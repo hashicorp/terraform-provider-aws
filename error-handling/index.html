@@ -1,0 +1,1830 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Contributor documentation and reference for the Terraform AWS Provider">
+      
+      
+      
+      
+        <link rel="prev" href="../design-decision-log/">
+      
+      
+        <link rel="next" href="../makefile-cheat-sheet/">
+      
+      <link rel="icon" href="../images/hashicorp-black.png">
+      <meta name="generator" content="mkdocs-1.4.2, mkdocs-material-9.0.6">
+    
+    
+      
+        <title>Error Handling - Terraform AWS Provider - Contributor Guide</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.558e4712.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+      
+      
+
+    
+    
+    
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="hashicorp" data-md-color-primary="black" data-md-color-accent="blue">
+  
+    
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#error-handling" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-header__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Terraform AWS Provider - Contributor Guide
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Error Handling
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Terraform AWS Provider - Contributor Guide" class="md-nav__button md-logo" aria-label="Terraform AWS Provider - Contributor Guide" data-md-component="logo">
+      
+  <img src="../images/hashicorp.png" alt="logo">
+
+    </a>
+    Terraform AWS Provider - Contributor Guide
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/hashicorp/terraform-provider-aws" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    hashicorp/terraform-provider-aws
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Welcome
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2" tabindex="0" aria-expanded="false">
+          Contribute
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribute" data-md-level="1">
+        <label class="md-nav__title" for="__nav_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribute
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../development-environment/" class="md-nav__link">
+        Development Environment
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_2_2" type="checkbox" id="__nav_2_2" >
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2_2" tabindex="0" aria-expanded="false">
+          Contribution Guides
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Contribution Guides" data-md-level="2">
+        <label class="md-nav__title" for="__nav_2_2">
+          <span class="md-nav__icon md-icon"></span>
+          Contribution Guides
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-resource/" class="md-nav__link">
+        Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-service/" class="md-nav__link">
+        Service
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-datasource/" class="md-nav__link">
+        Data source
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-function/" class="md-nav__link">
+        Function
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-a-new-region/" class="md-nav__link">
+        AWS Region
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../add-import-support/" class="md-nav__link">
+        Import Support
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-filtering/" class="md-nav__link">
+        Resource Filtering
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-name-generation/" class="md-nav__link">
+        Resource Name Generation
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../resource-tagging/" class="md-nav__link">
+        Resource Tagging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../adding-a-tag-resource/" class="md-nav__link">
+        Tag Resource
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../bugs-and-enhancements/" class="md-nav__link">
+        Bugs and Enhancements
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../documentation-changes/" class="md-nav__link">
+        Documentation Changes
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../running-and-writing-acceptance-tests/" class="md-nav__link">
+        Acceptance Tests
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../continuous-integration/" class="md-nav__link">
+        Continuous Integration
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../changelog-process/" class="md-nav__link">
+        Changelog Process
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../raising-a-pull-request/" class="md-nav__link">
+        Raising a Pull Request
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../prioritization/" class="md-nav__link">
+        How We Prioritize
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+      
+      
+      <input class="md-nav__toggle md-toggle " data-md-toggle="__nav_3" type="checkbox" id="__nav_3" checked>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3" tabindex="0" aria-expanded="true">
+          Developer Reference
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Developer Reference" data-md-level="1">
+        <label class="md-nav__title" for="__nav_3">
+          <span class="md-nav__icon md-icon"></span>
+          Developer Reference
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../acc-test-environment-variables/" class="md-nav__link">
+        Acceptance Test Environment Variables
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-go-sdk-versions/" class="md-nav__link">
+        AWS SDK for Go Versions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-go-sdk-migrations/" class="md-nav__link">
+        AWS SDK for Go Migrations
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../aws-sdk-go-base/" class="md-nav__link">
+        AWS SDK Go Base
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../core-services/" class="md-nav__link">
+        Core Services
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-handling-and-conversion/" class="md-nav__link">
+        Data Handling and Conversion
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../debugging/" class="md-nav__link">
+        Debugging
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dependency-updates/" class="md-nav__link">
+        Dependency Updates
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../design-decision-log/" class="md-nav__link">
+        Design Decision Log
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Error Handling
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Error Handling
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general-guidelines-and-helpers" class="md-nav__link">
+    General Guidelines and Helpers
+  </a>
+  
+    <nav class="md-nav" aria-label="General Guidelines and Helpers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#naming-and-check-style" class="md-nav__link">
+    Naming and Check Style
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrap-errors" class="md-nav__link">
+    Wrap Errors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-sdk-for-go-errors" class="md-nav__link">
+    AWS SDK for Go Errors
+  </a>
+  
+    <nav class="md-nav" aria-label="AWS SDK for Go Errors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aws-sdk-for-go-error-helpers" class="md-nav__link">
+    AWS SDK for Go Error Helpers
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-sdk-for-go-error-constants" class="md-nav__link">
+    AWS SDK for Go Error Constants
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terraform-plugin-types-and-helpers" class="md-nav__link">
+    Terraform Plugin Types and Helpers
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-lifecycle-guidelines" class="md-nav__link">
+    Resource Lifecycle Guidelines
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Lifecycle Guidelines">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resource-creation" class="md-nav__link">
+    Resource Creation
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Creation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creation-error-message-context" class="md-nav__link">
+    Creation Error Message Context
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disnewresource-checks" class="md-nav__link">
+    d.IsNewResource() Checks
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-read" class="md-nav__link">
+    Resource Read
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Read">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read-error-message-context" class="md-nav__link">
+    Read Error Message Context
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#singular-data-source-errors" class="md-nav__link">
+    Singular Data Source Errors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plural-data-source-errors" class="md-nav__link">
+    Plural Data Source Errors
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-update" class="md-nav__link">
+    Resource Update
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Update">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#update-error-message-context" class="md-nav__link">
+    Update Error Message Context
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-deletion" class="md-nav__link">
+    Resource Deletion
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Deletion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deletion-error-message-context" class="md-nav__link">
+    Deletion Error Message Context
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-already-deleted" class="md-nav__link">
+    Resource Already Deleted
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../makefile-cheat-sheet/" class="md-nav__link">
+        Makefile Cheat Sheet
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../naming/" class="md-nav__link">
+        Naming Standards
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../provider-design/" class="md-nav__link">
+        Provider Design
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../skaff/" class="md-nav__link">
+        Provider Scaffolding (skaff)
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regular-expressions/" class="md-nav__link">
+        Regular Expressions
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../retries-and-waiters/" class="md-nav__link">
+        Retries and Waiters
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-development-packages/" class="md-nav__link">
+        Terraform Plugin Development Packages
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../terraform-plugin-migrations/" class="md-nav__link">
+        Terraform Plugin Migrations
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../issue-reporting-and-lifecycle/" class="md-nav__link">
+        Submit an Issue
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../faq/" class="md-nav__link">
+        FAQ
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#general-guidelines-and-helpers" class="md-nav__link">
+    General Guidelines and Helpers
+  </a>
+  
+    <nav class="md-nav" aria-label="General Guidelines and Helpers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#naming-and-check-style" class="md-nav__link">
+    Naming and Check Style
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#wrap-errors" class="md-nav__link">
+    Wrap Errors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-sdk-for-go-errors" class="md-nav__link">
+    AWS SDK for Go Errors
+  </a>
+  
+    <nav class="md-nav" aria-label="AWS SDK for Go Errors">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#aws-sdk-for-go-error-helpers" class="md-nav__link">
+    AWS SDK for Go Error Helpers
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#aws-sdk-for-go-error-constants" class="md-nav__link">
+    AWS SDK for Go Error Constants
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#terraform-plugin-types-and-helpers" class="md-nav__link">
+    Terraform Plugin Types and Helpers
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resource-lifecycle-guidelines" class="md-nav__link">
+    Resource Lifecycle Guidelines
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Lifecycle Guidelines">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#resource-creation" class="md-nav__link">
+    Resource Creation
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Creation">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#creation-error-message-context" class="md-nav__link">
+    Creation Error Message Context
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disnewresource-checks" class="md-nav__link">
+    d.IsNewResource() Checks
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-read" class="md-nav__link">
+    Resource Read
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Read">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#read-error-message-context" class="md-nav__link">
+    Read Error Message Context
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#singular-data-source-errors" class="md-nav__link">
+    Singular Data Source Errors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plural-data-source-errors" class="md-nav__link">
+    Plural Data Source Errors
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-update" class="md-nav__link">
+    Resource Update
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Update">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#update-error-message-context" class="md-nav__link">
+    Update Error Message Context
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-deletion" class="md-nav__link">
+    Resource Deletion
+  </a>
+  
+    <nav class="md-nav" aria-label="Resource Deletion">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#deletion-error-message-context" class="md-nav__link">
+    Deletion Error Message Context
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#resource-already-deleted" class="md-nav__link">
+    Resource Already Deleted
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  
+  
+
+
+
+<!-- markdownlint-configure-file { "code-block-style": false } -->
+<h1 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">#</a></h1>
+<p>The Terraform AWS Provider codebase bridges the implementation of a <a href="https://www.terraform.io/plugin/how-terraform-works">Terraform Plugin</a> and an AWS API client to support AWS operations as Terraform Resources.
+An important aspect of performing remote actions is properly handling operations which are not guaranteed to succeed.
+Some common examples include unstable network connections, missing permissions, incorrect Terraform configurations, or unexpected responses from the remote system.
+All of these situations lead to an unexpected workflow action that must be surfaced to Terraform for operators to troubleshoot.
+This guide is intended to document best practices for surfacing these issues properly.</p>
+<p>For further details about how the AWS SDK for Go and the Terraform AWS Provider handle retryable errors, see the <a href="../retries-and-waiters/">Retries and Waiters documentation</a>.</p>
+<h2 id="general-guidelines-and-helpers">General Guidelines and Helpers<a class="headerlink" href="#general-guidelines-and-helpers" title="Permanent link">#</a></h2>
+<h3 id="naming-and-check-style">Naming and Check Style<a class="headerlink" href="#naming-and-check-style" title="Permanent link">#</a></h3>
+<p>Following typical Go conventions, error variables in the Terraform AWS Provider codebase should be named <code>err</code>, e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="nx">result</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">strconv</span><span class="p">.</span><span class="nx">Itoa</span><span class="p">(</span><span class="s">&quot;oh no!&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>The code that then checks these errors should prefer <code>if</code> conditionals that usually <code>return</code> (or in the case of looping constructs, <code>break</code>/<code>continue</code>) early, especially in the case of multiple error checks, e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="cm">/* ... something checking err first ... */</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ... return, break, continue, etc. ...</span>
+<span class="p">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// ... return, break, continue, etc. ...</span>
+<span class="p">}</span>
+
+<span class="c1">// all good!</span>
+</code></pre></div>
+<p>This is in preference to some other styles of error checking, such as <code>switch</code> conditionals without a condition.</p>
+<h3 id="wrap-errors">Wrap Errors<a class="headerlink" href="#wrap-errors" title="Permanent link">#</a></h3>
+<p>Go implements error wrapping, which means that a deeply nested function call can return a particular error type, while each function up the stack can provide additional error message context without losing the ability to determine the original error.
+Additional information about this concept can be found in the <a href="https://blog.golang.org/go1.13-errors">Go blog entry titled Working with Errors in Go 1.13</a>.</p>
+<p>For most use cases in this codebase, this means if code is receiving an error and needs to return it, it should implement <a href="https://pkg.go.dev/fmt#Errorf"><code>fmt.Errorf()</code></a> and the <code>%w</code> verb, e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="k">return</span><span class="w"> </span><span class="nx">fmt</span><span class="p">.</span><span class="nx">Errorf</span><span class="p">(</span><span class="s">&quot;adding some additional message: %w&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+</code></pre></div>
+<p>This type of error wrapping should be applied to all Terraform resource logic where errors (not diagnostics) are returned.</p>
+<h3 id="aws-sdk-for-go-errors">AWS SDK for Go Errors<a class="headerlink" href="#aws-sdk-for-go-errors" title="Permanent link">#</a></h3>
+<p>V1 and V2 of the AWS SDK for Go approach errors differently.
+Most notably, V2 makes use of more modern techniques like error wrapping that v1 does not.
+The <a href="https://aws.github.io/aws-sdk-go-v2/docs/migrating/#errors-types">Errors Types</a> section in the migration guide provides additional context on these differences.</p>
+<p>The sections below contain documentation for both SDKs. See <a href="../aws-go-sdk-versions/">AWS Go SDK Versions</a> for direction on which to use.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="1:2"><input checked="checked" id="__tabbed_1_1" name="__tabbed_1" type="radio" /><input id="__tabbed_1_2" name="__tabbed_1" type="radio" /><div class="tabbed-labels"><label for="__tabbed_1_1">AWS Go SDK V2 (Preferred)</label><label for="__tabbed_1_2">AWS Go SDK V1</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>The <a href="https://aws.github.io/aws-sdk-go-v2/docs/">AWS SDK for Go v2 documentation</a> includes a <a href="https://aws.github.io/aws-sdk-go-v2/docs/handling-errors/">section on handling errors</a>, which is recommended reading.</p>
+<p>For the purposes of this documentation, the most important concepts in handling these errors are:</p>
+<ul>
+<li>The SDK wraps all errors returned by service clients with the <a href="https://pkg.go.dev/github.com/aws/smithy-go/#OperationError"><code>smithy.OperationError</code></a> type.</li>
+<li><a href="https://golang.org/pkg/errors#As"><code>errors.As</code></a> should be used to unwrap errors when inspecting for a specific error type (e.g, a <code>BucketAlreadyExists</code> error from the S3 API).</li>
+</ul>
+</div>
+<div class="tabbed-block">
+<p>The <a href="https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/welcome.html">AWS SDK for Go v1 documentation</a> includes a <a href="https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/handling-errors.html">section on handling errors</a>, which is recommended reading.</p>
+<p>For the purposes of this documentation, the most important concepts in handling these errors are:</p>
+<ul>
+<li>Each response error (which eventually implements <code>awserr.Error</code>) has a <code>string</code> error code (<code>Code</code>) and <code>string</code> error message (<code>Message</code>). When printed as a string, they format as: <code>Code: Message</code>, e.g., <code>InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup</code>.</li>
+<li>Error handling is almost exclusively done via those <code>string</code> fields and not other response information, such as HTTP Status Codes.</li>
+<li>When the error code is non-specific, the error message should also be checked. Unfortunately, AWS APIs generally do not provide documentation or API modeling with the contents of these messages and often the Terraform AWS Provider code must rely on substring matching.</li>
+<li>Not all errors are returned in the response error from an AWS API operation. This is service- and sometimes API-call-specific. For example, the <a href="https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DeleteVpcEndpoints.html">EC2 <code>DeleteVpcEndpoints</code> API call</a> can return a "successful" response (in terms of no response error) but include information in an <code>Unsuccessful</code> field in the response body.</li>
+</ul>
+<p>When working with AWS SDK for Go v1 errors, it is preferred to use the helpers outlined below and use the <code>%w</code> format verb. Code should generally avoid type assertions with the underlying <code>awserr.Error</code> type or calling its <code>Code()</code>, <code>Error()</code>, <code>Message()</code>, or <code>String()</code> receiver methods. Using the <code>%v</code>, <code>%#v</code>, or <code>%+v</code> format verbs generally provides extraneous information that is not helpful to operators or code maintainers.</p>
+</div>
+</div>
+</div>
+<h4 id="aws-sdk-for-go-error-helpers">AWS SDK for Go Error Helpers<a class="headerlink" href="#aws-sdk-for-go-error-helpers" title="Permanent link">#</a></h4>
+<div class="tabbed-set tabbed-alternate" data-tabs="2:2"><input checked="checked" id="__tabbed_2_1" name="__tabbed_2" type="radio" /><input id="__tabbed_2_2" name="__tabbed_2" type="radio" /><div class="tabbed-labels"><label for="__tabbed_2_1">AWS Go SDK V2 (Preferred)</label><label for="__tabbed_2_2">AWS Go SDK V1</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>To simplify operations with AWS SDK for Go error types, the following helpers are available via the <code>github.com/hashicorp/aws-sdk-go-base/v2/tfawserr</code> Go package:</p>
+<ul>
+<li><code>tfawserr.ErrCodeEquals</code> - Preferred when the error code is specific enough for the check condition. For example, a <code>ResourceNotFoundError</code> code provides enough information that the requested resource does not exist.</li>
+<li><code>tfawserr.ErrMessageContains</code>: Preferred when an error code can cover multiple failure modes, and additional parsing of the error message is required to determine if it matches a specific condition.</li>
+</ul>
+</div>
+<div class="tabbed-block">
+<p>To simplify operations with AWS SDK for Go error types, the following helpers are available via the <code>github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr</code> Go package:</p>
+<ul>
+<li><code>tfawserr.ErrCodeEquals(err, "Code")</code>: Preferred when the error code is specific enough for the check condition. For example, a <code>ResourceNotFoundError</code> code provides enough information that the requested resource does not exist.</li>
+<li><code>tfawserr.ErrMessageContains(err, "Code", "MessageContains")</code>: Does simple substring matching for the error message.</li>
+</ul>
+</div>
+</div>
+</div>
+<p>The recommendation for error message checking is to be just specific enough to capture the anticipated issue, but not include <em>too</em> much matching as the AWS API can change over time without notice.
+The maintainers have observed changes in wording and capitalization cause unexpected issues in the past.</p>
+<p>For example, given this error code and message:</p>
+<div class="highlight"><pre><span></span><code>InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup
+</code></pre></div>
+<p>An error check for this might be:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">tfawserr</span><span class="p">.</span><span class="nx">ErrMessageContains</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="nx">backup</span><span class="p">.</span><span class="nx">ErrCodeInvalidParameterValueException</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;cannot be assumed&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Special handling here</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The Amazon Resource Name in the error message will be different for every environment and does not add value to the check.
+The AWS Backup suffix is also extraneous and could change should the service ever rename.</p>
+<h4 id="aws-sdk-for-go-error-constants">AWS SDK for Go Error Constants<a class="headerlink" href="#aws-sdk-for-go-error-constants" title="Permanent link">#</a></h4>
+<div class="tabbed-set tabbed-alternate" data-tabs="3:2"><input checked="checked" id="__tabbed_3_1" name="__tabbed_3" type="radio" /><input id="__tabbed_3_2" name="__tabbed_3" type="radio" /><div class="tabbed-labels"><label for="__tabbed_3_1">AWS Go SDK V2 (Preferred)</label><label for="__tabbed_3_2">AWS Go SDK V1</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Each AWS SDK for Go v2 service API typically implements common error codes, which get exported as public structs in the SDK. In the <a href="https://pkg.go.dev/github.com/aws/aws-sdk-go-v2">AWS SDK for Go v2 API Reference</a>, these can be found in each of the service packages <code>types</code> subpackage (typically named <code>{ErrorType}Exception</code>).</p>
+</div>
+<div class="tabbed-block">
+<p>Each AWS SDK for Go v1 service API typically implements common error codes, which get exported as public constants in the SDK. In the <a href="https://docs.aws.amazon.com/sdk-for-go/api/">AWS SDK for Go v1 API Reference</a>, these can be found in each of the service packages under the <code>Constants</code> section (typically named <code>ErrCode{ExceptionName}</code>).</p>
+</div>
+</div>
+</div>
+<p>If an AWS SDK for Go service API is missing an error code constant, an AWS Support case should be submitted and a new constant can be added to <code>internal/service/{SERVICE}/errors.go</code> file (created if not present), e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span><span class="p">(</span>
+<span class="w">    </span><span class="nx">ErrCodeInvalidParameterException</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">&quot;InvalidParameterException&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Then referencing code can use it via:</p>
+<div class="highlight"><pre><span></span><code><span class="c1">// imports</span>
+<span class="nx">tf</span><span class="p">{</span><span class="nx">SERVICE</span><span class="p">}</span><span class="w"> </span><span class="s">&quot;github.com/hashicorp/terraform-provider-aws/internal/service/{SERVICE}&quot;</span>
+
+<span class="c1">// logic</span>
+<span class="nx">tfawserr</span><span class="p">.</span><span class="nx">ErrCodeEquals</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="nx">tf</span><span class="p">{</span><span class="nx">SERVICE</span><span class="p">}.</span><span class="nx">ErrCodeInvalidParameterException</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="terraform-plugin-types-and-helpers">Terraform Plugin Types and Helpers<a class="headerlink" href="#terraform-plugin-types-and-helpers" title="Permanent link">#</a></h3>
+<p>The Terraform Plugin SDK includes some error types which are used in certain operations and typically preferred over implementing new types:</p>
+<ul>
+<li><a href="https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#NotFoundError"><code>retry.NotFoundError</code></a></li>
+<li><a href="https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#TimeoutError"><code>retry.TimeoutError</code></a><ul>
+<li>Returned from <a href="https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#RetryContext"><code>retry.RetryContext()</code></a> and
+<a href="https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry#StateChangeConf.WaitForStateContext"><code>(retry.StateChangeConf).WaitForStateContext()</code></a></li>
+</ul>
+</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>While these helpers currently reside in the Terraform Plugin SDK V2 package, they can be used with Plugin Framework based resources. In the future these functions will likely be migrated into the provider itself, or a standalone library as there is no direct dependency on Plugin SDK functionality.</p>
+</div>
+<p>The Terraform AWS Provider codebase implements some additional helpers for working with these in the <code>internal/tfresource</code> package:</p>
+<ul>
+<li><code>tfresource.NotFound(err)</code>: Returns true if the error is a <code>retry.NotFoundError</code>.</li>
+<li><code>tfresource.TimedOut(err)</code>: Returns true if the error is a <code>retry.TimeoutError</code> and contains no <code>LastError</code>. This typically signifies that the retry logic was never signaled for a retry, which can happen when AWS API operations are automatically retrying before returning.</li>
+</ul>
+<h2 id="resource-lifecycle-guidelines">Resource Lifecycle Guidelines<a class="headerlink" href="#resource-lifecycle-guidelines" title="Permanent link">#</a></h2>
+<p>Terraform CLI and the Terraform Plugin libraries have certain expectations and automatic behaviors depending on the lifecycle operation of a resource.
+This section highlights some common issues that can occur and their expected resolution.</p>
+<h3 id="resource-creation">Resource Creation<a class="headerlink" href="#resource-creation" title="Permanent link">#</a></h3>
+<p>For Terraform Plugin Framework based resources, creation is implemented on the <code>Create</code> method of the resource struct.
+For Terraform Plugin SDK V2 based resources, creation is implemented on the <code>CreateWithoutTimeout</code> function of the resource schema definition.</p>
+<h4 id="creation-error-message-context">Creation Error Message Context<a class="headerlink" href="#creation-error-message-context" title="Permanent link">#</a></h4>
+<div class="tabbed-set tabbed-alternate" data-tabs="4:2"><input checked="checked" id="__tabbed_4_1" name="__tabbed_4" type="radio" /><input id="__tabbed_4_2" name="__tabbed_4" type="radio" /><div class="tabbed-labels"><label for="__tabbed_4_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_4_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Errors encountered during creation should include additional messaging about the location or cause of the error for operators and code maintainers.
+Plugin Framework based resources will append error <a href="https://developer.hashicorp.com/terraform/plugin/framework/diagnostics">diagnostics</a> to the <code>resource.CreateResponse</code> <code>Diagnostics</code> field.
+The <code>create.ProblemStandardMessage</code> helper function can be used for constructing the appropriate context to accompany the error.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Service</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionCreating</span><span class="p">,</span><span class="w"> </span><span class="nx">ResName</span><span class="p">{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">Name</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">QuickSight</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionCreating</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameVPCConnection</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">Name</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Resources that use other operations that return errors (e.g. waiters) should follow a similar pattern, including the resource identifier since it has typically been set before this execution:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">createTimeout</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">CreateTimeout</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">Timeouts</span><span class="p">)</span>
+<span class="nx">waitOut</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">waitVPCConnectionCreated</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">ValueString</span><span class="p">(),</span><span class="w"> </span><span class="nx">createTimeout</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">QuickSight</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForCreation</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameVPCConnection</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<p>Errors encountered during creation should include additional messaging about the location or cause of the error for operators and code maintainers.
+The <code>create.AppendDiagError</code> helper function can be used to convert a native error into a <a href="https://developer.hashicorp.com/terraform/plugin/framework/diagnostics">diagnostic</a>, which is the method for surfacing warnings and errors in Terraform providers.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Service</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionCreating</span><span class="p">,</span><span class="w"> </span><span class="nx">ResName</span><span class="p">{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Get</span><span class="p">(</span><span class="s">&quot;name&quot;</span><span class="p">).(</span><span class="kt">string</span><span class="p">),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span><span class="o">...</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">IVS</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionCreating</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameRecordingConfiguration</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Resources that use other operations that return errors (e.g. waiters) should follow a similar pattern, including the resource identifier since it has typically been set before this execution:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">waitRecordingConfigurationCreated</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Timeout</span><span class="p">(</span><span class="nx">schema</span><span class="p">.</span><span class="nx">TimeoutCreate</span><span class="p">));</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">IVS</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForCreation</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameRecordingConfiguration</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h4 id="disnewresource-checks">d.IsNewResource() Checks<a class="headerlink" href="#disnewresource-checks" title="Permanent link">#</a></h4>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This type of check only applies to Plugin SDK V2 based resources. Plugin Framework based resources rely solely on <a href="../retries-and-waiters/">retries and waiters</a> to handle eventually consistent resources.</p>
+</div>
+<p>During resource creation, Terraform CLI expects either a properly applied state for the new resource or an error. To signal proper resource existence, the Terraform Plugin SDK uses an underlying resource identifier (set via <code>d.SetId(/* some value */)</code>). If for some reason the resource creation is returned without an error, but also without the resource identifier being set, Terraform CLI will return an error such as:</p>
+<div class="highlight"><pre><span></span><code>Error:<span class="w"> </span>Provider<span class="w"> </span>produced<span class="w"> </span>inconsistent<span class="w"> </span>result<span class="w"> </span>after<span class="w"> </span>apply
+
+When<span class="w"> </span>applying<span class="w"> </span>changes<span class="w"> </span>to<span class="w"> </span>aws_sns_topic_subscription.sqs,
+provider<span class="w"> </span><span class="s2">&quot;registry.terraform.io/hashicorp/aws&quot;</span><span class="w"> </span>produced<span class="w"> </span>an<span class="w"> </span>unexpected<span class="w"> </span>new
+value:<span class="w"> </span>Root<span class="w"> </span>resource<span class="w"> </span>was<span class="w"> </span>present,<span class="w"> </span>but<span class="w"> </span>now<span class="w"> </span>absent.
+
+This<span class="w"> </span>is<span class="w"> </span>a<span class="w"> </span>bug<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>provider,<span class="w"> </span>which<span class="w"> </span>should<span class="w"> </span>be<span class="w"> </span>reported<span class="w"> </span><span class="k">in</span><span class="w"> </span>the<span class="w"> </span>provider<span class="err">&#39;</span>s<span class="w"> </span>own
+issue<span class="w"> </span>tracker.
+</code></pre></div>
+<p>A typical pattern in resource implementations in the <code>CreateWithoutTimeout</code> function is to <code>return</code> the <code>ReadWithoutTimeout</code> function at the end to fill in the Terraform State for all attributes. Another typical pattern in resource implementations in the <code>ReadWithoutTimeout</code> function is to remove the resource from the Terraform State if the remote system returns an error or status that indicates the remote resource no longer exists by explicitly calling <code>d.SetId("")</code> and returning no error. If the remote system is not strongly read-after-write consistent (eventually consistent), this means the resource creation can return no error and also return no resource state.</p>
+<p>To prevent this type of Terraform CLI error, the resource implementation should also check against <code>d.IsNewResource()</code> before removing from the Terraform State and returning no error. If that check is <code>true</code>, then remote operation error (or one synthesized from the non-existent status) should be returned instead. While adding this check will not fix the resource implementation to handle the eventually consistent nature of the remote system, the error being returned will be less opaque for operators and code maintainers to troubleshoot.</p>
+<p>In the Terraform AWS Provider, an initial fix for the Terraform CLI error will typically look like:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">func</span><span class="w"> </span><span class="nx">resourceServiceThingCreate</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">ResourceData</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="w"> </span><span class="kd">interface</span><span class="p">{})</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">diags</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span>
+
+<span class="w">   </span><span class="cm">/* ... */</span>
+
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nb">append</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">resourceServiceThingRead</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="p">)</span><span class="o">...</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="kd">func</span><span class="w"> </span><span class="nx">resourceServiceThingRead</span><span class="p">(</span><span class="nx">ctx</span><span class="w"> </span><span class="nx">context</span><span class="p">.</span><span class="nx">Context</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="w"> </span><span class="o">*</span><span class="nx">schema</span><span class="p">.</span><span class="nx">ResourceData</span><span class="p">,</span><span class="w"> </span><span class="nx">meta</span><span class="w"> </span><span class="kd">interface</span><span class="p">{})</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="kd">var</span><span class="w"> </span><span class="nx">diags</span><span class="w"> </span><span class="nx">diag</span><span class="p">.</span><span class="nx">Diagnostics</span>
+
+<span class="w">   </span><span class="cm">/* ... */</span>
+
+<span class="w">    </span><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">DescribeServiceThing</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">!</span><span class="nx">d</span><span class="p">.</span><span class="nx">IsNewResource</span><span class="p">()</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">tfawserr</span><span class="p">.</span><span class="nx">ErrCodeEquals</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ResourceNotFoundException&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">log</span><span class="p">.</span><span class="nx">Printf</span><span class="p">(</span><span class="s">&quot;[WARN] {Service} {Thing} (%s) not found, removing from state&quot;</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">())</span>
+<span class="w">        </span><span class="nx">d</span><span class="p">.</span><span class="nx">SetId</span><span class="p">(</span><span class="s">&quot;&quot;</span><span class="p">)</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">diags</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Service</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionReading</span><span class="p">,</span><span class="w"> </span><span class="nx">ResName</span><span class="p">{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="cm">/* ... */</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>If the remote system is eventually consistent, see the <a href="../retries-and-waiters/#resource-lifecycle-retries">Retries and Waiters documentation on Resource Lifecycle Retries</a> for how to prevent consistency-type errors.</p>
+<h3 id="resource-read">Resource Read<a class="headerlink" href="#resource-read" title="Permanent link">#</a></h3>
+<p>For Terraform Plugin Framework based resources, read is implemented on the <code>Read</code> method of the resource struct.
+For Terraform Plugin SDK V2 based resources, read is implemented on the <code>ReadWithoutTimeout</code> function of the resource schema definition.</p>
+<h4 id="read-error-message-context">Read Error Message Context<a class="headerlink" href="#read-error-message-context" title="Permanent link">#</a></h4>
+<div class="tabbed-set tabbed-alternate" data-tabs="5:2"><input checked="checked" id="__tabbed_5_1" name="__tabbed_5" type="radio" /><input id="__tabbed_5_2" name="__tabbed_5" type="radio" /><div class="tabbed-labels"><label for="__tabbed_5_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_5_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Errors encountered during read should include the resource identifier (for managed resources) and additional messaging about the location or cause of the error for operators and code maintainers.
+Plugin Framework based resources will append error <a href="https://developer.hashicorp.com/terraform/plugin/framework/diagnostics">diagnostics</a> to the <code>resource.ReadResponse</code> <code>Diagnostics</code> field.
+The <code>create.ProblemStandardMessage</code> helper function can be used for constructing the appropriate context to accompany the error.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Service</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionReading</span><span class="p">,</span><span class="w"> </span><span class="nx">ResName</span><span class="p">{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">state</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">QuickSight</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionReading</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameVPCConnection</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<p>Errors encountered during read should include the resource identifier (for managed resources) and additional messaging about the location or cause of the error for operators and code maintainers.
+The <code>create.AppendDiagError</code> helper function can be used to convert a native error into a <a href="https://developer.hashicorp.com/terraform/plugin/framework/diagnostics">diagnostic</a>, which is the method for surfacing warnings and errors in Terraform providers.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Service</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionReading</span><span class="p">,</span><span class="w"> </span><span class="nx">ResName</span><span class="p">{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">IVS</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionReading</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameRecordingConfiguration</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h4 id="singular-data-source-errors">Singular Data Source Errors<a class="headerlink" href="#singular-data-source-errors" title="Permanent link">#</a></h4>
+<p>A data source which is expected to return Terraform State about a single remote resource is commonly referred to as a "singular" data source.
+Implementation-wise, it may use any available describe or list functionality from the remote system to retrieve the information.
+In addition to remote operation and data handling errors, errors should also be returned if:</p>
+<ul>
+<li>Zero results are found.</li>
+<li>Multiple results are found.</li>
+</ul>
+<p>For remote operations that are designed to return an error when the remote resource is not found, this error is typically just passed through similar to other remote operation errors.
+For remote operations that are designed to return a successful result whether there are zero, one, or multiple results, the error must be generated.</p>
+<p>For example in pseudo-code:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">ListServiceThings</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Return error diagnostic wrapping remote error</span>
+<span class="p">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">output</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">output</span><span class="p">.</span><span class="nx">Results</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Return custom error diagnostic indicating empty results</span>
+<span class="p">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nb">len</span><span class="p">(</span><span class="nx">output</span><span class="p">.</span><span class="nx">Results</span><span class="p">)</span><span class="w"> </span><span class="p">&gt;</span><span class="w"> </span><span class="mi">1</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="c1">// Return custom error diagnostic indicating multiple results</span>
+<span class="p">}</span>
+</code></pre></div>
+<h4 id="plural-data-source-errors">Plural Data Source Errors<a class="headerlink" href="#plural-data-source-errors" title="Permanent link">#</a></h4>
+<p>An emergent concept is a data source that returns multiple results, acting similarly to listing functionality from the remote system.
+These types of data sources should return <em>not</em> return errors if:</p>
+<ul>
+<li>Zero results are found.</li>
+<li>Multiple results are found.</li>
+</ul>
+<p>Remote operation and other data handling errors should still be returned.</p>
+<h3 id="resource-update">Resource Update<a class="headerlink" href="#resource-update" title="Permanent link">#</a></h3>
+<p>For Terraform Plugin Framework based resources, update is implemented on the <code>Update</code> method of the resource struct.
+For Terraform Plugin SDK V2 based resources, update is implemented on the <code>UpdateWithoutTimeout</code> function of the resource schema definition.</p>
+<h4 id="update-error-message-context">Update Error Message Context<a class="headerlink" href="#update-error-message-context" title="Permanent link">#</a></h4>
+<div class="tabbed-set tabbed-alternate" data-tabs="6:2"><input checked="checked" id="__tabbed_6_1" name="__tabbed_6" type="radio" /><input id="__tabbed_6_2" name="__tabbed_6" type="radio" /><div class="tabbed-labels"><label for="__tabbed_6_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_6_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Errors ecnountered during update should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
+Plugin Framework based resources will append error <a href="https://developer.hashicorp.com/terraform/plugin/framework/diagnostics">diagnostics</a> to the <code>resource.UpdateResponse</code> <code>Diagnostics</code> field.
+The <code>create.ProblemStandardMessage</code> helper function can be used for constructing the appropriate context to accompany the error.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Service</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionUpdating</span><span class="p">,</span><span class="w"> </span><span class="nx">ResName</span><span class="p">{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">QuickSight</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionUpdating</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameVPCConnection</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Resources that use other operations that return errors (e.g. waiters) should follow a similar pattern:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">updateTimeout</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">UpdateTimeout</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">Timeouts</span><span class="p">)</span>
+<span class="nx">waitOut</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">waitVPCConnectionUpdated</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">ValueString</span><span class="p">(),</span><span class="w"> </span><span class="nx">updateTimeout</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">QuickSight</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForUpdate</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameVPCConnection</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<p>Errors encountered during update should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
+The <code>create.AppendDiagError</code> helper function can be used to convert a native error into a <a href="https://developer.hashicorp.com/terraform/plugin/framework/diagnostics">diagnostic</a>, which is the method for surfacing warnings and errors in Terraform providers.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Service</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionUpdating</span><span class="p">,</span><span class="w"> </span><span class="nx">ResName</span><span class="p">{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">IVS</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionUpdating</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameRecordingConfiguration</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Resources that use other operations that return errors (e.g. waiters) should follow a similar pattern:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">waitRecordingConfigurationUpdated</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Timeout</span><span class="p">(</span><span class="nx">schema</span><span class="p">.</span><span class="nx">TimeoutUpdate</span><span class="p">));</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">     </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">IVS</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForUpdate</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameRecordingConfiguration</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h3 id="resource-deletion">Resource Deletion<a class="headerlink" href="#resource-deletion" title="Permanent link">#</a></h3>
+<p>For Terraform Plugin Framework based resources, deletion is implemented on the <code>Delete</code> method of the resource struct.
+For Terraform Plugin SDK V2 based resources, deletion is implemented on the <code>DeleteWithoutTimeout</code> function of the resource schema definition.</p>
+<h4 id="deletion-error-message-context">Deletion Error Message Context<a class="headerlink" href="#deletion-error-message-context" title="Permanent link">#</a></h4>
+<div class="tabbed-set tabbed-alternate" data-tabs="7:2"><input checked="checked" id="__tabbed_7_1" name="__tabbed_7" type="radio" /><input id="__tabbed_7_2" name="__tabbed_7" type="radio" /><div class="tabbed-labels"><label for="__tabbed_7_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_7_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<p>Errors encountered during deletion should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
+Plugin Framework based resources will append error <a href="https://developer.hashicorp.com/terraform/plugin/framework/diagnostics">diagnostics</a> to the <code>resource.DeleteResponse</code> <code>Diagnostics</code> field.
+The <code>create.ProblemStandardMessage</code> helper function can be used for constructing the appropriate context to accompany the error.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Service</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionDeleting</span><span class="p">,</span><span class="w"> </span><span class="nx">ResName</span><span class="p">{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">state</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">QuickSight</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionDeleting</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameVPCConnection</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Resources that use other operations that return errors (e.g. waiters) should follow a similar pattern:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">deleteTimeout</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">r</span><span class="p">.</span><span class="nx">DeleteTimeout</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">plan</span><span class="p">.</span><span class="nx">Timeouts</span><span class="p">)</span>
+<span class="nx">waitOut</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">waitVPCConnectionDeleted</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">ValueString</span><span class="p">(),</span><span class="w"> </span><span class="nx">deleteTimeout</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.</span><span class="nx">QuickSight</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForDeletion</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameVPCConnection</span><span class="p">,</span><span class="w"> </span><span class="nx">state</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<p>Errors encountered during deletion should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
+The <code>create.AppendDiagError</code> helper function can be used to convert a native error into a <a href="https://developer.hashicorp.com/terraform/plugin/framework/diagnostics">diagnostic</a>, which is the method for surfacing warnings and errors in Terraform providers.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Service</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionDeleting</span><span class="p">,</span><span class="w"> </span><span class="nx">ResName</span><span class="p">{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>e.g.</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">IVS</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionDeleting</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameRecordingConfiguration</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Resources that use other operations that return errors (e.g. waiters) should follow a similar pattern:</p>
+<div class="highlight"><pre><span></span><code><span class="k">if</span><span class="w"> </span><span class="nx">_</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">waitRecordingConfigurationDeleted</span><span class="p">(</span><span class="nx">ctx</span><span class="p">,</span><span class="w"> </span><span class="nx">conn</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Timeout</span><span class="p">(</span><span class="nx">schema</span><span class="p">.</span><span class="nx">TimeoutDelete</span><span class="p">));</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.</span><span class="nx">IVS</span><span class="p">,</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionWaitingForDeletion</span><span class="p">,</span><span class="w"> </span><span class="nx">ResNameRecordingConfiguration</span><span class="p">,</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+<h4 id="resource-already-deleted">Resource Already Deleted<a class="headerlink" href="#resource-already-deleted" title="Permanent link">#</a></h4>
+<p>A typical pattern for resource deletion is to immediately perform the remote system deletion operation without checking existence.
+This is generally acceptable as operators are encouraged to always refresh their Terraform State prior to performing changes.
+However, in certain scenarios, such as external systems modifying the remote system prior to the Terraform execution, it is still possible that the remote system will return an error signifying that the resource does not exist.
+In these cases, resources should implement logic that skips returning the error.</p>
+<div class="tabbed-set tabbed-alternate" data-tabs="8:2"><input checked="checked" id="__tabbed_8_1" name="__tabbed_8" type="radio" /><input id="__tabbed_8_2" name="__tabbed_8" type="radio" /><div class="tabbed-labels"><label for="__tabbed_8_1">Terraform Plugin Framework (Preferred)</label><label for="__tabbed_8_2">Terraform Plugin SDK V2</label></div>
+<div class="tabbed-content">
+<div class="tabbed-block">
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Terraform Plugin Framework automatically handles the equivalent of <code>resp.State.RemoveResource()</code> on deletion, so it is not necessary to include it.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">DeleteServiceThing</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">tfawserr</span><span class="p">.</span><span class="nx">ErrCodeEquals</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ResourceNotFoundException&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nx">resp</span><span class="p">.</span><span class="nx">Diagnostics</span><span class="p">.</span><span class="nx">AddError</span><span class="p">(</span>
+<span class="w">        </span><span class="nx">create</span><span class="p">.</span><span class="nx">ProblemStandardMessage</span><span class="p">(</span><span class="nx">names</span><span class="p">.{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Service</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionDeleting</span><span class="p">,</span><span class="w"> </span><span class="nx">ResName</span><span class="p">{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">state</span><span class="p">.</span><span class="nx">ID</span><span class="p">.</span><span class="nx">String</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">),</span>
+<span class="w">        </span><span class="nx">err</span><span class="p">.</span><span class="nx">Error</span><span class="p">(),</span>
+<span class="w">    </span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+<div class="tabbed-block">
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The Terraform Plugin SDK V2 automatically handles the equivalent of <code>d.SetId("")</code> on deletion, so it is not necessary to include it.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="nx">output</span><span class="p">,</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">:=</span><span class="w"> </span><span class="nx">conn</span><span class="p">.</span><span class="nx">DeleteServiceThing</span><span class="p">(</span><span class="nx">input</span><span class="p">)</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">tfawserr</span><span class="p">.</span><span class="nx">ErrCodeEquals</span><span class="p">(</span><span class="nx">err</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;ResourceNotFoundException&quot;</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">diags</span>
+<span class="p">}</span>
+
+<span class="k">if</span><span class="w"> </span><span class="nx">err</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">nil</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">AppendDiagError</span><span class="p">(</span><span class="nx">diags</span><span class="p">,</span><span class="w"> </span><span class="nx">names</span><span class="p">.{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Service</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">create</span><span class="p">.</span><span class="nx">ErrActionDeleting</span><span class="p">,</span><span class="w"> </span><span class="nx">ResName</span><span class="p">{{</span><span class="w"> </span><span class="p">.</span><span class="nx">Resource</span><span class="w"> </span><span class="p">}},</span><span class="w"> </span><span class="nx">d</span><span class="p">.</span><span class="nx">Id</span><span class="p">(),</span><span class="w"> </span><span class="nx">err</span><span class="p">)</span>
+<span class="p">}</span>
+</code></pre></div>
+</div>
+</div>
+</div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var tab,labels=set.querySelector(".tabbed-labels");for(tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      HashiCorp
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.instant", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.e5c33ebb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.51d95adb.min.js"></script>
+      
+    
+  </body>
+</html>
