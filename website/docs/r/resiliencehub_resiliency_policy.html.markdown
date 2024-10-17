@@ -50,12 +50,14 @@ The following arguments are required:
   Must be between 2 and 60 characters long.
   Must start with an alphanumeric character and contain alphanumeric characters, underscores, or hyphens.
 * `tier` (String) Resiliency Policy Tier.
+  Valid values are `MissionCritical`, `Critical`, `Important`, `CoreServices`, `NonCritical`, and `NotApplicable`.
 * `policy` (Attributes) The type of resiliency policy to be created, including the recovery time objective (RTO) and recovery point objective (RPO) in seconds. See [`policy`](#policy).
 
 The following arguments are optional:
 
 * `description` (String) Description of Resiliency Policy.
 * `data_location_constraint` (String) Data Location Constraint of the Policy.
+  Valid values are `AnyLocation`, `SameContinent`, and `SameCountry`.
 * `tags` - (Map Of String) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `policy`
