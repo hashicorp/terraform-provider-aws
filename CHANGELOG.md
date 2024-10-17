@@ -6,6 +6,7 @@ FEATURES:
 
 BUG FIXES:
 
+* data-source/aws_workspaces_bundle: Return the first matching bundle when searching by `name`. This fixes a regression introduced in [v5.72.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5720-october-15-2024) causing `multiple WorkSpaces Bundles matched; use additional constraints to reduce matches to a single WorkSpaces Bundle` errors ([#39777](https://github.com/hashicorp/terraform-provider-aws/issues/39777))
 * resource/aws_route53_record: Allow creation of records with `ttl=0` ([#39728](https://github.com/hashicorp/terraform-provider-aws/issues/39728))
 
 ## 5.72.1 (October 16, 2024)
