@@ -92,7 +92,7 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"policy_name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Description: "The name of the policy.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
@@ -611,7 +611,7 @@ type resourceResiliencyPolicyData struct {
 	Policy                 fwtypes.ObjectValueOf[resourceResiliencyPolicyModel] `tfsdk:"policy"`
 	PolicyArn              types.String                                         `tfsdk:"arn"`
 	PolicyDescription      types.String                                         `tfsdk:"policy_description"`
-	PolicyName             types.String                                         `tfsdk:"policy_name"`
+	PolicyName             types.String                                         `tfsdk:"name"`
 	Tier                   fwtypes.StringEnum[awstypes.ResiliencyPolicyTier]    `tfsdk:"tier"`
 	Tags                   tftags.Map                                           `tfsdk:"tags"`
 	TagsAll                tftags.Map                                           `tfsdk:"tags_all"`

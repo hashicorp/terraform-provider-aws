@@ -46,7 +46,7 @@ resource "aws_resiliencehub_resiliency_policy" "example" {
 
 The following arguments are required:
 
-* `policy_name` (String) Name of Resiliency Policy.
+* `name` (String) Name of Resiliency Policy.
 * `tier` (String) Resiliency Policy Tier.
 * `policy` (Attributes) The type of resiliency policy to be created, including the recovery time objective (RTO) and recovery point objective (RPO) in seconds. See [`policy`](#policy).
 

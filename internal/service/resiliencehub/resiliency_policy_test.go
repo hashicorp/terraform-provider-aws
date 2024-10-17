@@ -49,7 +49,7 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_description", rName),
 					resource.TestCheckResourceAttr(resourceName, "tier", "NotApplicable"),
 					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", "AnyLocation"),
@@ -104,7 +104,7 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
-					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_description", rName),
 					resource.TestCheckResourceAttr(resourceName, "tier", "NotApplicable"),
 					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", "AnyLocation"),
@@ -132,7 +132,7 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
 					testAccCheckResiliencyPolicyNotRecreated(&policy1, &policy2),
-					resource.TestCheckResourceAttr(resourceName, "policy_name", updatedPolicyName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, updatedPolicyName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
 				),
 			},
@@ -206,7 +206,7 @@ func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
-					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Value", "Other"),
@@ -224,7 +224,7 @@ func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
-					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
@@ -235,7 +235,7 @@ func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
 					testAccCheckResiliencyPolicyNotRecreated(&policy1, &policy2),
-					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -369,7 +369,7 @@ func testAccCheckResiliencyPolicyNotRecreated(before, after *resiliencehub.Descr
 func testAccResiliencyPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name = %[1]q
+  name = %[1]q
 
   policy_description = %[1]q
 
@@ -407,7 +407,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_updatePolicyName(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name = %[1]q
+  name = %[1]q
 
   policy_description = "testAccResiliencyPolicyConfig_updatePolicyName"
 
@@ -444,7 +444,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_updatePolicyDescription(rName, resPolicyDescValue string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name = %[1]q
+  name = %[1]q
 
   policy_description = %[2]q
 
@@ -482,7 +482,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_updateDataLocationConstraint(rName, resDataLocConstValue string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name = %[1]q
+  name = %[1]q
 
   policy_description = %[1]q
 
@@ -520,7 +520,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_updateTier(rName, resTierValue string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name = %[1]q
+  name = %[1]q
 
   policy_description = %[1]q
 
@@ -558,7 +558,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_updatePolicy(rName, resPolicyObjValue string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name = %[1]q
+  name = %[1]q
 
   policy_description = %[1]q
 
@@ -596,7 +596,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name = %[1]q
+  name = %[1]q
 
   policy_description = %[1]q
 
@@ -633,7 +633,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 func testAccResiliencyPolicyConfig_tag2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
-  policy_name = %[1]q
+  name = %[1]q
 
   policy_description = %[1]q
 
