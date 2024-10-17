@@ -28,6 +28,9 @@ import (
 
 // @SDKResource("aws_backup_framework", name="Framework")
 // @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeFrameworkOutput")
+// @Testing(generator="randomFrameworkName()")
 func resourceFramework() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFrameworkCreate,

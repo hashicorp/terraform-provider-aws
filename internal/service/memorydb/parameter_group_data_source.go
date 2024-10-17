@@ -64,7 +64,7 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 

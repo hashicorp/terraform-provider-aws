@@ -31,6 +31,8 @@ import (
 
 // @SDKResource("aws_backup_vault", name="Vault")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeBackupVaultOutput")
+// @Testing(importIgnore="force_destroy")
 func resourceVault() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultCreate,

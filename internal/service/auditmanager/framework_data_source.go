@@ -165,7 +165,7 @@ func (rd *dataSourceFrameworkData) refreshFromOutput(ctx context.Context, meta *
 	rd.FrameworkType = flex.StringValueToFramework(ctx, out.Type)
 	rd.ARN = flex.StringToFramework(ctx, out.Arn)
 
-	ignoreTagsConfig := meta.IgnoreTagsConfig
+	ignoreTagsConfig := meta.IgnoreTagsConfig(ctx)
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	rd.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 

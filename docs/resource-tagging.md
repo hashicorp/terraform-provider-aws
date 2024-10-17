@@ -407,7 +407,7 @@ In the resource `Read` operation, implement the logic to convert the service tag
     ```go
     // Typically declared near conn := /*...*/
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
     /* ... other d.Set(...) logic ... */
 
@@ -429,7 +429,7 @@ use the generated `listTags` function, e.g., with Athena Workgroups:
     ```go
     // Typically declared near conn := /*...*/
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
     /* ... other d.Set(...) logic ... */
 

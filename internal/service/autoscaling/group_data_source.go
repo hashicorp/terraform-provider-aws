@@ -567,7 +567,7 @@ func dataSourceGroup() *schema.Resource {
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	groupName := d.Get(names.AttrName).(string)
 	group, err := findGroupByName(ctx, conn, groupName)

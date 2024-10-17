@@ -200,7 +200,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 	arnPrefix := strings.TrimSuffix(aws.ToString(jd.JobDefinitionArn), fmt.Sprintf(":%d", aws.ToInt32(jd.Revision)))
 	data.ARNPrefix = types.StringValue(arnPrefix)
 
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 	tags := KeyValueTags(ctx, jd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 

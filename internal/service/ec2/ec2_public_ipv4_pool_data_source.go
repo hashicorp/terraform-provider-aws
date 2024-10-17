@@ -74,7 +74,7 @@ func dataSourcePublicIPv4Pool() *schema.Resource {
 func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	poolID := d.Get("pool_id").(string)
 	pool, err := findPublicIPv4PoolByID(ctx, conn, poolID)

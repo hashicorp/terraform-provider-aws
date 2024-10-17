@@ -16,6 +16,9 @@ import (
 )
 
 // @SDKDataSource("aws_backup_framework", name="Framework")
+// @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
+// @Testing(generator="randomFrameworkName()")
 func dataSourceFramework() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFrameworkRead,
@@ -104,7 +107,6 @@ func dataSourceFramework() *schema.Resource {
 func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
 	output, err := findFrameworkByName(ctx, conn, name)
@@ -123,16 +125,6 @@ func dataSourceFrameworkRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set(names.AttrDescription, output.FrameworkDescription)
 	d.Set(names.AttrName, output.FrameworkName)
 	d.Set(names.AttrStatus, output.FrameworkStatus)
-
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Framework (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

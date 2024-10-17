@@ -154,14 +154,13 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// Set tags
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	tags, err := listTags(ctx, conn, aws.ToString(out.Arn))
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, DSNameListener, d.Id(), err)
 	}
 
-	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, DSNameListener, d.Id(), err)
 	}
