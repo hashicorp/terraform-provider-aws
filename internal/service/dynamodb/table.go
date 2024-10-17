@@ -2436,11 +2436,11 @@ func expandOnDemandThroughput(tfMap map[string]interface{}) *awstypes.OnDemandTh
 
 	apiObject := &awstypes.OnDemandThroughput{}
 
-	if v, ok := tfMap["max_read_request_units"].(int); ok {
+	if v, ok := tfMap["max_read_request_units"].(int); ok && v != 0 {
 		apiObject.MaxReadRequestUnits = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_write_request_units"].(int); ok {
+	if v, ok := tfMap["max_write_request_units"].(int); ok && v != 0 {
 		apiObject.MaxWriteRequestUnits = aws.Int64(int64(v))
 	}
 
