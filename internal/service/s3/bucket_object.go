@@ -234,7 +234,7 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
-	if output.SSEKMSKeyId != nil {
+	if output.SSEKMSKeyId != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set(names.AttrKMSKeyID, output.SSEKMSKeyId)
 	}
 	d.Set("metadata", output.Metadata)
