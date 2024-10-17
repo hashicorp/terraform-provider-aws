@@ -43,9 +43,11 @@ func testAccDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.auto_mount_home_efs", "Enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.execution_role", "aws_iam_role.test", names.AttrARN),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tag_propagation", "DISABLED"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, "aws_vpc.test", names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_id"),
@@ -437,6 +439,39 @@ func testAccDomain_directDeploySettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.direct_deploy_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.direct_deploy_settings.0.status", "DISABLED"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_emrServerlessSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_emrServerlessSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.emr_serverless_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.canvas_app_settings.0.emr_serverless_settings.0.status", "ENABLED"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.canvas_app_settings.0.emr_serverless_settings.0.execution_role_arn", "aws_iam_role.test", names.AttrARN),
 				),
 			},
 			{
@@ -870,6 +905,114 @@ func testAccDomain_jupyterLabAppSettings(t *testing.T) {
 	})
 }
 
+func testAccDomain_jupyterLabAppSettingsEMRSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_jupyterLabAppSettingsEMRSettings(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.emr_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.emr_settings.0.assumable_role_arns.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.emr_settings.0.assumable_role_arns.*", "aws_iam_role.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.emr_settings.0.execution_role_arns.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.emr_settings.0.execution_role_arns.*", "aws_iam_role.test", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_jupyterLabAppSettingsAppLifecycle(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_jupyterLabAppSettingsAppLifecycle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.idle_timeout_in_minutes", "75"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.min_idle_timeout_in_minutes", "60"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.max_idle_timeout_in_minutes", "90"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.lifecycle_management", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
+func testAccDomain_jupyterLabAppSettingsBuiltInLifecycle(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfigjupyterLabAppSettingsBuiltInLifecycle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.built_in_lifecycle_config_arn", "aws_sagemaker_studio_lifecycle_config.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+		},
+	})
+}
+
 func testAccDomain_kernelGatewayAppSettings_lifecycleConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
@@ -1114,6 +1257,7 @@ func testAccDomain_defaultUserSettingsUpdated(t *testing.T) {
 				Config: testAccDomainConfig_sharingSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "app_network_access_type", "VpcOnly"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.sharing_settings.0.notebook_output_option", "Allowed"),
@@ -1317,6 +1461,49 @@ func testAccDomain_studioWebPortalSettings_hiddenAppTypes(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "JupyterServer"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "KernelGateway"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_app_types.*", "CodeEditor"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDomain_studioWebPortalSettings_hiddenInstanceTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_studioWebPortalSettings_hiddenInstanceTypes(rName, []string{"ml.m5.8xlarge", "ml.m5.12xlarge"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_instance_types.*", "ml.m5.8xlarge"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_instance_types.*", "ml.m5.12xlarge"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_studioWebPortalSettings_hiddenInstanceTypes(rName, []string{"ml.m5.8xlarge", "ml.m5.12xlarge", "ml.m5.16xlarge"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_instance_types.*", "ml.m5.8xlarge"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_instance_types.*", "ml.m5.12xlarge"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "default_user_settings.0.studio_web_portal_settings.0.hidden_instance_types.*", "ml.m5.16xlarge"),
 				),
 			},
 		},
@@ -1860,10 +2047,11 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_sagemaker_domain" "test" {
-  domain_name = %[1]q
-  auth_mode   = "IAM"
-  vpc_id      = aws_vpc.test.id
-  subnet_ids  = aws_subnet.test[*].id
+  domain_name             = %[1]q
+  auth_mode               = "IAM"
+  vpc_id                  = aws_vpc.test.id
+  subnet_ids              = aws_subnet.test[*].id
+  app_network_access_type = "VpcOnly"
 
   default_user_settings {
     execution_role = aws_iam_role.test.arn
@@ -1996,6 +2184,32 @@ resource "aws_sagemaker_domain" "test" {
     canvas_app_settings {
       direct_deploy_settings {
         status = "DISABLED"
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_emrServerlessSettings(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    canvas_app_settings {
+      emr_serverless_settings {
+        execution_role_arn = aws_iam_role.test.arn
+        status             = "ENABLED"
       }
     }
   }
@@ -2485,6 +2699,102 @@ resource "aws_sagemaker_domain" "test" {
 `, rName))
 }
 
+func testAccDomainConfig_jupyterLabAppSettingsEMRSettings(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    jupyter_lab_app_settings {
+      default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+      emr_settings {
+        assumable_role_arns = [aws_iam_role.test.arn]
+        execution_role_arns = [aws_iam_role.test.arn]
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_jupyterLabAppSettingsAppLifecycle(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    jupyter_lab_app_settings {
+      app_lifecycle_management {
+        idle_settings {
+          idle_timeout_in_minutes     = 75
+          lifecycle_management        = "ENABLED"
+          max_idle_timeout_in_minutes = 90
+          min_idle_timeout_in_minutes = 60
+        }
+      }
+      default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfigjupyterLabAppSettingsBuiltInLifecycle(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_studio_lifecycle_config" "test" {
+  studio_lifecycle_config_name     = %[1]q
+  studio_lifecycle_config_app_type = "JupyterServer"
+  studio_lifecycle_config_content  = base64encode("echo Hello")
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    jupyter_lab_app_settings {
+      default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+
+      built_in_lifecycle_config_arn = aws_sagemaker_studio_lifecycle_config.test.arn
+      lifecycle_config_arns         = [aws_sagemaker_studio_lifecycle_config.test.arn]
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
 func testAccDomainConfig_defaultSpaceKernelGatewayAppSettings(rName, instance string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_domain" "test" {
@@ -2745,6 +3055,36 @@ resource "aws_sagemaker_domain" "test" {
   }
 }
 `, rName, hiddenAppTypesString))
+}
+
+func testAccDomainConfig_studioWebPortalSettings_hiddenInstanceTypes(rName string, hiddenInstanceTypes []string) string {
+	var hiddenInstanceTypesString string
+	for i, instanceType := range hiddenInstanceTypes {
+		if i > 0 {
+			hiddenInstanceTypesString += ", "
+		}
+		hiddenInstanceTypesString += fmt.Sprintf("%q", instanceType)
+	}
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
+    studio_web_portal_settings {
+      hidden_instance_types = [%[2]s]
+    }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, hiddenInstanceTypesString))
 }
 
 func testAccDomainConfig_studioWebPortalSettings_hiddenMlTools(rName string, hiddenMlTools []string) string {
