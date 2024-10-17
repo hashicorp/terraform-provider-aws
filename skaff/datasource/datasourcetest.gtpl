@@ -187,7 +187,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "{{ .ServicePackage }}", regexache.MustCompile(`{{ .DataSourceLower }}:.+$`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "{{ .ServicePackage }}", regexache.MustCompile(`{{ .DataSourceLower }}:.+$`)),
 				),
 			},
 		},
