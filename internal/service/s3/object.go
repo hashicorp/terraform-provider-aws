@@ -301,7 +301,9 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
-	d.Set(names.AttrKMSKeyID, output.SSEKMSKeyId)
+	if output.SSEKMSKeyId != nil {
+		d.Set(names.AttrKMSKeyID, output.SSEKMSKeyId)
+	}
 	d.Set("metadata", output.Metadata)
 	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", output.ObjectLockMode)
