@@ -444,15 +444,11 @@ func (r *resourceResiliencyPolicy) ModifyPlan(ctx context.Context, request resou
 }
 
 const (
-	resiliencyPolicyTypeAZ       = "AZ"
-	resiliencyPolicyTypeHardware = "Hardware"
-	resiliencyPolicyTypeSoftware = "Software"
-	resiliencyPolicyTypeRegion   = "Region"
-	statusChangePending          = "Pending"
-	statusDeleting               = "Deleting"
-	statusNormal                 = "Normal"
-	statusUpdated                = "Updated"
-	statusCompleted              = "Completed"
+	statusChangePending = "Pending"
+	statusDeleting      = "Deleting"
+	statusNormal        = "Normal"
+	statusUpdated       = "Updated"
+	statusCompleted     = "Completed"
 )
 
 func waitResiliencyPolicyCreated(ctx context.Context, conn *resiliencehub.Client, arn string, timeout time.Duration) (*awstypes.ResiliencyPolicy, error) {
@@ -555,11 +551,11 @@ func (m *resourceResiliencyPolicyModel) expandPolicy(ctx context.Context, in *re
 
 	// Policy key case must be modified to align with key case in CreateResiliencyPolicy API documentation.
 	// See https://docs.aws.amazon.com/resilience-hub/latest/APIReference/API_CreateResiliencyPolicy.html
-	failurePolicyKeyMap := map[string]fwtypes.ObjectValueOf[resourceResiliencyObjectiveModel]{
-		resiliencyPolicyTypeAZ:       m.AZ,
-		resiliencyPolicyTypeHardware: m.Hardware,
-		resiliencyPolicyTypeSoftware: m.Software,
-		resiliencyPolicyTypeRegion:   m.Region}
+	failurePolicyKeyMap := map[awstypes.TestType]fwtypes.ObjectValueOf[resourceResiliencyObjectiveModel]{
+		awstypes.TestTypeAz:       m.AZ,
+		awstypes.TestTypeHardware: m.Hardware,
+		awstypes.TestTypeSoftware: m.Software,
+		awstypes.TestTypeRegion:   m.Region}
 
 	for k, v := range failurePolicyKeyMap {
 		if !v.IsNull() {
@@ -568,7 +564,7 @@ func (m *resourceResiliencyPolicyModel) expandPolicy(ctx context.Context, in *re
 			if diags.HasError() {
 				return diags
 			}
-			failurePolicy[k] = awstypes.FailurePolicy{
+			failurePolicy[string(k)] = awstypes.FailurePolicy{
 				RpoInSecs: resObjModel.RpoInSecs.ValueInt32(),
 				RtoInSecs: resObjModel.RtoInSecs.ValueInt32(),
 			}
@@ -585,8 +581,8 @@ func (m *resourceResiliencyPolicyData) flattenPolicy(ctx context.Context, failur
 		m.Policy = fwtypes.NewObjectValueOfNull[resourceResiliencyPolicyModel](ctx)
 	}
 
-	newResObjModel := func(policyType string, failurePolicy map[string]awstypes.FailurePolicy) fwtypes.ObjectValueOf[resourceResiliencyObjectiveModel] {
-		if pv, exists := failurePolicy[policyType]; exists {
+	newResObjModel := func(policyType awstypes.TestType, failurePolicy map[string]awstypes.FailurePolicy) fwtypes.ObjectValueOf[resourceResiliencyObjectiveModel] {
+		if pv, exists := failurePolicy[string(policyType)]; exists {
 			return fwtypes.NewObjectValueOfMust(ctx, &resourceResiliencyObjectiveModel{
 				RpoInSecs: types.Int32Value(pv.RpoInSecs),
 				RtoInSecs: types.Int32Value(pv.RtoInSecs)})
@@ -596,10 +592,10 @@ func (m *resourceResiliencyPolicyData) flattenPolicy(ctx context.Context, failur
 	}
 
 	m.Policy = fwtypes.NewObjectValueOfMust(ctx, &resourceResiliencyPolicyModel{
-		newResObjModel(resiliencyPolicyTypeAZ, failurePolicy),
-		newResObjModel(resiliencyPolicyTypeHardware, failurePolicy),
-		newResObjModel(resiliencyPolicyTypeSoftware, failurePolicy),
-		newResObjModel(resiliencyPolicyTypeRegion, failurePolicy),
+		newResObjModel(awstypes.TestTypeAz, failurePolicy),
+		newResObjModel(awstypes.TestTypeHardware, failurePolicy),
+		newResObjModel(awstypes.TestTypeSoftware, failurePolicy),
+		newResObjModel(awstypes.TestTypeRegion, failurePolicy),
 	})
 }
 
