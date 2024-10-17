@@ -21,10 +21,6 @@ resource "aws_backup_report_plan" "test" {
 
 # testAccReportPlanConfig_base
 
-data "aws_region" "current" {}
-
-data "aws_caller_identity" "current" {}
-
 resource "aws_s3_bucket" "test" {
   bucket = local.bucket_name
 }

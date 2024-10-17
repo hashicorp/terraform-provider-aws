@@ -293,10 +293,6 @@ func testAccCheckReportPlanExists(ctx context.Context, n string, v *awstypes.Rep
 
 func testAccReportPlanConfig_base(bucketName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-data "aws_caller_identity" "current" {}
-
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -387,5 +383,9 @@ resource "aws_backup_report_plan" "test" {
     "Name" = "Test Report Plan"
   }
 }
+
+data "aws_region" "current" {}
+
+data "aws_caller_identity" "current" {}
 `, rName2, label))
 }
