@@ -36,6 +36,7 @@ var (
 	EmptyDescription                          = emptyDescription
 	EngineMemcached                           = engineMemcached
 	EngineRedis                               = engineRedis
+	EngineValkey                              = engineValkey
 	EngineVersionForceNewOnDowngrade          = engineVersionForceNewOnDowngrade
 	EngineVersionIsDowngrade                  = engineVersionIsDowngrade
 	GlobalReplicationGroupRegionPrefixFormat  = globalReplicationGroupRegionPrefixFormat
@@ -44,6 +45,7 @@ var (
 	ValidateClusterEngineVersion              = validateClusterEngineVersion
 	ValidMemcachedVersionString               = validMemcachedVersionString
 	ValidRedisVersionString                   = validRedisVersionString
+	ValidValkeyVersionString                  = validValkeyVersionString
 )
 
 type (
