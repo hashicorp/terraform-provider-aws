@@ -124,7 +124,6 @@ func resourceReplicationGroup() *schema.Resource {
 			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				Default:      engineRedis,
 				ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
 			},
@@ -399,6 +398,15 @@ func resourceReplicationGroup() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			replicationGroupValidateMultiAZAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
+			customdiff.ForceNewIf(names.AttrEngine, func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				if !diff.HasChange(names.AttrEngine) {
+					return false
+				}
+				if old, new := diff.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
+					return false
+				}
+				return true
+			}),
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("num_cache_clusters") ||
 					diff.HasChange("num_node_groups") ||
@@ -657,6 +665,8 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("global_replication_group_id", rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId)
 	}
 
+	d.Set(names.AttrEngine, rgp.Engine)
+
 	switch rgp.AutomaticFailover {
 	case awstypes.AutomaticFailoverStatusDisabled, awstypes.AutomaticFailoverStatusDisabling:
 		d.Set("automatic_failover_enabled", false)
@@ -824,7 +834,10 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			requestUpdate = true
 		}
 
-		if d.HasChange(names.AttrEngine) {
+		if old, new := d.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
+			if !d.HasChange(names.AttrEngineVersion) {
+				return sdkdiag.AppendErrorf(diags, "must explicitly set '%s' attribute for Replication Group (%s) when updating engine to 'valkey'", names.AttrEngineVersion, d.Id())
+			}
 			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
 			requestUpdate = true
 		}

@@ -141,7 +141,7 @@ func resourceCluster() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ExactlyOneOf: []string{names.AttrEngine, "replication_group_id"},
-				ValidateFunc: validation.StringInSlice(engine_Values(), false),
+				ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis}, false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -978,7 +978,6 @@ func (b byCacheNodeId) Less(i, j int) bool {
 func setFromCacheCluster(d *schema.ResourceData, c *awstypes.CacheCluster) error {
 	d.Set("node_type", c.CacheNodeType)
 
-	d.Set(names.AttrEngine, c.Engine)
 	switch aws.ToString(c.Engine) {
 	case engineValkey:
 		if err := setEngineVersionValkey(d, c.EngineVersion); err != nil {

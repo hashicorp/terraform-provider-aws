@@ -372,6 +372,15 @@ func TestAccElastiCacheReplicationGroup_Engine_RedisToValkey(t *testing.T) {
 					testAccCheckReplicationGroupNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
 				),
+				ExpectError: regexache.MustCompile("must explicitly set 'engine_version' attribute"),
+			},
+			{
+				Config: testAccReplicationGroupConfig_update_Valkey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &v2),
+					testAccCheckReplicationGroupNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+				),
 			},
 		},
 	})
@@ -3281,6 +3290,23 @@ resource "aws_elasticache_replication_group" "test" {
   engine               = %[2]q
 }
 `, rName, engine)
+}
+
+func testAccReplicationGroupConfig_update_Valkey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+  port                 = 6379
+  apply_immediately    = true
+  maintenance_window   = "tue:06:30-tue:07:30"
+  snapshot_window      = "01:00-02:00"
+  engine               = "valkey"
+  engine_version       = "7.2"
+  #parameter_group_name = "default.valkey7"
+}
+`, rName)
 }
 
 func testAccReplicationGroupConfig_cacheClustersConflictsWithReplicasPerNodeGroup(rName string) string {
