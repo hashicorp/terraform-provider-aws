@@ -77,7 +77,7 @@ func testAccSlackChannelConfiguration_basic(t *testing.T) {
 			{
 				ResourceName:                         testResourceSlackChannelConfiguration,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccSlackChannelConfigurationImportStateIDFunc(testResourceSlackChannelConfiguration),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(testResourceSlackChannelConfiguration, "chat_configuration_arn"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "chat_configuration_arn",
 			},
@@ -174,17 +174,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccSlackChannelConfigurationImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["chat_configuration_arn"], nil
 	}
 }
 
