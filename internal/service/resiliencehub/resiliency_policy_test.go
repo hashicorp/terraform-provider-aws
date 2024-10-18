@@ -305,7 +305,7 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
-	expectARNChange := statecheck.CompareValue(compare.ValuesDiffer())
+	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
 
 	const (
 		initialDuration = "3600"
@@ -336,7 +336,7 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", initialDuration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -365,11 +365,11 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedDuration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -394,11 +394,11 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedDuration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -423,7 +423,7 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
-	expectARNChange := statecheck.CompareValue(compare.ValuesDiffer())
+	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
 
 	const (
 		initialDuration = "3600"
@@ -454,7 +454,7 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", initialDuration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -483,11 +483,11 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedDuration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},
@@ -512,11 +512,11 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedDuration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
-					expectARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
 				},
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
 			},

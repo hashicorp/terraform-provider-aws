@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -70,7 +69,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 			Required:    true,
 			PlanModifiers: []planmodifier.Int32{
 				int32planmodifier.UseStateForUnknown(),
-				int32planmodifier.RequiresReplace(),
 			},
 			Validators: []validator.Int32{
 				int32validator.AtLeast(0),
@@ -81,7 +79,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 			Required:    true,
 			PlanModifiers: []planmodifier.Int32{
 				int32planmodifier.UseStateForUnknown(),
-				int32planmodifier.RequiresReplace(),
 			},
 			Validators: []validator.Int32{
 				int32validator.AtLeast(0),
@@ -134,9 +131,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 				Description: "Specifies the estimated cost tier of the resiliency policy.",
 				CustomType:  fwtypes.StringEnumType[awstypes.EstimatedCostTier](),
 				Computed:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -145,9 +139,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 			names.AttrPolicy: schema.SingleNestedBlock{
 				Description: "The resiliency failure policy.",
 				CustomType:  fwtypes.NewObjectTypeOf[resourceResiliencyPolicyModel](ctx),
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
 				},
@@ -155,9 +146,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 					"az": schema.SingleNestedBlock{
 						CustomType:  fwtypes.NewObjectTypeOf[resourceResiliencyObjectiveModel](ctx),
 						Description: "The RTO and RPO target to measure resiliency for potential availability zone disruptions.",
-						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.RequiresReplace(),
-						},
 						Validators: []validator.Object{
 							objectvalidator.IsRequired(),
 						},
@@ -166,9 +154,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 					"hardware": schema.SingleNestedBlock{
 						CustomType:  fwtypes.NewObjectTypeOf[resourceResiliencyObjectiveModel](ctx),
 						Description: "The RTO and RPO target to measure resiliency for potential infrastructure disruptions.",
-						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.RequiresReplace(),
-						},
 						Validators: []validator.Object{
 							objectvalidator.IsRequired(),
 						},
@@ -177,9 +162,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 					"software": schema.SingleNestedBlock{
 						CustomType:  fwtypes.NewObjectTypeOf[resourceResiliencyObjectiveModel](ctx),
 						Description: "The RTO and RPO target to measure resiliency for potential application disruptions.",
-						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.RequiresReplace(),
-						},
 						Validators: []validator.Object{
 							objectvalidator.IsRequired(),
 						},
@@ -188,9 +170,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 					names.AttrRegion: schema.SingleNestedBlock{
 						CustomType:  fwtypes.NewObjectTypeOf[resourceResiliencyObjectiveModel](ctx),
 						Description: "The RTO and RPO target to measure resiliency for potential region disruptions.",
-						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.RequiresReplace(),
-						},
 						Validators: []validator.Object{
 							objectvalidator.AlsoRequires(
 								path.MatchRelative().AtName("rto_in_secs"),
@@ -203,7 +182,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 								Optional:    true,
 								PlanModifiers: []planmodifier.Int32{
 									int32planmodifier.UseStateForUnknown(),
-									int32planmodifier.RequiresReplace(),
 								},
 								Validators: []validator.Int32{
 									int32validator.AtLeast(0),
@@ -214,7 +192,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 								Optional:    true,
 								PlanModifiers: []planmodifier.Int32{
 									int32planmodifier.UseStateForUnknown(),
-									int32planmodifier.RequiresReplace(),
 								},
 								Validators: []validator.Int32{
 									int32validator.AtLeast(0),
@@ -256,10 +233,12 @@ func (r *resourceResiliencyPolicy) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	resp.Diagnostics.Append(planPolicyModel.expandPolicy(ctx, &in)...)
+	p, d := planPolicyModel.expandPolicy(ctx)
+	resp.Diagnostics.Append(d...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	in.Policy = p
 
 	in.Tags = getTagsIn(ctx)
 
@@ -279,7 +258,6 @@ func (r *resourceResiliencyPolicy) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	// plan.PolicyARN = flex.StringToFramework(ctx, out.Policy.PolicyArn)
 	arn := aws.ToString(out.Policy.PolicyArn)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
@@ -350,16 +328,15 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	if !plan.PolicyDescription.Equal(state.PolicyDescription) ||
-		!plan.DataLocationConstraint.Equal(state.DataLocationConstraint) ||
-		!plan.Tier.Equal(state.Tier) ||
-		!plan.PolicyName.Equal(state.PolicyName) {
+	diff, d := flex.Calculate(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
 		in := resiliencehub.UpdateResiliencyPolicyInput{
 			PolicyArn: flex.StringFromFramework(ctx, plan.PolicyARN),
-		}
-
-		if !plan.PolicyName.Equal(state.PolicyName) {
-			in.PolicyName = flex.StringFromFramework(ctx, plan.PolicyName)
 		}
 
 		if !plan.PolicyDescription.Equal(state.PolicyDescription) {
@@ -368,6 +345,24 @@ func (r *resourceResiliencyPolicy) Update(ctx context.Context, req resource.Upda
 
 		if !plan.DataLocationConstraint.Equal(state.DataLocationConstraint) {
 			in.DataLocationConstraint = plan.DataLocationConstraint.ValueEnum()
+		}
+
+		if !plan.Policy.Equal(state.Policy) {
+			planPolicyModel, d := plan.Policy.ToPtr(ctx)
+			resp.Diagnostics.Append(d...)
+			if d.HasError() {
+				return
+			}
+			p, d := planPolicyModel.expandPolicy(ctx)
+			resp.Diagnostics.Append(d...)
+			if d.HasError() {
+				return
+			}
+			in.Policy = p
+		}
+
+		if !plan.PolicyName.Equal(state.PolicyName) {
+			in.PolicyName = flex.StringFromFramework(ctx, plan.PolicyName)
 		}
 
 		if !plan.Tier.Equal(state.Tier) {
@@ -542,11 +537,7 @@ func findResiliencyPolicyByARN(ctx context.Context, conn *resiliencehub.Client, 
 	return out.Policy, nil
 }
 
-func (m *resourceResiliencyPolicyModel) expandPolicy(ctx context.Context, in *resiliencehub.CreateResiliencyPolicyInput) (diags diag.Diagnostics) {
-	if in == nil {
-		return diags
-	}
-
+func (m *resourceResiliencyPolicyModel) expandPolicy(ctx context.Context) (result map[string]awstypes.FailurePolicy, diags diag.Diagnostics) {
 	failurePolicy := make(map[string]awstypes.FailurePolicy)
 
 	// Policy key case must be modified to align with key case in CreateResiliencyPolicy API documentation.
@@ -562,7 +553,7 @@ func (m *resourceResiliencyPolicyModel) expandPolicy(ctx context.Context, in *re
 			resObjModel, d := v.ToPtr(ctx)
 			diags.Append(d...)
 			if diags.HasError() {
-				return diags
+				return result, diags
 			}
 			failurePolicy[string(k)] = awstypes.FailurePolicy{
 				RpoInSecs: resObjModel.RpoInSecs.ValueInt32(),
@@ -571,9 +562,9 @@ func (m *resourceResiliencyPolicyModel) expandPolicy(ctx context.Context, in *re
 		}
 	}
 
-	in.Policy = failurePolicy
+	result = failurePolicy
 
-	return diags
+	return result, diags
 }
 
 func (m *resourceResiliencyPolicyData) flattenPolicy(ctx context.Context, failurePolicy map[string]awstypes.FailurePolicy) {
