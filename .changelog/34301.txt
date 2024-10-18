@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_iam_access_key: Improve `pgp_key` argument to support GPG key sourced from Github
+resource/aws_iam_user_login_profile: Improve `pgp_key` argument to support GPG key sourced from Github
+```
