@@ -67,6 +67,10 @@ func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:c
 	return c.awsConfig.Copy()
 }
 
+func (c *AWSClient) AwsSession(context.Context) *session_sdkv1.Session { // nosemgrep:ci.aws-in-func-name
+	return c.session.Copy()
+}
+
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com
 // The prefix should not contain a trailing period.
@@ -233,7 +237,6 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 		"aws_sdkv2_config": c.awsConfig,
 		"endpoint":         c.resolveEndpoint(ctx, servicePackageName),
 		"partition":        c.Partition,
-		"session":          c.session,
 	}
 	switch servicePackageName {
 	case names.S3:
