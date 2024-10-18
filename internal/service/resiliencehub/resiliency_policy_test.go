@@ -79,74 +79,6 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 	})
 }
 
-func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_resiliencehub_resiliency_policy.test"
-
-	updatedPolicyObjValue := "86400"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccResiliencyPolicyConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
-					resource.TestCheckResourceAttr(resourceName, "tier", "NotApplicable"),
-					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", "AnyLocation"),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", "3600"),
-					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo_in_secs"),
-					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto_in_secs"),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
-				),
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-			{
-				Config: testAccResiliencyPolicyConfig_updatePolicy(rName, updatedPolicyObjValue),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", updatedPolicyObjValue),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", updatedPolicyObjValue),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", updatedPolicyObjValue),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", updatedPolicyObjValue),
-					resource.TestCheckResourceAttr(resourceName, "policy.region.rpo_in_secs", updatedPolicyObjValue),
-					resource.TestCheckResourceAttr(resourceName, "policy.region.rto_in_secs", updatedPolicyObjValue),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", updatedPolicyObjValue),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedPolicyObjValue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
-				),
-			},
-		},
-	})
-}
-
 func TestAccResilienceHubResiliencyPolicy_dataLocationConstraint(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -349,6 +281,242 @@ func TestAccResilienceHubResiliencyPolicy_name(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehub_resiliency_policy.test"
+
+	expectARNChange := statecheck.CompareValue(compare.ValuesDiffer())
+
+	const (
+		initialDuration = "3600"
+		updatedDuration = "86400"
+	)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResiliencyPolicyConfig_policy(rName, initialDuration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", initialDuration),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo_in_secs"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto_in_secs"),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", initialDuration),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccResiliencyPolicyConfig_policy(rName, updatedDuration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", updatedDuration),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo_in_secs"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto_in_secs"),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedDuration),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccResiliencyPolicyConfig_policyWithRegion(rName, updatedDuration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.region.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.region.rto_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedDuration),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehub_resiliency_policy.test"
+
+	expectARNChange := statecheck.CompareValue(compare.ValuesDiffer())
+
+	const (
+		initialDuration = "3600"
+		updatedDuration = "86400"
+	)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResiliencyPolicyConfig_policyWithRegion(rName, initialDuration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.region.rpo_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.region.rto_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", initialDuration),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccResiliencyPolicyConfig_policyWithRegion(rName, updatedDuration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.region.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.region.rto_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedDuration),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccResiliencyPolicyConfig_policy(rName, updatedDuration),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", updatedDuration),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo_in_secs"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto_in_secs"),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedDuration),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
 			},
@@ -705,42 +873,58 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 `, rName, tier)
 }
 
-func testAccResiliencyPolicyConfig_updatePolicy(rName, resPolicyObjValue string) string {
+func testAccResiliencyPolicyConfig_policy(rName, duration string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
   name = %[1]q
 
-  description = %[1]q
+  tier = "NotApplicable"
+
+  policy {
+    az {
+      rpo_in_secs = %[2]s
+      rto_in_secs = %[2]s
+    }
+    hardware {
+      rpo_in_secs = %[2]s
+      rto_in_secs = %[2]s
+    }
+    software {
+      rpo_in_secs = %[2]s
+      rto_in_secs = %[2]s
+    }
+  }
+}
+`, rName, duration)
+}
+
+func testAccResiliencyPolicyConfig_policyWithRegion(rName, duration string) string {
+	return fmt.Sprintf(`
+resource "aws_resiliencehub_resiliency_policy" "test" {
+  name = %[1]q
 
   tier = "NotApplicable"
 
-  data_location_constraint = "AnyLocation"
-
   policy {
-    region {
-      rpo_in_secs = %[2]q
-      rto_in_secs = %[2]q
-    }
     az {
-      rpo_in_secs = %[2]q
-      rto_in_secs = %[2]q
+      rpo_in_secs = %[2]s
+      rto_in_secs = %[2]s
     }
     hardware {
-      rpo_in_secs = %[2]q
-      rto_in_secs = %[2]q
+      rpo_in_secs = %[2]s
+      rto_in_secs = %[2]s
+    }
+    region {
+      rpo_in_secs = %[2]s
+      rto_in_secs = %[2]s
     }
     software {
-      rpo_in_secs = %[2]q
-      rto_in_secs = %[2]q
+      rpo_in_secs = %[2]s
+      rto_in_secs = %[2]s
     }
   }
-
-  tags = {
-    Name  = %[1]q
-    Value = "Other"
-  }
 }
-`, rName, resPolicyObjValue)
+`, rName, duration)
 }
 
 func testAccResiliencyPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
