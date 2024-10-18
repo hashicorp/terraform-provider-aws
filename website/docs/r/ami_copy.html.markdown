@@ -40,6 +40,7 @@ resource "aws_ami_copy" "example" {
 This resource supports the following arguments:
 
 * `name` - (Required) Region-unique name for the AMI.
+* `description` - (Optional) Longer, human-readable description for the AMI in the destination region.
 * `source_ami_id` - (Required) Id of the AMI to copy. This id must be valid in the region
   given by `source_ami_region`.
 * `source_ami_region` - (Required) Region from which the AMI will be copied. This may be the
