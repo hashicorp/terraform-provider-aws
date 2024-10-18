@@ -26,8 +26,8 @@ import (
 
 func main() {
 	const (
-		filename                  = `service_package_gen.go`
-		endpointResolverFilenamne = `service_endpoint_resolver_gen.go`
+		filename                 = `service_package_gen.go`
+		endpointResolverFilename = `service_endpoint_resolver_gen.go`
 	)
 	g := common.NewGenerator()
 
@@ -101,17 +101,17 @@ func main() {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 
-		if p != "meta" {
-			g.Infof("Generating internal/service/%s/%s", servicePackage, endpointResolverFilenamne)
+		if p != "meta" && !l.IsClientSDKV1() {
+			g.Infof("Generating internal/service/%s/%s", servicePackage, endpointResolverFilename)
 
-			d = g.NewGoFileDestination(endpointResolverFilenamne)
+			d = g.NewGoFileDestination(endpointResolverFilename)
 
 			if err := d.WriteTemplate("endpointresolver", endpointResolverTmpl, s); err != nil {
 				g.Fatalf("error generating %s endpoint resolver: %s", p, err)
 			}
 
 			if err := d.Write(); err != nil {
-				g.Fatalf("generating file (%s): %s", endpointResolverFilenamne, err)
+				g.Fatalf("generating file (%s): %s", endpointResolverFilename, err)
 			}
 		}
 
