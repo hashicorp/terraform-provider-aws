@@ -52,7 +52,7 @@ func TestAccIAMRolePoliciesExclusive_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccRolePoliciesExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "role_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "role_name",
 			},
@@ -129,7 +129,7 @@ func TestAccIAMRolePoliciesExclusive_multiple(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccRolePoliciesExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "role_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "role_name",
 			},
@@ -303,17 +303,6 @@ func testAccCheckRolePoliciesExclusiveExists(ctx context.Context, name string) r
 		}
 
 		return nil
-	}
-}
-
-func testAccRolePoliciesExclusiveImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["role_name"], nil
 	}
 }
 
