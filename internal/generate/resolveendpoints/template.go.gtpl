@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName string) string {
+func (c *AWSClient) ResolveEndpoint(ctx context.Context, servicePackageName string) string {
 	endpoint := c.endpoints[servicePackageName]
 	if endpoint != "" {
 		return endpoint
