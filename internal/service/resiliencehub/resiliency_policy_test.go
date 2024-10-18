@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehub"
-	"github.com/aws/aws-sdk-go-v2/service/resiliencehub/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehub/types"
 	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -692,7 +691,7 @@ func testAccCheckResiliencyPolicyDestroy(ctx context.Context) resource.TestCheck
 				PolicyArn: aws.String(rs.Primary.Attributes[names.AttrARN]),
 			}
 			_, err := conn.DescribeResiliencyPolicy(ctx, input)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
