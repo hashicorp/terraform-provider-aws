@@ -29,7 +29,7 @@ func sweepDomains(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.SimpleDBConn(ctx)
+	conn := simpleDBConn(ctx, client)
 	input := &simpledb.ListDomainsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

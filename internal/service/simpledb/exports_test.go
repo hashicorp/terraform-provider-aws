@@ -8,4 +8,5 @@ var (
 	ResourceDomain = newDomainResource
 
 	FindDomainByName = findDomainByName
+	SimpleDBConn     = simpleDBConn
 )

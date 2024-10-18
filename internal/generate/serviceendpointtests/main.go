@@ -42,6 +42,7 @@ func main() {
 			"paymentcryptography", // Resolver modifies URL
 			"route53profiles",     // Resolver modifies URL
 			"s3control",           // Resolver modifies URL
+			"simpledb",            // AWS SDK for Go v1
 			"timestreamwrite":     // Uses endpoint discovery
 			continue
 		}
