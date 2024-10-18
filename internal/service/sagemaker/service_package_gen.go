@@ -141,6 +141,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Image Version",
 		},
 		{
+			Factory:  resourceMlflowTrackingServer,
+			TypeName: "aws_sagemaker_mlflow_tracking_server",
+			Name:     "Mlflow Tracking Server",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
 			Factory:  resourceModel,
 			TypeName: "aws_sagemaker_model",
 			Name:     "Model",
