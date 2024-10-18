@@ -699,16 +699,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckResiliencyPolicyNotRecreated(before, after *resiliencehub.DescribeResiliencyPolicyOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Policy.PolicyArn), aws.ToString(after.Policy.PolicyArn); before != after {
-			return create.Error(names.ResilienceHub, create.ErrActionCheckingNotRecreated, tfresiliencehub.ResNameResiliencyPolicy, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
 func testAccResiliencyPolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
@@ -867,79 +857,4 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   }
 }
 `, rName, duration)
-}
-
-func testAccResiliencyPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_resiliencehub_resiliency_policy" "test" {
-  name = %[1]q
-
-  description = %[1]q
-
-  tier = "NotApplicable"
-
-  data_location_constraint = "AnyLocation"
-
-  policy {
-    region {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-    az {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-    hardware {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-    software {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccResiliencyPolicyConfig_tag2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_resiliencehub_resiliency_policy" "test" {
-  name = %[1]q
-
-  description = %[1]q
-
-  tier = "NotApplicable"
-
-  data_location_constraint = "AnyLocation"
-
-  policy {
-    region {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-    az {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-    hardware {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-    software {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
