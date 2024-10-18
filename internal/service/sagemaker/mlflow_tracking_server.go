@@ -46,7 +46,7 @@ func resourceMlflowTrackingServer() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validModelDataURL,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -99,7 +99,7 @@ func resourceMlflowTrackingServerCreate(ctx context.Context, d *schema.ResourceD
 	input := &sagemaker.CreateMlflowTrackingServerInput{
 		TrackingServerName:         aws.String(name),
 		ArtifactStoreUri:           aws.String(d.Get("artifact_store_uri").(string)),
-		RoleArn:                    aws.String(d.Get("role_arn").(string)),
+		RoleArn:                    aws.String(d.Get(names.AttrRoleARN).(string)),
 		AutomaticModelRegistration: aws.Bool(d.Get("automatic_model_registration").(bool)),
 		TrackingServerSize:         awstypes.TrackingServerSize(d.Get("tracking_server_size").(string)),
 		Tags:                       getTagsIn(ctx),
@@ -146,7 +146,7 @@ func resourceMlflowTrackingServerRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("tracking_server_name", output.TrackingServerName)
 	d.Set(names.AttrARN, output.TrackingServerArn)
 	d.Set("artifact_store_uri", output.ArtifactStoreUri)
-	d.Set("role_arn", output.RoleArn)
+	d.Set(names.AttrRoleARN, output.RoleArn)
 	d.Set("mlflow_version", output.MlflowVersion)
 	d.Set("tracking_server_size", output.TrackingServerSize)
 	d.Set("weekly_maintenance_window_start", output.WeeklyMaintenanceWindowStart)
