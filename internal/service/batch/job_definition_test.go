@@ -16,7 +16,11 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
@@ -37,7 +41,7 @@ func TestAccBatchJobDefinition_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobDefinitionConfig_name(rName),
+				Config: testAccJobDefinitionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
@@ -122,7 +126,7 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobDefinitionConfig_name(rName),
+				Config: testAccJobDefinitionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName),
@@ -185,7 +189,7 @@ func TestAccBatchJobDefinition_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobDefinitionConfig_name(rName),
+				Config: testAccJobDefinitionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceJobDefinition(), resourceName),
@@ -589,7 +593,7 @@ func TestAccBatchJobDefinition_NodeProperties_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobDefinitionConfig_NodeProperties(rName),
+				Config: testAccJobDefinitionConfig_nodeProperties(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
@@ -1014,6 +1018,63 @@ func TestAccBatchJobDefinition_ECSProperties_update(t *testing.T) {
 	})
 }
 
+func TestAccBatchJobDefinition_updateWithTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd awstypes.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_simpleWithTags(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+				),
+			},
+			// Create ensure that tags are put on the new revision.
+			{
+				Config: testAccJobDefinitionConfig_simpleWithTagsUpdate(rName),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrName), knownvalue.StringExact(rName)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), knownvalue.MapExact(map[string]knownvalue.Check{
+						"Name": knownvalue.StringExact(rName),
+					})),
+				},
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckJobDefinitionExists(ctx context.Context, n string, v *awstypes.JobDefinition) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1154,6 +1215,21 @@ func testAccCheckJobDefinitionDestroy(ctx context.Context) resource.TestCheckFun
 
 		return nil
 	}
+}
+
+func testAccJobDefinitionConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
+  name = %[1]q
+  type = "container"
+}
+`, rName)
 }
 
 func testAccJobDefinitionConfig_containerPropertiesAdvanced(rName, param string, retries, timeout int) string {
@@ -1332,21 +1408,6 @@ resource "aws_batch_job_definition" "test" {
 `, rName, subcommand))
 }
 
-func testAccJobDefinitionConfig_name(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_batch_job_definition" "test" {
-  container_properties = jsonencode({
-    command = ["echo", "test"]
-    image   = "busybox"
-    memory  = 128
-    vcpus   = 1
-  })
-  name = %[1]q
-  type = "container"
-}
-`, rName)
-}
-
 func testAccJobDefinitionConfig_capabilitiesEC2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
@@ -1510,7 +1571,7 @@ resource "aws_batch_job_definition" "test" {
 `, rName)
 }
 
-func testAccJobDefinitionConfig_NodeProperties(rName string) string {
+func testAccJobDefinitionConfig_nodeProperties(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   name = %[1]q
@@ -2143,4 +2204,42 @@ resource "aws_batch_job_definition" "test" {
   })
 }
 `, rName, acctest.Region())
+}
+
+func testAccJobDefinitionConfig_simpleWithTags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  container_properties = jsonencode({
+    command = ["echo", "test1"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
+  name = %[1]q
+  type = "container"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccJobDefinitionConfig_simpleWithTagsUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  container_properties = jsonencode({
+    command = ["echo", "test2"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
+  name = %[1]q
+  type = "container"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }
