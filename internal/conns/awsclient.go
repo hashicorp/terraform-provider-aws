@@ -278,68 +278,6 @@ func resolveServiceBaseEndpoint(ctx context.Context, sdkID string, configs []any
 	return
 }
 
-// conn returns the AWS SDK for Go v1 API client for the specified service.
-// The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
-// This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
-func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
-	ctx = tflog.SetField(ctx, "tf_aws.service_package", servicePackageName)
-
-	isDefault := len(extra) == 0
-	// Default service client is cached.
-	if isDefault {
-		c.lock.Lock()
-		defer c.lock.Unlock() // Runs at function exit, NOT block.
-
-		if raw, ok := c.conns[servicePackageName]; ok {
-			if conn, ok := raw.(T); ok {
-				return conn, nil
-			} else {
-				var zero T
-				return zero, fmt.Errorf("AWS SDK v1 API client (%s): %T, want %T", servicePackageName, raw, zero)
-			}
-		}
-	}
-
-	sp, ok := c.ServicePackages[servicePackageName]
-	if !ok {
-		var zero T
-		return zero, fmt.Errorf("unknown service package: %s", servicePackageName)
-	}
-
-	v, ok := sp.(interface {
-		NewConn(context.Context, map[string]any) (T, error)
-	})
-	if !ok {
-		var zero T
-		return zero, fmt.Errorf("no AWS SDK v1 API client factory: %s", servicePackageName)
-	}
-
-	config := c.apiClientConfig(ctx, servicePackageName)
-	maps.Copy(config, extra) // Extras overwrite per-service defaults.
-	conn, err := v.NewConn(ctx, config)
-	if err != nil {
-		var zero T
-		return zero, err
-	}
-
-	if v, ok := sp.(interface {
-		CustomizeConn(context.Context, T) (T, error)
-	}); ok {
-		conn, err = v.CustomizeConn(ctx, conn)
-		if err != nil {
-			var zero T
-			return zero, err
-		}
-	}
-
-	// Default service client is cached.
-	if isDefault {
-		c.conns[servicePackageName] = conn
-	}
-
-	return conn, nil
-}
-
 // client returns the AWS SDK for Go v2 API client for the specified service.
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
 // This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
