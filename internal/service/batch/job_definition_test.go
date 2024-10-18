@@ -1056,6 +1056,7 @@ func TestAccBatchJobDefinition_updateWithTags(t *testing.T) {
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("revision")),
 					},
 				},
 				ConfigStateChecks: []statecheck.StateCheck{
