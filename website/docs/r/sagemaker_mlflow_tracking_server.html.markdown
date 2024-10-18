@@ -16,33 +16,9 @@ Provides a SageMaker MLFlow Tracking Server resource.
 
 ```terraform
 resource "aws_sagemaker_mlflow_tracking_server" "example" {
-  workteam_name  = "example"
-  workforce_name = aws_sagemaker_workforce.example.id
-  description    = "example"
-
-  member_definition {
-    cognito_member_definition {
-      client_id  = aws_cognito_user_pool_client.example.id
-      user_pool  = aws_cognito_user_pool_domain.example.user_pool_id
-      user_group = aws_cognito_user_group.example.name
-    }
-  }
-}
-```
-
-### Oidc Usage
-
-```terraform
-resource "aws_sagemaker_mlflow_tracking_server" "example" {
-  workteam_name  = "example"
-  workforce_name = aws_sagemaker_workforce.example.id
-  description    = "example"
-
-  member_definition {
-    oidc_member_definition {
-      groups = ["example"]
-    }
-  }
+  tracking_server_name = "example"
+  role_arn             = aws_iam_role.example.arn
+  artifact_store_uri   = "s3://${aws_s3_bucket.example.bucket}/path"
 }
 ```
 
