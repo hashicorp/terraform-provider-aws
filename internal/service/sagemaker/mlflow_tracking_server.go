@@ -197,7 +197,6 @@ func resourceMlflowTrackingServerUpdate(ctx context.Context, d *schema.ResourceD
 		if _, err := waitMlflowTrackingServerUpdated(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Mlflow Tracking Server (%s) to update: %s", d.Id(), err)
 		}
-
 	}
 
 	return append(diags, resourceMlflowTrackingServerRead(ctx, d, meta)...)
@@ -212,7 +211,6 @@ func resourceMlflowTrackingServerDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	if _, err := conn.DeleteMlflowTrackingServer(ctx, input); err != nil {
-
 		if errs.IsA[*awstypes.ResourceNotFound](err) {
 			return diags
 		}
