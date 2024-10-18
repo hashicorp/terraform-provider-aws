@@ -353,7 +353,7 @@ func resourceReplicationGroup() *schema.Resource {
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"transit_encryption_mode": {
 				Type:             schema.TypeString,
