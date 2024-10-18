@@ -1,4 +1,69 @@
-## 5.72.0 (Unreleased)
+## 5.73.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_imagebuilder_lifecycle_policy` ([#35674](https://github.com/hashicorp/terraform-provider-aws/issues/35674))
+
+BUG FIXES:
+
+* data-source/aws_workspaces_bundle: Return the first matching bundle when searching by `name`. This fixes a regression introduced in [v5.72.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5720-october-15-2024) causing `multiple WorkSpaces Bundles matched; use additional constraints to reduce matches to a single WorkSpaces Bundle` errors ([#39777](https://github.com/hashicorp/terraform-provider-aws/issues/39777))
+* resource/aws_dynamodb_table: Fix validation error when optional attribute in `on_demand_throughput` is excluded ([#39784](https://github.com/hashicorp/terraform-provider-aws/issues/39784))
+* resource/aws_quicksight_data_set: Fix `InvalidParameterValueException: Invalid RowLevelPermissionDataSet. Namespace parameter should not be specified for Version 2` errors on Create and Update ([#39778](https://github.com/hashicorp/terraform-provider-aws/issues/39778))
+* resource/aws_route53_record: Allow creation of records with `ttl=0` ([#39728](https://github.com/hashicorp/terraform-provider-aws/issues/39728))
+
+## 5.72.1 (October 16, 2024)
+
+FEATURES:
+
+* **New Resource:** `aws_iam_group_policy_attachments_exclusive` ([#39732](https://github.com/hashicorp/terraform-provider-aws/issues/39732))
+* **New Resource:** `aws_iam_user_policy_attachments_exclusive` ([#39731](https://github.com/hashicorp/terraform-provider-aws/issues/39731))
+
+ENHANCEMENTS:
+
+* resource/aws_resourceexplorer2_view:  Add `scope` argument ([#39744](https://github.com/hashicorp/terraform-provider-aws/issues/39744))
+
+BUG FIXES:
+
+* data-source/aws_batch_job_definition: Properly handles ignored tags. ([#39734](https://github.com/hashicorp/terraform-provider-aws/issues/39734))
+* data-source/aws_cognito_user_pool: Properly handles ignored tags. ([#39734](https://github.com/hashicorp/terraform-provider-aws/issues/39734))
+* resource/aws_cognito_user_pool: Properly handles ignored tags. ([#39734](https://github.com/hashicorp/terraform-provider-aws/issues/39734))
+* resource/aws_dynamodb_table: Fix crash when `billing_mode` is set to `PAY_PER_REQUEST` without `global_secondary_index` updates ([#39752](https://github.com/hashicorp/terraform-provider-aws/issues/39752))
+* resource/aws_dynamodb_table_replica: Properly handles default and ignored tags. ([#39734](https://github.com/hashicorp/terraform-provider-aws/issues/39734))
+* resource/aws_resourceexplorer2_index: Correctly mark incomplete `AGGREGATOR` indexes as [tainted](https://developer.hashicorp.com/terraform/cli/state/taint#the-tainted-status) on Create ([#39744](https://github.com/hashicorp/terraform-provider-aws/issues/39744))
+
+## 5.72.0 (October 15, 2024)
+
+NOTES:
+
+* This version contains all the features, enhancements, and bug fixes from the [v5.71.0 release](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5710-october-11-2024) which was removed from the Terraform Registry ([#39692](https://github.com/hashicorp/terraform-provider-aws/issues/39692))
+* resource/aws_iam_role: The `managed_policy_arns` argument is deprecated. Use the `aws_iam_role_policy_attachments_exclusive` resource instead. ([#39718](https://github.com/hashicorp/terraform-provider-aws/issues/39718))
+
+FEATURES:
+
+* **New Resource:** `aws_iam_role_policy_attachments_exclusive` ([#39718](https://github.com/hashicorp/terraform-provider-aws/issues/39718))
+
+ENHANCEMENTS:
+
+* data-source/aws_workspaces_directory: Add `saml_properties` attribute ([#39060](https://github.com/hashicorp/terraform-provider-aws/issues/39060))
+* resource/aws_appflow_flow: Add `source_flow_config.source_connector_properties.sapo_data.pagination_config` and `source_flow_config.source_connector_properties.sapo_data.parallelism_config` attributes ([#38932](https://github.com/hashicorp/terraform-provider-aws/issues/38932))
+* resource/aws_cloudwatch_event_rule: Add tags to AWS API request on Update to support [ABAC `aws:RequestTag` conditions](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_tags.html#access_tags_control-requests) ([#39648](https://github.com/hashicorp/terraform-provider-aws/issues/39648))
+* resource/aws_cloudwatch_event_target: Add `appsync_target` configuration block ([#37773](https://github.com/hashicorp/terraform-provider-aws/issues/37773))
+* resource/aws_dynamodb_table: Add `on_demand_throughput` and `global_secondary_index.on_demand_throughput` arguments ([#37799](https://github.com/hashicorp/terraform-provider-aws/issues/37799))
+* resource/aws_rds_cluster: Increase maximum value of `serverlessv2_scaling_configuration.max_capacity` and `serverlessv2_scaling_configuration.min_capacity` from `128` to `256` ([#39697](https://github.com/hashicorp/terraform-provider-aws/issues/39697))
+* resource/aws_rds_cluster_instance: Treat `storage-optimization` status as success when creating or updating cluster DB instances ([#39691](https://github.com/hashicorp/terraform-provider-aws/issues/39691))
+* resource/aws_workspaces_directory: Add `saml_properties` configuration block ([#39060](https://github.com/hashicorp/terraform-provider-aws/issues/39060))
+
+BUG FIXES:
+
+* data-source/aws_ssm_document: Correct `arn` for automation documents ([#39705](https://github.com/hashicorp/terraform-provider-aws/issues/39705))
+* resource/aws_cognito_user_pool: Fixes error when `schema` has empty `string_attribute_constraints` or `number_attribute_constraints` ([#20386](https://github.com/hashicorp/terraform-provider-aws/issues/20386))
+* resource/aws_ssm_document: Correct `arn` for automation documents ([#39705](https://github.com/hashicorp/terraform-provider-aws/issues/39705))
+
+## 5.71.0 (October 11, 2024)
+
+This Terraform AWS Provider version has been removed from the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) due to `archive has incorrect checksum` errors while installing the provider on some platforms.
+
+The next planned Terraform AWS Provider release is **v5.72.0**, scheduled for the morning (EST) of October 17, 2024.
 
 FEATURES:
 
@@ -39,9 +104,6 @@ BUG FIXES:
 * resource/aws_vpc_ipam_pool: Change `publicly_advertisable` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
 * resource/aws_vpc_ipam_pool: Fix `InvalidParameterCombination: The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip` errors ([#39600](https://github.com/hashicorp/terraform-provider-aws/issues/39600))
 
-## 5.71.0 (October 11, 2024)
-
-This Terraform AWS Provider version has been removed from the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) due to `archive has incorrect checksum` errors while installing the provider.
 
 ## 5.70.0 (October  4, 2024)
 

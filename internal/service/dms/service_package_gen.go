@@ -28,26 +28,41 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceCertificate,
 			TypeName: "aws_dms_certificate",
 			Name:     "Certificate",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrCertificateARN,
+			},
 		},
 		{
 			Factory:  dataSourceEndpoint,
 			TypeName: "aws_dms_endpoint",
 			Name:     "Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "endpoint_arn",
+			},
 		},
 		{
 			Factory:  dataSourceReplicationInstance,
 			TypeName: "aws_dms_replication_instance",
 			Name:     "Replication Instance",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "replication_instance_arn",
+			},
 		},
 		{
 			Factory:  dataSourceReplicationSubnetGroup,
 			TypeName: "aws_dms_replication_subnet_group",
 			Name:     "Replication Subnet Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "replication_subnet_group_arn",
+			},
 		},
 		{
 			Factory:  dataSourceReplicationTask,
 			TypeName: "aws_dms_replication_task",
 			Name:     "Replication Task",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "replication_task_arn",
+			},
 		},
 	}
 }

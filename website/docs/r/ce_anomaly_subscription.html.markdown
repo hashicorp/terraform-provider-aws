@@ -223,8 +223,8 @@ The following arguments are required:
 * `and` - (Optional) Return results that match both [Dimension](#dimension) objects.
 * `cost_category` - (Optional) Configuration block for the filter that's based on  values. See [Cost Category](#cost-category) below.
 * `dimension` - (Optional) Configuration block for the specific [Dimension](#dimension) to use for.
-* `not` - (Optional) Return results that match both [Dimension](#dimension) object.
-* `or` - (Optional) Return results that match both [Dimension](#dimension) object.
+* `not` - (Optional) Return results that do not match the [Dimension](#dimension) object.
+* `or` - (Optional) Return results that match either [Dimension](#dimension) object.
 * `tags` - (Optional) Configuration block for the specific Tag to use for. See [Tags](#tags) below.
 
 ### Cost Category

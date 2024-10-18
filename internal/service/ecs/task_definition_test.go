@@ -105,19 +105,21 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", regexache.MustCompile(`task-definition/.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s:%s$`, rName, acctest.Ct1))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s$`, rName))),
+					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "track_latest", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccTaskDefinitionConfig_modified(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", regexache.MustCompile(`task-definition/.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s:%s$`, rName, acctest.Ct2))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s$`, rName))),
+					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct2),
 				),
 			},
 			{
@@ -126,6 +128,34 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceTaskDefinition(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccTaskDefinitionConfig_basic(rName),
+				Check:  resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct2), // should get re-created
 			},
 		},
 	})
@@ -146,7 +176,7 @@ func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_scratchVolume(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 				),
 			},
@@ -175,7 +205,7 @@ func TestAccECSTaskDefinition_configuredAtLaunch(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_configuredAtLaunch(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "volume.0.configure_at_launch", acctest.CtTrue),
@@ -206,7 +236,7 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_dockerVolumes(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
@@ -249,7 +279,7 @@ func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_dockerVolumesMinimal(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
@@ -284,7 +314,7 @@ func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_runtimePlatformMinimal(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
@@ -318,7 +348,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_fargateRuntimePlatformMinimal(rName, true, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
@@ -352,7 +382,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_fargateRuntimePlatformMinimal(rName, false, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "runtime_platform.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "runtime_platform.*", map[string]string{
@@ -385,7 +415,7 @@ func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_efsVolumeMinimal(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
@@ -420,7 +450,7 @@ func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_efsVolume(rName, "/home/test"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
@@ -456,7 +486,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionMinimal(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_transitEncryptionEFSVolumeMinimal(rName, "null"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
@@ -494,7 +524,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_transitEncryptionEFSVolume(rName, "ENABLED", 2999),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
@@ -532,7 +562,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionDisabled(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_transitEncryptionEFSVolumeDisabled(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
@@ -569,7 +599,7 @@ func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_efsAccessPoint(rName, "DISABLED"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
@@ -619,7 +649,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_fsxVolume(domainName, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
@@ -658,7 +688,7 @@ func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_scopedDockerVolume(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					testAccCheckTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(&def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", acctest.Ct1),
@@ -684,14 +714,14 @@ func TestAccECSTaskDefinition_service(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_service(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					testAccCheckServiceExists(ctx, "aws_ecs_service.test", &service),
 				),
 			},
 			{
 				Config: testAccTaskDefinitionConfig_serviceModified(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					testAccCheckServiceExists(ctx, "aws_ecs_service.test", &service),
 				),
@@ -721,7 +751,7 @@ func TestAccECSTaskDefinition_taskRoleARN(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_roleARN(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 				),
 			},
@@ -750,7 +780,7 @@ func TestAccECSTaskDefinition_networkMode(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_networkMode(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "network_mode", "bridge"),
 				),
@@ -780,7 +810,7 @@ func TestAccECSTaskDefinition_ipcMode(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_ipcMode(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "ipc_mode", "host"),
 				),
@@ -810,7 +840,7 @@ func TestAccECSTaskDefinition_pidMode(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_pidMode(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "pid_mode", "host"),
 				),
@@ -840,7 +870,7 @@ func TestAccECSTaskDefinition_constraint(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_constraint(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", acctest.Ct1),
 					testAccCheckTaskDefinitionConstraintsAttrs(&def),
@@ -871,13 +901,13 @@ func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &before),
 				),
 			},
 			{
 				Config: testAccTaskDefinitionConfig_updatedVolume(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &after),
 					testAccCheckTaskDefinitionRecreated(t, &before, &after),
 				),
@@ -908,7 +938,7 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_arrays(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 				),
 			},
@@ -937,7 +967,7 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_fargate(rName, `[{"protocol": "tcp", "containerPort": 8000}]`),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "requires_compatibilities.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cpu", "256"),
@@ -974,7 +1004,7 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_fargateEphemeralStorage(rName, `[{"protocol": "tcp", "containerPort": 8000}]`),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "requires_compatibilities.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cpu", "256"),
@@ -1008,7 +1038,7 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_executionRole(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 				),
 			},
@@ -1018,35 +1048,6 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
-			},
-		},
-	})
-}
-
-// Regression for https://github.com/hashicorp/terraform/issues/3582#issuecomment-286409786
-func TestAccECSTaskDefinition_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var def awstypes.TaskDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_task_definition.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTaskDefinitionConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecs.ResourceTaskDefinition(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccTaskDefinitionConfig_basic(rName),
-				Check:  resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct2), // should get re-created
 			},
 		},
 	})
@@ -1066,7 +1067,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -1081,7 +1082,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 			},
 			{
 				Config: testAccTaskDefinitionConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -1090,7 +1091,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 			},
 			{
 				Config: testAccTaskDefinitionConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -1123,7 +1124,7 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_proxyConfiguration(rName, containerName, proxyType, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					testAccCheckTaskDefinitionProxyConfiguration(&def, containerName, proxyType, ignoredUid, ignoredGid, appPorts, proxyIngressPort, proxyEgressPort, egressIgnoredPorts, egressIgnoredIPs),
 				),
@@ -1153,7 +1154,7 @@ func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_inferenceAccelerator(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "inference_accelerator.#", acctest.Ct1),
 				),
@@ -1201,7 +1202,7 @@ func TestAccECSTaskDefinition_trackLatest(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_trackLatest(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", regexache.MustCompile(`task-definition/.+`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
@@ -1234,7 +1235,7 @@ func TestAccECSTaskDefinition_unknownContainerDefinitions(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTaskDefinitionConfig_unknownContainerDefinitions(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 				),
 			},
@@ -1312,7 +1313,7 @@ func TestAccECSTaskDefinition_v5590ContainerDefinitionsRegression(t *testing.T) 
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccTaskDefinitionConfig_v5590ContainerDefinitionsRegression(rName, "nginx"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", acctest.Ct1),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].cpu", acctest.Ct10),
@@ -1571,11 +1572,9 @@ func testAccCheckTaskDefinitionDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			_, _, err := tfecs.FindTaskDefinitionByFamilyOrARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
-
 			if tfresource.NotFound(err) {
 				return nil
 			}
-
 			if err != nil {
 				return err
 			}

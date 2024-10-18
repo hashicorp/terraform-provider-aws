@@ -28,6 +28,7 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Activation")
 // @Testing(importIgnore="activation_code")
 // @Testing(tagsUpdateForceNew=true)
+// @Testing(tagsIdentifierAttribute="id", tagsResourceType="Activation")
 func resourceActivation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceActivationCreate,

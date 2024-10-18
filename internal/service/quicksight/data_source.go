@@ -30,6 +30,8 @@ import (
 
 // @SDKResource("aws_quicksight_data_source", name="Data Source")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.DataSource")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func resourceDataSource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSourceCreate,

@@ -31,7 +31,9 @@ import (
 
 // @SDKResource("aws_servicecatalog_provisioned_product", name="Provisioned Product")
 // @Tags
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalog/types;types.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true, noRemoveTags=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/servicecatalog/types;awstypes;awstypes.ProvisionedProductDetail",importIgnore="accept_language;ignore_errors;provisioning_artifact_name;provisioning_parameters;retain_physical_resources", skipEmptyTags=true, noRemoveTags=true)
+// @Testing(tagsIdentifierAttribute="id", tagsResourceType="Provisioned Product")
+// @Testing(tagsUpdateGetTagsIn=true)
 func resourceProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProvisionedProductCreate,

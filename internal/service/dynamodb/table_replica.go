@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -36,8 +37,8 @@ const (
 )
 
 // @SDKResource("aws_dynamodb_table_replica", name="Table Replica")
-// @Tags
-// @Testing(tagsTest=false)
+// @Tags(identifierAttribute="arn")
+// @Testing(altRegionProvider=true)
 func resourceTableReplica() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -180,6 +181,10 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set(names.AttrARN, repARN)
 
+	if err := createTags(ctx, conn, repARN, getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting DynamoDB Table Replica (%s) tags: %s", d.Id(), err)
+	}
+
 	return append(diags, resourceTableReplicaUpdate(ctx, d, meta)...)
 }
 
@@ -308,14 +313,6 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 		d.Set("point_in_time_recovery", false)
 	}
 
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
-	if err != nil && !(tfawserr.ErrMessageContains(err, errCodeUnknownOperationException, "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
-		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), fmt.Errorf("tags: %w", err))
-	}
-
-	setTagsOut(ctx, Tags(tags))
-
 	return diags
 }
 
@@ -403,19 +400,9 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	// handled direct to replica
 	// * point_in_time_recovery
-	// * tags
-	if d.HasChanges("point_in_time_recovery", names.AttrTagsAll) {
-		if d.HasChange(names.AttrTagsAll) {
-			o, n := d.GetChange(names.AttrTagsAll)
-			if err := updateTags(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
-				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
-			}
-		}
-
-		if d.HasChange("point_in_time_recovery") {
-			if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
-			}
+	if d.HasChange("point_in_time_recovery") {
+		if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 		}
 
 		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {

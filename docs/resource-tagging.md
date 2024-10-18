@@ -219,8 +219,12 @@ Most services can use a facility we call _transparent_ (or _implicit_) _tagging_
     }
     ```
 
-The `identifierAttribute` argument to the `@Tags` annotation identifies the attribute in the resource's schema whose value is used in tag listing and updating API calls. Common values are `"arn"` and "`id`".
-Once the annotation has been added to the resource's code, run `make gen` to register the resource for transparent tagging. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+The `identifierAttribute` argument to the `@Tags` annotation identifies the attribute in the resource type's schema whose value is used in tag listing and updating API calls.
+Common values are `"arn"` and `"id"`.
+If the resource type does not need separate `createTags`, `listTags`, or `updateTags` functions, do not specify an `identifierAttribute`.
+
+Once the annotation has been added to the resource's code, run `make gen` to register the resource for transparent tagging.
+This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
 #### Resource Create Operation
 
@@ -335,7 +339,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &eks.CreateClusterInput{
@@ -349,7 +353,7 @@ If the service API does not allow passing an empty list, the logic can be adjust
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &eks.CreateClusterInput{
@@ -367,7 +371,7 @@ implement the logic to convert the configuration tags into the service API call 
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     /* ... creation steps ... */
@@ -386,7 +390,7 @@ This example shows using `TagSpecifications`:
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &ec2.CreateFleetInput{
@@ -402,7 +406,7 @@ In the resource `Read` operation, implement the logic to convert the service tag
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
     /* ... other d.Set(...) logic ... */
@@ -424,7 +428,7 @@ use the generated `listTags` function, e.g., with Athena Workgroups:
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
     /* ... other d.Set(...) logic ... */
@@ -558,6 +562,13 @@ Use the annotation `@Testing(checkDestroyNoop=true)`.
 
 For some resource types, tags cannot be modified without recreating the resource.
 Use the annotation `@Testing(tagsUpdateForceNew=true)`.
+
+Resource types which pass the result of `getTagsIn` directly onto their Update Input may have an error where ignored tags are not correctly excluded from the update.
+Use the annotation `@Testing(tagsUpdateGetTagsIn=true)`.
+
+Some tests read the tag values directly from the AWS API.
+If the resource type does not specify `identifierAttribute` in its `@Tags` annotation, specify a `@Testing(tagsIdentifierAttribute=<attribute name>)` annotation to identify which attribute value should be used by the `listTags` function.
+If a resource type is also needed for the `listTags` function, also specify the `tagsResourceType` annotation.
 
 At least one resource type, the Service Catalog Provisioned Product, does not support removing tags.
 This is likely an error on the AWS side.

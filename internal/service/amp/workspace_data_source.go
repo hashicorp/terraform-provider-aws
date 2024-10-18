@@ -18,6 +18,7 @@ import (
 // @SDKDataSource("aws_prometheus_workspace", name="Workspace")
 // @Tags
 // @Testing(generator=false)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceWorkspace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkspaceRead,

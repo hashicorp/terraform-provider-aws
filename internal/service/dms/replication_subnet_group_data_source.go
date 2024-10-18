@@ -20,6 +20,7 @@ import (
 )
 
 // @SDKDataSource("aws_dms_replication_subnet_group", name="Replication Subnet Group")
+// @Tags(identifierAttribute="replication_subnet_group_arn")
 func dataSourceReplicationSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReplicationSubnetGroupRead,
@@ -58,8 +59,6 @@ func dataSourceReplicationSubnetGroup() *schema.Resource {
 func dataSourceReplicationSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DMSClient(ctx)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	replicationSubnetGroupID := d.Get("replication_subnet_group_id").(string)
 	group, err := findReplicationSubnetGroupByID(ctx, conn, replicationSubnetGroupID)
@@ -84,19 +83,6 @@ func dataSourceReplicationSubnetGroupRead(ctx context.Context, d *schema.Resourc
 	})
 	d.Set(names.AttrSubnetIDs, subnetIDs)
 	d.Set(names.AttrVPCID, group.VpcId)
-
-	tags, err := listTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DMS Replication Subnet Group (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

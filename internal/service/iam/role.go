@@ -40,7 +40,7 @@ const (
 )
 
 // @SDKResource("aws_iam_role", name="Role")
-// @Tags(identifierAttribute="id", resourceType="Role")
+// @Tags(identifierAttribute="name", resourceType="Role")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
@@ -131,6 +131,8 @@ func resourceRole() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				Deprecated: "The managed_policy_arns argument is deprecated. " +
+					"Use the aws_iam_role_policy_attachments_exclusive resource instead.",
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
