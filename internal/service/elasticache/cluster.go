@@ -139,9 +139,8 @@ func resourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ExactlyOneOf: []string{names.AttrEngine, "replication_group_id"},
-				ValidateFunc: validation.StringInSlice([]string{engineMemcached, engineRedis}, false),
+				ValidateFunc: validation.StringInSlice(engine_Values(), false),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
@@ -341,6 +340,7 @@ func resourceCluster() *schema.Resource {
 			clusterValidateNumCacheNodes,
 			clusterForceNewOnMemcachedNodeTypeChange,
 			clusterValidateMemcachedSnapshotIdentifier,
+			clusterForceNewOnEngineChange,
 			verify.SetTagsDiff,
 		),
 	}
@@ -1051,4 +1051,15 @@ func clusterValidateMemcachedSnapshotIdentifier(_ context.Context, diff *schema.
 		return nil
 	}
 	return errors.New(`engine "memcached" does not support final_snapshot_identifier`)
+}
+
+// clusterForceNewOnEngineChange causes re-creation when `engine` is changed and old value is not "redis" and new value is not "valkey"
+func clusterForceNewOnEngineChange(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if diff.Id() == "" || !diff.HasChange(names.AttrEngine) {
+		return nil
+	}
+	if o, n := diff.GetChange(names.AttrEngine); o.(string) == engineRedis && n.(string) == engineValkey {
+		return nil
+	}
+	return diff.ForceNew("node_type")
 }
