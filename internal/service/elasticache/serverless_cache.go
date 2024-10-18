@@ -97,6 +97,9 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"final_snapshot_name": schema.StringAttribute{
+				Optional: true,
+			},
 			"full_engine_version": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -390,7 +393,7 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 
 	input := &elasticache.DeleteServerlessCacheInput{
 		ServerlessCacheName: fwflex.StringFromFramework(ctx, data.ID),
-		FinalSnapshotName:   nil,
+		FinalSnapshotName:   fwflex.StringFromFramework(ctx, data.FinalSnapshotName),
 	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
@@ -536,6 +539,7 @@ type serverlessCacheResourceModel struct {
 	Description            types.String                                           `tfsdk:"description"`
 	Endpoint               fwtypes.ListNestedObjectValueOf[endpointModel]         `tfsdk:"endpoint"`
 	Engine                 types.String                                           `tfsdk:"engine"`
+	FinalSnapshotName      types.String                                           `tfsdk:"final_snapshot_name"`
 	FullEngineVersion      types.String                                           `tfsdk:"full_engine_version"`
 	ID                     types.String                                           `tfsdk:"id"`
 	KmsKeyID               types.String                                           `tfsdk:"kms_key_id"`

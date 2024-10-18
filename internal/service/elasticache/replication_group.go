@@ -159,6 +159,7 @@ func resourceReplicationGroup() *schema.Resource {
 					"at_rest_encryption_enabled",
 					"snapshot_arns",
 					"snapshot_name",
+					"serverless_cache_snapshot_name",
 				},
 			},
 			"ip_discovery": {
@@ -310,6 +311,14 @@ func resourceReplicationGroup() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"serverless_cache_snapshot_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ConflictsWith: []string{
+					"snapshot_name",
+				},
 			},
 			"snapshot_arns": {
 				Type:     schema.TypeSet,
@@ -490,7 +499,12 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("multi_az_enabled"); ok {
+	// We want to explicitly set MultiAZEnabled even if it is `false` in the configuration.
+	// This addresses the error InvalidParameterCombination
+	// "Each Node Group needs to have at least one replica for Multi-AZ enabled Replication Group"
+	// when creating a replication group with 1 shard/node-group and 0 replicas with Multi AZ disabled,
+	// using the snapshot of either a multi-AZ enabled replication group or of a serverless cache.
+	if v, ok := d.GetOkExists("multi_az_enabled"); ok {
 		input.MultiAZEnabled = aws.Bool(v.(bool))
 	}
 
@@ -551,6 +565,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("security_group_names"); ok && v.(*schema.Set).Len() > 0 {
 		input.CacheSecurityGroupNames = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("serverless_cache_snapshot_name"); ok {
+		input.ServerlessCacheSnapshotName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("snapshot_arns"); ok && v.(*schema.Set).Len() > 0 {
