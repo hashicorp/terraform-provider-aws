@@ -1025,7 +1025,7 @@ func TestAccELBV2Listener_attributes_gwlb_TCPIdleTimeoutSeconds(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_attributes_gwlbTcpIdleTimeoutSeconds(rName, tcp_timeout_1),
+				Config: testAccListenerConfig_attributes_gwlbTCPIdleTimeoutSeconds(rName, tcp_timeout_1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", lbResourceName, names.AttrARN),
@@ -1060,7 +1060,7 @@ func TestAccELBV2Listener_attributes_nlb_TCPIdleTimeoutSeconds(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_attributes_nlbTcpIdleTimeoutSeconds(rName),
+				Config: testAccListenerConfig_attributes_nlbTCPIdleTimeoutSeconds(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr("aws_lb.test", "load_balancer_type", "network"),
@@ -2903,7 +2903,7 @@ resource "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_attributes_gwlbTcpIdleTimeoutSeconds(rName string, seconds int) string {
+func testAccListenerConfig_attributes_gwlbTCPIdleTimeoutSeconds(rName string, seconds int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -2963,7 +2963,7 @@ resource "aws_lb_listener" "test" {
 `, rName, seconds))
 }
 
-func testAccListenerConfig_attributes_nlbTcpIdleTimeoutSeconds(rName string) string {
+func testAccListenerConfig_attributes_nlbTCPIdleTimeoutSeconds(rName string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
