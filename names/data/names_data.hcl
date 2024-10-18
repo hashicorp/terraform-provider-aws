@@ -7735,6 +7735,7 @@ service "simpledb" {
 
   client {
     go_v1_client_typename = "SimpleDB"
+    skip_client_generate  = true
   }
 
   endpoint_info {

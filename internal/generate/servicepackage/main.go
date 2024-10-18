@@ -49,6 +49,10 @@ func main() {
 			continue
 		}
 
+		if l.IsClientSDKV1() && l.GenerateClient() {
+			g.Fatalf("cannot generate AWS SDK for Go v1 client")
+		}
+
 		// Look for Terraform Plugin Framework and SDK resource and data source annotations.
 		// These annotations are implemented as comments on factory functions.
 		v := &visitor{
@@ -68,8 +72,6 @@ func main() {
 
 		s := ServiceDatum{
 			GenerateClient:       l.GenerateClient(),
-			ClientSDKV1:          l.IsClientSDKV1(),
-			GoV1Package:          l.GoV1Package(),
 			ClientSDKV2:          l.IsClientSDKV2(),
 			GoV2Package:          l.GoV2Package(),
 			ProviderPackage:      p,
@@ -78,10 +80,6 @@ func main() {
 			FrameworkResources:   v.frameworkResources,
 			SDKDataSources:       v.sdkDataSources,
 			SDKResources:         v.sdkResources,
-		}
-
-		if l.IsClientSDKV1() {
-			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
 		}
 
 		sort.SliceStable(s.FrameworkDataSources, func(i, j int) bool {
@@ -94,7 +92,7 @@ func main() {
 		d := g.NewGoFileDestination(filename)
 
 		if err := d.WriteTemplate("servicepackagedata", tmpl, s); err != nil {
-			g.Fatalf("error generating %s service package data: %s", p, err)
+			g.Fatalf("generating %s service package data: %s", p, err)
 		}
 
 		if err := d.Write(); err != nil {
@@ -107,7 +105,7 @@ func main() {
 			d = g.NewGoFileDestination(endpointResolverFilename)
 
 			if err := d.WriteTemplate("endpointresolver", endpointResolverTmpl, s); err != nil {
-				g.Fatalf("error generating %s endpoint resolver: %s", p, err)
+				g.Fatalf("generating %s endpoint resolver: %s", p, err)
 			}
 
 			if err := d.Write(); err != nil {
@@ -129,9 +127,6 @@ type ResourceDatum struct {
 
 type ServiceDatum struct {
 	GenerateClient       bool
-	ClientSDKV1          bool
-	GoV1Package          string // AWS SDK for Go v1 package name
-	GoV1ClientTypeName   string // AWS SDK for Go v1 client type name
 	ClientSDKV2          bool
 	GoV2Package          string // AWS SDK for Go v2 package name
 	ProviderPackage      string
