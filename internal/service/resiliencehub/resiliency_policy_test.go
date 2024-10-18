@@ -157,6 +157,76 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 	})
 }
 
+func TestAccResilienceHubResiliencyPolicy_dataLocationConstraint(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehub_resiliency_policy.test"
+
+	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResiliencyPolicyConfig_dataLocationConstraint(rName, awstypes.DataLocationConstraintSameContinent),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
+					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", string(awstypes.DataLocationConstraintSameContinent)),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccResiliencyPolicyConfig_dataLocationConstraint(rName, awstypes.DataLocationConstraintSameCountry),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", string(awstypes.DataLocationConstraintSameCountry)),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
 func TestAccResilienceHubResiliencyPolicy_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -282,76 +352,6 @@ func TestAccResilienceHubResiliencyPolicy_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
-					},
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-		},
-	})
-}
-
-func TestAccResilienceHubResiliencyPolicy_dataLocationConstraint(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_resiliencehub_resiliency_policy.test"
-
-	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccResiliencyPolicyConfig_dataLocationConstraint(rName, awstypes.DataLocationConstraintSameContinent),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
-					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", string(awstypes.DataLocationConstraintSameContinent)),
-				),
-				ConfigStateChecks: []statecheck.StateCheck{
-					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
-				},
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-				},
-			},
-			{
-				ResourceName:                         resourceName,
-				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
-				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-			{
-				Config: testAccResiliencyPolicyConfig_dataLocationConstraint(rName, awstypes.DataLocationConstraintSameCountry),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
-					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", string(awstypes.DataLocationConstraintSameCountry)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
@@ -564,33 +564,6 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 `, rName)
 }
 
-func testAccResiliencyPolicyConfig_description(rName, resPolicyDescValue string) string {
-	return fmt.Sprintf(`
-resource "aws_resiliencehub_resiliency_policy" "test" {
-  name = %[1]q
-
-  description = %[2]q
-
-  tier = "NotApplicable"
-
-  policy {
-    az {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
-    }
-    hardware {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
-    }
-    software {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
-    }
-  }
-}
-`, rName, resPolicyDescValue)
-}
-
 func testAccResiliencyPolicyConfig_dataLocationConstraint(rName string, dataLocationConstraint awstypes.DataLocationConstraint) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
@@ -616,6 +589,33 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   }
 }
 `, rName, dataLocationConstraint)
+}
+
+func testAccResiliencyPolicyConfig_description(rName, resPolicyDescValue string) string {
+	return fmt.Sprintf(`
+resource "aws_resiliencehub_resiliency_policy" "test" {
+  name = %[1]q
+
+  description = %[2]q
+
+  tier = "NotApplicable"
+
+  policy {
+    az {
+      rpo_in_secs = 3600
+      rto_in_secs = 3600
+    }
+    hardware {
+      rpo_in_secs = 3600
+      rto_in_secs = 3600
+    }
+    software {
+      rpo_in_secs = 3600
+      rto_in_secs = 3600
+    }
+  }
+}
+`, rName, resPolicyDescValue)
 }
 
 func testAccResiliencyPolicyConfig_updateTier(rName, resTierValue string) string {

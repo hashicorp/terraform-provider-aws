@@ -92,6 +92,15 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"data_location_constraint": schema.StringAttribute{
+				Description: "Specifies a high-level geographical location constraint for where resilience policy data can be stored.",
+				CustomType:  fwtypes.StringEnumType[awstypes.DataLocationConstraint](),
+				Computed:    true,
+				Optional:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrDescription: schema.StringAttribute{
 				Description: "The description for the policy.",
 				Optional:    true,
@@ -111,15 +120,6 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(2, 60),
 					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_-]+$`), "Must start with an alphanumeric character and contain alphanumeric characters, underscores, or hyphens"),
-				},
-			},
-			"data_location_constraint": schema.StringAttribute{
-				Description: "Specifies a high-level geographical location constraint for where resilience policy data can be stored.",
-				CustomType:  fwtypes.StringEnumType[awstypes.DataLocationConstraint](),
-				Computed:    true,
-				Optional:    true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"tier": schema.StringAttribute{
