@@ -2350,20 +2350,20 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.5", acctest.CtKey1, acctest.CtValue1),
+				Config: testAccReplicationGroupConfig_versionAndTag(rName, "6.0", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.0"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{acctest.CtKey1, acctest.CtValue1},
 					}),
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.6", acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccReplicationGroupConfig_versionAndTag(rName, "6.2", acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.2"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{acctest.CtKey1, acctest.CtValue1Updated},
 					}),
