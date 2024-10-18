@@ -1,0 +1,119 @@
+```release-note:enhancement
+resource/aws_quicksight_analysis: Added `definition.filter_groups.scope_configuration.all_sheets` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Added `definition.filter_groups.filters.category_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Added `definition.filter_groups.filters.numeric_equality_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Added `definition.filter_groups.filters.numeric_range_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Added `definition.filter_groups.filters.relative_dates_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Added `definition.filter_groups.filters.time_equality_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Added `definition.filter_groups.filters.time_range_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Added `definition.filter_groups.filters.top_bottom_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Added `definition.sheets.filter_controls.cross_sheet` attribute
+```
+
+```release-note:bug
+resource/aws_quicksight_analysis: Made `definition.filter_groups.filters.top_bottom_filter.time_granularity` attribute optional
+```
+
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Added `definition.filter_groups.scope_configuration.all_sheets` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Added `definition.filter_groups.filters.category_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Added `definition.filter_groups.filters.numeric_equality_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Added `definition.filter_groups.filters.numeric_range_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Added `definition.filter_groups.filters.relative_dates_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Added `definition.filter_groups.filters.time_equality_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Added `definition.filter_groups.filters.time_range_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Added `definition.filter_groups.filters.top_bottom_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Added `definition.sheets.filter_controls.cross_sheet` attribute
+```
+
+```release-note:bug
+resource/aws_quicksight_dashboard: Made `definition.filter_groups.filters.top_bottom_filter.time_granularity` attribute optional
+```
+
+```release-note:enhancement
+resource/aws_quicksight_template: Added `definition.filter_groups.scope_configuration.all_sheets` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_template: Added `definition.filter_groups.filters.category_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_template: Added `definition.filter_groups.filters.numeric_equality_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_template: Added `definition.filter_groups.filters.numeric_range_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_template: Added `definition.filter_groups.filters.relative_dates_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_template: Added `definition.filter_groups.filters.time_equality_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_template: Added `definition.filter_groups.filters.time_range_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_template: Added `definition.filter_groups.filters.top_bottom_filter.default_filter_control_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_template: Added `definition.sheets.filter_controls.cross_sheet` attribute
+```
+
+```release-note:bug
+resource/aws_quicksight_template: Made `definition.filter_groups.filters.top_bottom_filter.time_granularity` attribute optional
+```
