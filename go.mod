@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.2
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.20.2
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.23.2
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/chime v1.34.2
@@ -85,7 +85,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.33.2
-	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.32.2
+	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.22.2
@@ -103,7 +103,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.182.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.2
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.47.3
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.47.4
 	github.com/aws/aws-sdk-go-v2/service/efs v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/eks v1.50.2
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.43.0
@@ -187,16 +187,16 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/pcs v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.34.2
-	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.15.2
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.17.2
+	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.16.0
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/polly v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.25.2
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.76.2
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.77.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.20.2
-	github.com/aws/aws-sdk-go-v2/service/rds v1.87.2
+	github.com/aws/aws-sdk-go-v2/service/rds v1.87.3
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.23.2
