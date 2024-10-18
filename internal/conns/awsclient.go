@@ -235,7 +235,7 @@ func convertIPToDashIP(ip string) string {
 func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName string) map[string]any {
 	m := map[string]any{
 		"aws_sdkv2_config": c.awsConfig,
-		"endpoint":         c.resolveEndpoint(ctx, servicePackageName),
+		"endpoint":         c.ResolveEndpoint(ctx, servicePackageName),
 		"partition":        c.Partition,
 	}
 	switch servicePackageName {
