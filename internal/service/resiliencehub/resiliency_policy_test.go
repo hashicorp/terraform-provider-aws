@@ -13,9 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehub"
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehub/types"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -85,7 +89,6 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
 	updatedPolicyName := "updated-policy-name"
-	updatedPolicyDescription := "updated policy desecription"
 	updatedDataLocationConstraint := "SameCountry"
 	updatedTier := "MissionCritical"
 	updatedPolicyObjValue := "86400"
@@ -137,15 +140,6 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccResiliencyPolicyConfig_updatePolicyDescription(rName, updatedPolicyDescription),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy3),
-					testAccCheckResiliencyPolicyNotRecreated(&policy2, &policy3),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedPolicyDescription),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
-				),
-			},
-			{
 				Config: testAccResiliencyPolicyConfig_updateDataLocationConstraint(rName, updatedDataLocationConstraint),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy4),
@@ -177,6 +171,81 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedPolicyObjValue),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
 				),
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubResiliencyPolicy_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehub_resiliency_policy.test"
+
+	const (
+		initial = "initial"
+		updated = "updated"
+	)
+
+	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResiliencyPolicyConfig_description(rName, initial),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, initial),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccResiliencyPolicyConfig_description(rName, updated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updated),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 		},
 	})
@@ -406,7 +475,7 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 `, rName)
 }
 
-func testAccResiliencyPolicyConfig_updatePolicyDescription(rName, resPolicyDescValue string) string {
+func testAccResiliencyPolicyConfig_description(rName, resPolicyDescValue string) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
   name = %[1]q
