@@ -1352,19 +1352,19 @@ func ExpandRowLevelPermissionDataSet(tfList []interface{}) *awstypes.RowLevelPer
 
 	apiObject := &awstypes.RowLevelPermissionDataSet{}
 
-	if v, ok := tfMap[names.AttrARN].(string); ok {
+	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
 	}
-	if v, ok := tfMap["permission_policy"].(string); ok {
-		apiObject.PermissionPolicy = awstypes.RowLevelPermissionPolicy(v)
-	}
-	if v, ok := tfMap["format_version"].(string); ok {
+	if v, ok := tfMap["format_version"].(string); ok && v != "" {
 		apiObject.FormatVersion = awstypes.RowLevelPermissionFormatVersion(v)
 	}
-	if v, ok := tfMap[names.AttrNamespace].(string); ok {
+	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
 		apiObject.Namespace = aws.String(v)
 	}
-	if v, ok := tfMap[names.AttrStatus].(string); ok {
+	if v, ok := tfMap["permission_policy"].(string); ok && v != "" {
+		apiObject.PermissionPolicy = awstypes.RowLevelPermissionPolicy(v)
+	}
+	if v, ok := tfMap[names.AttrStatus].(string); ok && v != "" {
 		apiObject.Status = awstypes.Status(v)
 	}
 
