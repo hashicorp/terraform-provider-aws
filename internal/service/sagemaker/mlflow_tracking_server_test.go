@@ -36,7 +36,7 @@ func TestAccSageMakerMlflowTrackingServer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "tracking_server_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "automatic_model_registration", "false"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_model_registration", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "tracking_server_size", "Small"),
 					resource.TestCheckResourceAttrSet(resourceName, "tracking_server_url"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
@@ -54,7 +54,7 @@ func TestAccSageMakerMlflowTrackingServer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMlflowTrackingServerExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "tracking_server_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "automatic_model_registration", "true"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_model_registration", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "tracking_server_size", "Medium"),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_window_start", "Sun:01:00"),
 					resource.TestCheckResourceAttrSet(resourceName, "tracking_server_url"),
