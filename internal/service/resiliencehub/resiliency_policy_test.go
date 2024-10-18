@@ -85,11 +85,10 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var policy1, policy2, policy3 resiliencehub.DescribeResiliencyPolicyOutput
+	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_resiliencehub_resiliency_policy.test"
 
-	updatedTier := "MissionCritical"
 	updatedPolicyObjValue := "86400"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -130,18 +129,9 @@ func TestAccResilienceHubResiliencyPolicy_update(t *testing.T) {
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
 			{
-				Config: testAccResiliencyPolicyConfig_updateTier(rName, updatedTier),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
-					testAccCheckResiliencyPolicyNotRecreated(&policy1, &policy2),
-					resource.TestCheckResourceAttr(resourceName, "tier", updatedTier),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
-				),
-			},
-			{
 				Config: testAccResiliencyPolicyConfig_updatePolicy(rName, updatedPolicyObjValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy3),
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
 					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", updatedPolicyObjValue),
 					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", updatedPolicyObjValue),
 					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", updatedPolicyObjValue),
@@ -352,6 +342,76 @@ func TestAccResilienceHubResiliencyPolicy_name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+		},
+	})
+}
+
+func TestAccResilienceHubResiliencyPolicy_tier(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_resiliencehub_resiliency_policy.test"
+
+	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResiliencyPolicyConfig_tier(rName, awstypes.ResiliencyPolicyTierMissionCritical),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
+					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ResiliencyPolicyTierMissionCritical)),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
+				},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+				},
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+			},
+			{
+				Config: testAccResiliencyPolicyConfig_tier(rName, awstypes.ResiliencyPolicyTierCoreServices),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
+					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ResiliencyPolicyTierCoreServices)),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
@@ -618,12 +678,10 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 `, rName, resPolicyDescValue)
 }
 
-func testAccResiliencyPolicyConfig_updateTier(rName, resTierValue string) string {
+func testAccResiliencyPolicyConfig_tier(rName string, tier awstypes.ResiliencyPolicyTier) string {
 	return fmt.Sprintf(`
 resource "aws_resiliencehub_resiliency_policy" "test" {
   name = %[1]q
-
-  description = %[1]q
 
   tier = %[2]q
 
@@ -643,13 +701,8 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
       rto_in_secs = 3600
     }
   }
-
-  tags = {
-    Name  = %[1]q
-    Value = "Other"
-  }
 }
-`, rName, resTierValue)
+`, rName, tier)
 }
 
 func testAccResiliencyPolicyConfig_updatePolicy(rName, resPolicyObjValue string) string {
