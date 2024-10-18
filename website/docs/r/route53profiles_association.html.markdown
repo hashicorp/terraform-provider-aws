@@ -34,7 +34,7 @@ resource "aws_route53profiles_association" "example" {
 
 The following arguments are required:
 
-* `name` - (Required) Name of the Profile Association.
+* `name` - (Required) Name of the Profile Association. Must match a regex of `(?!^[0-9]+$)([a-zA-Z0-9\\-_' ']+)`
 
 * `profile_id` - (Required) ID of the profile associated with the VPC.
 
