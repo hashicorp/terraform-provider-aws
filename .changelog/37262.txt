@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_instance: Don't force an instance rebuild when modifying `ipv6_addresses`
+```
