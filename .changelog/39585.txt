@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/awslb_listener: Add tcp_idle_timeout_seconds argument
+```
