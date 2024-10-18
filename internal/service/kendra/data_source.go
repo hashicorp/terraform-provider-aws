@@ -5,6 +5,7 @@ package kendra
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -15,12 +16,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
+	"github.com/aws/aws-sdk-go-v2/service/kendra/document"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -84,6 +87,23 @@ func ResourceDataSource() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"template_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"template": {
+										Type:     schema.TypeString,
+										Required: true,
+										StateFunc: func(v interface{}) string {
+											jsonString, _ := structure.NormalizeJsonString(v)
+											return jsonString
+										},
+									},
+								},
+							},
+						},
 						"s3_configuration": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -926,7 +946,52 @@ func expandDataSourceConfiguration(tfList []interface{}) *types.DataSourceConfig
 		result.WebCrawlerConfiguration = expandWebCrawlerConfiguration(v)
 	}
 
+	if v, ok := tfMap["template_configuration"].([]interface{}); ok && len(v) > 0 {
+		templateConfiguration, err := expandTemplateConfiguration(v)
+		if err != nil {
+			tfresource.SetLastError(err, nil)
+		} else {
+			result.TemplateConfiguration = templateConfiguration
+		}
+	}
+
 	return result
+}
+
+// Template Configuration
+func expandTemplateConfiguration(tfList []interface{}) (*types.TemplateConfiguration, error) {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil, nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil, nil
+	}
+
+	result := &types.TemplateConfiguration{}
+
+	template, err := expandTemplate(tfMap["template"].(string))
+	if err != nil {
+		return nil, err
+	}
+
+	result.Template = template
+
+	return result, nil
+}
+
+func expandTemplate(rawProps string) (document.Interface, error) {
+	var props interface{}
+
+	err := json.Unmarshal([]byte(rawProps), &props)
+	if err != nil {
+		return nil, fmt.Errorf("decoding JSON: %s", err)
+	}
+
+	value := document.NewLazyDocument(props)
+
+	return value, nil
 }
 
 // S3 Configuration
@@ -1356,6 +1421,10 @@ func flattenDataSourceConfiguration(apiObject *types.DataSourceConfiguration) []
 		m["web_crawler_configuration"] = flattenWebCrawlerConfiguration(v)
 	}
 
+	if v := apiObject.TemplateConfiguration; v != nil {
+		m["template_configuration"] = flattenTemplateConfiguration(v)
+	}
+
 	return []interface{}{m}
 }
 
@@ -1460,6 +1529,25 @@ func flattenWebCrawlerConfiguration(apiObject *types.WebCrawlerConfiguration) []
 	}
 
 	return []interface{}{m}
+}
+
+func flattenTemplateConfiguration(apiObject *types.TemplateConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	template := map[string]interface{}{}
+
+	if v := apiObject.Template; v != nil {
+		bytes, err := apiObject.Template.MarshalSmithyDocument()
+		if err != nil {
+			tfresource.SetLastError(err, nil)
+			return nil
+		} else {
+			template["template"] = string(bytes[:])
+		}
+	}
+
+	return []interface{}{template}
 }
 
 func flattenAuthenticationConfiguration(apiObject *types.AuthenticationConfiguration) []interface{} {
