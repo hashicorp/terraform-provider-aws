@@ -188,7 +188,7 @@ resource "aws_batch_job_definition" "test" {
 
 func testAccJobDefinitionDataSourceConfig_basicARNNode(rName string) string {
 	return acctest.ConfigCompose(
-		testAccJobDefinitionConfig_NodeProperties(rName), `
+		testAccJobDefinitionConfig_nodeProperties(rName), `
 data "aws_batch_job_definition" "test" {
   arn = aws_batch_job_definition.test.arn
 }`)
