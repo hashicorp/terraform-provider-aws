@@ -53,7 +53,7 @@ func TestAccLambdaFunctionRecursionConfig_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccCheckFunctionRecursionConfigImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "function_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "function_name",
 			},
@@ -94,7 +94,7 @@ func TestAccLambdaFunctionRecursionConfig_update(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccCheckFunctionRecursionConfigImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "function_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "function_name",
 			},
@@ -190,17 +190,6 @@ func testAccCheckFunctionRecursionConfigExists(ctx context.Context, name string,
 		recursionconfig = resp
 
 		return nil
-	}
-}
-
-func testAccCheckFunctionRecursionConfigImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["function_name"], nil
 	}
 }
 
