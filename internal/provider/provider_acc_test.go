@@ -817,7 +817,7 @@ func testAccCheckIgnoreTagsKeyPrefixes(ctx context.Context, t *testing.T, p **sc
 		}
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
-		ignoreTagsConfig := providerClient.IgnoreTagsConfig
+		ignoreTagsConfig := providerClient.IgnoreTagsConfig(ctx)
 
 		if ignoreTagsConfig == nil || ignoreTagsConfig.KeyPrefixes == nil {
 			if len(expectedKeyPrefixes) != 0 {
@@ -874,7 +874,7 @@ func testAccCheckIgnoreTagsKeys(ctx context.Context, t *testing.T, p **schema.Pr
 		}
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
-		ignoreTagsConfig := providerClient.IgnoreTagsConfig
+		ignoreTagsConfig := providerClient.IgnoreTagsConfig(ctx)
 
 		if ignoreTagsConfig == nil || ignoreTagsConfig.Keys == nil {
 			if len(expectedKeys) != 0 {

@@ -36,7 +36,7 @@ func (r *ResourceWithConfigure) SetTagsAll(ctx context.Context, request resource
 	}
 
 	defaultTagsConfig := r.Meta().DefaultTagsConfig(ctx)
-	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
+	ignoreTagsConfig := r.Meta().IgnoreTagsConfig(ctx)
 
 	var planTags tftags.Map
 

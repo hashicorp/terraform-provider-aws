@@ -175,7 +175,7 @@ func dataSourceCluster() *schema.Resource {
 func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	partition := meta.(*conns.AWSClient).Partition
 
 	clusterID := d.Get("cluster_id").(string)
