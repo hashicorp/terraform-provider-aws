@@ -338,6 +338,45 @@ func testAccSpace_jupyterLabAppSettings(t *testing.T) {
 	})
 }
 
+func testAccSpace_jupyterLabAppSettingsAppLifecycle(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeSpaceOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_space.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSpaceConfig_jupyterLabAppSettingsLifecycle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSpaceExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.app_type", "JupyterLab"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.idle_timeout_in_minutes", "60"),
+					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.0.sharing_type", "Private"),
+					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", acctest.Ct1),
+					resource.TestCheckResourceAttrPair(resourceName, "ownership_settings.0.owner_user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccSpace_jupyterServerAppSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeSpaceOutput
@@ -609,6 +648,42 @@ resource "aws_sagemaker_space" "test" {
   space_settings {
     app_type = "JupyterLab"
     jupyter_lab_app_settings {
+      default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccSpaceConfig_jupyterLabAppSettingsLifecycle(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_jupyterLabAppSettingsAppLifecycle(rName), fmt.Sprintf(`
+resource "aws_sagemaker_user_profile" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = "%[1]s-2"
+}
+
+resource "aws_sagemaker_space" "test" {
+  domain_id  = aws_sagemaker_domain.test.id
+  space_name = %[1]q
+
+  space_sharing_settings {
+    sharing_type = "Private"
+  }
+
+  ownership_settings {
+    owner_user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
+  }
+
+  space_settings {
+    app_type = "JupyterLab"
+    jupyter_lab_app_settings {
+      app_lifecycle_management {
+        idle_settings {
+          idle_timeout_in_minutes = 60
+        }
+      }
       default_resource_spec {
         instance_type = "ml.t3.micro"
       }

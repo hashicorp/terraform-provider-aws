@@ -100,6 +100,29 @@ func resourceSpace() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"default_resource_spec": {
 										Type:     schema.TypeList,
 										Required: true,
@@ -163,6 +186,29 @@ func resourceSpace() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"code_repository": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -687,6 +733,10 @@ func expandSpaceCodeEditorAppSettings(l []interface{}) *awstypes.SpaceCodeEditor
 
 	config := &awstypes.SpaceCodeEditorAppSettings{}
 
+	if v, ok := m["app_lifecycle_management"].([]interface{}); ok && len(v) > 0 {
+		config.AppLifecycleManagement = expandSpaceAppLifecycleManagement(v)
+	}
+
 	if v, ok := m["default_resource_spec"].([]interface{}); ok && len(v) > 0 {
 		config.DefaultResourceSpec = expandResourceSpec(v)
 	}
@@ -700,6 +750,10 @@ func flattenSpaceCodeEditorAppSettings(config *awstypes.SpaceCodeEditorAppSettin
 	}
 
 	m := map[string]interface{}{}
+
+	if config.AppLifecycleManagement != nil {
+		m["app_lifecycle_management"] = flattenSpaceAppLifecycleManagement(config.AppLifecycleManagement)
+	}
 
 	if config.DefaultResourceSpec != nil {
 		m["default_resource_spec"] = flattenResourceSpec(config.DefaultResourceSpec)
@@ -716,6 +770,10 @@ func expandSpaceJupyterLabAppSettings(l []interface{}) *awstypes.SpaceJupyterLab
 	m := l[0].(map[string]interface{})
 
 	config := &awstypes.SpaceJupyterLabAppSettings{}
+
+	if v, ok := m["app_lifecycle_management"].([]interface{}); ok && len(v) > 0 {
+		config.AppLifecycleManagement = expandSpaceAppLifecycleManagement(v)
+	}
 
 	if v, ok := m["code_repository"].(*schema.Set); ok && v.Len() > 0 {
 		config.CodeRepositories = expandCodeRepositories(v.List())
@@ -734,6 +792,10 @@ func flattenSpaceJupyterLabAppSettings(config *awstypes.SpaceJupyterLabAppSettin
 	}
 
 	m := map[string]interface{}{}
+
+	if config.AppLifecycleManagement != nil {
+		m["app_lifecycle_management"] = flattenSpaceAppLifecycleManagement(config.AppLifecycleManagement)
+	}
 
 	if config.CodeRepositories != nil {
 		m["code_repository"] = flattenCodeRepositories(config.CodeRepositories)
@@ -947,6 +1009,66 @@ func flattenSpaceSharingSettings(config *awstypes.SpaceSharingSettings) []map[st
 
 	m := map[string]interface{}{
 		"sharing_type": config.SharingType,
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandSpaceAppLifecycleManagement(l []interface{}) *awstypes.SpaceAppLifecycleManagement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.SpaceAppLifecycleManagement{}
+
+	if v, ok := m["idle_settings"].([]interface{}); ok && len(v) > 0 {
+		config.IdleSettings = expandSpaceIdleSettings(v)
+	}
+
+	return config
+}
+
+func expandSpaceIdleSettings(l []interface{}) *awstypes.SpaceIdleSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.SpaceIdleSettings{}
+
+	if v, ok := m["idle_timeout_in_minutes"].(int); ok {
+		config.IdleTimeoutInMinutes = aws.Int32(int32(v))
+	}
+
+	return config
+}
+
+func flattenSpaceAppLifecycleManagement(config *awstypes.SpaceAppLifecycleManagement) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.IdleSettings != nil {
+		m["idle_settings"] = flattenSpaceIdleSettings(config.IdleSettings)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenSpaceIdleSettings(config *awstypes.SpaceIdleSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.IdleTimeoutInMinutes != nil {
+		m["idle_timeout_in_minutes"] = aws.ToInt32(config.IdleTimeoutInMinutes)
 	}
 
 	return []map[string]interface{}{m}

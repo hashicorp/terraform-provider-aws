@@ -103,6 +103,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings_imageConfig":     testAccSpace_kernelGatewayAppSettings_imageconfig,
 			"jupyterServerAppSettings":                 testAccSpace_jupyterServerAppSettings,
 			"jupyterLabAppSettings":                    testAccSpace_jupyterLabAppSettings,
+			"jupyterLabAppSettingsLifecycle":           testAccSpace_jupyterLabAppSettingsAppLifecycle,
 			"codeEditorAppSettings":                    testAccSpace_codeEditorAppSettings,
 			"storageSettings":                          testAccSpace_storageSettings,
 			"customFileSystem":                         testAccSpace_customFileSystem,
