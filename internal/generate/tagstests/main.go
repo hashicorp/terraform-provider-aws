@@ -401,6 +401,10 @@ func (d ResourceDatum) AdditionalTfVars() map[string]string {
 	})
 }
 
+func (d ResourceDatum) HasImportStateIDAttribute() bool {
+	return d.importStateIDAttribute != ""
+}
+
 func (d ResourceDatum) ImportStateIDAttribute() string {
 	return namesgen.ConstOrQuote(d.importStateIDAttribute)
 }
