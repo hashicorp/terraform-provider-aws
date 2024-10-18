@@ -57,14 +57,14 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "tier", "NotApplicable"),
 					resource.TestCheckResourceAttr(resourceName, "data_location_constraint", "AnyLocation"),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", "3600"),
-					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo_in_secs"),
-					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto_in_secs"),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", "3600"),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo", "1h0m0s"),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto", "1h0m0s"),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo", "1h0m0s"),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto", "1h0m0s"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto"),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo", "1h0m0s"),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto", "1h0m0s"),
 				),
 			},
 			{
@@ -307,8 +307,8 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
 
 	const (
-		initialDuration = "3600"
-		updatedDuration = "86400"
+		initialDuration = "1h0m0s"
+		updatedDuration = "24h0m0s"
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -325,14 +325,14 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_policy(rName, initialDuration),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", initialDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", initialDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", initialDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", initialDuration),
-					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo_in_secs"),
-					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto_in_secs"),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", initialDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto", initialDuration),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto"),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto", initialDuration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
@@ -354,14 +354,14 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_policy(rName, updatedDuration),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", updatedDuration),
-					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo_in_secs"),
-					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto_in_secs"),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto", updatedDuration),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto"),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto", updatedDuration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
@@ -383,14 +383,14 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_policyWithRegion(rName, updatedDuration),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.region.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.region.rto_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.region.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.region.rto", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto", updatedDuration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
@@ -425,8 +425,8 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 	expectNoARNChange := statecheck.CompareValue(compare.ValuesSame())
 
 	const (
-		initialDuration = "3600"
-		updatedDuration = "86400"
+		initialDuration = "1h0m0s"
+		updatedDuration = "24h0m0s"
 	)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -443,14 +443,14 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_policyWithRegion(rName, initialDuration),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", initialDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", initialDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", initialDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", initialDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.region.rpo_in_secs", initialDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.region.rto_in_secs", initialDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", initialDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.region.rpo", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.region.rto", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo", initialDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto", initialDuration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
@@ -472,14 +472,14 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_policyWithRegion(rName, updatedDuration),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.region.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.region.rto_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.region.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.region.rto", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto", updatedDuration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
@@ -501,14 +501,14 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 				Config: testAccResiliencyPolicyConfig_policy(rName, updatedDuration),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.az.rto_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto_in_secs", updatedDuration),
-					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo_in_secs"),
-					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto_in_secs"),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo_in_secs", updatedDuration),
-					resource.TestCheckResourceAttr(resourceName, "policy.software.rto_in_secs", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.az.rto", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.hardware.rto", updatedDuration),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rpo"),
+					resource.TestCheckNoResourceAttr(resourceName, "policy.region.rto"),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rpo", updatedDuration),
+					resource.TestCheckResourceAttr(resourceName, "policy.software.rto", updatedDuration),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					expectNoARNChange.AddStateValue(resourceName, tfjsonpath.New(names.AttrARN)),
@@ -775,16 +775,16 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   policy {
     az {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     hardware {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     software {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
   }
 }
@@ -802,16 +802,16 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   policy {
     az {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     hardware {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     software {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
   }
 }
@@ -829,16 +829,16 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   policy {
     az {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     hardware {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     software {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
   }
 }
@@ -856,16 +856,16 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   policy {
     az {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     hardware {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     software {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
   }
 }
@@ -881,16 +881,16 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   policy {
     az {
-      rpo_in_secs = %[2]s
-      rto_in_secs = %[2]s
+      rpo = %[2]q
+      rto = %[2]q
     }
     hardware {
-      rpo_in_secs = %[2]s
-      rto_in_secs = %[2]s
+      rpo = %[2]q
+      rto = %[2]q
     }
     software {
-      rpo_in_secs = %[2]s
-      rto_in_secs = %[2]s
+      rpo = %[2]q
+      rto = %[2]q
     }
   }
 }
@@ -906,20 +906,20 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   policy {
     az {
-      rpo_in_secs = %[2]s
-      rto_in_secs = %[2]s
+      rpo = %[2]q
+      rto = %[2]q
     }
     hardware {
-      rpo_in_secs = %[2]s
-      rto_in_secs = %[2]s
+      rpo = %[2]q
+      rto = %[2]q
     }
     region {
-      rpo_in_secs = %[2]s
-      rto_in_secs = %[2]s
+      rpo = %[2]q
+      rto = %[2]q
     }
     software {
-      rpo_in_secs = %[2]s
-      rto_in_secs = %[2]s
+      rpo = %[2]q
+      rto = %[2]q
     }
   }
 }
@@ -939,20 +939,20 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   policy {
     region {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     az {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     hardware {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     software {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
   }
 
@@ -976,20 +976,20 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
 
   policy {
     region {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     az {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     hardware {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
     software {
-      rpo_in_secs = 3600
-      rto_in_secs = 3600
+      rpo = "1h0m0s"
+      rto = "1h0m0s"
     }
   }
 

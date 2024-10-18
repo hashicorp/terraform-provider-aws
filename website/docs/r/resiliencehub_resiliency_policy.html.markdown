@@ -23,20 +23,20 @@ resource "aws_resiliencehub_resiliency_policy" "example" {
 
   policy {
     region {
-      rpo_in_secs = 86400
-      rto_in_secs = 86400
+      rpo = "24h"
+      rto = "24h"
     }
     az {
-      rpo_in_secs = 86400
-      rto_in_secs = 86400
+      rpo = "24h"
+      rto = "24h"
     }
     hardware {
-      rpo_in_secs = 86400
-      rto_in_secs = 86400
+      rpo = "24h"
+      rto = "24h"
     }
     software {
-      rpo_in_secs = 86400
-      rto_in_secs = 86400
+      rpo = "24h"
+      rto = "24h"
     }
   }
 }
@@ -76,30 +76,38 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `rpo_in_secs` - (Number) RPO in seconds.
-* `rto_in_secs` - (Number) RTO in seconds.
+* `rpo` - (Number) Recovery Point Objective (RPO) as a Go duration.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+* `rto` - (Number) Recovery Time Objective (RTO) as a Go duration.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
 
 ### `policy.hardware`
 
 The following arguments are required:
 
-* `rpo_in_secs` - (Number) RPO in seconds.
-* `rto_in_secs` - (Number) RTO in seconds.
+* `rpo` - (Number) Recovery Point Objective (RPO) as a Go duration.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+* `rto` - (Number) Recovery Time Objective (RTO) as a Go duration.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
 
 ### `policy.software`
 
 The following arguments are required:
 
-* `rpo_in_secs` - (Number) RPO in seconds.
-* `rto_in_secs` - (Number) RTO in seconds.
+* `rpo` - (Number) Recovery Point Objective (RPO) as a Go duration.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+* `rto` - (Number) Recovery Time Objective (RTO) as a Go duration.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
 
 ### `policy.region`
 
 The following arguments are required:
 
-* `rpo_in_secs` - (Number) RPO in seconds.
-* `rto_in_secs` - (Number) RTO in seconds.
-
+* `rpo` - (Number) Recovery Point Objective (RPO) as a Go duration.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+* `rto` - (Number) Recovery Time Objective (RTO) as a Go duration.
+  Represented by a string such as `1h`, `2h45m`, or `30m15s`.
+  
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:

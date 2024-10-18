@@ -14,14 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/resiliencehub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resiliencehub/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -64,24 +63,20 @@ func (r *resourceResiliencyPolicy) Metadata(_ context.Context, req resource.Meta
 
 func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	requiredObjAttrs := map[string]schema.Attribute{
-		"rto_in_secs": schema.Int32Attribute{
-			Description: "Recovery Time Objective (RTO) in seconds.",
+		"rto": schema.StringAttribute{
+			Description: "Recovery Time Objective (RTO) as a Go duration.",
+			CustomType:  timetypes.GoDurationType{},
 			Required:    true,
-			PlanModifiers: []planmodifier.Int32{
-				int32planmodifier.UseStateForUnknown(),
-			},
-			Validators: []validator.Int32{
-				int32validator.AtLeast(0),
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
-		"rpo_in_secs": schema.Int32Attribute{
-			Description: "Recovery Point Objective (RPO) in seconds.",
+		"rpo": schema.StringAttribute{
+			Description: "Recovery Point Objective (RPO) as a Go duration.",
+			CustomType:  timetypes.GoDurationType{},
 			Required:    true,
-			PlanModifiers: []planmodifier.Int32{
-				int32planmodifier.UseStateForUnknown(),
-			},
-			Validators: []validator.Int32{
-				int32validator.AtLeast(0),
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
 	}
@@ -172,29 +167,25 @@ func (r *resourceResiliencyPolicy) Schema(ctx context.Context, req resource.Sche
 						Description: "The RTO and RPO target to measure resiliency for potential region disruptions.",
 						Validators: []validator.Object{
 							objectvalidator.AlsoRequires(
-								path.MatchRelative().AtName("rto_in_secs"),
-								path.MatchRelative().AtName("rpo_in_secs"),
+								path.MatchRelative().AtName("rto"),
+								path.MatchRelative().AtName("rpo"),
 							),
 						},
 						Attributes: map[string]schema.Attribute{
-							"rto_in_secs": schema.Int32Attribute{
-								Description: "Recovery Time Objective (RTO) in seconds.",
+							"rto": schema.StringAttribute{
+								Description: "Recovery Time Objective (RTO) as a Go duration.",
+								CustomType:  timetypes.GoDurationType{},
 								Optional:    true,
-								PlanModifiers: []planmodifier.Int32{
-									int32planmodifier.UseStateForUnknown(),
-								},
-								Validators: []validator.Int32{
-									int32validator.AtLeast(0),
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
 								},
 							},
-							"rpo_in_secs": schema.Int32Attribute{
-								Description: "Recovery Point Objective (RPO) in seconds.",
+							"rpo": schema.StringAttribute{
+								Description: "Recovery Point Objective (RPO) as a Go duration.",
+								CustomType:  timetypes.GoDurationType{},
 								Optional:    true,
-								PlanModifiers: []planmodifier.Int32{
-									int32planmodifier.UseStateForUnknown(),
-								},
-								Validators: []validator.Int32{
-									int32validator.AtLeast(0),
+								PlanModifiers: []planmodifier.String{
+									stringplanmodifier.UseStateForUnknown(),
 								},
 							},
 						},
@@ -546,18 +537,26 @@ func (m *resourceResiliencyPolicyModel) expandPolicy(ctx context.Context) (resul
 		awstypes.TestTypeAz:       m.AZ,
 		awstypes.TestTypeHardware: m.Hardware,
 		awstypes.TestTypeSoftware: m.Software,
-		awstypes.TestTypeRegion:   m.Region}
-
+		awstypes.TestTypeRegion:   m.Region,
+	}
 	for k, v := range failurePolicyKeyMap {
 		if !v.IsNull() {
 			resObjModel, d := v.ToPtr(ctx)
 			diags.Append(d...)
-			if diags.HasError() {
+			if d.HasError() {
+				return result, diags
+			}
+			rpo, d := resObjModel.Rpo.ValueGoDuration()
+			if d.HasError() {
+				return result, diags
+			}
+			rto, d := resObjModel.Rto.ValueGoDuration()
+			if d.HasError() {
 				return result, diags
 			}
 			failurePolicy[string(k)] = awstypes.FailurePolicy{
-				RpoInSecs: resObjModel.RpoInSecs.ValueInt32(),
-				RtoInSecs: resObjModel.RtoInSecs.ValueInt32(),
+				RpoInSecs: int32(rpo.Seconds()),
+				RtoInSecs: int32(rto.Seconds()),
 			}
 		}
 	}
@@ -575,8 +574,9 @@ func (m *resourceResiliencyPolicyData) flattenPolicy(ctx context.Context, failur
 	newResObjModel := func(policyType awstypes.TestType, failurePolicy map[string]awstypes.FailurePolicy) fwtypes.ObjectValueOf[resourceResiliencyObjectiveModel] {
 		if pv, exists := failurePolicy[string(policyType)]; exists {
 			return fwtypes.NewObjectValueOfMust(ctx, &resourceResiliencyObjectiveModel{
-				RpoInSecs: types.Int32Value(pv.RpoInSecs),
-				RtoInSecs: types.Int32Value(pv.RtoInSecs)})
+				Rpo: timetypes.NewGoDurationValue(time.Duration(pv.RpoInSecs) * time.Second),
+				Rto: timetypes.NewGoDurationValue(time.Duration(pv.RtoInSecs) * time.Second),
+			})
 		} else {
 			return fwtypes.NewObjectValueOfNull[resourceResiliencyObjectiveModel](ctx)
 		}
@@ -611,6 +611,6 @@ type resourceResiliencyPolicyModel struct {
 }
 
 type resourceResiliencyObjectiveModel struct {
-	RpoInSecs types.Int32 `tfsdk:"rpo_in_secs"`
-	RtoInSecs types.Int32 `tfsdk:"rto_in_secs"`
+	Rpo timetypes.GoDuration `tfsdk:"rpo"`
+	Rto timetypes.GoDuration `tfsdk:"rto"`
 }
