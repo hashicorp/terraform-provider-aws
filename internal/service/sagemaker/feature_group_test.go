@@ -1022,8 +1022,8 @@ resource "aws_sagemaker_feature_group" "test" {
   role_arn                       = aws_iam_role.test.arn
 
   feature_definition {
-    feature_name    = %[1]q
-    feature_type    = "String"
+    feature_name = %[1]q
+    feature_type = "String"
   }
 
   feature_definition {
@@ -1049,8 +1049,8 @@ resource "aws_sagemaker_feature_group" "test" {
   role_arn                       = aws_iam_role.test.arn
 
   feature_definition {
-    feature_name    = %[1]q
-    feature_type    = "String"
+    feature_name = %[1]q
+    feature_type = "String"
   }
 
   feature_definition {
@@ -1059,14 +1059,14 @@ resource "aws_sagemaker_feature_group" "test" {
     collection_type = "Vector"
     collection_config {
       vector_config {
-		dimension = 2
+        dimension = 2
       }
     }
   }	  
 
   online_store_config {
     enable_online_store = true
-	storage_type        = "InMemory"
+    storage_type        = "InMemory"
   }
 }
 `, rName))
