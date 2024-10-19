@@ -104,7 +104,7 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(name)
 
-	if err := waitImageCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitImageCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image (%s) to be created: %s", d.Id(), err)
 	}
 
@@ -174,7 +174,7 @@ func resourceImageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			return sdkdiag.AppendErrorf(diags, "updating SageMaker Image: %s", err)
 		}
 
-		if err := waitImageCreated(ctx, conn, d.Id()); err != nil {
+		if _, err := waitImageCreated(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for SageMaker Image (%s) to update: %s", d.Id(), err)
 		}
 	}
