@@ -166,7 +166,6 @@ func RegisterSweepers() {
 		Name: "aws_sagemaker_hub",
 		F:    sweepHubs,
 	})
-
 }
 
 func sweepAppImagesConfig(region string) error {
