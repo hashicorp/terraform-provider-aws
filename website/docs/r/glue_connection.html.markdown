@@ -270,15 +270,48 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `authentication_configuration` - (Optional) The authentication properties of the connection. Used for a Salesforce connection. See [`authentication_configuration` Block](#authentication_configuration-block) for details.
 * `catalog_id` – (Optional) ID of the Data Catalog in which to create the connection. If none is supplied, the AWS account ID is used by default.
 * `connection_properties` – (Optional) Map of key-value pairs used as parameters for this connection. For more information, see the [AWS Documentation](https://docs.aws.amazon.com/glue/latest/dg/connection-properties.html).
 
   **Note:** Some connection types require the `SparkProperties` property with a JSON document that contains the actual connection properties. For specific examples, refer to [Example Usage](#example-usage).
-* `connection_type` – (Optional) Type of the connection. Valid values: `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `CUSTOM`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, `NETWORK`, `OPENSEARCH`, `SNOWFLAKE`. Defaults to `JDBC`.
+* `connection_type` – (Optional) Type of the connection. Valid values: `AZURECOSMOS`, `AZURESQL`, `BIGQUERY`, `CUSTOM`, `JDBC`, `KAFKA`, `MARKETPLACE`, `MONGODB`, `NETWORK`, `OPENSEARCH`, `SALESFORCE`, `SNOWFLAKE`, `VIEW_VALIDATION_REDSHIFT`, `VIEW_VALIDATION_ATHENA`. Defaults to `JDBC`.
 * `description` – (Optional) Description of the connection.
 * `match_criteria` – (Optional) List of criteria that can be used in selecting this connection.
 * `physical_connection_requirements` - (Optional) Map of physical connection requirements, such as VPC and SecurityGroup. See [`physical_connection_requirements` Block](#physical_connection_requirements-block) for details.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### `authentication_configuration` Block
+
+The `authentication_configuration` configuration block supports the following arguments:
+
+* `authentication_type` - (Optional) A structure containing the authentication configuration. Valid values are `BASIC`, `OAUTH2`, and `CUSTOM`.
+* `oauth2_properties` - (Optional) The properties for OAuth2 authentication. See [`oauth2_properties` Block](#oauth2_properties-block) for details.
+* `secret_arn` - (Optional) The secret manager ARN to store credentials in the request.
+
+### `oauth2_properties` Block
+
+The `oauth2_properties` configuration block supports the following arguments:
+
+* `authorization_code_properties` - (Optional) The set of properties required for the the OAuth2 `AUTHORIZATION_CODE` grant type. See [`authorization_code_properties` Block](#authorization_code_properties-block) for details.
+* `oauth2_client_application` - (Optional) The client application type in the CreateConnection request. For example, `AWS_MANAGED` or `USER_MANAGED`. See [`oauth2_client_application` Block](#oauth2_client_application-block) for details.
+* `oauth2_grant_type` - (Optional) The OAuth2 grant type in the request. Valid Values are `AUTHORIZATION_CODE`, `CLIENT_CREDENTIALS`, and `JWT_BEARER`.
+* `token_url` - (Optional) The URL of the provider's authentication server, to exchange an authorization code for an access token.
+* `token_url_parameters_map` - (Optional) A map of parameters that are added to the token GET request.
+
+### `authorization_code_properties` Block
+
+The `authorization_code_properties` configuration block supports the following arguments:
+
+* `authorization_code` - (Optional) An authorization code to be used in the third leg of the `AUTHORIZATION_CODE` grant workflow. This is a single-use code which becomes invalid once exchanged for an access token, thus it is acceptable to have this value as a request parameter.
+* `redirect_uri` - (Optional) The redirect URI where the user gets redirected to by authorization server when issuing an authorization code. The URI is subsequently used when the authorization code is exchanged for an access token.
+
+### `oauth2_client_application` Block
+
+The `oauth2_client_application` configuration block supports the following arguments:
+
+* `aws_managed_client_application_reference` - (Optional) The reference to the SaaS-side client app that is AWS managed.
+* `user_managed_client_application_client_id` - (Optional) The client application clientID if the ClientAppType is `USER_MANAGED`.
 
 ### `physical_connection_requirements` Block
 
