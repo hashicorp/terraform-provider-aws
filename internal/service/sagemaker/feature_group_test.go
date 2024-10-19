@@ -542,7 +542,7 @@ func testAccFeatureGroup_featureDefinition_collectionConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_name", fmt.Sprintf("%s-1", rName)),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_type", "Fractional"),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_type", "Vector"),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_config.0.vector_config.#", acctest.Ct1),
@@ -1055,7 +1055,7 @@ resource "aws_sagemaker_feature_group" "test" {
 
   feature_definition {
     feature_name    = "%[1]s-1"
-    feature_type    = "String"
+    feature_type    = "Fractional"
     collection_type = "Vector"
     collection_config {
       vector_config {
