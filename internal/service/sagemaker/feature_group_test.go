@@ -479,7 +479,7 @@ func testAccFeatureGroup_throughputConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "throughput_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "throughput_config.0.throughput_mode", "Provisioned"),
-					resource.TestCheckResourceAttr(resourceName, "throughput_config.0.provisioned_write_capacity_units", "1"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_config.0.provisioned_write_capacity_units", acctest.Ct1),
 				),
 			},
 		},
@@ -546,7 +546,7 @@ func testAccFeatureGroup_featureDefinition_collectionConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_type", "Vector"),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_config.0.vector_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_config.0.vector_config.0.dimension", "2"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_config.0.vector_config.0.dimension", acctest.Ct2),
 				),
 			},
 			{
