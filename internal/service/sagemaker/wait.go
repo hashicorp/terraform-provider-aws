@@ -654,8 +654,8 @@ func waitHubInService(ctx context.Context, conn *sagemaker.Client, name string) 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
-		if awstypes.HubStatus(output.HubStatus) == awstypes.HubStatus(awstypes.HubStatusCreateFailed) {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusCreateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -675,8 +675,8 @@ func waitHubDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
-		if awstypes.HubStatus(output.HubStatus) == awstypes.HubStatus(awstypes.HubStatusDeleteFailed) {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err
@@ -696,8 +696,8 @@ func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
-		if awstypes.HubStatus(output.HubStatus) == awstypes.HubStatus(awstypes.HubStatusUpdateFailed) {
-			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusUpdateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
 		}
 
 		return output, err

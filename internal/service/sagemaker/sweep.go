@@ -161,6 +161,12 @@ func RegisterSweepers() {
 		Name: "aws_sagemaker_pipeline",
 		F:    sweepPipelines,
 	})
+
+	resource.AddTestSweepers("aws_sagemaker_hub", &resource.Sweeper{
+		Name: "aws_sagemaker_hub",
+		F:    sweepHubs,
+	})
+
 }
 
 func sweepAppImagesConfig(region string) error {
