@@ -300,7 +300,7 @@ func testAccHubConfig_s3(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
-  
+
 resource "aws_sagemaker_hub" "test" {
   hub_name        = %[1]q
   hub_description = %[1]q
