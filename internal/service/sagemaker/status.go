@@ -107,6 +107,22 @@ func statusFeatureGroup(ctx context.Context, conn *sagemaker.Client, name string
 	}
 }
 
+func statusFeatureGroupUpdate(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findFeatureGroupByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.LastUpdateStatus.Status), nil
+	}
+}
+
 func statusFlowDefinition(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findFlowDefinitionByName(ctx, conn, name)
