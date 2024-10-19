@@ -1029,12 +1029,12 @@ resource "aws_sagemaker_feature_group" "test" {
   feature_definition {
     feature_name    = "%[1]s-1"
     feature_type    = "String"
-	collection_type = "List"
+    collection_type = "List"
   }
 
   online_store_config {
     enable_online_store = true
-	storage_type        = "InMemory"
+    storage_type        = "InMemory"
   }
 }
 `, rName))
@@ -1056,7 +1056,7 @@ resource "aws_sagemaker_feature_group" "test" {
   feature_definition {
     feature_name    = "%[1]s-1"
     feature_type    = "String"
-	collection_type = "Vector"
+    collection_type = "Vector"
     collection_config {
       vector_config {
 		dimension = 2
@@ -1095,7 +1095,7 @@ resource "aws_sagemaker_feature_group" "test" {
       s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
     }
   }
-	
+
   throughput_config {
     throughput_mode = "OnDemand"
   }
@@ -1128,10 +1128,10 @@ resource "aws_sagemaker_feature_group" "test" {
       s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
     }
   }
-	
+
   throughput_config {
     throughput_mode                  = "Provisioned"
-	provisioned_write_capacity_units = 1
+    provisioned_write_capacity_units = 1
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
