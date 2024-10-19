@@ -1062,7 +1062,7 @@ resource "aws_sagemaker_feature_group" "test" {
         dimension = 2
       }
     }
-  }	  
+  }
 
   online_store_config {
     enable_online_store = true
