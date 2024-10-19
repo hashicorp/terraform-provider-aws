@@ -170,7 +170,7 @@ func waitModelPackageGroupDeleted(ctx context.Context, conn *sagemaker.Client, n
 	return nil, err
 }
 
-func waitImageCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageOutput, error) {
+func waitImageCreated(ctx context.Context, conn *sagemaker.Client, name string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageStatusCreating, awstypes.ImageStatusUpdating),
 		Target:  enum.Slice(awstypes.ImageStatusCreated),
@@ -185,13 +185,13 @@ func waitImageCreated(ctx context.Context, conn *sagemaker.Client, name string) 
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
-func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageOutput, error) {
+func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageStatusDeleting),
 		Target:  []string{},
@@ -206,10 +206,10 @@ func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) 
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 
-		return output, err
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func waitImageVersionCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageVersionOutput, error) {
