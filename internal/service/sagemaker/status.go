@@ -218,3 +218,19 @@ func statusMlflowTrackingServer(ctx context.Context, conn *sagemaker.Client, nam
 		return output, string(output.TrackingServerStatus), nil
 	}
 }
+
+func statusHub(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findHubByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.HubStatus), nil
+	}
+}

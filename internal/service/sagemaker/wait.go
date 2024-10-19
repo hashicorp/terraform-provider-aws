@@ -43,6 +43,7 @@ const (
 	monitoringScheduleScheduledTimeout = 2 * time.Minute
 	monitoringScheduleStoppedTimeout   = 2 * time.Minute
 	mlflowTrackingServerTimeout        = 30 * time.Minute
+	hubTimeout                         = 10 * time.Minute
 
 	notebookInstanceStatusNotFound = "NotFound"
 )
@@ -636,6 +637,69 @@ func waitMlflowTrackingServerDeleted(ctx context.Context, conn *sagemaker.Client
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeMlflowTrackingServerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubInService(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubStatusCreating),
+		Target:  enum.Slice(awstypes.HubStatusInService),
+		Refresh: statusHub(ctx, conn, name),
+		Timeout: hubTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
+		if awstypes.HubStatus(output.HubStatus) == awstypes.HubStatus(awstypes.HubStatusCreateFailed) {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubStatusDeleting),
+		Target:  []string{},
+		Refresh: statusHub(ctx, conn, name),
+		Timeout: hubTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
+		if awstypes.HubStatus(output.HubStatus) == awstypes.HubStatus(awstypes.HubStatusDeleteFailed) {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubStatusUpdating),
+		Target:  enum.Slice(awstypes.HubStatusInService),
+		Refresh: statusHub(ctx, conn, name),
+		Timeout: hubTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
+		if awstypes.HubStatus(output.HubStatus) == awstypes.HubStatus(awstypes.HubStatusUpdateFailed) {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		}
+
 		return output, err
 	}
 
