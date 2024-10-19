@@ -69,6 +69,10 @@ func resourceBucket() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"region_namex": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"acceleration_status": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -741,8 +745,15 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// See https://docs.aws.amazon.com/AmazonS3/latest/API/API_CreateBucket.html#AmazonS3-CreateBucket-request-LocationConstraint.
 	if region != names.USEast1RegionID {
-		input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
-			LocationConstraint: types.BucketLocationConstraint(region),
+		regionNameX := d.Get(region_namex)
+		if regionNameX == "" {
+			input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
+				LocationConstraint: types.BucketLocationConstraint(region),
+			}
+		} else {
+			input.CreateBucketConfiguration = &types.CreateBucketConfiguration{
+				LocationConstraint: types.BucketLocationConstraint(regionNameX),
+			}
 		}
 	}
 
