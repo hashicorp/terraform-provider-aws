@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_imagebuilder_workflow: Fix validation of workflow type. Exclude DISTRIBUTION from allowed values.
+```
