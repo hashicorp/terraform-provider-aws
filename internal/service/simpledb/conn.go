@@ -60,7 +60,7 @@ func simpleDBConn(ctx context.Context, c *conns.AWSClient) *simpledb.SimpleDB {
 var _ endpoints_sdkv1.Resolver = resolverSDKv1{}
 
 type resolverSDKv1 struct {
-	ctx context.Context
+	ctx context.Context //nolint:containedctx // Was in generated code
 }
 
 func newEndpointResolverSDKv1(ctx context.Context) resolverSDKv1 {
