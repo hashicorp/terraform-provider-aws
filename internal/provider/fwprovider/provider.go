@@ -490,6 +490,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 					ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
 					if meta != nil {
 						ctx = meta.RegisterLogger(ctx)
+						ctx = flex.RegisterLogger(ctx)
 					}
 					return ctx
 				}
