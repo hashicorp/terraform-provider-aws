@@ -67,8 +67,13 @@ func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:c
 	return c.awsConfig.Copy()
 }
 
+// AwsSession and Endpoints can be removed once the simpledb service is removed.
 func (c *AWSClient) AwsSession(context.Context) *session_sdkv1.Session { // nosemgrep:ci.aws-in-func-name
 	return c.session
+}
+
+func (c *AWSClient) Endpoints(context.Context) map[string]string {
+	return maps.Clone(c.endpoints)
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
@@ -232,10 +237,10 @@ func convertIPToDashIP(ip string) string {
 }
 
 // apiClientConfig returns the AWS API client configuration parameters for the specified service.
-func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName string) map[string]any {
+func (c *AWSClient) apiClientConfig(_ context.Context, servicePackageName string) map[string]any {
 	m := map[string]any{
 		"aws_sdkv2_config": c.awsConfig,
-		"endpoint":         c.ResolveEndpoint(ctx, servicePackageName),
+		"endpoint":         c.endpoints[servicePackageName],
 		"partition":        c.Partition,
 	}
 	switch servicePackageName {
