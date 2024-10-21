@@ -329,8 +329,8 @@ func waitFeatureGroupUpdated(ctx context.Context, conn *sagemaker.Client, name s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
-		if status, reason := output.LastUpdateStatus.Status, aws.ToString(output.LastUpdateStatus.FailureReason); status == awstypes.LastUpdateStatusValueFailed && reason != "" {
-			tfresource.SetLastError(err, errors.New(reason))
+		if v := output.LastUpdateStatus; v != nil && v.Status == awstypes.LastUpdateStatusValueFailed {
+			tfresource.SetLastError(err, errors.New(*v.FailureReason))
 		}
 
 		return output, err
