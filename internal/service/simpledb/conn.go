@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"os"
 
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/simpledb"
@@ -41,7 +43,7 @@ func simpleDBConn(ctx context.Context, c *conns.AWSClient) *simpledb.SimpleDB { 
 
 	cfg := aws.Config{}
 
-	if endpoint := c.ResolveEndpoint(ctx, servicePackageName); endpoint != "" {
+	if endpoint := resolveEndpoint(ctx, c); endpoint != "" {
 		tflog.Debug(ctx, "setting endpoint", map[string]any{
 			"tf_aws.endpoint": endpoint,
 		})
@@ -53,6 +55,59 @@ func simpleDBConn(ctx context.Context, c *conns.AWSClient) *simpledb.SimpleDB { 
 	conn = simpledb.New(c.AwsSession(ctx).Copy(&cfg))
 
 	return conn
+}
+
+// Adapted from
+//	internal/conns/awsclient_resolveendpoint_gen.go: func (c *AWSClient) ResolveEndpoint(ctx context.Context, servicePackageName string) string
+
+func resolveEndpoint(ctx context.Context, c *conns.AWSClient) string {
+	endpoint := c.Endpoints(ctx)[names.SimpleDB]
+	if endpoint != "" {
+		return endpoint
+	}
+
+	endpoint = aws.StringValue(c.AwsConfig(ctx).BaseEndpoint)
+	svc := os.Getenv("AWS_ENDPOINT_URL_SIMPLEDB")
+	if svc != "" {
+		return svc
+	}
+
+	if base := os.Getenv("AWS_ENDPOINT_URL"); base != "" {
+		return base
+	}
+
+	endpoint, found, err := resolveServiceBaseEndpoint(ctx, "SimpleDB", c.AwsConfig(ctx).ConfigSources)
+	if found && err == nil {
+		return endpoint
+	}
+
+	return endpoint
+}
+
+// Copied from internal/conns/awsclient.go.
+
+// serviceBaseEndpointProvider is needed to search for all providers
+// that provide a configured service endpoint
+type serviceBaseEndpointProvider interface {
+	GetServiceBaseEndpoint(ctx context.Context, sdkID string) (string, bool, error)
+}
+
+// resolveServiceBaseEndpoint is used to retrieve service endpoints from configured sources
+// while allowing for configured endpoints to be disabled
+func resolveServiceBaseEndpoint(ctx context.Context, sdkID string, configs []any) (value string, found bool, err error) {
+	if val, found, _ := config.GetIgnoreConfiguredEndpoints(ctx, configs); found && val {
+		return "", false, nil
+	}
+
+	for _, cs := range configs {
+		if p, ok := cs.(serviceBaseEndpointProvider); ok {
+			value, found, err = p.GetServiceBaseEndpoint(ctx, sdkID)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
 }
 
 // Copied from internal/service/simpledb/service_endpoint_resolver_gen.go.
