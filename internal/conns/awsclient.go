@@ -68,7 +68,7 @@ func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:c
 }
 
 func (c *AWSClient) AwsSession(context.Context) *session_sdkv1.Session { // nosemgrep:ci.aws-in-func-name
-	return c.session.Copy()
+	return c.session
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
