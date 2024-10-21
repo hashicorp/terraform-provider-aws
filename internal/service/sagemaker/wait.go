@@ -318,6 +318,27 @@ func waitFeatureGroupDeleted(ctx context.Context, conn *sagemaker.Client, name s
 	return nil, err
 }
 
+func waitFeatureGroupUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.LastUpdateStatusValueInProgress),
+		Target:  enum.Slice(awstypes.LastUpdateStatusValueSuccessful),
+		Refresh: statusFeatureGroupUpdate(ctx, conn, name),
+		Timeout: featureGroupDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
+		if v := output.LastUpdateStatus; v != nil && v.Status == awstypes.LastUpdateStatusValueFailed {
+			tfresource.SetLastError(err, errors.New(*v.FailureReason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitAppInService(ctx context.Context, conn *sagemaker.Client, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AppStatusPending),
