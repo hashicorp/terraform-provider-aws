@@ -95,6 +95,10 @@ class MyConvertedCode(TerraformStack):
             depends_on=[workspaces_default_service_access, workspaces_default_self_service_access
             ],
             directory_id=Token.as_string(aws_directory_service_directory_example.id),
+            saml_properties=WorkspacesDirectorySamlProperties(
+                status="ENABLED",
+                user_access_url="https://sso.example.com/"
+            ),
             self_service_permissions=WorkspacesDirectorySelfServicePermissions(
                 change_compute_type=True,
                 increase_volume_size=True,
@@ -160,11 +164,18 @@ This resource supports the following arguments:
 
 * `directory_id` - (Required) The directory identifier for registration in WorkSpaces service.
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
-* `ip_group_ids` - The identifiers of the IP access control groups associated with the directory.
+* `ip_group_ids` – (Optional) The identifiers of the IP access control groups associated with the directory.
 * `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `saml_properties` – (Optional) Configuration of SAML authentication integration. Defined below.
 * `self_service_permissions` – (Optional) Permissions to enable or disable self-service capabilities. Defined below.
 * `workspace_access_properties` – (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
 * `workspace_creation_properties` – (Optional) Default properties that are used for creating WorkSpaces. Defined below.
+
+### saml_properties
+
+* `relay_state_parameter_name` - (Optional) The relay state parameter name supported by the SAML 2.0 identity provider (IdP). Default `RelayState`.
+* `status` - (Optional) Status of SAML 2.0 authentication. Default `DISABLED`.
+* `user_access_url` - (Optional) The SAML 2.0 identity provider (IdP) user access URL.
 
 ### self_service_permissions
 
@@ -236,4 +247,4 @@ Using `terraform import`, import Workspaces directory using the directory ID. Fo
 % terraform import aws_workspaces_directory.main d-4444444444
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-d3c63279ed03f48d66f7e43838d7dd34eb898e70056d69f86ad10924bad87a77 -->
+<!-- cache-key: cdktf-0.20.8 input-f7cff0cd2b83407a58d367c446b2c8ec52ee314cdd97d6921dfa0fd5f1fd2076 -->
