@@ -2141,7 +2141,7 @@ func testAccCheckListenerRuleExists(ctx context.Context, n string, v *awstypes.R
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-		output, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.Attributes["arn"])
 
 		if err != nil {
 			return err
@@ -2162,7 +2162,7 @@ func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.Attributes["arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -2172,7 +2172,7 @@ func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 				return err
 			}
 
-			return fmt.Errorf("ELBv2 Listener Rule %s still exists", rs.Primary.ID)
+			return fmt.Errorf("ELBv2 Listener Rule %s still exists", rs.Primary.Attributes["arn"])
 		}
 
 		return nil
