@@ -32,6 +32,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func init() {
+	acctest.RegisterServiceErrorCheckFunc("s3_conditional", testAccErrorCheckSkipService)
+}
+
+func testAccErrorCheckSkipService(t *testing.T) resource.ErrorCheckFunc {
+	return acctest.ErrorCheckSkipMessagesContaining(t,
+		"PreconditionFailed: At least one of the pre-conditions you specified did not hold",
+	)
+}
+
 func TestSDKv1CompatibleCleanKey(t *testing.T) {
 	t.Parallel()
 
@@ -1883,6 +1893,27 @@ func TestAccS3Object_optInRegion(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_conditionalWrite(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var obj s3.GetObjectOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, "s3_conditional"),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_conditionalWrite(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, "aws_s3_object.object", &obj),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckObjectVersionIDDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(first.VersionId) == aws.ToString(second.VersionId) {
@@ -3039,4 +3070,26 @@ resource "aws_s3_object" "object" {
   key    = "test-key"
 }
 `, rName))
+}
+
+func testAccObjectConfig_conditionalWrite(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  force_destroy = false
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "conditional_object"
+}
+
+
+resource "aws_s3_object" "conditional_object" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "conditional_object"
+  if_none_match = "*"
+  depends_on = [aws_s3_object.object]
+}
+`, rName)
 }

@@ -149,6 +149,10 @@ func resourceObject() *schema.Resource {
 				Computed:      true,
 				ConflictsWith: []string{names.AttrKMSKeyID},
 			},
+			"if_none_match": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			names.AttrForceDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -530,6 +534,10 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("content_language"); ok {
 		input.ContentLanguage = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("if_none_match"); ok {
+		input.IfNoneMatch = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrContentType); ok {
