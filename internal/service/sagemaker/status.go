@@ -111,7 +111,7 @@ func statusFeatureGroupUpdate(ctx context.Context, conn *sagemaker.Client, name 
 	return func() (interface{}, string, error) {
 		output, err := findFeatureGroupByName(ctx, conn, name)
 
-		if tfresource.NotFound(err) {
+		if tfresource.NotFound(err) || output.LastUpdateStatus == nil {
 			return nil, "", nil
 		}
 
