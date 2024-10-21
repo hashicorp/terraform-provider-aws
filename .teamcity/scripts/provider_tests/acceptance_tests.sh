@@ -45,6 +45,7 @@ TF_ACC=1 go test \
     ./internal/framework/... \
     ./internal/function/... \
     ./internal/generate/... \
+    ./internal/iam/... \
     ./internal/io/... \
     ./internal/json/... \
     ./internal/logging/... \
