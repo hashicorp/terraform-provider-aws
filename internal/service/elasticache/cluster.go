@@ -978,7 +978,9 @@ func (b byCacheNodeId) Less(i, j int) bool {
 func setFromCacheCluster(d *schema.ResourceData, c *awstypes.CacheCluster) error {
 	d.Set("node_type", c.CacheNodeType)
 
-	switch aws.ToString(c.Engine) {
+	engine := aws.ToString(c.Engine)
+	d.Set(names.AttrEngine, engine)
+	switch engine {
 	case engineValkey:
 		if err := setEngineVersionValkey(d, c.EngineVersion); err != nil {
 			return err // nosemgrep:ci.bare-error-returns
