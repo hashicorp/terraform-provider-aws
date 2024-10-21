@@ -8,5 +8,5 @@ var (
 	ResourceDomain = newDomainResource
 
 	FindDomainByName = findDomainByName
-	SimpleDBConn     = simpleDBConn
+	SimpleDBConn     = simpleDBConn // nosemgrep:ci.simpledb-in-var-name
 )
