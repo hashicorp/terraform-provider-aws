@@ -832,15 +832,15 @@ func validListenerRulePriority(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-// from arn:
-// arn:aws:elasticloadbalancing:us-east-1:012345678912:listener-rule/app/name/0123456789abcdef/abcdef0123456789/456789abcedf1234
-// select submatches:
-// (arn:aws:elasticloadbalancing:us-east-1:012345678912:listener)-rule(/app/name/0123456789abcdef/abcdef0123456789)/456789abcedf1234
-// concat to become:
-// arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789
-var lbListenerARNFromRuleARNRegexp = regexache.MustCompile(`^(arn:.+:listener)-rule(/.+)/[^/]+$`)
-
 func listenerARNFromRuleARN(ruleARN string) string {
+	// from arn:
+	// arn:aws:elasticloadbalancing:us-east-1:012345678912:listener-rule/app/name/0123456789abcdef/abcdef0123456789/456789abcedf1234
+	// select submatches:
+	// (arn:aws:elasticloadbalancing:us-east-1:012345678912:listener)-rule(/app/name/0123456789abcdef/abcdef0123456789)/456789abcedf1234
+	// concat to become:
+	// arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789
+	var lbListenerARNFromRuleARNRegexp = regexache.MustCompile(`^(arn:.+:listener)-rule(/.+)/[^/]+$`)
+
 	if arnComponents := lbListenerARNFromRuleARNRegexp.FindStringSubmatch(ruleARN); len(arnComponents) > 1 {
 		return arnComponents[1] + arnComponents[2]
 	}
