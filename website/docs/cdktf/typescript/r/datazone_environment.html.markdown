@@ -133,4 +133,4 @@ Using `terraform import`, import DataZone Environment using the `domain_idntifie
 % terraform import aws_datazone_environment.example dzd_d2i7tzk3tnjjf4,5vpywijpwryec0
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-04e9b61234e0ad2508dc8e16bc5b836df5b1adc614563949effd6d5bb2afc43e -->
+<!-- cache-key: cdktf-0.20.8 input-04e9b61234e0ad2508dc8e16bc5b836df5b1adc614563949effd6d5bb2afc43e -->

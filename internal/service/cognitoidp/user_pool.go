@@ -33,7 +33,7 @@ import (
 )
 
 // @SDKResource("aws_cognito_user_pool", name="User Pool")
-// @Tags
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types;awstypes;awstypes.UserPoolType")
 func resourceUserPool() *schema.Resource {
 	return &schema.Resource{
@@ -955,15 +955,17 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"sms_authentication_message",
 		"sms_configuration",
 		"sms_verification_message",
-		names.AttrTags,
-		names.AttrTagsAll,
+		// names.AttrTagsAll,
 		"user_attribute_update_settings",
 		"user_pool_add_ons",
 		"verification_message_template",
 	) {
+		// TODO: `UpdateUserPoolInput` has a field `UserPoolTags` that can be used to set tags directly.
+		// However, setting tags directly on the update requires correctly managing Ignored and Default tags.
+		// For now, use `UpdateTags`. Once this is fixed, `UpdateTags` will no longer be needed by this package.
 		input := &cognitoidentityprovider.UpdateUserPoolInput{
-			UserPoolId:   aws.String(d.Id()),
-			UserPoolTags: getTagsIn(ctx),
+			UserPoolId: aws.String(d.Id()),
+			// UserPoolTags: getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("account_recovery_setting"); ok {

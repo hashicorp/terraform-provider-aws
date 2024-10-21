@@ -66,4 +66,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `expires_at` - Specifies when the service account token will expire.
 * `key` - The key for the service account token. Used when making calls to the Grafana HTTP APIs to authenticate and authorize the requests.
 
-<!-- cache-key: cdktf-0.20.9 input-4ecc23ccfdd5d21b6dd3384f0e310b3c13c52ded805632134356f17677649b08 -->
+<!-- cache-key: cdktf-0.20.8 input-4ecc23ccfdd5d21b6dd3384f0e310b3c13c52ded805632134356f17677649b08 -->

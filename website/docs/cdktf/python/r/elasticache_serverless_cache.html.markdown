@@ -193,4 +193,4 @@ Using `terraform import`, import ElastiCache Serverless Cache using the `name`. 
 % terraform import aws_elasticache_serverless_cache.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-2195e3c57e2149561d6da082a1437ad5f3d6c7065409010921e038c0b909a806 -->
+<!-- cache-key: cdktf-0.20.8 input-2195e3c57e2149561d6da082a1437ad5f3d6c7065409010921e038c0b909a806 -->

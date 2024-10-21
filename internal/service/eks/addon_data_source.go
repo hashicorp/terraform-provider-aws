@@ -65,7 +65,7 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	addonName := d.Get("addon_name").(string)
 	clusterName := d.Get(names.AttrClusterName).(string)

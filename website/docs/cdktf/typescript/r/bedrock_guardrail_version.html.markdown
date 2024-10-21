@@ -93,4 +93,4 @@ Using `terraform import`, import Amazon Bedrock Guardrail Version using using a 
 % terraform import aws_bedrock_guardrail_version.example arn:aws:bedrock:us-west-2:123456789012:guardrail-id-12345678,1
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-d25e55323f6bf131f1cc2a349e79696414422e88a6634ccb6d04b8f7e4678949 -->
+<!-- cache-key: cdktf-0.20.8 input-d25e55323f6bf131f1cc2a349e79696414422e88a6634ccb6d04b8f7e4678949 -->

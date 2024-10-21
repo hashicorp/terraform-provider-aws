@@ -212,7 +212,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	// TIP: -- 5. Set the tags
 	{{- end }}
 	{{- if .IncludeTags }}
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 	{{- end }}

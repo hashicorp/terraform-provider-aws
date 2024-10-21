@@ -8,15 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -580,56 +578,42 @@ func TestAccImageBuilderInfrastructureConfiguration_terminateInstanceOnFailure(t
 
 func testAccCheckInfrastructureConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_imagebuilder_infrastructure_configuration" {
 				continue
 			}
 
-			input := &imagebuilder.GetInfrastructureConfigurationInput{
-				InfrastructureConfigurationArn: aws.String(rs.Primary.ID),
-			}
+			_, err := tfimagebuilder.FindInfrastructureConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.GetInfrastructureConfigurationWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error getting Image Builder Infrastructure Configuration (%s): %w", rs.Primary.ID, err)
+				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("Image Builder Infrastructure Configuration (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Image Builder Infrastructure Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckInfrastructureConfigurationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckInfrastructureConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
 
-		input := &imagebuilder.GetInfrastructureConfigurationInput{
-			InfrastructureConfigurationArn: aws.String(rs.Primary.ID),
-		}
+		_, err := tfimagebuilder.FindInfrastructureConfigurationByARN(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.GetInfrastructureConfigurationWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error getting Image Builder Infrastructure Configuration (%s): %w", rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
 }
 

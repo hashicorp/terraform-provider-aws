@@ -21,6 +21,7 @@ import (
 
 // @SDKDataSource("aws_lambda_function", name="Function")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceFunction() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionRead,

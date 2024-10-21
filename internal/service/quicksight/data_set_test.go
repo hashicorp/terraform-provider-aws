@@ -447,53 +447,6 @@ func TestAccQuickSightDataSet_refreshProperties(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightDataSet_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var dataSet awstypes.DataSet
-	resourceName := "aws_quicksight_data_set.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDataSetConfigTags1(rId, rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDataSetConfigTags2(rId, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccDataSetConfigTags1(rId, rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccQuickSightDataSet_noPhysicalTableMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataSet awstypes.DataSet
@@ -1078,65 +1031,6 @@ resource "aws_quicksight_data_set" "test" {
   }
 }
 `, rId, rName))
-}
-
-func testAccDataSetConfigTags1(rId, rName, key1, value1 string) string {
-	return acctest.ConfigCompose(
-		testAccDataSetConfig_base(rId, rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_set" "test" {
-  data_set_id = %[1]q
-  name        = %[2]q
-  import_mode = "SPICE"
-
-  physical_table_map {
-    physical_table_map_id = %[1]q
-    s3_source {
-      data_source_arn = aws_quicksight_data_source.test.arn
-      input_columns {
-        name = "Column1"
-        type = "STRING"
-      }
-      upload_settings {
-        format = "JSON"
-      }
-    }
-  }
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, rId, rName, key1, value1))
-}
-
-func testAccDataSetConfigTags2(rId, rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(
-		testAccDataSetConfig_base(rId, rName),
-		fmt.Sprintf(`
-resource "aws_quicksight_data_set" "test" {
-  data_set_id = %[1]q
-  name        = %[2]q
-  import_mode = "SPICE"
-
-  physical_table_map {
-    physical_table_map_id = %[1]q
-    s3_source {
-      data_source_arn = aws_quicksight_data_source.test.arn
-      input_columns {
-        name = "Column1"
-        type = "STRING"
-      }
-      upload_settings {
-        format = "JSON"
-      }
-    }
-  }
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, rId, rName, key1, value1, key2, value2))
 }
 
 func testAccDataSetConfigNoPhysicalTableMap(rId, rName string) string {

@@ -55,7 +55,7 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 							resource.TestCheckResourceAttrSet(resourceName, "compute_config.0.replication_subnet_group_id"),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", acctest.Ct0),
 							resource.TestCheckResourceAttr(resourceName, "replication_config_identifier", rName),
-							acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_settings", defaultReplicationConfigSettings[migrationType]),
+							acctest.CheckResourceAttrJSONNoDiff(resourceName, "replication_settings", defaultReplicationConfigSettings[awstypes.MigrationTypeValue(migrationType)]),
 							resource.TestCheckResourceAttr(resourceName, "replication_type", migrationType),
 							resource.TestCheckNoResourceAttr(resourceName, "resource_identifier"),
 							resource.TestCheckResourceAttrPair(resourceName, "source_endpoint_arn", "aws_dms_endpoint.source", "endpoint_arn"),
@@ -255,47 +255,6 @@ func TestAccDMSReplicationConfig_settings_StreamBuffer(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"start_replication"},
-			},
-		},
-	})
-}
-
-func TestAccDMSReplicationConfig_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dms_replication_config.test"
-	var v awstypes.ReplicationConfig
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccReplicationConfigConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccReplicationConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -664,62 +623,11 @@ resource "aws_dms_replication_config" "test" {
 `, rName, start))
 }
 
-func testAccReplicationConfigConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccReplicationConfigConfig_base_DummyDatabase(rName),
-		fmt.Sprintf(`
-resource "aws_dms_replication_config" "test" {
-  replication_config_identifier = %[1]q
-  replication_type              = "cdc"
-  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
-  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
-  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
-
-  compute_config {
-    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
-    max_capacity_units           = "128"
-    min_capacity_units           = "2"
-    preferred_maintenance_window = "sun:23:45-mon:00:30"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccReplicationConfigConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccReplicationConfigConfig_base_DummyDatabase(rName),
-		fmt.Sprintf(`
-resource "aws_dms_replication_config" "test" {
-  replication_config_identifier = %[1]q
-  replication_type              = "cdc"
-  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
-  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
-  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
-
-  compute_config {
-    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
-    max_capacity_units           = "128"
-    min_capacity_units           = "2"
-    preferred_maintenance_window = "sun:23:45-mon:00:30"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
 var (
-	defaultReplicationConfigSettings = map[string]string{
-		"cdc":               defaultReplicationConfigCdcSettings,
-		"full-load":         defaultReplicationConfigFullLoadSettings,
-		"full-load-and-cdc": defaultReplicationConfigFullLoadAndCdcSettings,
+	defaultReplicationConfigSettings = map[awstypes.MigrationTypeValue]string{
+		awstypes.MigrationTypeValueCdc:            defaultReplicationConfigCdcSettings,
+		awstypes.MigrationTypeValueFullLoad:       defaultReplicationConfigFullLoadSettings,
+		awstypes.MigrationTypeValueFullLoadAndCdc: defaultReplicationConfigFullLoadAndCdcSettings,
 	}
 
 	//go:embed testdata/replication_config/defaults/cdc.json

@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_dms_replication_instance", name="Replication Instance")
 // @Tags(identifierAttribute="replication_instance_arn")
+// @Testing(importIgnore="apply_immediately")
 func resourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationInstanceCreate,
