@@ -178,12 +178,20 @@ func waitImageCreated(ctx context.Context, conn *sagemaker.Client, name string) 
 		Timeout: imageCreatedTimeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
+		if status, reason := output.ImageStatus, aws.ToString(output.FailureReason); (status == awstypes.ImageStatusCreateFailed || status == awstypes.ImageStatusUpdateFailed) && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return err
+	}
 
 	return err
 }
 
-func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageOutput, error) {
+func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageStatusDeleting),
 		Target:  []string{},
@@ -194,10 +202,14 @@ func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
-		return output, err
+		if status, reason := output.ImageStatus, aws.ToString(output.FailureReason); status == awstypes.ImageStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func waitImageVersionCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageVersionOutput, error) {
@@ -211,6 +223,10 @@ func waitImageVersionCreated(ctx context.Context, conn *sagemaker.Client, name s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
+		if status, reason := output.ImageVersionStatus, aws.ToString(output.FailureReason); status == awstypes.ImageVersionStatusCreateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -228,6 +244,10 @@ func waitImageVersionDeleted(ctx context.Context, conn *sagemaker.Client, name s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
+		if status, reason := output.ImageVersionStatus, aws.ToString(output.FailureReason); status == awstypes.ImageVersionStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
