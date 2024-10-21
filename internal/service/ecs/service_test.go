@@ -4601,6 +4601,31 @@ resource "aws_ecs_service" "test" {
 
 func testAccService_vpcLatticeConfiguration_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.name
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+  enable_execute_command = true
+  network_configuration {
+    subnets          = [aws_subnet.test.id]
+    security_groups = [aws_security_group.test.id]
+    assign_public_ip = true
+  }
+ vpc_lattice_configuration {
+    role_arn         = aws_iam_role.vpc_lattice_infrastructure.arn
+    target_group_arn = aws_vpclattice_target_group.test.arn
+    port_name        = "testvpclattice"
+  }
+
+ vpc_lattice_configuration {
+    role_arn         = aws_iam_role.vpc_lattice_infrastructure.arn
+    target_group_arn = aws_vpclattice_target_group.test_ipv6.arn
+    port_name        = "testvpclattice-ipv6"
+  }
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
 
@@ -4926,33 +4951,6 @@ resource "aws_ecs_task_definition" "test" {
 ]
 DEFINITION
 }
-
-
-resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.test.name
-  task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
-  enable_execute_command = true
-  network_configuration {
-    subnets          = [aws_subnet.test.id]
-    security_groups = [aws_security_group.test.id]
-    assign_public_ip = true
-  }
- vpc_lattice_configuration {
-    role_arn         = aws_iam_role.vpc_lattice_infrastructure.arn
-    target_group_arn = aws_vpclattice_target_group.test.arn
-    port_name        = "testvpclattice"
-  }
-
- vpc_lattice_configuration {
-    role_arn         = aws_iam_role.vpc_lattice_infrastructure.arn
-    target_group_arn = aws_vpclattice_target_group.test_ipv6.arn
-    port_name        = "testvpclattice-ipv6"
-  }
-}
-
 
 data "aws_partition" "current" {}
 data "aws_caller_identity" "current" {}
