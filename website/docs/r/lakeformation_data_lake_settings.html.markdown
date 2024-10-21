@@ -63,6 +63,16 @@ resource "aws_lakeformation_data_lake_settings" "example" {
 }
 ```
 
+### Change Cross Account Version
+
+```terraform
+resource "aws_lakeformation_data_lake_settings" "example" {
+  parameters = {
+    "CROSS_ACCOUNT_VERSION" = "3"
+  }
+}
+```
+
 ## Argument Reference
 
 The following arguments are optional:
