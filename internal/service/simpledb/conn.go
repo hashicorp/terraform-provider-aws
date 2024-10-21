@@ -10,7 +10,7 @@ import (
 	"net/url"
 
 	"github.com/aws/aws-sdk-go/aws"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/simpledb"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -57,7 +57,7 @@ func simpleDBConn(ctx context.Context, c *conns.AWSClient) *simpledb.SimpleDB {
 
 // Copied from internal/service/simpledb/service_endpoint_resolver_gen.go.
 
-var _ endpoints_sdkv1.Resolver = resolverSDKv1{}
+var _ endpoints.Resolver = resolverSDKv1{}
 
 type resolverSDKv1 struct {
 	ctx context.Context //nolint:containedctx // Was in generated code
@@ -69,20 +69,20 @@ func newEndpointResolverSDKv1(ctx context.Context) resolverSDKv1 {
 	}
 }
 
-func (r resolverSDKv1) EndpointFor(service, region string, opts ...func(*endpoints_sdkv1.Options)) (endpoint endpoints_sdkv1.ResolvedEndpoint, err error) {
+func (r resolverSDKv1) EndpointFor(service, region string, opts ...func(*endpoints.Options)) (endpoints.ResolvedEndpoint, error) {
 	ctx := r.ctx
 
-	var opt endpoints_sdkv1.Options
+	var opt endpoints.Options
 	opt.Set(opts...)
 
-	useFIPS := opt.UseFIPSEndpoint == endpoints_sdkv1.FIPSEndpointStateEnabled
+	useFIPS := opt.UseFIPSEndpoint == endpoints.FIPSEndpointStateEnabled
 
-	defaultResolver := endpoints_sdkv1.DefaultResolver()
+	defaultResolver := endpoints.DefaultResolver()
 
 	if useFIPS {
 		ctx = tflog.SetField(ctx, "tf_aws.use_fips", useFIPS)
 
-		endpoint, err = defaultResolver.EndpointFor(service, region, opts...)
+		endpoint, err := defaultResolver.EndpointFor(service, region, opts...)
 		if err != nil {
 			return endpoint, err
 		}
@@ -104,12 +104,12 @@ func (r resolverSDKv1) EndpointFor(service, region string, opts ...func(*endpoin
 				tflog.Debug(ctx, "default endpoint host not found, disabling FIPS", map[string]any{
 					"tf_aws.hostname": hostname,
 				})
-				opts = append(opts, func(o *endpoints_sdkv1.Options) {
-					o.UseFIPSEndpoint = endpoints_sdkv1.FIPSEndpointStateDisabled
+				opts = append(opts, func(o *endpoints.Options) {
+					o.UseFIPSEndpoint = endpoints.FIPSEndpointStateDisabled
 				})
 			} else {
-				err = fmt.Errorf("looking up simpledb endpoint %q: %s", hostname, err)
-				return
+				err := fmt.Errorf("looking up simpledb endpoint %q: %s", hostname, err)
+				return endpoints.ResolvedEndpoint{}, err
 			}
 		} else {
 			return endpoint, err
