@@ -520,4 +520,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-4ea1f79147c035d56ca062057addfe56de64ba6c3dee99ca558008c0b296d7c8 -->
+<!-- cache-key: cdktf-0.20.8 input-4ea1f79147c035d56ca062057addfe56de64ba6c3dee99ca558008c0b296d7c8 -->

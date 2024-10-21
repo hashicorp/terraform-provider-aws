@@ -63,6 +63,7 @@ This resource supports the following arguments:
 * `rule_name` - (Required) An display name for a backup rule.
 * `target_vault_name` - (Required) The name of a logical container where backups are stored.
 * `schedule` - (Optional) A CRON expression specifying when AWS Backup initiates a backup job.
+* `schedule_expression_timezone` - (Optional) The timezone in which the schedule expression is set. Default value: `"Etc/UTC"`.
 * `enable_continuous_backup` - (Optional) Enable continuous backups for supported resources.
 * `start_window` - (Optional) The amount of time in minutes before beginning a backup.
 * `completion_window` - (Optional) The amount of time in minutes AWS Backup attempts a backup before canceling the job and returning an error.
@@ -126,4 +127,4 @@ Using `terraform import`, import Backup Plan using the `id`. For example:
 % terraform import aws_backup_plan.test <id>
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-ae01c9fb9e7affc0382314ccec1c65f4cc4f130b5e941d660e20c92e9b5312b9 -->
+<!-- cache-key: cdktf-0.20.8 input-826f12ea1a977c3111ab982ec617895faf024ed3b6b3e4bcf7de41f5a62b6aeb -->
