@@ -42,6 +42,7 @@ const (
 	spaceInServiceTimeout              = 10 * time.Minute
 	monitoringScheduleScheduledTimeout = 2 * time.Minute
 	monitoringScheduleStoppedTimeout   = 2 * time.Minute
+	mlflowTrackingServerTimeout        = 30 * time.Minute
 
 	notebookInstanceStatusNotFound = "NotFound"
 )
@@ -584,6 +585,57 @@ func waitMonitoringScheduleNotFound(ctx context.Context, conn *sagemaker.Client,
 			tfresource.SetLastError(err, errors.New(reason))
 		}
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitMlflowTrackingServerCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMlflowTrackingServerOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TrackingServerStatusCreating),
+		Target:  enum.Slice(awstypes.TrackingServerStatusCreated),
+		Refresh: statusMlflowTrackingServer(ctx, conn, name),
+		Timeout: mlflowTrackingServerTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowTrackingServerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitMlflowTrackingServerUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMlflowTrackingServerOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TrackingServerStatusUpdating),
+		Target:  enum.Slice(awstypes.TrackingServerStatusUpdated),
+		Refresh: statusMlflowTrackingServer(ctx, conn, name),
+		Timeout: mlflowTrackingServerTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowTrackingServerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitMlflowTrackingServerDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeMlflowTrackingServerOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.TrackingServerStatusDeleting),
+		Target:  []string{},
+		Refresh: statusMlflowTrackingServer(ctx, conn, name),
+		Timeout: mlflowTrackingServerTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeMlflowTrackingServerOutput); ok {
 		return output, err
 	}
 

@@ -2,7 +2,10 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_ssm_patch_baselines` ([#39779](https://github.com/hashicorp/terraform-provider-aws/issues/39779))
 * **New Resource:** `aws_imagebuilder_lifecycle_policy` ([#35674](https://github.com/hashicorp/terraform-provider-aws/issues/35674))
+* **New Resource:** `aws_resiliencehub_resiliency_policy` ([#38913](https://github.com/hashicorp/terraform-provider-aws/issues/38913))
+* **New Resource:** `aws_sagemaker_mlflow_tracking_server` ([#39796](https://github.com/hashicorp/terraform-provider-aws/issues/39796))
 
 ENHANCEMENTS:
 

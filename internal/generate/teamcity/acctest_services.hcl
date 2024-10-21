@@ -219,6 +219,10 @@ service "redshift" {
   vpc_lock = true
 }
 
+service "resiliencehub" {
+  parallelism = 10
+}
+
 service "route53" {
   vpc_lock = true
 }
