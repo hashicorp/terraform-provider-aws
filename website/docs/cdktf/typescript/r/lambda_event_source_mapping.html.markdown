@@ -388,4 +388,4 @@ Using `terraform import`, import Lambda event source mappings using the `UUID` (
 % terraform import aws_lambda_event_source_mapping.event_source_mapping 12345kxodurf3443
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-23cbe095e4916e1974b6f351520375105de46fe0451f897ce81436ca1299db41 -->
+<!-- cache-key: cdktf-0.20.8 input-23cbe095e4916e1974b6f351520375105de46fe0451f897ce81436ca1299db41 -->
