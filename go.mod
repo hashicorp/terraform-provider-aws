@@ -35,14 +35,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.38.2
-	github.com/aws/aws-sdk-go-v2/service/athena v1.47.2
+	github.com/aws/aws-sdk-go-v2/service/athena v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/backup v1.39.3
 	github.com/aws/aws-sdk-go-v2/service/batch v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.2
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.20.2
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.8.2
@@ -88,7 +88,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.42.2
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.22.2
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/detective v1.31.2
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.28.2
@@ -100,7 +100,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.36.2
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.182.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.183.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.47.4
