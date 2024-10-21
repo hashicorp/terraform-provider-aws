@@ -27,7 +27,7 @@ var (
 // internal/conns/awsclient.go: func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error)
 // internal/service/simpledb/service_package_gen.go: func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*simpledb_sdkv1.SimpleDB, error)
 
-func simpleDBConn(ctx context.Context, c *conns.AWSClient) *simpledb.SimpleDB {
+func simpleDBConn(ctx context.Context, c *conns.AWSClient) *simpledb.SimpleDB { // nosemgrep:ci.simpledb-in-func-name
 	const servicePackageName = names.SimpleDB
 	ctx = tflog.SetField(ctx, "tf_aws.service_package", servicePackageName)
 
