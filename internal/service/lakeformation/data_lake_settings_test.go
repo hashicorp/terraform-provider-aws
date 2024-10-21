@@ -138,7 +138,7 @@ func testAccDataLakeSettings_parameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct2), // In fresh account, with empty config, API returns map[CROSS_ACCOUNT_VERSION:1 SET_CONTEXT:TRUE]
-					resource.TestCheckResourceAttr(resourceName, "parameters.SET_CONTEXT", "TRUE"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.SET_CONTEXT", acctest.CtTrueCaps),
 					resource.TestCheckResourceAttr(resourceName, "parameters.CROSS_ACCOUNT_VERSION", acctest.Ct1),
 				),
 			},
@@ -162,7 +162,7 @@ func testAccDataLakeSettings_parameters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct2), // In fresh account, with empty config, API returns map[CROSS_ACCOUNT_VERSION:1 SET_CONTEXT:TRUE]
-					resource.TestCheckResourceAttr(resourceName, "parameters.SET_CONTEXT", "TRUE"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.SET_CONTEXT", acctest.CtTrueCaps),
 					resource.TestCheckResourceAttr(resourceName, "parameters.CROSS_ACCOUNT_VERSION", acctest.Ct1),
 				),
 			},
