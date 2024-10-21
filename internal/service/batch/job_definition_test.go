@@ -1031,7 +1031,7 @@ func TestAccBatchJobDefinition_updateWithTags(t *testing.T) {
 		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobDefinitionConfig_simpleWithTags(rName),
+				Config: testAccJobDefinitionConfig_simpleWithTags(rName, "echo", "test1"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
@@ -1052,7 +1052,7 @@ func TestAccBatchJobDefinition_updateWithTags(t *testing.T) {
 			},
 			// Create ensure that tags are put on the new revision.
 			{
-				Config: testAccJobDefinitionConfig_simpleWithTagsUpdate(rName),
+				Config: testAccJobDefinitionConfig_simpleWithTags(rName, "echo", "test2"),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
@@ -2207,11 +2207,11 @@ resource "aws_batch_job_definition" "test" {
 `, rName, acctest.Region())
 }
 
-func testAccJobDefinitionConfig_simpleWithTags(rName string) string {
+func testAccJobDefinitionConfig_simpleWithTags(rName, command1, command2 string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
   container_properties = jsonencode({
-    command = ["echo", "test1"]
+    command = [%[2]q, %[3]q]
     image   = "busybox"
     memory  = 128
     vcpus   = 1
@@ -2223,24 +2223,5 @@ resource "aws_batch_job_definition" "test" {
     Name = %[1]q
   }
 }
-`, rName)
-}
-
-func testAccJobDefinitionConfig_simpleWithTagsUpdate(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_batch_job_definition" "test" {
-  container_properties = jsonencode({
-    command = ["echo", "test2"]
-    image   = "busybox"
-    memory  = 128
-    vcpus   = 1
-  })
-  name = %[1]q
-  type = "container"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-`, rName)
+`, rName, command1, command2)
 }
