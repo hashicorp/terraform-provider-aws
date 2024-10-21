@@ -1050,7 +1050,7 @@ func TestAccBatchJobDefinition_updateWithTags(t *testing.T) {
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 				),
 			},
-			// Create ensure that tags are put on the new revision.
+			// Ensure that tags are put on the new revision.
 			{
 				Config: testAccJobDefinitionConfig_simpleWithTagsUpdate(rName),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
