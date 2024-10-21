@@ -66,7 +66,7 @@ func resolveEndpoint(ctx context.Context, c *conns.AWSClient) string {
 		return endpoint
 	}
 
-	endpoint = aws.StringValue(c.AwsConfig(ctx).BaseEndpoint)
+	//endpoint = aws.StringValue(c.AwsConfig(ctx).BaseEndpoint)
 	svc := os.Getenv("AWS_ENDPOINT_URL_SIMPLEDB")
 	if svc != "" {
 		return svc
