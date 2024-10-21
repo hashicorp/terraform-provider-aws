@@ -309,7 +309,6 @@ resource "aws_lakeformation_data_lake_settings" "test" {
   catalog_id = data.aws_caller_identity.current.account_id
 
   parameters = {
-    "SET_CONTEXT" = "TRUE"
     %[1]q = %[2]q
   }
 }
