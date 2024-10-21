@@ -13,7 +13,6 @@ import (
 	"sync"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	config_sdkv2 "github.com/aws/aws-sdk-go-v2/config"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
@@ -257,30 +256,6 @@ func (c *AWSClient) apiClientConfig(_ context.Context, servicePackageName string
 	}
 
 	return m
-}
-
-// serviceBaseEndpointProvider is needed to search for all providers
-// that provide a configured service endpoint
-type serviceBaseEndpointProvider interface {
-	GetServiceBaseEndpoint(ctx context.Context, sdkID string) (string, bool, error)
-}
-
-// resolveServiceBaseEndpoint is used to retrieve service endpoints from configured sources
-// while allowing for configured endpoints to be disabled
-func resolveServiceBaseEndpoint(ctx context.Context, sdkID string, configs []any) (value string, found bool, err error) {
-	if val, found, _ := config_sdkv2.GetIgnoreConfiguredEndpoints(ctx, configs); found && val {
-		return "", false, nil
-	}
-
-	for _, cs := range configs {
-		if p, ok := cs.(serviceBaseEndpointProvider); ok {
-			value, found, err = p.GetServiceBaseEndpoint(ctx, sdkID)
-			if err != nil || found {
-				break
-			}
-		}
-	}
-	return
 }
 
 // client returns the AWS SDK for Go v2 API client for the specified service.
