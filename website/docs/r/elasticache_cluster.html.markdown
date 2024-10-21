@@ -57,20 +57,6 @@ resource "aws_elasticache_cluster" "example" {
 }
 ```
 
-### Valkey Instance
-
-```terraform
-resource "aws_elasticache_cluster" "example" {
-  cluster_id           = "cluster-example"
-  engine               = "valkey"
-  node_type            = "cache.m4.large"
-  num_cache_nodes      = 1
-  parameter_group_name = "default.valkey7"
-  engine_version       = "7.2"
-  port                 = 6379
-}
-```
-
 ### Redis Cluster Mode Disabled Read Replica Instance
 
 These inherit their settings from the replication group.
@@ -82,12 +68,12 @@ resource "aws_elasticache_cluster" "replica" {
 }
 ```
 
-### Redis/Valkey Log Delivery configuration
+### Redis Log Delivery configuration
 
 ```terraform
 resource "aws_elasticache_cluster" "test" {
   cluster_id        = "mycluster"
-  engine            = "redis" # or "valkey"
+  engine            = "redis"
   node_type         = "cache.t3.micro"
   num_cache_nodes   = 1
   port              = 6379
@@ -154,7 +140,7 @@ resource "aws_elasticache_cluster" "example" {
 The following arguments are required:
 
 * `cluster_id` – (Required) Group identifier. ElastiCache converts this name to lowercase. Changing this value will re-create the resource.
-* `engine` – (Optional, Required if `replication_group_id` is not specified) Name of the cache engine to be used for this cache cluster. Valid values are `memcached`, `redis` and `valkey`.
+* `engine` – (Optional, Required if `replication_group_id` is not specified) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` and `redis`.
 * `node_type` – (Required unless `replication_group_id` is provided) The instance class used.
   See AWS documentation for information on [supported node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Redis](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/nodes-select-size.html).
   See AWS documentation for information on [supported node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/CacheNodes.SupportedTypes.html) and [guidance on selecting node types for Memcached](https://docs.aws.amazon.com/AmazonElastiCache/latest/mem-ug/nodes-select-size.html).
@@ -166,7 +152,7 @@ The following arguments are optional:
 
 * `apply_immediately` - (Optional) Whether any database modifications are applied immediately, or during the next maintenance window. Default is `false`. See [Amazon ElastiCache Documentation for more information.](https://docs.aws.amazon.com/AmazonElastiCache/latest/APIReference/API_ModifyCacheCluster.html).
 * `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
-  Only supported for engine types `"redis"` and `"valkey"` and if the engine version is 6 or higher.
+  Only supported for engine type `"redis"` and if the engine version is 6 or higher.
   Defaults to `true`.
 * `availability_zone` - (Optional) Availability Zone for the cache cluster. If you want to create cache nodes in multi-az, use `preferred_availability_zones` instead. Default: System chosen Availability Zone. Changing this value will re-create the resource.
 * `az_mode` - (Optional, Memcached only) Whether the nodes in this Memcached node group are created in a single Availability Zone or created across multiple Availability Zones in the cluster's region. Valid values for this parameter are `single-az` or `cross-az`, default is `single-az`. If you want to choose `cross-az`, `num_cache_nodes` must be greater than `1`.
@@ -180,7 +166,7 @@ The following arguments are optional:
   The actual engine version used is returned in the attribute `engine_version_actual`, see [Attribute Reference](#attribute-reference) below. Cannot be provided with `replication_group_id.`
 * `final_snapshot_identifier` - (Optional, Redis only) Name of your final cluster snapshot. If omitted, no final snapshot will be made.
 * `ip_discovery` - (Optional) The IP version to advertise in the discovery protocol. Valid values are `ipv4` or `ipv6`.
-* `log_delivery_configuration` - (Optional, Redis OSS and Valkey only) Specifies the destination and format of Redis OSS/Valkey [SLOWLOG](https://redis.io/commands/slowlog) or Redis OSS/Valkey [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
+* `log_delivery_configuration` - (Optional, Redis only) Specifies the destination and format of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log). See the documentation on [Amazon ElastiCache](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html). See [Log Delivery Configuration](#log-delivery-configuration) below for more details.
 * `maintenance_window` – (Optional) Specifies the weekly time range for when maintenance
 on the cache cluster is performed. The format is `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC).
 The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09:00`.
@@ -202,7 +188,7 @@ The minimum maintenance window is a 60 minute period. Example: `sun:05:00-sun:09
 
 ### Log Delivery Configuration
 
-The `log_delivery_configuration` block allows the streaming of Redis OSS/Valkey [SLOWLOG](https://redis.io/commands/slowlog) or Redis OSS/Valkey [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) to CloudWatch Logs or Kinesis Data Firehose. Max of 2 blocks.
+The `log_delivery_configuration` block allows the streaming of Redis [SLOWLOG](https://redis.io/commands/slowlog) or Redis [Engine Log](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/Log_Delivery.html#Log_contents-engine-log) to CloudWatch Logs or Kinesis Data Firehose. Max of 2 blocks.
 
 * `destination` - Name of either the CloudWatch Logs LogGroup or Kinesis Data Firehose resource.
 * `destination_type` - For CloudWatch Logs use `cloudwatch-logs` or for Kinesis Data Firehose use `kinesis-firehose`.
