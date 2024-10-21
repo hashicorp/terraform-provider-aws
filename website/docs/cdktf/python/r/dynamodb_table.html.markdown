@@ -209,6 +209,7 @@ Optional arguments:
 * `import_table` - (Optional) Import Amazon S3 data into a new table. See below.
 * `global_secondary_index` - (Optional) Describe a GSI for the table; subject to the normal limits on the number of GSIs, projected attributes, etc. See below.
 * `local_secondary_index` - (Optional, Forces new resource) Describe an LSI on the table; these can only be allocated _at creation_ so you cannot change this definition after you have created the resource. See below.
+* `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand table. See below.
 * `point_in_time_recovery` - (Optional) Enable point-in-time recovery options. See below.
 * `range_key` - (Optional, Forces new resource) Attribute to use as the range (sort) key. Must also be defined as an `attribute`, see below.
 * `read_capacity` - (Optional) Number of read units for this table. If the `billing_mode` is `PROVISIONED`, this field is required.
@@ -261,6 +262,7 @@ Optional arguments:
 * `hash_key` - (Required) Name of the hash key in the index; must be defined as an attribute in the resource.
 * `name` - (Required) Name of the index.
 * `non_key_attributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
+* `on_demand_throughput` - (Optional) Sets the maximum number of read and write units for the specified on-demand table. See below.
 * `projection_type` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `non_key_attributes` in addition to the attributes that that`KEYS_ONLY` project.
 * `range_key` - (Optional) Name of the range key; must be defined
 * `read_capacity` - (Optional) Number of read units for this index. Must be set if billing_mode is set to PROVISIONED.
@@ -272,6 +274,11 @@ Optional arguments:
 * `non_key_attributes` - (Optional) Only required with `INCLUDE` as a projection type; a list of attributes to project into the index. These do not need to be defined as attributes on the table.
 * `projection_type` - (Required) One of `ALL`, `INCLUDE` or `KEYS_ONLY` where `ALL` projects every attribute into the index, `KEYS_ONLY` projects  into the index only the table and index hash_key and sort_key attributes ,  `INCLUDE` projects into the index all of the attributes that are defined in `non_key_attributes` in addition to the attributes that that`KEYS_ONLY` project.
 * `range_key` - (Required) Name of the range key.
+
+### `on_demand_throughput`
+
+* `max_read_request_units` - (Optional) Maximum number of read request units for the specified table. To specify set the value greater than or equal to 1. To remove set the value to -1.
+* `max_write_request_units` - (Optional) Maximum number of write request units for the specified table. To specify set the value greater than or equal to 1. To remove set the value to -1.
 
 ### `point_in_time_recovery`
 
@@ -344,4 +351,4 @@ Using `terraform import`, import DynamoDB tables using the `name`. For example:
 % terraform import aws_dynamodb_table.basic-dynamodb-table GameScores
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-810fbdca20fc8dae7684a0c0b7f8ed92177810a7dda66a1f28706f01663a494b -->
+<!-- cache-key: cdktf-0.20.8 input-0e792419b0e926f4d7c9b71c1a15790b7e64f9481fbe3263cefc4a708da39c13 -->

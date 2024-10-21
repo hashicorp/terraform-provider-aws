@@ -85,7 +85,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `description` - (Required) A description of the work team.
-* `workforceName` - (Required) The name of the workforce.
+* `workforceName` - (Optional) The name of the workforce.
 * `workteamName` - (Required) The name of the Workteam (must be unique).
 * `memberDefinition` - (Required) A list of Member Definitions that contains objects that identify the workers that make up the work team. Workforces can be created using Amazon Cognito or your own OIDC Identity Provider (IdP). For private workforces created using Amazon Cognito use `cognitoMemberDefinition`. For workforces created using your own OIDC identity provider (IdP) use `oidcMemberDefinition`. Do not provide input for both of these parameters in a single request. see [Member Definition](#member-definition) details below.
 * `notificationConfiguration` - (Optional) Configures notification of workers regarding available or expiring work items. see [Notification Configuration](#notification-configuration) details below.
@@ -161,4 +161,4 @@ Using `terraform import`, import SageMaker Workteams using the `workteamName`. F
 % terraform import aws_sagemaker_workteam.example example
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-9ac358db98aebbfae557b0945f65f02166f5e0693531cf2251b875b077a7ea64 -->
+<!-- cache-key: cdktf-0.20.8 input-e5e991e660212747a639391783caf843d28708e99a57cb8e73ea6fdff1f8d235 -->

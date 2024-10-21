@@ -70,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `create` - (Default `5m`)
 - `update` - (Default `5m`)
-- `delete` - (Default `5m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -97,4 +97,4 @@ Using `terraform import`, import EBS Volumes using the `id`. For example:
 % terraform import aws_ebs_volume.id vol-049df61146c4d7901
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-92ec3ce7171663c1078ea136c38ae14a9544f626bf400bd2be9fd052c9a938d8 -->
+<!-- cache-key: cdktf-0.20.8 input-a49e4b750cd9fa3bd6e8a24961b0ce5676dc571b8d9a3fc931b334d803ed328a -->
