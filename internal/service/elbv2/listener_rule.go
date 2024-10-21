@@ -47,7 +47,7 @@ const (
 
 // @SDKResource("aws_alb_listener_rule", name="Listener Rule")
 // @SDKResource("aws_lb_listener_rule", name="Listener Rule")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Rule")
 // @Testing(importIgnore="action.0.forward")
 func resourceListenerRule() *schema.Resource {
