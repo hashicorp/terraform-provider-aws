@@ -152,7 +152,7 @@ func TestAccSSMMaintenanceWindow_multipleUpdates(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_multipleUpdates(rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &maintenanceWindow2),
-					resource.TestCheckResourceAttr(resourceName, "cutoff", "8"),
+					resource.TestCheckResourceAttr(resourceName, "cutoff", acctest.Ct8),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDuration, acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
@@ -417,7 +417,7 @@ func TestAccSSMMaintenanceWindow_scheduleOffset(t *testing.T) {
 				Config: testAccMaintenanceWindowConfig_scheduleOffset(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowExists(ctx, resourceName, &maintenanceWindow2),
-					resource.TestCheckResourceAttr(resourceName, "schedule_offset", "5"),
+					resource.TestCheckResourceAttr(resourceName, "schedule_offset", acctest.Ct5),
 				),
 			},
 		},
