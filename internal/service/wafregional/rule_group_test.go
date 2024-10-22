@@ -49,7 +49,7 @@ func TestAccWAFRegionalRuleGroup_basic(t *testing.T) {
 					computeActivatedRuleWithRuleId(&rule, "COUNT", 50, &idx),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type":    "COUNT",
-						names.AttrPriority: "50",
+						names.AttrPriority: acctest.Ct50,
 						names.AttrType:     string(awstypes.WafRuleTypeRegular),
 					}),
 				),
@@ -210,7 +210,7 @@ func TestAccWAFRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 					computeActivatedRuleWithRuleId(&rule0, "COUNT", 50, &idx0),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type":    "COUNT",
-						names.AttrPriority: "50",
+						names.AttrPriority: acctest.Ct50,
 						names.AttrType:     string(awstypes.WafRuleTypeRegular),
 					}),
 				),
@@ -242,7 +242,7 @@ func TestAccWAFRegionalRuleGroup_changeActivatedRules(t *testing.T) {
 					computeActivatedRuleWithRuleId(&rule3, "BLOCK", 15, &idx3),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "activated_rule.*", map[string]string{
 						"action.0.type":    "BLOCK",
-						names.AttrPriority: "15",
+						names.AttrPriority: acctest.Ct15,
 						names.AttrType:     string(awstypes.WafRuleTypeRegular),
 					}),
 				),
