@@ -500,7 +500,7 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 				Config: testAccClusterInstanceConfig_monitoringInterval(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", acctest.Ct30),
 				),
 			},
 			{
@@ -515,7 +515,7 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 				Config: testAccClusterInstanceConfig_monitoringInterval(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "60"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", acctest.Ct60),
 				),
 			},
 			{
@@ -529,7 +529,7 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 				Config: testAccClusterInstanceConfig_monitoringInterval(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", acctest.Ct30),
 				),
 			},
 		},
@@ -853,7 +853,7 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", acctest.Ct7),
 				),
 			},
 			{
