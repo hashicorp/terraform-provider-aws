@@ -493,7 +493,7 @@ func TestAccRDSClusterParameterGroup_dynamicDiffs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "aurora-postgresql12"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "track_activity_query_size", // system source
-						names.AttrValue: "4096",
+						names.AttrValue: acctest.Ct4096,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "shared_preload_libraries", // system source
