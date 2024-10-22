@@ -163,8 +163,8 @@ func TestAccTimestreamWriteTableDataSource_retentionProperties(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableExistsNames(ctx, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.0.magnetic_store_retention_period_in_days", "30"),
-					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.0.memory_store_retention_period_in_hours", "120"),
+					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.0.magnetic_store_retention_period_in_days", acctest.Ct30),
+					resource.TestCheckResourceAttr(dataSourceName, "retention_properties.0.memory_store_retention_period_in_hours", acctest.Ct120),
 				),
 			},
 			{
