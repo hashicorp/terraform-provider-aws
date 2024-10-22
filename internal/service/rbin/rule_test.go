@@ -175,13 +175,13 @@ func TestAccRBinRule_lock_config(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_lockConfig(resourceType, "DAYS", "7"),
+				Config: testAccRuleConfig_lockConfig(resourceType, "DAYS", acctest.Ct7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "lock_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.0.unlock_delay_unit", "DAYS"),
-					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.0.unlock_delay_value", "7"),
+					resource.TestCheckResourceAttr(resourceName, "lock_configuration.0.unlock_delay.0.unlock_delay_value", acctest.Ct7),
 				),
 			},
 		},
