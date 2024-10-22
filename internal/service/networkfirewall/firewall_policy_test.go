@@ -604,7 +604,7 @@ func TestAccNetworkFirewallFirewallPolicy_statelessRuleGroupReference(t *testing
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.stateless_rule_group_reference.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
-						names.AttrPriority: "20",
+						names.AttrPriority: acctest.Ct20,
 					}),
 				),
 			},
@@ -654,7 +654,7 @@ func TestAccNetworkFirewallFirewallPolicy_updateStatelessRuleGroupReference(t *t
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "firewall_policy.0.stateless_rule_group_reference.*.resource_arn", ruleGroupResourceName, names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "firewall_policy.0.stateless_rule_group_reference.*", map[string]string{
-						names.AttrPriority: "20",
+						names.AttrPriority: acctest.Ct20,
 					}),
 				),
 			},
