@@ -19,7 +19,7 @@ rules:
           regex: '^github.com/aws/aws-sdk-go-v2/service/[^/]+$'
       - metavariable-regex:
           metavariable: "$Y"
-          regex: '^github.com/aws/aws-sdk-go/service-v2/[^/]+$'
+          regex: '^github.com/aws/aws-sdk-go-v2/service/[^/]+$'
     severity: WARNING
 
   - id: prefer-pointer-conversion-assignment
