@@ -361,7 +361,7 @@ func testAccSpace_jupyterLabAppSettingsAppLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.idle_timeout_in_minutes", "60"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.idle_timeout_in_minutes", acctest.Ct60),
 					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.0.sharing_type", "Private"),
 					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", acctest.Ct1),
