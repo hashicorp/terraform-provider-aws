@@ -962,9 +962,9 @@ func testAccDomain_jupyterLabAppSettingsAppLifecycle(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.idle_timeout_in_minutes", "75"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.min_idle_timeout_in_minutes", "60"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.max_idle_timeout_in_minutes", "90"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.idle_timeout_in_minutes", acctest.Ct75),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.min_idle_timeout_in_minutes", acctest.Ct60),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.max_idle_timeout_in_minutes", acctest.Ct90),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.app_lifecycle_management.0.idle_settings.0.lifecycle_management", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
@@ -1343,8 +1343,8 @@ func testAccDomain_posix(t *testing.T) {
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.gid", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.gid", acctest.Ct1001),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", acctest.Ct10000),
 				),
 			},
 			{
@@ -1378,7 +1378,7 @@ func testAccDomain_spaceStorageSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "200"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", acctest.Ct200),
 				),
 			},
 			{
@@ -1616,7 +1616,7 @@ func testAccDomain_spaceSettingsSpaceStorageSettings(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_spaceSettingsSpaceStorageSettings(rName, "100", "200"),
+				Config: testAccDomainConfig_spaceSettingsSpaceStorageSettings(rName, acctest.Ct100, acctest.Ct200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
@@ -1624,12 +1624,12 @@ func testAccDomain_spaceSettingsSpaceStorageSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "100"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", acctest.Ct100),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "200"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", acctest.Ct200),
 				),
 			},
 			{
@@ -1639,7 +1639,7 @@ func testAccDomain_spaceSettingsSpaceStorageSettings(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 			{
-				Config: testAccDomainConfig_spaceSettingsSpaceStorageSettings(rName, "150", "250"),
+				Config: testAccDomainConfig_spaceSettingsSpaceStorageSettings(rName, acctest.Ct150, acctest.Ct250),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
@@ -1647,12 +1647,12 @@ func testAccDomain_spaceSettingsSpaceStorageSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "150"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", acctest.Ct150),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "250"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", acctest.Ct250),
 				),
 			},
 		},
@@ -1672,16 +1672,16 @@ func testAccDomain_spaceSettingsCustomPOSIXUserConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_spaceSettingsCustomPOSIXUserConfig(rName, "1001", "10000", "1002", "20000"),
+				Config: testAccDomainConfig_spaceSettingsCustomPOSIXUserConfig(rName, acctest.Ct1001, acctest.Ct10000, "1002", acctest.Ct20000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.gid", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.gid", acctest.Ct1001),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", acctest.Ct10000),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.gid", "1002"),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.uid", "20000"),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.uid", acctest.Ct20000),
 				),
 			},
 			{
@@ -1691,13 +1691,13 @@ func testAccDomain_spaceSettingsCustomPOSIXUserConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 			{
-				Config: testAccDomainConfig_spaceSettingsCustomPOSIXUserConfig(rName, "2001", "20000", "2002", "40000"),
+				Config: testAccDomainConfig_spaceSettingsCustomPOSIXUserConfig(rName, "2001", acctest.Ct20000, "2002", "40000"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.gid", "2001"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", "20000"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_posix_user_config.0.uid", acctest.Ct20000),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.gid", "2002"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.custom_posix_user_config.0.uid", "40000"),
