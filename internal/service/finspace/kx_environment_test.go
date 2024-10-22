@@ -268,7 +268,7 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T
 					}),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
-						names.AttrProtocol:  "6",
+						names.AttrProtocol:  acctest.Ct6,
 						"rule_action":       "allow",
 						names.AttrCIDRBlock: "0.0.0.0/0",
 						"rule_number":       acctest.Ct1,
@@ -284,7 +284,7 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T
 					}),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
-						names.AttrProtocol:  "6",
+						names.AttrProtocol:  acctest.Ct6,
 						"rule_action":       "allow",
 						names.AttrCIDRBlock: "0.0.0.0/0",
 						"rule_number":       acctest.Ct1,
@@ -293,7 +293,7 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T
 						names.AttrProtocol:  acctest.Ct4,
 						"rule_action":       "allow",
 						names.AttrCIDRBlock: "0.0.0.0/0",
-						"rule_number":       "20",
+						"rule_number":       acctest.Ct20,
 					}),
 				),
 			},
@@ -306,7 +306,7 @@ func TestAccFinSpaceKxEnvironment_attachmentNetworkACLConfiguration(t *testing.T
 					}),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "transit_gateway_configuration.0.attachment_network_acl_configuration.*", map[string]string{
-						names.AttrProtocol:  "6",
+						names.AttrProtocol:  acctest.Ct6,
 						"rule_action":       "allow",
 						names.AttrCIDRBlock: "0.0.0.0/0",
 						"rule_number":       acctest.Ct1,
