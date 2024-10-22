@@ -387,7 +387,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "6"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", acctest.Ct6),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.search"),
 				),
 			},
@@ -402,7 +402,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "7"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", acctest.Ct7),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.search"),
 				),
 			},
@@ -411,7 +411,7 @@ func TestAccOpenSearchDomain_Cluster_warm(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "7"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", acctest.Ct7),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.large.search"),
 				),
 			},
@@ -1694,8 +1694,8 @@ func TestAccOpenSearchDomain_offPeakWindowOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours", "9"),
-					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.minutes", "30"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours", acctest.Ct9),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.minutes", acctest.Ct30),
 				),
 			},
 			{
@@ -1713,7 +1713,7 @@ func TestAccOpenSearchDomain_offPeakWindowOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.hours", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.minutes", "15"),
+					resource.TestCheckResourceAttr(resourceName, "off_peak_window_options.0.off_peak_window.0.window_start_time.0.minutes", acctest.Ct15),
 				),
 			},
 			{
