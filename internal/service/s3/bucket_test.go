@@ -637,30 +637,30 @@ func TestAccS3Bucket_Manage_lifecycleBasic(t *testing.T) {
 				Config: testAccBucketConfig_lifecycle(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "6"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", acctest.Ct6),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.id", "id1"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.prefix", "path1/"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.days", "365"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.days", acctest.Ct365),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.date", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
 						"date":                 "",
-						"days":                 "30",
+						"days":                 acctest.Ct30,
 						names.AttrStorageClass: "STANDARD_IA",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
 						"date":                 "",
-						"days":                 "60",
+						"days":                 acctest.Ct60,
 						names.AttrStorageClass: "INTELLIGENT_TIERING",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
 						"date":                 "",
-						"days":                 "90",
+						"days":                 acctest.Ct90,
 						names.AttrStorageClass: "ONEZONE_IA",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
 						"date":                 "",
-						"days":                 "120",
+						"days":                 acctest.Ct120,
 						names.AttrStorageClass: "GLACIER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
@@ -816,7 +816,7 @@ func TestAccS3Bucket_Manage_lifecycleRemove(t *testing.T) {
 				Config: testAccBucketConfig_lifecycle(bucketName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "6"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", acctest.Ct6),
 				),
 			},
 			{
@@ -825,7 +825,7 @@ func TestAccS3Bucket_Manage_lifecycleRemove(t *testing.T) {
 					testAccCheckBucketExists(ctx, resourceName),
 					// As Lifecycle Rule is a Computed field, removing them from terraform will not
 					// trigger an update to remove them from the S3 bucket.
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", "6"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.#", acctest.Ct6),
 				),
 			},
 		},
@@ -2290,7 +2290,7 @@ func TestBucketName(t *testing.T) {
 		"foobar",
 		"foo.bar",
 		"foo.bar.baz",
-		"1234",
+		acctest.Ct1234,
 		"foo-bar",
 		strings.Repeat("x", 63),
 	}
