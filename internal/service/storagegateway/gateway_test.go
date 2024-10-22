@@ -467,7 +467,7 @@ func TestAccStorageGatewayGateway_SMBActiveDirectorySettings_timeout(t *testing.
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", domainName),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.timeout_in_seconds", "50"),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.timeout_in_seconds", acctest.Ct50),
 				),
 			},
 			{
@@ -533,7 +533,7 @@ func TestAccStorageGatewayGateway_SMBMicrosoftActiveDirectorySettings_timeout(t 
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.domain_name", domainName),
-					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.timeout_in_seconds", "50"),
+					resource.TestCheckResourceAttr(resourceName, "smb_active_directory_settings.0.timeout_in_seconds", acctest.Ct50),
 				),
 			},
 			{
@@ -835,7 +835,7 @@ func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.hour_of_day", "22"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.hour_of_day", acctest.Ct22),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.minute_of_hour", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_week", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_month", ""),
@@ -848,13 +848,13 @@ func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address"},
 			},
 			{
-				Config: testAccGatewayConfig_maintenanceStartTime(rName, 21, 10, "", "12"),
+				Config: testAccGatewayConfig_maintenanceStartTime(rName, 21, 10, "", acctest.Ct12),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &gateway),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.hour_of_day", "21"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.minute_of_hour", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_week", ""),
-					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_month", "12"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_month", acctest.Ct12),
 				),
 			},
 			{
