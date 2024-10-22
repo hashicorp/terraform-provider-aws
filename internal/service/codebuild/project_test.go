@@ -105,7 +105,7 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "badge_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "build_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "build_timeout", acctest.Ct60),
 					resource.TestCheckResourceAttr(resourceName, "queued_timeout", "480"),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", string(types.CacheTypeNoCache)),
@@ -327,7 +327,7 @@ func TestAccCodeBuildProject_buildTimeout(t *testing.T) {
 				Config: testAccProjectConfig_buildTimeout(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "build_timeout", "120"),
+					resource.TestCheckResourceAttr(resourceName, "build_timeout", acctest.Ct120),
 				),
 			},
 			{
@@ -366,7 +366,7 @@ func TestAccCodeBuildProject_queuedTimeout(t *testing.T) {
 				Config: testAccProjectConfig_queuedTimeout(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "queued_timeout", "120"),
+					resource.TestCheckResourceAttr(resourceName, "queued_timeout", acctest.Ct120),
 				),
 			},
 			{
@@ -390,8 +390,8 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 	var project types.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
-	s3Location1 := rName + "-1"
-	s3Location2 := rName + "-2"
+	s3Location1 := rName + acctest.CtNegative1
+	s3Location2 := rName + acctest.CtNegative2
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -983,7 +983,7 @@ func TestAccCodeBuildProject_buildBatch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.0", "BUILD_GENERAL1_SMALL"),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.maximum_builds_allowed", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.timeout_in_mins", "5"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.timeout_in_mins", acctest.Ct5),
 				),
 			},
 			{
@@ -999,7 +999,7 @@ func TestAccCodeBuildProject_buildBatch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.0", "BUILD_GENERAL1_MEDIUM"),
-					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.maximum_builds_allowed", "20"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.maximum_builds_allowed", acctest.Ct20),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.timeout_in_mins", acctest.Ct10),
 				),
 			},
@@ -2846,7 +2846,7 @@ func TestAccCodeBuildProject_concurrentBuildLimit(t *testing.T) {
 				Config: testAccProjectConfig_concurrentBuildLimit(rName, 12),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "concurrent_build_limit", "12"),
+					resource.TestCheckResourceAttr(resourceName, "concurrent_build_limit", acctest.Ct12),
 				),
 			},
 			{
