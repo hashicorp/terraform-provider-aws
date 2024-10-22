@@ -151,7 +151,7 @@ func TestAccRoute53ResolverFirewallRuleGroupAssociation_priority(t *testing.T) {
 				Config: testAccFirewallRuleGroupAssociationConfig_priority(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallRuleGroupAssociationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "200"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct200),
 				),
 			},
 		},
