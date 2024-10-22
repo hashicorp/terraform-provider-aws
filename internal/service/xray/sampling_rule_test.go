@@ -36,7 +36,7 @@ func TestAccXRaySamplingRule_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "reservoir_size", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "url_path", "*"),
