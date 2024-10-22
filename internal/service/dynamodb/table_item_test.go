@@ -417,7 +417,7 @@ func TestAccDynamoDBTableItem_mapOutOfBandUpdate(t *testing.T) {
 	}
 }`
 
-	oldValue := "300"
+	oldValue := acctest.Ct300
 	newValue := "400"
 
 	oldItem := fmt.Sprintf(tmpl, oldValue)
