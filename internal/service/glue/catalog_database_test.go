@@ -59,7 +59,7 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "my-location"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param2", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "parameters.param3", "50"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.param3", acctest.Ct50),
 				),
 			},
 			{
@@ -70,7 +70,7 @@ func TestAccGlueCatalogDatabase_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "my-location"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.param2", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "parameters.param3", "50"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.param3", acctest.Ct50),
 				),
 			},
 		},
