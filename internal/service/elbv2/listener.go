@@ -4,11 +4,11 @@
 package elbv2
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -572,9 +572,9 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if len(listener.Certificates) == 1 {
 		d.Set(names.AttrCertificateARN, listener.Certificates[0].CertificateArn)
 	}
-	sort.Slice(listener.DefaultActions, func(i, j int) bool {
-		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
-	})
+
+	sortListenerActions(listener.DefaultActions)
+
 	if err := d.Set(names.AttrDefaultAction, flattenListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
@@ -1688,4 +1688,10 @@ func diffSuppressMissingForward(attrName string) schema.SchemaDiffSuppressFunc {
 		}
 		return false
 	}
+}
+
+func sortListenerActions(actions []awstypes.Action) {
+	slices.SortFunc(actions, func(a, b awstypes.Action) int {
+		return cmp.Compare(aws.ToInt32(a.Order), aws.ToInt32(b.Order))
+	})
 }

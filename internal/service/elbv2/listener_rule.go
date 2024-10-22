@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -578,9 +577,8 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	sort.Slice(rule.Actions, func(i, j int) bool {
-		return aws.ToInt32(rule.Actions[i].Order) < aws.ToInt32(rule.Actions[j].Order)
-	})
+	sortListenerActions(rule.Actions)
+
 	if err := d.Set(names.AttrAction, flattenListenerActions(d, names.AttrAction, rule.Actions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
