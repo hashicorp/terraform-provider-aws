@@ -77,7 +77,7 @@ func TestAccRolesAnywhereTrustAnchor_notificationSettings(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "notification_settings.0.configured_by"),
 					resource.TestCheckResourceAttr(resourceName, "notification_settings.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "notification_settings.0.event", string(awstypes.NotificationEventCaCertificateExpiry)),
-					resource.TestCheckResourceAttr(resourceName, "notification_settings.0.threshold", "75"),
+					resource.TestCheckResourceAttr(resourceName, "notification_settings.0.threshold", acctest.Ct75),
 				),
 			},
 			{
