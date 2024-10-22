@@ -78,18 +78,18 @@ func TestAccELBLoadBalancer_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "connection_draining", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "300"),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", acctest.Ct300),
 					resource.TestCheckResourceAttr(resourceName, "cross_zone_load_balancing", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "desync_mitigation_mode", "defensive"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttr(resourceName, "health_check.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "60"),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout", acctest.Ct60),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "internal", acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
-						"lb_port":           "80",
+						"lb_port":           acctest.Ct80,
 						"lb_protocol":       "http",
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -288,7 +288,7 @@ func TestAccELBLoadBalancer_AccessLogs_enabled(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.bucket", rName),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.interval", "5"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.interval", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", acctest.CtTrue),
 				),
 			},
@@ -328,7 +328,7 @@ func TestAccELBLoadBalancer_AccessLogs_disabled(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.bucket", rName),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.interval", "5"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.interval", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", acctest.CtFalse),
 				),
 			},
@@ -536,7 +536,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
-						"lb_port":           "80",
+						"lb_port":           acctest.Ct80,
 						"lb_protocol":       "http",
 					}),
 				),
@@ -549,13 +549,13 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
-						"lb_port":           "80",
+						"lb_port":           acctest.Ct80,
 						"lb_protocol":       "http",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
-						"instance_port":     "22",
+						"instance_port":     acctest.Ct22,
 						"instance_protocol": "tcp",
-						"lb_port":           "22",
+						"lb_port":           acctest.Ct22,
 						"lb_protocol":       "tcp",
 					}),
 				),
@@ -568,7 +568,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
-						"lb_port":           "80",
+						"lb_port":           acctest.Ct80,
 						"lb_protocol":       "http",
 					}),
 				),
@@ -579,9 +579,9 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
-						"instance_port":     "8080",
+						"instance_port":     acctest.Ct8080,
 						"instance_protocol": "http",
-						"lb_port":           "80",
+						"lb_port":           acctest.Ct80,
 						"lb_protocol":       "http",
 					}),
 				),
@@ -605,7 +605,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
-						"lb_port":           "80",
+						"lb_port":           acctest.Ct80,
 						"lb_protocol":       "http",
 					}),
 				),
@@ -636,7 +636,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
 						"instance_port":     "8000",
 						"instance_protocol": "http",
-						"lb_port":           "80",
+						"lb_port":           acctest.Ct80,
 						"lb_protocol":       "http",
 					}),
 				),
@@ -661,7 +661,7 @@ func TestAccELBLoadBalancer_healthCheck(t *testing.T) {
 				Config: testAccLoadBalancerConfig_healthCheck(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "health_check.0.healthy_threshold", acctest.Ct5),
 				),
 			},
 			{
@@ -689,7 +689,7 @@ func TestAccELBLoadBalancer_timeout(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_idleTimeout(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "200"),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout", acctest.Ct200),
 				),
 			},
 			{
@@ -724,7 +724,7 @@ func TestAccELBLoadBalancer_connectionDraining(t *testing.T) {
 				Config: testAccLoadBalancerConfig_connectionDrainingUpdateTimeout(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "connection_draining", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", "600"),
+					resource.TestCheckResourceAttr(resourceName, "connection_draining_timeout", acctest.Ct600),
 				),
 			},
 			{
