@@ -571,7 +571,7 @@ func TestAccGlueTrigger_eventBatchingCondition(t *testing.T) {
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
 					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_size", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_window", "50"),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_window", acctest.Ct50),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EVENT"),
 				),
 			},
