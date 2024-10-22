@@ -101,7 +101,7 @@ func TestAccDeviceFarmProject_timeout(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "default_job_timeout_minutes", "20"),
+					resource.TestCheckResourceAttr(resourceName, "default_job_timeout_minutes", acctest.Ct20),
 				),
 			},
 		},
