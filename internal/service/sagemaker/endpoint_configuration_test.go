@@ -201,7 +201,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverless(t *test
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.max_concurrency", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.memory_size_in_mb", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.memory_size_in_mb", acctest.Ct1024),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.provisioned_concurrency", acctest.Ct0),
 				),
 			},
@@ -259,9 +259,9 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverlessProvisio
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.max_concurrency", "200"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.max_concurrency", acctest.Ct200),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.memory_size_in_mb", "5120"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.provisioned_concurrency", "100"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.provisioned_concurrency", acctest.Ct100),
 				),
 			},
 			{
@@ -289,7 +289,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_initialVariantWeig
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(
-						resourceName, "production_variants.1.initial_variant_weight", "0.5"),
+						resourceName, "production_variants.1.initial_variant_weight", acctest.Ct0Point5),
 				),
 			},
 			{
@@ -444,7 +444,7 @@ func TestAccSageMakerEndpointConfiguration_dataCapture(t *testing.T) {
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", acctest.Ct50),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.0.capture_mode", "Input"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.1.capture_mode", "Output"),
@@ -478,7 +478,7 @@ func TestAccSageMakerEndpointConfiguration_dataCapture_inputAndOutput(t *testing
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.enable_capture", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", "50"),
+					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.initial_sampling_percentage", acctest.Ct50),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.destination_s3_uri", fmt.Sprintf("s3://%s/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_options.0.capture_mode", "InputAndOutput"),
 					resource.TestCheckResourceAttr(resourceName, "data_capture_config.0.capture_content_type_header.0.json_content_types.#", acctest.Ct1),
