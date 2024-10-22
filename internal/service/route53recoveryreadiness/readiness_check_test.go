@@ -26,7 +26,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_basic(t *testing.T) {
 	rSetName := sdkacctest.RandomWithPrefix("tf-acc-test-set")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
@@ -62,7 +62,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_disappears(t *testing.T) {
 	rSetName := sdkacctest.RandomWithPrefix("tf-acc-test-set")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
@@ -92,7 +92,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
@@ -145,7 +145,7 @@ func TestAccRoute53RecoveryReadinessReadinessCheck_timeout(t *testing.T) {
 	rSetName := sdkacctest.RandomWithPrefix("tf-acc-test-set")
 	resourceName := "aws_route53recoveryreadiness_readiness_check.test"
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
