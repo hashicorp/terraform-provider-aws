@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -284,7 +285,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 	var result apiCallParams
 
 	_, err := client.ListDashboards(ctx, &quicksight.ListDashboardsInput{
-		AwsAccountId: aws.String("123456789012"),
+		AwsAccountId: aws.String(acctest.Ct12Digit),
 	},
 		func(opts *quicksight.Options) {
 			opts.APIOptions = append(opts.APIOptions,
