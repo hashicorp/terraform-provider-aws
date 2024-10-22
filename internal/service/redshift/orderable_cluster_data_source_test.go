@@ -47,9 +47,9 @@ func TestAccRedshiftOrderableClusterDataSource_clusterVersion(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrderableClusterDataSourceConfig_version("1.0"),
+				Config: testAccOrderableClusterDataSourceConfig_version(acctest.Ct1Point0),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "cluster_version", "1.0"),
+					resource.TestCheckResourceAttr(dataSourceName, "cluster_version", acctest.Ct1Point0),
 				),
 			},
 		},
