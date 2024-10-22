@@ -620,9 +620,9 @@ func TestAccEC2Instance_gp2IopsDevice(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "11"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct11),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", acctest.Ct100),
 					testCheck(),
 				),
 			},
@@ -703,7 +703,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 		}
 	}
 
-	rootVolumeSize := "11"
+	rootVolumeSize := acctest.Ct11
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -719,10 +719,10 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "root_block_device.0.volume_id", regexache.MustCompile("vol-[0-9a-z]+")),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct5),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
-						names.AttrVolumeSize: "9",
+						names.AttrVolumeSize: acctest.Ct9,
 						names.AttrVolumeType: "gp2",
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
@@ -732,20 +732,20 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 						names.AttrDeviceName: "/dev/sdc",
 						names.AttrVolumeSize: acctest.Ct10,
 						names.AttrVolumeType: "io1",
-						names.AttrIOPS:       "100",
+						names.AttrIOPS:       acctest.Ct100,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdf",
 						names.AttrVolumeSize: acctest.Ct10,
 						names.AttrVolumeType: "gp3",
-						names.AttrThroughput: "300",
+						names.AttrThroughput: acctest.Ct300,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdg",
 						names.AttrVolumeSize: acctest.Ct10,
 						names.AttrVolumeType: "gp3",
-						names.AttrThroughput: "300",
-						names.AttrIOPS:       "4000",
+						names.AttrThroughput: acctest.Ct300,
+						names.AttrIOPS:       acctest.Ct4000,
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexache.MustCompile("vol-[0-9a-z]+"),
@@ -753,7 +753,7 @@ func TestAccEC2Instance_blockDevices(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdd",
 						names.AttrEncrypted:  acctest.CtTrue,
-						names.AttrVolumeSize: "12",
+						names.AttrVolumeSize: acctest.Ct12,
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]*regexp.Regexp{
 						"volume_id": regexache.MustCompile("vol-[0-9a-z]+"),
@@ -851,7 +851,7 @@ func TestAccEC2Instance_noAMIEphemeralDevices(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "11"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct11),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", acctest.Ct2),
@@ -1757,7 +1757,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsRBDOverlap(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", "6"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", acctest.Ct6),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", acctest.Ct4),
 				),
@@ -1798,7 +1798,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBDOverlaps(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.1.tags.%", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.1.tags_all.%", "6"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.1.tags_all.%", acctest.Ct6),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2.tags.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2.tags_all.%", acctest.Ct4),
 				),
@@ -1850,7 +1850,7 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTagsOverlap(t *testing.
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),  // overlap
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.jelly", "bean"),     // overlap
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.every", "gnomesie"), // non-overlap
@@ -2469,7 +2469,7 @@ func TestAccEC2Instance_EBSRootDevice_modifySize(t *testing.T) {
 
 	volumeType := "gp2"
 
-	originalSize := "30"
+	originalSize := acctest.Ct30
 	updatedSize := "32"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2507,7 +2507,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyType(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	volumeSize := "30"
+	volumeSize := acctest.Ct30
 
 	originalType := "gp2"
 	updatedType := "standard"
@@ -2547,12 +2547,12 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	volumeSize := "30"
+	volumeSize := acctest.Ct30
 
 	volumeType := "io1"
 
-	originalIOPS := "100"
-	updatedIOPS := "200"
+	originalIOPS := acctest.Ct100
+	updatedIOPS := acctest.Ct200
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2591,11 +2591,11 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	volumeSize := "30"
+	volumeSize := acctest.Ct30
 	volumeType := "io2"
 
-	originalIOPS := "100"
-	updatedIOPS := "200"
+	originalIOPS := acctest.Ct100
+	updatedIOPS := acctest.Ct200
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2634,12 +2634,12 @@ func TestAccEC2Instance_EBSRootDeviceModifyThroughput_gp3(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	volumeSize := "30"
+	volumeSize := acctest.Ct30
 
 	volumeType := "gp3"
 
-	originalThroughput := "250"
-	updatedThroughput := "300"
+	originalThroughput := acctest.Ct250
+	updatedThroughput := acctest.Ct300
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2678,7 +2678,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyDeleteOnTermination(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	volumeSize := "30"
+	volumeSize := acctest.Ct30
 	volumeType := "gp2"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2716,13 +2716,13 @@ func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	originalSize := "30"
+	originalSize := acctest.Ct30
 	updatedSize := "32"
 
 	originalType := "gp2"
 	updatedType := "io1"
 
-	updatedIOPS := "200"
+	updatedIOPS := acctest.Ct200
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2760,7 +2760,7 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 	resourceName := "aws_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	updatedRootVolumeSize := "14"
+	updatedRootVolumeSize := acctest.Ct14
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2774,13 +2774,13 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 					testAccCheckInstanceExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct10),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrVolumeSize: "9",
+						names.AttrVolumeSize: acctest.Ct9,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrVolumeSize: acctest.Ct10,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrVolumeSize: "12",
+						names.AttrVolumeSize: acctest.Ct12,
 					}),
 				),
 			},
@@ -2791,13 +2791,13 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifySize(t *testing.
 					testAccCheckInstanceNotRecreated(&before, &after),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", updatedRootVolumeSize),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrVolumeSize: "9",
+						names.AttrVolumeSize: acctest.Ct9,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrVolumeSize: acctest.Ct10,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrVolumeSize: "12",
+						names.AttrVolumeSize: acctest.Ct12,
 					}),
 				),
 			},
@@ -2824,13 +2824,13 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtFalse),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrVolumeSize: "9",
+						names.AttrVolumeSize: acctest.Ct9,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrVolumeSize: acctest.Ct10,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrVolumeSize: "12",
+						names.AttrVolumeSize: acctest.Ct12,
 					}),
 				),
 			},
@@ -2842,13 +2842,13 @@ func TestAccEC2Instance_EBSRootDeviceMultipleBlockDevices_modifyDeleteOnTerminat
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", acctest.CtTrue),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrVolumeSize: "9",
+						names.AttrVolumeSize: acctest.Ct9,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrVolumeSize: acctest.Ct10,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						names.AttrVolumeSize: "12",
+						names.AttrVolumeSize: acctest.Ct12,
 					}),
 				),
 			},
@@ -2878,7 +2878,7 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 						names.AttrDeleteOnTermination: acctest.CtTrue,
 						names.AttrDeviceName:          "/dev/sdd",
 						names.AttrEncrypted:           acctest.CtFalse,
-						names.AttrIOPS:                "100",
+						names.AttrIOPS:                acctest.Ct100,
 						names.AttrVolumeSize:          acctest.Ct10,
 						names.AttrVolumeType:          "gp2",
 					}),
@@ -2886,7 +2886,7 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 						names.AttrDeleteOnTermination: acctest.CtTrue,
 						names.AttrDeviceName:          "/dev/sdc",
 						names.AttrEncrypted:           acctest.CtFalse,
-						names.AttrIOPS:                "100",
+						names.AttrIOPS:                acctest.Ct100,
 						names.AttrVolumeSize:          acctest.Ct10,
 						names.AttrVolumeType:          "gp2",
 					}),
@@ -2894,7 +2894,7 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 						names.AttrDeleteOnTermination: acctest.CtTrue,
 						names.AttrDeviceName:          "/dev/sdb",
 						names.AttrEncrypted:           acctest.CtFalse,
-						names.AttrIOPS:                "100",
+						names.AttrIOPS:                acctest.Ct100,
 						names.AttrVolumeSize:          acctest.Ct10,
 						names.AttrVolumeType:          "gp2",
 					}),
@@ -2946,8 +2946,8 @@ func TestAccEC2Instance_gp3RootBlockDevice(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp3"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", "4000"),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.throughput", "300"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", acctest.Ct4000),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.throughput", acctest.Ct300),
 					testCheck(),
 				),
 			},
