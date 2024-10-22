@@ -57,7 +57,7 @@ func TestAccFSxONTAPFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "route_table_ids.*", "aws_vpc.test", "default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", acctest.Ct1024),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, string(awstypes.StorageTypeSsd)),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.1", names.AttrID),
@@ -358,7 +358,7 @@ func TestAccFSxONTAPFileSystem_diskIOPS(t *testing.T) {
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "4000"),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", acctest.Ct4000),
 				),
 			},
 		},
@@ -575,7 +575,7 @@ func TestAccFSxONTAPFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_automaticBackupRetentionDays(rName, 90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "90"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", acctest.Ct90),
 				),
 			},
 			{
@@ -811,7 +811,7 @@ func TestAccFSxONTAPFileSystem_storageCapacity(t *testing.T) {
 				Config: testAccONTAPFileSystemConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem1),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", acctest.Ct1024),
 				),
 			},
 			{
