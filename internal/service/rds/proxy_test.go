@@ -183,7 +183,7 @@ func TestAccRDSProxy_idleClientTimeout(t *testing.T) {
 				Config: testAccProxyConfig_idleClientTimeout(rName, 3600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "idle_client_timeout", acctest.Ct3600),
 				),
 			},
 		},
