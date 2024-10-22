@@ -40,7 +40,7 @@ func testAccLandingZone_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "drift_status.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "latest_available_version"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1Point0),
 				),
 			},
 			{
