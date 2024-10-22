@@ -143,7 +143,7 @@ func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", acctest.Ct7),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", string(awstypes.PatchComplianceLevelCritical)),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.enable_non_security", acctest.CtTrue),
@@ -160,7 +160,7 @@ func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", acctest.Ct7),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.compliance_level", string(awstypes.PatchComplianceLevelInformational)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", string(awstypes.OperatingSystemWindows)),
@@ -344,7 +344,7 @@ func TestAccSSMPatchBaseline_approvalRuleEmpty(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
-					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveAfterDays", "7"),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveAfterDays", acctest.Ct7),
 					acctest.CheckResourceAttrJMESNotExists(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveUntilDate"),
 				),
 			},
