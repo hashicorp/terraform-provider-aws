@@ -148,8 +148,8 @@ func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						names.AttrProtocol:  "-1",
-						"rule_no":           "100",
+						names.AttrProtocol:  acctest.CtNegative1,
+						"rule_no":           acctest.Ct100,
 						"from_port":         acctest.Ct0,
 						"to_port":           acctest.Ct0,
 						names.AttrAction:    "allow",
@@ -181,7 +181,7 @@ func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						names.AttrProtocol: "-1",
+						names.AttrProtocol: acctest.CtNegative1,
 						"rule_no":          "101",
 						"from_port":        acctest.Ct0,
 						"to_port":          acctest.Ct0,
