@@ -46,7 +46,7 @@ func TestAccLightsailDisk_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "size_in_gb", "8"),
+					resource.TestCheckResourceAttr(resourceName, "size_in_gb", acctest.Ct8),
 					resource.TestCheckResourceAttrSet(resourceName, "support_code"),
 				),
 			},
