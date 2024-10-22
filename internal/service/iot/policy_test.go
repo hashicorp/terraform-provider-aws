@@ -217,8 +217,8 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", "5"),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct1, acctest.Ct2, acctest.Ct3, acctest.Ct4, "5"}),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.Ct5),
+					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct1, acctest.Ct2, acctest.Ct3, acctest.Ct4, acctest.Ct5}),
 				),
 			},
 			{
@@ -226,8 +226,8 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", "6"),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct2, acctest.Ct3, acctest.Ct4, "5", "6"}),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.Ct6),
+					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct2, acctest.Ct3, acctest.Ct4, acctest.Ct5, acctest.Ct6}),
 				),
 			},
 			{
@@ -235,8 +235,8 @@ func TestAccIoTPolicy_prune(t *testing.T) {
 				Config: testAccPolicyConfig_resourceName(rName, fmt.Sprintf("arn:aws:iot:*:*:topic/%s", sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "default_version_id", "7"),
-					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct3, acctest.Ct4, "5", "6", "7"}),
+					resource.TestCheckResourceAttr(resourceName, "default_version_id", acctest.Ct7),
+					testAccCheckPolicyVersionIDs(ctx, resourceName, []string{acctest.Ct3, acctest.Ct4, acctest.Ct5, acctest.Ct6, acctest.Ct7}),
 				),
 			},
 		},
