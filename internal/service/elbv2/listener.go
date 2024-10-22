@@ -388,6 +388,8 @@ func resourceListener() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tcp_idle_timeout_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -396,8 +398,6 @@ func resourceListener() *schema.Resource {
 				// Attribute only valid for TCP (NLB) and GENEVE (GWLB) listeners
 				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumGeneve, awstypes.ProtocolEnumTcp),
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.All(

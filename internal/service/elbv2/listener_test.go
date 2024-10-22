@@ -1011,8 +1011,8 @@ func TestAccELBV2Listener_attributes_gwlb_TCPIdleTimeoutSeconds(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lbResourceName := "aws_lb.test"
 	resourceName := "aws_lb_listener.test"
-	tcp_timeout_1 := 60
-	// tcp_timeout_2 := 6000
+	tcpTimeout1 := 60
+	// tcpTimeout2 := 6000
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1025,7 +1025,7 @@ func TestAccELBV2Listener_attributes_gwlb_TCPIdleTimeoutSeconds(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_attributes_gwlbTCPIdleTimeoutSeconds(rName, tcp_timeout_1),
+				Config: testAccListenerConfig_attributes_gwlbTCPIdleTimeoutSeconds(rName, tcpTimeout1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", lbResourceName, names.AttrARN),
