@@ -65,8 +65,8 @@ func testAccAutomationRule_full(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.confidence", "20"),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.criticality", "25"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.confidence", acctest.Ct20),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.criticality", acctest.Ct25),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.types.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.text", "This is a critical resource. Please review ASAP."),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.updated_by", "sechub-automation"),
@@ -92,7 +92,7 @@ func testAccAutomationRule_full(t *testing.T) {
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.confidence", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.criticality", "15"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.criticality", acctest.Ct15),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.types.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.text", "This is a non-critical resource. Please review in due time."),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.note.0.updated_by", "sechub-automation"),
@@ -191,7 +191,7 @@ func testAccAutomationRule_numberFilters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.0.eq", "5"),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.0.eq", acctest.Ct5),
 				),
 			},
 			{
@@ -204,7 +204,7 @@ func testAccAutomationRule_numberFilters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.0.lte", "50"),
+					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.0.lte", acctest.Ct50),
 				),
 			},
 		},
