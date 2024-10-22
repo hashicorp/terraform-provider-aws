@@ -65,7 +65,7 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "detect_sentiment", acctest.CtFalse),
 					resource.TestCheckResourceAttr(rName, "enable_model_improvements", acctest.CtFalse),
 					resource.TestCheckResourceAttr(rName, "failure_reason", ""),
-					resource.TestCheckResourceAttr(rName, "idle_session_ttl_in_seconds", "300"),
+					resource.TestCheckResourceAttr(rName, "idle_session_ttl_in_seconds", acctest.Ct300),
 					resource.TestCheckResourceAttr(rName, "intent.#", acctest.Ct1),
 					acctest.CheckResourceAttrRFC3339(rName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttr(rName, "locale", "en-US"),
@@ -465,7 +465,7 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(ctx, rName, &v),
 					resource.TestCheckResourceAttr(rName, "enable_model_improvements", acctest.CtTrue),
-					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", "0.5"),
+					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", acctest.Ct0Point5),
 				),
 			},
 			{
@@ -515,7 +515,7 @@ func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(ctx, rName, &v),
-					resource.TestCheckResourceAttr(rName, "idle_session_ttl_in_seconds", "600"),
+					resource.TestCheckResourceAttr(rName, "idle_session_ttl_in_seconds", acctest.Ct600),
 				),
 			},
 			{
