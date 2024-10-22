@@ -62,12 +62,12 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.email_sending_account", "COGNITO_DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "password_policy.0.minimum_length", "8"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.minimum_length", acctest.Ct8),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_lowercase", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_numbers", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_symbols", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_uppercase", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "password_policy.0.temporary_password_validity_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.temporary_password_validity_days", acctest.Ct7),
 					resource.TestCheckResourceAttr(resourceName, "verification_message_template.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct0),
@@ -243,7 +243,7 @@ func TestAccCognitoIDPUserPool_withAdminCreateUserAndPasswordPolicy(t *testing.T
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "password_policy.0.temporary_password_validity_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.temporary_password_validity_days", acctest.Ct7),
 				),
 			},
 			{
@@ -1041,12 +1041,12 @@ func TestAccCognitoIDPUserPool_withPasswordPolicy(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "password_policy.0.minimum_length", "7"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.minimum_length", acctest.Ct7),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_lowercase", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_numbers", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_symbols", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_uppercase", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "password_policy.0.temporary_password_validity_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.temporary_password_validity_days", acctest.Ct7),
 				),
 			},
 			{
@@ -1058,12 +1058,12 @@ func TestAccCognitoIDPUserPool_withPasswordPolicy(t *testing.T) {
 				Config: testAccUserPoolConfig_passwordPolicyUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "password_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "password_policy.0.minimum_length", "9"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.minimum_length", acctest.Ct9),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_lowercase", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_numbers", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_symbols", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.require_uppercase", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "password_policy.0.temporary_password_validity_days", "14"),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.temporary_password_validity_days", acctest.Ct14),
 				),
 			},
 		},
@@ -1398,7 +1398,7 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"number_attribute_constraints.#":            acctest.Ct0,
 						"required":                                  acctest.CtTrue,
 						"string_attribute_constraints.#":            acctest.Ct1,
-						"string_attribute_constraints.0.min_length": "5",
+						"string_attribute_constraints.0.min_length": acctest.Ct5,
 						"string_attribute_constraints.0.max_length": acctest.Ct10,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
@@ -1434,7 +1434,7 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool2),
 					testAccCheckUserPoolNotRecreated(&pool1, &pool2),
-					resource.TestCheckResourceAttr(resourceName, "schema.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "schema.#", acctest.Ct5),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
 						"attribute_data_type":                       "String",
 						"developer_only_attribute":                  acctest.CtFalse,
@@ -1443,7 +1443,7 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"number_attribute_constraints.#":            acctest.Ct0,
 						"required":                                  acctest.CtTrue,
 						"string_attribute_constraints.#":            acctest.Ct1,
-						"string_attribute_constraints.0.min_length": "5",
+						"string_attribute_constraints.0.min_length": acctest.Ct5,
 						"string_attribute_constraints.0.max_length": acctest.Ct10,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
@@ -1462,7 +1462,7 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						names.AttrName:                             "mynondevnumber",
 						"number_attribute_constraints.#":           acctest.Ct1,
 						"number_attribute_constraints.0.min_value": acctest.Ct2,
-						"number_attribute_constraints.0.max_value": "6",
+						"number_attribute_constraints.0.max_value": acctest.Ct6,
 						"required":                                 acctest.CtFalse,
 						"string_attribute_constraints.#":           acctest.Ct0,
 					}),
@@ -2235,7 +2235,7 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 func testAccUserPoolConfig_smsConfigurationSNSCallerARN2(rName string) string {
-	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName+"-2", "test"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName+acctest.CtNegative2, "test"), fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
