@@ -89,7 +89,7 @@ func TestRecordMigrateStateV1toV2(t *testing.T) {
 		"v0_2": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				names.AttrWeight: "-1",
+				names.AttrWeight: "-1", // nosemgrep: ci.literal-Negative1-string-test-constant
 			},
 			Expected: map[string]string{},
 		},
