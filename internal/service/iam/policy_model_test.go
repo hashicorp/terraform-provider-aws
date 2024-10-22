@@ -246,7 +246,7 @@ func TestIsValidAWSPrincipal(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 			valid: true,
 		},
 		names.AttrAccountID: {
-			value: "123456789012",
+			value: acctest.Ct12Digit,
 			valid: true,
 		},
 		"unique_id": {
