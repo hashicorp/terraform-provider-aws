@@ -75,7 +75,7 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 				Config: testAccEnvironmentEC2Config_allFields(rName, name1, description1, imageID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentEC2Exists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "automatic_stop_time_minutes", "60"),
+					resource.TestCheckResourceAttr(resourceName, "automatic_stop_time_minutes", acctest.Ct60),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "CONNECT_SSH"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description1),
 					resource.TestCheckResourceAttr(resourceName, "image_id", imageID),
