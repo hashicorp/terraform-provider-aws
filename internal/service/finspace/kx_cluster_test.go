@@ -221,7 +221,7 @@ func TestAccFinSpaceKxCluster_cache250Configurations(t *testing.T) {
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_storage_configurations.*", map[string]string{
-						names.AttrSize: "1200",
+						names.AttrSize: acctest.Ct1200,
 						names.AttrType: "CACHE_250",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.0.cache_configurations.*", map[string]string{
