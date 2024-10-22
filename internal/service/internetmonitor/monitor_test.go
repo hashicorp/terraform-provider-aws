@@ -145,7 +145,7 @@ func TestAccInternetMonitorMonitor_healthEventsConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.availability_score_threshold", "50"),
+					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.availability_score_threshold", acctest.Ct50),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.performance_score_threshold", "95"),
 				),
 			},
@@ -159,7 +159,7 @@ func TestAccInternetMonitorMonitor_healthEventsConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.availability_score_threshold", "75"),
+					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.availability_score_threshold", acctest.Ct75),
 					resource.TestCheckResourceAttr(resourceName, "health_events_config.0.performance_score_threshold", "85"),
 				),
 			},
