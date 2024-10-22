@@ -32,6 +32,7 @@ BUG FIXES:
 * resource/aws_elasticache_serverless_cache: Fix `InvalidParameterValue: This API supports only cross-engine upgrades to Valkey engine currently` errors on Update ([#39745](https://github.com/hashicorp/terraform-provider-aws/issues/39745))
 * resource/aws_quicksight_data_set: Fix `InvalidParameterValueException: Invalid RowLevelPermissionDataSet. Namespace parameter should not be specified for Version 2` errors on Create and Update ([#39778](https://github.com/hashicorp/terraform-provider-aws/issues/39778))
 * resource/aws_route53_record: Allow creation of records with `ttl=0` ([#39728](https://github.com/hashicorp/terraform-provider-aws/issues/39728))
+* resource/aws_security_group_rule: Remove from state when rule not found. This fixes a regression introduced in [v5.60.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5600-july-25-2024) ([#39834](https://github.com/hashicorp/terraform-provider-aws/issues/39834))
 
 ## 5.72.1 (October 16, 2024)
 
