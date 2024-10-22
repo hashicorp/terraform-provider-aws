@@ -40,7 +40,7 @@ func testAccVoiceConnectorStreaming_basic(t *testing.T) {
 				Config: testAccVoiceConnectorStreamingConfig_basic(name),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVoiceConnectorStreamingExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "data_retention", "5"),
+					resource.TestCheckResourceAttr(resourceName, "data_retention", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "disabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "streaming_notification_targets.#", acctest.Ct1),
 				),
