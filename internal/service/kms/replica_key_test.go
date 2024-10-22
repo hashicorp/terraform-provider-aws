@@ -42,7 +42,7 @@ func TestAccKMSReplicaKey_basic(t *testing.T) {
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", acctest.Ct30),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "key_rotation_enabled", acctest.CtFalse),
