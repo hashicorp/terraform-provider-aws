@@ -541,10 +541,8 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	attributes = append(attributes, listenerAttributes.expand(d, listenerProtocolType, false)...)
 
 	if len(attributes) > 0 {
-		_, err := modifyListenerAttributes(ctx, conn, d.Id(), attributes)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Listener (%s) attributes: %s", d.Id(), err)
+		if err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -588,15 +586,16 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrProtocol, listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
 
-	// Get listener attributes with resource ID
-	attributes, err := findListenerAttributesByARN(ctx, conn, d.Id())
+	// DescribeListenerAttributes is not supported for 'TLS' protocol listeners.
+	if listener.Protocol != awstypes.ProtocolEnumTls {
+		attributes, err := findListenerAttributesByARN(ctx, conn, d.Id())
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s) attributes: %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s) attributes: %s", d.Id(), err)
+		}
+
+		listenerAttributes.flatten(d, attributes)
 	}
-
-	// Flatten attributes
-	listenerAttributes.flatten(d, attributes)
 
 	return diags
 }
@@ -648,7 +647,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		attributes = append(attributes, listenerAttributes.expand(d, awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)), true)...)
 
 		if len(attributes) > 0 {
-			if _, err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
+			if err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -688,6 +687,13 @@ func findListenerAttributesByARN(ctx context.Context, conn *elasticloadbalancing
 
 	output, err := conn.DescribeListenerAttributes(ctx, input)
 
+	if errs.IsA[*awstypes.ListenerNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -699,13 +705,19 @@ func findListenerAttributesByARN(ctx context.Context, conn *elasticloadbalancing
 	return output.Attributes, nil
 }
 
-func modifyListenerAttributes(ctx context.Context, conn *elasticloadbalancingv2.Client, listenerARN string, attributes []awstypes.ListenerAttribute) (*elasticloadbalancingv2.ModifyListenerAttributesOutput, error) {
+func modifyListenerAttributes(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string, attributes []awstypes.ListenerAttribute) error {
 	input := &elasticloadbalancingv2.ModifyListenerAttributesInput{
-		ListenerArn: aws.String(listenerARN),
 		Attributes:  attributes,
+		ListenerArn: aws.String(arn),
 	}
 
-	return conn.ModifyListenerAttributes(ctx, input)
+	_, err := conn.ModifyListenerAttributes(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("modifying ELBv2 Listener (%s) attributes: %w", arn, err)
+	}
+
+	return nil
 }
 
 type listenerAttributeInfo struct {
