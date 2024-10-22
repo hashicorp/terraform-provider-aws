@@ -69,7 +69,7 @@ func TestAccAppRunnerService_ImageRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.code_repository.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.0.port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.0.port", acctest.Ct80),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.0.runtime_environment_secrets.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_configuration.0.runtime_environment_variables.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "source_configuration.0.image_repository.0.image_identifier", "public.ecr.aws/nginx/nginx:latest"),
@@ -175,10 +175,10 @@ func TestAccAppRunnerService_ImageRepository_healthCheck(t *testing.T) {
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.healthy_threshold", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.interval", "5"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.interval", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.protocol", string(types.HealthCheckProtocolTcp)),
-					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.timeout", "5"),
-					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.unhealthy_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.timeout", acctest.Ct5),
+					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.unhealthy_threshold", acctest.Ct5),
 				),
 			},
 			{
@@ -192,7 +192,7 @@ func TestAccAppRunnerService_ImageRepository_healthCheck(t *testing.T) {
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.healthy_threshold", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.interval", "5"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.interval", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.protocol", string(types.HealthCheckProtocolTcp)),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.timeout", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "health_check_configuration.0.unhealthy_threshold", acctest.Ct4),
@@ -223,7 +223,7 @@ func TestAccAppRunnerService_ImageRepository_instance_NoInstanceRole(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", acctest.Ct1024),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.instance_role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "3072"),
 				),
@@ -254,7 +254,7 @@ func TestAccAppRunnerService_ImageRepository_instance_Update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", acctest.Ct1024),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.instance_role_arn", roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "3072"),
 				),
@@ -271,7 +271,7 @@ func TestAccAppRunnerService_ImageRepository_instance_Update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "2048"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.instance_role_arn", roleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "4096"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", acctest.Ct4096),
 				),
 			},
 			{
@@ -285,7 +285,7 @@ func TestAccAppRunnerService_ImageRepository_instance_Update(t *testing.T) {
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "2048"),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "4096"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", acctest.Ct4096),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.instance_role_arn"), // The IAM Role is not unset
 				),
 			},
@@ -311,7 +311,7 @@ func TestAccAppRunnerService_ImageRepository_instance_Update1(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "256"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.instance_role_arn", roleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "512"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", acctest.Ct512),
 				),
 			},
 			{
@@ -324,7 +324,7 @@ func TestAccAppRunnerService_ImageRepository_instance_Update1(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "4096"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", acctest.Ct4096),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_configuration.0.instance_role_arn", roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "12288"),
 				),
@@ -339,7 +339,7 @@ func TestAccAppRunnerService_ImageRepository_instance_Update1(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", "4096"),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.cpu", acctest.Ct4096),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.memory", "12288"),
 					resource.TestCheckResourceAttrSet(resourceName, "instance_configuration.0.instance_role_arn"), // The IAM Role is not unset
 				),
