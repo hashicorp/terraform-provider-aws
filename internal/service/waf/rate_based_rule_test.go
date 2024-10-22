@@ -205,7 +205,7 @@ func testAccWAFRateBasedRule_changeRateLimit(t *testing.T) {
 					testAccCheckIPSetExists(ctx, "aws_waf_ipset.ipset", &ipset),
 					testAccCheckRateBasedRuleExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ruleName),
-					resource.TestCheckResourceAttr(resourceName, "rate_limit", "4000"),
+					resource.TestCheckResourceAttr(resourceName, "rate_limit", acctest.Ct4000),
 					resource.TestCheckResourceAttr(resourceName, "predicates.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
 						"negated":      acctest.CtFalse,
