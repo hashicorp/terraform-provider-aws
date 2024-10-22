@@ -107,38 +107,38 @@ func TestBucketACLParseResourceID(t *testing.T) {
 		},
 		{
 			TestName:            "valid ID with bucket and bucket owner",
-			InputID:             tfs3.BucketACLCreateResourceID("example", "123456789012", ""),
+			InputID:             tfs3.BucketACLCreateResourceID("example", acctest.Ct12Digit, ""),
 			ExpectedACL:         "",
 			ExpectedBucket:      "example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket that has dot, hyphen, and number and bucket owner",
-			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket.4000", "123456789012", ""),
+			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket.4000", acctest.Ct12Digit, ""),
 			ExpectedACL:         "",
 			ExpectedBucket:      "my-example.bucket.4000",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket, bucket owner, and acl",
-			InputID:             tfs3.BucketACLCreateResourceID("example", "123456789012", string(types.BucketCannedACLPrivate)),
+			InputID:             tfs3.BucketACLCreateResourceID("example", acctest.Ct12Digit, string(types.BucketCannedACLPrivate)),
 			ExpectedACL:         string(types.BucketCannedACLPrivate),
 			ExpectedBucket:      "example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket, bucket owner, and acl that has hyphens",
-			InputID:             tfs3.BucketACLCreateResourceID("example", "123456789012", string(types.BucketCannedACLPublicReadWrite)),
+			InputID:             tfs3.BucketACLCreateResourceID("example", acctest.Ct12Digit, string(types.BucketCannedACLPublicReadWrite)),
 			ExpectedACL:         string(types.BucketCannedACLPublicReadWrite),
 			ExpectedBucket:      "example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket that has dot, hyphen, and numbers, bucket owner, and acl that has hyphens",
-			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket.4000", "123456789012", string(types.BucketCannedACLPublicReadWrite)),
+			InputID:             tfs3.BucketACLCreateResourceID("my-example.bucket.4000", acctest.Ct12Digit, string(types.BucketCannedACLPublicReadWrite)),
 			ExpectedACL:         string(types.BucketCannedACLPublicReadWrite),
 			ExpectedBucket:      "my-example.bucket.4000",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket (pre-2018, us-east-1)", //lintignore:AWSAT003
@@ -191,38 +191,38 @@ func TestBucketACLParseResourceID(t *testing.T) {
 		},
 		{
 			TestName:            "valid ID with bucket (pre-2018, us-east-1) and bucket owner", //lintignore:AWSAT003
-			InputID:             tfs3.BucketACLCreateResourceID("Example", "123456789012", ""),
+			InputID:             tfs3.BucketACLCreateResourceID("Example", acctest.Ct12Digit, ""),
 			ExpectedACL:         "",
 			ExpectedBucket:      "Example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket (pre-2018, us-east-1) that has underscore, dot, hyphen, and number and bucket owner", //lintignore:AWSAT003
-			InputID:             tfs3.BucketACLCreateResourceID("My_Example-Bucket.4000", "123456789012", ""),
+			InputID:             tfs3.BucketACLCreateResourceID("My_Example-Bucket.4000", acctest.Ct12Digit, ""),
 			ExpectedACL:         "",
 			ExpectedBucket:      "My_Example-Bucket.4000",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket (pre-2018, us-east-1), bucket owner, and acl", //lintignore:AWSAT003
-			InputID:             tfs3.BucketACLCreateResourceID("Example", "123456789012", string(types.BucketCannedACLPrivate)),
+			InputID:             tfs3.BucketACLCreateResourceID("Example", acctest.Ct12Digit, string(types.BucketCannedACLPrivate)),
 			ExpectedACL:         string(types.BucketCannedACLPrivate),
 			ExpectedBucket:      "Example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket (pre-2018, us-east-1), bucket owner, and acl that has hyphens", //lintignore:AWSAT003
-			InputID:             tfs3.BucketACLCreateResourceID("Example", "123456789012", string(types.BucketCannedACLPublicReadWrite)),
+			InputID:             tfs3.BucketACLCreateResourceID("Example", acctest.Ct12Digit, string(types.BucketCannedACLPublicReadWrite)),
 			ExpectedACL:         string(types.BucketCannedACLPublicReadWrite),
 			ExpectedBucket:      "Example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 		{
 			TestName:            "valid ID with bucket (pre-2018, us-east-1) that has underscore, dot, hyphen, and numbers, bucket owner, and acl that has hyphens", //lintignore:AWSAT003
-			InputID:             tfs3.BucketACLCreateResourceID("My_Example-bucket.4000", "123456789012", string(types.BucketCannedACLPublicReadWrite)),
+			InputID:             tfs3.BucketACLCreateResourceID("My_Example-bucket.4000", acctest.Ct12Digit, string(types.BucketCannedACLPublicReadWrite)),
 			ExpectedACL:         string(types.BucketCannedACLPublicReadWrite),
 			ExpectedBucket:      "My_Example-bucket.4000",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 	}
 
