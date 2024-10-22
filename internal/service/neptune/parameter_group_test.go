@@ -178,7 +178,7 @@ func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_basic(rName, "neptune_query_timeout", "25", "pending-reboot"),
+				Config: testAccParameterGroupConfig_basic(rName, "neptune_query_timeout", acctest.Ct25, "pending-reboot"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
@@ -186,7 +186,7 @@ func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"apply_method":  "pending-reboot",
 						names.AttrName:  "neptune_query_timeout",
-						names.AttrValue: "25",
+						names.AttrValue: acctest.Ct25,
 					}),
 				),
 			},
@@ -197,7 +197,7 @@ func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 			},
 			// This test should be updated with a dynamic parameter when available
 			{
-				Config:      testAccParameterGroupConfig_basic(rName, "neptune_query_timeout", "25", "immediate"),
+				Config:      testAccParameterGroupConfig_basic(rName, "neptune_query_timeout", acctest.Ct25, "immediate"),
 				ExpectError: regexache.MustCompile(`cannot use immediate apply method for static parameter`),
 			},
 			// Test removing the configuration
