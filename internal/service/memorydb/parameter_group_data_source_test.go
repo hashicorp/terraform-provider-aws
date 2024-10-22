@@ -35,7 +35,7 @@ func TestAccMemoryDBParameterGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "parameter.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "parameter.*", map[string]string{
 						names.AttrName:  "active-defrag-cycle-max",
-						names.AttrValue: "70",
+						names.AttrValue: acctest.Ct70,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "parameter.*", map[string]string{
 						names.AttrName:  "active-defrag-cycle-min",
