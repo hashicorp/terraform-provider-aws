@@ -14,6 +14,18 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-0Point5-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct0Point5` for the string literal "0.5" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"0.5"'
+    severity: ERROR
+    fix: "acctest.Ct0Point5"
+    options:
+      constant_propagation: false
+
   - id: literal-1-string-test-constant
     languages: [go]
     message: Use the constant `acctest.Ct1` for the string literal "1" in test files
@@ -42,6 +54,270 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-100-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct100` for the string literal "100" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"100"'
+    severity: ERROR
+    fix: "acctest.Ct100"
+    options:
+      constant_propagation: false
+
+  - id: literal-1000-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct1000` for the string literal "1000" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"1000"'
+    severity: ERROR
+    fix: "acctest.Ct1000"
+    options:
+      constant_propagation: false
+
+  - id: literal-10000-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct10000` for the string literal "10000" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"10000"'
+    severity: ERROR
+    fix: "acctest.Ct10000"
+    options:
+      constant_propagation: false
+
+  - id: literal-1001-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct1001` for the string literal "1001" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"1001"'
+    severity: ERROR
+    fix: "acctest.Ct1001"
+    options:
+      constant_propagation: false
+
+  - id: literal-1024-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct1024` for the string literal "1024" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"1024"'
+    severity: ERROR
+    fix: "acctest.Ct1024"
+    options:
+      constant_propagation: false
+
+  - id: literal-11-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct11` for the string literal "11" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"11"'
+    severity: ERROR
+    fix: "acctest.Ct11"
+    options:
+      constant_propagation: false
+
+  - id: literal-12-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct12` for the string literal "12" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"12"'
+    severity: ERROR
+    fix: "acctest.Ct12"
+    options:
+      constant_propagation: false
+
+  - id: literal-120-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct120` for the string literal "120" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"120"'
+    severity: ERROR
+    fix: "acctest.Ct120"
+    options:
+      constant_propagation: false
+
+  - id: literal-1200-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct1200` for the string literal "1200" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"1200"'
+    severity: ERROR
+    fix: "acctest.Ct1200"
+    options:
+      constant_propagation: false
+
+  - id: literal-123-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct123` for the string literal "123" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"123"'
+    severity: ERROR
+    fix: "acctest.Ct123"
+    options:
+      constant_propagation: false
+
+  - id: literal-1234-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct1234` for the string literal "1234" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"1234"'
+    severity: ERROR
+    fix: "acctest.Ct1234"
+    options:
+      constant_propagation: false
+
+  - id: literal-125-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct125` for the string literal "125" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"125"'
+    severity: ERROR
+    fix: "acctest.Ct125"
+    options:
+      constant_propagation: false
+
+  - id: literal-12Digit-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct12Digit` for the string literal "123456789012" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"123456789012"'
+    severity: ERROR
+    fix: "acctest.Ct12Digit"
+    options:
+      constant_propagation: false
+
+  - id: literal-13-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct13` for the string literal "13" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"13"'
+    severity: ERROR
+    fix: "acctest.Ct13"
+    options:
+      constant_propagation: false
+
+  - id: literal-14-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct14` for the string literal "14" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"14"'
+    severity: ERROR
+    fix: "acctest.Ct14"
+    options:
+      constant_propagation: false
+
+  - id: literal-15-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct15` for the string literal "15" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"15"'
+    severity: ERROR
+    fix: "acctest.Ct15"
+    options:
+      constant_propagation: false
+
+  - id: literal-150-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct150` for the string literal "150" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"150"'
+    severity: ERROR
+    fix: "acctest.Ct150"
+    options:
+      constant_propagation: false
+
+  - id: literal-16-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct16` for the string literal "16" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"16"'
+    severity: ERROR
+    fix: "acctest.Ct16"
+    options:
+      constant_propagation: false
+
+  - id: literal-180-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct180` for the string literal "180" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"180"'
+    severity: ERROR
+    fix: "acctest.Ct180"
+    options:
+      constant_propagation: false
+
+  - id: literal-1Point0-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct1Point0` for the string literal "1.0" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"1.0"'
+    severity: ERROR
+    fix: "acctest.Ct1Point0"
+    options:
+      constant_propagation: false
+
+  - id: literal-1Point1-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct1Point1` for the string literal "1.1" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"1.1"'
+    severity: ERROR
+    fix: "acctest.Ct1Point1"
+    options:
+      constant_propagation: false
+
+  - id: literal-1Point5-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct1Point5` for the string literal "1.5" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"1.5"'
+    severity: ERROR
+    fix: "acctest.Ct1Point5"
+    options:
+      constant_propagation: false
+
   - id: literal-2-string-test-constant
     languages: [go]
     message: Use the constant `acctest.Ct2` for the string literal "2" in test files
@@ -53,6 +329,102 @@ rules:
       - pattern: 'acctest.CtTwo'
     severity: ERROR
     fix: "acctest.Ct2"
+    options:
+      constant_propagation: false
+
+  - id: literal-20-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct20` for the string literal "20" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"20"'
+    severity: ERROR
+    fix: "acctest.Ct20"
+    options:
+      constant_propagation: false
+
+  - id: literal-200-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct200` for the string literal "200" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"200"'
+    severity: ERROR
+    fix: "acctest.Ct200"
+    options:
+      constant_propagation: false
+
+  - id: literal-2000-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct2000` for the string literal "2000" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"2000"'
+    severity: ERROR
+    fix: "acctest.Ct2000"
+    options:
+      constant_propagation: false
+
+  - id: literal-20000-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct20000` for the string literal "20000" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"20000"'
+    severity: ERROR
+    fix: "acctest.Ct20000"
+    options:
+      constant_propagation: false
+
+  - id: literal-22-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct22` for the string literal "22" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"22"'
+    severity: ERROR
+    fix: "acctest.Ct22"
+    options:
+      constant_propagation: false
+
+  - id: literal-25-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct25` for the string literal "25" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"25"'
+    severity: ERROR
+    fix: "acctest.Ct25"
+    options:
+      constant_propagation: false
+
+  - id: literal-250-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct250` for the string literal "250" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"250"'
+    severity: ERROR
+    fix: "acctest.Ct250"
+    options:
+      constant_propagation: false
+
+  - id: literal-2Point5-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct2Point5` for the string literal "2.5" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"2.5"'
+    severity: ERROR
+    fix: "acctest.Ct2Point5"
     options:
       constant_propagation: false
 
@@ -70,6 +442,78 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-30-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct30` for the string literal "30" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"30"'
+    severity: ERROR
+    fix: "acctest.Ct30"
+    options:
+      constant_propagation: false
+
+  - id: literal-300-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct300` for the string literal "300" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"300"'
+    severity: ERROR
+    fix: "acctest.Ct300"
+    options:
+      constant_propagation: false
+
+  - id: literal-30000-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct30000` for the string literal "30000" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"30000"'
+    severity: ERROR
+    fix: "acctest.Ct30000"
+    options:
+      constant_propagation: false
+
+  - id: literal-35-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct35` for the string literal "35" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"35"'
+    severity: ERROR
+    fix: "acctest.Ct35"
+    options:
+      constant_propagation: false
+
+  - id: literal-3600-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct3600` for the string literal "3600" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"3600"'
+    severity: ERROR
+    fix: "acctest.Ct3600"
+    options:
+      constant_propagation: false
+
+  - id: literal-365-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct365` for the string literal "365" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"365"'
+    severity: ERROR
+    fix: "acctest.Ct365"
+    options:
+      constant_propagation: false
+
   - id: literal-4-string-test-constant
     languages: [go]
     message: Use the constant `acctest.Ct4` for the string literal "4" in test files
@@ -81,6 +525,282 @@ rules:
       - pattern: 'acctest.CtFour'
     severity: ERROR
     fix: "acctest.Ct4"
+    options:
+      constant_propagation: false
+
+  - id: literal-40-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct40` for the string literal "40" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"40"'
+    severity: ERROR
+    fix: "acctest.Ct40"
+    options:
+      constant_propagation: false
+
+  - id: literal-4000-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct4000` for the string literal "4000" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"4000"'
+    severity: ERROR
+    fix: "acctest.Ct4000"
+    options:
+      constant_propagation: false
+
+  - id: literal-404-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct404` for the string literal "404" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"404"'
+    severity: ERROR
+    fix: "acctest.Ct404"
+    options:
+      constant_propagation: false
+
+  - id: literal-4096-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct4096` for the string literal "4096" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"4096"'
+    severity: ERROR
+    fix: "acctest.Ct4096"
+    options:
+      constant_propagation: false
+
+  - id: literal-443-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct443` for the string literal "443" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"443"'
+    severity: ERROR
+    fix: "acctest.Ct443"
+    options:
+      constant_propagation: false
+
+  - id: literal-5-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct5` for the string literal "5" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"5"'
+    severity: ERROR
+    fix: "acctest.Ct5"
+    options:
+      constant_propagation: false
+
+  - id: literal-50-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct50` for the string literal "50" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"50"'
+    severity: ERROR
+    fix: "acctest.Ct50"
+    options:
+      constant_propagation: false
+
+  - id: literal-500-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct500` for the string literal "500" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"500"'
+    severity: ERROR
+    fix: "acctest.Ct500"
+    options:
+      constant_propagation: false
+
+  - id: literal-5000-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct5000` for the string literal "5000" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"5000"'
+    severity: ERROR
+    fix: "acctest.Ct5000"
+    options:
+      constant_propagation: false
+
+  - id: literal-512-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct512` for the string literal "512" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"512"'
+    severity: ERROR
+    fix: "acctest.Ct512"
+    options:
+      constant_propagation: false
+
+  - id: literal-6-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct6` for the string literal "6" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"6"'
+    severity: ERROR
+    fix: "acctest.Ct6"
+    options:
+      constant_propagation: false
+
+  - id: literal-60-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct60` for the string literal "60" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"60"'
+    severity: ERROR
+    fix: "acctest.Ct60"
+    options:
+      constant_propagation: false
+
+  - id: literal-600-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct600` for the string literal "600" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"600"'
+    severity: ERROR
+    fix: "acctest.Ct600"
+    options:
+      constant_propagation: false
+
+  - id: literal-7-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct7` for the string literal "7" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"7"'
+    severity: ERROR
+    fix: "acctest.Ct7"
+    options:
+      constant_propagation: false
+
+  - id: literal-70-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct70` for the string literal "70" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"70"'
+    severity: ERROR
+    fix: "acctest.Ct70"
+    options:
+      constant_propagation: false
+
+  - id: literal-75-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct75` for the string literal "75" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"75"'
+    severity: ERROR
+    fix: "acctest.Ct75"
+    options:
+      constant_propagation: false
+
+  - id: literal-8-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct8` for the string literal "8" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"8"'
+    severity: ERROR
+    fix: "acctest.Ct8"
+    options:
+      constant_propagation: false
+
+  - id: literal-80-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct80` for the string literal "80" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"80"'
+    severity: ERROR
+    fix: "acctest.Ct80"
+    options:
+      constant_propagation: false
+
+  - id: literal-8080-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct8080` for the string literal "8080" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"8080"'
+    severity: ERROR
+    fix: "acctest.Ct8080"
+    options:
+      constant_propagation: false
+
+  - id: literal-9-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct9` for the string literal "9" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"9"'
+    severity: ERROR
+    fix: "acctest.Ct9"
+    options:
+      constant_propagation: false
+
+  - id: literal-90-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct90` for the string literal "90" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"90"'
+    severity: ERROR
+    fix: "acctest.Ct90"
+    options:
+      constant_propagation: false
+
+  - id: literal-99-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct99` for the string literal "99" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"99"'
+    severity: ERROR
+    fix: "acctest.Ct99"
+    options:
+      constant_propagation: false
+
+  - id: literal-9999-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.Ct9999` for the string literal "9999" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"9999"'
+    severity: ERROR
+    fix: "acctest.Ct9999"
     options:
       constant_propagation: false
 
@@ -177,6 +897,30 @@ rules:
     pattern: '"name"'
     severity: ERROR
     fix: "acctest.CtName"
+    options:
+      constant_propagation: false
+
+  - id: literal-Negative1-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtNegative1` for the string literal "-1" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"-1"'
+    severity: ERROR
+    fix: "acctest.CtNegative1"
+    options:
+      constant_propagation: false
+
+  - id: literal-Negative2-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtNegative2` for the string literal "-2" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"-2"'
+    severity: ERROR
+    fix: "acctest.CtNegative2"
     options:
       constant_propagation: false
 
