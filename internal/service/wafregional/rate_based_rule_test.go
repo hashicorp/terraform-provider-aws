@@ -214,7 +214,7 @@ func TestAccWAFRegionalRateBasedRule_changeRateLimit(t *testing.T) {
 	var before, after awstypes.RateBasedRule
 	resourceName := "aws_wafregional_rate_based_rule.wafrule"
 	ruleName := fmt.Sprintf("wafrule%s", sdkacctest.RandString(5))
-	rateLimitBefore := "2000"
+	rateLimitBefore := acctest.Ct2000
 	rateLimitAfter := "2001"
 
 	resource.ParallelTest(t, resource.TestCase{
