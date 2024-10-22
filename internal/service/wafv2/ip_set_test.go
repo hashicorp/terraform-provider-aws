@@ -299,7 +299,7 @@ func TestAccWAFV2IPSet_large(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipSetName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, string(awstypes.ScopeRegional)),
 					resource.TestCheckResourceAttr(resourceName, "ip_address_version", string(awstypes.IPAddressVersionIpv4)),
-					resource.TestCheckResourceAttr(resourceName, "addresses.#", "50"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", acctest.Ct50),
 				),
 			},
 			{
