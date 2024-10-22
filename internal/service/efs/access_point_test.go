@@ -105,8 +105,8 @@ func TestAccEFSAccessPoint_RootDirectoryCreation_info(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_directory.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.path", "/home/test"),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.0.owner_gid", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.0.owner_uid", "1001"),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.0.owner_gid", acctest.Ct1001),
+					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.0.owner_uid", acctest.Ct1001),
 					resource.TestCheckResourceAttr(resourceName, "root_directory.0.creation_info.0.permissions", "755"),
 				),
 			},
@@ -136,8 +136,8 @@ func TestAccEFSAccessPoint_POSIX_user(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "posix_user.0.gid", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "posix_user.0.uid", "1001"),
+					resource.TestCheckResourceAttr(resourceName, "posix_user.0.gid", acctest.Ct1001),
+					resource.TestCheckResourceAttr(resourceName, "posix_user.0.uid", acctest.Ct1001),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.secondary_gids.%", acctest.Ct0),
 				),
 			},
@@ -167,8 +167,8 @@ func TestAccEFSAccessPoint_POSIXUserSecondary_gids(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPointExists(ctx, resourceName, &ap),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "posix_user.0.gid", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "posix_user.0.uid", "1001"),
+					resource.TestCheckResourceAttr(resourceName, "posix_user.0.gid", acctest.Ct1001),
+					resource.TestCheckResourceAttr(resourceName, "posix_user.0.uid", acctest.Ct1001),
 					resource.TestCheckResourceAttr(resourceName, "posix_user.0.secondary_gids.#", acctest.Ct1)),
 			},
 			{
