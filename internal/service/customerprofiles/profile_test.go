@@ -53,7 +53,7 @@ func TestAccCustomerProfilesProfile_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address.0.state", "WA"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "attributes.SSN", "123-44-0000"),
-					resource.TestCheckResourceAttr(resourceName, "attributes.LoyaltyPoints", "30000"),
+					resource.TestCheckResourceAttr(resourceName, "attributes.LoyaltyPoints", acctest.Ct30000),
 					resource.TestCheckResourceAttr(resourceName, "billing_address.0.%", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "billing_address.0.address_1", "789 Sample St"),
 					resource.TestCheckResourceAttr(resourceName, "billing_address.0.address_2", "Apt 1"),
