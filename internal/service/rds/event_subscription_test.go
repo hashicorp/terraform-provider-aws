@@ -203,7 +203,7 @@ func TestAccRDSEventSubscription_categories(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("es:%s", rName)),
 					acctest.CheckResourceAttrAccountID(resourceName, "customer_aws_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", acctest.Ct5),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "availability"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "backup"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
