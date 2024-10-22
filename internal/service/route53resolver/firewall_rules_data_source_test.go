@@ -32,7 +32,7 @@ func TestAccRoute53ResolverFirewallRulesDataSource_basic(t *testing.T) {
 	fqdn := acctest.RandomFQDomainName()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	action := "ALLOW"
-	priority := "100"
+	priority := acctest.Ct100
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
