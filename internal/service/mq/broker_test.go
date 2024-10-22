@@ -68,7 +68,7 @@ func TestBrokerPasswordValidation(t *testing.T) {
 		ErrCount int
 	}{
 		{
-			Value:    "123456789012",
+			Value:    acctest.Ct12Digit,
 			ErrCount: 0,
 		},
 		{
@@ -84,11 +84,11 @@ func TestBrokerPasswordValidation(t *testing.T) {
 			ErrCount: 1,
 		},
 		{
-			Value:    "123" + strings.Repeat("#", 9),
+			Value:    acctest.Ct123 + strings.Repeat("#", 9),
 			ErrCount: 0,
 		},
 		{
-			Value:    "12" + strings.Repeat("#", 10),
+			Value:    acctest.Ct12 + strings.Repeat("#", 10),
 			ErrCount: 1,
 		},
 		{
@@ -366,7 +366,7 @@ func TestAccMQBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instances.#", acctest.Ct1),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
-					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", acctest.Ct5),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
@@ -593,7 +593,7 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
 						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
-					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", acctest.Ct5),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
@@ -684,7 +684,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
 						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
-					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", acctest.Ct5),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
@@ -694,7 +694,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.ip_address",
 						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
-					resource.TestCheckResourceAttr(resourceName, "instances.1.endpoints.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "instances.1.endpoints.#", acctest.Ct5),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
@@ -813,7 +813,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
 						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
-					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", acctest.Ct5),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
@@ -823,7 +823,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.ip_address",
 						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
-					resource.TestCheckResourceAttr(resourceName, "instances.1.endpoints.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "instances.1.endpoints.#", acctest.Ct5),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
