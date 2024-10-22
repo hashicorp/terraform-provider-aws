@@ -432,25 +432,25 @@ func TestAccServiceCatalogProvisionedProduct_productTagUpdateAfterError(t *testi
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedProductConfig_productTagUpdateAfterError_valid(rName, bucketName, "1.0"),
+				Config: testAccProvisionedProductConfig_productTagUpdateAfterError_valid(rName, bucketName, acctest.Ct1Point0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.version", "1.0"),
-					acctest.S3BucketHasTag(ctx, bucketName, names.AttrVersion, "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.version", acctest.Ct1Point0),
+					acctest.S3BucketHasTag(ctx, bucketName, names.AttrVersion, acctest.Ct1Point0),
 				),
 			},
 			{
-				Config:      testAccProvisionedProductConfig_productTagUpdateAfterError_confict(rName, bucketName, "1.5"),
+				Config:      testAccProvisionedProductConfig_productTagUpdateAfterError_confict(rName, bucketName, acctest.Ct1Point5),
 				ExpectError: regexache.MustCompile(`BucketAlreadyOwnedByYou`),
 			},
 			{
-				Config: testAccProvisionedProductConfig_productTagUpdateAfterError_valid(rName, bucketName, "1.5"),
+				Config: testAccProvisionedProductConfig_productTagUpdateAfterError_valid(rName, bucketName, acctest.Ct1Point5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "tags.version", "1.5"),
-					acctest.S3BucketHasTag(ctx, bucketName, names.AttrVersion, "1.5"),
+					resource.TestCheckResourceAttr(resourceName, "tags.version", acctest.Ct1Point5),
+					acctest.S3BucketHasTag(ctx, bucketName, names.AttrVersion, acctest.Ct1Point5),
 				),
 			},
 		},
