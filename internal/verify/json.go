@@ -15,6 +15,7 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 // SuppressEquivalentPolicyDiffs returns a difference suppression function that compares
@@ -156,7 +157,7 @@ func SecondJSONUnlessEquivalent(old, new string) (string, error) {
 		// read directly from the remote resource instead.
 		//
 		// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/39833
-		if strings.Contains(err.Error(), "parsing policy 1") {
+		if errs.Contains(err, "parsing policy 1") {
 			return new, nil
 		}
 
