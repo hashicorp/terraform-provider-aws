@@ -35,7 +35,7 @@ func TestAccRedshiftServerlessSnapshot_basic(t *testing.T) {
 					testAccCheckSnapshotExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "namespace_name", "aws_redshiftserverless_namespace.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, acctest.CtNegative1),
 					resource.TestCheckResourceAttr(resourceName, "admin_username", "admin"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account"),
 					resource.TestCheckResourceAttr(resourceName, "accounts_with_provisioned_restore_access.#", acctest.Ct0),
