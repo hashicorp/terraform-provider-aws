@@ -339,7 +339,7 @@ func TestAccFSxOpenZFSVolume_recordSizeKib(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_recordSizeKib(rName, 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "record_size_kib", "8"),
+					resource.TestCheckResourceAttr(resourceName, "record_size_kib", acctest.Ct8),
 				),
 			},
 			{
@@ -352,7 +352,7 @@ func TestAccFSxOpenZFSVolume_recordSizeKib(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "record_size_kib", "1024"),
+					resource.TestCheckResourceAttr(resourceName, "record_size_kib", acctest.Ct1024),
 				),
 			},
 		},
@@ -375,8 +375,8 @@ func TestAccFSxOpenZFSVolume_storageCapacity(t *testing.T) {
 				Config: testAccOpenZFSVolumeConfig_storageCapacity(rName, 30, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume1),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity_quota_gib", "30"),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity_reservation_gib", "20"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity_quota_gib", acctest.Ct30),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity_reservation_gib", acctest.Ct20),
 				),
 			},
 			{
@@ -389,8 +389,8 @@ func TestAccFSxOpenZFSVolume_storageCapacity(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenZFSVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckOpenZFSVolumeNotRecreated(&volume1, &volume2),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity_quota_gib", "40"),
-					resource.TestCheckResourceAttr(resourceName, "storage_capacity_reservation_gib", "30"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity_quota_gib", acctest.Ct40),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity_reservation_gib", acctest.Ct30),
 				),
 			},
 		},
@@ -490,17 +490,17 @@ func TestAccFSxOpenZFSVolume_userAndGroupQuotas(t *testing.T) {
 						names.AttrType:               "USER",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user_and_group_quotas.*", map[string]string{
-						names.AttrID:                 "20",
-						"storage_capacity_quota_gib": "1024",
+						names.AttrID:                 acctest.Ct20,
+						"storage_capacity_quota_gib": acctest.Ct1024,
 						names.AttrType:               "GROUP",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user_and_group_quotas.*", map[string]string{
-						names.AttrID:                 "5",
-						"storage_capacity_quota_gib": "1024",
+						names.AttrID:                 acctest.Ct5,
+						"storage_capacity_quota_gib": acctest.Ct1024,
 						names.AttrType:               "GROUP",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user_and_group_quotas.*", map[string]string{
-						names.AttrID:                 "100",
+						names.AttrID:                 acctest.Ct100,
 						"storage_capacity_quota_gib": "128",
 						names.AttrType:               "USER",
 					}),
