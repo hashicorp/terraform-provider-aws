@@ -32,7 +32,7 @@ func testAccFrameworkDataSource_basic(t *testing.T) {
 						names.AttrName:            "BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK",
 						"input_parameter.#":       acctest.Ct1,
 						"input_parameter.0.name":  "requiredRetentionDays",
-						"input_parameter.0.value": "35",
+						"input_parameter.0.value": acctest.Ct35,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(datasourceName, "control.*", map[string]string{
 						names.AttrName:      "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK",
