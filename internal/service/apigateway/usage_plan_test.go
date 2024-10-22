@@ -197,7 +197,7 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.burst_limit", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.rate_limit", "5"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.rate_limit", acctest.Ct5),
 				),
 			},
 			{
@@ -206,7 +206,7 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.burst_limit", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.rate_limit", "6"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.rate_limit", acctest.Ct6),
 				),
 			},
 			{
@@ -238,7 +238,7 @@ func TestAccAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 				Config: testAccUsagePlanConfig_throttling(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.rate_limit", "5"),
+					resource.TestCheckResourceAttr(resourceName, "throttle_settings.0.rate_limit", acctest.Ct5),
 				),
 			},
 			{
@@ -280,8 +280,8 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.limit", "100"),
-					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.offset", "6"),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.limit", acctest.Ct100),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.offset", acctest.Ct6),
 					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.period", "WEEK"),
 				),
 			},
@@ -290,8 +290,8 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.limit", "200"),
-					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.offset", "20"),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.limit", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.offset", acctest.Ct20),
 					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.period", "MONTH"),
 				),
 			},
@@ -451,7 +451,7 @@ func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.0.throttle.*", map[string]string{
 						names.AttrPath: "/test/GET",
 						"burst_limit":  acctest.Ct3,
-						"rate_limit":   "6",
+						"rate_limit":   acctest.Ct6,
 					}),
 				),
 			},
@@ -472,7 +472,7 @@ func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "api_stages.0.throttle.*", map[string]string{
 						names.AttrPath: "/test/GET",
 						"burst_limit":  acctest.Ct3,
-						"rate_limit":   "6",
+						"rate_limit":   acctest.Ct6,
 					}),
 				),
 			},
