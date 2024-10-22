@@ -290,10 +290,10 @@ func TestAccGlueJob_glueVersion(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobConfig_versionMaxCapacity(rName, "1.0"),
+				Config: testAccJobConfig_versionMaxCapacity(rName, acctest.Ct1Point0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "glue_version", acctest.Ct1Point0),
 				),
 			},
 			{
@@ -861,7 +861,7 @@ func TestAccGlueJob_maxCapacity(t *testing.T) {
 				Config: testAccJobConfig_maxCapacity(rName, 15),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobExists(ctx, resourceName, &job),
-					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "15"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.Ct15),
 				),
 			},
 			{
