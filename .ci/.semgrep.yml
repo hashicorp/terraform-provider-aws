@@ -337,17 +337,17 @@ rules:
     patterns:
       - pattern-either:
           - pattern: |
-              aws.TimeValue($X) == $Y
+              aws.ToTime($X) == $Y
           - pattern: |
-              aws.TimeValue($X) != $Y
+              aws.ToTime($X) != $Y
           - pattern: |
               ($X : time.Time) == $Y
           - pattern: |
               ($X : time.Time) != $Y
           - pattern: |
-              $X == aws.TimeValue($Y)
+              $X == aws.ToTime($Y)
           - pattern: |
-              $X != aws.TimeValue($Y)
+              $X != aws.ToTime($Y)
           - pattern: |
               $X == ($Y : time.Time)
           - pattern: |
