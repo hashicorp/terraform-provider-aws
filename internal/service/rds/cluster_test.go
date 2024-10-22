@@ -678,7 +678,7 @@ func TestAccRDSCluster_allocatedStorage(t *testing.T) {
 				Config: testAccClusterConfig_allocatedStorage(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "100"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, acctest.Ct100),
 				),
 			},
 		},
@@ -744,7 +744,7 @@ func TestAccRDSCluster_iops(t *testing.T) {
 				Config: testAccClusterConfig_iops(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "1000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, acctest.Ct1000),
 				),
 			},
 		},
@@ -1315,7 +1315,7 @@ func TestAccRDSCluster_backupsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "preferred_backup_window", "07:00-09:00"),
 					resource.TestCheckResourceAttr(
-						resourceName, "backup_retention_period", "5"),
+						resourceName, "backup_retention_period", acctest.Ct5),
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:00-tue:04:30"),
 				),
@@ -1924,8 +1924,8 @@ func TestAccRDSCluster_scaling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.auto_pause", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.max_capacity", "256"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", "8"),
-					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", "600"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.min_capacity", acctest.Ct8),
+					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_before_timeout", acctest.Ct600),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.seconds_until_auto_pause", "86400"),
 					resource.TestCheckResourceAttr(resourceName, "scaling_configuration.0.timeout_action", "ForceApplyCapacityChange"),
 				),
@@ -1957,7 +1957,7 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "64"),
-					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", acctest.Ct0Point5),
 				),
 			},
 			{
