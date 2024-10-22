@@ -57,7 +57,7 @@ func TestAccSageMakerNotebookInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeSize, "5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeSize, acctest.Ct5),
 				),
 			},
 			{
@@ -169,14 +169,14 @@ func TestAccSageMakerNotebookInstance_volumeSize(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeSize, "5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeSize, acctest.Ct5),
 				),
 			},
 			{
 				Config: testAccNotebookInstanceConfig_volume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeSize, "8"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeSize, acctest.Ct8),
 					testAccCheckNotebookInstanceNotRecreated(&notebook1, &notebook2),
 				),
 			},
@@ -189,7 +189,7 @@ func TestAccSageMakerNotebookInstance_volumeSize(t *testing.T) {
 				Config: testAccNotebookInstanceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceExists(ctx, resourceName, &notebook3),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeSize, "5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVolumeSize, acctest.Ct5),
 					testAccCheckNotebookInstanceRecreated(&notebook2, &notebook3),
 				),
 			},
