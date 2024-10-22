@@ -156,7 +156,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", fmt.Sprintf("%s-%s", rName, "table1")),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", acctest.Ct0Point5),
 				),
 			},
 			{
@@ -169,7 +169,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", fmt.Sprintf("%s-%s", rName, "table1")),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "1.5"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", acctest.Ct1Point5),
 				),
 			},
 			{
@@ -177,7 +177,7 @@ func TestAccGlueCrawler_DynamoDBTarget_scanRate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.path", fmt.Sprintf("%s-%s", rName, "table1")),
-					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "dynamodb_target.0.scan_rate", acctest.Ct0Point5),
 				),
 			},
 		},
