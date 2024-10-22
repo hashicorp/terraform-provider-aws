@@ -206,7 +206,7 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 		CheckDestroy:             testAccCheckRefreshScheduleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRefreshScheduleConfig_MonthlyRefresh(rId, rName, sId, "15"),
+				Config: testAccRefreshScheduleConfig_MonthlyRefresh(rId, rName, sId, acctest.Ct15),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight",
@@ -216,7 +216,7 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.interval", "MONTHLY"),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_month", "15"),
+					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_month", acctest.Ct15),
 					resource.TestCheckNoResourceAttr(resourceName, "schedule.0.schedule_frequency.0.refresh_on_day.0.day_of_week"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
