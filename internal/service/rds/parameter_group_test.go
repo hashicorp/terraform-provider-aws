@@ -176,7 +176,7 @@ func TestParameterGroupModifyChunk(t *testing.T) {
 				{
 					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("innodb_max_dirty_pages_pct"),
-					ParameterValue: aws.String("90"),
+					ParameterValue: aws.String(acctest.Ct90),
 				},
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
@@ -230,7 +230,7 @@ func TestParameterGroupModifyChunk(t *testing.T) {
 				{
 					ApplyMethod:    types.ApplyMethodPendingReboot,
 					ParameterName:  aws.String("innodb_max_dirty_pages_pct"),
-					ParameterValue: aws.String("90"),
+					ParameterValue: aws.String(acctest.Ct90),
 				},
 				{
 					ApplyMethod:    types.ApplyMethodImmediate,
@@ -509,7 +509,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "table_open_cache",
-						names.AttrValue: "4096",
+						names.AttrValue: acctest.Ct4096,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "tmp_table_size",
@@ -525,7 +525,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_open_files",
-						names.AttrValue: "4000",
+						names.AttrValue: acctest.Ct4000,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_read_io_threads",
@@ -569,7 +569,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_io_capacity",
-						names.AttrValue: "2000",
+						names.AttrValue: acctest.Ct2000,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_io_capacity_max",
@@ -577,11 +577,11 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_lock_wait_timeout",
-						names.AttrValue: "120",
+						names.AttrValue: acctest.Ct120,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_max_dirty_pages_pct",
-						names.AttrValue: "90",
+						names.AttrValue: acctest.Ct90,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "log_bin_trust_function_creators",
@@ -601,11 +601,11 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "max_connect_errors",
-						names.AttrValue: "100",
+						names.AttrValue: acctest.Ct100,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "query_cache_min_res_unit",
-						names.AttrValue: "512",
+						names.AttrValue: acctest.Ct512,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "slow_query_log",
@@ -688,7 +688,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "table_open_cache",
-						names.AttrValue: "4096",
+						names.AttrValue: acctest.Ct4096,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "tmp_table_size",
@@ -704,7 +704,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_open_files",
-						names.AttrValue: "4000",
+						names.AttrValue: acctest.Ct4000,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_read_io_threads",
@@ -748,7 +748,7 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_io_capacity",
-						names.AttrValue: "2000",
+						names.AttrValue: acctest.Ct2000,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_io_capacity_max",
@@ -756,11 +756,11 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_lock_wait_timeout",
-						names.AttrValue: "120",
+						names.AttrValue: acctest.Ct120,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "innodb_max_dirty_pages_pct",
-						names.AttrValue: "90",
+						names.AttrValue: acctest.Ct90,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "log_bin_trust_function_creators",
@@ -780,11 +780,11 @@ func TestAccRDSParameterGroup_limit(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "max_connect_errors",
-						names.AttrValue: "100",
+						names.AttrValue: acctest.Ct100,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "query_cache_min_res_unit",
-						names.AttrValue: "512",
+						names.AttrValue: acctest.Ct512,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "slow_query_log",
