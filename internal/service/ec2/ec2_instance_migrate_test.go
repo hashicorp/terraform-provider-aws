@@ -30,7 +30,7 @@ func TestInstanceMigrateState(t *testing.T) {
 				"block_device.3851383343.encrypted":             acctest.CtFalse,
 				"block_device.3851383343.snapshot_id":           "",
 				"block_device.3851383343.virtual_name":          "",
-				"block_device.3851383343.volume_size":           "5",
+				"block_device.3851383343.volume_size":           acctest.Ct5,
 				"block_device.3851383343.volume_type":           "standard",
 				// Ephemeral
 				"block_device.3101711606.delete_on_termination": acctest.CtFalse,
@@ -54,7 +54,7 @@ func TestInstanceMigrateState(t *testing.T) {
 				"ebs_block_device.3851383343.device_name":            "/dev/sdx",
 				"ebs_block_device.3851383343.encrypted":              acctest.CtFalse,
 				"ebs_block_device.3851383343.snapshot_id":            "",
-				"ebs_block_device.3851383343.volume_size":            "5",
+				"ebs_block_device.3851383343.volume_size":            acctest.Ct5,
 				"ebs_block_device.3851383343.volume_type":            "standard",
 				"ephemeral_block_device.#":                           acctest.Ct1,
 				"ephemeral_block_device.2458403513.device_name":      "/dev/sdy",
@@ -77,7 +77,7 @@ func TestInstanceMigrateState(t *testing.T) {
 				"block_device.3851383343.encrypted":             acctest.CtFalse,
 				"block_device.3851383343.snapshot_id":           "",
 				"block_device.3851383343.virtual_name":          "",
-				"block_device.3851383343.volume_size":           "5",
+				"block_device.3851383343.volume_size":           acctest.Ct5,
 				"block_device.3851383343.volume_type":           "standard",
 				"block_device.3851383343.iops":                  "",
 				// Ephemeral
@@ -96,7 +96,7 @@ func TestInstanceMigrateState(t *testing.T) {
 				"root_block_device.3018388612.snapshot_id":           "",
 				"root_block_device.3018388612.volume_size":           acctest.Ct10,
 				"root_block_device.3018388612.volume_type":           "io1",
-				"root_block_device.3018388612.iops":                  "1000",
+				"root_block_device.3018388612.iops":                  acctest.Ct1000,
 			},
 			Expected: map[string]string{
 				"ebs_block_device.#": acctest.Ct1,
@@ -104,7 +104,7 @@ func TestInstanceMigrateState(t *testing.T) {
 				"ebs_block_device.3851383343.device_name":            "/dev/sdx",
 				"ebs_block_device.3851383343.encrypted":              acctest.CtFalse,
 				"ebs_block_device.3851383343.snapshot_id":            "",
-				"ebs_block_device.3851383343.volume_size":            "5",
+				"ebs_block_device.3851383343.volume_size":            acctest.Ct5,
 				"ebs_block_device.3851383343.volume_type":            "standard",
 				"ephemeral_block_device.#":                           acctest.Ct1,
 				"ephemeral_block_device.2458403513.device_name":      "/dev/sdy",
@@ -115,7 +115,7 @@ func TestInstanceMigrateState(t *testing.T) {
 				"root_block_device.3018388612.snapshot_id":           "",
 				"root_block_device.3018388612.volume_size":           acctest.Ct10,
 				"root_block_device.3018388612.volume_type":           "io1",
-				"root_block_device.3018388612.iops":                  "1000",
+				"root_block_device.3018388612.iops":                  acctest.Ct1000,
 			},
 		},
 	}
