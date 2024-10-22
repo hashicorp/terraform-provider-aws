@@ -164,7 +164,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.parameter.*", map[string]string{
 						names.AttrName: "MaxPasswordAge",
 						"value_type":   "CUSTOM",
-						"int.0.value":  "60",
+						"int.0.value":  acctest.Ct60,
 					}),
 				),
 			},
@@ -229,14 +229,14 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 			},
 			{
 				// int type
-				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(foundationalStandardsARN, "DocumentDB.2", "minimumBackupRetentionPeriod", "int", "20"),
+				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(foundationalStandardsARN, "DocumentDB.2", "minimumBackupRetentionPeriod", "int", acctest.Ct20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "DocumentDB.2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
 						names.AttrName: "minimumBackupRetentionPeriod",
 						"value_type":   "CUSTOM",
-						"int.0.value":  "20",
+						"int.0.value":  acctest.Ct20,
 					}),
 				),
 			},
@@ -250,8 +250,8 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 						names.AttrName:       "authorizedTcpPorts",
 						"value_type":         "CUSTOM",
 						"int_list.0.value.#": acctest.Ct2,
-						"int_list.0.value.0": "443",
-						"int_list.0.value.1": "8080",
+						"int_list.0.value.0": acctest.Ct443,
+						"int_list.0.value.1": acctest.Ct8080,
 					}),
 				),
 			},
