@@ -35,7 +35,7 @@ func TestAccNetworkManagerLink_basic(t *testing.T) {
 					testAccCheckLinkExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "50"),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", acctest.Ct50),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, ""),
@@ -138,7 +138,7 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "50"),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", acctest.Ct50),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, "provider1"),
@@ -156,8 +156,8 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLinkExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "bandwidth.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", "75"),
-					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", "20"),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.download_speed", acctest.Ct75),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth.0.upload_speed", acctest.Ct20),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, "provider2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "type2"),
