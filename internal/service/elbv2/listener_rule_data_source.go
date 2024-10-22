@@ -116,10 +116,6 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 								names.AttrClientID: schema.StringAttribute{
 									Computed: true,
 								},
-								names.AttrClientSecret: schema.StringAttribute{
-									Computed:  true,
-									Sensitive: true,
-								},
 								names.AttrIssuer: schema.StringAttribute{
 									Computed: true,
 								},
@@ -329,6 +325,8 @@ func (d *dataSourceListenerRule) Read(ctx context.Context, req datasource.ReadRe
 		}
 	}
 
+	sortListenerActions(out.Actions)
+
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("Rule"))...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -383,7 +381,6 @@ type authenticateOIDCActionConfigModel struct {
 	AuthorizationEndpoint            types.String        `tfsdk:"authorization_endpoint"`
 	AuthenticationRequestExtraParams fwtypes.MapOfString `tfsdk:"authentication_request_extra_params"`
 	ClientId                         types.String        `tfsdk:"client_id"`
-	ClientSecret                     types.String        `tfsdk:"client_secret"`
 	Issuer                           types.String        `tfsdk:"issuer"`
 	OnUnauthenticatedRequest         types.String        `tfsdk:"on_unauthenticated_request"`
 	Scope                            types.String        `tfsdk:"scope"`

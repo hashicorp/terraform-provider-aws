@@ -4,6 +4,7 @@
 package elbv2_test
 
 import (
+	"fmt"
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
@@ -195,6 +196,181 @@ func TestAccELBV2ListenerRuleDataSource_byListenerAndPriority(t *testing.T) {
 
 					// tags
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_actionAuthenticateCognito(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	dataSourceName := "data.aws_lb_listener_rule.test"
+	resourceName := "aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_actionAuthenticateCognito(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"authenticate_cognito": knownvalue.NotNull(),
+							"authenticate_oidc":    knownvalue.Null(),
+							"fixed_response":       knownvalue.Null(),
+							"forward":              knownvalue.Null(),
+							"order":                knownvalue.NotNull(),
+							"redirect":             knownvalue.Null(),
+							"target_group_arn":     knownvalue.Null(),
+							names.AttrType:         knownvalue.NotNull(),
+						}),
+						knownvalue.NotNull(),
+					})),
+
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("order"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("order"),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey(names.AttrType),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey(names.AttrType),
+						compare.ValuesSame(),
+					),
+
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_cognito"), knownvalue.NotNull()),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_cognito"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_cognito").AtSliceIndex(0),
+						compare.ValuesSame(),
+					),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_actionAuthenticateOIDC(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	dataSourceName := "data.aws_lb_listener_rule.test"
+	resourceName := "aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_actionAuthenticateOIDC(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"authenticate_cognito": knownvalue.Null(),
+							"authenticate_oidc":    knownvalue.NotNull(),
+							"fixed_response":       knownvalue.Null(),
+							"forward":              knownvalue.Null(),
+							"order":                knownvalue.NotNull(),
+							"redirect":             knownvalue.Null(),
+							"target_group_arn":     knownvalue.Null(),
+							names.AttrType:         knownvalue.NotNull(),
+						}),
+						knownvalue.NotNull(),
+					})),
+
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("order"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("order"),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey(names.AttrType),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey(names.AttrType),
+						compare.ValuesSame(),
+					),
+
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc"), knownvalue.NotNull()),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("authentication_request_extra_params"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("authentication_request_extra_params"),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("authorization_endpoint"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("authorization_endpoint"),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey(names.AttrClientID),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey(names.AttrClientID),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey(names.AttrIssuer),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey(names.AttrIssuer),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("on_unauthenticated_request"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("on_unauthenticated_request"),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey(names.AttrScope),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey(names.AttrScope),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("session_cookie_name"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("session_cookie_name"),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("session_timeout"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("session_timeout"),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("token_endpoint"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("token_endpoint"),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtMapKey("user_info_endpoint"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("authenticate_oidc").AtSliceIndex(0).AtMapKey("user_info_endpoint"),
+						compare.ValuesSame(),
+					),
 				},
 			},
 		},
@@ -484,6 +660,129 @@ resource "aws_lb_listener_rule" "test" {
   }
 }
 `)
+}
+
+func testAccListenerRuleDataSourceConfig_actionAuthenticateCognito(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerRuleConfig_baseWithHTTPSListener(rName, key, certificate),
+		fmt.Sprintf(`
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type = "authenticate-cognito"
+
+    authenticate_cognito {
+      user_pool_arn       = aws_cognito_user_pool.test.arn
+      user_pool_client_id = aws_cognito_user_pool_client.test.id
+      user_pool_domain    = aws_cognito_user_pool_domain.test.domain
+
+      authentication_request_extra_params = {
+        param = "test"
+      }
+    }
+  }
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    host_header {
+      values = ["example.com"]
+    }
+  }
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name                                 = %[1]q
+  user_pool_id                         = aws_cognito_user_pool.test.id
+  generate_secret                      = true
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_flows                  = ["code", "implicit"]
+  allowed_oauth_scopes                 = ["phone", "email", "openid", "profile", "aws.cognito.signin.user.admin"]
+  callback_urls                        = ["https://www.example.com/callback", "https://www.example.com/redirect"]
+  default_redirect_uri                 = "https://www.example.com/redirect"
+  logout_urls                          = ["https://www.example.com/login"]
+}
+
+resource "aws_cognito_user_pool_domain" "test" {
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+`, rName))
+}
+
+func testAccListenerRuleDataSourceConfig_actionAuthenticateOIDC(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerRuleConfig_baseWithHTTPSListener(rName, key, certificate),
+		fmt.Sprintf(`
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type = "authenticate-oidc"
+
+    authenticate_oidc {
+      authorization_endpoint = "https://example.com/authorization_endpoint"
+      client_id              = "s6BhdRkqt3"
+      client_secret          = "7Fjfp0ZBr1KtDRbnfVdmIw"
+      issuer                 = "https://example.com"
+      token_endpoint         = "https://example.com/token_endpoint"
+      user_info_endpoint     = "https://example.com/user_info_endpoint"
+
+      authentication_request_extra_params = {
+        param = "test"
+      }
+    }
+  }
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    host_header {
+      values = ["example.com"]
+    }
+  }
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+}
+
+resource "aws_cognito_user_pool_client" "test" {
+  name                                 = %[1]q
+  user_pool_id                         = aws_cognito_user_pool.test.id
+  generate_secret                      = true
+  allowed_oauth_flows_user_pool_client = true
+  allowed_oauth_flows                  = ["code", "implicit"]
+  allowed_oauth_scopes                 = ["phone", "email", "openid", "profile", "aws.cognito.signin.user.admin"]
+  callback_urls                        = ["https://www.example.com/callback", "https://www.example.com/redirect"]
+  default_redirect_uri                 = "https://www.example.com/redirect"
+  logout_urls                          = ["https://www.example.com/login"]
+}
+
+resource "aws_cognito_user_pool_domain" "test" {
+  domain       = %[1]q
+  user_pool_id = aws_cognito_user_pool.test.id
+}
+`, rName))
 }
 
 func testAccListenerRuleDataSourceConfig_conditionHostHeader(rName string) string {
