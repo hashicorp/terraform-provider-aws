@@ -318,7 +318,7 @@ func TestAccGlueCatalogTable_Update_replaceValues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.input_format", "TextInputFormat"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.output_format", "TextInputFormat"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.compressed", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.number_of_buckets", "12"),
+					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.number_of_buckets", acctest.Ct12),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.name", "ser_de_name2"),
 					resource.TestCheckNoResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.param1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_descriptor.0.ser_de_info.0.parameters.param2", "param_val_12"),
