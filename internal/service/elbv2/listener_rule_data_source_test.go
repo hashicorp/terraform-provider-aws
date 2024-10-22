@@ -237,6 +237,193 @@ func TestAccELBV2ListenerRuleDataSource_conditionHostHeader(t *testing.T) {
 	})
 }
 
+func TestAccELBV2ListenerRuleDataSource_conditionHTTPHeader(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_conditionHTTPHeader(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
+						expectKnownCondition("http_header", knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"http_header_name": knownvalue.StringExact("X-Forwarded-For"),
+							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("192.168.1.*"),
+								knownvalue.StringExact("10.0.0.*"),
+							}),
+						})),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_conditionHTTPRequestMethod(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_conditionHTTPRequestMethod(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
+						expectKnownCondition("http_request_method", knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("GET"),
+								knownvalue.StringExact("POST"),
+							}),
+						})),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_conditionPathPattern(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_conditionPathPattern(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
+						expectKnownCondition("path_pattern", knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("/public/*"),
+								knownvalue.StringExact("/cgi-bin/*"),
+							}),
+						})),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_conditionQueryString(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_conditionQueryString(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
+						expectKnownCondition("query_string", knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"key":   knownvalue.StringExact("one"),
+									"value": knownvalue.StringExact("un"),
+								}),
+								knownvalue.ObjectExact(map[string]knownvalue.Check{
+									"key":   knownvalue.StringExact("two"),
+									"value": knownvalue.StringExact("deux"),
+								}),
+							}),
+						})),
+					})),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_conditionSourceIP(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_conditionSourceIP(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
+						expectKnownCondition("source_ip", knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("192.168.0.0/16"),
+								knownvalue.StringExact("dead:cafe::/64"),
+							}),
+						})),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func expectKnownCondition(key string, check knownvalue.Check) knownvalue.Check {
 	checks := map[string]knownvalue.Check{
 		"host_header":         knownvalue.Null(),
@@ -317,6 +504,135 @@ resource "aws_lb_listener_rule" "test" {
   condition {
     host_header {
       values = ["example.com", "www.example.com"]
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleDataSourceConfig_conditionHTTPHeader(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    http_header {
+      http_header_name = "X-Forwarded-For"
+      values           = ["192.168.1.*", "10.0.0.*"]
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleDataSourceConfig_conditionHTTPRequestMethod(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    http_request_method {
+      values = ["GET", "POST"]
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleDataSourceConfig_conditionPathPattern(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/public/*", "/cgi-bin/*"]
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleDataSourceConfig_conditionQueryString(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    query_string {
+      key   = "one"
+      value = "un"
+    }
+    query_string {
+      key   = "two"
+      value = "deux"
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleDataSourceConfig_conditionSourceIP(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    source_ip {
+      values = [
+        "192.168.0.0/16",
+        "dead:cafe::/64",
+      ]
     }
   }
 }
