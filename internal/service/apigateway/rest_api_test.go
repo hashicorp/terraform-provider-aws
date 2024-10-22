@@ -1001,7 +1001,7 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "-1"), // -1 removes existing values
+				Config: testAccRestAPIConfig_minimumCompressionSize(rName, acctest.CtNegative1), // -1 removes existing values
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", ""),
