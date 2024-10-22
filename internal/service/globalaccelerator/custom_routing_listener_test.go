@@ -37,12 +37,12 @@ func TestAccGlobalAcceleratorCustomRoutingListener_basic(t *testing.T) {
 					testAccCheckCustomRoutingListenerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "port_range.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
-						"from_port": "443",
-						"to_port":   "443",
+						"from_port": acctest.Ct443,
+						"to_port":   acctest.Ct443,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_range.*", map[string]string{
-						"from_port": "10000",
-						"to_port":   "30000",
+						"from_port": acctest.Ct10000,
+						"to_port":   acctest.Ct30000,
 					}),
 				),
 			},
