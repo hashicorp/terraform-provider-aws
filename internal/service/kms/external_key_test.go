@@ -43,7 +43,7 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 					testAccCheckExternalKeyExists(ctx, resourceName, &key),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", acctest.Ct30),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "expiration_model", ""),
 					resource.TestCheckNoResourceAttr(resourceName, "key_material_base64"),
@@ -142,7 +142,7 @@ func TestAccKMSExternalKey_deletionWindowInDays(t *testing.T) {
 				Config: testAccExternalKeyConfig_deletionWindowInDays(rName, 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "8"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", acctest.Ct8),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func TestAccKMSExternalKey_deletionWindowInDays(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key2),
 					testAccCheckExternalKeyNotRecreated(&key1, &key2),
-					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", acctest.Ct7),
 				),
 			},
 		},
@@ -179,10 +179,10 @@ func TestAccKMSExternalKey_description(t *testing.T) {
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExternalKeyConfig_description(rName + "-1"),
+				Config: testAccExternalKeyConfig_description(rName + acctest.CtNegative1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+"-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+acctest.CtNegative1),
 				),
 			},
 			{
@@ -195,11 +195,11 @@ func TestAccKMSExternalKey_description(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccExternalKeyConfig_description(rName + "-2"),
+				Config: testAccExternalKeyConfig_description(rName + acctest.CtNegative2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key2),
 					testAccCheckExternalKeyNotRecreated(&key1, &key2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+"-2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+acctest.CtNegative2),
 				),
 			},
 		},
