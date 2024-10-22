@@ -60,7 +60,6 @@ func main() {
 		td := TemplateData{
 			HumanFriendly:     l.HumanFriendly(),
 			PackageName:       packageName,
-			SDKVersion:        l.SDKVersion(),
 			GoPackage:         l.GoPackageName(),
 			ProviderNameUpper: l.ProviderNameUpper(),
 			Region:            "us-west-2",
@@ -73,16 +72,8 @@ func main() {
 			Aliases:           l.Aliases(),
 			OverrideRegion:    l.EndpointOverrideRegion(),
 		}
-		if l.IsClientSDKV1() {
-			switch packageName {
-			case "imagebuilder":
-				td.V1NameResolverNeedsUnknownService = true
-			}
-		}
-		if l.IsClientSDKV2() {
-			if strings.Contains(td.APICallParams, "awstypes") {
-				td.ImportAwsTypes = true
-			}
+		if strings.Contains(td.APICallParams, "awstypes") {
+			td.ImportAwsTypes = true
 		}
 
 		if td.OverrideRegion == "us-west-2" {
@@ -121,7 +112,6 @@ func main() {
 type TemplateData struct {
 	HumanFriendly                     string
 	PackageName                       string
-	SDKVersion                        int
 	GoPackage                         string
 	ProviderNameUpper                 string
 	Region                            string
