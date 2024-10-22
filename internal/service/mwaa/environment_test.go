@@ -125,12 +125,12 @@ func TestAccMWAAEnvironment_airflowOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_airflowOptions(rName, acctest.Ct1, "16"),
+				Config: testAccEnvironmentConfig_airflowOptions(rName, acctest.Ct1, acctest.Ct16),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.core.default_task_retries", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.core.parallelism", "16"),
+					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.core.parallelism", acctest.Ct16),
 				),
 			},
 			{
@@ -262,7 +262,7 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.core.default_task_retries", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.core.parallelism", "16"),
+					resource.TestCheckResourceAttr(resourceName, "airflow_configuration_options.core.parallelism", acctest.Ct16),
 					resource.TestCheckResourceAttr(resourceName, "airflow_version", "2.4.3"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "airflow", "environment/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
@@ -291,9 +291,9 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "logging_configuration.0.worker_logs.0.cloud_watch_log_group_arn"),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.worker_logs.0.log_level", "WARNING"),
-					resource.TestCheckResourceAttr(resourceName, "max_workers", "20"),
-					resource.TestCheckResourceAttr(resourceName, "min_workers", "15"),
-					resource.TestCheckResourceAttr(resourceName, "max_webservers", "5"),
+					resource.TestCheckResourceAttr(resourceName, "max_workers", acctest.Ct20),
+					resource.TestCheckResourceAttr(resourceName, "min_workers", acctest.Ct15),
+					resource.TestCheckResourceAttr(resourceName, "max_webservers", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "min_webservers", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "network_configuration.#", acctest.Ct1),
