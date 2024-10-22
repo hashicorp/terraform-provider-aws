@@ -71,7 +71,7 @@ func main() {
 
 	d := g.NewUnformattedFileDestination(filename)
 
-	if err := d.WriteTemplate("prlabeler", tmpl, td); err != nil {
+	if err := d.BufferTemplate("prlabeler", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
