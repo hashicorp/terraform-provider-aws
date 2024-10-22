@@ -1,0 +1,17 @@
+rules:
+  - id: aws-sdk-go-imports
+    languages: [go]
+    message: Do not use AWS SDK for Go v1
+    paths:
+      include:
+        - internal/
+      exclude:
+        - "internal/service/simpledb/*.go"
+        - "internal/conns/**/*.go"
+    patterns:
+      - pattern: |
+          import ("$X")
+      - metavariable-regex:
+          metavariable: "$X"
+          regex: '^github.com/aws/aws-sdk-go/.+$'
+    severity: WARNING
