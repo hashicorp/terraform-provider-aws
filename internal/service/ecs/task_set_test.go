@@ -120,7 +120,7 @@ func TestAccECSTaskSet_withScale(t *testing.T) {
 					testAccCheckTaskSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "scale.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scale.0.unit", string(awstypes.ScaleUnitPercent)),
-					resource.TestCheckResourceAttr(resourceName, "scale.0.value", "100"),
+					resource.TestCheckResourceAttr(resourceName, "scale.0.value", acctest.Ct100),
 				),
 			},
 			{
