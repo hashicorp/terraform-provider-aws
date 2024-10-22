@@ -616,9 +616,9 @@ func testAccTrail_advancedEventSelector(t *testing.T) {
 			{
 				Config: testAccCloudTrailConfig_advancedEventSelector(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.#", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.name", "s3Custom"),
-					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.field_selector.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.field_selector.#", acctest.Ct5),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
 						names.AttrField: "eventCategory",
 						"equals.#":      acctest.Ct1,
