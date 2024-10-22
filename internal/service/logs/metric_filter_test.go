@@ -145,7 +145,7 @@ func TestAccLogsMetricFilter_update(t *testing.T) {
 					testAccCheckMetricFilterExists(ctx, resourceName, &mf),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.default_value", "2.5"),
+					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.default_value", acctest.Ct2Point5),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.dimensions.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.name", "metric1"),
 					resource.TestCheckResourceAttr(resourceName, "metric_transformation.0.namespace", "ns1"),
