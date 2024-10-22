@@ -74,7 +74,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.application/json", "{'foobar': 'bar}"),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.text/html", "<html>Foo</html>"),
-					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "2000"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", acctest.Ct2000),
 				),
 			},
 			{
@@ -93,7 +93,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.application/json", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.application/xml", "#set($inputRoot = $input.path('$'))\n{ }"),
-					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "2000"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", acctest.Ct2000),
 				),
 			},
 			{
@@ -108,7 +108,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "request_templates.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", "2000"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_milliseconds", acctest.Ct2000),
 				),
 			},
 			{
