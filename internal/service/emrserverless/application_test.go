@@ -45,7 +45,7 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_start_configuration.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.0.enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.0.idle_timeout_minutes", "15"),
+					resource.TestCheckResourceAttr(resourceName, "auto_stop_configuration.0.idle_timeout_minutes", acctest.Ct15),
 					resource.TestCheckResourceAttr(resourceName, "initial_capacity.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "image_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
