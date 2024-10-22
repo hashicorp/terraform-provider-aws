@@ -31,7 +31,7 @@ func TestAccCustomerProfilesDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_base(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "120"),
+					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", acctest.Ct120),
 				),
 			},
 			{
@@ -43,7 +43,7 @@ func TestAccCustomerProfilesDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_base(rName, 365),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "365"),
+					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", acctest.Ct365),
 				),
 			},
 		},
@@ -64,7 +64,7 @@ func TestAccCustomerProfilesDomain_full(t *testing.T) {
 				Config: testAccDomainConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "120"),
+					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", acctest.Ct120),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.%", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.%", acctest.Ct4),
@@ -82,7 +82,7 @@ func TestAccCustomerProfilesDomain_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.day_of_the_week", "MONDAY"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.time", "18:00"),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.%", "8"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.%", acctest.Ct8),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.%", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.address.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.attribute_matching_model", "ONE_TO_ONE"),
@@ -111,7 +111,7 @@ func TestAccCustomerProfilesDomain_full(t *testing.T) {
 				Config: testAccDomainConfig_fullUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "365"),
+					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", acctest.Ct365),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.%", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.%", acctest.Ct4),
@@ -129,7 +129,7 @@ func TestAccCustomerProfilesDomain_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.%", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.day_of_the_week", "SUNDAY"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.job_schedule.0.time", "20:00"),
-					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.%", "8"),
+					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.%", acctest.Ct8),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.%", acctest.Ct4),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.address.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule_based_matching.0.attribute_types_selector.0.attribute_matching_model", "MANY_TO_MANY"),
