@@ -902,7 +902,7 @@ func PartitionDNSSuffix() string {
 }
 
 func PartitionReverseDNSPrefix() string {
-	return names.ReverseDNS(PartitionDNSSuffix())
+	return conns.ReverseDNS(PartitionDNSSuffix())
 }
 
 func alternateRegionPartition() string {
