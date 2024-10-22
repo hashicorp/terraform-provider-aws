@@ -17,7 +17,7 @@ func TestValidIdentityPoolName(t *testing.T) {
 	t.Parallel()
 
 	validValues := []string{
-		"123",
+		acctest.Ct123,
 		"1 2 3",
 		"foo",
 		"foo bar",
