@@ -49,7 +49,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 				Config: testAccTargetConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTargetExists(ctx, resourceName, &target),
-					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "8"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.Ct8),
 					resource.TestCheckResourceAttr(resourceName, "min_capacity", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
@@ -178,7 +178,7 @@ func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 					resource.TestCheckResourceAttr(readResourceName, names.AttrResourceID, "table/"+rName),
 					resource.TestCheckResourceAttr(readResourceName, "scalable_dimension", "dynamodb:table:ReadCapacityUnits"),
 					resource.TestCheckResourceAttr(readResourceName, "min_capacity", acctest.Ct2),
-					resource.TestCheckResourceAttr(readResourceName, names.AttrMaxCapacity, "15"),
+					resource.TestCheckResourceAttr(readResourceName, names.AttrMaxCapacity, acctest.Ct15),
 				),
 			},
 		},
