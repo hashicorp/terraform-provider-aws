@@ -28,7 +28,7 @@ func TestAccVPCRouteTablesDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_route_tables.by_vpc_id", "ids.#", acctest.Ct2), // Add the default route table.
 					resource.TestCheckResourceAttr("data.aws_route_tables.by_tags", "ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr("data.aws_route_tables.by_filter", "ids.#", "6"), // Add the default route tables.
+					resource.TestCheckResourceAttr("data.aws_route_tables.by_filter", "ids.#", acctest.Ct6), // Add the default route tables.
 					resource.TestCheckResourceAttr("data.aws_route_tables.empty", "ids.#", acctest.Ct0),
 				),
 			},
