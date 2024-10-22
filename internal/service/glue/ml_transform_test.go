@@ -94,8 +94,8 @@ func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", acctest.Ct0Point5),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", acctest.Ct0Point5),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", acctest.CtTrue),
 				),
 			},
@@ -125,8 +125,8 @@ func TestAccGlueMlTransform_typeFindMatchesFull(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.transform_type", "FIND_MATCHES"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.primary_key_column_name", "my_column_1"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", "0.5"),
-					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.accuracy_cost_trade_off", acctest.Ct0Point5),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.precision_recall_trade_off", acctest.Ct0Point5),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.find_matches_parameters.0.enforce_provided_labels", acctest.CtTrue),
 				),
 			},
@@ -191,10 +191,10 @@ func TestAccGlueMlTransform_glueVersion(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccMLTransformConfig_version(rName, "1.0"),
+				Config: testAccMLTransformConfig_version(rName, acctest.Ct1Point0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "glue_version", acctest.Ct1Point0),
 				),
 			},
 			{
@@ -391,7 +391,7 @@ func TestAccGlueMlTransform_maxCapacity(t *testing.T) {
 				Config: testAccMLTransformConfig_maxCapacity(rName, 15),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "15"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.Ct15),
 				),
 			},
 			{
