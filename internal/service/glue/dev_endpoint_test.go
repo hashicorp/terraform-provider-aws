@@ -42,7 +42,7 @@ func TestAccGlueDevEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, "arguments.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "5"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
@@ -196,10 +196,10 @@ func TestAccGlueDevEndpoint_glueVersion(t *testing.T) {
 				ExpectError: regexache.MustCompile(`must match version pattern X.X`),
 			},
 			{
-				Config: testAccDevEndpointConfig_version(rName, "1.0"),
+				Config: testAccDevEndpointConfig_version(rName, acctest.Ct1Point0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "glue_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "glue_version", acctest.Ct1Point0),
 				),
 			},
 			{
@@ -246,7 +246,7 @@ func TestAccGlueDevEndpoint_numberOfNodes(t *testing.T) {
 				Config: testAccDevEndpointConfig_numberOfNodes(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "5"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", acctest.Ct5),
 				),
 			},
 			{
@@ -286,7 +286,7 @@ func TestAccGlueDevEndpoint_numberOfWorkers(t *testing.T) {
 				Config: testAccDevEndpointConfig_numberOfWorkers(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevEndpointExists(ctx, resourceName, &endpoint),
-					resource.TestCheckResourceAttr(resourceName, "number_of_workers", "5"),
+					resource.TestCheckResourceAttr(resourceName, "number_of_workers", acctest.Ct5),
 				),
 			},
 			{
