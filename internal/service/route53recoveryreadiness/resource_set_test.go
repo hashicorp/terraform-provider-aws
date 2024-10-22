@@ -25,7 +25,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
@@ -61,7 +61,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
@@ -92,7 +92,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
@@ -144,7 +144,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
@@ -180,7 +180,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_basicDNSTargetResource(t *testin
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	domainName := "myTestDomain.test"
 	hzArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "hostedzone/zzzzzzzzz",
@@ -223,7 +223,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_dnsTargetResourceNLBTarget(t *te
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	hzArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "hostedzone/zzzzzzzzz",
@@ -261,7 +261,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_dnsTargetResourceR53Target(t *te
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	hzArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "hostedzone/zzzzzzzzz",
@@ -301,7 +301,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
