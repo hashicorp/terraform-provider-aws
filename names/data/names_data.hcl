@@ -6797,7 +6797,7 @@ service "quicksight" {
 
   endpoint_info {
     endpoint_api_call   = "ListDashboards"
-    endpoint_api_params = "AwsAccountId: aws.String(\"123456789012\")"
+    endpoint_api_params = "AwsAccountId: aws.String(acctest.Ct12Digit)"
   }
 
   resource_prefix {
@@ -8908,7 +8908,7 @@ service "budgets" {
 
   endpoint_info {
     endpoint_api_call   = "DescribeBudgets"
-    endpoint_api_params = "AccountId: aws.String(\"012345678901\")"
+    endpoint_api_params = "AccountId: aws.String(acctest.Ct12Digit)"
   }
 
   resource_prefix {
