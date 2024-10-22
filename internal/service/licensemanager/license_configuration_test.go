@@ -176,7 +176,7 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "license-manager", regexache.MustCompile(`license-configuration:lic-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test2"),
-					resource.TestCheckResourceAttr(resourceName, "license_count", "99"),
+					resource.TestCheckResourceAttr(resourceName, "license_count", acctest.Ct99),
 					resource.TestCheckResourceAttr(resourceName, "license_count_hard_limit", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "license_counting_type", "Socket"),
 					resource.TestCheckResourceAttr(resourceName, "license_rules.#", acctest.Ct1),
