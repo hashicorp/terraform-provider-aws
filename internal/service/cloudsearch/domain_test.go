@@ -233,7 +233,7 @@ func TestAccCloudSearchDomain_sourceFields(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
 						names.AttrName:         "int_test_3",
 						names.AttrType:         "int",
-						names.AttrDefaultValue: "8",
+						names.AttrDefaultValue: acctest.Ct8,
 						"source_fields":        "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "index_field.*", map[string]string{
