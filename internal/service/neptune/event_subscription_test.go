@@ -237,7 +237,7 @@ func TestAccNeptuneEventSubscription_withCategories(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSourceType, "db-instance"),
-					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "event_categories.#", acctest.Ct5),
 				),
 			},
 			{
