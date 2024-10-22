@@ -246,8 +246,8 @@ func TestAccDMSReplicationConfig_settings_StreamBuffer(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.StreamBufferCount", acctest.Ct4),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.StreamBufferSizeInMB", "16"),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.CtrlStreamBufferSizeInMB", "5"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.StreamBufferSizeInMB", acctest.Ct16),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.CtrlStreamBufferSizeInMB", acctest.Ct5),
 				),
 			},
 			{
@@ -278,7 +278,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "16"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", acctest.Ct16),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", acctest.Ct2),
 				),
 			},
