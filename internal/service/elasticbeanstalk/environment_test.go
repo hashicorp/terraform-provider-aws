@@ -463,7 +463,7 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
 					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/"+platformNameWithVersion1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "5"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", rValue1Str),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", rValue1Str),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", rValue1Str),
@@ -485,7 +485,7 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
 					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/"+platformNameWithVersion2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "5"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", rValue2Str),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", rValue2Str),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", rValue2Str),
