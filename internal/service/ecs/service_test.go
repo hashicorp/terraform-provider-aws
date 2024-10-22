@@ -485,14 +485,14 @@ func TestAccECSService_healthCheckGracePeriodSeconds(t *testing.T) {
 				Config: testAccServiceConfig_healthCheckGracePeriodSeconds(rName, 300),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", acctest.Ct300),
 				),
 			},
 			{
 				Config: testAccServiceConfig_healthCheckGracePeriodSeconds(rName, 600),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "600"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", acctest.Ct600),
 				),
 			},
 			{
@@ -597,7 +597,7 @@ func TestAccECSService_DeploymentControllerType_codeDeployUpdateDesiredCountAndH
 				Config: testAccServiceConfig_deploymentControllerTypeCodeDeployUpdate(rName, 2, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", "120"),
+					resource.TestCheckResourceAttr(resourceName, "health_check_grace_period_seconds", acctest.Ct120),
 				),
 			},
 		},
@@ -715,8 +715,8 @@ func TestAccECSService_DeploymentValues_basic(t *testing.T) {
 				Config: testAccServiceConfig_deploymentValues(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "deployment_maximum_percent", "200"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_minimum_healthy_percent", "100"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_maximum_percent", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "deployment_minimum_healthy_percent", acctest.Ct100),
 				),
 			},
 		},
@@ -740,7 +740,7 @@ func TestAccECSService_DeploymentValues_minZeroMaxOneHundred(t *testing.T) {
 				Config: testAccServiceConfig_deploymentPercents(rName, 0, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "deployment_maximum_percent", "100"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_maximum_percent", acctest.Ct100),
 					resource.TestCheckResourceAttr(resourceName, "deployment_minimum_healthy_percent", acctest.Ct0),
 				),
 			},
@@ -1549,7 +1549,7 @@ func TestAccECSService_ServiceConnect_ingressPortOverride(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.dns_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.port", acctest.Ct8080),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.discovery_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.ingress_port_override", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.port_name", "nginx-http"),
