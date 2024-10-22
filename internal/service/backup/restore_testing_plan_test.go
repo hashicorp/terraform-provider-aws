@@ -227,7 +227,7 @@ func TestAccBackupRestoreTestingPlan_additionals(t *testing.T) {
 		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestoreTestingPlanConfig_additionals("365", "cron(0 12 ? * * *)", rName),
+				Config: testAccRestoreTestingPlanConfig_additionals(acctest.Ct365, "cron(0 12 ? * * *)", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
@@ -236,7 +236,7 @@ func TestAccBackupRestoreTestingPlan_additionals(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.selection_window_days", "365"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.selection_window_days", acctest.Ct365),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 12 ? * * *)"),
 					resource.TestCheckResourceAttr(resourceName, "start_window_hours", "168"),
 				),
@@ -267,7 +267,7 @@ func TestAccBackupRestoreTestingPlan_additionalsWithUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckRestoreTestingPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestoreTestingPlanConfig_additionals("365", "cron(0 1 ? * * *)", rName),
+				Config: testAccRestoreTestingPlanConfig_additionals(acctest.Ct365, "cron(0 1 ? * * *)", rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRestoreTestingPlanExists(ctx, resourceName, &restoretestingplan),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
@@ -276,7 +276,7 @@ func TestAccBackupRestoreTestingPlan_additionalsWithUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.selection_window_days", "365"),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.selection_window_days", acctest.Ct365),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 1 ? * * *)"),
 					resource.TestCheckResourceAttr(resourceName, "start_window_hours", "168"),
 				),
