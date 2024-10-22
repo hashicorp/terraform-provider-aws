@@ -64,7 +64,7 @@ func TestAccKendraIndex_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity_units.0.storage_capacity_units", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, acctest.CtBasic),
-					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "14"),
+					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", acctest.Ct14),
 					resource.TestCheckResourceAttr(resourceName, "edition", string(types.IndexEditionEnterpriseEdition)),
 					resource.TestCheckResourceAttr(resourceName, "index_statistics.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "index_statistics.0.faq_statistics.#", acctest.Ct1),
@@ -460,7 +460,7 @@ func TestAccKendraIndex_addDocumentMetadataConfigurationUpdates(t *testing.T) {
 				Config: testAccIndexConfig_documentMetadataConfigurationUpdatesBase(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
-					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", "14"),
+					resource.TestCheckResourceAttr(resourceName, "document_metadata_configuration_updates.#", acctest.Ct14),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "document_metadata_configuration_updates.*", map[string]string{
 						names.AttrName:           "_authors",
 						names.AttrType:           string(types.DocumentAttributeValueTypeStringListValue),
