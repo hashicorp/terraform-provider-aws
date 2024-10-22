@@ -1757,7 +1757,7 @@ func TestAccECSService_AvailabilityZoneRebalancing(t *testing.T) {
 				Config: testAccServiceConfig_availabilityZoneRebalancing_nullUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingEnabled)),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_rebalancing", string(awstypes.AvailabilityZoneRebalancingDisabled)),
 				),
 			},
 			{

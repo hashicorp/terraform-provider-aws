@@ -554,14 +554,9 @@ func resourceService() *schema.Resource {
 				},
 			},
 			"availability_zone_rebalancing": {
-				Type:     schema.TypeString,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if new == "" {
-						return true
-					}
-					return old == new
-				},
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.AvailabilityZoneRebalancingDisabled,
 				ValidateDiagFunc: enum.Validate[awstypes.AvailabilityZoneRebalancing](),
 			},
 			names.AttrCapacityProviderStrategy: {
