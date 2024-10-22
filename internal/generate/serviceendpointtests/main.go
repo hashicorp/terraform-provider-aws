@@ -99,7 +99,7 @@ func main() {
 
 		d := g.NewGoFileDestination(filepath.Join(relativePath, packageName, filename))
 
-		if err := d.WriteTemplate("serviceendpointtests", tmpl, td); err != nil {
+		if err := d.BufferTemplate("serviceendpointtests", tmpl, td); err != nil {
 			g.Fatalf("error generating service endpoint tests: %s", err)
 		}
 
