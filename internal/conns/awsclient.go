@@ -12,10 +12,11 @@ import (
 	"strings"
 	"sync"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
-	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -31,7 +32,7 @@ type AWSClient struct {
 	Region            string
 	ServicePackages   map[string]ServicePackage
 
-	awsConfig                 *aws_sdkv2.Config
+	awsConfig                 *aws.Config
 	clients                   map[string]any
 	conns                     map[string]any
 	dnsSuffix                 string
@@ -40,14 +41,14 @@ type AWSClient struct {
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
 	session                   *session_sdkv1.Session
-	s3ExpressClient           *s3_sdkv2.Client
+	s3ExpressClient           *s3.Client
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
 	stsRegion                 string // From provider configuration.
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
-func (c *AWSClient) CredentialsProvider(context.Context) aws_sdkv2.CredentialsProvider {
+func (c *AWSClient) CredentialsProvider(context.Context) aws.CredentialsProvider {
 	if c.awsConfig == nil {
 		return nil
 	}
@@ -62,7 +63,7 @@ func (c *AWSClient) IgnoreTagsConfig(context.Context) *tftags.IgnoreConfig {
 	return c.ignoreTagsConfig
 }
 
-func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:ci.aws-in-func-name
+func (c *AWSClient) AwsConfig(context.Context) aws.Config { // nosemgrep:ci.aws-in-func-name
 	return c.awsConfig.Copy()
 }
 
@@ -92,15 +93,15 @@ func (c *AWSClient) RegionalHostname(ctx context.Context, prefix string) string 
 // S3ExpressClient returns an AWS SDK for Go v2 S3 API client suitable for use with S3 Express (directory buckets).
 // This client differs from the standard S3 API client only in us-east-1 if the global S3 endpoint is used.
 // In that case the returned client uses the regional S3 endpoint.
-func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3_sdkv2.Client {
+func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3.Client {
 	s3Client := c.S3Client(ctx)
 
 	c.lock.Lock() // OK since a non-default client is created.
 	defer c.lock.Unlock()
 
 	if c.s3ExpressClient == nil {
-		if s3Client.Options().Region == names.GlobalRegionID {
-			c.s3ExpressClient = errs.Must(client[*s3_sdkv2.Client](ctx, c, names.S3, map[string]any{
+		if s3Client.Options().Region == endpoints.AwsGlobalRegionID {
+			c.s3ExpressClient = errs.Must(client[*s3.Client](ctx, c, names.S3, map[string]any{
 				"s3_us_east_1_regional_endpoint": "regional",
 			}))
 		} else {
@@ -158,7 +159,7 @@ func (c *AWSClient) APIGatewayV2InvokeURL(ctx context.Context, protocolType apig
 // CloudFrontDistributionHostedZoneID returns the Route 53 hosted zone ID
 // for Amazon CloudFront distributions in the configured AWS partition.
 func (c *AWSClient) CloudFrontDistributionHostedZoneID(context.Context) string {
-	if c.Partition == names.ChinaPartitionID {
+	if c.Partition == endpoints.AwsCnPartitionID {
 		return "Z3RFFRIM2A3IF5" // See https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
 	}
 	return "Z2FDTNDATAQYW2" // See https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html#Route53-Type-AliasTarget-HostedZoneId
@@ -204,7 +205,7 @@ func (c *AWSClient) ReverseDNSPrefix(ctx context.Context) string {
 // EC2RegionalPrivateDNSSuffix returns the EC2 private DNS suffix for the configured AWS Region.
 func (c *AWSClient) EC2RegionalPrivateDNSSuffix(context.Context) string {
 	region := c.Region
-	if region == names.USEast1RegionID {
+	if region == endpoints.UsEast1RegionID {
 		return "ec2.internal"
 	}
 
@@ -214,7 +215,7 @@ func (c *AWSClient) EC2RegionalPrivateDNSSuffix(context.Context) string {
 // EC2RegionalPublicDNSSuffix returns the EC2 public DNS suffix for the configured AWS Region.
 func (c *AWSClient) EC2RegionalPublicDNSSuffix(context.Context) string {
 	region := c.Region
-	if region == names.USEast1RegionID {
+	if region == endpoints.UsEast1RegionID {
 		return "compute-1"
 	}
 
