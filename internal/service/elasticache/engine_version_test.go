@@ -279,6 +279,22 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 			version: "7.0",
 			valid:   true,
 		},
+
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.x",
+			valid:   false,
+		},
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.2",
+			valid:   true,
+		},
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.2.6",
+			valid:   false,
+		},
 	}
 
 	for _, testcase := range testcases {
