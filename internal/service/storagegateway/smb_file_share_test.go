@@ -808,7 +808,7 @@ func TestAccStorageGatewaySMBFileShare_cacheAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", acctest.Ct300),
 				),
 			},
 			{
@@ -821,7 +821,7 @@ func TestAccStorageGatewaySMBFileShare_cacheAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "500"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", acctest.Ct500),
 				),
 			},
 			{
@@ -829,7 +829,7 @@ func TestAccStorageGatewaySMBFileShare_cacheAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSMBFileShareExists(ctx, resourceName, &smbFileShare),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", acctest.Ct300),
 				),
 			},
 		},
