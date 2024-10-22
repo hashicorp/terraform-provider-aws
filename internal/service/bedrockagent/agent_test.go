@@ -129,7 +129,7 @@ func TestAccBedrockAgentAgent_singlePromptUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentConfig_singlePromptUpdate(rName, "anthropic.claude-v2", "basic claude", "500"),
+				Config: testAccAgentConfig_singlePromptUpdate(rName, "anthropic.claude-v2", "basic claude", acctest.Ct500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
@@ -302,19 +302,19 @@ func TestAccBedrockAgentAgent_update(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentConfig_basic(rName+"-1", "anthropic.claude-v2", "basic claude"),
+				Config: testAccAgentConfig_basic(rName+acctest.CtNegative1, "anthropic.claude-v2", "basic claude"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-1"),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+acctest.CtNegative1),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 				),
 			},
 			{
-				Config: testAccAgentConfig_basic(rName+"-2", "anthropic.claude-v2", "basic claude"),
+				Config: testAccAgentConfig_basic(rName+acctest.CtNegative2, "anthropic.claude-v2", "basic claude"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-2"),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+acctest.CtNegative2),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
 				),
@@ -398,7 +398,7 @@ func TestAccBedrockAgentAgent_kms(t *testing.T) {
 		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentConfig_kms(rName, "anthropic.claude-v2", "basic claude", "500"),
+				Config: testAccAgentConfig_kms(rName, "anthropic.claude-v2", "basic claude", acctest.Ct500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
