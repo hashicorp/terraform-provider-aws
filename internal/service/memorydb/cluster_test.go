@@ -63,7 +63,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.name", regexache.MustCompile(`^`+rName+`-000[12]-00[12]$`)),
 					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.endpoint.0.address", regexache.MustCompile(`^`+rName+`-000[12]-00[12]\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "shards.0.nodes.0.endpoint.0.port", "6379"),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", acctest.Ct7),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", names.AttrID),
@@ -298,8 +298,8 @@ func TestAccMemoryDBCluster_create_withPort(t *testing.T) {
 				Config: testAccClusterConfig_port(rName, 9999),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "9999"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "9999"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", acctest.Ct9999),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, acctest.Ct9999),
 				),
 			},
 			{
@@ -345,10 +345,10 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_finalSnapshotName(rName, rName+"-1"),
+				Config: testAccClusterConfig_finalSnapshotName(rName, rName+acctest.CtNegative1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "final_snapshot_name", rName+"-1"),
+					resource.TestCheckResourceAttr(resourceName, "final_snapshot_name", rName+acctest.CtNegative1),
 				),
 			},
 			{
@@ -873,7 +873,7 @@ func TestAccMemoryDBCluster_Update_snapshotRetentionLimit(t *testing.T) {
 				Config: testAccClusterConfig_snapshotRetentionLimit(rName, 35),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "35"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", acctest.Ct35),
 				),
 			},
 			{
