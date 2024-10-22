@@ -43,10 +43,10 @@ func TestAccRDSProxyDefaultTargetGroup_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`target-group:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "connection_pool_config.*", map[string]string{
-						"connection_borrow_timeout":    "120",
+						"connection_borrow_timeout":    acctest.Ct120,
 						"init_query":                   "",
-						"max_connections_percent":      "100",
-						"max_idle_connections_percent": "50",
+						"max_connections_percent":      acctest.Ct100,
+						"max_idle_connections_percent": acctest.Ct50,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", acctest.Ct0),
 				),
@@ -83,10 +83,10 @@ func TestAccRDSProxyDefaultTargetGroup_emptyConnectionPool(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`target-group:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "connection_pool_config.*", map[string]string{
-						"connection_borrow_timeout":    "120",
+						"connection_borrow_timeout":    acctest.Ct120,
 						"init_query":                   "",
-						"max_connections_percent":      "100",
-						"max_idle_connections_percent": "50",
+						"max_connections_percent":      acctest.Ct100,
+						"max_idle_connections_percent": acctest.Ct50,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.session_pinning_filters.#", acctest.Ct0),
 				),
@@ -120,7 +120,7 @@ func TestAccRDSProxyDefaultTargetGroup_connectionBorrowTimeout(t *testing.T) {
 				Config: testAccProxyDefaultTargetGroupConfig_connectionBorrowTimeout(rName, 120),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.connection_borrow_timeout", "120"),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.connection_borrow_timeout", acctest.Ct120),
 				),
 			},
 			{
@@ -132,7 +132,7 @@ func TestAccRDSProxyDefaultTargetGroup_connectionBorrowTimeout(t *testing.T) {
 				Config: testAccProxyDefaultTargetGroupConfig_connectionBorrowTimeout(rName, 90),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.connection_borrow_timeout", "90"),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.connection_borrow_timeout", acctest.Ct90),
 				),
 			},
 		},
@@ -198,7 +198,7 @@ func TestAccRDSProxyDefaultTargetGroup_maxConnectionsPercent(t *testing.T) {
 				Config: testAccProxyDefaultTargetGroupConfig_maxConnectionsPercent(rName, 100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_connections_percent", "100"),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_connections_percent", acctest.Ct100),
 				),
 			},
 			{
@@ -210,7 +210,7 @@ func TestAccRDSProxyDefaultTargetGroup_maxConnectionsPercent(t *testing.T) {
 				Config: testAccProxyDefaultTargetGroupConfig_maxConnectionsPercent(rName, 75),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_connections_percent", "75"),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_connections_percent", acctest.Ct75),
 				),
 			},
 		},
@@ -237,7 +237,7 @@ func TestAccRDSProxyDefaultTargetGroup_maxIdleConnectionsPercent(t *testing.T) {
 				Config: testAccProxyDefaultTargetGroupConfig_maxIdleConnectionsPercent(rName, 50),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProxyTargetGroupExists(ctx, resourceName, &dbProxyTargetGroup),
-					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_idle_connections_percent", "50"),
+					resource.TestCheckResourceAttr(resourceName, "connection_pool_config.0.max_idle_connections_percent", acctest.Ct50),
 				),
 			},
 			{
