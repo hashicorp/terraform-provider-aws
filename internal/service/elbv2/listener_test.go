@@ -70,6 +70,7 @@ func TestAccELBV2Listener_Application_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"default_action.0.forward",
+					"tcp_idle_timeout_seconds",
 				},
 			},
 		},
