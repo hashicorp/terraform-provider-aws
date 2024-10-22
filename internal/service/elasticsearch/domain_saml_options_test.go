@@ -118,7 +118,7 @@ func TestAccElasticsearchDomainSAMLOptions_Update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainSAMLOptionsExist(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", acctest.Ct60),
 				),
 			},
 			{
@@ -126,7 +126,7 @@ func TestAccElasticsearchDomainSAMLOptions_Update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainSAMLOptionsExist(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "180"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", acctest.Ct180),
 				),
 			},
 		},
@@ -151,7 +151,7 @@ func TestAccElasticsearchDomainSAMLOptions_Disabled(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainSAMLOptionsExist(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "saml_options.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", "60"),
+					resource.TestCheckResourceAttr(resourceName, "saml_options.0.session_timeout_minutes", acctest.Ct60),
 				),
 			},
 			{
