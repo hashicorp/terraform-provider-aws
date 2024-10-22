@@ -139,8 +139,8 @@ func TestAccIVSChatRoom_update(t *testing.T) {
 
 	resourceName := "aws_ivschat_room.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	maximumMessageLength := "123"
-	maximumMessageRatePerSecond := "5"
+	maximumMessageLength := acctest.Ct123
+	maximumMessageRatePerSecond := acctest.Ct5
 	fallbackResult := "DENY"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
