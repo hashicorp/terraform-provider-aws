@@ -11,6 +11,6 @@ import (
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
-func expectFullTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
-	return tfstatecheck.ExpectFullTags(tfkms.ServicePackage(context.Background()), resourceAddress, knownValue)
+func expectFullResourceTags(resourceAddress string, knownValue knownvalue.Check) statecheck.StateCheck {
+	return tfstatecheck.ExpectFullResourceTags(tfkms.ServicePackage(context.Background()), resourceAddress, knownValue)
 }

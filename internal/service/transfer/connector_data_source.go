@@ -112,7 +112,7 @@ func (d *dataSourceConnector) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	tags := KeyValueTags(ctx, description.Connector.Tags).IgnoreAWS().IgnoreConfig(d.Meta().IgnoreTagsConfig)
+	tags := KeyValueTags(ctx, description.Connector.Tags).IgnoreAWS().IgnoreConfig(d.Meta().IgnoreTagsConfig(ctx))
 	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)

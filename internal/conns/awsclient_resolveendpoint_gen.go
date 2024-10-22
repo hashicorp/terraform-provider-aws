@@ -21,22 +21,6 @@ func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName stri
 	// Only SDK v1 packages. This is already supported by SDK v2.
 	switch servicePackageName {
 
-	case "imagebuilder":
-		endpoint = aws.ToString(c.awsConfig.BaseEndpoint)
-		svc := os.Getenv("AWS_ENDPOINT_URL_IMAGEBUILDER")
-		if svc != "" {
-			return svc
-		}
-
-		if base := os.Getenv("AWS_ENDPOINT_URL"); base != "" {
-			return base
-		}
-
-		endpoint, found, err := resolveServiceBaseEndpoint(ctx, "imagebuilder", c.awsConfig.ConfigSources)
-		if found && err == nil {
-			return endpoint
-		}
-
 	case "simpledb":
 		endpoint = aws.ToString(c.awsConfig.BaseEndpoint)
 		svc := os.Getenv("AWS_ENDPOINT_URL_SIMPLEDB")

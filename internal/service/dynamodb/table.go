@@ -272,9 +272,10 @@ func resourceTable() *schema.Resource {
 				ForceNew: true,
 			},
 			"read_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"on_demand_throughput"},
 			},
 			"replica": {
 				Type:     schema.TypeSet,
@@ -483,9 +484,10 @@ func resourceTable() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"write_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-				Optional: true,
+				Type:          schema.TypeInt,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"on_demand_throughput"},
 			},
 		},
 	}
@@ -1079,7 +1081,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	// update only on-demand throughput indexes when switching to PAY_PER_REQUEST
 	if newBillingMode == awstypes.BillingModePayPerRequest {
 		for _, gsiUpdate := range gsiUpdates {
-			if gsiUpdate.Update.OnDemandThroughput == nil {
+			if gsiUpdate.Update == nil || (gsiUpdate.Update != nil && gsiUpdate.Update.OnDemandThroughput == nil) {
 				continue
 			}
 
@@ -1736,7 +1738,7 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			}
 			otherAttributesChanged := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes)
 
-			if capacityChanged && !otherAttributesChanged {
+			if capacityChanged && !otherAttributesChanged && billingMode == awstypes.BillingModeProvisioned {
 				update := awstypes.GlobalSecondaryIndexUpdate{
 					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 						IndexName:             aws.String(idxName),
@@ -1744,7 +1746,7 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 					},
 				}
 				ops = append(ops, update)
-			} else if onDemandThroughputChanged && !otherAttributesChanged {
+			} else if onDemandThroughputChanged && !otherAttributesChanged && billingMode == awstypes.BillingModePayPerRequest {
 				update := awstypes.GlobalSecondaryIndexUpdate{
 					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 						IndexName:          aws.String(idxName),
@@ -2434,11 +2436,11 @@ func expandOnDemandThroughput(tfMap map[string]interface{}) *awstypes.OnDemandTh
 
 	apiObject := &awstypes.OnDemandThroughput{}
 
-	if v, ok := tfMap["max_read_request_units"].(int); ok {
+	if v, ok := tfMap["max_read_request_units"].(int); ok && v != 0 {
 		apiObject.MaxReadRequestUnits = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["max_write_request_units"].(int); ok {
+	if v, ok := tfMap["max_write_request_units"].(int); ok && v != 0 {
 		apiObject.MaxWriteRequestUnits = aws.Int64(int64(v))
 	}
 

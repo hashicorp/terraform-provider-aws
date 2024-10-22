@@ -16,6 +16,7 @@ import (
 
 // @SDKDataSource("aws_datapipeline_pipeline")
 // @Tags
+// @Testing(tagsIdentifierAttribute="id", tagsResourceType="Pipeline")
 func dataSourcePipeline() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePipelineRead,

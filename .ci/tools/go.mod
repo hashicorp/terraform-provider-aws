@@ -3,7 +3,7 @@ module github.com/hashicorp/terraform-provider-aws/tools
 go 1.23.2
 
 require (
-	github.com/YakDriver/tfproviderdocs v0.14.3
+	github.com/YakDriver/tfproviderdocs v0.15.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.61.0
 	github.com/hashicorp/copywrite v0.19.0
@@ -292,7 +292,7 @@ require (
 	github.com/yagipy/maintidx v1.0.0 // indirect
 	github.com/yeya24/promlinter v0.3.0 // indirect
 	github.com/ykadowak/zerologlint v0.1.5 // indirect
-	github.com/yuin/goldmark v1.7.4 // indirect
+	github.com/yuin/goldmark v1.7.8 // indirect
 	github.com/yuin/goldmark-meta v1.1.0 // indirect
 	github.com/zclconf/go-cty v1.15.0 // indirect
 	github.com/zclconf/go-cty-yaml v1.0.3 // indirect
