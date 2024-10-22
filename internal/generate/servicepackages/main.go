@@ -65,7 +65,7 @@ func main() {
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("servicepackages", tmpl, td); err != nil {
+	if err := d.BufferTemplate("servicepackages", tmpl, td); err != nil {
 		g.Fatalf("error generating service packages list: %s", err)
 	}
 
