@@ -135,7 +135,7 @@ func TestAccM2Environment_full(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "environment_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "force_update"),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "5"),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "M2.m5.large"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_arn"),
