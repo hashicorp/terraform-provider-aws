@@ -1449,7 +1449,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kafka.*", map[string]string{
-						"client_properties.%":                     "8",
+						"client_properties.%":                     acctest.Ct8,
 						"client_properties.acks":                  acctest.Ct1,
 						"client_properties.bootstrap.servers":     "b-1.localhost:9094",
 						"client_properties.compression.type":      "none",
@@ -1491,7 +1491,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kafka.*", map[string]string{
-						"client_properties.%":                     "8",
+						"client_properties.%":                     acctest.Ct8,
 						"client_properties.acks":                  acctest.Ct1,
 						"client_properties.bootstrap.servers":     "b-2.localhost:9094",
 						"client_properties.compression.type":      "none",
@@ -1534,7 +1534,7 @@ func TestAccIoTTopicRule_kafka(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "kafka.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "kafka.*", map[string]string{
-						"client_properties.%":                     "8",
+						"client_properties.%":                     acctest.Ct8,
 						"client_properties.acks":                  acctest.Ct1,
 						"client_properties.bootstrap.servers":     "b-3.localhost:9094",
 						"client_properties.compression.type":      "none",
