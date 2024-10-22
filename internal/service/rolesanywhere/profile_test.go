@@ -37,7 +37,7 @@ func TestAccRolesAnywhereProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "role_arns.#", acctest.Ct1),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arns.0", "iam", fmt.Sprintf("role/%s", roleName)),
-					resource.TestCheckResourceAttr(resourceName, "duration_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "duration_seconds", acctest.Ct3600),
 				),
 			},
 			{
@@ -66,7 +66,7 @@ func TestAccRolesAnywhereProfile_noRoleARNs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "duration_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "duration_seconds", acctest.Ct3600),
 				),
 			},
 			{
@@ -81,7 +81,7 @@ func TestAccRolesAnywhereProfile_noRoleARNs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "role_arns.#", acctest.Ct1),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arns.0", "iam", fmt.Sprintf("role/%s", roleName)),
-					resource.TestCheckResourceAttr(resourceName, "duration_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "duration_seconds", acctest.Ct3600),
 				),
 			},
 		},
