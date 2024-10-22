@@ -34,7 +34,7 @@ func testAccEventConfigurations_basic(t *testing.T) {
 			{
 				Config: testAccEventConfigurationsConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "event_configurations.%", "11"),
+					resource.TestCheckResourceAttr(resourceName, "event_configurations.%", acctest.Ct11),
 					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING_GROUP", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "event_configurations.THING_TYPE", acctest.CtFalse),
