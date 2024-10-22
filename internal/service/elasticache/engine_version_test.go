@@ -106,7 +106,7 @@ func TestValidRedisVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: "5",
+			version: acctest.Ct5,
 			valid:   false,
 		},
 		{
@@ -138,7 +138,7 @@ func TestValidRedisVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: "6",
+			version: acctest.Ct6,
 			valid:   false,
 		},
 		{
@@ -174,7 +174,7 @@ func TestValidRedisVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: "7",
+			version: acctest.Ct7,
 			valid:   false,
 		},
 		{
