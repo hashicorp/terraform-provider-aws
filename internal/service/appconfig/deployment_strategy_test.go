@@ -104,7 +104,7 @@ func TestAccAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 				Config: testAccDeploymentStrategyConfig_finalBakeTime(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentStrategyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "final_bake_time_in_minutes", "60"),
+					resource.TestCheckResourceAttr(resourceName, "final_bake_time_in_minutes", acctest.Ct60),
 				),
 			},
 			{
@@ -116,7 +116,7 @@ func TestAccAppConfigDeploymentStrategy_updateFinalBakeTime(t *testing.T) {
 				Config: testAccDeploymentStrategyConfig_finalBakeTime(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentStrategyExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "final_bake_time_in_minutes", "30"),
+					resource.TestCheckResourceAttr(resourceName, "final_bake_time_in_minutes", acctest.Ct30),
 				),
 			},
 			{
