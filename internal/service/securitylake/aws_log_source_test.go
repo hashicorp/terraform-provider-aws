@@ -84,7 +84,7 @@ func testAccAWSLogSource_sourceVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckAWSLogSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLogSourceConfig_sourceVersion("1.0"),
+				Config: testAccAWSLogSourceConfig_sourceVersion(acctest.Ct1Point0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLogSourceExists(ctx, resourceName, &logSource),
 					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
@@ -92,7 +92,7 @@ func testAccAWSLogSource_sourceVersion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.0.regions.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "source.0.regions.*", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_name", "ROUTE53"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_version", acctest.Ct1Point0),
 				),
 			},
 			{
