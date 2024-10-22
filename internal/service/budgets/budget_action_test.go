@@ -70,7 +70,7 @@ func TestAccBudgetsBudgetAction_triggeredAutomatic(t *testing.T) {
 	resourceName := "aws_budgets_budget_action.test"
 	var conf awstypes.Action
 
-	const thresholdValue = "100"
+	const thresholdValue = acctest.Ct100
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
@@ -114,7 +114,7 @@ func TestAccBudgetsBudgetAction_triggeredManual(t *testing.T) {
 	resourceName := "aws_budgets_budget_action.test"
 	var conf awstypes.Action
 
-	const thresholdValue = "100"
+	const thresholdValue = acctest.Ct100
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
@@ -213,7 +213,7 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelAuto), "100"),
+				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelAuto), acctest.Ct100),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbudgets.ResourceBudgetAction(), resourceName),
