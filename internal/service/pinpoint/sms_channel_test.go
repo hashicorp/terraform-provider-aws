@@ -65,7 +65,7 @@ func TestAccPinpointSMSChannel_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	var channel awstypes.SMSChannelResponse
 	resourceName := "aws_pinpoint_sms_channel.test"
-	senderId := "1234"
+	senderId := acctest.Ct1234
 	shortCode := "5678"
 	newShortCode := "7890"
 
