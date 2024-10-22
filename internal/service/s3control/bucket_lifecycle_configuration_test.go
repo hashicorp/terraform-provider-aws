@@ -40,7 +40,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      acctest.Ct1,
-						"expiration.0.days": "365",
+						"expiration.0.days": acctest.Ct365,
 						names.AttrID:        "test",
 						names.AttrStatus:    string(types.ExpirationStatusEnabled),
 					}),
@@ -182,7 +182,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_days(t *testing
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      acctest.Ct1,
-						"expiration.0.days": "7",
+						"expiration.0.days": acctest.Ct7,
 					}),
 				),
 			},
@@ -198,7 +198,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_days(t *testing
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      acctest.Ct1,
-						"expiration.0.days": "30",
+						"expiration.0.days": acctest.Ct30,
 					}),
 				),
 			},
