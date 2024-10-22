@@ -136,7 +136,7 @@ func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "partition_count", "7"),
+					resource.TestCheckResourceAttr(resourceName, "partition_count", acctest.Ct7),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "partition"),
 				),
 			},
