@@ -65,7 +65,7 @@ func main() {
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("awsclient", tmpl, td); err != nil {
+	if err := d.BufferTemplate("awsclient", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
