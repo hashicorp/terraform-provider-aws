@@ -47,16 +47,25 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceFramework,
 			TypeName: "aws_backup_framework",
 			Name:     "Framework",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  dataSourcePlan,
 			TypeName: "aws_backup_plan",
 			Name:     "Plan",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  dataSourceReportPlan,
 			TypeName: "aws_backup_report_plan",
 			Name:     "Report Plan",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  dataSourceSelection,
@@ -67,6 +76,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceVault,
 			TypeName: "aws_backup_vault",
 			Name:     "Vault",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }

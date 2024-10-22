@@ -117,6 +117,7 @@ This data source exports the following attributes in addition to the arguments a
 * `manages_vpc_endpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
 * `owner` - AWS account ID of the service owner or `amazon`.
 * `private_dns_name` - Private DNS name for the service.
+* `private_dns_names` - Private DNS names assigned to the VPC endpoint service.
 * `service_id` - ID of the endpoint service.
 * `supported_ip_address_types` - The supported IP address types.
 * `tags` - Map of tags assigned to the resource.
@@ -128,4 +129,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.9 input-07124556ae240c2c16fc954fbeb348321b8ac1e928a8e3cc7a640d672a6dfb99 -->
+<!-- cache-key: cdktf-0.20.8 input-4982f667d6dfa682444164d5564cda055be54a23f36e40b964684fee8c4a3ca5 -->

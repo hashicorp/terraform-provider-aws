@@ -105,7 +105,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceUserPool,
 			TypeName: "aws_cognito_user_pool",
 			Name:     "User Pool",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  resourceUserPoolDomain,

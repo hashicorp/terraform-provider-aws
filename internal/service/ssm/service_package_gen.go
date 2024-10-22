@@ -15,7 +15,12 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourcePatchBaselines,
+			Name:    "Patch Baselines",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {

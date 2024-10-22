@@ -147,56 +147,6 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 	})
 }
 
-func TestAccQuickSightFolder_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var folder awstypes.Folder
-	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_quicksight_folder.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.QuickSightEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFolderDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFolderConfig_tags1(rId, rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccFolderConfig_tags2(rId, rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccFolderConfig_tags1(rId, rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccQuickSightFolder_parentFolder(t *testing.T) {
 	ctx := acctest.Context(t)
 	var folder awstypes.Folder
@@ -396,33 +346,6 @@ resource "aws_quicksight_folder" "test" {
   }
 }
 `, rId, rName))
-}
-
-func testAccFolderConfig_tags1(rId, rName, key1, value1 string) string {
-	return fmt.Sprintf(`
-resource "aws_quicksight_folder" "test" {
-  folder_id = %[1]q
-  name      = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, rId, rName, key1, value1)
-}
-
-func testAccFolderConfig_tags2(rId, rName, key1, value1, key2, value2 string) string {
-	return fmt.Sprintf(`
-resource "aws_quicksight_folder" "test" {
-  folder_id = %[1]q
-  name      = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, rId, rName, key1, value1, key2, value2)
 }
 
 func testAccFolderConfig_parentFolder(rId, rName, parentId, parentName string) string {

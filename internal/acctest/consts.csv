@@ -19,6 +19,8 @@ private_key_pem,PrivateKeyPEM
 provider_tags,ProviderTags
 providerkey1,ProviderKey1
 providervalue1,ProviderValue1
+providervalue1updated,ProviderValue1Updated
+providervalue1again,ProviderValue1Again
 rName,RName
 resource_owner,ResourceOwner
 resource_tags,ResourceTags
@@ -26,7 +28,9 @@ resourcekey1,ResourceKey1
 resourcekey2,ResourceKey2
 resourcevalue1,ResourceValue1
 resourcevalue1updated,ResourceValue1Updated
+resourcevalue1again,ResourceValue1Again
 resourcevalue2,ResourceValue2
+resourcevalue2updated,ResourceValue2Updated
 rule.#,RulePound
 tags.%,TagsPercent
 tags.key1,TagsKey1

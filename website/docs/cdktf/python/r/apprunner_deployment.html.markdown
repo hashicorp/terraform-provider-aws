@@ -45,4 +45,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `operation_id` - The unique ID of the operation associated with deployment.
 * `status` - The current status of the App Runner service deployment.
 
-<!-- cache-key: cdktf-0.20.9 input-174062645567df0484bd1555e61467931d5bd1e9d2d2ce98910c2f2f8399d118 -->
+<!-- cache-key: cdktf-0.20.8 input-174062645567df0484bd1555e61467931d5bd1e9d2d2ce98910c2f2f8399d118 -->

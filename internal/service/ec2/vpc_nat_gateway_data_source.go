@@ -96,7 +96,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	var diags diag.Diagnostics
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &ec2.DescribeNatGatewaysInput{
 		Filter: newAttributeFilterList(

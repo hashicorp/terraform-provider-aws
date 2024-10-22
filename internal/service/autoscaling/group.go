@@ -1258,7 +1258,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	g, err := findGroupByName(ctx, conn, d.Id())
 

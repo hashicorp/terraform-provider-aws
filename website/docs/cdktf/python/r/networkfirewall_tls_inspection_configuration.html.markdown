@@ -470,4 +470,4 @@ Using `terraform import`, import Network Firewall TLS Inspection Configuration u
 % terraform import aws_networkfirewall_tls_inspection_configuration.example arn:aws:network-firewall::<region>:<account_id>:tls-configuration/example
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-a6cbd3c0919ebf7b4427b805db64d4ea8ed7025bb8d8161a1265dea1453f11dd -->
+<!-- cache-key: cdktf-0.20.8 input-a6cbd3c0919ebf7b4427b805db64d4ea8ed7025bb8d8161a1265dea1453f11dd -->

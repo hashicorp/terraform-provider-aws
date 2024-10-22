@@ -87,6 +87,11 @@ func RegisterSweepers() {
 		F:    sweepImages,
 	})
 
+	resource.AddTestSweepers("aws_sagemaker_mlflow_tracking_server", &resource.Sweeper{
+		Name: "aws_sagemaker_mlflow_tracking_server",
+		F:    sweepMlflowTrackingServers,
+	})
+
 	resource.AddTestSweepers("aws_sagemaker_model_package_group", &resource.Sweeper{
 		Name: "aws_sagemaker_model_package_group",
 		F:    sweepModelPackageGroups,
@@ -155,6 +160,11 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_sagemaker_pipeline", &resource.Sweeper{
 		Name: "aws_sagemaker_pipeline",
 		F:    sweepPipelines,
+	})
+
+	resource.AddTestSweepers("aws_sagemaker_hub", &resource.Sweeper{
+		Name: "aws_sagemaker_hub",
+		F:    sweepHubs,
 	})
 }
 
@@ -1070,4 +1080,95 @@ func sweepPipelines(region string) error {
 	}
 
 	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepMlflowTrackingServers(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %s", err)
+	}
+	conn := client.SageMakerClient(ctx)
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
+
+	pages := sagemaker.NewListMlflowTrackingServersPaginator(conn, &sagemaker.ListMlflowTrackingServersInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping SageMaker Mlflow Tracking Server sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil()
+		}
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("retrieving SageMaker Mlflow Tracking Servers: %w", err))
+		}
+
+		for _, project := range page.TrackingServerSummaries {
+			name := aws.ToString(project.TrackingServerName)
+
+			r := resourceMlflowTrackingServer()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("sweeping SageMaker Mlflow Tracking Servers: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepHubs(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %s", err)
+	}
+	conn := client.SageMakerClient(ctx)
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	in := &sagemaker.ListHubsInput{}
+
+	for {
+		out, err := conn.ListHubs(ctx, in)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Sagemaker Hubs sweep for %s: %s", region, err)
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("error retrieving Sagemaker Hubs: %w", err)
+		}
+
+		for _, hub := range out.HubSummaries {
+			name := aws.ToString(hub.HubName)
+			log.Printf("[INFO] Deleting Sagemaker Hubs: %s", name)
+
+			if !strings.HasPrefix(name, sweep.ResourcePrefix) {
+				log.Printf("[INFO] Skipping SageMaker Hub (%s): not in allow list", name)
+				continue
+			}
+
+			r := resourceHub()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		if aws.ToString(out.NextToken) == "" {
+			break
+		}
+		in.NextToken = out.NextToken
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Sagemaker Hubs for %s: %w", region, err)
+	}
+
+	return nil
 }

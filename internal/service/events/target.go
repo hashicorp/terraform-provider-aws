@@ -68,6 +68,20 @@ func resourceTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"appsync_target": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"graphql_operation": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1048576)),
+						},
+					},
+				},
+			},
 			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -621,6 +635,12 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
+	if target.AppSyncParameters != nil {
+		if err := d.Set("appsync_target", flattenAppSyncParameters(target.AppSyncParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting appsync_target: %s", err)
+		}
+	}
+
 	return diags
 }
 
@@ -869,6 +889,10 @@ func expandPutTargetsInput(ctx context.Context, d *schema.ResourceData) *eventbr
 
 	if v, ok := d.GetOk("dead_letter_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		target.DeadLetterConfig = expandDeadLetterParametersConfig(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("appsync_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		target.AppSyncParameters = expandAppSyncParameters(v.([]interface{}))
 	}
 
 	input := &eventbridge.PutTargetsInput{
@@ -1483,4 +1507,24 @@ func flattenTargetCapacityProviderStrategy(cps []types.CapacityProviderStrategyI
 		results = append(results, s)
 	}
 	return results
+}
+
+func flattenAppSyncParameters(apiObject *types.AppSyncParameters) []map[string]interface{} {
+	tfMap := make(map[string]interface{})
+	tfMap["graphql_operation"] = aws.ToString(apiObject.GraphQLOperation)
+
+	return []map[string]interface{}{tfMap}
+}
+
+func expandAppSyncParameters(tfList []interface{}) *types.AppSyncParameters {
+	apiObject := &types.AppSyncParameters{}
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		if v, ok := tfMap["graphql_operation"].(string); ok && v != "" {
+			apiObject.GraphQLOperation = aws.String(v)
+		}
+	}
+
+	return apiObject
 }

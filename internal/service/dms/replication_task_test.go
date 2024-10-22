@@ -54,7 +54,7 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 							resource.TestCheckNoResourceAttr(resourceName, "cdc_start_time"),
 							resource.TestCheckResourceAttr(resourceName, "migration_type", migrationType),
 							resource.TestCheckResourceAttrPair(resourceName, "replication_instance_arn", "aws_dms_replication_instance.test", "replication_instance_arn"),
-							acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_task_settings", defaultReplicationTaskSettings[migrationType]),
+							acctest.CheckResourceAttrJSONNoDiff(resourceName, "replication_task_settings", defaultReplicationTaskSettings[awstypes.MigrationTypeValue(migrationType)]),
 							resource.TestCheckResourceAttrPair(resourceName, "source_endpoint_arn", "aws_dms_endpoint.source", "endpoint_arn"),
 							resource.TestCheckResourceAttr(resourceName, "start_replication_task", acctest.CtFalse),
 							resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ready"),
@@ -1284,10 +1284,10 @@ resource "aws_dms_replication_instance" "test2" {
 }
 
 var (
-	defaultReplicationTaskSettings = map[string]string{
-		"cdc":               defaultReplicationTaskCdcSettings,
-		"full-load":         defaultReplicationTaskFullLoadSettings,
-		"full-load-and-cdc": defaultReplicationTaskFullLoadAndCdcSettings,
+	defaultReplicationTaskSettings = map[awstypes.MigrationTypeValue]string{
+		awstypes.MigrationTypeValueCdc:            defaultReplicationTaskCdcSettings,
+		awstypes.MigrationTypeValueFullLoad:       defaultReplicationTaskFullLoadSettings,
+		awstypes.MigrationTypeValueFullLoadAndCdc: defaultReplicationTaskFullLoadAndCdcSettings,
 	}
 
 	//go:embed testdata/replication_task/defaults/cdc.json

@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -94,7 +95,11 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 			names.AttrEngine: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIf(func(ctx context.Context, sr planmodifier.StringRequest, rrifr *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+						configIsRedis := sr.ConfigValue.Equal(basetypes.NewStringValue(engineRedis))
+						planIsValkey := sr.PlanValue.Equal(basetypes.NewStringValue(engineValkey))
+						rrifr.RequiresReplace = !(configIsRedis && planIsValkey)
+					}, "Replace engine diff", "Replace engine diff"),
 				},
 			},
 			"full_engine_version": schema.StringAttribute{
@@ -338,6 +343,14 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 	if serverlessCacheHasChanges(ctx, new, old) {
 		input := &elasticache.ModifyServerlessCacheInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		// Unset engine related stuff to prevent the following error:
+		// This API supports only cross-engine upgrades to Valkey engine currently.
+		if new.Engine.Equal(old.Engine) {
+			input.Engine = nil
+		}
+		if new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
+			input.MajorEngineVersion = nil
+		}
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -357,7 +370,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		}
 	}
 
-	// AWS returns null values for certain values that are available on redis only.
+	// AWS returns null values for certain values that are available on redis/valkey only.
 	// always set these values to the state value to avoid unnecessary diff failures on computed values.
 	output, err := findServerlessCacheByID(ctx, conn, old.ID.ValueString())
 

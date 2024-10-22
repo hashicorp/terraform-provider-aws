@@ -30,7 +30,7 @@ resource "aws_kms_key" "test_key" {
 resource "aws_verifiedaccess_group" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
 
-  server_side_encryption_configuration {
+  sse_configuration {
     kms_key_arn = aws_kms_key.test_key.arn
   }
 }

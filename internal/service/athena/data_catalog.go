@@ -192,7 +192,7 @@ func resourceDataCatalogDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	log.Printf("[DEBUG] Deleting Athena Data Catalog: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting Athena Data Catalog (%s)", d.Id())
 	_, err := conn.DeleteDataCatalog(ctx, &athena.DeleteDataCatalogInput{
 		Name: aws.String(d.Id()),
 	})

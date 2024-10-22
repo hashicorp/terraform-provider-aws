@@ -44,6 +44,10 @@ func testAccDirectoryDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "iam_role_id", resourceName, "iam_role_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ip_group_ids", resourceName, "ip_group_ids"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "registration_code", resourceName, "registration_code"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.#", resourceName, "saml_properties.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.0.relay_state_parameter_name", resourceName, "saml_properties.0.relay_state_parameter_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.0.status", resourceName, "saml_properties.0.status"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "saml_properties.0.user_access_url", resourceName, "saml_properties.0.user_access_url"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "self_service_permissions.#", resourceName, "self_service_permissions.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "self_service_permissions.0.change_compute_type", resourceName, "self_service_permissions.0.change_compute_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "self_service_permissions.0.increase_volume_size", resourceName, "self_service_permissions.0.increase_volume_size"),
@@ -90,6 +94,12 @@ resource "aws_security_group" "test" {
 resource "aws_workspaces_directory" "test" {
   directory_id = aws_directory_service_directory.main.id
 
+  saml_properties {
+    relay_state_parameter_name = "LinkMode"
+    status                     = "ENABLED"
+    user_access_url            = "https://sso.%[2]s/"
+  }
+
   self_service_permissions {
     change_compute_type  = false
     increase_volume_size = true
@@ -129,5 +139,5 @@ data "aws_workspaces_directory" "test" {
 data "aws_iam_role" "workspaces-default" {
   name = "workspaces_DefaultRole"
 }
-`, rName))
+`, rName, domain))
 }

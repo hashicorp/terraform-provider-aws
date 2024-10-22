@@ -16,40 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// listTags lists ssm service tags.
-// The identifier is typically the Amazon Resource Name (ARN), although
-// it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *ssm.Client, identifier, resourceType string, optFns ...func(*ssm.Options)) (tftags.KeyValueTags, error) {
-	input := &ssm.ListTagsForResourceInput{
-		ResourceId:   aws.String(identifier),
-		ResourceType: awstypes.ResourceTypeForTagging(resourceType),
-	}
-
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
-
-	if err != nil {
-		return tftags.New(ctx, nil), err
-	}
-
-	return KeyValueTags(ctx, output.TagList), nil
-}
-
-// ListTags lists ssm service tags and set them in Context.
-// It is called from outside this package.
-func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).SSMClient(ctx), identifier, resourceType)
-
-	if err != nil {
-		return err
-	}
-
-	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = option.Some(tags)
-	}
-
-	return nil
-}
-
 // []*SERVICE.Tag handling
 
 // Tags returns ssm service tags.

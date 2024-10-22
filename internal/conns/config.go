@@ -207,9 +207,9 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 
 	client.AccountID = accountID
-	client.DefaultTagsConfig = c.DefaultTagsConfig
+	client.defaultTagsConfig = c.DefaultTagsConfig
 	client.dnsSuffix = dnsSuffix
-	client.IgnoreTagsConfig = c.IgnoreTagsConfig
+	client.ignoreTagsConfig = c.IgnoreTagsConfig
 	client.Partition = partition
 	client.Region = c.Region
 	client.SetHTTPClient(ctx, session.Config.HTTPClient) // Must be called while client.Session is nil.

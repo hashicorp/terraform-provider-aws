@@ -16,6 +16,8 @@ import (
 )
 
 // @SDKDataSource("aws_backup_report_plan", name="Report Plan")
+// @Tags(identifierAttribute="arn")
+// @Testing(generator="randomReportPlanName()")
 func dataSourceReportPlan() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReportPlanRead,
@@ -116,7 +118,6 @@ func dataSourceReportPlan() *schema.Resource {
 func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
 	reportPlan, err := findReportPlanByName(ctx, conn, name)
@@ -136,16 +137,6 @@ func dataSourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 	if err := d.Set("report_setting", flattenReportSetting(reportPlan.ReportSetting)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting report_setting: %s", err)
-	}
-
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Backup Report Plan (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags

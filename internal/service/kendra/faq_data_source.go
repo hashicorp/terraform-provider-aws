@@ -109,7 +109,7 @@ func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	id := d.Get("faq_id").(string)
 	indexId := d.Get("index_id").(string)

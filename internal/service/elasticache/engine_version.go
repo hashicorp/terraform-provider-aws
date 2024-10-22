@@ -56,6 +56,24 @@ func validRedisVersionString(v any, k string) (ws []string, errors []error) {
 	return
 }
 
+const (
+	valkeyVersionRegexpPattern = `^[7-9]\.[[:digit:]]+$`
+)
+
+var (
+	valkeyVersionRegexp = regexache.MustCompile(valkeyVersionRegexpPattern)
+)
+
+func validValkeyVersionString(v any, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !valkeyVersionRegexp.MatchString(value) {
+		errors = append(errors, fmt.Errorf("%s: %s is invalid. For Valkey use <major>.<minor>.", k, value))
+	}
+
+	return
+}
+
 // customizeDiffValidateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
 func customizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	engineVersion, ok := diff.GetOk(names.AttrEngineVersion)
@@ -70,11 +88,15 @@ func customizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.R
 func validateClusterEngineVersion(engine, engineVersion string) error {
 	// Memcached: Versions in format <major>.<minor>.<patch>
 	// Redis: Starting with version 6, must match <major>.<minor>, prior to version 6, <major>.<minor>.<patch>
+	// Valkey: Versions in format <major>.<minor>
 	var validator schema.SchemaValidateFunc
-	if engine == "" || engine == engineMemcached {
+	switch engine {
+	case "", engineMemcached:
 		validator = validMemcachedVersionString
-	} else {
+	case engineRedis:
 		validator = validRedisVersionString
+	case engineValkey:
+		validator = validValkeyVersionString
 	}
 
 	_, errs := validator(engineVersion, names.AttrEngineVersion)
@@ -182,6 +204,17 @@ func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 			d.Set(names.AttrEngineVersion, fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
 		}
 	}
+	d.Set("engine_version_actual", engineVersion.String())
+
+	return nil
+}
+
+func setEngineVersionValkey(d *schema.ResourceData, version *string) error {
+	engineVersion, err := gversion.NewVersion(aws.ToString(version))
+	if err != nil {
+		return fmt.Errorf("reading engine version: %w", err)
+	}
+	d.Set(names.AttrEngineVersion, fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
 	d.Set("engine_version_actual", engineVersion.String())
 
 	return nil

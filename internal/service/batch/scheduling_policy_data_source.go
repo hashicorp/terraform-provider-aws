@@ -18,6 +18,7 @@ import (
 
 // @SDKDataSource("aws_batch_scheduling_policy", name="Scheduling Policy")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSchedulingPolicyRead,
