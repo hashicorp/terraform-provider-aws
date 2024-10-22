@@ -240,7 +240,7 @@ func TestAccSSMDocument_Permission_private(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
-	ids := "123456789012"
+	ids := acctest.Ct12Digit
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -297,7 +297,7 @@ func TestAccSSMDocument_Permission_change(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssm_document.test"
 	idsInitial := "123456789012,123456789013"
-	idsRemove := "123456789012"
+	idsRemove := acctest.Ct12Digit
 	idsAdd := "123456789012,123456789014"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -451,7 +451,7 @@ func TestAccSSMDocument_SchemaVersion_1(t *testing.T) {
 				Config: testAccDocumentConfig_schemaVersion1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schema_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "schema_version", acctest.Ct1Point0),
 				),
 			},
 			{
@@ -463,7 +463,7 @@ func TestAccSSMDocument_SchemaVersion_1(t *testing.T) {
 				Config: testAccDocumentConfig_schemaVersion1Update(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "schema_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "schema_version", acctest.Ct1Point0),
 				),
 			},
 		},
