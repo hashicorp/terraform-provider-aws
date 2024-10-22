@@ -79,7 +79,7 @@ func testAccResponsePlan_updateRequiredFields(t *testing.T) {
 
 	iniTitle := "initialTitle"
 	updTitle := "updatedTitle"
-	updImpact := "5"
+	updImpact := acctest.Ct5
 
 	resourceName := "aws_ssmincidents_response_plan.test"
 
