@@ -38,7 +38,7 @@ func TestAccRoute53HealthCheck_basic(t *testing.T) {
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, names.AttrARN, "route53", regexache.MustCompile("healthcheck/.+")),
 					resource.TestCheckResourceAttr(resourceName, "measure_latency", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, acctest.Ct80),
 					resource.TestCheckResourceAttr(resourceName, "failure_threshold", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -50,10 +50,10 @@ func TestAccRoute53HealthCheck_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccHealthCheckConfig_basic("5", false),
+				Config: testAccHealthCheckConfig_basic(acctest.Ct5, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
-					resource.TestCheckResourceAttr(resourceName, "failure_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "failure_threshold", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "invert_healthcheck", acctest.CtFalse),
 				),
 			},
