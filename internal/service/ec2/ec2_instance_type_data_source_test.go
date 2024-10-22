@@ -93,7 +93,7 @@ func TestAccEC2InstanceTypeDataSource_metal(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "ebs_performance_maximum_throughput", "2375"),
 					resource.TestCheckResourceAttr(dataSourceName, "ebs_performance_maximum_iops", "80000"),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_disks.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "instance_disks.0.count", "8"),
+					resource.TestCheckResourceAttr(dataSourceName, "instance_disks.0.count", acctest.Ct8),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_disks.0.size", "7500"),
 					resource.TestCheckResourceAttr(dataSourceName, "instance_disks.0.type", "ssd"),
 					resource.TestCheckResourceAttr(dataSourceName, "total_instance_storage", "60000"),
@@ -116,7 +116,7 @@ func TestAccEC2InstanceTypeDataSource_gpu(t *testing.T) {
 				Config: testAccInstanceTypeDataSourceConfig_gpu,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "gpus.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "gpus.0.count", "8"),
+					resource.TestCheckResourceAttr(dataSourceName, "gpus.0.count", acctest.Ct8),
 					resource.TestCheckResourceAttr(dataSourceName, "gpus.0.manufacturer", "NVIDIA"),
 					resource.TestCheckResourceAttr(dataSourceName, "gpus.0.memory_size", "81920"),
 					resource.TestCheckResourceAttr(dataSourceName, "gpus.0.name", "H100"),
