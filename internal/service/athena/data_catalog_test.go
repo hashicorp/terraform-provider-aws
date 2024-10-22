@@ -202,7 +202,7 @@ func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "A test data catalog using Glue"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "GLUE"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "parameters.catalog-id", "123456789012"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.catalog-id", acctest.Ct12Digit),
 				),
 			},
 			{
