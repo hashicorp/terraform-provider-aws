@@ -73,7 +73,7 @@ func TestAccEventsArchive_update(t *testing.T) {
 				Config: testAccArchiveConfig_updateAttributes(archiveName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckArchiveExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "retention_days", "7"),
+					resource.TestCheckResourceAttr(resourceName, "retention_days", acctest.Ct7),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "event_pattern", "{\"source\":[\"company.team.service\"]}"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 				),
