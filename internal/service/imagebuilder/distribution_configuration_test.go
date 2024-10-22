@@ -720,7 +720,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 					testAccCheckDistributionConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.max_parallel_launches", "7"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.max_parallel_launches", acctest.Ct7),
 				),
 			},
 			{
@@ -759,7 +759,7 @@ func TestAccImageBuilderDistributionConfiguration_DistributionFastLaunchConfigur
 					resource.TestCheckResourceAttr(resourceName, "distribution.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.0.target_resource_count", "5"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.0.fast_launch_configuration.0.snapshot_configuration.0.target_resource_count", acctest.Ct5),
 				),
 			},
 			{
