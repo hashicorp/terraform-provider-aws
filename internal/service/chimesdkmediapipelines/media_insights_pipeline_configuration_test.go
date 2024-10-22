@@ -180,7 +180,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "resource_access_role_arn", "iam", fmt.Sprintf(`role/%s`, roleName2)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "chime", fmt.Sprintf(`media-insights-pipeline-configuration/%s`, rName)),
-					resource.TestCheckResourceAttr(resourceName, "elements.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "elements.#", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "elements.0.type", "VoiceAnalyticsProcessor"),
 					resource.TestCheckResourceAttr(resourceName, "elements.1.type", "LambdaFunctionSink"),
 					resource.TestCheckResourceAttr(resourceName, "elements.2.type", "SnsTopicSink"),
