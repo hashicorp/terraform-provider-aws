@@ -39,7 +39,7 @@ func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						names.AttrProtocol: "tcp",
-						"from_port":        "80",
+						"from_port":        acctest.Ct80,
 						"to_port":          "8000",
 						"cidr_blocks.#":    acctest.Ct1,
 						"cidr_blocks.0":    "10.0.0.0/8",
@@ -47,7 +47,7 @@ func TestAccVPCDefaultSecurityGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						names.AttrProtocol: "tcp",
-						"from_port":        "80",
+						"from_port":        acctest.Ct80,
 						"to_port":          "8000",
 						"cidr_blocks.#":    acctest.Ct1,
 						"cidr_blocks.0":    "10.0.0.0/8",
