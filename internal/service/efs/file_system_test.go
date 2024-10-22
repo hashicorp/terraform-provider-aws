@@ -230,7 +230,7 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 				Config: testAccFileSystemConfig_maxTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "50"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct50),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.Another", "tag"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag45", "TestTagValue"),
