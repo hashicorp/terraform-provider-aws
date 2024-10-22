@@ -94,18 +94,11 @@ func TestAccELBV2ListenerRuleDataSource_byARN(t *testing.T) {
 
 					// condition
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"host_header": knownvalue.ObjectExact(map[string]knownvalue.Check{
-								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
-									knownvalue.StringExact("example.com"),
-								}),
+						expectKnownCondition("host_header", knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("example.com"),
 							}),
-							"http_header":         knownvalue.Null(),
-							"http_request_method": knownvalue.Null(),
-							"path_pattern":        knownvalue.Null(),
-							"query_string":        knownvalue.Null(),
-							"source_ip":           knownvalue.Null(),
-						}),
+						})),
 					})),
 
 					// tags
@@ -139,24 +132,30 @@ func TestAccELBV2ListenerRuleDataSource_conditionHostHeader(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrCondition), knownvalue.SetExact([]knownvalue.Check{
-						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"host_header": knownvalue.ObjectExact(map[string]knownvalue.Check{
-								names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
-									knownvalue.StringExact("example.com"),
-									knownvalue.StringExact("www.example.com"),
-								}),
+						expectKnownCondition("host_header", knownvalue.ObjectExact(map[string]knownvalue.Check{
+							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
+								knownvalue.StringExact("example.com"),
+								knownvalue.StringExact("www.example.com"),
 							}),
-							"http_header":         knownvalue.Null(),
-							"http_request_method": knownvalue.Null(),
-							"path_pattern":        knownvalue.Null(),
-							"query_string":        knownvalue.Null(),
-							"source_ip":           knownvalue.Null(),
-						}),
+						})),
 					})),
 				},
 			},
 		},
 	})
+}
+
+func expectKnownCondition(key string, check knownvalue.Check) knownvalue.Check {
+	checks := map[string]knownvalue.Check{
+		"host_header":         knownvalue.Null(),
+		"http_header":         knownvalue.Null(),
+		"http_request_method": knownvalue.Null(),
+		"path_pattern":        knownvalue.Null(),
+		"query_string":        knownvalue.Null(),
+		"source_ip":           knownvalue.Null(),
+	}
+	checks[key] = check
+	return knownvalue.ObjectExact(checks)
 }
 
 func testAccListenerRuleDataSourceConfig_byARN(rName string) string {
