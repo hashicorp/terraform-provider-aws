@@ -40,7 +40,7 @@ func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      acctest.Ct1,
-						"expiration.0.days": "365",
+						"expiration.0.days": acctest.Ct365,
 						"filter.#":          acctest.Ct1,
 						"filter.0.prefix":   "",
 						names.AttrID:        rName,
@@ -158,7 +158,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThan(t *testi
 						"expiration.#":                      acctest.Ct1,
 						"expiration.0.date":                 date,
 						"filter.#":                          acctest.Ct1,
-						"filter.0.object_size_greater_than": "100",
+						"filter.0.object_size_greater_than": acctest.Ct100,
 						names.AttrID:                        rName,
 						names.AttrStatus:                    tfs3.LifecycleRuleStatusEnabled,
 					}),
@@ -230,7 +230,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeLessThan(t *testing.
 						"expiration.#":                   acctest.Ct1,
 						"expiration.0.date":              date,
 						"filter.#":                       acctest.Ct1,
-						"filter.0.object_size_less_than": "500",
+						"filter.0.object_size_less_than": acctest.Ct500,
 						names.AttrID:                     rName,
 						names.AttrStatus:                 tfs3.LifecycleRuleStatusEnabled,
 					}),
@@ -267,7 +267,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRange(t *testing.T) 
 						"expiration.0.date": date,
 						"filter.#":          acctest.Ct1,
 						"filter.0.and.#":    acctest.Ct1,
-						"filter.0.and.0.object_size_greater_than": "500",
+						"filter.0.and.0.object_size_greater_than": acctest.Ct500,
 						"filter.0.and.0.object_size_less_than":    "64000",
 						names.AttrID:                              rName,
 						names.AttrStatus:                          tfs3.LifecycleRuleStatusEnabled,
@@ -305,7 +305,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRangeAndPrefix(t *te
 						"expiration.0.date": date,
 						"filter.#":          acctest.Ct1,
 						"filter.0.and.#":    acctest.Ct1,
-						"filter.0.and.0.object_size_greater_than": "500",
+						"filter.0.and.0.object_size_greater_than": acctest.Ct500,
 						"filter.0.and.0.object_size_less_than":    "64000",
 						"filter.0.and.0.prefix":                   rName,
 						names.AttrID:                              rName,
@@ -390,7 +390,7 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						names.AttrID:            "log",
 						"expiration.#":          acctest.Ct1,
-						"expiration.0.days":     "90",
+						"expiration.0.days":     acctest.Ct90,
 						"filter.#":              acctest.Ct1,
 						"filter.0.and.#":        acctest.Ct1,
 						"filter.0.and.0.prefix": "log/",
@@ -399,11 +399,11 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules(t *testing.T) {
 						"transition.#":          acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.transition.*", map[string]string{
-						"days":                 "30",
+						"days":                 acctest.Ct30,
 						names.AttrStorageClass: string(types.StorageClassStandardIa),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.transition.*", map[string]string{
-						"days":                 "60",
+						"days":                 acctest.Ct60,
 						names.AttrStorageClass: string(types.StorageClassGlacier),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -474,7 +474,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionExpiration(t *testin
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"noncurrent_version_expiration.#":                 acctest.Ct1,
-						"noncurrent_version_expiration.0.noncurrent_days": "90",
+						"noncurrent_version_expiration.0.noncurrent_days": acctest.Ct90,
 					}),
 				),
 			},
@@ -506,11 +506,11 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testin
 						"noncurrent_version_transition.#": acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.noncurrent_version_transition.*", map[string]string{
-						"noncurrent_days":      "30",
+						"noncurrent_days":      acctest.Ct30,
 						names.AttrStorageClass: string(types.StorageClassStandardIa),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*.noncurrent_version_transition.*", map[string]string{
-						"noncurrent_days":      "60",
+						"noncurrent_days":      acctest.Ct60,
 						names.AttrStorageClass: string(types.StorageClassGlacier),
 					}),
 				),
@@ -544,7 +544,7 @@ func TestAccS3BucketLifecycleConfiguration_prefix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      acctest.Ct1,
-						"expiration.0.days": "365",
+						"expiration.0.days": acctest.Ct365,
 						names.AttrID:        rName,
 						names.AttrPrefix:    "path1/",
 						names.AttrStatus:    tfs3.LifecycleRuleStatusEnabled,
@@ -579,7 +579,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_Tag(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":         acctest.Ct1,
-						"expiration.0.days":    "365",
+						"expiration.0.days":    acctest.Ct365,
 						names.AttrID:           rName,
 						"filter.#":             acctest.Ct1,
 						"filter.0.tag.#":       acctest.Ct1,
@@ -691,7 +691,7 @@ func TestAccS3BucketLifecycleConfiguration_ruleAbortIncompleteMultipartUpload(t 
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"abort_incomplete_multipart_upload.#":                       acctest.Ct1,
-						"abort_incomplete_multipart_upload.0.days_after_initiation": "7",
+						"abort_incomplete_multipart_upload.0.days_after_initiation": acctest.Ct7,
 					}),
 				),
 			},
@@ -706,7 +706,7 @@ func TestAccS3BucketLifecycleConfiguration_ruleAbortIncompleteMultipartUpload(t 
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"abort_incomplete_multipart_upload.#":                       acctest.Ct1,
-						"abort_incomplete_multipart_upload.0.days_after_initiation": "5",
+						"abort_incomplete_multipart_upload.0.days_after_initiation": acctest.Ct5,
 					}),
 				),
 			},
@@ -1032,7 +1032,7 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.object_size_greater_than", "300"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.object_size_greater_than", acctest.Ct300),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.prefix", "prefix1"),
 				),
 			},
@@ -1087,7 +1087,7 @@ func TestAccS3BucketLifecycleConfiguration_basicTransitionDefaultMinimumObjectSi
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      acctest.Ct1,
-						"expiration.0.days": "365",
+						"expiration.0.days": acctest.Ct365,
 						"filter.#":          acctest.Ct1,
 						"filter.0.prefix":   "",
 						names.AttrID:        rName,
@@ -1109,7 +1109,7 @@ func TestAccS3BucketLifecycleConfiguration_basicTransitionDefaultMinimumObjectSi
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      acctest.Ct1,
-						"expiration.0.days": "365",
+						"expiration.0.days": acctest.Ct365,
 						"filter.#":          acctest.Ct1,
 						"filter.0.prefix":   "",
 						names.AttrID:        rName,
