@@ -45,7 +45,7 @@ func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "active-defrag-cycle-max",
-						names.AttrValue: "70",
+						names.AttrValue: acctest.Ct70,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "active-defrag-cycle-min",
@@ -130,13 +130,13 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrParameter},
 			},
 			{
-				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, "20"),
+				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, acctest.Ct20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  names.AttrTimeout,
-						names.AttrValue: "20",
+						names.AttrValue: acctest.Ct20,
 					}),
 				),
 			},
@@ -146,13 +146,13 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_multiple(rName, names.AttrTimeout, "20", "activerehashing", "no"),
+				Config: testAccParameterGroupConfig_multiple(rName, names.AttrTimeout, acctest.Ct20, "activerehashing", "no"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  names.AttrTimeout,
-						names.AttrValue: "20",
+						names.AttrValue: acctest.Ct20,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "activerehashing",
@@ -166,13 +166,13 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, "20"),
+				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, acctest.Ct20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  names.AttrTimeout,
-						names.AttrValue: "20",
+						names.AttrValue: acctest.Ct20,
 					}),
 				),
 			},
