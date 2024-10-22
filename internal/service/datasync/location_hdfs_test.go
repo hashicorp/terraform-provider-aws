@@ -48,7 +48,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_key_provider_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "name_node.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "name_node.*", map[string]string{
-						names.AttrPort: "80",
+						names.AttrPort: acctest.Ct80,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "replication_factor", acctest.Ct3),
@@ -166,7 +166,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_key_provider_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "name_node.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "name_node.*", map[string]string{
-						names.AttrPort: "80",
+						names.AttrPort: acctest.Ct80,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "replication_factor", acctest.Ct3),
