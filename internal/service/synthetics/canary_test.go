@@ -41,7 +41,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "runtime_version", runtimeVersionDataSourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", acctest.Ct1000),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
 					resource.TestCheckResourceAttr(resourceName, "failure_retention_period", "31"),
 					resource.TestCheckResourceAttr(resourceName, "success_retention_period", "31"),
@@ -73,7 +73,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "runtime_version", runtimeVersionDataSourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", acctest.Ct1000),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
 					resource.TestCheckResourceAttr(resourceName, "failure_retention_period", "31"),
 					resource.TestCheckResourceAttr(resourceName, "success_retention_period", "31"),
@@ -188,7 +188,7 @@ func TestAccSyntheticsCanary_rate(t *testing.T) {
 				Config: testAccCanaryConfig_rate(fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)), "rate(1 minute)"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", acctest.Ct60),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(1 minute)"),
 				),
 			},
@@ -202,7 +202,7 @@ func TestAccSyntheticsCanary_rate(t *testing.T) {
 				Config: testAccCanaryConfig_rate(fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8)), "rate(2 minutes)"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "120"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", acctest.Ct120),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.expression", "rate(2 minutes)"),
 				),
 			},
@@ -330,7 +330,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "runtime_version", runtimeVersionDataSourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", acctest.Ct1000),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.active_tracing", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "failure_retention_period", "31"),
@@ -372,8 +372,8 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", acctest.Ct1000),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", acctest.Ct60),
 				),
 			},
 			{
@@ -387,7 +387,7 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "960"),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "120"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", acctest.Ct120),
 				),
 			},
 			{
@@ -395,7 +395,7 @@ func TestAccSyntheticsCanary_run(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "960"),
-					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "60"),
+					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", acctest.Ct60),
 				),
 			},
 		},
