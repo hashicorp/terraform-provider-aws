@@ -113,10 +113,10 @@ func testAccStage_cache(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStageConfig_cache(rName, "0.5"),
+				Config: testAccStageConfig_cache(rName, acctest.Ct0Point5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", acctest.Ct0Point5),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtTrue),
 				),
 			},
@@ -154,10 +154,10 @@ func testAccStage_cacheSizeCacheDisabled(t *testing.T) {
 		CheckDestroy:             testAccCheckStageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStageConfig_cache(rName, "0.5"),
+				Config: testAccStageConfig_cache(rName, acctest.Ct0Point5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "cache_cluster_size", acctest.Ct0Point5),
 					resource.TestCheckResourceAttr(resourceName, "cache_cluster_enabled", acctest.CtTrue),
 				),
 			},
@@ -459,7 +459,7 @@ func testAccStage_canarySettings(t *testing.T) {
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "66.66"),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.four", "5"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.four", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtFalse),
 				),
 			},
