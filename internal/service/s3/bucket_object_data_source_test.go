@@ -36,7 +36,7 @@ func TestAccS3BucketObjectDataSource_basic(t *testing.T) {
 				Config: testAccBucketObjectDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", acctest.Ct11),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
@@ -120,7 +120,7 @@ func TestAccS3BucketObjectDataSource_kmsEncrypted(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_kmsEncrypted(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", acctest.Ct22),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "server_side_encryption", resourceName, "server_side_encryption"),
@@ -152,7 +152,7 @@ func TestAccS3BucketObjectDataSource_bucketKeyEnabled(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_keyEnabled(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "content_length", "22"),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", acctest.Ct22),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "server_side_encryption", resourceName, "server_side_encryption"),
@@ -185,7 +185,7 @@ func TestAccS3BucketObjectDataSource_allParams(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_allParams(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "content_length", "25"),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", acctest.Ct25),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
@@ -232,7 +232,7 @@ func TestAccS3BucketObjectDataSource_objectLockLegalHoldOff(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_lockLegalHoldOff(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", acctest.Ct11),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
@@ -263,7 +263,7 @@ func TestAccS3BucketObjectDataSource_objectLockLegalHoldOn(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_lockLegalHoldOn(rInt, retainUntilDate),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
+					resource.TestCheckResourceAttr(dataSourceName, "content_length", acctest.Ct11),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrContentType, resourceName, names.AttrContentType),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),
 					resource.TestMatchResourceAttr(dataSourceName, "last_modified", regexache.MustCompile(rfc1123RegexPattern)),
