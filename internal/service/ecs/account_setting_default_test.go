@@ -201,7 +201,7 @@ func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) 
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountSettingDefaultExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "fargateTaskRetirementWaitPeriod"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "14"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrValue, acctest.Ct14),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
@@ -255,7 +255,7 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 			case awstypes.SettingNameContainerInstanceLongArnFormat, awstypes.SettingNameServiceLongArnFormat, awstypes.SettingNameTaskLongArnFormat:
 				return nil
 			case awstypes.SettingNameFargateTaskRetirementWaitPeriod:
-				if value == "7" {
+				if value == acctest.Ct7 {
 					return nil
 				}
 			default:
