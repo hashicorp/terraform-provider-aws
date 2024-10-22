@@ -225,7 +225,7 @@ func TestAccLogsGroup_retentionPolicy(t *testing.T) {
 				Config: testAccGroupConfig_retentionPolicy(rName, 365),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLogGroupExists(ctx, t, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "retention_in_days", "365"),
+					resource.TestCheckResourceAttr(resourceName, "retention_in_days", acctest.Ct365),
 				),
 			},
 			{
