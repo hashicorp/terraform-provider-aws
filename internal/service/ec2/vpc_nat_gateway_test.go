@@ -352,8 +352,8 @@ func TestAccVPCNATGateway_SecondaryPrivateIPAddresses_private(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "5"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", acctest.Ct5),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", acctest.Ct5),
 					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.5"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.6"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.7"),
@@ -371,8 +371,8 @@ func TestAccVPCNATGateway_SecondaryPrivateIPAddresses_private(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNATGatewayExists(ctx, resourceName, &natGateway),
 					resource.TestCheckResourceAttr(resourceName, "secondary_allocation_ids.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", "7"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_address_count", acctest.Ct7),
+					resource.TestCheckResourceAttr(resourceName, "secondary_private_ip_addresses.#", acctest.Ct7),
 					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.5"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.6"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "secondary_private_ip_addresses.*", "10.0.1.7"),
