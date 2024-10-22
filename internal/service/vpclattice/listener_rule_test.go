@@ -43,7 +43,7 @@ func TestAccVPCLatticeListenerRule_basic(t *testing.T) {
 				Config: testAccListenerRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "20"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct20),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.*/rule/rule.+`)),
 				),
 			},
@@ -78,7 +78,7 @@ func TestAccVPCLatticeListenerRule_fixedResponse(t *testing.T) {
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.status_code", "404"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.status_code", acctest.Ct404),
 				),
 			},
 			{
@@ -107,7 +107,7 @@ func TestAccVPCLatticeListenerRule_methodMatch(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "40"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct40),
 				),
 			},
 			{
