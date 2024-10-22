@@ -404,7 +404,7 @@ func TestAccNeptuneCluster_backupsUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "07:00-09:00"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "5"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:00-tue:04:30"),
 				),
 			},
@@ -639,7 +639,7 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 				Config: testAccClusterConfig_restoreFromSnapshot(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "5"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyARN, keyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "neptune_cluster_parameter_group_name", parameterGroupResourceName, names.AttrID),
