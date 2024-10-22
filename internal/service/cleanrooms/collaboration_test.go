@@ -261,7 +261,7 @@ func TestAccCleanRoomsCollaboration_updateMemberAbilities(t *testing.T) {
 				Config: testAccCollaborationConfig_additionalMember(TEST_NAME, TEST_DESCRIPTION, TEST_TAG),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCollaborationExists(ctx, resourceName, &collaboration),
-					resource.TestCheckResourceAttr(resourceName, "member.0.account_id", "123456789012"),
+					resource.TestCheckResourceAttr(resourceName, "member.0.account_id", acctest.Ct12Digit),
 					resource.TestCheckResourceAttr(resourceName, "member.0.display_name", "OtherMember"),
 					resource.TestCheckResourceAttr(resourceName, "member.0.status", "INVITED"),
 					resource.TestCheckResourceAttr(resourceName, "member.0.member_abilities.#", acctest.Ct0),
