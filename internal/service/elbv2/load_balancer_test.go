@@ -95,6 +95,7 @@ func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_tls_version_and_cipher_suite_headers", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_xff_client_port", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "30"),
 					resource.TestCheckResourceAttr(resourceName, "internal", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
@@ -136,6 +137,7 @@ func TestAccELBV2LoadBalancer_NLB_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDNSName),
 					resource.TestCheckResourceAttr(resourceName, "dns_record_client_routing_policy", "any_availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "internal", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer_type", "network"),
@@ -597,6 +599,48 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) 
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerAttribute(ctx, resourceName, "load_balancing.cross_zone.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_cross_zone_load_balancing", acctest.CtTrue),
+					testAccCheckLoadBalancerNotRecreated(&mid, &post),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateZonalShift(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pre, mid, post awstypes.LoadBalancer
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLoadBalancerConfig_nlbZonalShift(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "zonal_shift.config.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbZonalShift(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &mid),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "zonal_shift.config.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtFalse),
+					testAccCheckLoadBalancerNotRecreated(&pre, &mid),
+				),
+			},
+			{
+				Config: testAccLoadBalancerConfig_nlbZonalShift(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, "zonal_shift.config.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtTrue),
 					testAccCheckLoadBalancerNotRecreated(&mid, &post),
 				),
 			},
@@ -1778,7 +1822,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnetMapping(t *testing.T)
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, 2),
+				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, false, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", acctest.Ct2),
@@ -1786,7 +1830,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnetMapping(t *testing.T)
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, 3),
+				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, false, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerNotRecreated(&pre, &post),
@@ -1815,7 +1859,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, 3),
+				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, false, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", acctest.Ct3),
@@ -1823,7 +1867,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, 2),
+				Config: testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, false, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerRecreated(&pre, &post),
@@ -2547,14 +2591,18 @@ resource "aws_lb" "test" {
 }
 
 func testAccLoadBalancerConfig_nlbBasic(rName string) string {
-	return testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, 1)
+	return testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, false, false, 1)
 }
 
 func testAccLoadBalancerConfig_nlbCrossZone(rName string, cz bool) string {
-	return testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, cz, 1)
+	return testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, cz, false, 1)
 }
 
-func testAccLoadBalancerConfig_nlbSubnetMappingCount(rName string, cz bool, subnetCount int) string {
+func testAccLoadBalancerConfig_nlbZonalShift(rName string, zs bool) string {
+	return testAccLoadBalancerConfig_nlbSubnetMappingCount(rName, true, zs, 1)
+}
+
+func testAccLoadBalancerConfig_nlbSubnetMappingCount(rName string, cz, zs bool, subnetCount int) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, subnetCount), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name               = %[1]q
@@ -2563,6 +2611,7 @@ resource "aws_lb" "test" {
 
   enable_deletion_protection       = false
   enable_cross_zone_load_balancing = %[2]t
+  enable_zonal_shift               = %[3]t
 
   dynamic "subnet_mapping" {
     for_each = aws_subnet.test[*]
@@ -2575,7 +2624,7 @@ resource "aws_lb" "test" {
     Name = %[1]q
   }
 }
-`, rName, cz))
+`, rName, cz, zs))
 }
 
 func testAccLoadBalancerConfig_typeGateway(rName string) string {
