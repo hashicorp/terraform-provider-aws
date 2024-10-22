@@ -49,7 +49,7 @@ func TestAccRoute53KeySigningKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPublicKey, regexache.MustCompile(`^[0-9A-Za-z+/]+={0,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "signing_algorithm_mnemonic", "ECDSAP256SHA256"),
-					resource.TestCheckResourceAttr(resourceName, "signing_algorithm_type", "13"),
+					resource.TestCheckResourceAttr(resourceName, "signing_algorithm_type", acctest.Ct13),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, tfroute53.KeySigningKeyStatusActive),
 				),
 			},
