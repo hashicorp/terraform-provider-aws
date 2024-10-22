@@ -54,7 +54,7 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "drain_elb_on_shutdown", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "ebs_volume.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "elastic_load_balancer", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", "120"),
+					resource.TestCheckResourceAttr(resourceName, "instance_shutdown_timeout", acctest.Ct120),
 					resource.TestCheckResourceAttr(resourceName, "install_updates_on_boot", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "manage_bundler", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Rails App Server"),
