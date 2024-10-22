@@ -35,7 +35,7 @@ func TestAccELBSSLNegotiationPolicy_basic(t *testing.T) {
 				Config: testAccLBSSLNegotiationPolicyConfig_basic(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", acctest.Ct7),
 				),
 			},
 		},
@@ -59,14 +59,14 @@ func TestAccELBSSLNegotiationPolicy_update(t *testing.T) {
 				Config: testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", acctest.Ct7),
 				),
 			},
 			{
 				Config: testAccLBSSLNegotiationPolicyConfig_update(rName, key, certificate, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "attribute.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "attribute.#", acctest.Ct7),
 				),
 			},
 			{
