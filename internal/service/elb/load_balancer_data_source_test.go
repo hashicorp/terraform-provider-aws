@@ -29,7 +29,7 @@ func TestAccELBLoadBalancerDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(dataSourceName, "cross_zone_load_balancing", acctest.CtTrue),
-					resource.TestCheckResourceAttr(dataSourceName, "idle_timeout", "30"),
+					resource.TestCheckResourceAttr(dataSourceName, "idle_timeout", acctest.Ct30),
 					resource.TestCheckResourceAttr(dataSourceName, "internal", acctest.CtTrue),
 					resource.TestCheckResourceAttr(dataSourceName, "subnets.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(dataSourceName, "security_groups.#", acctest.Ct1),
