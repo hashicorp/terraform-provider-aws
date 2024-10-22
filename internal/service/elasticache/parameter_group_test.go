@@ -310,13 +310,13 @@ func TestAccElastiCacheParameterGroup_switchReservedMemoryParameter(t *testing.T
 				),
 			},
 			{
-				Config: testAccParameterGroupConfig_1(rName, "redis3.2", "reserved-memory-percent", "25"),
+				Config: testAccParameterGroupConfig_1(rName, "redis3.2", "reserved-memory-percent", acctest.Ct25),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &cacheParameterGroup1),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "reserved-memory-percent",
-						names.AttrValue: "25",
+						names.AttrValue: acctest.Ct25,
 					}),
 				),
 			},
