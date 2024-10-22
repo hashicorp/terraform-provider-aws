@@ -52,7 +52,7 @@ func TestAccDSRadiusSettings_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "radius_retries", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, "radius_servers.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "radius_servers.*", radiusServer),
-					resource.TestCheckResourceAttr(resourceName, "radius_timeout", "30"),
+					resource.TestCheckResourceAttr(resourceName, "radius_timeout", acctest.Ct30),
 					resource.TestCheckResourceAttrSet(resourceName, "shared_secret"),
 				),
 			},
