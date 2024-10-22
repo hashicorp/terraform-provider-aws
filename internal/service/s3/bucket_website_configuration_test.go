@@ -177,7 +177,7 @@ func TestAccS3BucketWebsiteConfiguration_RoutingRule_ConditionAndRedirect(t *tes
 					resource.TestCheckResourceAttr(resourceName, "routing_rule.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "routing_rule.*", map[string]string{
 						"condition.#": acctest.Ct1,
-						"condition.0.http_error_code_returned_equals": "404",
+						"condition.0.http_error_code_returned_equals": acctest.Ct404,
 						"redirect.#":                         acctest.Ct1,
 						"redirect.0.replace_key_prefix_with": "report-404",
 					}),
