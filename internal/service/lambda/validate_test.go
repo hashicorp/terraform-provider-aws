@@ -1,12 +1,14 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package lambda
+package lambda_test
 
 import (
 	"strings"
 	"testing"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -21,7 +23,7 @@ func TestValidFunctionName(t *testing.T) {
 		"function-name",
 	}
 	for _, v := range validNames {
-		_, errors := validFunctionName()(v, names.AttrName)
+		_, errors := tflambda.ValidFunctionName()(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Lambda function name: %q", v, errors)
 		}
@@ -36,7 +38,7 @@ func TestValidFunctionName(t *testing.T) {
 			"ooooooooooooooooongFunctionName",
 	}
 	for _, v := range invalidNames {
-		_, errors := validFunctionName()(v, names.AttrName)
+		_, errors := tflambda.ValidFunctionName()(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Lambda function name", v)
 		}
@@ -52,7 +54,7 @@ func TestValidPermissionAction(t *testing.T) {
 		"*",
 	}
 	for _, v := range validNames {
-		_, errors := validPermissionAction()(v, names.AttrAction)
+		_, errors := tflambda.ValidPermissionAction()(v, names.AttrAction)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Lambda permission action: %q", v, errors)
 		}
@@ -65,7 +67,7 @@ func TestValidPermissionAction(t *testing.T) {
 		"lambda:Invoke*",
 	}
 	for _, v := range invalidNames {
-		_, errors := validPermissionAction()(v, names.AttrAction)
+		_, errors := tflambda.ValidPermissionAction()(v, names.AttrAction)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Lambda permission action", v)
 		}
@@ -81,7 +83,7 @@ func TestValidPermissionEventSourceToken(t *testing.T) {
 		strings.Repeat(".", 256),
 	}
 	for _, v := range validTokens {
-		_, errors := validPermissionEventSourceToken()(v, "event_source_token")
+		_, errors := tflambda.ValidPermissionEventSourceToken()(v, "event_source_token")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Lambda permission event source token", v)
 		}
@@ -93,7 +95,7 @@ func TestValidPermissionEventSourceToken(t *testing.T) {
 		strings.Repeat(".", 257),
 	}
 	for _, v := range invalidTokens {
-		_, errors := validPermissionEventSourceToken()(v, "event_source_token")
+		_, errors := tflambda.ValidPermissionEventSourceToken()(v, "event_source_token")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Lambda permission event source token", v)
 		}
@@ -104,7 +106,7 @@ func TestValidQualifier(t *testing.T) {
 	t.Parallel()
 
 	validNames := []string{
-		"123",
+		acctest.Ct123,
 		"prod",
 		"PROD",
 		"MyTestEnv",
@@ -113,7 +115,7 @@ func TestValidQualifier(t *testing.T) {
 		"$LATEST",
 	}
 	for _, v := range validNames {
-		_, errors := validQualifier()(v, names.AttrName)
+		_, errors := tflambda.ValidQualifier()(v, names.AttrName)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Lambda function qualifier: %q", v, errors)
 		}
@@ -128,7 +130,7 @@ func TestValidQualifier(t *testing.T) {
 			"oooooooooooongQualifier",
 	}
 	for _, v := range invalidNames {
-		_, errors := validQualifier()(v, names.AttrName)
+		_, errors := tflambda.ValidQualifier()(v, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Lambda function qualifier", v)
 		}
@@ -141,10 +143,10 @@ func TestValidPolicyStatementID(t *testing.T) {
 	validNames := []string{
 		"YadaHereAndThere",
 		"Valid-5tatement_Id",
-		"1234",
+		acctest.Ct1234,
 	}
 	for _, v := range validNames {
-		_, errors := validPolicyStatementID()(v, "statement_id")
+		_, errors := tflambda.ValidPolicyStatementID()(v, "statement_id")
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid Statement ID: %q", v, errors)
 		}
@@ -158,7 +160,7 @@ func TestValidPolicyStatementID(t *testing.T) {
 			"ooooooooooooooooooooooooooooooooooooooooStatementId",
 	}
 	for _, v := range invalidNames {
-		_, errors := validPolicyStatementID()(v, "statement_id")
+		_, errors := tflambda.ValidPolicyStatementID()(v, "statement_id")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid Statement ID", v)
 		}
