@@ -424,7 +424,7 @@ func TestAccSchedulerSchedule_flexibleTimeWindow(t *testing.T) {
 				Config: testAccScheduleConfig_flexibleTimeWindow(name, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", "20"),
+					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", acctest.Ct20),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.mode", "FLEXIBLE"),
 				),
 			},
@@ -1007,12 +1007,12 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
 						"base":              acctest.Ct2,
 						"capacity_provider": "test1",
-						names.AttrWeight:    "50",
+						names.AttrWeight:    acctest.Ct50,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
 						"base":              acctest.Ct0,
 						"capacity_provider": "test2",
-						names.AttrWeight:    "50",
+						names.AttrWeight:    acctest.Ct50,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", acctest.CtFalse),
@@ -1054,7 +1054,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target.0.ecs_parameters.0.capacity_provider_strategy.*", map[string]string{
 						"base":              acctest.Ct3,
 						"capacity_provider": "test3",
-						names.AttrWeight:    "100",
+						names.AttrWeight:    acctest.Ct100,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_ecs_managed_tags", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "target.0.ecs_parameters.0.enable_execute_command", acctest.CtTrue),
@@ -1342,7 +1342,7 @@ func TestAccSchedulerSchedule_targetRetryPolicy(t *testing.T) {
 				Config: testAccScheduleConfig_targetRetryPolicy(name, 60, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_event_age_in_seconds", "60"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_event_age_in_seconds", acctest.Ct60),
 					resource.TestCheckResourceAttr(resourceName, "target.0.retry_policy.0.maximum_retry_attempts", acctest.Ct1),
 				),
 			},
