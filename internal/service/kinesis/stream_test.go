@@ -321,7 +321,7 @@ func TestAccKinesisStream_shardLevelMetrics(t *testing.T) {
 				Config: testAccStreamConfig_allShardLevelMetrics(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamExists(ctx, resourceName, &stream),
-					resource.TestCheckResourceAttr(resourceName, "shard_level_metrics.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "shard_level_metrics.#", acctest.Ct7),
 					resource.TestCheckTypeSetElemAttr(resourceName, "shard_level_metrics.*", "IncomingBytes"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "shard_level_metrics.*", "IncomingRecords"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "shard_level_metrics.*", "OutgoingBytes"),
