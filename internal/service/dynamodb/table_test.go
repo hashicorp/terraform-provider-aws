@@ -556,8 +556,8 @@ func TestAccDynamoDBTable_extended(t *testing.T) {
 						names.AttrName:         "ReplacementTestTableGSI",
 						"hash_key":             "TestTableHashKey",
 						"range_key":            "ReplacementGSIRangeKey",
-						"write_capacity":       "5",
-						"read_capacity":        "5",
+						"write_capacity":       acctest.Ct5,
+						"read_capacity":        acctest.Ct5,
 						"projection_type":      "INCLUDE",
 						"non_key_attributes.#": acctest.Ct1,
 					}),
@@ -640,8 +640,8 @@ func TestAccDynamoDBTable_BillingMode_payPerRequestToProvisioned(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "5"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "5"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.Ct5),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.Ct5),
 				),
 			},
 		},
@@ -708,8 +708,8 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequest(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "5"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "5"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.Ct5),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.Ct5),
 				),
 			},
 			{
@@ -751,8 +751,8 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequestIgnoreChanges(t 
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModeProvisioned)),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "5"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "5"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.Ct5),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.Ct5),
 				),
 			},
 			{
@@ -903,8 +903,8 @@ func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", "5"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", "5"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", acctest.Ct5),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", acctest.Ct5),
 				),
 			},
 			{
@@ -938,8 +938,8 @@ func TestAccDynamoDBTable_onDemandThroughput(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", "5"),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_read_request_units", acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_throughput.0.max_write_request_units", acctest.Ct5),
 				),
 			},
 		},
@@ -964,8 +964,8 @@ func TestAccDynamoDBTable_gsiOnDemandThroughput(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", string(awstypes.BillingModePayPerRequest)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
-						"on_demand_throughput.0.max_read_request_units":  "5",
-						"on_demand_throughput.0.max_write_request_units": "5",
+						"on_demand_throughput.0.max_read_request_units":  acctest.Ct5,
+						"on_demand_throughput.0.max_write_request_units": acctest.Ct5,
 					}),
 				),
 			},
@@ -2723,8 +2723,8 @@ func TestAccDynamoDBTable_tableClass_ConcurrentModification(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, "table_class", "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, "read_capacity", "5"),
-					resource.TestCheckResourceAttr(resourceName, "write_capacity", "5"),
+					resource.TestCheckResourceAttr(resourceName, "read_capacity", acctest.Ct5),
+					resource.TestCheckResourceAttr(resourceName, "write_capacity", acctest.Ct5),
 				),
 			},
 			{
