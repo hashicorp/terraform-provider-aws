@@ -71,7 +71,7 @@ func TestAccIVSRecordingConfiguration_update(t *testing.T) {
 	resourceName := "aws_ivs_recording_configuration.test"
 	recordingReconnectWindowSeconds := "45"
 	recordingMode := "INTERVAL"
-	targetIntervalSeconds := "30"
+	targetIntervalSeconds := acctest.Ct30
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
