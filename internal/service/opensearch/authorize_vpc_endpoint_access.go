@@ -109,7 +109,7 @@ func (r *resourceAuthorizeVpcEndpointAccess) Create(ctx context.Context, req res
 		Account:    aws.String(plan.Account.ValueString()),
 		DomainName: aws.String(plan.DomainName.ValueString()),
 	}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, &plan, in, fwflex.WithFieldNamePrefix("AuthorizeVpcEndpointAccess"))...)
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -117,31 +117,21 @@ func (r *resourceAuthorizeVpcEndpointAccess) Create(ctx context.Context, req res
 	out, err := conn.AuthorizeVpcEndpointAccess(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearch, create.ErrActionCreating, ResNameAuthorizeVpcEndpointAccess, plan.Name.String(), err),
+			create.ProblemStandardMessage(names.OpenSearch, create.ErrActionCreating, ResNameAuthorizeVpcEndpointAccess, plan.DomainName.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	if out == nil || out.AuthorizeVpcEndpointAccess == nil {
+	if out == nil || out.AuthorizedPrincipal == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearch, create.ErrActionCreating, ResNameAuthorizeVpcEndpointAccess, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.OpenSearch, create.ErrActionCreating, ResNameAuthorizeVpcEndpointAccess, plan.DomainName.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	// TIP: -- 5. Using the output from the create function, set the minimum attributes
-	plan.ARN = flex.StringToFramework(ctx, out.AuthorizeVpcEndpointAccess.Arn)
-	plan.ID = flex.StringToFramework(ctx, out.AuthorizeVpcEndpointAccess.AuthorizeVpcEndpointAccessId)
-
-	// TIP: -- 6. Use a waiter to wait for create to complete
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitAuthorizeVpcEndpointAccessCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearch, create.ErrActionWaitingForCreation, ResNameAuthorizeVpcEndpointAccess, plan.Name.String(), err),
-			err.Error(),
-		)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
