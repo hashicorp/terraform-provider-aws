@@ -995,6 +995,54 @@ func TestAccLambdaFunction_image(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunction_imageNullImageConfig(t *testing.T) {
+	key := "AWS_LAMBDA_IMAGE_LATEST_ID"
+	imageLatestID := os.Getenv(key)
+	if imageLatestID == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_nullImageConfig(rName, imageLatestID),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "package_type", lambda.PackageTypeImage),
+					// image_config should be set to an empty list
+					resource.TestCheckResourceAttr(resourceName, "image_config.#", "0"),
+				),
+			},
+			{
+				// Test that there are no planned changes when re-planning the same config with an empty `image_config` block
+				Config:             testAccFunctionConfig_nullImageConfig(rName, imageLatestID),
+				ResourceName:       resourceName,
+				ExpectNonEmptyPlan: false,
+				PlanOnly:           true,
+			},
+			{
+				// Make sure that we don't erroneously suppress a valid diff
+				Config:       testAccFunctionConfig_image(rName, imageLatestID),
+				ResourceName: resourceName,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.entry_point.0", "/bootstrap-with-handler"),
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.command.0", "app.lambda_handler"),
+					resource.TestCheckResourceAttr(resourceName, "image_config.0.working_directory", "/var/task"),
+				),
+			},
+		},
+	},
+	)
+}
+
 func TestAccLambdaFunction_architectures(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3690,6 +3738,24 @@ resource "aws_lambda_function" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFunctionConfig_nullImageConfig(rName, imageID string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+	image_uri     = %[1]q
+	function_name = %[2]q
+	role          = aws_iam_role.iam_for_lambda.arn
+	package_type  = "Image"
+	image_config {
+	  entry_point       = null
+	  command           = null
+	  working_directory = null
+	}
+}
+`, imageID, rName))
 }
 
 func testAccFunctionConfig_s3Simple(rName string) string {
