@@ -37,7 +37,7 @@ func TestAccIoTRoleAlias_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleAliasExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", fmt.Sprintf("rolealias/%s", alias)),
-					resource.TestCheckResourceAttr(resourceName, "credential_duration", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "credential_duration", acctest.Ct3600),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
 				),
