@@ -239,7 +239,7 @@ func TestAccFISExperimentTemplate_eks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.name", "k8s-pod-delete"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.description", "k8s pod delete"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:eks:inject-kubernetes-custom-resource"),
-					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.key", "kubernetesApiVersion"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.value", "litmuschaos.io/v1alpha1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.1.key", "kubernetesKind"),
