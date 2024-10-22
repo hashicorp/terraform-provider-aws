@@ -300,20 +300,20 @@ func TestAccSNSTopic_deliveryStatus(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicExists(ctx, resourceName, &attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "application_success_feedback_role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_sample_rate", "100"),
+					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_sample_rate", acctest.Ct100),
 					resource.TestCheckResourceAttrPair(resourceName, "application_failure_feedback_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_success_feedback_role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", "90"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", acctest.Ct90),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_failure_feedback_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "http_success_feedback_role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_sample_rate", "80"),
+					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_sample_rate", acctest.Ct80),
 					resource.TestCheckResourceAttrPair(resourceName, "http_failure_feedback_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "sqs_success_feedback_role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", "70"),
+					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", acctest.Ct70),
 					resource.TestCheckResourceAttrPair(resourceName, "sqs_failure_feedback_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "firehose_failure_feedback_role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "firehose_success_feedback_role_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_sample_rate", "60"),
+					resource.TestCheckResourceAttr(resourceName, "firehose_success_feedback_sample_rate", acctest.Ct60),
 					resource.TestCheckResourceAttr(resourceName, "tracing_config", "Active"),
 				),
 			},
@@ -878,7 +878,7 @@ resource "aws_sns_topic" "test" {
       "Sid": "Stmt1445931846145",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:${data.aws_partition.current.partition}:iam::012345678901:role/wooo"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::123456789012:role/wooo"
       },
       "Action": "sns:Publish",
       "Resource": "arn:${data.aws_partition.current.partition}:sns:${data.aws_region.current.name}::example"
