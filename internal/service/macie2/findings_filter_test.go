@@ -299,8 +299,8 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 	dataSourceRegion := "data.aws_region.current"
 	description := "this is a description"
 	descriptionUpdated := "this is a description updated"
-	firstNumber := "12"
-	secondNumber := "13"
+	firstNumber := acctest.Ct12
+	secondNumber := acctest.Ct13
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
