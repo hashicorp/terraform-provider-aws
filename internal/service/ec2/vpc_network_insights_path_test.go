@@ -236,7 +236,7 @@ func TestAccVPCNetworkInsightsPath_destinationPort(t *testing.T) {
 				Config: testAccVPCNetworkInsightsPathConfig_destinationPort(rName, 80),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "destination_port", acctest.Ct80),
 				),
 			},
 			{
@@ -248,7 +248,7 @@ func TestAccVPCNetworkInsightsPath_destinationPort(t *testing.T) {
 				Config: testAccVPCNetworkInsightsPathConfig_destinationPort(rName, 443),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsPathExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "destination_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "destination_port", acctest.Ct443),
 				),
 			},
 		},
