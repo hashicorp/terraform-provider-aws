@@ -50,7 +50,7 @@ func testAccMultiplex_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000000"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_reserved_bitrate", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.maximum_video_buffer_delay_milliseconds", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.maximum_video_buffer_delay_milliseconds", acctest.Ct1000),
 				),
 			},
 			{
@@ -132,7 +132,7 @@ func testAccMultiplex_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000000"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_reserved_bitrate", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.maximum_video_buffer_delay_milliseconds", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.maximum_video_buffer_delay_milliseconds", acctest.Ct1000),
 				),
 			},
 			{
@@ -144,7 +144,7 @@ func testAccMultiplex_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_bitrate", "1000001"),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_reserved_bitrate", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.transport_stream_id", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.maximum_video_buffer_delay_milliseconds", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "multiplex_settings.0.maximum_video_buffer_delay_milliseconds", acctest.Ct1000),
 				),
 			},
 		},
