@@ -48,7 +48,7 @@ func TestAccRedshiftSnapshotCopy_basic(t *testing.T) {
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "7"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, acctest.Ct7),
 				),
 			},
 			{
@@ -163,7 +163,7 @@ func TestAccRedshiftSnapshotCopy_retentionPeriod(t *testing.T) {
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &snap),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "20"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, acctest.Ct20),
 				),
 			},
 		},
