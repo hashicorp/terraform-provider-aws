@@ -92,7 +92,7 @@ func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 				Config: testAccReplicationTaskConfig_updateSettingsAndMappings(rName, 1024, "ZedsDead"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", "1024"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", acctest.Ct1024),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", `rules[0]."rule-name"`, "ZedsDead"),
 				),
@@ -107,7 +107,7 @@ func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 				Config: testAccReplicationTaskConfig_updateSettingsAndMappings(rName, 1024, "EMBRZ"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", "1024"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", acctest.Ct1024),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", `rules[0]."rule-name"`, "EMBRZ"),
 				),
@@ -137,7 +137,7 @@ func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 				Config: testAccReplicationTaskConfig_updateSettingsAndMappings(rName, 1024, "ZedsDead"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", "1024"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", acctest.Ct1024),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", `rules[0]."rule-name"`, "ZedsDead"),
 				),
@@ -167,7 +167,7 @@ func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 				Config: testAccReplicationTaskConfig_updateSettingsAndMappings(rName, 1024, "EMBRZ"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", "1024"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "ChangeProcessingTuning.MemoryLimitTotal", acctest.Ct1024),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
 					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", `rules[0]."rule-name"`, "EMBRZ"),
 				),
@@ -368,8 +368,8 @@ func TestAccDMSReplicationTask_settings_StreamBuffer(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "StreamBufferSettings.StreamBufferCount", acctest.Ct4),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "StreamBufferSettings.StreamBufferSizeInMB", "16"),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "StreamBufferSettings.CtrlStreamBufferSizeInMB", "5"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "StreamBufferSettings.StreamBufferSizeInMB", acctest.Ct16),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "StreamBufferSettings.CtrlStreamBufferSizeInMB", acctest.Ct5),
 				),
 			},
 			{
