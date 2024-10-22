@@ -45,7 +45,7 @@ func TestAccLexV2ModelsBot_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotExists(ctx, resourceName, &bot),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "idle_session_ttl_in_seconds", "60"),
+					resource.TestCheckResourceAttr(resourceName, "idle_session_ttl_in_seconds", acctest.Ct60),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "data_privacy.0.child_directed"),
 				),
