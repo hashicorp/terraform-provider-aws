@@ -130,7 +130,7 @@ func TestAccS3ObjectsDataSource_maxKeysSmall(t *testing.T) {
 				Config: testAccObjectsDataSourceConfig_maxKeysSmall(rName, 2, 5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "common_prefixes.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(dataSourceName, "keys.#", "5"),
+					resource.TestCheckResourceAttr(dataSourceName, "keys.#", acctest.Ct5),
 					resource.TestCheckResourceAttr(dataSourceName, "owners.#", acctest.Ct0),
 				),
 			},
