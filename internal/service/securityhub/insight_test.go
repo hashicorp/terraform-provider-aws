@@ -102,7 +102,7 @@ func testAccInsight_DateFilters(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filters.0.created_at.*", map[string]string{
 						"date_range.#":       acctest.Ct1,
 						"date_range.0.unit":  string(types.DateRangeUnitDays),
-						"date_range.0.value": "5",
+						"date_range.0.value": acctest.Ct5,
 					}),
 				),
 			},
