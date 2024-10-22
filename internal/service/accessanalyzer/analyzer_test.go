@@ -129,7 +129,7 @@ func testAccAnalyzer_configuration(t *testing.T) {
 					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.unused_access_age", "180"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.unused_access_age", acctest.Ct180),
 				),
 			},
 			{
