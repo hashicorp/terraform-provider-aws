@@ -45,7 +45,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 				Config: testAccRegionSettingsConfig_1(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegionSettingsExists(ctx, &settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "16"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", acctest.Ct16),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", acctest.CtTrue),
@@ -72,7 +72,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 				Config: testAccRegionSettingsConfig_2(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegionSettingsExists(ctx, &settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "16"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", acctest.Ct16),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", acctest.CtTrue),
@@ -94,7 +94,7 @@ func testAccRegionSettings_basic(t *testing.T) {
 				Config: testAccRegionSettingsConfig_3(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRegionSettingsExists(ctx, &settings),
-					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", "16"),
+					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.%", acctest.Ct16),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.Aurora", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DocumentDB", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "resource_type_opt_in_preference.DynamoDB", acctest.CtTrue),
