@@ -86,10 +86,10 @@ func testAccCustomLogSource_sourceVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomLogSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLogSourceConfig_sourceVersion(rName, "1.5"),
+				Config: testAccCustomLogSourceConfig_sourceVersion(rName, acctest.Ct1Point5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
-					resource.TestCheckResourceAttr(resourceName, "source_version", "1.5"),
+					resource.TestCheckResourceAttr(resourceName, "source_version", acctest.Ct1Point5),
 				),
 			},
 			{
@@ -99,10 +99,10 @@ func testAccCustomLogSource_sourceVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrConfiguration},
 			},
 			{
-				Config: testAccCustomLogSourceConfig_sourceVersion(rName, "2.5"),
+				Config: testAccCustomLogSourceConfig_sourceVersion(rName, acctest.Ct2Point5),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
-					resource.TestCheckResourceAttr(resourceName, "source_version", "2.5"),
+					resource.TestCheckResourceAttr(resourceName, "source_version", acctest.Ct2Point5),
 				),
 			},
 			{
