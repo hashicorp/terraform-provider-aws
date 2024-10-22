@@ -43,7 +43,7 @@ func TestAccElasticsearchDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", "1.5"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_version", acctest.Ct1Point5),
 					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*es\..*/_plugin/kibana/`)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -236,7 +236,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "6"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", acctest.Ct6),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.elasticsearch"),
 				),
 			},
@@ -251,7 +251,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "7"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", acctest.Ct7),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.elasticsearch"),
 				),
 			},
@@ -260,7 +260,7 @@ func TestAccElasticsearchDomain_warm(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "7"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", acctest.Ct7),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.large.elasticsearch"),
 				),
 			},
@@ -392,7 +392,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(
-						resourceName, "elasticsearch_version", "1.5"),
+						resourceName, "elasticsearch_version", acctest.Ct1Point5),
 				),
 				ExpectError: regexache.MustCompile(`Elasticsearch Domain .+ already exists`),
 			},
