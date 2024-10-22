@@ -43,7 +43,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tiering.0.access_tier", "DEEP_ARCHIVE_ACCESS"),
-					resource.TestCheckResourceAttr(resourceName, "tiering.0.days", "180"),
+					resource.TestCheckResourceAttr(resourceName, "tiering.0.days", acctest.Ct180),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
 						"access_tier": "DEEP_ARCHIVE_ACCESS",
-						"days":        "180",
+						"days":        acctest.Ct180,
 					}),
 				),
 			},
@@ -128,7 +128,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
 						"access_tier": "ARCHIVE_ACCESS",
-						"days":        "90",
+						"days":        acctest.Ct90,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
 						"access_tier": "DEEP_ARCHIVE_ACCESS",
@@ -169,7 +169,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
 						"access_tier": "ARCHIVE_ACCESS",
-						"days":        "365",
+						"days":        acctest.Ct365,
 					}),
 				),
 			},
@@ -188,7 +188,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
 						"access_tier": "DEEP_ARCHIVE_ACCESS",
-						"days":        "365",
+						"days":        acctest.Ct365,
 					}),
 				),
 			},
