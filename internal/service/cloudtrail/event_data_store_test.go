@@ -214,7 +214,7 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 					testAccCheckEventDataStoreExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "365"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, acctest.Ct365),
 					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", acctest.CtTrue),
 				),
 			},
@@ -229,7 +229,7 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 					testAccCheckEventDataStoreExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "90"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, acctest.Ct90),
 					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", acctest.CtFalse),
 				),
 			},
@@ -251,7 +251,7 @@ func TestAccCloudTrailEventDataStore_advancedEventSelector(t *testing.T) {
 			{
 				Config: testAccEventDataStoreConfig_advancedSelector(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.#", acctest.Ct5),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.name", "s3Custom"),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.field_selector.#", acctest.Ct4),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "advanced_event_selector.0.field_selector.*", map[string]string{
