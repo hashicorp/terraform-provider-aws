@@ -372,7 +372,7 @@ func TestAccElastiCacheCluster_snapshotsWithUpdates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, "aws_elasticache_cluster.test", &ec),
 					resource.TestCheckResourceAttr("aws_elasticache_cluster.test", "snapshot_window", "07:00-09:00"),
-					resource.TestCheckResourceAttr("aws_elasticache_cluster.test", "snapshot_retention_limit", "7"),
+					resource.TestCheckResourceAttr("aws_elasticache_cluster.test", "snapshot_retention_limit", acctest.Ct7),
 				),
 			},
 		},
