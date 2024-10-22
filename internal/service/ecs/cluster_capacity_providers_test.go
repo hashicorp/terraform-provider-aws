@@ -38,7 +38,7 @@ func TestAccECSClusterCapacityProviders_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              acctest.Ct1,
-						names.AttrWeight:    "100",
+						names.AttrWeight:    acctest.Ct100,
 						"capacity_provider": "FARGATE",
 					}),
 				),
@@ -230,7 +230,7 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              acctest.Ct1,
-						names.AttrWeight:    "100",
+						names.AttrWeight:    acctest.Ct100,
 						"capacity_provider": "FARGATE",
 					}),
 				),
@@ -247,12 +247,12 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              acctest.Ct1,
-						names.AttrWeight:    "50",
+						names.AttrWeight:    acctest.Ct50,
 						"capacity_provider": "FARGATE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              "",
-						names.AttrWeight:    "50",
+						names.AttrWeight:    acctest.Ct50,
 						"capacity_provider": "FARGATE_SPOT",
 					}),
 				),
@@ -269,12 +269,12 @@ func TestAccECSClusterCapacityProviders_Update_defaultStrategy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              acctest.Ct2,
-						names.AttrWeight:    "25",
+						names.AttrWeight:    acctest.Ct25,
 						"capacity_provider": "FARGATE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "default_capacity_provider_strategy.*", map[string]string{
 						"base":              "",
-						names.AttrWeight:    "75",
+						names.AttrWeight:    acctest.Ct75,
 						"capacity_provider": "FARGATE_SPOT",
 					}),
 				),
