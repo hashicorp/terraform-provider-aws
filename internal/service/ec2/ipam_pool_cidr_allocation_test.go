@@ -120,7 +120,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4BasicNetmask(t *testing.T) {
 	var allocationV1, allocationV2 awstypes.IpamPoolAllocation
 	resourceName := "aws_vpc_ipam_pool_cidr_allocation.test"
 	originalNetmask := "28"
-	updatedNetmask := "25"
+	updatedNetmask := acctest.Ct25
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
