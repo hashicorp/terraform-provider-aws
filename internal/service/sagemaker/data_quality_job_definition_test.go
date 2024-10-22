@@ -52,12 +52,12 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.instance_count", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.instance_type", "ml.t3.medium"),
-					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.volume_size_in_gb", "20"),
+					resource.TestCheckResourceAttr(resourceName, "job_resources.0.cluster_config.0.volume_size_in_gb", acctest.Ct20),
 					resource.TestCheckResourceAttr(resourceName, "data_quality_baseline_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "network_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", acctest.Ct3600),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
@@ -422,7 +422,7 @@ func TestAccSageMakerDataQualityJobDefinition_stoppingCondition(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataQualityJobDefinitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "600"),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", acctest.Ct600),
 				),
 			},
 			{
