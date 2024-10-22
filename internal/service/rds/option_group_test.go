@@ -593,7 +593,7 @@ func TestAccRDSOptionGroup_badDiffs(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "option.*", map[string]string{
 						"option_name":     "S3_INTEGRATION",
-						names.AttrVersion: "1.0",
+						names.AttrVersion: acctest.Ct1Point0,
 					}),
 				),
 			},
