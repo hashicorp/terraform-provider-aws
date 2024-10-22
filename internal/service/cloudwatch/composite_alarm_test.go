@@ -363,7 +363,7 @@ func TestAccCloudWatchCompositeAlarm_actionsSuppressor(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.0.alarm", fmt.Sprintf("%[1]s-0", rName)),
 					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.0.extension_period", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.0.wait_period", "20"),
+					resource.TestCheckResourceAttr(resourceName, "actions_suppressor.0.wait_period", acctest.Ct20),
 				),
 			},
 			{
