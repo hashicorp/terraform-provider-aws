@@ -284,7 +284,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 	var result apiCallParams
 
 	_, err := client.ListAssociatedFleets(ctx, &appstream.ListAssociatedFleetsInput{
-		StackName: aws_sdkv2.String("test"),
+		StackName: aws.String("test"),
 	},
 		func(opts *appstream.Options) {
 			opts.APIOptions = append(opts.APIOptions,

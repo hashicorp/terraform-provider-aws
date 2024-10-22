@@ -284,7 +284,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 	var result apiCallParams
 
 	_, err := client.ListAppsLists(ctx, &fms.ListAppsListsInput{
-		MaxResults: aws_sdkv2.Int32(1),
+		MaxResults: aws.Int32(1),
 	},
 		func(opts *fms.Options) {
 			opts.APIOptions = append(opts.APIOptions,

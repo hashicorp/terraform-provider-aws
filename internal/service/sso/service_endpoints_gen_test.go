@@ -284,7 +284,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 	var result apiCallParams
 
 	_, err := client.ListAccounts(ctx, &sso.ListAccountsInput{
-		AccessToken: aws_sdkv2.String("mock-access-token"),
+		AccessToken: aws.String("mock-access-token"),
 	},
 		func(opts *sso.Options) {
 			opts.APIOptions = append(opts.APIOptions,

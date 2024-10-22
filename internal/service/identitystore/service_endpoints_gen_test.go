@@ -284,7 +284,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 	var result apiCallParams
 
 	_, err := client.ListUsers(ctx, &identitystore.ListUsersInput{
-		IdentityStoreId: aws_sdkv2.String("d-1234567890"),
+		IdentityStoreId: aws.String("d-1234567890"),
 	},
 		func(opts *identitystore.Options) {
 			opts.APIOptions = append(opts.APIOptions,

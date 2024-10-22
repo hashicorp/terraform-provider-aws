@@ -284,7 +284,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 	var result apiCallParams
 
 	_, err := client.ListDashboards(ctx, &quicksight.ListDashboardsInput{
-		AwsAccountId: aws_sdkv2.String("123456789012"),
+		AwsAccountId: aws.String("123456789012"),
 	},
 		func(opts *quicksight.Options) {
 			opts.APIOptions = append(opts.APIOptions,

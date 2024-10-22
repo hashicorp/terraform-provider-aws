@@ -284,7 +284,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 	var result apiCallParams
 
 	_, err := client.DescribeBudgets(ctx, &budgets.DescribeBudgetsInput{
-		AccountId: aws_sdkv2.String("012345678901"),
+		AccountId: aws.String("012345678901"),
 	},
 		func(opts *budgets.Options) {
 			opts.APIOptions = append(opts.APIOptions,

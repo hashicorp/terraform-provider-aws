@@ -284,7 +284,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 	var result apiCallParams
 
 	_, err := client.ListStackInstances(ctx, &cloudformation.ListStackInstancesInput{
-		StackSetName: aws_sdkv2.String("test"),
+		StackSetName: aws.String("test"),
 	},
 		func(opts *cloudformation.Options) {
 			opts.APIOptions = append(opts.APIOptions,

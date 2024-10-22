@@ -338,7 +338,7 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 	var result apiCallParams
 
 	_, err := client.ListDatabases(ctx, &redshiftdata.ListDatabasesInput{
-		Database: aws_sdkv2.String("test"),
+		Database: aws.String("test"),
 	},
 		func(opts *redshiftdata.Options) {
 			opts.APIOptions = append(opts.APIOptions,
