@@ -84,7 +84,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 			input: `{"attr":{"N":"123"}}`,
 			expected: map[string]awstypes.AttributeValue{
 				"attr": &awstypes.AttributeValueMemberN{
-					Value: "123",
+					Value: acctest.Ct123,
 				},
 			},
 		},
@@ -236,7 +236,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 		"N": {
 			attrs: map[string]awstypes.AttributeValue{
 				"attr": &awstypes.AttributeValueMemberN{
-					Value: "123",
+					Value: acctest.Ct123,
 				},
 			},
 			expected: `{"attr":{"N":"123"}}`,
