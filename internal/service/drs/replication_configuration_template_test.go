@@ -54,7 +54,7 @@ func testAccReplicationConfigurationTemplate_basic(t *testing.T) {
 					testAccCheckReplicationConfigurationTemplateExists(ctx, resourceName, &rct),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "associate_default_security_group", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "bandwidth_throttling", "12"),
+					resource.TestCheckResourceAttr(resourceName, "bandwidth_throttling", acctest.Ct12),
 					resource.TestCheckResourceAttr(resourceName, "create_public_ip", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "data_plane_routing", "PRIVATE_IP"),
 					resource.TestCheckResourceAttr(resourceName, "default_large_staging_disk_type", "GP2"),
@@ -66,7 +66,7 @@ func testAccReplicationConfigurationTemplate_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "pit_policy.*", map[string]string{
 						names.AttrEnabled:    acctest.CtTrue,
 						names.AttrInterval:   acctest.Ct10,
-						"retention_duration": "60",
+						"retention_duration": acctest.Ct60,
 						"units":              "MINUTE",
 						"rule_id":            acctest.Ct1,
 					}),
