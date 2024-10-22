@@ -5,10 +5,14 @@ package elbv2
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -280,6 +284,19 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 	}
 }
 
+func (d *dataSourceListenerRule) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.ExactlyOneOf(
+			path.MatchRoot(names.AttrARN),
+			path.MatchRoot("listener_arn"),
+		),
+		datasourcevalidator.RequiredTogether(
+			path.MatchRoot("listener_arn"),
+			path.MatchRoot(names.AttrPriority),
+		),
+	}
+}
+
 func (d *dataSourceListenerRule) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ELBV2Client(ctx)
 
@@ -289,13 +306,27 @@ func (d *dataSourceListenerRule) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 
-	out, err := findListenerRuleByARN(ctx, conn, data.ARN.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ELBV2, create.ErrActionReading, dsNameListenerRule, data.ARN.String(), err),
-			err.Error(),
-		)
-		return
+	var out *awstypes.Rule
+	if !data.ARN.IsNull() {
+		var err error
+		out, err = findListenerRuleByARN(ctx, conn, data.ARN.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ELBV2, create.ErrActionReading, dsNameListenerRule, data.ARN.String(), err),
+				err.Error(),
+			)
+			return
+		}
+	} else {
+		var err error
+		out, err = findListenerRuleByListenerAndPriority(ctx, conn, data.ListenerARN.ValueString(), data.Priority.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ELBV2, create.ErrActionReading, dsNameListenerRule, fmt.Sprintf("%s/%s", data.ListenerARN.String(), data.Priority.String()), err),
+				err.Error(),
+			)
+			return
+		}
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("Rule"))...)

@@ -801,6 +801,16 @@ func findListenerRuleByARN(ctx context.Context, conn *elasticloadbalancingv2.Cli
 	return findListenerRule(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Rule]())
 }
 
+func findListenerRuleByListenerAndPriority(ctx context.Context, conn *elasticloadbalancingv2.Client, listenerARN, priority string) (*awstypes.Rule, error) {
+	input := &elasticloadbalancingv2.DescribeRulesInput{
+		ListenerArn: aws.String(listenerARN),
+	}
+
+	return findListenerRule(ctx, conn, input, func(v *awstypes.Rule) bool {
+		return aws.ToString(v.Priority) == priority
+	})
+}
+
 func highestListenerRulePriority(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (int32, error) {
 	input := &elasticloadbalancingv2.DescribeRulesInput{
 		ListenerArn: aws.String(arn),
