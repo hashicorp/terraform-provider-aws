@@ -41,9 +41,8 @@ import (
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
-	tfawserr_sdkv1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -1786,31 +1785,31 @@ func PreCheckSkipError(err error) bool {
 	// GovCloud has endpoints that respond with (no message provided after the error code):
 	// AccessDeniedException:
 	// Ignore these API endpoints that exist but are not officially enabled
-	if tfawserr_sdkv1.ErrCodeEquals(err, "AccessDeniedException") || tfawserr_sdkv2.ErrCodeEquals(err, "AccessDeniedException") {
+	if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 		return true
 	}
 	// Ignore missing API endpoints
-	if tfawserr_sdkv1.ErrMessageContains(err, "RequestError", "send request failed") || tfawserr_sdkv2.ErrMessageContains(err, "RequestError", "send request failed") {
+	if tfawserr.ErrMessageContains(err, "RequestError", "send request failed") {
 		return true
 	}
 	// Ignore unsupported API calls
-	if tfawserr_sdkv1.ErrCodeEquals(err, "UnknownOperationException") || tfawserr_sdkv2.ErrCodeEquals(err, "UnknownOperationException") {
+	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
 		return true
 	}
-	if tfawserr_sdkv1.ErrCodeEquals(err, "UnsupportedOperation") || tfawserr_sdkv2.ErrCodeEquals(err, "UnsupportedOperation") {
+	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
 		return true
 	}
-	if tfawserr_sdkv1.ErrMessageContains(err, "InvalidInputException", "Unknown operation") || tfawserr_sdkv2.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
+	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
 		return true
 	}
-	if tfawserr_sdkv1.ErrMessageContains(err, "InvalidAction", "is not valid") || tfawserr_sdkv2.ErrMessageContains(err, "InvalidAction", "is not valid") {
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not valid") {
 		return true
 	}
-	if tfawserr_sdkv1.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") || tfawserr_sdkv2.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
 		return true
 	}
 	// ignore when not authorized to call API from account
-	if tfawserr_sdkv1.ErrCodeEquals(err, "ForbiddenException") || tfawserr_sdkv2.ErrCodeEquals(err, "ForbiddenException") {
+	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
 		return true
 	}
 	// Ignore missing API endpoints
