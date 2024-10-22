@@ -1109,7 +1109,7 @@ func TestAccKinesisAnalyticsApplication_Multiple_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "8"), // Delete CloudWatch logging options + add reference data source + delete input processing configuration+ update application + delete output + 2 * add output.
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct8), // Delete CloudWatch logging options + add reference data source + delete input processing configuration+ update application + delete output + 2 * add output.
 				),
 			},
 			{
@@ -1230,7 +1230,7 @@ func TestAccKinesisAnalyticsApplication_Output_update(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "start_application"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "READY"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "6"), // 2 * output deletion.
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct6), // 2 * output deletion.
 				),
 			},
 		},
@@ -1889,7 +1889,7 @@ func TestAccKinesisAnalyticsApplication_StartApplication_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "8"), // Delete CloudWatch logging options + add reference data source + delete input processing configuration+ update application + delete output + 2 * add output.
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct8), // Delete CloudWatch logging options + add reference data source + delete input processing configuration+ update application + delete output + 2 * add output.
 				),
 			},
 			{
