@@ -86,7 +86,7 @@ func TestAccS3BucketObjectsDataSource_all(t *testing.T) {
 			{
 				Config: testAccBucketObjectsDataSourceConfig_all(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", "7"),
+					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.#", acctest.Ct7),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.0", "arch/courthouse_towers/landscape"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.1", "arch/navajo/north_window"),
 					resource.TestCheckResourceAttr("data.aws_s3_objects.yesh", "keys.2", "arch/navajo/sand_dune"),
