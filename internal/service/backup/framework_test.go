@@ -214,7 +214,7 @@ func testAccFramework_updateControlInputParameters(t *testing.T) {
 	var framework backup.DescribeFrameworkOutput
 	rName := randomFrameworkName()
 	description := "example description"
-	originalRequiredRetentionDays := "35"
+	originalRequiredRetentionDays := acctest.Ct35
 	updatedRequiredRetentionDays := "34"
 	resourceName := "aws_backup_framework.test"
 
@@ -332,12 +332,12 @@ func testAccFramework_updateControls(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFrameworkExists(ctx, resourceName, &framework),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "control.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "control.#", acctest.Ct5),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
 						names.AttrName:            "BACKUP_RECOVERY_POINT_MINIMUM_RETENTION_CHECK",
 						"input_parameter.#":       acctest.Ct1,
 						"input_parameter.0.name":  "requiredRetentionDays",
-						"input_parameter.0.value": "35",
+						"input_parameter.0.value": acctest.Ct35,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "control.*", map[string]string{
 						names.AttrName:      "BACKUP_PLAN_MIN_FREQUENCY_AND_MIN_RETENTION_CHECK",
