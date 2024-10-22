@@ -42,7 +42,7 @@ func TestAccWAFSizeConstraintSet_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
 						"comparison_operator": "EQ",
 						"field_to_match.#":    acctest.Ct1,
-						names.AttrSize:        "4096",
+						names.AttrSize:        acctest.Ct4096,
 						"text_transformation": "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
@@ -143,7 +143,7 @@ func TestAccWAFSizeConstraintSet_changeConstraints(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
 						"comparison_operator": "EQ",
 						"field_to_match.#":    acctest.Ct1,
-						names.AttrSize:        "4096",
+						names.AttrSize:        acctest.Ct4096,
 						"text_transformation": "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
@@ -161,7 +161,7 @@ func TestAccWAFSizeConstraintSet_changeConstraints(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*", map[string]string{
 						"comparison_operator": "GE",
 						"field_to_match.#":    acctest.Ct1,
-						names.AttrSize:        "1024",
+						names.AttrSize:        acctest.Ct1024,
 						"text_transformation": "NONE",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "size_constraints.*.field_to_match.*", map[string]string{
