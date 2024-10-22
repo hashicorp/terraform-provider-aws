@@ -95,7 +95,7 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 			{
 				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 512, 5632, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "base_capacity", "512"),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", acctest.Ct512),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, "5632"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 				),
@@ -134,7 +134,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 				Config: testAccWorkgroupConfig_configParameters(rName, "14400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", acctest.Ct9),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "datestyle",
 						"parameter_value": "ISO, MDY",
@@ -182,7 +182,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 				Config: testAccWorkgroupConfig_configParameters(rName, "28800"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "9"),
+					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", acctest.Ct9),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "datestyle",
 						"parameter_value": "ISO, MDY",
