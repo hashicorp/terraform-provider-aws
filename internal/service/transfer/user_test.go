@@ -139,8 +139,8 @@ func testAccUser_posix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.gid", "1000"),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.uid", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.gid", acctest.Ct1000),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.uid", acctest.Ct1000),
 				),
 			},
 			{
@@ -153,8 +153,8 @@ func testAccUser_posix(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.gid", "1001"),
-					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.uid", "1001"),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.gid", acctest.Ct1001),
+					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.uid", acctest.Ct1001),
 					resource.TestCheckResourceAttr(resourceName, "posix_profile.0.secondary_gids.#", acctest.Ct2),
 				),
 			},
