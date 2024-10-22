@@ -233,8 +233,8 @@ func TestSkipFlatteningStringAttributeContraints(t *testing.T) {
 					Name:                   aws.String(names.AttrEmail),
 					Required:               aws.Bool(true),
 					StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
-						MaxLength: aws.String("1024"),
-						MinLength: aws.String("5"),
+						MaxLength: aws.String("1024"), // nosemgrep:ci.literal-1024-string-test-constant
+						MinLength: aws.String("5"),    // nosemgrep:ci.literal-5-string-test-constant
 					},
 				},
 			},
