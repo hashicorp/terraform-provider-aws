@@ -67,7 +67,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return cloudtrail.NewFromConfig(cfg,
-		cloudtrail.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		cloudtrail.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }
