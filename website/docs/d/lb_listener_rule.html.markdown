@@ -5,14 +5,6 @@ page_title: "AWS: aws_lb_listener_rule"
 description: |-
   Terraform data source for managing an AWS ELB (Elastic Load Balancing) Listener Rule.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->
 
 # Data Source: aws_lb_listener_rule
 
@@ -151,7 +143,7 @@ This data source exports the following attributes in addition to the arguments a
 ### `condition`
 
 * `host_header` - Contains a single attribute `values`, which contains a set of host names.
-* `http_header` - 
+* `http_header` - HTTP header and values to match.
   [Detailed below](#http_header).
 * `http_request_method` - Contains a single attribute `values`, which contains a set of HTTP request methods.
 * `path_pattern` - Contains a single attribute `values`, which contains a set of path patterns to compare against the request URL.
