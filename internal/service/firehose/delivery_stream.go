@@ -127,11 +127,11 @@ func resourceDeliveryStream() *schema.Resource {
 					ForceNew: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"database_name": {
+							names.AttrDatabaseName: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
-							"table_name": {
+							names.AttrTableName: {
 								Type:     schema.TypeString,
 								Required: true,
 							},
@@ -3426,8 +3426,8 @@ func expandDestinationTableConfigurationList(tfMap map[string]interface{}) []typ
 
 func expandDestinationTableConfiguration(tfMap map[string]interface{}) types.DestinationTableConfiguration {
 	apiObject := types.DestinationTableConfiguration{
-		DestinationDatabaseName: aws.String(tfMap["database_name"].(string)),
-		DestinationTableName:    aws.String(tfMap["table_name"].(string)),
+		DestinationDatabaseName: aws.String(tfMap[names.AttrDatabaseName].(string)),
+		DestinationTableName:    aws.String(tfMap[names.AttrTableName].(string)),
 	}
 
 	if v, ok := tfMap["s3_error_output_prefix"].(string); ok {
@@ -4247,8 +4247,8 @@ func flattenIcebergDestinationDescription(apiObject *types.IcebergDestinationDes
 		tableConfigurations := make([]map[string]interface{}, 0, len(apiObject.DestinationTableConfigurationList))
 		for _, table := range apiObject.DestinationTableConfigurationList {
 			tableConfigurations = append(tableConfigurations, map[string]interface{}{
-				"database_name":          aws.ToString(table.DestinationDatabaseName),
-				"table_name":             aws.ToString(table.DestinationTableName),
+				names.AttrDatabaseName:          aws.ToString(table.DestinationDatabaseName),
+				names.AttrTableName:             aws.ToString(table.DestinationTableName),
 				"s3_error_output_prefix": table.S3ErrorOutputPrefix,
 				"unique_keys":            table.UniqueKeys,
 			})
