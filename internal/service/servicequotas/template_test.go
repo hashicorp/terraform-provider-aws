@@ -25,14 +25,14 @@ const (
 	lambdaServiceCode = "lambda"
 
 	lambdaStorageQuotaCode = "L-2ACBD22F" // Function and layer storage
-	lambdaStorageValue     = acctest.Ct80 // Default is 75 GB
+	lambdaStorageValue     = "80"         // Default is 75 GB
 
 	lambdaConcurrentExecQuotaCode = "L-B99A9384" // Concurrent executions
 	lambdaConcurrentExecValue     = "1500"       // Default is 1000
 
-	lambdaENIQuotaCode    = "L-9FEE3D26"  // Elastic network interfaces per VPC
-	lambdaENIValue        = "275"         // Default is 250
-	lambdaENIValueUpdated = acctest.Ct300 // Default is 250
+	lambdaENIQuotaCode    = "L-9FEE3D26" // Elastic network interfaces per VPC
+	lambdaENIValue        = "275"        // Default is 250
+	lambdaENIValueUpdated = "300"        // Default is 250
 )
 
 func testAccTemplate_basic(t *testing.T) {
