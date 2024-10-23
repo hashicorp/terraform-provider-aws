@@ -20,7 +20,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return fms.NewFromConfig(cfg,
-		fms.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		fms.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *fms.Options) {
 			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {
