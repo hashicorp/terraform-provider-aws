@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-version"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,7 +43,7 @@ func TestValidMemcachedVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: acctest.Ct1,
+			version: "1",
 			valid:   false,
 		},
 		{
@@ -106,7 +105,7 @@ func TestValidRedisVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: acctest.Ct5,
+			version: "5",
 			valid:   false,
 		},
 		{
@@ -138,7 +137,7 @@ func TestValidRedisVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: acctest.Ct6,
+			version: "6",
 			valid:   false,
 		},
 		{
@@ -174,7 +173,7 @@ func TestValidRedisVersionString(t *testing.T) {
 			valid:   false,
 		},
 		{
-			version: acctest.Ct7,
+			version: "7",
 			valid:   false,
 		},
 		{
