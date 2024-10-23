@@ -86,7 +86,7 @@ import (
 {{- end }}
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource("aws_{{ .ServicePackage }}_{{ .ResourceSnake }}", name="{{ .HumanResourceName }}")
+// @FrameworkResource("{{ .ProviderResourceName }}", name="{{ .HumanResourceName }}")
 {{- if .IncludeTags }}
 // @Tags(identifierAttribute="arn")
 {{- end }}
@@ -116,7 +116,7 @@ type resource{{ .Resource }} struct {
 }
 
 func (r *resource{{ .Resource }}) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}"
+	resp.TypeName = "{{ .ProviderResourceName }}"
 }
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====

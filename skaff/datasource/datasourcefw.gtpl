@@ -72,7 +72,7 @@ import (
 {{- end }}
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource(name="{{ .HumanDataSourceName }}")
+// @SDKDataSource("{{ .ProviderResourceName }}", name="{{ .HumanDataSourceName }}")
 func newDataSource{{ .DataSource }}(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSource{{ .DataSource }}{}, nil
 }
@@ -86,7 +86,7 @@ type dataSource{{ .DataSource }} struct {
 }
 
 func (d *dataSource{{ .DataSource }}) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_{{ .ServicePackage }}_{{ .DataSourceSnake }}"
+	resp.TypeName = "{{ .ProviderResourceName }}"
 }
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====
