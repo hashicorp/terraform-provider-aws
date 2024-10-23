@@ -66,9 +66,6 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 						"order": schema.Int32Attribute{
 							Computed: true,
 						},
-						"target_group_arn": schema.StringAttribute{
-							Computed: true,
-						},
 						names.AttrType: schema.StringAttribute{
 							Computed: true,
 						},
@@ -355,6 +352,9 @@ type dataSourceListenerRuleModel struct {
 	Tags        tftags.Map                                         `tfsdk:"tags"`
 }
 
+// The API includes a TargetGroupArn field at the root level of the Action. This only applies when Type == "forward"
+// and there is a single target group. The read also populates the ForwardConfig with the single TargetGroup,
+// so it is redundant. Using the ForwardConfig in all cases improves consistency.
 type actionModel struct {
 	Type                      types.String                                                `tfsdk:"type"`
 	AuthenticateCognitoConfig fwtypes.ObjectValueOf[authenticateCognitoActionConfigModel] `tfsdk:"authenticate_cognito"`
@@ -363,7 +363,6 @@ type actionModel struct {
 	ForwardConfig             fwtypes.ObjectValueOf[forwardActionConfigModel]             `tfsdk:"forward"`
 	Order                     types.Int32                                                 `tfsdk:"order"`
 	RedirectConfig            fwtypes.ObjectValueOf[redirectActionConfigModel]            `tfsdk:"redirect"`
-	TargetGroupArn            types.String                                                `tfsdk:"target_group_arn"`
 }
 
 type authenticateCognitoActionConfigModel struct {
