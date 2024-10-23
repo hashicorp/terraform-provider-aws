@@ -117,7 +117,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_validatorJSON(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						names.AttrType: string(awstypes.ValidatorTypeJsonSchema),
 					}),
@@ -132,7 +132,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_validatorNoJSONContent(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						names.AttrContent: "",
 						names.AttrType:    string(awstypes.ValidatorTypeJsonSchema),
@@ -171,7 +171,7 @@ func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_validatorLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "validator.*.content", "aws_lambda_function.test", names.AttrARN),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						names.AttrType: string(awstypes.ValidatorTypeLambda),
@@ -210,7 +210,7 @@ func TestAccAppConfigConfigurationProfile_Validators_multiple(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_validatorMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						names.AttrContent: "{\"$schema\":\"http://json-schema.org/draft-05/schema#\",\"description\":\"BasicFeatureToggle-1\",\"title\":\"$id$\"}",
 						names.AttrType:    string(awstypes.ValidatorTypeJsonSchema),
