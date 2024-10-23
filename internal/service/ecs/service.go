@@ -1084,22 +1084,21 @@ func resourceService() *schema.Resource {
 			"vpc_lattice_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"role_arn": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Optional:     false,
 							ValidateFunc: verify.ValidARN,
 						},
 						"target_group_arn": {
 							Type:         schema.TypeString,
-							Optional:     true,
+							Optional:     false,
 							ValidateFunc: verify.ValidARN,
 						},
 						"port_name": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Optional: false,
 						},
 					},
 				},
