@@ -29,9 +29,15 @@ BUG FIXES:
 
 * data-source/aws_workspaces_bundle: Return the first matching bundle when searching by `name`. This fixes a regression introduced in [v5.72.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5720-october-15-2024) causing `multiple WorkSpaces Bundles matched; use additional constraints to reduce matches to a single WorkSpaces Bundle` errors ([#39777](https://github.com/hashicorp/terraform-provider-aws/issues/39777))
 * resource/aws_dynamodb_table: Fix validation error when optional attribute in `on_demand_throughput` is excluded ([#39784](https://github.com/hashicorp/terraform-provider-aws/issues/39784))
+* resource/aws_ecr_repository_policy: Fix persistent validation errors when malformed `policy` content is written to state ([#39842](https://github.com/hashicorp/terraform-provider-aws/issues/39842))
 * resource/aws_elasticache_serverless_cache: Fix `InvalidParameterValue: This API supports only cross-engine upgrades to Valkey engine currently` errors on Update ([#39745](https://github.com/hashicorp/terraform-provider-aws/issues/39745))
+* resource/aws_iam_policy: Fix persistent validation errors when malformed `policy` content is written to state ([#39842](https://github.com/hashicorp/terraform-provider-aws/issues/39842))
+* resource/aws_iam_role_policy: Fix persistent validation errors when malformed `policy` content is written to state ([#39842](https://github.com/hashicorp/terraform-provider-aws/issues/39842))
+* resource/aws_kms_key: Fix persistent validation errors when malformed `policy` content is written to state ([#39842](https://github.com/hashicorp/terraform-provider-aws/issues/39842))
 * resource/aws_quicksight_data_set: Fix `InvalidParameterValueException: Invalid RowLevelPermissionDataSet. Namespace parameter should not be specified for Version 2` errors on Create and Update ([#39778](https://github.com/hashicorp/terraform-provider-aws/issues/39778))
 * resource/aws_route53_record: Allow creation of records with `ttl=0` ([#39728](https://github.com/hashicorp/terraform-provider-aws/issues/39728))
+* resource/aws_s3_bucket_policy: Fix persistent validation errors when malformed `policy` content is written to state ([#39842](https://github.com/hashicorp/terraform-provider-aws/issues/39842))
+* resource/aws_secretsmanager_secret: Fix persistent validation errors when malformed `policy` content is written to state ([#39842](https://github.com/hashicorp/terraform-provider-aws/issues/39842))
 * resource/aws_security_group_rule: Remove from state when rule not found. This fixes a regression introduced in [v5.60.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5600-july-25-2024) ([#39834](https://github.com/hashicorp/terraform-provider-aws/issues/39834))
 
 ## 5.72.1 (October 16, 2024)
