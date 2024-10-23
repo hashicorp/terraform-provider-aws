@@ -101,7 +101,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return autoscaling.NewFromConfig(cfg,
-		autoscaling.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		autoscaling.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }
