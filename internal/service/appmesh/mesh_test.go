@@ -97,7 +97,7 @@ func testAccMesh_egressFilter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.egress_filter.0.type", "ALLOW_ALL"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "0"),
 				),
 			},
 			{

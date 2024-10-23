@@ -36,7 +36,7 @@ func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrServiceRole, resourceName, names.AttrServiceRole),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
-					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", "0"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),

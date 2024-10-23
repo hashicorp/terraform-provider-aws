@@ -45,7 +45,7 @@ func testAccIngestion_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ingestion_type", "auditLog"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

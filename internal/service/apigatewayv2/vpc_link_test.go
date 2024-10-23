@@ -41,7 +41,7 @@ func TestAccAPIGatewayV2VPCLink_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

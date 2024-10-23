@@ -44,7 +44,7 @@ func TestAccCodeCommitRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyID),
 					resource.TestCheckResourceAttrSet(resourceName, "repository_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRepositoryName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

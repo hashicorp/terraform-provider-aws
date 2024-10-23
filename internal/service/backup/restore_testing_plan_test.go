@@ -45,7 +45,7 @@ func TestAccBackupRestoreTestingPlan_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 12 ? * * *)"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0), // no tags
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"), // no tags
 				),
 			},
 			{
@@ -234,7 +234,7 @@ func TestAccBackupRestoreTestingPlan_additionals(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.selection_window_days", acctest.Ct365),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 12 ? * * *)"),
@@ -274,7 +274,7 @@ func TestAccBackupRestoreTestingPlan_additionalsWithUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.selection_window_days", acctest.Ct365),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 1 ? * * *)"),
@@ -296,7 +296,7 @@ func TestAccBackupRestoreTestingPlan_additionalsWithUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.algorithm", "LATEST_WITHIN_WINDOW"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.include_vaults.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.exclude_vaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.recovery_point_types.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "recovery_point_selection.0.selection_window_days", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "cron(0 12 ? * * *)"),

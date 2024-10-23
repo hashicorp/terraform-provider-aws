@@ -39,7 +39,7 @@ func TestAccAppRunnerVPCConnector_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_connector_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

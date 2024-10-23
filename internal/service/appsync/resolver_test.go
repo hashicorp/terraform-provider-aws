@@ -39,9 +39,9 @@ func testAccResolver_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile("apis/.+/types/.+/resolvers/.+")),
 					resource.TestCheckResourceAttr(resourceName, "data_source", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "request_template"),
-					resource.TestCheckResourceAttr(resourceName, "max_batch_size", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "sync_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "runtime.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "max_batch_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "sync_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "runtime.#", "0"),
 				),
 			},
 			{

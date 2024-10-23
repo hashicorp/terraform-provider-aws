@@ -47,7 +47,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "source_flow_config.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_flow_config.0.connector_type"),
 					resource.TestCheckResourceAttrSet(resourceName, "source_flow_config.0.source_connector_properties.#"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "task.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "task.0.source_fields.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "task.0.task_type"),

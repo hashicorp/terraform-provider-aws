@@ -43,9 +43,9 @@ func TestAccAppConfigConfigurationProfile_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "configuration_profile_id", regexache.MustCompile(`[0-9a-z]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "location_uri", "hosted"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "AWS.Freeform"),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
 				),
 			},
 			{
@@ -149,7 +149,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
 				),
 			},
 		},
@@ -188,7 +188,7 @@ func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 				Config: testAccConfigurationProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "validator.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "validator.#", "0"),
 				),
 			},
 		},

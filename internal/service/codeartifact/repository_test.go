@@ -39,9 +39,9 @@ func testAccRepository_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "administrator_account", "aws_codeartifact_domain.test", names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "upstream.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "external_connections.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "upstream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -119,8 +119,8 @@ func testAccRepository_owner(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "domain_owner", "aws_codeartifact_domain.test", names.AttrOwner),
 					resource.TestCheckResourceAttrPair(resourceName, "administrator_account", "aws_codeartifact_domain.test", names.AttrOwner),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					resource.TestCheckResourceAttr(resourceName, "upstream.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "external_connections.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "upstream.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "0"),
 				),
 			},
 			{
@@ -241,7 +241,7 @@ func testAccRepository_externalConnection(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "external_connections.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "external_connections.#", "0"),
 				),
 			},
 			{

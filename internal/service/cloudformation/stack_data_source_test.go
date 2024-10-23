@@ -29,9 +29,9 @@ func TestAccCloudFormationStackDataSource_DataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.Ct1),
 					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexache.MustCompile("^vpc-[0-9a-z]+")),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.CIDR", "10.10.10.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_in_minutes", acctest.Ct6),
@@ -116,9 +116,9 @@ func TestAccCloudFormationStackDataSource_DataSource_yaml(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", acctest.Ct1),
 					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexache.MustCompile("^vpc-[0-9a-z]+")),
-					resource.TestCheckResourceAttr(resourceName, "capabilities.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "parameters.CIDR", "10.10.10.0/24"),
 					resource.TestCheckResourceAttr(resourceName, "timeout_in_minutes", acctest.Ct6),

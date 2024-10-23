@@ -40,7 +40,7 @@ func TestAccAPIGatewayV2IntegrationResponse_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_key", "/200/"),
-					resource.TestCheckResourceAttr(resourceName, "response_templates.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "response_templates.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "template_selection_expression", ""),
 				),
 			},

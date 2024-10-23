@@ -97,7 +97,7 @@ func TestAccBatchJobDefinitionDataSource_basicARN_NodeProperties(t *testing.T) {
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicARNNode(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "node_properties.0.main_node", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "node_properties.0.main_node", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "node_properties.0.node_range_properties.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(dataSourceName, "node_properties.0.node_range_properties.0.container.0.image", "busybox"),
 				),

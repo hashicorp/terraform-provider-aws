@@ -104,7 +104,7 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codebuild", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "badge_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "build_batch_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "build_timeout", acctest.Ct60),
 					resource.TestCheckResourceAttr(resourceName, "queued_timeout", "480"),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", acctest.Ct1),
@@ -113,7 +113,7 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "encryption_key", "kms", "alias/aws/s3"),
 					resource.TestCheckResourceAttr(resourceName, "environment.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildGeneral1Small)),
-					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.type", string(types.EnvironmentTypeLinuxContainer)),
@@ -121,18 +121,18 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", string(types.LogsConfigStatusTypeEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", string(types.LogsConfigStatusTypeDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "source.0.location", testAccGitHubSourceLocationFromEnv()),
 					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "GITHUB"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
 			},
 			{
@@ -390,8 +390,8 @@ func TestAccCodeBuildProject_cache(t *testing.T) {
 	var project types.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
-	s3Location1 := rName + acctest.CtNegative1
-	s3Location2 := rName + acctest.CtNegative2
+	s3Location1 := rName + "-1"
+	s3Location2 := rName + "-2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -536,7 +536,7 @@ func TestAccCodeBuildProject_fileSystemLocations(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "environment.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildGeneral1Small)),
-					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.type", string(types.EnvironmentTypeLinuxContainer)),
@@ -670,7 +670,7 @@ func TestAccCodeBuildProject_Environment_environmentVariable(t *testing.T) {
 				Config: testAccProjectConfig_environmentVariableZero(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project3),
-					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
 				),
 			},
 			{
@@ -1030,7 +1030,7 @@ func TestAccCodeBuildProject_buildBatchConfigDelete(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.combine_artifacts", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.compute_types_allowed.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.restrictions.0.maximum_builds_allowed", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.0.timeout_in_mins", "2160"),
 				),
@@ -1251,7 +1251,7 @@ func TestAccCodeBuildProject_SecondarySourcesGitSubmodules_codeCommit(t *testing
 				Config: testAccProjectConfig_secondarySourcesNone(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "0"),
 				),
 			},
 		},
@@ -1397,7 +1397,7 @@ func TestAccCodeBuildProject_SecondarySourcesVersions(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "0"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
 						"source_identifier": "secondarySource1",
 					}),
@@ -1859,7 +1859,7 @@ func TestAccCodeBuildProject_vpc(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
 			},
 		},
@@ -1889,7 +1889,7 @@ func TestAccCodeBuildProject_windowsServer2019Container(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "environment.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildGeneral1Medium)),
-					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image_pull_credentials_type", string(types.ImagePullCredentialsTypeCodebuild)),
@@ -1960,7 +1960,7 @@ func TestAccCodeBuildProject_linuxLambdaContainer(t *testing.T) {
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "environment.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildLambda1gb)),
-					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image", "aws/codebuild/amazonlinux-x86_64-lambda-standard:go1.21"),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.image_pull_credentials_type", string(types.ImagePullCredentialsTypeCodebuild)),
@@ -2419,7 +2419,7 @@ func TestAccCodeBuildProject_secondaryArtifacts(t *testing.T) {
 				Config: testAccProjectConfig_secondaryArtifactsNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "0"),
 				),
 			},
 		},
@@ -2853,7 +2853,7 @@ func TestAccCodeBuildProject_concurrentBuildLimit(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "concurrent_build_limit", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "concurrent_build_limit", "0"),
 				),
 			},
 		},

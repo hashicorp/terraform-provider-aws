@@ -292,7 +292,7 @@ func TestAccAPIGatewayDomainName_MutualTLSAuthentication_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, acmCertificateResourceName, names.AttrDomainName),
-					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.#", "0"),
 				),
 			},
 			{

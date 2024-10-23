@@ -342,11 +342,11 @@ func testAccPermissions_lfTagPolicyMultiple(t *testing.T) {
 						"values.#":    acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag_policy.0.expression.*", map[string]string{
-						names.AttrKey: rName + acctest.CtNegative1,
+						names.AttrKey: rName + "-1",
 						"values.#":    acctest.Ct2,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "lf_tag_policy.0.expression.*", map[string]string{
-						names.AttrKey: rName + acctest.CtNegative2,
+						names.AttrKey: rName + "-2",
 						"values.#":    acctest.Ct2,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct3),

@@ -289,7 +289,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_initialVariantWeig
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(
-						resourceName, "production_variants.1.initial_variant_weight", acctest.Ct0Point5),
+						resourceName, "production_variants.1.initial_variant_weight", "0.5"),
 				),
 			},
 			{

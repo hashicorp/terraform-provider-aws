@@ -179,10 +179,10 @@ func TestAccKMSExternalKey_description(t *testing.T) {
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExternalKeyConfig_description(rName + acctest.CtNegative1),
+				Config: testAccExternalKeyConfig_description(rName + "-1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+"-1"),
 				),
 			},
 			{
@@ -195,11 +195,11 @@ func TestAccKMSExternalKey_description(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccExternalKeyConfig_description(rName + acctest.CtNegative2),
+				Config: testAccExternalKeyConfig_description(rName + "-2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key2),
 					testAccCheckExternalKeyNotRecreated(&key1, &key2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+acctest.CtNegative2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName+"-2"),
 				),
 			},
 		},

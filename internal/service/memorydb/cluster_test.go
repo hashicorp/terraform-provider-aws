@@ -345,10 +345,10 @@ func TestAccMemoryDBCluster_delete_withFinalSnapshot(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_finalSnapshotName(rName, rName+acctest.CtNegative1),
+				Config: testAccClusterConfig_finalSnapshotName(rName, rName+"-1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "final_snapshot_name", rName+acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, "final_snapshot_name", rName+"-1"),
 				),
 			},
 			{

@@ -40,7 +40,7 @@ func TestAccCodeBuildReportGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "NO_EXPORT"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codebuild", fmt.Sprintf("report-group/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

@@ -42,7 +42,7 @@ func TestAccCodeStarNotificationsNotificationRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_type_ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.NotificationRuleStatusEnabled)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.#", acctest.Ct1),
 				),
 			},

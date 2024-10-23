@@ -49,7 +49,7 @@ func TestAccDataSyncTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "options.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "options.0.atime", "BEST_EFFORT"),
-					resource.TestCheckResourceAttr(resourceName, "options.0.bytes_per_second", acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, "options.0.bytes_per_second", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.gid", "INT_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.log_level", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.mtime", "PRESERVE"),

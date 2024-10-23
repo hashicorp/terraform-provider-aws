@@ -41,7 +41,7 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "body"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -49,9 +49,9 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexache.MustCompile(`[0-9a-z]+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -1001,7 +1001,7 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"body", "put_rest_api_mode"},
 			},
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSize(rName, acctest.CtNegative1), // -1 removes existing values
+				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "-1"), // -1 removes existing values
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", ""),

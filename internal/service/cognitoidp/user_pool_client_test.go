@@ -49,7 +49,7 @@ func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "access_token_validity", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", acctest.Ct3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClientSecret, ""),
@@ -57,7 +57,7 @@ func TestAccCognitoIDPUserPoolClient_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_propagate_additional_user_context_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", acctest.CtTrue),
 					resource.TestCheckNoResourceAttr(resourceName, "generate_secret"),
-					resource.TestCheckResourceAttr(resourceName, "id_token_validity", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", ""),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", acctest.Ct30),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),

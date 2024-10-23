@@ -40,9 +40,9 @@ func TestAccAthenaDatabase_basic(t *testing.T) {
 					testAccCheckDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, dbName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_bucket.test", names.AttrBucket),
-					resource.TestCheckResourceAttr(resourceName, "acl_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "properties.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "acl_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "properties.%", "0"),
 				),
 			},
 			{

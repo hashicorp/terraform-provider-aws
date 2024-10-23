@@ -48,7 +48,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_track_name", "current"),
-					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "tags.#", acctest.Ct0),

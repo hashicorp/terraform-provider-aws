@@ -80,7 +80,7 @@ func TestAccAPIGatewayV2APIsDataSource_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource1Name, "ids.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(dataSource2Name, "ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(dataSource3Name, "ids.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSource3Name, "ids.#", "0"),
 				),
 			},
 		},

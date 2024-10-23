@@ -157,7 +157,7 @@ func TestAccAutoScalingSchedule_negativeOne(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScalingScheduleExists(ctx, resourceName, &v),
 					testAccCheckScalingScheduleHasNoDesiredCapacity(&v),
-					resource.TestCheckResourceAttr(resourceName, "desired_capacity", acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "-1"),
 				),
 			},
 			{

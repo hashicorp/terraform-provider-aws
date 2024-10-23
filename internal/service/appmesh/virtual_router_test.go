@@ -48,7 +48,7 @@ func testAccVirtualRouter_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
 					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s", meshName, vrName)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -63,7 +63,7 @@ func testAccVirtualRouter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8081"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -108,7 +108,7 @@ func testAccVirtualRouter_multiListener(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedDate),
 					acctest.CheckResourceAttrAccountID(resourceName, acctest.CtResourceOwner),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s", meshName, vrName)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -129,7 +129,7 @@ func testAccVirtualRouter_multiListener(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.0.port", acctest.Ct8080),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.2.port_mapping.0.protocol", "grpc"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

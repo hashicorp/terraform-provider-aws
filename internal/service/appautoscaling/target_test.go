@@ -41,7 +41,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "min_capacity", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scalable_dimension", "ecs:service:DesiredCount"),
 					resource.TestCheckResourceAttr(resourceName, "service_namespace", "ecs"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 
@@ -51,7 +51,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 					testAccCheckTargetExists(ctx, resourceName, &target),
 					resource.TestCheckResourceAttr(resourceName, names.AttrMaxCapacity, acctest.Ct8),
 					resource.TestCheckResourceAttr(resourceName, "min_capacity", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

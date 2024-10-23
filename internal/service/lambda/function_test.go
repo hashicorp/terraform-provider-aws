@@ -76,7 +76,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
-					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, tflambda.FunctionVersionLatest),
 				),
@@ -293,7 +293,7 @@ func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 				),
 			},
 			{
@@ -313,7 +313,7 @@ func TestAccLambdaFunction_concurrencyCycle(t *testing.T) {
 				Config: testAccFunctionConfig_basic(rName, rName, rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 				),
 			},
 		},

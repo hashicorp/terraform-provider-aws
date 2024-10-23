@@ -40,7 +40,7 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_account"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_identifier", rName),
-					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "-1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},

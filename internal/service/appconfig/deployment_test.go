@@ -49,7 +49,7 @@ func TestAccAppConfigDeployment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "environment_id", envResourceName, "environment_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -91,7 +91,7 @@ func TestAccAppConfigDeployment_kms(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "environment_id", envResourceName, "environment_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "kms_key_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},

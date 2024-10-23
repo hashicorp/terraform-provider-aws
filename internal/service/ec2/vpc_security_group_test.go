@@ -49,11 +49,11 @@ func TestProtocolStateFunc(t *testing.T) {
 		},
 		{
 			input:    "all",
-			expected: acctest.CtNegative1,
+			expected: "-1",
 		},
 		{
-			input:    acctest.CtNegative1,
-			expected: acctest.CtNegative1,
+			input:    "-1",
+			expected: "-1",
 		},
 		{
 			input:    -1,
@@ -117,11 +117,11 @@ func TestProtocolForValue(t *testing.T) {
 		},
 		{
 			input:    "all",
-			expected: acctest.CtNegative1,
+			expected: "-1",
 		},
 		{
-			input:    acctest.CtNegative1,
-			expected: acctest.CtNegative1,
+			input:    "-1",
+			expected: "-1",
 		},
 		{
 			input:    "tCp",
@@ -141,7 +141,7 @@ func TestProtocolForValue(t *testing.T) {
 		},
 		{
 			input:    "ALL",
-			expected: acctest.CtNegative1,
+			expected: "-1",
 		},
 		{
 			input:    "icMp",
@@ -205,7 +205,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			names.AttrProtocol:    acctest.CtNegative1,
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
@@ -292,7 +292,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			names.AttrProtocol:    acctest.CtNegative1,
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
@@ -302,7 +302,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			names.AttrProtocol:    acctest.CtNegative1,
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
@@ -312,7 +312,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			},
 		},
 		map[string]interface{}{
-			names.AttrProtocol:    acctest.CtNegative1,
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
@@ -322,7 +322,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			}),
 		},
 		map[string]interface{}{
-			names.AttrProtocol:    acctest.CtNegative1,
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
@@ -332,7 +332,7 @@ func TestSecurityGroupExpandCollapseRules(t *testing.T) {
 			}),
 		},
 		map[string]interface{}{
-			names.AttrProtocol:    acctest.CtNegative1,
+			names.AttrProtocol:    "-1",
 			"from_port":           int(8000),
 			"to_port":             int(8080),
 			names.AttrDescription: "",
@@ -417,7 +417,7 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 			},
 		},
 		{
-			IpProtocol: aws.String(acctest.CtNegative1),
+			IpProtocol: aws.String("-1"),
 			FromPort:   aws.Int32(0),
 			ToPort:     aws.Int32(0),
 			PrefixListIds: []awstypes.PrefixListId{
@@ -453,7 +453,7 @@ func TestSecurityGroupIPPermGather(t *testing.T) {
 			}),
 		},
 		{
-			names.AttrProtocol: acctest.CtNegative1,
+			names.AttrProtocol: "-1",
 			"from_port":        int64(0),
 			"to_port":          int64(0),
 			"prefix_list_ids":  []string{"pl-12345678"},
@@ -616,7 +616,7 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 
 	expanded := []interface{}{
 		map[string]interface{}{
-			names.AttrProtocol: acctest.CtNegative1,
+			names.AttrProtocol: "-1",
 			"from_port":        0,
 			"to_port":          0,
 			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
@@ -638,7 +638,7 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 
 	expected := []awstypes.IpPermission{
 		{
-			IpProtocol: aws.String(acctest.CtNegative1),
+			IpProtocol: aws.String("-1"),
 			FromPort:   aws.Int32(0),
 			ToPort:     aws.Int32(0),
 			IpRanges:   []awstypes.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
@@ -682,7 +682,7 @@ func TestExpandIPPerms_NegOneProtocol(t *testing.T) {
 	// or to_port is not zero, but protocol is "-1".
 	errorCase := []interface{}{
 		map[string]interface{}{
-			names.AttrProtocol: acctest.CtNegative1,
+			names.AttrProtocol: "-1",
 			"from_port":        0,
 			"to_port":          65535,
 			"cidr_blocks":      []interface{}{"0.0.0.0/0"},
@@ -732,7 +732,7 @@ func TestExpandIPPerms_AllProtocol(t *testing.T) {
 
 	expected := []awstypes.IpPermission{
 		{
-			IpProtocol: aws.String(acctest.CtNegative1),
+			IpProtocol: aws.String("-1"),
 			FromPort:   aws.Int32(0),
 			ToPort:     aws.Int32(0),
 			IpRanges:   []awstypes.IpRange{{CidrIp: aws.String("0.0.0.0/0")}},
@@ -1318,7 +1318,7 @@ func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 						"ipv6_cidr_blocks.#":  acctest.Ct1,
 						"ipv6_cidr_blocks.0":  "::/0",
 						"prefix_list_ids.#":   acctest.Ct0,
-						names.AttrProtocol:    acctest.CtNegative1,
+						names.AttrProtocol:    "-1",
 						"security_groups.#":   acctest.Ct0,
 						"self":                acctest.CtFalse,
 						"to_port":             acctest.Ct0,
@@ -1330,7 +1330,7 @@ func TestAccVPCSecurityGroup_ruleGathering(t *testing.T) {
 						"from_port":           acctest.Ct0,
 						"ipv6_cidr_blocks.#":  acctest.Ct0,
 						"prefix_list_ids.#":   acctest.Ct0,
-						names.AttrProtocol:    acctest.CtNegative1,
+						names.AttrProtocol:    "-1",
 						"security_groups.#":   acctest.Ct0,
 						"self":                acctest.CtFalse,
 						"to_port":             acctest.Ct0,
@@ -1784,7 +1784,7 @@ func TestAccVPCSecurityGroup_vpcNegOneIngress(t *testing.T) {
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
-						names.AttrProtocol: acctest.CtNegative1,
+						names.AttrProtocol: "-1",
 						"from_port":        acctest.Ct0,
 						"to_port":          acctest.Ct0,
 						"cidr_blocks.#":    acctest.Ct1,
@@ -1886,7 +1886,7 @@ func TestAccVPCSecurityGroup_vpcAllEgress(t *testing.T) {
 					testAccCheckSecurityGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
-						names.AttrProtocol: acctest.CtNegative1,
+						names.AttrProtocol: "-1",
 						"from_port":        acctest.Ct0,
 						"to_port":          acctest.Ct0,
 						"cidr_blocks.#":    acctest.Ct1,
@@ -2320,7 +2320,7 @@ func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 						"from_port":           acctest.Ct0,
 						"ipv6_cidr_blocks.#":  acctest.Ct0,
 						"prefix_list_ids.#":   acctest.Ct0,
-						names.AttrProtocol:    acctest.CtNegative1,
+						names.AttrProtocol:    "-1",
 						"security_groups.#":   acctest.Ct0,
 						"self":                acctest.CtFalse,
 						"to_port":             acctest.Ct0,
@@ -2332,7 +2332,7 @@ func TestAccVPCSecurityGroup_ipv4AndIPv6Egress(t *testing.T) {
 						"ipv6_cidr_blocks.#":  acctest.Ct1,
 						"ipv6_cidr_blocks.0":  "::/0",
 						"prefix_list_ids.#":   acctest.Ct0,
-						names.AttrProtocol:    acctest.CtNegative1,
+						names.AttrProtocol:    "-1",
 						"security_groups.#":   acctest.Ct0,
 						"self":                acctest.CtFalse,
 						"to_port":             acctest.Ct0,

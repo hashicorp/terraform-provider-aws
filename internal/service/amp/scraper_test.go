@@ -49,7 +49,7 @@ func TestAccAMPScraper_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "source.0.eks.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

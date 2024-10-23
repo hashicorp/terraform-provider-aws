@@ -41,7 +41,7 @@ func TestAccBedrockAgentAgentAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -102,7 +102,7 @@ func TestAccBedrockAgentAgentAlias_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionOld),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -121,7 +121,7 @@ func TestAccBedrockAgentAgentAlias_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionNew),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -151,7 +151,7 @@ func TestAccBedrockAgentAgentAlias_routingUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test Alias"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -170,7 +170,7 @@ func TestAccBedrockAgentAgentAlias_routingUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test Alias"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -249,7 +249,7 @@ func TestAccBedrockAgentAgentAlias_provisionedThroughput(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_configuration.0.provisioned_throughput"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

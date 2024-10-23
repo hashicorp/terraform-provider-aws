@@ -75,7 +75,7 @@ func TestAccAutoScalingNotification_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_notification.test"
 	groups1 := []string{rName}
-	groups2 := []string{rName, rName + acctest.CtNegative2}
+	groups2 := []string{rName, rName + "-2"}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -101,7 +101,7 @@ func TestAccAutoScalingNotification_update(t *testing.T) {
 					testAccCheckNotificationExists(ctx, resourceName, groups2),
 					resource.TestCheckResourceAttr(resourceName, "group_names.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName),
-					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName+acctest.CtNegative2),
+					resource.TestCheckTypeSetElemAttr(resourceName, "group_names.*", rName+"-2"),
 					resource.TestCheckResourceAttr(resourceName, "notifications.#", acctest.Ct3),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_LAUNCH"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "notifications.*", "autoscaling:EC2_INSTANCE_TERMINATE"),

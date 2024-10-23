@@ -100,7 +100,7 @@ func testAccMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", "0"),
 				),
 			},
 			{
@@ -406,7 +406,7 @@ func testAccMethodSettings_Settings_throttlingBurstLimitDisabledByDefault(t *tes
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", "-1"),
 				),
 			},
 			{
@@ -481,7 +481,7 @@ func testAccMethodSettings_Settings_throttlingRateLimitDisabledByDefault(t *test
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_rate_limit", acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_rate_limit", "-1"),
 				),
 			},
 			{

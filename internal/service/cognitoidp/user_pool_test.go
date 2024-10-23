@@ -54,8 +54,8 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_date"),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "account_recovery_setting.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "admin_create_user_config.0.allow_admin_create_user_only", acctest.CtFalse),
@@ -70,9 +70,9 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password_policy.0.temporary_password_validity_days", acctest.Ct7),
 					resource.TestCheckResourceAttr(resourceName, "verification_message_template.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "estimated_number_of_users", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "estimated_number_of_users", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, "INACTIVE"),
 				),
 			},
@@ -288,7 +288,7 @@ func TestAccCognitoIDPUserPool_withAdvancedSecurityMode(t *testing.T) {
 			{
 				Config: testAccUserPoolConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.#", "0"),
 				),
 			},
 		},
@@ -401,7 +401,7 @@ func TestAccCognitoIDPUserPool_passwordHistorySize(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "password_policy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "password_policy.0.password_history_size", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "password_policy.0.password_history_size", "0"),
 				),
 			},
 		},
@@ -429,7 +429,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -442,7 +442,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -452,7 +452,7 @@ func TestAccCognitoIDPUserPool_MFA_sms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 				),
 			},
 		},
@@ -505,7 +505,7 @@ func TestAccCognitoIDPUserPool_MFA_smsAndSoftwareTokenMFA(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 				),
 			},
 		},
@@ -533,7 +533,7 @@ func TestAccCognitoIDPUserPool_MFA_smsToSoftwareTokenMFA(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 				),
 			},
 			{
@@ -571,7 +571,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
 				),
@@ -585,15 +585,15 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFA(t *testing.T) {
 				Config: testAccUserPoolConfig_mfaConfiguration(rName, string(awstypes.UserPoolMfaTypeOff)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccUserPoolConfig_mfaConfigurationSoftwareTokenMFAConfigurationEnabled(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
 				),
@@ -620,7 +620,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAToSMS(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "mfa_configuration", "ON"),
-					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.0.enabled", acctest.CtTrue),
 				),
@@ -637,7 +637,7 @@ func TestAccCognitoIDPUserPool_MFA_softwareTokenMFAToSMS(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "sms_configuration.0.external_id", "test"),
 					resource.TestCheckResourceAttrPair(resourceName, "sms_configuration.0.sns_caller_arn", iamRoleResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "software_token_mfa_configuration.#", "0"),
 				),
 			},
 		},
@@ -962,7 +962,7 @@ func TestAccCognitoIDPUserPool_withAliasAttributes(t *testing.T) {
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "alias_attributes.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "alias_attributes.*", "preferred_username"),
-					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "0"),
 				),
 			},
 			{
@@ -1002,7 +1002,7 @@ func TestAccCognitoIDPUserPool_withUsernameAttributes(t *testing.T) {
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "username_attributes.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "username_attributes.*", "phone_number"),
-					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "0"),
 				),
 			},
 			{
@@ -1163,7 +1163,7 @@ func TestAccCognitoIDPUserPool_withLambda(t *testing.T) {
 				Config: testAccUserPoolConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
 				),
 			},
 		},
@@ -1192,7 +1192,7 @@ func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_email_sender.0.lambda_arn", lambdaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.0.lambda_version", "V1_0"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 				),
 			},
 			{
@@ -1207,15 +1207,15 @@ func TestAccCognitoIDPUserPool_WithLambda_email(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_email_sender.0.lambda_arn", lambdaUpdatedResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.0.lambda_version", "V1_0"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 				),
 			},
 			{
 				Config: testAccUserPoolConfig_lambdaEmailSenderUpdatedRemove(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 				),
 			},
 		},
@@ -1241,7 +1241,7 @@ func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn", lambdaResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_version", "V1_0"),
@@ -1256,7 +1256,7 @@ func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 				Config: testAccUserPoolConfig_lambdaSMSSenderUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_arn", lambdaUpdatedResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.0.lambda_version", "V1_0"),
@@ -1266,8 +1266,8 @@ func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 				Config: testAccUserPoolConfig_lambdaSMSSenderUpdatedRemove(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 				),
 			},
 		},
@@ -1317,9 +1317,9 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 			{
 				Config: testAccUserPoolConfig_lambdaPreTokenGenerationConfigRemove(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", "0"),
 				),
 			},
 		},
@@ -1344,7 +1344,7 @@ func TestAccCognitoIDPUserPool_addLambda(t *testing.T) {
 				Config: testAccUserPoolConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
 				),
 			},
 			{
@@ -1395,7 +1395,7 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"developer_only_attribute":                  acctest.CtFalse,
 						"mutable":                                   acctest.CtFalse,
 						names.AttrName:                              names.AttrEmail,
-						"number_attribute_constraints.#":            acctest.Ct0,
+						"number_attribute_constraints.#":            "0",
 						"required":                                  acctest.CtTrue,
 						"string_attribute_constraints.#":            acctest.Ct1,
 						"string_attribute_constraints.0.min_length": acctest.Ct5,
@@ -1406,16 +1406,16 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"developer_only_attribute":       acctest.CtTrue,
 						"mutable":                        acctest.CtFalse,
 						names.AttrName:                   "mybool",
-						"number_attribute_constraints.#": acctest.Ct0,
+						"number_attribute_constraints.#": "0",
 						"required":                       acctest.CtFalse,
-						"string_attribute_constraints.#": acctest.Ct0,
+						"string_attribute_constraints.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
 						"attribute_data_type":            "String",
 						"developer_only_attribute":       acctest.CtFalse,
 						"mutable":                        acctest.CtTrue,
 						names.AttrName:                   "strattr",
-						"number_attribute_constraints.#": acctest.Ct0,
+						"number_attribute_constraints.#": "0",
 						"required":                       acctest.CtFalse,
 						"string_attribute_constraints.#": acctest.Ct1,
 					}),
@@ -1426,7 +1426,7 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						names.AttrName:                   "numattr",
 						"required":                       acctest.CtFalse,
 						"number_attribute_constraints.#": acctest.Ct1,
-						"string_attribute_constraints.#": acctest.Ct0,
+						"string_attribute_constraints.#": "0",
 					})),
 			},
 			{
@@ -1440,7 +1440,7 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"developer_only_attribute":                  acctest.CtFalse,
 						"mutable":                                   acctest.CtFalse,
 						names.AttrName:                              names.AttrEmail,
-						"number_attribute_constraints.#":            acctest.Ct0,
+						"number_attribute_constraints.#":            "0",
 						"required":                                  acctest.CtTrue,
 						"string_attribute_constraints.#":            acctest.Ct1,
 						"string_attribute_constraints.0.min_length": acctest.Ct5,
@@ -1451,9 +1451,9 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"developer_only_attribute":       acctest.CtTrue,
 						"mutable":                        acctest.CtFalse,
 						names.AttrName:                   "mybool",
-						"number_attribute_constraints.#": acctest.Ct0,
+						"number_attribute_constraints.#": "0",
 						"required":                       acctest.CtFalse,
-						"string_attribute_constraints.#": acctest.Ct0,
+						"string_attribute_constraints.#": "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
 						"attribute_data_type":                      "Number",
@@ -1464,14 +1464,14 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"number_attribute_constraints.0.min_value": acctest.Ct2,
 						"number_attribute_constraints.0.max_value": acctest.Ct6,
 						"required":                                 acctest.CtFalse,
-						"string_attribute_constraints.#":           acctest.Ct0,
+						"string_attribute_constraints.#":           "0",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
 						"attribute_data_type":            "String",
 						"developer_only_attribute":       acctest.CtFalse,
 						"mutable":                        acctest.CtTrue,
 						names.AttrName:                   "strattr",
-						"number_attribute_constraints.#": acctest.Ct0,
+						"number_attribute_constraints.#": "0",
 						"required":                       acctest.CtFalse,
 						"string_attribute_constraints.#": acctest.Ct1,
 					}),
@@ -1482,7 +1482,7 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						names.AttrName:                   "numattr",
 						"required":                       acctest.CtFalse,
 						"number_attribute_constraints.#": acctest.Ct1,
-						"string_attribute_constraints.#": acctest.Ct0,
+						"string_attribute_constraints.#": "0",
 					}),
 				),
 			},
@@ -1840,8 +1840,8 @@ func TestAccCognitoIDPUserPool_withUserAttributeUpdateSettings(t *testing.T) {
 				Config: testAccUserPoolConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "auto_verified_attributes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_attribute_update_settings.#", "0"),
 				),
 			},
 		},
@@ -2235,7 +2235,7 @@ resource "aws_cognito_user_pool" "test" {
 }
 
 func testAccUserPoolConfig_smsConfigurationSNSCallerARN2(rName string) string {
-	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName+acctest.CtNegative2, "test"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccUserPoolSMSConfigurationConfig_base(rName+"-2", "test"), fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 

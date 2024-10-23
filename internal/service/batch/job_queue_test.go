@@ -52,11 +52,11 @@ func TestAccBatchJobQueue_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", fmt.Sprintf("job-queue/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_environments.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "compute_environments.0", "aws_batch_compute_environment.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.JQStateEnabled)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -90,7 +90,7 @@ func TestAccBatchJobQueue_basicCEO(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(awstypes.JQStateEnabled)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

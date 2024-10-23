@@ -282,7 +282,7 @@ func TestAccAPIGatewayAuthorizer_Zero_ttl(t *testing.T) {
 				Config: testAccAuthorizerConfig_lambdaNoCache(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
 				),
 			},
 			{

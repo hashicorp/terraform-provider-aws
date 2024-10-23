@@ -77,22 +77,22 @@ func TestAccRekognitionProject_ContentModeration(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_contentModeration(rProjectId+acctest.CtNegative1, "ENABLED"),
+				Config: testAccProjectConfig_contentModeration(rProjectId+"-1", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, rProjectId+acctest.CtNegative1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rProjectId+acctest.CtNegative1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rProjectId+"-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rProjectId+"-1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
 				),
 			},
 			{
-				Config: testAccProjectConfig_contentModeration(rProjectId+acctest.CtNegative2, "DISABLED"),
+				Config: testAccProjectConfig_contentModeration(rProjectId+"-2", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrID, rProjectId+acctest.CtNegative2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rProjectId+acctest.CtNegative2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rProjectId+"-2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rProjectId+"-2"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),

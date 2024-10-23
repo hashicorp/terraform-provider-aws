@@ -44,9 +44,9 @@ func TestAccCloudFormationStackInstances_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "accounts.#", acctest.Ct1),
 					acctest.CheckResourceAttrAccountID(resourceName, "accounts.0"),
 					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "regions.0", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "retain_stacks", acctest.CtFalse),
@@ -144,9 +144,9 @@ func TestAccCloudFormationStackInstances_Multi_increaseRegions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "accounts.#", acctest.Ct1),
 					acctest.CheckResourceAttrAccountID(resourceName, "accounts.0"),
 					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "deployment_targets.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "regions.*", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, "retain_stacks", acctest.CtFalse),
@@ -300,7 +300,7 @@ func TestAccCloudFormationStackInstances_parameterOverrides(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackInstancesExists(ctx, resourceName, &stackInstances4),
 					testAccCheckStackInstancesNotRecreated(&stackInstances3, &stackInstances4),
-					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameter_overrides.%", "0"),
 				),
 			},
 		},
@@ -427,9 +427,9 @@ func TestAccCloudFormationStackInstances_operationPreferences(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
 			},
@@ -462,9 +462,9 @@ func TestAccCloudFormationStackInstances_concurrencyMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.concurrency_mode", "SOFT_FAILURE_TOLERANCE"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_count", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.failure_tolerance_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_count", acctest.Ct10),
-					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.max_concurrent_percentage", "0"),
 					resource.TestCheckResourceAttr(resourceName, "operation_preferences.0.region_concurrency_type", ""),
 				),
 			},
@@ -556,7 +556,7 @@ func testAccCheckStackInstancesExists(ctx context.Context, resourceName string, 
 		}
 
 		deployedByOU := false
-		if rs.Primary.Attributes["deployment_targets.#"] != acctest.Ct0 && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != acctest.Ct0 {
+		if rs.Primary.Attributes["deployment_targets.#"] != "0" && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != "0" {
 			deployedByOU = true
 		}
 
@@ -604,7 +604,7 @@ func testAccCheckStackInstancesForOrganizationalUnitExists(ctx context.Context, 
 		}
 
 		deployedByOU := false
-		if rs.Primary.Attributes["deployment_targets.#"] != acctest.Ct0 && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != acctest.Ct0 {
+		if rs.Primary.Attributes["deployment_targets.#"] != "0" && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != "0" {
 			deployedByOU = true
 		}
 
@@ -648,7 +648,7 @@ func testAccCheckStackInstancesForOrganizationalUnitDestroy(ctx context.Context)
 			}
 
 			deployedByOU := false
-			if rs.Primary.Attributes["deployment_targets.#"] != acctest.Ct0 && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != acctest.Ct0 {
+			if rs.Primary.Attributes["deployment_targets.#"] != "0" && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != "0" {
 				deployedByOU = true
 			}
 
@@ -697,7 +697,7 @@ func testAccCheckStackInstancesDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			deployedByOU := false
-			if rs.Primary.Attributes["deployment_targets.#"] != acctest.Ct0 && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != acctest.Ct0 {
+			if rs.Primary.Attributes["deployment_targets.#"] != "0" && rs.Primary.Attributes["deployment_targets.0.organizational_unit_ids.#"] != "0" {
 				deployedByOU = true
 			}
 

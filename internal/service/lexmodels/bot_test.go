@@ -465,7 +465,7 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBotExists(ctx, rName, &v),
 					resource.TestCheckResourceAttr(rName, "enable_model_improvements", acctest.CtTrue),
-					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", acctest.Ct0Point5),
+					resource.TestCheckResourceAttr(rName, "nlu_intent_confidence_threshold", "0.5"),
 				),
 			},
 			{

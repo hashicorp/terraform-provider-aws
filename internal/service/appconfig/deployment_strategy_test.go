@@ -42,7 +42,7 @@ func TestAccAppConfigDeploymentStrategy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "growth_factor", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "replicate_to", string(awstypes.ReplicateToNone)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

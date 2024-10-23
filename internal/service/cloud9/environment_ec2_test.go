@@ -41,7 +41,7 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "owner_arn"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
