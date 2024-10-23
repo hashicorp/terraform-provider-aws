@@ -41,7 +41,7 @@ func newResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, 
 	r := &resourceAssociation{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute) // tags only
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -119,7 +119,7 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Read:   true,
+				Update: true,
 				Delete: true,
 			}),
 		},
