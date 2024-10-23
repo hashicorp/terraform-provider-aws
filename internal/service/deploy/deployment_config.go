@@ -152,13 +152,13 @@ func resourceDeploymentConfig() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										ForceNew:         true,
 										ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsPerZoneType](),
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeInt,
 										Optional: true,
 										ForceNew: true,
@@ -367,8 +367,8 @@ func expandZonalConfig(d *schema.ResourceData) *types.ZonalConfig {
 
 func expandMinimumHealthyHostsPerZone(config map[string]interface{}) *types.MinimumHealthyHostsPerZone {
 	minimumHealthyHostsPerZone := types.MinimumHealthyHostsPerZone{
-		Type:  types.MinimumHealthyHostsPerZoneType(config["type"].(string)),
-		Value: int32(config["value"].(int)),
+		Type:  types.MinimumHealthyHostsPerZoneType(config[names.AttrType].(string)),
+		Value: int32(config[names.AttrValue].(int)),
 	}
 
 	return &minimumHealthyHostsPerZone
@@ -452,8 +452,8 @@ func flattenMinimumHealthHostsPerZone(config *types.MinimumHealthyHostsPerZone) 
 	}
 
 	item := make(map[string]interface{})
-	item["type"] = string(config.Type)
-	item["value"] = config.Value
+	item[names.AttrType] = string(config.Type)
+	item[names.AttrValue] = config.Value
 
 	return append(result, item)
 }

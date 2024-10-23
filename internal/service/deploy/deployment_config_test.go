@@ -248,7 +248,7 @@ func TestAccDeployDeploymentConfig_zonalConfig(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -257,12 +257,12 @@ func TestAccDeployDeploymentConfig_zonalConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config1),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
-					resource.TestCheckResourceAttr(resourceName, "zonal_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.first_zone_monitor_duration_in_seconds", "10"),
-					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.first_zone_monitor_duration_in_seconds", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.0.type", "FLEET_PERCENT"),
 					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.0.value", "20"),
-					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.monitor_duration_in_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.monitor_duration_in_seconds", acctest.Ct10),
 				),
 			},
 			{
@@ -270,11 +270,11 @@ func TestAccDeployDeploymentConfig_zonalConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config2),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
-					resource.TestCheckResourceAttr(resourceName, "zonal_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.first_zone_monitor_duration_in_seconds", "20"),
-					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.0.type", "HOST_COUNT"),
-					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.0.value", "2"),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.minimum_healthy_hosts_per_zone.0.value", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "zonal_config.0.monitor_duration_in_seconds", "20"),
 				),
 			},
