@@ -195,7 +195,7 @@ func (r *resourceAuthorizeVpcEndpointAccess) ImportState(ctx context.Context, re
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func findAuthorizeVpcEndpointAccessByName(ctx context.Context, conn *opensearch.Client, id string) (*awstypes.AuthorizedPrincipal, error) {
+func findAuthorizeVpcEndpointAccessByName(ctx context.Context, conn *opensearch.Client, domainName string) (*awstypes.AuthorizedPrincipal, error) {
 	in := &opensearch.ListVpcEndpointAccessInput{
 		DomainName: aws.String(id),
 	}

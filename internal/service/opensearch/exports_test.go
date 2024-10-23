@@ -12,10 +12,11 @@ var (
 	ResourcePackageAssociation        = resourcePackageAssociation
 	ResourceVPCEndpoint               = resourceVPCEndpoint
 
-	FindDomainByName                   = findDomainByName
-	FindPackageByID                    = findPackageByID
-	FindPackageAssociationByTwoPartKey = findPackageAssociationByTwoPartKey
-	FindVPCEndpointByID                = findVPCEndpointByID
+	FindDomainByName                     = findDomainByName
+	FindPackageByID                      = findPackageByID
+	FindPackageAssociationByTwoPartKey   = findPackageAssociationByTwoPartKey
+	FindVPCEndpointByID                  = findVPCEndpointByID
+	FindAuthorizeVpcEndpointAccessByName = findAuthorizeVpcEndpointAccessByName
 
 	EBSVolumeTypePermitsIopsInput       = ebsVolumeTypePermitsIopsInput
 	EBSVolumeTypePermitsThroughputInput = ebsVolumeTypePermitsThroughputInput
