@@ -56,7 +56,7 @@ func testAccBranch_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "source_branch", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStage, "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "ttl", acctest.Ct5),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "5"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -158,8 +158,8 @@ func testAccBranch_EnvironmentVariables(t *testing.T) {
 				Config: testAccBranchConfig_environmentVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "1"),
 				),
 			},
 			{
@@ -171,9 +171,9 @@ func testAccBranch_EnvironmentVariables(t *testing.T) {
 				Config: testAccBranchConfig_environmentVariablesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBranchExists(ctx, resourceName, &branch),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR2", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR1", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment_variables.ENVVAR2", "2"),
 				),
 			},
 			{
@@ -216,7 +216,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "framework", "React"),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStage, "DEVELOPMENT"),
-					resource.TestCheckResourceAttr(resourceName, "ttl", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "10"),
 				),
 			},
 			{
@@ -238,7 +238,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "framework", "Angular"),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStage, "EXPERIMENTAL"),
-					resource.TestCheckResourceAttr(resourceName, "ttl", acctest.Ct15),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "15"),
 				),
 			},
 		},
