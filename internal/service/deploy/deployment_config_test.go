@@ -443,12 +443,12 @@ resource "aws_codedeploy_deployment_config" "test" {
   }
 
   zonal_config {
-	first_zone_monitor_duration_in_seconds = %[2]d
-	minimum_healthy_hosts_per_zone {
-		type = %[3]q
-		value = %[4]d
-	}
-	monitor_duration_in_seconds = %[5]d
+    first_zone_monitor_duration_in_seconds = %[2]d
+    minimum_healthy_hosts_per_zone {
+      type  = %[3]q
+      value = %[4]d
+    }
+    monitor_duration_in_seconds = %[5]d
   }
 }
 `, rName, first_zone_monitor_duration, minimum_healthy_host_type, minimum_healthy_host_value, monitor_duration)
