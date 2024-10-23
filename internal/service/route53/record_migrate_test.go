@@ -76,20 +76,20 @@ func TestRecordMigrateStateV1toV2(t *testing.T) {
 		"v0_1": {
 			StateVersion: 1,
 			Attributes: map[string]string{
-				names.AttrWeight: "0", // nosemgrep: ci.literal-0-string-test-constant
+				names.AttrWeight: "0",
 				"failover":       "PRIMARY",
 			},
 			Expected: map[string]string{
-				"weighted_routing_policy.#":        "1", // nosemgrep: ci.literal-1-string-test-constant
-				"weighted_routing_policy.0.weight": "0", // nosemgrep: ci.literal-0-string-test-constant
-				"failover_routing_policy.#":        "1", // nosemgrep: ci.literal-1-string-test-constant
+				"weighted_routing_policy.#":        "1",
+				"weighted_routing_policy.0.weight": "0",
+				"failover_routing_policy.#":        "1",
 				"failover_routing_policy.0.type":   "PRIMARY",
 			},
 		},
 		"v0_2": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				names.AttrWeight: "-1", // nosemgrep: ci.literal-Negative1-string-test-constant
+				names.AttrWeight: "-1",
 			},
 			Expected: map[string]string{},
 		},
