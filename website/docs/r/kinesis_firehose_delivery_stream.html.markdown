@@ -562,8 +562,8 @@ resource "aws_glue_catalog_table" "test" {
     location = "s3://${aws_s3_bucket.bucket.id}"
 
     columns {
-      name    = "my_column_1"
-      type    = "int"
+      name = "my_column_1"
+      type = "int"
     }
   }
 }
@@ -579,8 +579,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     buffering_interval = 400
 
     s3_configuration {
-      role_arn           = aws_iam_role.firehose_role.arn
-      bucket_arn         = aws_s3_bucket.bucket.arn
+      role_arn   = aws_iam_role.firehose_role.arn
+      bucket_arn = aws_s3_bucket.bucket.arn
     }
 
     destination_table_configuration {
