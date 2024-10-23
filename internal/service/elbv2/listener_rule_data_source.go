@@ -24,6 +24,8 @@ import (
 )
 
 // @FrameworkDataSource("aws_lb_listener_rule", name="Listener Rule")
+// @Testing(tagsTest=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func newDataSourceListenerRule(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceListenerRule{}, nil
 }
