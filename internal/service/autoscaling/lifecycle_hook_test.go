@@ -35,7 +35,7 @@ func TestAccAutoScalingLifecycleHook_basic(t *testing.T) {
 					testAccCheckLifecycleHookExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "autoscaling_group_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "default_result", "CONTINUE"),
-					resource.TestCheckResourceAttr(resourceName, "heartbeat_timeout", acctest.Ct2000),
+					resource.TestCheckResourceAttr(resourceName, "heartbeat_timeout", "2000"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_transition", "autoscaling:EC2_INSTANCE_LAUNCHING"),
 				),
 			},

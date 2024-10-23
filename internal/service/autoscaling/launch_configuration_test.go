@@ -165,25 +165,25 @@ func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_blockDevices(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
-						names.AttrVolumeSize: acctest.Ct9,
+						names.AttrVolumeSize: "9",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdc",
-						names.AttrIOPS:       acctest.Ct100,
-						names.AttrVolumeSize: acctest.Ct10,
+						names.AttrIOPS:       "100",
+						names.AttrVolumeSize: "10",
 						names.AttrVolumeType: "io1",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
 						names.AttrDeviceName:  "/dev/sde",
 						names.AttrVirtualName: "ephemeral0",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
-						names.AttrVolumeSize: acctest.Ct11,
+						names.AttrVolumeSize: "11",
 						names.AttrVolumeType: "gp2",
 					}),
 				),
@@ -247,8 +247,8 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_volumeSize(t *testing
 				Config: testAccLaunchConfigurationConfig_rootBlockDeviceVolumeSize(rName, 11),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct11),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "11"),
 				),
 			},
 			{
@@ -260,8 +260,8 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_volumeSize(t *testing
 				Config: testAccLaunchConfigurationConfig_rootBlockDeviceVolumeSize(rName, 20),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", acctest.Ct20),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "20"),
 				),
 			},
 		},
@@ -284,10 +284,10 @@ func TestAccAutoScalingLaunchConfiguration_encryptedRootBlockDevice(t *testing.T
 				Config: testAccLaunchConfigurationConfig_encryptedRootBlockDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
 						names.AttrEncrypted:  acctest.CtTrue,
-						names.AttrVolumeSize: acctest.Ct11,
+						names.AttrVolumeSize: "11",
 						names.AttrVolumeType: "gp2",
 					}),
 				),
@@ -373,17 +373,17 @@ func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_gp3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
 						names.AttrEncrypted:  acctest.CtTrue,
-						names.AttrThroughput: acctest.Ct150,
-						names.AttrVolumeSize: acctest.Ct9,
+						names.AttrThroughput: "150",
+						names.AttrVolumeSize: "9",
 						names.AttrVolumeType: "gp3",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
-						names.AttrVolumeSize: acctest.Ct11,
+						names.AttrVolumeSize: "11",
 						names.AttrVolumeType: "gp3",
 					}),
 				),
@@ -413,15 +413,15 @@ func TestAccAutoScalingLaunchConfiguration_encryptedEBSBlockDevice(t *testing.T)
 				Config: testAccLaunchConfigurationConfig_encryptedEBSBlockDevice(rName, 9),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
 						names.AttrEncrypted:  acctest.CtTrue,
-						names.AttrVolumeSize: acctest.Ct9,
+						names.AttrVolumeSize: "9",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
-						names.AttrVolumeSize: acctest.Ct11,
+						names.AttrVolumeSize: "11",
 						names.AttrVolumeType: "gp2",
 					}),
 				),
@@ -435,15 +435,15 @@ func TestAccAutoScalingLaunchConfiguration_encryptedEBSBlockDevice(t *testing.T)
 				Config: testAccLaunchConfigurationConfig_encryptedEBSBlockDevice(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sdb",
 						names.AttrEncrypted:  acctest.CtTrue,
-						names.AttrVolumeSize: acctest.Ct10,
+						names.AttrVolumeSize: "10",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "root_block_device.*", map[string]string{
-						names.AttrVolumeSize: acctest.Ct11,
+						names.AttrVolumeSize: "11",
 						names.AttrVolumeType: "gp2",
 					}),
 				),
@@ -468,9 +468,9 @@ func TestAccAutoScalingLaunchConfiguration_metadataOptions(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_metadataOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", names.AttrEnabled),
-					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
 				),
 			},
@@ -499,7 +499,7 @@ func TestAccAutoScalingLaunchConfiguration_EBS_noDevice(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_ebsNoDevice(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						names.AttrDeviceName: "/dev/sda2",
 						"no_device":          acctest.CtTrue,
