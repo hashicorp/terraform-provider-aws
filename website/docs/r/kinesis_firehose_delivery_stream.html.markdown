@@ -573,8 +573,8 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   destination = "iceberg"
 
   iceberg_configuration {
-    role_arn            = aws_iam_role.firehose_role.arn
-    catalog_arn         = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    role_arn           = aws_iam_role.firehose_role.arn
+    catalog_arn        = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
     buffering_size     = 10
     buffering_interval = 400
 
