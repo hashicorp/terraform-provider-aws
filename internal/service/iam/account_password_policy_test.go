@@ -44,7 +44,7 @@ func testAccAccountPasswordPolicy_basic(t *testing.T) {
 				Config: testAccAccountPasswordPolicyConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPasswordPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", acctest.Ct8),
+					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", "8"),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func testAccAccountPasswordPolicy_basic(t *testing.T) {
 				Config: testAccAccountPasswordPolicyConfig_modified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPasswordPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", acctest.Ct7),
+					resource.TestCheckResourceAttr(resourceName, "minimum_password_length", "7"),
 				),
 			},
 		},
