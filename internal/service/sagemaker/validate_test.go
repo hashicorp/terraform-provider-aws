@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -19,7 +18,7 @@ func TestValidName(t *testing.T) {
 		"ValidSageMakerName",
 		"Valid-5a63Mak3r-Name",
 		"123-456-789",
-		acctest.Ct1234,
+		"1234",
 		strings.Repeat("W", 63),
 	}
 	for _, v := range validNames {
@@ -51,7 +50,7 @@ func TestValidPrefix(t *testing.T) {
 		"ValidSageMakerName",
 		"Valid-5a63Mak3r-Name",
 		"123-456-789",
-		acctest.Ct1234,
+		"1234",
 		strings.Repeat("W", maxLength),
 	}
 	for _, v := range validPrefixes {
