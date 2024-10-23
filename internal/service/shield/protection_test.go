@@ -10,14 +10,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/shield"
-	"github.com/aws/aws-sdk-go-v2/service/shield/types"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -187,7 +186,7 @@ func TestAccShieldProtection_cloudFront(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
-			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
@@ -220,7 +219,7 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
-			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldServiceID),
@@ -340,11 +339,9 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 	input := &shield.ListProtectionsInput{}
 
-	errResourceNotFoundException := &types.ResourceNotFoundException{}
-
 	_, err := conn.ListProtections(ctx, input)
 
-	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, errResourceNotFoundException.ErrorCode(), "subscription does not exist") {
+	if acctest.PreCheckSkipError(err) || errs.IsAErrorMessageContains[*awstypes.ResourceNotFoundException](err, "subscription does not exist") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

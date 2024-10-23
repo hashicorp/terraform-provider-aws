@@ -359,11 +359,11 @@ func findActionType(ctx context.Context, conn *codepipeline.Client, input *codep
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findActionTypes(ctx context.Context, conn *codepipeline.Client, input *codepipeline.ListActionTypesInput, filter tfslices.Predicate[*types.ActionType]) ([]*types.ActionType, error) {
-	var output []*types.ActionType
+func findActionTypes(ctx context.Context, conn *codepipeline.Client, input *codepipeline.ListActionTypesInput, filter tfslices.Predicate[*types.ActionType]) ([]types.ActionType, error) {
+	var output []types.ActionType
 
 	pages := codepipeline.NewListActionTypesPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -374,8 +374,7 @@ func findActionTypes(ctx context.Context, conn *codepipeline.Client, input *code
 		}
 
 		for _, v := range page.ActionTypes {
-			v := v
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}

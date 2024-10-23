@@ -647,7 +647,7 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	testTimeStr := "2023-12-08T09:34:01Z"
-	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
+	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr)) // nosemgrep: ci.avoid-errs-Must
 
 	intentDescribeTF := tflexv2models.ResourceIntentData{
 		BotID:                  types.StringValue(testString),
@@ -842,12 +842,10 @@ func TestIntentAutoFlex(t *testing.T) {
 	)
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(fmt.Sprintf("expand %s", testCase.TestName), func(t *testing.T) {
 			t.Parallel()
 
-			diags := flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, "Intent"), testCase.TFFull, testCase.AWSEmpty)
+			diags := flex.Expand(ctx, testCase.TFFull, testCase.AWSEmpty, tflexv2models.IntentFlexOpt)
 
 			gotErr := diags != nil
 
@@ -869,7 +867,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		t.Run(fmt.Sprintf("flatten %s", testCase.TestName), func(t *testing.T) {
 			t.Parallel()
 
-			diags := flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, "Intent"), testCase.AWSFull, testCase.TFEmpty)
+			diags := flex.Flatten(ctx, testCase.AWSFull, testCase.TFEmpty, tflexv2models.IntentFlexOpt)
 
 			gotErr := diags != nil
 

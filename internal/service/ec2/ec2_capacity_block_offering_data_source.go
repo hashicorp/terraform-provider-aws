@@ -5,36 +5,34 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource("aws_ec2_capacity_block_offering", name="Capacity Block Offering")
-func newDataSourceCapacityBlockOffering(_ context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourceCapacityBlockOffering{}
+func newCapacityBlockOfferingDataSource(_ context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &capacityBlockOfferingDataSource{}
 
 	return d, nil
 }
 
-type dataSourceCapacityBlockOffering struct {
+type capacityBlockOfferingDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceCapacityBlockOffering) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (*capacityBlockOfferingDataSource) Metadata(_ context.Context, _ datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_ec2_capacity_block_offering"
 }
 
-func (d *dataSourceCapacityBlockOffering) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *capacityBlockOfferingDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrAvailabilityZone: schema.StringAttribute{
@@ -73,39 +71,30 @@ func (d *dataSourceCapacityBlockOffering) Schema(_ context.Context, _ datasource
 	}
 }
 
-const (
-	DSNameCapacityBlockOffering = "Capacity Block Offering"
-)
-
-func (d *dataSourceCapacityBlockOffering) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	conn := d.Meta().EC2Client(ctx)
-	var data dataSourceCapacityBlockOfferingData
-
+func (d *capacityBlockOfferingDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data capacityBlockOfferingDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := d.Meta().EC2Client(ctx)
 
 	input := &ec2.DescribeCapacityBlockOfferingsInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := findCapacityBLockOffering(ctx, conn, input)
+	output, err := findCapacityBlockOffering(ctx, conn, input)
 
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, DSNameCapacityBlockOffering, data.InstanceType.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Capacity Block Offering (%s)", data.InstanceType.ValueString()), err.Error())
+
 		return
 	}
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -113,7 +102,7 @@ func (d *dataSourceCapacityBlockOffering) Read(ctx context.Context, request data
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceCapacityBlockOfferingData struct {
+type capacityBlockOfferingDataSourceModel struct {
 	AvailabilityZone        types.String      `tfsdk:"availability_zone"`
 	CapacityDurationHours   types.Int64       `tfsdk:"capacity_duration_hours"`
 	CurrencyCode            types.String      `tfsdk:"currency_code"`
@@ -124,22 +113,4 @@ type dataSourceCapacityBlockOfferingData struct {
 	StartDateRange          timetypes.RFC3339 `tfsdk:"start_date_range"`
 	Tenancy                 types.String      `tfsdk:"tenancy"`
 	UpfrontFee              types.String      `tfsdk:"upfront_fee"`
-}
-
-func findCapacityBLockOffering(ctx context.Context, conn *ec2.Client, in *ec2.DescribeCapacityBlockOfferingsInput) (*awstypes.CapacityBlockOffering, error) {
-	output, err := conn.DescribeCapacityBlockOfferings(ctx, in)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.CapacityBlockOfferings) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	if len(output.CapacityBlockOfferings) > 1 {
-		return nil, tfresource.NewTooManyResultsError(len(output.CapacityBlockOfferings), in)
-	}
-
-	return tfresource.AssertSingleValueResult(output.CapacityBlockOfferings)
 }

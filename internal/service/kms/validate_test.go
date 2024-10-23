@@ -185,7 +185,6 @@ func TestValidateKeyOrAlias(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.Value, func(t *testing.T) {
 			t.Parallel()
 
@@ -231,7 +230,6 @@ func TestValidateKeyARN(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

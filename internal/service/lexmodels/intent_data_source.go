@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_lex_intent")
-func DataSourceIntent() *schema.Resource {
+// @SDKDataSource("aws_lex_intent", name="Intent")
+func dataSourceIntent() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIntentRead,
 
@@ -73,10 +73,10 @@ func DataSourceIntent() *schema.Resource {
 
 func dataSourceIntentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LexModelsConn(ctx)
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	intentName := d.Get(names.AttrName).(string)
-	resp, err := conn.GetIntentWithContext(ctx, &lexmodelbuildingservice.GetIntentInput{
+	resp, err := conn.GetIntent(ctx, &lexmodelbuildingservice.GetIntentInput{
 		Name:    aws.String(intentName),
 		Version: aws.String(d.Get(names.AttrVersion).(string)),
 	})

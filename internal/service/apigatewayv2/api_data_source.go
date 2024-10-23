@@ -17,6 +17,7 @@ import (
 
 // @SDKDataSource("aws_apigatewayv2_api", name="API")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceAPI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIRead,

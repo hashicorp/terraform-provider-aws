@@ -5,24 +5,28 @@ package inspector_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/inspector"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/inspector"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/inspector/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfinspector "github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v inspector.AssessmentTemplate
+	var v awstypes.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -55,7 +59,7 @@ func TestAccInspectorAssessmentTemplate_basic(t *testing.T) {
 
 func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v inspector.AssessmentTemplate
+	var v awstypes.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -79,7 +83,7 @@ func TestAccInspectorAssessmentTemplate_disappears(t *testing.T) {
 
 func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v inspector.AssessmentTemplate
+	var v awstypes.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -132,7 +136,7 @@ func TestAccInspectorAssessmentTemplate_tags(t *testing.T) {
 
 func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v inspector.AssessmentTemplate
+	var v awstypes.AssessmentTemplate
 	resourceName := "aws_inspector_assessment_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -190,41 +194,33 @@ func TestAccInspectorAssessmentTemplate_eventSubscription(t *testing.T) {
 
 func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_inspector_assessment_template" {
 				continue
 			}
 
-			resp, err := conn.DescribeAssessmentTemplatesWithContext(ctx, &inspector.DescribeAssessmentTemplatesInput{
-				AssessmentTemplateArns: []*string{
-					aws.String(rs.Primary.ID),
-				},
-			})
-
-			if tfawserr.ErrCodeEquals(err, inspector.ErrCodeInvalidInputException) {
-				continue
+			_, err := tfinspector.FindAssessmentTemplateByID(ctx, conn, rs.Primary.ID)
+			if errs.IsA[*retry.NotFoundError](err) {
+				return nil
 			}
-
 			if err != nil {
-				return fmt.Errorf("finding Inspector Classic Assessment Template: %s", err)
+				return create.Error(names.Inspector, create.ErrActionCheckingDestroyed, tfinspector.ResNameAssessmentTemplate, rs.Primary.ID, err)
 			}
 
-			if len(resp.AssessmentTemplates) > 0 {
-				return fmt.Errorf("Found Template, expected none: %s", resp)
-			}
+			return create.Error(names.Inspector, create.ErrActionCheckingDestroyed, tfinspector.ResNameAssessmentTemplate, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckTemplateDisappears(ctx context.Context, v *inspector.AssessmentTemplate) resource.TestCheckFunc {
+func testAccCheckTemplateDisappears(ctx context.Context, v *awstypes.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorClient(ctx)
 
-		_, err := conn.DeleteAssessmentTemplateWithContext(ctx, &inspector.DeleteAssessmentTemplateInput{
+		_, err := conn.DeleteAssessmentTemplate(ctx, &inspector.DeleteAssessmentTemplateInput{
 			AssessmentTemplateArn: v.Arn,
 		})
 
@@ -232,7 +228,7 @@ func testAccCheckTemplateDisappears(ctx context.Context, v *inspector.Assessment
 	}
 }
 
-func testAccCheckTemplateExists(ctx context.Context, name string, v *inspector.AssessmentTemplate) resource.TestCheckFunc {
+func testAccCheckTemplateExists(ctx context.Context, name string, v *awstypes.AssessmentTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -243,20 +239,14 @@ func testAccCheckTemplateExists(ctx context.Context, name string, v *inspector.A
 			return fmt.Errorf("No Inspector Classic Assessment template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).InspectorClient(ctx)
 
-		resp, err := conn.DescribeAssessmentTemplatesWithContext(ctx, &inspector.DescribeAssessmentTemplatesInput{
-			AssessmentTemplateArns: aws.StringSlice([]string{rs.Primary.ID}),
-		})
+		resp, err := tfinspector.FindAssessmentTemplateByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
-			return err
+			return create.Error(names.Inspector, create.ErrActionCheckingExistence, tfinspector.ResNameAssessmentTemplate, rs.Primary.ID, err)
 		}
 
-		if resp.AssessmentTemplates == nil || len(resp.AssessmentTemplates) == 0 {
-			return fmt.Errorf("Inspector Classic Assessment template not found")
-		}
-
-		*v = *resp.AssessmentTemplates[0]
+		*v = *resp
 
 		return nil
 	}

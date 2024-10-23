@@ -38,7 +38,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 				Config: testAccTLSInspectionConfigurationConfig_basic(rName, commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
 					resource.TestCheckResourceAttr(resourceName, "certificates.#", acctest.Ct1),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
@@ -170,7 +170,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_encryptionConfiguration(t 
 				Config: testAccTLSInspectionConfigurationConfig_encryptionConfiguration(rName, commonName.String(), certificateDomainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
 					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
 					resource.TestCheckResourceAttr(resourceName, "certificates.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
@@ -220,20 +220,27 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 	commonName := acctest.RandomDomain()
 	certificateDomainName := commonName.RandomSubdomain().String()
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"tls": {
+			Source:            "hashicorp/tls",
+			VersionConstraint: "4.0.5",
+		},
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTLSInspectionConfigurationConfig_checkCertificateRevocationStatus(rName, commonName.String(), certificateDomainName, "REJECT", "PASS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
-					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
-					resource.TestCheckResourceAttr(resourceName, "certificates.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
+					resource.TestCheckNoResourceAttr(resourceName, "certificates"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.key_id", "AWS_OWNED_KMS_KEY"),
@@ -243,7 +250,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.#", acctest.Ct1),
-					resource.TestCheckNoResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.certificate_authority_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.certificate_authority_arn"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.0.revoked_status_action", "REJECT"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.0.unknown_status_action", "PASS"),
@@ -260,7 +267,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.0.from_port", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.0.to_port", "65534"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "tls_inspection_configuration_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 				),
@@ -275,9 +282,9 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 				Config: testAccTLSInspectionConfigurationConfig_checkCertificateRevocationStatus(rName, commonName.String(), certificateDomainName, "DROP", "PASS"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
-					resource.TestCheckNoResourceAttr(resourceName, "certificate_authority"),
-					resource.TestCheckResourceAttr(resourceName, "certificates.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", regexache.MustCompile(`tls-configuration/.+$`)),
+					resource.TestCheckNoResourceAttr(resourceName, "certificates"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.key_id", "AWS_OWNED_KMS_KEY"),
@@ -287,7 +294,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.#", acctest.Ct1),
-					resource.TestCheckNoResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.certificate_authority_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.certificate_authority_arn"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.0.revoked_status_action", "DROP"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.check_certificate_revocation_status.0.unknown_status_action", "PASS"),
@@ -304,7 +311,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_checkCertificateRevocation
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.0.from_port", "1024"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.scope.0.source_ports.0.to_port", "65534"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configuration.0.server_certificate.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "tls_inspection_configuration_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
 				),
@@ -415,6 +422,39 @@ resource "aws_acm_certificate" "test" {
   ]
 }
 `, rName, commonName, certificateDomainName)
+}
+
+func testAccTLSInspectionConfigurationConfig_certificateCheckCertificateRevocationStatus(commonName, certificateDomainName string) string {
+	return fmt.Sprintf(`
+resource "tls_private_key" "test" {
+  algorithm = "RSA"
+}
+
+resource "tls_self_signed_cert" "test" {
+  private_key_pem = tls_private_key.test.private_key_pem
+
+  subject {
+    common_name = %[1]q
+  }
+
+  is_ca_certificate    = true
+  set_subject_key_id   = true
+  set_authority_key_id = true
+
+  validity_period_hours = 9000
+
+  allowed_uses = [
+    "cert_signing",
+    "crl_signing",
+    "digital_signature"
+  ]
+}
+
+resource "aws_acm_certificate" "test" {
+  private_key      = tls_private_key.test.private_key_pem
+  certificate_body = tls_self_signed_cert.test.cert_pem
+}
+`, commonName, certificateDomainName)
 }
 
 func testAccTLSInspectionConfigurationConfig_basic(rName, commonName, certificateDomainName string) string {
@@ -539,7 +579,7 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
 }
 
 func testAccTLSInspectionConfigurationConfig_checkCertificateRevocationStatus(rName, commonName, certificateDomainName, revokedStatusAction, unknownStatusAction string) string {
-	return acctest.ConfigCompose(testAccTLSInspectionConfigurationConfig_certificateBase(rName, commonName, certificateDomainName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTLSInspectionConfigurationConfig_certificateCheckCertificateRevocationStatus(commonName, certificateDomainName), fmt.Sprintf(`
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
   name        = %[1]q
   description = "test"
@@ -551,12 +591,10 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
 
   tls_inspection_configuration {
     server_certificate_configuration {
+      certificate_authority_arn = aws_acm_certificate.test.arn
       check_certificate_revocation_status {
         revoked_status_action = %[2]q
         unknown_status_action = %[3]q
-      }
-      server_certificate {
-        resource_arn = aws_acm_certificate.test.arn
       }
       scope {
         protocols = [6]

@@ -67,7 +67,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_vpclattice_auth_policy",
 		},
 		{
-			Factory:  ResourceListener,
+			Factory:  resourceListener,
 			TypeName: "aws_vpclattice_listener",
 			Name:     "Listener",
 			Tags: &types.ServicePackageResourceTags{

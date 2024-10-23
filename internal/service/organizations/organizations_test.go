@@ -50,6 +50,7 @@ func TestAccOrganizations_serial(t *testing.T) {
 			"update":                             testAccOrganizationalUnit_update,
 			"tags":                               testAccOrganizationalUnit_tags,
 			"DataSource_basic":                   testAccOrganizationalUnitDataSource_basic,
+			"DescendantOUsDataSource_basic":      testOrganizationalUnitDescendantOUsDataSource_basic,
 			"ChildAccountsDataSource_basic":      testAccOrganizationalUnitChildAccountsDataSource_basic,
 			"DescendantAccountsDataSource_basic": testAccOrganizationalUnitDescendantAccountsDataSource_basic,
 			"PluralDataSource_basic":             testAccOrganizationalUnitsDataSource_basic,

@@ -6,7 +6,7 @@ package cognitoidp_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -15,7 +15,7 @@ import (
 
 func TestAccCognitoIDPUserPoolClientDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var client cognitoidentityprovider.UserPoolClientType
+	var client awstypes.UserPoolClientType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "data.aws_cognito_user_pool_client.test"
 
@@ -23,7 +23,6 @@ func TestAccCognitoIDPUserPoolClientDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserPoolClientDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserPoolClientDataSourceConfig_basic(rName),
@@ -41,10 +40,10 @@ func TestAccCognitoIDPUserPoolClientDataSource_basic(t *testing.T) {
 }
 
 func testAccUserPoolClientDataSourceConfig_basic(rName string) string {
-	return testAccUserPoolClientConfig_basic(rName) + `
+	return acctest.ConfigCompose(testAccUserPoolClientConfig_basic(rName), `
 data "aws_cognito_user_pool_client" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
   client_id    = aws_cognito_user_pool_client.test.id
 }
-`
+`)
 }

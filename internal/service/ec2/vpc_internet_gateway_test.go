@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccVPCInternetGateway_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.InternetGateway
+	var v awstypes.InternetGateway
 	resourceName := "aws_internet_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -52,7 +52,7 @@ func TestAccVPCInternetGateway_basic(t *testing.T) {
 
 func TestAccVPCInternetGateway_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.InternetGateway
+	var v awstypes.InternetGateway
 	resourceName := "aws_internet_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -75,7 +75,7 @@ func TestAccVPCInternetGateway_disappears(t *testing.T) {
 
 func TestAccVPCInternetGateway_Attachment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.InternetGateway
+	var v awstypes.InternetGateway
 	resourceName := "aws_internet_gateway.test"
 	vpc1ResourceName := "aws_vpc.test1"
 	vpc2ResourceName := "aws_vpc.test2"
@@ -112,7 +112,7 @@ func TestAccVPCInternetGateway_Attachment(t *testing.T) {
 
 func TestAccVPCInternetGateway_Tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.InternetGateway
+	var v awstypes.InternetGateway
 	resourceName := "aws_internet_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -158,7 +158,7 @@ func TestAccVPCInternetGateway_Tags(t *testing.T) {
 
 func testAccCheckInternetGatewayDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_internet_gateway" {
@@ -182,7 +182,7 @@ func testAccCheckInternetGatewayDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckInternetGatewayExists(ctx context.Context, n string, v *ec2.InternetGateway) resource.TestCheckFunc {
+func testAccCheckInternetGatewayExists(ctx context.Context, n string, v *awstypes.InternetGateway) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -193,7 +193,7 @@ func testAccCheckInternetGatewayExists(ctx context.Context, n string, v *ec2.Int
 			return fmt.Errorf("No EC2 Internet Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindInternetGatewayByID(ctx, conn, rs.Primary.ID)
 

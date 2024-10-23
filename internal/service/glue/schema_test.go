@@ -8,14 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -330,9 +332,9 @@ func TestAccGlueSchema_Disappears_registry(t *testing.T) {
 }
 
 func testAccPreCheckSchema(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-	_, err := conn.ListRegistriesWithContext(ctx, &glue.ListRegistriesInput{})
+	_, err := conn.ListRegistries(ctx, &glue.ListRegistriesInput{})
 
 	// Some endpoints that do not support Glue Schemas return InternalFailure
 	if acctest.PreCheckSkipError(err) || tfawserr.ErrCodeEquals(err, "InternalFailure") {
@@ -355,7 +357,7 @@ func testAccCheckSchemaExists(ctx context.Context, resourceName string, schema *
 			return fmt.Errorf("No Glue Schema ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 		output, err := tfglue.FindSchemaByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
@@ -365,7 +367,7 @@ func testAccCheckSchemaExists(ctx context.Context, resourceName string, schema *
 			return fmt.Errorf("Glue Schema (%s) not found", rs.Primary.ID)
 		}
 
-		if aws.StringValue(output.SchemaArn) == rs.Primary.ID {
+		if aws.ToString(output.SchemaArn) == rs.Primary.ID {
 			*schema = *output
 			return nil
 		}
@@ -381,15 +383,15 @@ func testAccCheckSchemaDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 			output, err := tfglue.FindSchemaByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+				if errs.IsA[*awstypes.EntityNotFoundException](err) {
 					return nil
 				}
 			}
 
-			if output != nil && aws.StringValue(output.SchemaArn) == rs.Primary.ID {
+			if output != nil && aws.ToString(output.SchemaArn) == rs.Primary.ID {
 				return fmt.Errorf("Glue Schema %s still exists", rs.Primary.ID)
 			}
 

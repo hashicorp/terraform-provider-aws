@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -17,7 +17,7 @@ import (
 
 func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster_iam_roles.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -59,7 +59,7 @@ func TestAccRedshiftClusterIAMRoles_basic(t *testing.T) {
 
 func TestAccRedshiftClusterIAMRoles_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 

@@ -24,7 +24,7 @@ From Feb - April 2024, we will be prioritizing the following areas of work:
 
 Issue: [#36033](https://github.com/hashicorp/terraform-provider-aws/issues/36033)
 
-[Resource Explorer](https://aws.amazon.com/resourceexplorer/) Use AWS Resource Explorer to more easily search for and discover your resources across AWS Regions and accounts, such as Amazon Elastic Compute Cloud (Amazon EC2) instances, Amazon Kinesis streams, and Amazon DynamoDB tables..
+[Resource Explorer](https://aws.amazon.com/resourceexplorer/) Use AWS Resource Explorer to more easily search for and discover your resources across AWS Regions and accounts, such as Amazon Elastic Compute Cloud (Amazon EC2) instances, Amazon Kinesis streams, and Amazon DynamoDB tables.
 
 Support for additional Resource explorer resources may include:
 

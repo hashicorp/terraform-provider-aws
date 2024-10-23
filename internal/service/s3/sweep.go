@@ -29,6 +29,9 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_s3_object", &resource.Sweeper{
 		Name: "aws_s3_object",
 		F:    sweepObjects,
+		Dependencies: []string{
+			"aws_m2_application",
+		},
 	})
 
 	resource.AddTestSweepers("aws_s3_bucket", &resource.Sweeper{

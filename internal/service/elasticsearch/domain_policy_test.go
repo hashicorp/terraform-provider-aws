@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	elasticsearch "github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,7 +18,7 @@ import (
 
 func TestAccElasticsearchDomainPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var domain elasticsearch.ElasticsearchDomainStatus
+	var domain awstypes.ElasticsearchDomainStatus
 	ri := sdkacctest.RandInt()
 	policy := `{
     "Version": "2012-10-17",

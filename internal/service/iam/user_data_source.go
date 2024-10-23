@@ -19,6 +19,7 @@ import (
 
 // @SDKDataSource("aws_iam_user", name="User")
 // @Tags
+// @Testing(tagsIdentifierAttribute="user_name", tagsResourceType="User")
 func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,

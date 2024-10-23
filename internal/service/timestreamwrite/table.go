@@ -233,6 +233,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return diags
 	}
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Timestream Table (%s): %s", d.Id(), err)
+	}
+
 	d.Set(names.AttrARN, table.Arn)
 	d.Set(names.AttrDatabaseName, table.DatabaseName)
 	if err := d.Set("magnetic_store_write_properties", flattenMagneticStoreWriteProperties(table.MagneticStoreWriteProperties)); err != nil {

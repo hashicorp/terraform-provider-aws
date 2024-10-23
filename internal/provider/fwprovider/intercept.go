@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -402,7 +401,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 
 	switch when {
 	case Before:
-		var planTags fwtypes.Map
+		var planTags tftags.Map
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
 		if diags.HasError() {
@@ -420,7 +419,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
 		// Computed tags_all include any provider configured default_tags.
 		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, tagsInContext.TagsIn.MustUnwrap().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
-		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 
 		if diags.HasError() {
 			return ctx, diags
@@ -484,14 +483,16 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 					// If the service package has a generic resource list tags methods, call it.
 					var err error
 
-					if v, ok := sp.(interface {
-						ListTags(context.Context, any, string) error
-					}); ok {
+					if v, ok := sp.(tftags.ServiceTagLister); ok {
 						err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-					} else if v, ok := sp.(interface {
-						ListTags(context.Context, any, string, string) error
-					}); ok && r.tags.ResourceType != "" {
-						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+					} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
+						if r.tags.ResourceType == "" {
+							tflog.Error(ctx, "ListTags method requires ResourceType but none set", map[string]interface{}{
+								"ServicePackage": sp.ServicePackageName(),
+							})
+						} else {
+							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+						}
 					} else {
 						tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
 							"ServicePackage": sp.ServicePackageName(),
@@ -516,11 +517,12 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		apiTags := tagsInContext.TagsOut.UnwrapOrDefault()
 
 		// AWS APIs often return empty lists of tags when none have been configured.
-		stateTags := tftags.Null
+		var stateTags tftags.Map
+		response.State.GetAttribute(ctx, path.Root(names.AttrTags), &stateTags)
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
-		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).ResolveDuplicatesFramework(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, response, diags).Map(); len(v) > 0 {
-			stateTags = flex.FlattenFrameworkStringValueMapLegacy(ctx, v)
+		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).ResolveDuplicatesFramework(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, response, &diags).Map(); len(v) > 0 {
+			stateTags = tftags.NewMapFromMapValue(flex.FlattenFrameworkStringValueMapLegacy(ctx, v))
 		}
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
 
@@ -530,7 +532,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 
 		// Computed tags_all do.
 		stateTagsAll := flex.FlattenFrameworkStringValueMapLegacy(ctx, apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
-		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), &stateTagsAll)...)
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTagsAll), tftags.NewMapFromMapValue(stateTagsAll))...)
 
 		if diags.HasError() {
 			return ctx, diags
@@ -572,7 +574,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 
 	switch when {
 	case Before:
-		var planTags fwtypes.Map
+		var planTags tftags.Map
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
 		if diags.HasError() {
@@ -586,7 +588,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 
 		tagsInContext.TagsIn = option.Some(tags)
 
-		var oldTagsAll, newTagsAll fwtypes.Map
+		var oldTagsAll, newTagsAll tftags.Map
 
 		diags.Append(request.State.GetAttribute(ctx, path.Root(names.AttrTagsAll), &oldTagsAll)...)
 
@@ -616,13 +618,9 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 					// If the service package has a generic resource update tags methods, call it.
 					var err error
 
-					if v, ok := sp.(interface {
-						UpdateTags(context.Context, any, string, any, any) error
-					}); ok {
+					if v, ok := sp.(tftags.ServiceTagUpdater); ok {
 						err = v.UpdateTags(ctx, meta, identifier, oldTagsAll, newTagsAll)
-					} else if v, ok := sp.(interface {
-						UpdateTags(context.Context, any, string, string, any, any) error
-					}); ok && r.tags.ResourceType != "" {
+					} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok && r.tags.ResourceType != "" {
 						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
 					} else {
 						tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{

@@ -68,7 +68,6 @@ func TestResourceScheduleIDFromARN(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.ARN, func(t *testing.T) {
 			t.Parallel()
 
@@ -151,7 +150,6 @@ func TestResourceScheduleParseID(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.ID, func(t *testing.T) {
 			t.Parallel()
 

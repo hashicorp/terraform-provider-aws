@@ -40,10 +40,11 @@ func TestAccBackupPlan_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"rule_name":         rName,
-						"target_vault_name": rName,
-						names.AttrSchedule:  "cron(0 12 * * ? *)",
-						"lifecycle.#":       acctest.Ct0,
+						"rule_name":                    rName,
+						"target_vault_name":            rName,
+						names.AttrSchedule:             "cron(0 12 * * ? *)",
+						"schedule_expression_timezone": "Etc/UTC",
+						"lifecycle.#":                  acctest.Ct0,
 					}),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVersion),
@@ -58,7 +59,7 @@ func TestAccBackupPlan_basic(t *testing.T) {
 	})
 }
 
-func TestAccBackupPlan_withTags(t *testing.T) {
+func TestAccBackupPlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
@@ -71,42 +72,12 @@ func TestAccBackupPlan_withTags(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_tags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccPlanConfig_tagsUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
-				),
-			},
-			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourcePlan(), resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -651,7 +622,41 @@ func TestAccBackupPlan_enableContinuousBackup(t *testing.T) {
 	})
 }
 
-func TestAccBackupPlan_disappears(t *testing.T) {
+func TestAccBackupPlan_upgradeScheduleExpressionTimezone(t *testing.T) {
+	ctx := acctest.Context(t)
+	var plan backup.GetBackupPlanOutput
+	resourceName := "aws_backup_plan.test"
+	rName := fmt.Sprintf("tf-testacc-backup-%s", sdkacctest.RandString(14))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BackupServiceID),
+		CheckDestroy: testAccCheckPlanDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.70.0",
+					},
+				},
+				Config: testAccPlanConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccPlanConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBackupPlan_scheduleExpressionTimezone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var plan backup.GetBackupPlanOutput
 	resourceName := "aws_backup_plan.test"
@@ -664,12 +669,37 @@ func TestAccBackupPlan_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPlanDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPlanConfig_basic(rName),
+				Config: testAccPlanConfig_scheduleExpressionTimezone(rName, "Pacific/Tahiti"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbackup.ResourcePlan(), resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"lifecycle.#":                  acctest.Ct0,
+						"rule_name":                    rName,
+						names.AttrSchedule:             "cron(0 12 * * ? *)",
+						"schedule_expression_timezone": "Pacific/Tahiti",
+						"target_vault_name":            rName,
+					}),
 				),
-				ExpectNonEmptyPlan: true,
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPlanConfig_scheduleExpressionTimezone(rName, "Africa/Abidjan"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"lifecycle.#":                  acctest.Ct0,
+						"rule_name":                    rName,
+						names.AttrSchedule:             "cron(0 12 * * ? *)",
+						"schedule_expression_timezone": "Africa/Abidjan",
+						"target_vault_name":            rName,
+					}),
+				),
 			},
 		},
 	})
@@ -702,12 +732,12 @@ func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckPlanExists(ctx context.Context, n string, v *backup.GetBackupPlanOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
-
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupClient(ctx)
 
 		output, err := tfbackup.FindPlanByID(ctx, conn, rs.Primary.ID)
 
@@ -757,54 +787,6 @@ resource "aws_backup_plan" "test" {
       delete_after                              = 180
       opt_in_to_archive_for_supported_resources = true
     }
-  }
-}
-`, rName)
-}
-
-func testAccPlanConfig_tags(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_backup_vault" "test" {
-  name = %[1]q
-}
-
-resource "aws_backup_plan" "test" {
-  name = %[1]q
-
-  rule {
-    rule_name         = %[1]q
-    target_vault_name = aws_backup_vault.test.name
-    schedule          = "cron(0 12 * * ? *)"
-  }
-
-  tags = {
-    Name = %[1]q
-    Key1 = "Value1"
-    Key2 = "Value2a"
-  }
-}
-`, rName)
-}
-
-func testAccPlanConfig_tagsUpdated(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_backup_vault" "test" {
-  name = %[1]q
-}
-
-resource "aws_backup_plan" "test" {
-  name = %[1]q
-
-  rule {
-    rule_name         = %[1]q
-    target_vault_name = aws_backup_vault.test.name
-    schedule          = "cron(0 12 * * ? *)"
-  }
-
-  tags = {
-    Name = %[1]q
-    Key2 = "Value2b"
-    Key3 = "Value3"
   }
 }
 `, rName)
@@ -1062,7 +1044,7 @@ resource "aws_backup_plan" "test" {
 }
 
 func testAccPlanConfig_ruleCopyActionCrossRegion(rName string) string {
-	return acctest.ConfigAlternateRegionProvider() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
   name = "%[1]s-1"
 }
@@ -1095,7 +1077,7 @@ resource "aws_backup_plan" "test" {
     }
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccPlanConfig_ruleCopyActionNoLifecycle(rName string) string {
@@ -1207,4 +1189,23 @@ resource "aws_backup_plan" "test" {
   }
 }
 `, rName)
+}
+
+func testAccPlanConfig_scheduleExpressionTimezone(rName, scheduleExpressionTimezone string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name                    = %[1]q
+    target_vault_name            = aws_backup_vault.test.name
+    schedule                     = "cron(0 12 * * ? *)"
+    schedule_expression_timezone = %[2]q
+  }
+}
+`, rName, scheduleExpressionTimezone)
 }

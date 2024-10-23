@@ -1246,27 +1246,33 @@ type securityPolicyName string
 const (
 	securityPolicyName2018_11             securityPolicyName = "TransferSecurityPolicy-2018-11"
 	securityPolicyName2020_06             securityPolicyName = "TransferSecurityPolicy-2020-06"
-	securityPolicyNameFIPS_2020_06        securityPolicyName = "TransferSecurityPolicy-FIPS-2020-06"
-	securityPolicyNameFIPS_2023_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2023-05"
-	securityPolicyNameFIPS_2024_01        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-01"
 	securityPolicyName2022_03             securityPolicyName = "TransferSecurityPolicy-2022-03"
 	securityPolicyName2023_05             securityPolicyName = "TransferSecurityPolicy-2023-05"
 	securityPolicyName2024_01             securityPolicyName = "TransferSecurityPolicy-2024-01"
+	securityPolicyNameFIPS_2020_06        securityPolicyName = "TransferSecurityPolicy-FIPS-2020-06"
+	securityPolicyNameFIPS_2023_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2023-05"
+	securityPolicyNameFIPS_2024_01        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-01"
+	securityPolicyNameFIPS_2024_05        securityPolicyName = "TransferSecurityPolicy-FIPS-2024-05"
 	securityPolicyNamePQ_SSH_2023_04      securityPolicyName = "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"
 	securityPolicyNamePQ_SSH_FIPS_2023_04 securityPolicyName = "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"
+	securityPolicyNameRestricted_2018_11  securityPolicyName = "TransferSecurityPolicy-Restricted-2018-11"
+	securityPolicyNameRestricted_2020_06  securityPolicyName = "TransferSecurityPolicy-Restricted-2020-06"
 )
 
 func (securityPolicyName) Values() []securityPolicyName {
 	return []securityPolicyName{
 		securityPolicyName2018_11,
 		securityPolicyName2020_06,
-		securityPolicyNameFIPS_2020_06,
-		securityPolicyNameFIPS_2023_05,
-		securityPolicyNameFIPS_2024_01,
 		securityPolicyName2022_03,
 		securityPolicyName2023_05,
 		securityPolicyName2024_01,
+		securityPolicyNameFIPS_2020_06,
+		securityPolicyNameFIPS_2023_05,
+		securityPolicyNameFIPS_2024_01,
+		securityPolicyNameFIPS_2024_05,
 		securityPolicyNamePQ_SSH_2023_04,
 		securityPolicyNamePQ_SSH_FIPS_2023_04,
+		securityPolicyNameRestricted_2018_11,
+		securityPolicyNameRestricted_2020_06,
 	}
 }

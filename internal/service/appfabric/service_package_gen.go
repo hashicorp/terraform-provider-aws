@@ -21,6 +21,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newAppAuthorizationConnectionResource,
+			Name:    "App Authorization Connection",
+		},
+		{
 			Factory: newAppAuthorizationResource,
 			Name:    "App Authorization",
 			Tags: &types.ServicePackageResourceTags{
@@ -32,6 +36,20 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "App Bundle",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory: newIngestionDestinationResource,
+			Name:    "Ingestion Destination",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newIngestionResource,
+			Name:    "Ingestion",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 	}

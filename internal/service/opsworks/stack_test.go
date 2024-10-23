@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/opsworks"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,15 +23,17 @@ import (
 )
 
 func TestAccOpsWorksStack_basic(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var v opsworks.Stack
+	var v awstypes.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.OpsWorks)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
@@ -78,15 +80,17 @@ func TestAccOpsWorksStack_basic(t *testing.T) {
 }
 
 func TestAccOpsWorksStack_disappears(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var v opsworks.Stack
+	var v awstypes.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.OpsWorks)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
@@ -106,15 +110,17 @@ func TestAccOpsWorksStack_disappears(t *testing.T) {
 }
 
 func TestAccOpsWorksStack_noVPC_basic(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var v opsworks.Stack
+	var v awstypes.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.OpsWorks)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
@@ -148,15 +154,17 @@ func TestAccOpsWorksStack_noVPC_basic(t *testing.T) {
 }
 
 func TestAccOpsWorksStack_noVPC_defaultAZ(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var v opsworks.Stack
+	var v awstypes.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.OpsWorks)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
@@ -182,15 +190,17 @@ func TestAccOpsWorksStack_noVPC_defaultAZ(t *testing.T) {
 }
 
 func TestAccOpsWorksStack_tags(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var v opsworks.Stack
+	var v awstypes.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.OpsWorks)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
@@ -232,21 +242,23 @@ func TestAccOpsWorksStack_tags(t *testing.T) {
 }
 
 func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var v opsworks.Stack
+	var v awstypes.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.OpsWorks)
 			testAccPreCheckStacks(ctx, t)
 			// This test requires a very particular AWS Region configuration
 			// in order to exercise the OpsWorks classic endpoint functionality.
 			acctest.PreCheckMultipleRegion(t, 2)
-			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-			acctest.PreCheckAlternateRegionIs(t, endpoints.UsWest1RegionID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckAlternateRegionIs(t, names.USWest1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
@@ -259,7 +271,7 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 					resource.TestCheckResourceAttrWith(resourceName, names.AttrARN, func(value string) error {
 						if !regexache.MustCompile(arn.ARN{
 							Partition: acctest.Partition(),
-							Service:   opsworks.ServiceName,
+							Service:   names.OpsWorks,
 							Region:    acctest.AlternateRegion(),
 							AccountID: acctest.AccountID(),
 							Resource:  `stack/.+/`,
@@ -271,7 +283,7 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
 					// "In this case, the actual API endpoint of the stack is in us-east-1."
-					resource.TestCheckResourceAttr(resourceName, "stack_endpoint", endpoints.UsEast1RegionID),
+					resource.TestCheckResourceAttr(resourceName, "stack_endpoint", names.USEast1RegionID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -303,15 +315,17 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 }
 
 func TestAccOpsWorksStack_allAttributes(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var v opsworks.Stack
+	var v awstypes.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.OpsWorks)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
@@ -439,15 +453,17 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 }
 
 func TestAccOpsWorksStack_windows(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
-	var v opsworks.Stack
+	var v awstypes.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.OpsWorks)
 			testAccPreCheckStacks(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
@@ -484,11 +500,11 @@ func TestAccOpsWorksStack_windows(t *testing.T) {
 }
 
 func testAccPreCheckStacks(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
 	input := &opsworks.DescribeStacksInput{}
 
-	_, err := conn.DescribeStacksWithContext(ctx, input)
+	_, err := conn.DescribeStacks(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -499,14 +515,14 @@ func testAccPreCheckStacks(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckStackExists(ctx context.Context, n string, v *opsworks.Stack) resource.TestCheckFunc {
+func testAccCheckStackExists(ctx context.Context, n string, v *awstypes.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
 		output, err := tfopsworks.FindStackByID(ctx, conn, rs.Primary.ID)
 
@@ -522,7 +538,7 @@ func testAccCheckStackExists(ctx context.Context, n string, v *opsworks.Stack) r
 
 func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_opsworks_stack" {

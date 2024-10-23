@@ -387,6 +387,7 @@ func TestAccSSMDocument_automation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDocumentExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "document_type", "Automation"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("automation-definition/%s", rName)),
 				),
 			},
 			{

@@ -5,26 +5,23 @@ package quicksight_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccQuickSightTheme_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var theme quicksight.Theme
+	var theme awstypes.Theme
 	resourceName := "aws_quicksight_theme.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -44,7 +41,7 @@ func TestAccQuickSightTheme_basic(t *testing.T) {
 					testAccCheckThemeExists(ctx, resourceName, &theme),
 					resource.TestCheckResourceAttr(resourceName, "theme_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
 				),
 			},
 			{
@@ -58,8 +55,7 @@ func TestAccQuickSightTheme_basic(t *testing.T) {
 
 func TestAccQuickSightTheme_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var theme quicksight.Theme
+	var theme awstypes.Theme
 	resourceName := "aws_quicksight_theme.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -86,8 +82,7 @@ func TestAccQuickSightTheme_disappears(t *testing.T) {
 }
 func TestAccQuickSightTheme_fullConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var theme quicksight.Theme
+	var theme awstypes.Theme
 	resourceName := "aws_quicksight_theme.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -107,7 +102,7 @@ func TestAccQuickSightTheme_fullConfig(t *testing.T) {
 					testAccCheckThemeExists(ctx, resourceName, &theme),
 					resource.TestCheckResourceAttr(resourceName, "theme_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.ui_color_palette.0.measure_foreground", "#FFFFFF"),
 				),
 			},
@@ -122,8 +117,7 @@ func TestAccQuickSightTheme_fullConfig(t *testing.T) {
 
 func TestAccQuickSightTheme_update(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var theme quicksight.Theme
+	var theme awstypes.Theme
 	resourceName := "aws_quicksight_theme.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -144,7 +138,7 @@ func TestAccQuickSightTheme_update(t *testing.T) {
 					testAccCheckThemeExists(ctx, resourceName, &theme),
 					resource.TestCheckResourceAttr(resourceName, "theme_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.data_color_palette.0.empty_fill_color", "#FFFFFF"),
 					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct1),
 				),
@@ -155,7 +149,7 @@ func TestAccQuickSightTheme_update(t *testing.T) {
 					testAccCheckThemeExists(ctx, resourceName, &theme),
 					resource.TestCheckResourceAttr(resourceName, "theme_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.data_color_palette.0.empty_fill_color", "#000000"),
 					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct2),
 				),
@@ -166,49 +160,46 @@ func TestAccQuickSightTheme_update(t *testing.T) {
 
 func testAccCheckThemeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_theme" {
 				continue
 			}
 
-			output, err := tfquicksight.FindThemeByID(ctx, conn, rs.Primary.ID)
+			_, err := tfquicksight.FindThemeByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["theme_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-					return nil
-				}
 				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("QuickSight Theme (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("QuickSight Theme (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckThemeExists(ctx context.Context, name string, theme *quicksight.Theme) resource.TestCheckFunc {
+func testAccCheckThemeExists(ctx context.Context, n string, v *awstypes.Theme) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameTheme, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameTheme, name, errors.New("not set"))
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
-		output, err := tfquicksight.FindThemeByID(ctx, conn, rs.Primary.ID)
+		output, err := tfquicksight.FindThemeByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrAWSAccountID], rs.Primary.Attributes["theme_id"])
 
 		if err != nil {
-			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameTheme, rs.Primary.ID, err)
+			return err
 		}
 
-		*theme = *output
+		*v = *output
 
 		return nil
 	}

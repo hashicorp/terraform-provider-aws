@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 	ctx := acctest.Context(t)
-	var classifier glue.Classifier
+	var classifier awstypes.Classifier
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
@@ -77,7 +77,7 @@ func TestAccGlueClassifier_csvClassifier(t *testing.T) {
 
 func TestAccGlueClassifier_csvClassifierCustomSerde(t *testing.T) {
 	ctx := acctest.Context(t)
-	var classifier glue.Classifier
+	var classifier awstypes.Classifier
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
@@ -117,7 +117,7 @@ func TestAccGlueClassifier_csvClassifierCustomSerde(t *testing.T) {
 
 func TestAccGlueClassifier_CSVClassifier_quoteSymbol(t *testing.T) {
 	ctx := acctest.Context(t)
-	var classifier glue.Classifier
+	var classifier awstypes.Classifier
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
@@ -155,7 +155,7 @@ func TestAccGlueClassifier_CSVClassifier_quoteSymbol(t *testing.T) {
 
 func TestAccGlueClassifier_CSVClassifier_custom(t *testing.T) {
 	ctx := acctest.Context(t)
-	var classifier glue.Classifier
+	var classifier awstypes.Classifier
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
@@ -197,7 +197,7 @@ func TestAccGlueClassifier_CSVClassifier_custom(t *testing.T) {
 
 func TestAccGlueClassifier_grokClassifier(t *testing.T) {
 	ctx := acctest.Context(t)
-	var classifier glue.Classifier
+	var classifier awstypes.Classifier
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
@@ -247,7 +247,7 @@ func TestAccGlueClassifier_grokClassifier(t *testing.T) {
 
 func TestAccGlueClassifier_GrokClassifier_customPatterns(t *testing.T) {
 	ctx := acctest.Context(t)
-	var classifier glue.Classifier
+	var classifier awstypes.Classifier
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
@@ -297,7 +297,7 @@ func TestAccGlueClassifier_GrokClassifier_customPatterns(t *testing.T) {
 
 func TestAccGlueClassifier_jsonClassifier(t *testing.T) {
 	ctx := acctest.Context(t)
-	var classifier glue.Classifier
+	var classifier awstypes.Classifier
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
@@ -343,7 +343,7 @@ func TestAccGlueClassifier_jsonClassifier(t *testing.T) {
 
 func TestAccGlueClassifier_typeChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	var classifier glue.Classifier
+	var classifier awstypes.Classifier
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
@@ -413,7 +413,7 @@ func TestAccGlueClassifier_typeChange(t *testing.T) {
 
 func TestAccGlueClassifier_xmlClassifier(t *testing.T) {
 	ctx := acctest.Context(t)
-	var classifier glue.Classifier
+	var classifier awstypes.Classifier
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
@@ -461,7 +461,7 @@ func TestAccGlueClassifier_xmlClassifier(t *testing.T) {
 
 func TestAccGlueClassifier_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var classifier glue.Classifier
+	var classifier awstypes.Classifier
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_classifier.test"
@@ -484,7 +484,7 @@ func TestAccGlueClassifier_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckClassifierExists(ctx context.Context, resourceName string, classifier *glue.Classifier) resource.TestCheckFunc {
+func testAccCheckClassifierExists(ctx context.Context, resourceName string, classifier *awstypes.Classifier) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -495,7 +495,7 @@ func testAccCheckClassifierExists(ctx context.Context, resourceName string, clas
 			return fmt.Errorf("No Glue Classifier ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 		output, err := tfglue.FindClassifierByName(ctx, conn, rs.Primary.ID)
 
@@ -515,7 +515,7 @@ func testAccCheckClassifierDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
 			_, err := tfglue.FindClassifierByName(ctx, conn, rs.Primary.ID)
 

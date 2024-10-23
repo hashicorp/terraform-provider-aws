@@ -158,7 +158,6 @@ func TestAccSageMakerMonitoringSchedule_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringScheduleExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceMonitoringSchedule(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceMonitoringSchedule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -168,7 +167,7 @@ func TestAccSageMakerMonitoringSchedule_disappears(t *testing.T) {
 
 func testAccCheckMonitoringScheduleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_monitoring_schedule" {
@@ -202,7 +201,7 @@ func testAccCheckMonitoringScheduleExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("no SageMaker Monitoring Schedule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 		_, err := tfsagemaker.FindMonitoringScheduleByName(ctx, conn, rs.Primary.ID)
 
 		return err

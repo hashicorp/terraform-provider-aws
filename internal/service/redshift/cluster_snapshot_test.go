@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Snapshot
+	var v awstypes.Snapshot
 	resourceName := "aws_redshift_cluster_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -66,7 +66,7 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 
 func TestAccRedshiftClusterSnapshot_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Snapshot
+	var v awstypes.Snapshot
 	resourceName := "aws_redshift_cluster_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -112,7 +112,7 @@ func TestAccRedshiftClusterSnapshot_tags(t *testing.T) {
 
 func TestAccRedshiftClusterSnapshot_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Snapshot
+	var v awstypes.Snapshot
 	resourceName := "aws_redshift_cluster_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -134,7 +134,7 @@ func TestAccRedshiftClusterSnapshot_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *redshift.Snapshot) resource.TestCheckFunc {
+func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *awstypes.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -145,7 +145,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *redshif
 			return fmt.Errorf("No Redshift Cluster Snapshot is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		out, err := tfredshift.FindClusterSnapshotByID(ctx, conn, rs.Primary.ID)
 
@@ -161,7 +161,7 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *redshif
 
 func testAccCheckClusterSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_cluster_snapshot" {

@@ -23,7 +23,6 @@ func TestAccImageBuilderComponentDataSource_arn(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComponentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComponentDataSourceConfig_buildVersionARN(rName),

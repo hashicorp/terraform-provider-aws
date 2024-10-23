@@ -5,10 +5,8 @@ package elasticsearch
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	elasticsearchservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticsearchservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceDomain,
+			Factory:  dataSourceDomain,
 			TypeName: "aws_elasticsearch_domain",
+			Name:     "Domain",
 		},
 	}
 }
@@ -36,7 +35,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDomain,
+			Factory:  resourceDomain,
 			TypeName: "aws_elasticsearch_domain",
 			Name:     "Domain",
 			Tags: &types.ServicePackageResourceTags{
@@ -44,16 +43,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDomainPolicy,
+			Factory:  resourceDomainPolicy,
 			TypeName: "aws_elasticsearch_domain_policy",
+			Name:     "Domain Policy",
 		},
 		{
-			Factory:  ResourceDomainSAMLOptions,
+			Factory:  resourceDomainSAMLOptions,
 			TypeName: "aws_elasticsearch_domain_saml_options",
+			Name:     "Domain SAML Options",
 		},
 		{
-			Factory:  ResourceVPCEndpoint,
+			Factory:  resourceVPCEndpoint,
 			TypeName: "aws_elasticsearch_vpc_endpoint",
+			Name:     "VPC Endpoint",
 		},
 	}
 }
@@ -62,22 +64,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Elasticsearch
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*elasticsearchservice_sdkv1.ElasticsearchService, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*elasticsearchservice_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return elasticsearchservice_sdkv1.New(sess.Copy(&cfg)), nil
+	return elasticsearchservice_sdkv2.NewFromConfig(cfg,
+		elasticsearchservice_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

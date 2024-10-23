@@ -8,20 +8,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGlueSecurityConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var securityConfiguration glue.SecurityConfiguration
+	var securityConfiguration awstypes.SecurityConfiguration
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_security_configuration.test"
@@ -60,7 +61,7 @@ func TestAccGlueSecurityConfiguration_basic(t *testing.T) {
 
 func TestAccGlueSecurityConfiguration_CloudWatchEncryptionCloudWatchEncryptionMode_sseKMS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var securityConfiguration glue.SecurityConfiguration
+	var securityConfiguration awstypes.SecurityConfiguration
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -93,7 +94,7 @@ func TestAccGlueSecurityConfiguration_CloudWatchEncryptionCloudWatchEncryptionMo
 
 func TestAccGlueSecurityConfiguration_JobBookmarksEncryptionJobBookmarksEncryptionMode_cseKMS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var securityConfiguration glue.SecurityConfiguration
+	var securityConfiguration awstypes.SecurityConfiguration
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -126,7 +127,7 @@ func TestAccGlueSecurityConfiguration_JobBookmarksEncryptionJobBookmarksEncrypti
 
 func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseKMS(t *testing.T) {
 	ctx := acctest.Context(t)
-	var securityConfiguration glue.SecurityConfiguration
+	var securityConfiguration awstypes.SecurityConfiguration
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
@@ -159,7 +160,7 @@ func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseKMS(t *tes
 
 func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseS3(t *testing.T) {
 	ctx := acctest.Context(t)
-	var securityConfiguration glue.SecurityConfiguration
+	var securityConfiguration awstypes.SecurityConfiguration
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_security_configuration.test"
@@ -189,7 +190,7 @@ func TestAccGlueSecurityConfiguration_S3EncryptionS3EncryptionMode_sseS3(t *test
 	})
 }
 
-func testAccCheckSecurityConfigurationExists(ctx context.Context, resourceName string, securityConfiguration *glue.SecurityConfiguration) resource.TestCheckFunc {
+func testAccCheckSecurityConfigurationExists(ctx context.Context, resourceName string, securityConfiguration *awstypes.SecurityConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -200,9 +201,9 @@ func testAccCheckSecurityConfigurationExists(ctx context.Context, resourceName s
 			return fmt.Errorf("No Glue Security Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-		output, err := conn.GetSecurityConfigurationWithContext(ctx, &glue.GetSecurityConfigurationInput{
+		output, err := conn.GetSecurityConfiguration(ctx, &glue.GetSecurityConfigurationInput{
 			Name: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -213,7 +214,7 @@ func testAccCheckSecurityConfigurationExists(ctx context.Context, resourceName s
 			return fmt.Errorf("Glue Security Configuration (%s) not found", rs.Primary.ID)
 		}
 
-		if aws.StringValue(output.SecurityConfiguration.Name) == rs.Primary.ID {
+		if aws.ToString(output.SecurityConfiguration.Name) == rs.Primary.ID {
 			*securityConfiguration = *output.SecurityConfiguration
 			return nil
 		}
@@ -229,13 +230,13 @@ func testAccCheckSecurityConfigurationDestroy(ctx context.Context) resource.Test
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).GlueClient(ctx)
 
-			output, err := conn.GetSecurityConfigurationWithContext(ctx, &glue.GetSecurityConfigurationInput{
+			output, err := conn.GetSecurityConfiguration(ctx, &glue.GetSecurityConfigurationInput{
 				Name: aws.String(rs.Primary.ID),
 			})
 
-			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+			if errs.IsA[*awstypes.EntityNotFoundException](err) {
 				continue
 			}
 
@@ -244,7 +245,7 @@ func testAccCheckSecurityConfigurationDestroy(ctx context.Context) resource.Test
 			}
 
 			securityConfiguration := output.SecurityConfiguration
-			if securityConfiguration != nil && aws.StringValue(securityConfiguration.Name) == rs.Primary.ID {
+			if securityConfiguration != nil && aws.ToString(securityConfiguration.Name) == rs.Primary.ID {
 				return fmt.Errorf("Glue Security Configuration %s still exists", rs.Primary.ID)
 			}
 		}

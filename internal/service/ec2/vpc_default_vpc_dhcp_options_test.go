@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,7 +27,7 @@ func TestAccVPCDefaultVPCDHCPOptions_serial(t *testing.T) {
 
 func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var d ec2.DhcpOptions
+	var d awstypes.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{
@@ -54,7 +54,7 @@ func testAccDefaultVPCDHCPOptions_basic(t *testing.T) {
 
 func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
 	ctx := acctest.Context(t)
-	var d ec2.DhcpOptions
+	var d awstypes.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{
@@ -83,7 +83,7 @@ func testAccDefaultVPCDHCPOptions_owner(t *testing.T) {
 // Don't forget to unset TF_CLI_CONFIG_FILE.
 func testAccDefaultVPCDHCPOptions_v420Regression(t *testing.T) {
 	ctx := acctest.Context(t)
-	var d ec2.DhcpOptions
+	var d awstypes.DhcpOptions
 	resourceName := "aws_default_vpc_dhcp_options.test"
 
 	resource.Test(t, resource.TestCase{

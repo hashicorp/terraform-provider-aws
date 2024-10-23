@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_inspector2_enabler: Fix `AccessDeniedException: Lambda code scanning is not supported in ...` errors
+```
+
+```release-note:bug
+resource/aws_inspector2_member_association: Improve handling of `AccessDeniedException` errors during creation
+```

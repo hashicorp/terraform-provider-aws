@@ -157,7 +157,7 @@ resource "aws_vpc_ipam_pool_cidr_allocation" "test" {
 }
 
 func testAccIPAMPreviewNextCIDRDataSourceConfig_ipv4Disallowed(netmaskLength, disallowedCidr string) string {
-	return testAccIPAMPreviewNextCIDRDataSourceConfig_base + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccIPAMPreviewNextCIDRDataSourceConfig_base, fmt.Sprintf(`
 data "aws_vpc_ipam_preview_next_cidr" "test" {
   ipam_pool_id   = aws_vpc_ipam_pool.test.id
   netmask_length = %[1]q
@@ -170,5 +170,5 @@ data "aws_vpc_ipam_preview_next_cidr" "test" {
     aws_vpc_ipam_pool_cidr.test
   ]
 }
-`, netmaskLength, disallowedCidr)
+`, netmaskLength, disallowedCidr))
 }

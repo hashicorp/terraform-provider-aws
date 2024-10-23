@@ -67,10 +67,10 @@ func main() {
 		}
 
 		s := ServiceDatum{
-			GenerateClient:       !l.SkipClientGenerate(),
-			ClientSDKV1:          l.ClientSDKV1(),
+			GenerateClient:       l.GenerateClient(),
+			ClientSDKV1:          l.IsClientSDKV1(),
 			GoV1Package:          l.GoV1Package(),
-			ClientSDKV2:          l.ClientSDKV2(),
+			ClientSDKV2:          l.IsClientSDKV2(),
 			GoV2Package:          l.GoV2Package(),
 			ProviderPackage:      p,
 			ProviderNameUpper:    l.ProviderNameUpper(),
@@ -80,7 +80,7 @@ func main() {
 			SDKResources:         v.sdkResources,
 		}
 
-		if l.ClientSDKV1() {
+		if l.IsClientSDKV1() {
 			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
 		}
 

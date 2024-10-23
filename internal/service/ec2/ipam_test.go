@@ -39,6 +39,7 @@ func TestAccIPAM_basic(t *testing.T) {
 					testAccCheckIPAMExists(ctx, resourceName, &ipam),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, "enable_private_gua", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "operating_regions.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "scope_count", acctest.Ct2),
 					resource.TestMatchResourceAttr(resourceName, "private_default_scope_id", regexache.MustCompile(`^ipam-scope-[0-9a-f]+`)),
@@ -262,15 +263,45 @@ func TestAccIPAM_tags(t *testing.T) {
 	})
 }
 
+func TestAccIPAM_enablePrivateGUA(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ipam awstypes.Ipam
+	resourceName := "aws_vpc_ipam.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMConfig_enablePrivateGUA(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "enable_private_gua", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIPAMConfig_enablePrivateGUA(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "enable_private_gua", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckIPAMExists(ctx context.Context, n string, v *awstypes.Ipam) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IPAM ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
@@ -425,4 +456,18 @@ resource "aws_vpc_ipam" "test" {
   tier = "%s"
 }
 `, tier)
+}
+
+func testAccIPAMConfig_enablePrivateGUA(enablePrivateGUA bool) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  enable_private_gua = %[1]t
+
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+}
+`, enablePrivateGUA)
 }

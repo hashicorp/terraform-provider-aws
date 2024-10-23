@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/locationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflocation "github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -158,20 +159,20 @@ func TestAccLocationMap_tags(t *testing.T) {
 
 func testAccCheckMapDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_location_map" {
 				continue
 			}
 
-			input := &locationservice.DescribeMapInput{
+			input := &location.DescribeMapInput{
 				MapName: aws.String(rs.Primary.ID),
 			}
 
-			output, err := conn.DescribeMapWithContext(ctx, input)
+			output, err := conn.DescribeMap(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -196,13 +197,13 @@ func testAccCheckMapExists(ctx context.Context, resourceName string) resource.Te
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationClient(ctx)
 
-		input := &locationservice.DescribeMapInput{
+		input := &location.DescribeMapInput{
 			MapName: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribeMapWithContext(ctx, input)
+		_, err := conn.DescribeMap(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error getting Location Service Map (%s): %w", rs.Primary.ID, err)

@@ -189,17 +189,17 @@ func testAccIntegrationResponseImportStateIdFunc(resourceName string) resource.I
 }
 
 func testAccIntegrationResponseConfig_basic(rName string) string {
-	return testAccIntegrationConfig_basic(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_basic(rName), `
 resource "aws_apigatewayv2_integration_response" "test" {
   api_id                   = aws_apigatewayv2_api.test.id
   integration_id           = aws_apigatewayv2_integration.test.id
   integration_response_key = "/200/"
 }
-`
+`)
 }
 
 func testAccIntegrationResponseConfig_allAttributes(rName string) string {
-	return testAccIntegrationConfig_basic(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_basic(rName), `
 resource "aws_apigatewayv2_integration_response" "test" {
   api_id                   = aws_apigatewayv2_api.test.id
   integration_id           = aws_apigatewayv2_integration.test.id
@@ -212,11 +212,11 @@ resource "aws_apigatewayv2_integration_response" "test" {
     "application/json" = ""
   }
 }
-`
+`)
 }
 
 func testAccIntegrationResponseConfig_allAttributesUpdated(rName string) string {
-	return testAccIntegrationConfig_basic(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_basic(rName), `
 resource "aws_apigatewayv2_integration_response" "test" {
   api_id                   = aws_apigatewayv2_api.test.id
   integration_id           = aws_apigatewayv2_integration.test.id
@@ -230,5 +230,5 @@ resource "aws_apigatewayv2_integration_response" "test" {
     "application/xml"  = "#set($percent=$number/100)"
   }
 }
-`
+`)
 }

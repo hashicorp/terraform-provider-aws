@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -69,7 +70,7 @@ func ResourceWorkflow() *schema.Resource {
 
 func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &glue.CreateWorkflowInput{
@@ -78,7 +79,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if kv, ok := d.GetOk("default_run_properties"); ok {
-		input.DefaultRunProperties = flex.ExpandStringMap(kv.(map[string]interface{}))
+		input.DefaultRunProperties = flex.ExpandStringValueMap(kv.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -86,11 +87,11 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("max_concurrent_runs"); ok {
-		input.MaxConcurrentRuns = aws.Int64(int64(v.(int)))
+		input.MaxConcurrentRuns = aws.Int32(int32(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating Glue Workflow: %s", input)
-	_, err := conn.CreateWorkflowWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Glue Workflow: %+v", input)
+	_, err := conn.CreateWorkflow(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Glue Trigger (%s): %s", name, err)
 	}
@@ -101,16 +102,16 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	input := &glue.GetWorkflowInput{
 		Name: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Reading Glue Workflow: %#v", input)
-	output, err := conn.GetWorkflowWithContext(ctx, input)
+	output, err := conn.GetWorkflow(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			log.Printf("[WARN] Glue Workflow (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -134,7 +135,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}.String()
 	d.Set(names.AttrARN, workFlowArn)
 
-	if err := d.Set("default_run_properties", aws.StringValueMap(workflow.DefaultRunProperties)); err != nil {
+	if err := d.Set("default_run_properties", workflow.DefaultRunProperties); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_run_properties: %s", err)
 	}
 	d.Set(names.AttrDescription, workflow.Description)
@@ -146,7 +147,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	if d.HasChanges("default_run_properties", names.AttrDescription, "max_concurrent_runs") {
 		input := &glue.UpdateWorkflowInput{
@@ -154,7 +155,7 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if kv, ok := d.GetOk("default_run_properties"); ok {
-			input.DefaultRunProperties = flex.ExpandStringMap(kv.(map[string]interface{}))
+			input.DefaultRunProperties = flex.ExpandStringValueMap(kv.(map[string]interface{}))
 		}
 
 		if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -162,11 +163,11 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("max_concurrent_runs"); ok {
-			input.MaxConcurrentRuns = aws.Int64(int64(v.(int)))
+			input.MaxConcurrentRuns = aws.Int32(int32(v.(int)))
 		}
 
 		log.Printf("[DEBUG] Updating Glue Workflow: %#v", input)
-		_, err := conn.UpdateWorkflowWithContext(ctx, input)
+		_, err := conn.UpdateWorkflow(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Glue Workflow (%s): %s", d.Id(), err)
 		}
@@ -177,7 +178,7 @@ func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Glue Workflow: %s", d.Id())
 	err := DeleteWorkflow(ctx, conn, d.Id())
@@ -188,14 +189,14 @@ func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func DeleteWorkflow(ctx context.Context, conn *glue.Glue, name string) error {
+func DeleteWorkflow(ctx context.Context, conn *glue.Client, name string) error {
 	input := &glue.DeleteWorkflowInput{
 		Name: aws.String(name),
 	}
 
-	_, err := conn.DeleteWorkflowWithContext(ctx, input)
+	_, err := conn.DeleteWorkflow(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		if errs.IsA[*awstypes.EntityNotFoundException](err) {
 			return nil
 		}
 		return err

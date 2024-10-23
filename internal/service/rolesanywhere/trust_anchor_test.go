@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -37,16 +38,61 @@ func TestAccRolesAnywhereTrustAnchor_basic(t *testing.T) {
 					testAccCheckTrustAnchorExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "notification_settings.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_data.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "source.0.source_data.0.acm_pca_arn", "aws_acmpca_certificate_authority.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_type", "AWS_ACM_PCA"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_type", string(awstypes.TrustAnchorTypeAwsAcmPca)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRolesAnywhereTrustAnchor_notificationSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	caCommonName := acctest.RandomDomainName()
+	resourceName := "aws_rolesanywhere_trust_anchor.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RolesAnywhereServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTrustAnchorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTrustAnchorConfig_notificationSettings(rName, caCommonName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustAnchorExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "notification_settings.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "notification_settings.0.channel", string(awstypes.NotificationChannelAll)),
+					resource.TestCheckResourceAttrSet(resourceName, "notification_settings.0.configured_by"),
+					resource.TestCheckResourceAttr(resourceName, "notification_settings.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "notification_settings.0.event", string(awstypes.NotificationEventCaCertificateExpiry)),
+					resource.TestCheckResourceAttr(resourceName, "notification_settings.0.threshold", "75"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTrustAnchorConfig_basic(rName, caCommonName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTrustAnchorExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEnabled),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "notification_settings.#", acctest.Ct2),
+				),
 			},
 		},
 	})
@@ -141,7 +187,7 @@ func TestAccRolesAnywhereTrustAnchor_certificateBundle(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "source.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_data.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "source.0.source_type", "CERTIFICATE_BUNDLE"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_type", string(awstypes.TrustAnchorTypeCertificateBundle)),
 				),
 			},
 			{
@@ -289,6 +335,30 @@ resource "aws_rolesanywhere_trust_anchor" "test" {
     }
     source_type = "AWS_ACM_PCA"
   }
+  depends_on = [aws_acmpca_certificate_authority_certificate.test]
+}
+`, rName))
+}
+
+func testAccTrustAnchorConfig_notificationSettings(rName, caCommonName string) string {
+	return acctest.ConfigCompose(
+		testAccTrustAnchorConfig_acmBase(caCommonName),
+		fmt.Sprintf(`
+resource "aws_rolesanywhere_trust_anchor" "test" {
+  name = %[1]q
+  source {
+    source_data {
+      acm_pca_arn = aws_acmpca_certificate_authority.test.arn
+    }
+    source_type = "AWS_ACM_PCA"
+  }
+
+  notification_settings {
+    enabled   = true
+    event     = "CA_CERTIFICATE_EXPIRY"
+    threshold = 75
+  }
+
   depends_on = [aws_acmpca_certificate_authority_certificate.test]
 }
 `, rName))

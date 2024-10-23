@@ -95,7 +95,7 @@ func resourceTrafficMirrorSessionCreate(ctx context.Context, d *schema.ResourceD
 	input := &ec2.CreateTrafficMirrorSessionInput{
 		ClientToken:           aws.String(id.UniqueId()),
 		NetworkInterfaceId:    aws.String(d.Get(names.AttrNetworkInterfaceID).(string)),
-		TagSpecifications:     getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTrafficMirrorSession),
+		TagSpecifications:     getTagSpecificationsIn(ctx, awstypes.ResourceTypeTrafficMirrorSession),
 		TrafficMirrorFilterId: aws.String(d.Get("traffic_mirror_filter_id").(string)),
 		TrafficMirrorTargetId: aws.String(d.Get("traffic_mirror_target_id").(string)),
 	}
@@ -161,7 +161,7 @@ func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("traffic_mirror_target_id", session.TrafficMirrorTargetId)
 	d.Set("virtual_network_id", session.VirtualNetworkId)
 
-	setTagsOutV2(ctx, session.Tags)
+	setTagsOut(ctx, session.Tags)
 
 	return diags
 }

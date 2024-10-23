@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/route53resolver"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/route53resolver/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccRoute53ResolverFirewallRuleGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.FirewallRuleGroup
+	var v awstypes.FirewallRuleGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
 
@@ -53,7 +53,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_basic(t *testing.T) {
 
 func TestAccRoute53ResolverFirewallRuleGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.FirewallRuleGroup
+	var v awstypes.FirewallRuleGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
 
@@ -77,7 +77,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_disappears(t *testing.T) {
 
 func TestAccRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v route53resolver.FirewallRuleGroup
+	var v awstypes.FirewallRuleGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53_resolver_firewall_rule_group.test"
 
@@ -135,7 +135,7 @@ func TestAccRoute53ResolverFirewallRuleGroup_tags(t *testing.T) {
 
 func testAccCheckFirewallRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_route53_resolver_firewall_rule_group" {
@@ -159,7 +159,7 @@ func testAccCheckFirewallRuleGroupDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckFirewallRuleGroupExists(ctx context.Context, n string, v *route53resolver.FirewallRuleGroup) resource.TestCheckFunc {
+func testAccCheckFirewallRuleGroupExists(ctx context.Context, n string, v *awstypes.FirewallRuleGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -170,7 +170,7 @@ func testAccCheckFirewallRuleGroupExists(ctx context.Context, n string, v *route
 			return fmt.Errorf("No Route53 Resolver Firewall Rule Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53ResolverClient(ctx)
 
 		output, err := tfroute53resolver.FindFirewallRuleGroupByID(ctx, conn, rs.Primary.ID)
 

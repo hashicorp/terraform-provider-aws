@@ -36,6 +36,14 @@ func DataSourceStream() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"encryption_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrKMSKeyID: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -78,7 +86,7 @@ func DataSourceStream() *schema.Resource {
 func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	stream, err := findStreamByName(ctx, conn, name)
@@ -115,6 +123,8 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrARN, stream.StreamARN)
 	d.Set("closed_shards", aws.ToStringSlice(closedShards))
 	d.Set("creation_timestamp", aws.ToTime(stream.StreamCreationTimestamp).Unix())
+	d.Set("encryption_type", stream.EncryptionType)
+	d.Set(names.AttrKMSKeyID, stream.KeyId)
 	d.Set(names.AttrName, stream.StreamName)
 	d.Set("open_shards", aws.ToStringSlice(openShards))
 	d.Set(names.AttrRetentionPeriod, stream.RetentionPeriodHours)

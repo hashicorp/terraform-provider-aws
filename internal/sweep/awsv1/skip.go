@@ -14,19 +14,7 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "RequestError", "send request failed") {
 		return true
 	}
-	// Ignore unsupported API calls
-	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
-		return true
-	}
-	// Ignore more unsupported API calls
-	// InvalidParameterValue: Use of cache security groups is not permitted in this API version for your account.
-	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "not permitted in this API version for your account") {
-		return true
-	}
-	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
-	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version") {
-		return true
-	}
+
 	// GovCloud has endpoints that respond with (no message provided):
 	// AccessDeniedException:
 	// Since acceptance test sweepers are best effort and this response is very common,
@@ -54,8 +42,25 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidKeySigningKeyStatus", "cannot be deleted because") {
 		return true
 	}
+	// InvalidParameterValue: Access Denied to API Version: APIGlobalDatabases
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "Access Denied to API Version") {
+		return true
+	}
+	// Ignore more unsupported API calls
+	// InvalidParameterValue: Use of cache security groups is not permitted in this API version for your account.
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "not permitted in this API version for your account") {
+		return true
+	}
+	// For example from us-gov-west-1 MemoryDB cluster
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
+		return true
+	}
 	// For example from us-west-2 Route53 zone
 	if tfawserr.ErrMessageContains(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
+		return true
+	}
+	// For example from us-gov-east-1 IoT domain configuration
+	if tfawserr.ErrMessageContains(err, "UnauthorizedException", "API is not available in") {
 		return true
 	}
 	// For example from us-gov-west-1 EventBridge archive
@@ -70,16 +75,12 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "UnsupportedCommandException", "command is only supported in") {
 		return true
 	}
+	// Ignore unsupported API calls
+	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
+		return true
+	}
 	// For example from us-west-1 EMR studio
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Account is not whitelisted to use this feature") {
-		return true
-	}
-	// For example from us-gov-east-1 IoT domain configuration
-	if tfawserr.ErrMessageContains(err, "UnauthorizedException", "API is not available in") {
-		return true
-	}
-	// For example from us-gov-west-1 MemoryDB cluster
-	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
 		return true
 	}
 	// For example from us-west-2 SageMaker device fleet

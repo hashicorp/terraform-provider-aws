@@ -118,7 +118,7 @@ func TestAccRedshiftHSMClientCertificate_disappears(t *testing.T) {
 
 func testAccCheckHSMClientCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_hsm_client_certificate" {
@@ -153,7 +153,7 @@ func testAccCheckHSMClientCertificateExists(ctx context.Context, name string) re
 			return fmt.Errorf("Snapshot Copy Grant ID (HsmClientCertificateName) is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		_, err := tfredshift.FindHSMClientCertificateByID(ctx, conn, rs.Primary.ID)
 

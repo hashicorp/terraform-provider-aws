@@ -37,19 +37,6 @@ func Int64ToFrameworkLegacy(_ context.Context, v *int64) types.Int64 {
 	return types.Int64Value(aws.ToInt64(v))
 }
 
-func Int64FromFrameworkLegacy(_ context.Context, v types.Int64) *int64 {
-	if v.IsNull() || v.IsUnknown() {
-		return nil
-	}
-
-	i := v.ValueInt64()
-	if i == 0 {
-		return nil
-	}
-
-	return aws.Int64(i)
-}
-
 func Int32ToFramework(ctx context.Context, v *int32) types.Int64 {
 	var output types.Int64
 
@@ -64,6 +51,12 @@ func Int32ValueToFramework(ctx context.Context, v int32) types.Int64 {
 	must(Flatten(ctx, v, &output))
 
 	return output
+}
+
+// Int32ToFrameworkLegacy converts an int32 pointer to a Framework Int64 value.
+// A nil int32 pointer is converted to a zero Int64.
+func Int32ToFrameworkLegacy(_ context.Context, v *int32) types.Int64 {
+	return types.Int64Value(int64(aws.ToInt32(v)))
 }
 
 // Int32FromFramework coverts a Framework Int64 value to an int32 pointer.

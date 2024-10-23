@@ -8,8 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -163,7 +162,6 @@ func TestAccSageMakerProject_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &mpg),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceProject(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -173,14 +171,14 @@ func TestAccSageMakerProject_disappears(t *testing.T) {
 
 func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_project" {
 				continue
 			}
 
-			Project, err := tfsagemaker.FindProjectByName(ctx, conn, rs.Primary.ID)
+			_, err := tfsagemaker.FindProjectByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -190,9 +188,7 @@ func testAccCheckProjectDestroy(ctx context.Context) resource.TestCheckFunc {
 				return fmt.Errorf("reading SageMaker Project (%s): %w", rs.Primary.ID, err)
 			}
 
-			if aws.StringValue(Project.ProjectName) == rs.Primary.ID {
-				return fmt.Errorf("sagemaker Project %q still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("sagemaker Project %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -210,7 +206,7 @@ func testAccCheckProjectExists(ctx context.Context, n string, mpg *sagemaker.Des
 			return fmt.Errorf("No sagmaker Project ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 		resp, err := tfsagemaker.FindProjectByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err

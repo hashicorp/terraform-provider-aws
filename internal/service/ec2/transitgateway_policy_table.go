@@ -67,7 +67,7 @@ func resourceTransitGatewayPolicyTableCreate(ctx context.Context, d *schema.Reso
 
 	transitGatewayID := d.Get(names.AttrTransitGatewayID).(string)
 	input := &ec2.CreateTransitGatewayPolicyTableInput{
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeTransitGatewayPolicyTable),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeTransitGatewayPolicyTable),
 		TransitGatewayId:  aws.String(transitGatewayID),
 	}
 
@@ -114,7 +114,7 @@ func resourceTransitGatewayPolicyTableRead(ctx context.Context, d *schema.Resour
 	d.Set(names.AttrState, transitGatewayPolicyTable.State)
 	d.Set(names.AttrTransitGatewayID, transitGatewayPolicyTable.TransitGatewayId)
 
-	setTagsOutV2(ctx, transitGatewayPolicyTable.Tags)
+	setTagsOut(ctx, transitGatewayPolicyTable.Tags)
 
 	return diags
 }

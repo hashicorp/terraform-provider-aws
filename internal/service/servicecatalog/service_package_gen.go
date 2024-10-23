@@ -5,10 +5,8 @@ package servicecatalog
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	servicecatalog_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,30 +25,36 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceConstraint,
+			Factory:  dataSourceConstraint,
 			TypeName: "aws_servicecatalog_constraint",
+			Name:     "Constraint",
 		},
 		{
-			Factory:  DataSourceLaunchPaths,
+			Factory:  dataSourceLaunchPaths,
 			TypeName: "aws_servicecatalog_launch_paths",
+			Name:     "Launch Paths",
 		},
 		{
-			Factory:  DataSourcePortfolio,
+			Factory:  dataSourcePortfolio,
 			TypeName: "aws_servicecatalog_portfolio",
+			Name:     "Portfolio",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourcePortfolioConstraints,
+			Factory:  dataSourcePortfolioConstraints,
 			TypeName: "aws_servicecatalog_portfolio_constraints",
+			Name:     "Portfolio Constraints",
 		},
 		{
-			Factory:  DataSourceProduct,
+			Factory:  dataSourceProduct,
 			TypeName: "aws_servicecatalog_product",
+			Name:     "Product",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceProvisioningArtifacts,
+			Factory:  dataSourceProvisioningArtifacts,
 			TypeName: "aws_servicecatalog_provisioning_artifacts",
+			Name:     "Provisioning Artifacts",
 		},
 	}
 }
@@ -58,62 +62,72 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceBudgetResourceAssociation,
+			Factory:  resourceBudgetResourceAssociation,
 			TypeName: "aws_servicecatalog_budget_resource_association",
+			Name:     "Budget Resource Association",
 		},
 		{
-			Factory:  ResourceConstraint,
+			Factory:  resourceConstraint,
 			TypeName: "aws_servicecatalog_constraint",
+			Name:     "Constraint",
 		},
 		{
-			Factory:  ResourceOrganizationsAccess,
+			Factory:  resourceOrganizationsAccess,
 			TypeName: "aws_servicecatalog_organizations_access",
+			Name:     "Organizations Access",
 		},
 		{
-			Factory:  ResourcePortfolio,
+			Factory:  resourcePortfolio,
 			TypeName: "aws_servicecatalog_portfolio",
 			Name:     "Portfolio",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourcePortfolioShare,
+			Factory:  resourcePortfolioShare,
 			TypeName: "aws_servicecatalog_portfolio_share",
+			Name:     "Portfolio Share",
 		},
 		{
-			Factory:  ResourcePrincipalPortfolioAssociation,
+			Factory:  resourcePrincipalPortfolioAssociation,
 			TypeName: "aws_servicecatalog_principal_portfolio_association",
+			Name:     "Principal Portfolio Association",
 		},
 		{
-			Factory:  ResourceProduct,
+			Factory:  resourceProduct,
 			TypeName: "aws_servicecatalog_product",
 			Name:     "Product",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceProductPortfolioAssociation,
+			Factory:  resourceProductPortfolioAssociation,
 			TypeName: "aws_servicecatalog_product_portfolio_association",
+			Name:     "Product Portfolio Association",
 		},
 		{
-			Factory:  ResourceProvisionedProduct,
+			Factory:  resourceProvisionedProduct,
 			TypeName: "aws_servicecatalog_provisioned_product",
 			Name:     "Provisioned Product",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceProvisioningArtifact,
+			Factory:  resourceProvisioningArtifact,
 			TypeName: "aws_servicecatalog_provisioning_artifact",
+			Name:     "Provisioning Artifact",
 		},
 		{
-			Factory:  ResourceServiceAction,
+			Factory:  resourceServiceAction,
 			TypeName: "aws_servicecatalog_service_action",
+			Name:     "Service Action",
 		},
 		{
-			Factory:  ResourceTagOption,
+			Factory:  resourceTagOption,
 			TypeName: "aws_servicecatalog_tag_option",
+			Name:     "Tag Option",
 		},
 		{
-			Factory:  ResourceTagOptionResourceAssociation,
+			Factory:  resourceTagOptionResourceAssociation,
 			TypeName: "aws_servicecatalog_tag_option_resource_association",
+			Name:     "Tag Option Resource Association",
 		},
 	}
 }
@@ -122,22 +136,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.ServiceCatalog
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*servicecatalog_sdkv1.ServiceCatalog, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*servicecatalog_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return servicecatalog_sdkv1.New(sess.Copy(&cfg)), nil
+	return servicecatalog_sdkv2.NewFromConfig(cfg,
+		servicecatalog_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

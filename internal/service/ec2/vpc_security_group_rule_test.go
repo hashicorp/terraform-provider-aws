@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,42 +23,42 @@ import (
 func TestSecurityGroupRuleCreateID(t *testing.T) {
 	t.Parallel()
 
-	simple := &ec2.IpPermission{
+	simple := awstypes.IpPermission{
 		IpProtocol: aws.String("tcp"),
-		FromPort:   aws.Int64(80),
-		ToPort:     aws.Int64(8000),
-		IpRanges: []*ec2.IpRange{
+		FromPort:   aws.Int32(80),
+		ToPort:     aws.Int32(8000),
+		IpRanges: []awstypes.IpRange{
 			{
 				CidrIp: aws.String("10.0.0.0/8"),
 			},
 		},
 	}
 
-	egress := &ec2.IpPermission{
+	egress := awstypes.IpPermission{
 		IpProtocol: aws.String("tcp"),
-		FromPort:   aws.Int64(80),
-		ToPort:     aws.Int64(8000),
-		IpRanges: []*ec2.IpRange{
+		FromPort:   aws.Int32(80),
+		ToPort:     aws.Int32(8000),
+		IpRanges: []awstypes.IpRange{
 			{
 				CidrIp: aws.String("10.0.0.0/8"),
 			},
 		},
 	}
 
-	egress_all := &ec2.IpPermission{
+	egress_all := awstypes.IpPermission{
 		IpProtocol: aws.String("-1"),
-		IpRanges: []*ec2.IpRange{
+		IpRanges: []awstypes.IpRange{
 			{
 				CidrIp: aws.String("10.0.0.0/8"),
 			},
 		},
 	}
 
-	vpc_security_group_source := &ec2.IpPermission{
+	vpc_security_group_source := awstypes.IpPermission{
 		IpProtocol: aws.String("tcp"),
-		FromPort:   aws.Int64(80),
-		ToPort:     aws.Int64(8000),
-		UserIdGroupPairs: []*ec2.UserIdGroupPair{
+		FromPort:   aws.Int32(80),
+		ToPort:     aws.Int32(8000),
+		UserIdGroupPairs: []awstypes.UserIdGroupPair{
 			{
 				UserId:  aws.String("987654321"),
 				GroupId: aws.String("sg-12345678"),
@@ -74,11 +74,11 @@ func TestSecurityGroupRuleCreateID(t *testing.T) {
 		},
 	}
 
-	security_group_source := &ec2.IpPermission{
+	security_group_source := awstypes.IpPermission{
 		IpProtocol: aws.String("tcp"),
-		FromPort:   aws.Int64(80),
-		ToPort:     aws.Int64(8000),
-		UserIdGroupPairs: []*ec2.UserIdGroupPair{
+		FromPort:   aws.Int32(80),
+		ToPort:     aws.Int32(8000),
+		UserIdGroupPairs: []awstypes.UserIdGroupPair{
 			{
 				UserId:    aws.String("987654321"),
 				GroupName: aws.String("my-security-group"),
@@ -96,7 +96,7 @@ func TestSecurityGroupRuleCreateID(t *testing.T) {
 
 	// hardcoded hashes, to detect future change
 	cases := []struct {
-		Input  *ec2.IpPermission
+		Input  awstypes.IpPermission
 		Type   string
 		Output string
 	}{
@@ -108,16 +108,16 @@ func TestSecurityGroupRuleCreateID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := tfec2.SecurityGroupRuleCreateID("sg-12345", tc.Type, tc.Input)
+		actual := tfec2.SecurityGroupRuleCreateID("sg-12345", tc.Type, &tc.Input)
 		if actual != tc.Output {
-			t.Errorf("input: %s - %s\noutput: %s", tc.Type, tc.Input, actual)
+			t.Errorf("input: %s - %#v\noutput: %s", tc.Type, tc.Input, actual)
 		}
 	}
 }
 
 func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -159,7 +159,7 @@ func TestAccVPCSecurityGroupRule_Ingress_vpc(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -194,7 +194,7 @@ func TestAccVPCSecurityGroupRule_IngressSourceWithAccount_id(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_Ingress_protocol(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -236,7 +236,7 @@ func TestAccVPCSecurityGroupRule_Ingress_protocol(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_Ingress_icmpv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -278,7 +278,7 @@ func TestAccVPCSecurityGroupRule_Ingress_icmpv6(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_Ingress_ipv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -320,7 +320,7 @@ func TestAccVPCSecurityGroupRule_Ingress_ipv6(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_egress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -360,9 +360,34 @@ func TestAccVPCSecurityGroupRule_egress(t *testing.T) {
 	})
 }
 
+func TestAccVPCSecurityGroupRule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group_rule.test"
+	sgResourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupRuleConfig_egress(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupRule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCSecurityGroupRule_selfReference(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -413,7 +438,7 @@ func TestAccVPCSecurityGroupRule_expectInvalidTypeError(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCSecurityGroupRuleConfig_expectInvalidType(rName),
-				ExpectError: regexache.MustCompile(`expected type to be one of \[egress ingress\]`),
+				ExpectError: regexache.MustCompile(`expected type to be one of \[\"egress\" \"ingress\"\]`),
 			},
 		},
 	})
@@ -534,7 +559,7 @@ func TestAccVPCSecurityGroupRule_PartialMatching_source(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_issue5310(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -574,7 +599,7 @@ func TestAccVPCSecurityGroupRule_issue5310(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_race(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	sgResourceName := "aws_security_group.test"
 	n := 50
@@ -598,7 +623,7 @@ func TestAccVPCSecurityGroupRule_race(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_selfSource(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -639,7 +664,7 @@ func TestAccVPCSecurityGroupRule_selfSource(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_prefixListEgress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -701,7 +726,7 @@ func TestAccVPCSecurityGroupRule_prefixListEmptyString(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_ingressDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -743,7 +768,7 @@ func TestAccVPCSecurityGroupRule_ingressDescription(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_egressDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -785,7 +810,7 @@ func TestAccVPCSecurityGroupRule_egressDescription(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_IngressDescription_updates(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -844,7 +869,7 @@ func TestAccVPCSecurityGroupRule_IngressDescription_updates(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_EgressDescription_updates(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -903,7 +928,7 @@ func TestAccVPCSecurityGroupRule_EgressDescription_updates(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_Description_allPorts(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -962,7 +987,7 @@ func TestAccVPCSecurityGroupRule_Description_allPorts(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -992,10 +1017,11 @@ func TestAccVPCSecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSecurityGroupRuleImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"from_port", "to_port"},
 			},
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_descriptionAllPortsNonZeroPorts(rName, "description2"),
@@ -1022,7 +1048,7 @@ func TestAccVPCSecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6416
 func TestAccVPCSecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_security_group_rule.test1"
 	resource2Name := "aws_security_group_rule.test2"
@@ -1065,16 +1091,18 @@ func TestAccVPCSecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testi
 				),
 			},
 			{
-				ResourceName:      resource1Name,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resource1Name),
-				ImportStateVerify: true,
+				ResourceName:            resource1Name,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSecurityGroupRuleImportStateIdFunc(resource1Name),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"to_port"},
 			},
 			{
-				ResourceName:      resource2Name,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resource2Name),
-				ImportStateVerify: true,
+				ResourceName:            resource2Name,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSecurityGroupRuleImportStateIdFunc(resource2Name),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"to_port"},
 			},
 		},
 	})
@@ -1082,7 +1110,7 @@ func TestAccVPCSecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testi
 
 func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group1, group2 ec2.SecurityGroup
+	var group1, group2 awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_security_group_rule.test1"
 	resource2Name := "aws_security_group_rule.test2"
@@ -1249,7 +1277,7 @@ func TestAccVPCSecurityGroupRule_multiDescription(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_Ingress_multipleIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -1292,7 +1320,7 @@ func TestAccVPCSecurityGroupRule_Ingress_multipleIPv6(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_Ingress_multiplePrefixLists(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -1333,7 +1361,7 @@ func TestAccVPCSecurityGroupRule_Ingress_multiplePrefixLists(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_Ingress_peeredVPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -1374,7 +1402,7 @@ func TestAccVPCSecurityGroupRule_Ingress_peeredVPC(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_Ingress_ipv4AndIPv6(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -1417,7 +1445,7 @@ func TestAccVPCSecurityGroupRule_Ingress_ipv4AndIPv6(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSelf(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sgResourceName := "aws_security_group.test"
@@ -1458,7 +1486,7 @@ func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSelf(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSource(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	sg1ResourceName := "aws_security_group.test.0"
@@ -1500,7 +1528,7 @@ func TestAccVPCSecurityGroupRule_Ingress_prefixListAndSource(t *testing.T) {
 
 func TestAccVPCSecurityGroupRule_protocolChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group ec2.SecurityGroup
+	var group awstypes.SecurityGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_security_group_rule.test"
 	resourceName2 := "aws_security_group_rule.test2"

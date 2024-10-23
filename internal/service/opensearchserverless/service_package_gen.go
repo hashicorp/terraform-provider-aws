@@ -39,6 +39,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	return []*types.ServicePackageFrameworkResource{
 		{
 			Factory: newResourceAccessPolicy,
+			Name:    "Access Policy",
 		},
 		{
 			Factory: newResourceCollection,
@@ -53,12 +54,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		},
 		{
 			Factory: newResourceSecurityConfig,
+			Name:    "Security Config",
 		},
 		{
 			Factory: newResourceSecurityPolicy,
+			Name:    "Security Policy",
 		},
 		{
-			Factory: newResourceVPCEndpoint,
+			Factory: newVPCEndpointResource,
+			Name:    "VPC Endpoint",
 		},
 	}
 }
@@ -68,10 +72,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceSecurityPolicy,
 			TypeName: "aws_opensearchserverless_security_policy",
+			Name:     "Security Policy",
 		},
 		{
-			Factory:  DataSourceVPCEndpoint,
+			Factory:  dataSourceVPCEndpoint,
 			TypeName: "aws_opensearchserverless_vpc_endpoint",
+			Name:     "VPC Endpoint",
 		},
 	}
 }

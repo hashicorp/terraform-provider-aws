@@ -15,10 +15,9 @@ import (
 )
 
 type ServiceDatum struct {
-	SDKVersion         string
-	GoV1Package        string
+	SDKVersion         int
+	GoPackage          string
 	GoV1ClientTypeName string
-	GoV2Package        string
 	ProviderNameUpper  string
 }
 
@@ -35,7 +34,6 @@ func main() {
 	g.Infof("Generating internal/conns/%s", filename)
 
 	data, err := data.ReadAllServiceData()
-
 	if err != nil {
 		g.Fatalf("error reading service data: %s", err)
 	}
@@ -53,12 +51,11 @@ func main() {
 
 		s := ServiceDatum{
 			ProviderNameUpper: l.ProviderNameUpper(),
-			GoV1Package:       l.GoV1Package(),
-			GoV2Package:       l.GoV2Package(),
+			SDKVersion:        l.SDKVersion(),
+			GoPackage:         l.GoPackageName(),
 		}
 
-		s.SDKVersion = l.SDKVersion()
-		if l.ClientSDKV1() {
+		if l.IsClientSDKV1() {
 			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
 		}
 
@@ -80,5 +77,5 @@ func main() {
 	}
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string

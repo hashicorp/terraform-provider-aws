@@ -58,7 +58,6 @@ func TestValidMemcachedVersionString(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase := testcase
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
@@ -185,7 +184,6 @@ func TestValidRedisVersionString(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase := testcase
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
@@ -281,10 +279,25 @@ func TestValidateClusterEngineVersion(t *testing.T) {
 			version: "7.0",
 			valid:   true,
 		},
+
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.x",
+			valid:   false,
+		},
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.2",
+			valid:   true,
+		},
+		{
+			engine:  tfelasticache.EngineValkey,
+			version: "7.2.6",
+			valid:   false,
+		},
 	}
 
 	for _, testcase := range testcases {
-		testcase := testcase
 		t.Run(fmt.Sprintf("%s %s", testcase.engine, testcase.version), func(t *testing.T) {
 			t.Parallel()
 			err := tfelasticache.ValidateClusterEngineVersion(testcase.engine, testcase.version)
@@ -389,7 +402,6 @@ func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -458,7 +470,6 @@ func TestCustomizeDiffEngineVersionIsDowngrade_6xTo6digit(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -617,7 +628,6 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -687,7 +697,6 @@ func TestNormalizeEngineVersion(t *testing.T) {
 	}
 
 	for _, testcase := range testcases {
-		testcase := testcase
 		t.Run(testcase.version, func(t *testing.T) {
 			t.Parallel()
 
@@ -872,8 +881,6 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 	}
 
 	for name, testcase := range testcases {
-		testcase := testcase
-
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

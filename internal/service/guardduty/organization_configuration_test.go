@@ -287,7 +287,7 @@ func testAccCheckOrganizationConfigurationExists(ctx context.Context, n string) 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
 		_, err := tfguardduty.FindOrganizationConfigurationByID(ctx, conn, rs.Primary.ID)
 

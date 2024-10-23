@@ -96,7 +96,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeHostsInput{
-		Filter: newCustomFilterListV2(d.Get(names.AttrFilter).(*schema.Set)),
+		Filter: newCustomFilterList(d.Get(names.AttrFilter).(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("host_id"); ok {
@@ -136,7 +136,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("sockets", host.HostProperties.Sockets)
 	d.Set("total_vcpus", host.HostProperties.TotalVCpus)
 
-	setTagsOutV2(ctx, host.Tags)
+	setTagsOut(ctx, host.Tags)
 
 	return diags
 }

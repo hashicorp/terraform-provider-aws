@@ -39,7 +39,7 @@ func TestAccDynamoDBTableExport_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableExportConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExportExists(ctx, resourceName, &tableexport),
 					resource.TestCheckResourceAttr(resourceName, "export_format", "DYNAMODB_JSON"),
 					resource.TestCheckResourceAttr(resourceName, "export_status", "COMPLETED"),
@@ -54,7 +54,7 @@ func TestAccDynamoDBTableExport_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStartTime),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile(
-						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
+						fmt.Sprintf(`table/%s/export/.+$`, rName),
 					)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "table_arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
 				),
@@ -92,7 +92,7 @@ func TestAccDynamoDBTableExport_kms(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableExportConfig_kms(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExportExists(ctx, resourceName, &tableexport),
 					resource.TestCheckResourceAttr(resourceName, "export_format", "DYNAMODB_JSON"),
 					resource.TestCheckResourceAttr(resourceName, "export_status", "COMPLETED"),
@@ -107,7 +107,7 @@ func TestAccDynamoDBTableExport_kms(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStartTime),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile(
-						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
+						fmt.Sprintf(`table/%s/export/.+$`, rName),
 					)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "table_arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
 				),
@@ -144,7 +144,7 @@ func TestAccDynamoDBTableExport_s3Prefix(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableExportConfig_s3Prefix(rName, "test"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExportExists(ctx, resourceName, &tableexport),
 					resource.TestCheckResourceAttr(resourceName, "export_format", "DYNAMODB_JSON"),
 					resource.TestCheckResourceAttr(resourceName, "export_status", "COMPLETED"),
@@ -159,7 +159,7 @@ func TestAccDynamoDBTableExport_s3Prefix(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStartTime),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", regexache.MustCompile(
-						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
+						fmt.Sprintf(`table/%s/export/.+$`, rName),
 					)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "table_arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
 				),

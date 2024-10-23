@@ -151,55 +151,6 @@ func testAccMultiplex_update(t *testing.T) {
 	})
 }
 
-func testAccMultiplex_updateTags(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var multiplex medialive.DescribeMultiplexOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_medialive_multiplex.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
-			testAccMultiplexesPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMultiplexConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccMultiplexConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccMultiplexConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiplexExists(ctx, resourceName, &multiplex),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccMultiplex_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -342,49 +293,4 @@ resource "aws_medialive_multiplex" "test" {
   }
 }
 `, rName, start))
-}
-
-func testAccMultiplexConfig_tags1(rName, key1, value1 string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-las1-az1"),
-		fmt.Sprintf(`
-resource "aws_medialive_multiplex" "test" {
-  name               = %[1]q
-  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
-
-  multiplex_settings {
-    transport_stream_bitrate                = 1000000
-    transport_stream_id                     = 1
-    transport_stream_reserved_bitrate       = 1
-    maximum_video_buffer_delay_milliseconds = 1000
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, key1, value1))
-}
-
-func testAccMultiplexConfig_tags2(rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-las1-az1"),
-		fmt.Sprintf(`
-resource "aws_medialive_multiplex" "test" {
-  name               = %[1]q
-  availability_zones = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
-
-  multiplex_settings {
-    transport_stream_bitrate                = 1000000
-    transport_stream_id                     = 1
-    transport_stream_reserved_bitrate       = 1
-    maximum_video_buffer_delay_milliseconds = 1000
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, key1, value1, key2, value2))
 }

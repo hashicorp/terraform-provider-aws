@@ -254,8 +254,9 @@ The following arguments are available:
 * `via` (Optional) - The network function groups and any edge overrides associated with the action.
     * `network_function_groups` (Optional) - A list of strings. The network function group to use for the service insertion action.
     * `with_edge_override` (Optional) - Any edge overrides and the preferred edge to use.
-        * `edge_sets` (Optional) - A list of strings. The list of edges associated with the network function group.
-        * `use_edge` (Optional) - The preferred edge to use.
+        * `edge_sets` (Optional) - A list of a list of strings. The list of edges associated with the network function group.
+        * `use_edge_location` (Optional) - The preferred edge to use.
+        * `use_edge` (**Deprecated** use `use_edge_location` instead) - The preferred edge to use.
 
 ### `network_function_groups`
 

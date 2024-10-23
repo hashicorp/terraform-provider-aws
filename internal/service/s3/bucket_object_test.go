@@ -1849,7 +1849,7 @@ func testAccBucketObjectConfig_nonVersioned(rName string, source string) string 
   ]
 }`
 
-	return acctest.ConfigAssumeRolePolicy(policy) + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAssumeRolePolicy(policy), fmt.Sprintf(`
 resource "aws_s3_bucket" "object_bucket_3" {
   bucket = %[1]q
 }
@@ -1860,7 +1860,7 @@ resource "aws_s3_bucket_object" "object" {
   source = %[2]q
   etag   = filemd5(%[2]q)
 }
-`, rName, source)
+`, rName, source))
 }
 
 func testAccBucketObjectConfig_objectKeyEnabled(rName string, content string) string {

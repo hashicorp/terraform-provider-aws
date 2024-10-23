@@ -2,7 +2,8 @@
 
 The Terraform AWS Provider Makefile includes a lot of functionality to make working on the provider easier and more efficient. Many contributors are familiar with using the Makefile for running acceptance tests, but there is a lot more functionality hidden in this humble file.
 
-**NOTE:** See [Continuous Integration](continuous-integration.md) for more information about the CI-focused parts of the Makefile.
+!!! tip
+    See [Continuous Integration](continuous-integration.md) for more information about the CI-focused parts of the Makefile.
 
 ## Basics
 
@@ -46,7 +47,8 @@ In the [Cheat Sheet](#cheat-sheet), you can see which variables affect which [ta
 
 Variables are often defined before the `make` call on the same line, such as `MY_VAR=42 make my-target`. However, they can also be set on the same line _after_ the `make` call or in your environment, using, for example, `export MY_VAR=42`.
 
-**NOTE:** Targets that [meta and dependent targets](#meta-targets-and-dependent-targets) run may not all respect the same set of variables.
+!!! note
+    Targets that [meta and dependent targets](#meta-targets-and-dependent-targets) run may not all respect the same set of variables.
 
 * `ACCTEST_PARALLELISM` - (Default: `20`) Number of concurrent acceptance tests to run. Overridden if `P` is set.
 * `ACCTEST_TIMEOUT` - (Default: `360m`) Timeout before acceptance tests panic.
@@ -83,7 +85,8 @@ Variables are often defined before the `make` call on the same line, such as `MY
 * **Legacy?**: Indicates whether the target is a legacy holdover. Use caution with a legacy target! It may not work, or it may perform checks or fixes that do _not_ align with current practices. In the future, this target should be removed, modernized, or verified to still have value.
 * **Vars**: [Variables](#variables) that you can set when using the target, such as `MY_VAR=42 make my-target`. [Meta and dependent targets](#meta-targets-and-dependent-targets) run other targets that may not respect the same variables.
 
-**TIP:** Makefile autocompletion works out of the box on Zsh (the default shell for Terminal on macOS) and Fish shells. For Bash, the `bash-completion` package, among others, provides Makefile autocompletion. Using autocompletion allows you, for example, to type `make ac`, press _tab_, and the shell autocompletes `make acctest-lint`.
+!!! tip
+    Makefile autocompletion works out of the box on Zsh (the default shell for Terminal on macOS) and Fish shells. For Bash, the `bash-completion` package, among others, provides Makefile autocompletion. Using autocompletion allows you, for example, to type `make ac`, press _tab_, and the shell autocompletes `make acctest-lint`.
 
 | Target | Description | CI? | Legacy? | Vars |
 | --- | --- | --- | --- | --- |
@@ -130,7 +133,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `lint`<sup>M</sup> | Legacy target, use caution |  | ✔️ |  |
 | `lint-fix`<sup>M</sup> | Fix acceptance test, website, and docs linter findings |  | ✔️ |  |
 | `misspell`<sup>M</sup> | Run all CI misspell checks | ✔️ |  |  |
-| `preferred-lib` | Preferred Library Version Check / diffgrep | ✔️ |  | `BASE_REF` |
 | `prereq-go` | Install the project's Go version |  |  | `GO_VER` |
 | `provider-lint` | ProviderLint Checks / providerlint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `provider-markdown-lint` | Provider Check / markdown-lint | ✔️ |  |  |
@@ -161,6 +163,9 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | `testacc-lint-fix` | Fix acceptance test linter findings |  |  | `K`, `PKG`, `SVC_DIR` |
 | `testacc-short`<sup>D</sup> | Run acceptace tests with the -short flag |  |  | `ACCTEST_PARALLELISM`, `ACCTEST_TIMEOUT`, `GO_VER`, `K`, `PKG`, `PKG_NAME`, `RUNARGS`, `TEST_COUNT`, `TESTARGS` |
 | `testacc-tflint` | Acceptance Test Linting / tflint | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-dir` | Run `tflint` on Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-dir-fix` | Fix `tflint` issues in Terraform acceptance test directories | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
+| `testacc-tflint-embedded` | Run `tflint` on embedded Terraform configurations | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
 | `tfproviderdocs`<sup>D</sup> | Provider Checks / tfproviderdocs | ✔️ |  |  |
 | `tfsdk2fw`<sup>D</sup> | Install tfsdk2fw |  |  | `GO_VER` |
 | `tools`<sup>D</sup> | Install tools |  |  | `GO_VER` |

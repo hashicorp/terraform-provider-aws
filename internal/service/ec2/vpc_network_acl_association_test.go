@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccVPCNetworkACLAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAclAssociation
+	var v awstypes.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_association.test"
 	naclResourceName := "aws_network_acl.test"
@@ -52,7 +52,7 @@ func TestAccVPCNetworkACLAssociation_basic(t *testing.T) {
 
 func TestAccVPCNetworkACLAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAclAssociation
+	var v awstypes.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_association.test"
 
@@ -76,7 +76,7 @@ func TestAccVPCNetworkACLAssociation_disappears(t *testing.T) {
 
 func TestAccVPCNetworkACLAssociation_disappears_NACL(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAclAssociation
+	var v awstypes.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_association.test"
 	naclResourceName := "aws_network_acl.test"
@@ -101,7 +101,7 @@ func TestAccVPCNetworkACLAssociation_disappears_NACL(t *testing.T) {
 
 func TestAccVPCNetworkACLAssociation_disappears_Subnet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAclAssociation
+	var v awstypes.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_association.test"
 	subnetResourceName := "aws_subnet.test"
@@ -126,7 +126,7 @@ func TestAccVPCNetworkACLAssociation_disappears_Subnet(t *testing.T) {
 
 func TestAccVPCNetworkACLAssociation_twoAssociations(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 ec2.NetworkAclAssociation
+	var v1, v2 awstypes.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_network_acl_association.test1"
 	resource2Name := "aws_network_acl_association.test2"
@@ -167,7 +167,7 @@ func TestAccVPCNetworkACLAssociation_twoAssociations(t *testing.T) {
 
 func TestAccVPCNetworkACLAssociation_associateWithDefaultNACL(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAclAssociation
+	var v awstypes.NetworkAclAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_network_acl_association.test"
 	subnetResourceName := "aws_subnet.test"
@@ -196,7 +196,7 @@ func TestAccVPCNetworkACLAssociation_associateWithDefaultNACL(t *testing.T) {
 
 func testAccCheckNetworkACLAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_network_acl_association" {
@@ -220,7 +220,7 @@ func testAccCheckNetworkACLAssociationDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckNetworkACLAssociationExists(ctx context.Context, n string, v *ec2.NetworkAclAssociation) resource.TestCheckFunc {
+func testAccCheckNetworkACLAssociationExists(ctx context.Context, n string, v *awstypes.NetworkAclAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -231,7 +231,7 @@ func testAccCheckNetworkACLAssociationExists(ctx context.Context, n string, v *e
 			return fmt.Errorf("No EC2 Network ACL Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindNetworkACLAssociationByID(ctx, conn, rs.Primary.ID)
 

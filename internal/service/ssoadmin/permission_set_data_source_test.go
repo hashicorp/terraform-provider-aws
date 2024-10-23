@@ -81,7 +81,7 @@ func TestAccSSOAdminPermissionSetDataSource_nonExistent(t *testing.T) {
 	})
 }
 
-func testAccSSOPermissionSetBaseDataSourceConfig(rName string) string {
+func testAccSSOPermissionSetDataSourceConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 
@@ -102,7 +102,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 
 func testAccPermissionSetDataSourceConfig_ssoByARN(rName string) string {
 	return acctest.ConfigCompose(
-		testAccSSOPermissionSetBaseDataSourceConfig(rName),
+		testAccSSOPermissionSetDataSourceConfig_base(rName),
 		`
 data "aws_ssoadmin_permission_set" "test" {
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
@@ -113,7 +113,7 @@ data "aws_ssoadmin_permission_set" "test" {
 
 func testAccPermissionSetDataSourceConfig_ssoByName(rName string) string {
 	return acctest.ConfigCompose(
-		testAccSSOPermissionSetBaseDataSourceConfig(rName),
+		testAccSSOPermissionSetDataSourceConfig_base(rName),
 		`
 data "aws_ssoadmin_permission_set" "test" {
   instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]

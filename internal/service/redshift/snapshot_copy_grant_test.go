@@ -117,7 +117,7 @@ func TestAccRedshiftSnapshotCopyGrant_tags(t *testing.T) {
 
 func testAccCheckSnapshotCopyGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_snapshot_copy_grant" {
@@ -148,7 +148,7 @@ func testAccCheckSnapshotCopyGrantExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		_, err := tfredshift.FindSnapshotCopyGrantByName(ctx, conn, rs.Primary.ID)
 

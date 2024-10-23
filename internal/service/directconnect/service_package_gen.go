@@ -5,10 +5,8 @@ package directconnect
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	directconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,24 +25,29 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceConnection,
+			Factory:  dataSourceConnection,
 			TypeName: "aws_dx_connection",
+			Name:     "Connection",
 		},
 		{
-			Factory:  DataSourceGateway,
+			Factory:  dataSourceGateway,
 			TypeName: "aws_dx_gateway",
+			Name:     "Gateway",
 		},
 		{
-			Factory:  DataSourceLocation,
+			Factory:  dataSourceLocation,
 			TypeName: "aws_dx_location",
+			Name:     "Location",
 		},
 		{
-			Factory:  DataSourceLocations,
+			Factory:  dataSourceLocations,
 			TypeName: "aws_dx_locations",
+			Name:     "Locations",
 		},
 		{
-			Factory:  DataSourceRouterConfiguration,
+			Factory:  dataSourceRouterConfiguration,
 			TypeName: "aws_dx_router_configuration",
+			Name:     "Router Configuration",
 		},
 	}
 }
@@ -52,11 +55,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceBGPPeer,
+			Factory:  resourceBGPPeer,
 			TypeName: "aws_dx_bgp_peer",
+			Name:     "BGP Peer",
 		},
 		{
-			Factory:  ResourceConnection,
+			Factory:  resourceConnection,
 			TypeName: "aws_dx_connection",
 			Name:     "Connection",
 			Tags: &types.ServicePackageResourceTags{
@@ -64,67 +68,76 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConnectionAssociation,
+			Factory:  resourceConnectionAssociation,
 			TypeName: "aws_dx_connection_association",
+			Name:     "Connection LAG Association",
 		},
 		{
-			Factory:  ResourceConnectionConfirmation,
+			Factory:  resourceConnectionConfirmation,
 			TypeName: "aws_dx_connection_confirmation",
+			Name:     "Connection Confirmation",
 		},
 		{
-			Factory:  ResourceGateway,
+			Factory:  resourceGateway,
 			TypeName: "aws_dx_gateway",
+			Name:     "Gateway",
 		},
 		{
-			Factory:  ResourceGatewayAssociation,
+			Factory:  resourceGatewayAssociation,
 			TypeName: "aws_dx_gateway_association",
+			Name:     "Gateway Association",
 		},
 		{
-			Factory:  ResourceGatewayAssociationProposal,
+			Factory:  resourceGatewayAssociationProposal,
 			TypeName: "aws_dx_gateway_association_proposal",
+			Name:     "Gateway Association Proposal",
 		},
 		{
-			Factory:  ResourceHostedConnection,
+			Factory:  resourceHostedConnection,
 			TypeName: "aws_dx_hosted_connection",
+			Name:     "Hosted Connection",
 		},
 		{
-			Factory:  ResourceHostedPrivateVirtualInterface,
+			Factory:  resourceHostedPrivateVirtualInterface,
 			TypeName: "aws_dx_hosted_private_virtual_interface",
-		},
-		{
-			Factory:  ResourceHostedPrivateVirtualInterfaceAccepter,
-			TypeName: "aws_dx_hosted_private_virtual_interface_accepter",
 			Name:     "Hosted Private Virtual Interface",
+		},
+		{
+			Factory:  resourceHostedPrivateVirtualInterfaceAccepter,
+			TypeName: "aws_dx_hosted_private_virtual_interface_accepter",
+			Name:     "Hosted Private Virtual Interface Accepter",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceHostedPublicVirtualInterface,
+			Factory:  resourceHostedPublicVirtualInterface,
 			TypeName: "aws_dx_hosted_public_virtual_interface",
-		},
-		{
-			Factory:  ResourceHostedPublicVirtualInterfaceAccepter,
-			TypeName: "aws_dx_hosted_public_virtual_interface_accepter",
 			Name:     "Hosted Public Virtual Interface",
+		},
+		{
+			Factory:  resourceHostedPublicVirtualInterfaceAccepter,
+			TypeName: "aws_dx_hosted_public_virtual_interface_accepter",
+			Name:     "Hosted Public Virtual Interface Accepter",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceHostedTransitVirtualInterface,
+			Factory:  resourceHostedTransitVirtualInterface,
 			TypeName: "aws_dx_hosted_transit_virtual_interface",
+			Name:     "Hosted Transit Virtual Interface",
 		},
 		{
-			Factory:  ResourceHostedTransitVirtualInterfaceAccepter,
+			Factory:  resourceHostedTransitVirtualInterfaceAccepter,
 			TypeName: "aws_dx_hosted_transit_virtual_interface_accepter",
-			Name:     "Hosted Transit Virtual Interface",
+			Name:     "Hosted Transit Virtual Interface Accepter",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
-			Factory:  ResourceLag,
+			Factory:  resourceLag,
 			TypeName: "aws_dx_lag",
 			Name:     "LAG",
 			Tags: &types.ServicePackageResourceTags{
@@ -132,11 +145,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceMacSecKeyAssociation,
+			Factory:  resourceMacSecKeyAssociation,
 			TypeName: "aws_dx_macsec_key_association",
+			Name:     "MACSec Key Association",
 		},
 		{
-			Factory:  ResourcePrivateVirtualInterface,
+			Factory:  resourcePrivateVirtualInterface,
 			TypeName: "aws_dx_private_virtual_interface",
 			Name:     "Private Virtual Interface",
 			Tags: &types.ServicePackageResourceTags{
@@ -144,7 +158,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourcePublicVirtualInterface,
+			Factory:  resourcePublicVirtualInterface,
 			TypeName: "aws_dx_public_virtual_interface",
 			Name:     "Public Virtual Interface",
 			Tags: &types.ServicePackageResourceTags{
@@ -152,7 +166,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTransitVirtualInterface,
+			Factory:  resourceTransitVirtualInterface,
 			TypeName: "aws_dx_transit_virtual_interface",
 			Name:     "Transit Virtual Interface",
 			Tags: &types.ServicePackageResourceTags{
@@ -166,22 +180,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.DirectConnect
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*directconnect_sdkv1.DirectConnect, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*directconnect_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return directconnect_sdkv1.New(sess.Copy(&cfg)), nil
+	return directconnect_sdkv2.NewFromConfig(cfg,
+		directconnect_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

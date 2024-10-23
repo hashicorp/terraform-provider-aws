@@ -21,7 +21,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceConnectionAlias,
+			Factory: newConnectionAliasResource,
 			Name:    "Connection Alias",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
@@ -33,28 +33,12 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceBundle,
+			Factory:  dataSourceBundle,
 			TypeName: "aws_workspaces_bundle",
+			Name:     "Bundle",
 		},
 		{
-			Factory:  DataSourceDirectory,
-			TypeName: "aws_workspaces_directory",
-		},
-		{
-			Factory:  DataSourceImage,
-			TypeName: "aws_workspaces_image",
-		},
-		{
-			Factory:  DataSourceWorkspace,
-			TypeName: "aws_workspaces_workspace",
-		},
-	}
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
-		{
-			Factory:  ResourceDirectory,
+			Factory:  dataSourceDirectory,
 			TypeName: "aws_workspaces_directory",
 			Name:     "Directory",
 			Tags: &types.ServicePackageResourceTags{
@@ -62,7 +46,33 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceIPGroup,
+			Factory:  dataSourceImage,
+			TypeName: "aws_workspaces_image",
+			Name:     "Image",
+		},
+		{
+			Factory:  dataSourceWorkspace,
+			TypeName: "aws_workspaces_workspace",
+			Name:     "Workspace",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+	}
+}
+
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceDirectory,
+			TypeName: "aws_workspaces_directory",
+			Name:     "Directory",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  resourceIPGroup,
 			TypeName: "aws_workspaces_ip_group",
 			Name:     "IP Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -70,7 +80,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceWorkspace,
+			Factory:  resourceWorkspace,
 			TypeName: "aws_workspaces_workspace",
 			Name:     "Workspace",
 			Tags: &types.ServicePackageResourceTags{

@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -39,7 +39,7 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -54,11 +54,11 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					testAccCheckBotExists(ctx, rName, &v),
 					testAccCheckBotNotExists(ctx, testBotID, acctest.Ct1),
 
-					resource.TestCheckNoResourceAttr(rName, "abort_statement"),
+					resource.TestCheckResourceAttr(rName, "abort_statement.#", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(rName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(rName, "checksum"),
 					resource.TestCheckResourceAttr(rName, "child_directed", acctest.CtFalse),
-					resource.TestCheckNoResourceAttr(rName, "clarification_prompt"),
+					resource.TestCheckResourceAttr(rName, "clarification_prompt.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(rName, "create_version", acctest.CtFalse),
 					acctest.CheckResourceAttrRFC3339(rName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(rName, names.AttrDescription, "Bot to order flowers on the behalf of a user"),
@@ -66,7 +66,7 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "enable_model_improvements", acctest.CtFalse),
 					resource.TestCheckResourceAttr(rName, "failure_reason", ""),
 					resource.TestCheckResourceAttr(rName, "idle_session_ttl_in_seconds", "300"),
-					resource.TestCheckNoResourceAttr(rName, "intent"),
+					resource.TestCheckResourceAttr(rName, "intent.#", acctest.Ct1),
 					acctest.CheckResourceAttrRFC3339(rName, names.AttrLastUpdatedDate),
 					resource.TestCheckResourceAttr(rName, "locale", "en-US"),
 					resource.TestCheckResourceAttr(rName, names.AttrName, testBotID),
@@ -74,13 +74,14 @@ func TestAccLexModelsBot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(rName, "process_behavior", "SAVE"),
 					resource.TestCheckResourceAttr(rName, names.AttrStatus, "NOT_BUILT"),
 					resource.TestCheckResourceAttr(rName, names.AttrVersion, tflexmodels.BotVersionLatest),
-					resource.TestCheckNoResourceAttr(rName, "voice_id"),
+					resource.TestCheckResourceAttr(rName, "voice_id", ""),
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -109,7 +110,7 @@ func testAccBot_createVersion(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -128,9 +129,10 @@ func testAccBot_createVersion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -156,7 +158,7 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -178,9 +180,10 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -200,9 +203,10 @@ func TestAccLexModelsBot_abortStatement(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -217,7 +221,7 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -243,6 +247,10 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 				ResourceName:      rName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"abort_statement.0.message.0.group_number",
+					"clarification_prompt.0.message.0.group_number",
+				},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -260,6 +268,10 @@ func TestAccLexModelsBot_clarificationPrompt(t *testing.T) {
 				ResourceName:      rName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"abort_statement.0.message.0.group_number",
+					"clarification_prompt.0.message.0.group_number",
+				},
 			},
 		},
 	})
@@ -274,7 +286,7 @@ func TestAccLexModelsBot_childDirected(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -290,9 +302,10 @@ func TestAccLexModelsBot_childDirected(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -305,9 +318,10 @@ func TestAccLexModelsBot_childDirected(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -322,7 +336,7 @@ func TestAccLexModelsBot_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -338,9 +352,10 @@ func TestAccLexModelsBot_description(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -353,9 +368,10 @@ func TestAccLexModelsBot_description(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -370,7 +386,7 @@ func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -386,9 +402,10 @@ func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -401,9 +418,10 @@ func TestAccLexModelsBot_detectSentiment(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -418,7 +436,7 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -434,9 +452,10 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -450,9 +469,10 @@ func TestAccLexModelsBot_enableModelImprovements(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -467,7 +487,7 @@ func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -483,9 +503,10 @@ func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -498,9 +519,10 @@ func TestAccLexModelsBot_idleSessionTTLInSeconds(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -515,7 +537,7 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -531,9 +553,10 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -546,9 +569,10 @@ func TestAccLexModelsBot_intents(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -569,7 +593,7 @@ func TestAccLexModelsBot_computeVersion(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -621,7 +645,7 @@ func TestAccLexModelsBot_locale(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -637,9 +661,10 @@ func TestAccLexModelsBot_locale(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -652,9 +677,10 @@ func TestAccLexModelsBot_locale(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -669,7 +695,7 @@ func TestAccLexModelsBot_voiceID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -685,9 +711,10 @@ func TestAccLexModelsBot_voiceID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 			{
 				Config: acctest.ConfigCompose(
@@ -700,9 +727,10 @@ func TestAccLexModelsBot_voiceID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"abort_statement.0.message.0.group_number"},
 			},
 		},
 	})
@@ -717,7 +745,7 @@ func TestAccLexModelsBot_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LexModelBuildingServiceEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -749,7 +777,7 @@ func testAccCheckBotExistsWithVersion(ctx context.Context, rName, botVersion str
 			return fmt.Errorf("No Lex Bot ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
 
 		output, err := tflexmodels.FindBotVersionByName(ctx, conn, rs.Primary.ID, botVersion)
 
@@ -769,7 +797,7 @@ func testAccCheckBotExists(ctx context.Context, rName string, output *lexmodelbu
 
 func testAccCheckBotNotExists(ctx context.Context, botName, botVersion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
 
 		_, err := tflexmodels.FindBotVersionByName(ctx, conn, botName, botVersion)
 
@@ -787,14 +815,14 @@ func testAccCheckBotNotExists(ctx context.Context, botName, botVersion string) r
 
 func testAccCheckBotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LexModelsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lex_bot" {
 				continue
 			}
 
-			output, err := conn.GetBotVersionsWithContext(ctx, &lexmodelbuildingservice.GetBotVersionsInput{
+			output, err := conn.GetBotVersions(ctx, &lexmodelbuildingservice.GetBotVersionsInput{
 				Name: aws.String(rs.Primary.ID),
 			})
 

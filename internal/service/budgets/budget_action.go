@@ -32,6 +32,7 @@ import (
 
 // @SDKResource("aws_budgets_budget_action")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func ResourceBudgetAction() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetActionCreate,
@@ -628,15 +629,15 @@ func flattenBudgetActionIAMActionDefinition(lt *awstypes.IamActionDefinition) []
 		"policy_arn": aws.ToString(lt.PolicyArn),
 	}
 
-	if lt.Users != nil && len(lt.Users) > 0 {
+	if len(lt.Users) > 0 {
 		attrs["users"] = flex.FlattenStringValueSet(lt.Users)
 	}
 
-	if lt.Roles != nil && len(lt.Roles) > 0 {
+	if len(lt.Roles) > 0 {
 		attrs["roles"] = flex.FlattenStringValueSet(lt.Roles)
 	}
 
-	if lt.Groups != nil && len(lt.Groups) > 0 {
+	if len(lt.Groups) > 0 {
 		attrs["groups"] = flex.FlattenStringValueSet(lt.Groups)
 	}
 
@@ -652,7 +653,7 @@ func flattenBudgetActionScpActionDefinition(lt *awstypes.ScpActionDefinition) []
 		"policy_id": aws.ToString(lt.PolicyId),
 	}
 
-	if lt.TargetIds != nil && len(lt.TargetIds) > 0 {
+	if len(lt.TargetIds) > 0 {
 		attrs["target_ids"] = flex.FlattenStringValueSet(lt.TargetIds)
 	}
 

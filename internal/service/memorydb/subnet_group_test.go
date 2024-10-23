@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,7 +19,7 @@ import (
 )
 
 func testAccPreCheck(t *testing.T) {
-	acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
+	acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 }
 
 func TestAccMemoryDBSubnetGroup_basic(t *testing.T) {
@@ -298,7 +297,7 @@ func TestAccMemoryDBSubnetGroup_update_tags(t *testing.T) {
 
 func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_memorydb_subnet_group" {
@@ -333,7 +332,7 @@ func testAccCheckSubnetGroupExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("No MemoryDB Subnet Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		_, err := tfmemorydb.FindSubnetGroupByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 

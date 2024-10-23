@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.SiteToSiteVpnAttachment
+	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	vpnResourceName := "aws_vpn_connection.test"
 	coreNetworkResourceName := "aws_networkmanager_core_network.test"
@@ -58,9 +58,10 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 		},
 	})
@@ -68,7 +69,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_basic(t *testing.T) {
 
 func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.SiteToSiteVpnAttachment
+	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bgpASN := sdkacctest.RandIntRange(64512, 65534)
@@ -97,7 +98,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_disappears(t *testing.T) {
 
 func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v networkmanager.SiteToSiteVpnAttachment
+	var v awstypes.SiteToSiteVpnAttachment
 	resourceName := "aws_networkmanager_site_to_site_vpn_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	bgpASN := sdkacctest.RandIntRange(64512, 65534)
@@ -146,7 +147,7 @@ func TestAccNetworkManagerSiteToSiteVPNAttachment_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckSiteToSiteVPNAttachmentExists(ctx context.Context, n string, v *networkmanager.SiteToSiteVpnAttachment) resource.TestCheckFunc {
+func testAccCheckSiteToSiteVPNAttachmentExists(ctx context.Context, n string, v *awstypes.SiteToSiteVpnAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -157,7 +158,7 @@ func testAccCheckSiteToSiteVPNAttachmentExists(ctx context.Context, n string, v 
 			return fmt.Errorf("No Network Manager Site To Site VPN Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindSiteToSiteVPNAttachmentByID(ctx, conn, rs.Primary.ID)
 
@@ -173,7 +174,7 @@ func testAccCheckSiteToSiteVPNAttachmentExists(ctx context.Context, n string, v 
 
 func testAccCheckSiteToSiteVPNAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkmanager_site_to_site_vpn_attachment" {

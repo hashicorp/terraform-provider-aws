@@ -36,6 +36,7 @@ func main() {
 		switch packageName {
 		case "cloudfrontkeyvaluestore", // Endpoint includes account ID
 			"codecatalyst",        // Bearer auth token needs special handling
+			"location",            // Resolver modifies URL
 			"mwaa",                // Resolver modifies URL
 			"neptunegraph",        // EndpointParameters has an additional parameter, ApiType
 			"paymentcryptography", // Resolver modifies URL
@@ -58,6 +59,8 @@ func main() {
 		td := TemplateData{
 			HumanFriendly:     l.HumanFriendly(),
 			PackageName:       packageName,
+			SDKVersion:        l.SDKVersion(),
+			GoPackage:         l.GoPackageName(),
 			ProviderNameUpper: l.ProviderNameUpper(),
 			Region:            "us-west-2",
 			APICall:           l.EndpointAPICall(),
@@ -69,24 +72,13 @@ func main() {
 			Aliases:           l.Aliases(),
 			OverrideRegion:    l.EndpointOverrideRegion(),
 		}
-		if l.ClientSDKV1() {
-			td.GoV1Package = l.GoV1Package()
-
+		if l.IsClientSDKV1() {
 			switch packageName {
-			case "imagebuilder",
-				"globalaccelerator",
-				"route53recoveryreadiness",
-				"worklink":
+			case "imagebuilder":
 				td.V1NameResolverNeedsUnknownService = true
 			}
-			switch packageName {
-			case "wafregional":
-				td.V1AlternateInputPackage = "waf"
-			}
 		}
-		if l.ClientSDKV2() {
-			td.GoV2Package = l.GoV2Package()
-
+		if l.IsClientSDKV2() {
 			if strings.Contains(td.APICallParams, "awstypes") {
 				td.ImportAwsTypes = true
 			}
@@ -128,8 +120,8 @@ func main() {
 type TemplateData struct {
 	HumanFriendly                     string
 	PackageName                       string
-	GoV1Package                       string
-	GoV2Package                       string
+	SDKVersion                        int
+	GoPackage                         string
 	ProviderNameUpper                 string
 	Region                            string
 	APICall                           string
@@ -139,7 +131,6 @@ type TemplateData struct {
 	DeprecatedEnvVar                  string
 	TFAWSEnvVar                       string
 	V1NameResolverNeedsUnknownService bool
-	V1AlternateInputPackage           string
 	Aliases                           []string
 	ImportAwsTypes                    bool
 	OverrideRegion                    string

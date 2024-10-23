@@ -384,7 +384,7 @@ resource "aws_codeartifact_repository" "test" {
 }
 
 func testAccRepositoryConfig_upstreams2(rName string) string {
-	return testAccRepositoryConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccRepositoryConfig_base(rName), fmt.Sprintf(`
 resource "aws_codeartifact_repository" "upstream1" {
   repository = "%[1]s-upstream1"
   domain     = aws_codeartifact_domain.test.domain
@@ -407,11 +407,11 @@ resource "aws_codeartifact_repository" "test" {
     repository_name = aws_codeartifact_repository.upstream2.repository
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccRepositoryConfig_externalConnection(rName string) string {
-	return testAccRepositoryConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccRepositoryConfig_base(rName), fmt.Sprintf(`
 resource "aws_codeartifact_repository" "test" {
   repository = %[1]q
   domain     = aws_codeartifact_domain.test.domain
@@ -420,11 +420,11 @@ resource "aws_codeartifact_repository" "test" {
     external_connection_name = "public:npmjs"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccRepositoryConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccRepositoryConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccRepositoryConfig_base(rName), fmt.Sprintf(`
 resource "aws_codeartifact_repository" "test" {
   repository = %[1]q
   domain     = aws_codeartifact_domain.test.domain
@@ -433,11 +433,11 @@ resource "aws_codeartifact_repository" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccRepositoryConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccRepositoryConfig_base(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccRepositoryConfig_base(rName), fmt.Sprintf(`
 resource "aws_codeartifact_repository" "test" {
   repository = %[1]q
   domain     = aws_codeartifact_domain.test.domain
@@ -447,5 +447,5 @@ resource "aws_codeartifact_repository" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

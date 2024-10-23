@@ -284,6 +284,7 @@ func isContentTypeAllowed(contentType *string) bool {
 		regexache.MustCompile(`^application/x-sh$`),
 		regexache.MustCompile(`^application/xhtml\+xml$`),
 		regexache.MustCompile(`^application/xml$`),
+		regexache.MustCompile(`^application/x-sql$`),
 		regexache.MustCompile(`^text/.+`),
 	}
 	for _, r := range allowedContentTypes {
