@@ -156,7 +156,6 @@ func resourceComputeEnvironment() *schema.Resource {
 									names.AttrVersion: {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
 									},
 								},
 							},
