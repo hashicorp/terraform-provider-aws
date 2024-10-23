@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_iam_user_login_profile
 
-Manages an IAM User Login Profile with limited support for password creation during Terraform resource creation. Uses PGP to encrypt the password for safe transport to the user. PGP keys can be obtained from Keybase.
+Manages an IAM User Login Profile with limited support for password creation during Terraform resource creation. Uses PGP to encrypt the password for safe transport to the user. PGP keys can be obtained from Keybase or GitHub.
 
 -> To reset an IAM User login password via Terraform, you can use the [`terraform taint` command](https://www.terraform.io/docs/commands/taint.html) or change any of the arguments.
 
@@ -23,7 +23,7 @@ resource "aws_iam_user" "example" {
 
 resource "aws_iam_user_login_profile" "example" {
   user    = aws_iam_user.example.name
-  pgp_key = "keybase:some_person_that_exists"
+  pgp_key = "keybase:some_person_that_exists" # or "github:some_person_that_exists"
 }
 
 output "password" {
@@ -36,7 +36,7 @@ output "password" {
 This resource supports the following arguments:
 
 * `user` - (Required) The IAM user's name.
-* `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:username`. Only applies on resource creation. Drift detection is not possible with this argument.
+* `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase/github username in the form `keybase:username` or `github:username`. Only applies on resource creation. Drift detection is not possible with this argument.
 * `password_length` - (Optional) The length of the generated password on resource creation. Only applies on resource creation. Drift detection is not possible with this argument. Default value is `20`.
 * `password_reset_required` - (Optional) Whether the user should be forced to reset the generated password on resource creation. Only applies on resource creation.
 
