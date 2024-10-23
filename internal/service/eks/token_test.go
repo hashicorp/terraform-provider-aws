@@ -224,7 +224,7 @@ func TestVerifyUnmarshalJSONError(t *testing.T) {
 func TestVerifyInvalidCanonicalARNError(t *testing.T) {
 	t.Parallel()
 
-	_, err := newVerifier(200, jsonResponse(names.AttrARN, "1000", "userid"), nil).Verify(validToken) // nosemgrep:ci.literal-1000-string-test-constant
+	_, err := newVerifier(200, jsonResponse(names.AttrARN, "1000", "userid"), nil).Verify(validToken)
 	errorContains(t, err, "arn \"arn\" is invalid:")
 	assertSTSError(t, err)
 }
