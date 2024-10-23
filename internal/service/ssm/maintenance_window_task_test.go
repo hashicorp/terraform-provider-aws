@@ -40,7 +40,7 @@ func TestAccSSMMaintenanceWindowTask_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`windowtask/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "window_task_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "window_id", "aws_ssm_maintenance_window.test", names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", "1"),
 				),
 			},
 			{
@@ -51,9 +51,9 @@ func TestAccSSMMaintenanceWindowTask_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "test description"),
 					resource.TestCheckResourceAttr(resourceName, "task_type", "RUN_COMMAND"),
 					resource.TestCheckResourceAttr(resourceName, "task_arn", "AWS-InstallPowerShellModule"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "max_concurrency", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "max_errors", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "3"),
+					resource.TestCheckResourceAttr(resourceName, "max_concurrency", "3"),
+					resource.TestCheckResourceAttr(resourceName, "max_errors", "2"),
 					testAccCheckWindowsTaskNotRecreated(t, &before, &after),
 				),
 			},
@@ -83,7 +83,7 @@ func TestAccSSMMaintenanceWindowTask_noTarget(t *testing.T) {
 				Config: testAccMaintenanceWindowTaskConfig_noTarget(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTaskExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "targets.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "targets.#", "0"),
 				),
 			},
 			{
@@ -319,7 +319,7 @@ func TestAccSSMMaintenanceWindowTask_taskInvocationRunCommandParameters(t *testi
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRoleARN, serviceRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.service_role_arn", serviceRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.comment", "test comment"),
-					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.timeout_seconds", acctest.Ct30),
+					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.timeout_seconds", "30"),
 				),
 			},
 			{
@@ -327,7 +327,7 @@ func TestAccSSMMaintenanceWindowTask_taskInvocationRunCommandParameters(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMaintenanceWindowTaskExists(ctx, resourceName, &task),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.comment", "test comment update"),
-					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.timeout_seconds", acctest.Ct60),
+					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.timeout_seconds", "60"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.output_s3_bucket", s3BucketResourceName, names.AttrID),
 				),
 			},
