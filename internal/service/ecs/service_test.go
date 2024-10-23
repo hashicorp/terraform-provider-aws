@@ -5099,43 +5099,37 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_availabilityZoneRebalancing(rName string, serviceRebalancing string) string {
 	return fmt.Sprintf(`
+  resource "aws_ecs_cluster" "test" {
+    name = %[1]q
+  }
+  
+  resource "aws_ecs_task_definition" "test" {
+    family = %[1]q
+  
+    container_definitions = <<DEFINITION
+  [
+    {
+      "cpu": 128,
+      "essential": true,
+      "image": "ghost:latest",
+      "memory": 128,
+      "name": "ghost"
+    }
+  ]
+  DEFINITION
+  }
+
   resource "aws_ecs_service" "test" {
     name                          = %[1]q
     cluster                       = aws_ecs_cluster.test.id
     task_definition               = aws_ecs_task_definition.test.arn
     availability_zone_rebalancing = %[2]q
   }
-
-  resource "aws_ecs_cluster" "test" {
-    name = %[1]q
-  }
-  
-  resource "aws_ecs_task_definition" "test" {
-    family = %[1]q
-  
-    container_definitions = <<DEFINITION
-  [
-    {
-      "cpu": 128,
-      "essential": true,
-      "image": "ghost:latest",
-      "memory": 128,
-      "name": "ghost"
-    }
-  ]
-  DEFINITION
-  }
   `, rName, serviceRebalancing)
 }
 
 func testAccServiceConfig_availabilityZoneRebalancing_nullUpdate(rName string) string {
 	return fmt.Sprintf(`
-  resource "aws_ecs_service" "test" {
-    name                          = %[1]q
-    cluster                       = aws_ecs_cluster.test.id
-    task_definition               = aws_ecs_task_definition.test.arn
-  }
-
   resource "aws_ecs_cluster" "test" {
     name = %[1]q
   }
@@ -5154,6 +5148,12 @@ func testAccServiceConfig_availabilityZoneRebalancing_nullUpdate(rName string) s
     }
   ]
   DEFINITION
+  }
+  
+  resource "aws_ecs_service" "test" {
+    name                          = %[1]q
+    cluster                       = aws_ecs_cluster.test.id
+    task_definition               = aws_ecs_task_definition.test.arn
   }
   `, rName)
 }

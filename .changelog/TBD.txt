@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_ecs_service: Add availability_zone_rebalancing argument
+resource/aws_ecs_service: Add `availability_zone_rebalancing` argument
 ```
