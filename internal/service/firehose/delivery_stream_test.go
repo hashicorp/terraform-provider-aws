@@ -4072,8 +4072,8 @@ resource "aws_glue_catalog_table" "test" {
     location = "s3://${aws_s3_bucket.bucket.id}"
 
     columns {
-      name    = "my_column_1"
-      type    = "int"
+      name = "my_column_1"
+      type = "int"
     }
   }
 }
@@ -4090,15 +4090,15 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "iceberg"
 
   iceberg_configuration {
-    role_arn        = aws_iam_role.firehose.arn
-    s3_backup_mode  = "FailedDataOnly"
-    catalog_arn     = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    role_arn       = aws_iam_role.firehose.arn
+    s3_backup_mode = "FailedDataOnly"
+    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.bucket.arn
       role_arn   = aws_iam_role.firehose.arn
     }
-	
+
     destination_table_configuration {
       database_name = aws_glue_catalog_database.test.name
       table_name    = aws_glue_catalog_table.test.name
@@ -4120,7 +4120,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   iceberg_configuration {
     role_arn           = aws_iam_role.firehose.arn
     s3_backup_mode     = "FailedDataOnly"
-    catalog_arn     = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    catalog_arn        = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
     buffering_interval = 900
     buffering_size     = 100
     retry_duration     = 900
@@ -4130,7 +4130,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       role_arn   = aws_iam_role.firehose.arn
     }
 
-	destination_table_configuration {
+    destination_table_configuration {
       database_name = aws_glue_catalog_database.test.name
       table_name    = aws_glue_catalog_table.test.name
     }
@@ -4149,20 +4149,20 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "iceberg"
 
   iceberg_configuration {
-    role_arn        = aws_iam_role.firehose.arn
-    s3_backup_mode  = "FailedDataOnly"
-    catalog_arn     = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    role_arn       = aws_iam_role.firehose.arn
+    s3_backup_mode = "FailedDataOnly"
+    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
 
     s3_configuration {
       bucket_arn = aws_s3_bucket.bucket.arn
       role_arn   = aws_iam_role.firehose.arn
     }
 
-	destination_table_configuration {
+    destination_table_configuration {
       database_name          = aws_glue_catalog_database.test.name
       table_name             = aws_glue_catalog_table.test.name
-	  unique_keys            = ["my_column_1"]
-	  s3_error_output_prefix = "error"
+      unique_keys            = ["my_column_1"]
+      s3_error_output_prefix = "error"
     }
 
     processing_configuration {
@@ -4195,11 +4195,11 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   destination = "iceberg"
 
   iceberg_configuration {
-    role_arn        = aws_iam_role.firehose.arn
-    s3_backup_mode  = "FailedDataOnly"
-    catalog_arn     = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    role_arn       = aws_iam_role.firehose.arn
+    s3_backup_mode = "FailedDataOnly"
+    catalog_arn    = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
 
-	s3_configuration {
+    s3_configuration {
       bucket_arn = aws_s3_bucket.bucket.arn
       role_arn   = aws_iam_role.firehose.arn
     }
