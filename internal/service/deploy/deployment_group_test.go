@@ -1089,8 +1089,8 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_multiple(t *te
 				Config: testAccDeploymentGroupConfig_loadBalancerInfoTargetInfoMultiple(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_info.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_info.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.target_group_info.*", map[string]string{
 						names.AttrName: "acc-test-codedeploy-dep-group-1",
 					}),
