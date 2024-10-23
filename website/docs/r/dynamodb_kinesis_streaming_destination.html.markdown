@@ -39,13 +39,9 @@ resource "aws_dynamodb_kinesis_streaming_destination" "example" {
 
 This resource supports the following arguments:
 
+* `approximate_creation_date_time_precision` - (Optional) Toggle for the precision of Kinesis data stream timestamp. Valid values: `MILLISECOND` and `MICROSECOND`.
 * `stream_arn` - (Required) The ARN for a Kinesis data stream. This must exist in the same account and region as the DynamoDB table.
-  
-* `table_name` - (Required) The name of the DynamoDB table. There
-  can only be one Kinesis streaming destination for a given DynamoDB table.
-
-* `approximate_creation_date_time_precision` - (Optional) Toggle for the precision of Kinesis data stream timestamp. The
-  values are either MILLISECOND or MICROSECOND. If no value is specified, the precision will be set to MILLISECOND.
+* `table_name` - (Required) The name of the DynamoDB table. There can only be one Kinesis streaming destination for a given DynamoDB table.
 
 ## Attribute Reference
 
