@@ -95,7 +95,7 @@ func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_deletion_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_tls_version_and_cipher_suite_headers", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_xff_client_port", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "enable_zonal_shift", acctest.CtFalse),
+					resource.TestCheckNoResourceAttr(resourceName, "enable_zonal_shift"),
 					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "30"),
 					resource.TestCheckResourceAttr(resourceName, "internal", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIPAddressType, "ipv4"),
@@ -993,7 +993,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnet(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_subnetCount(rName, 2),
+				Config: testAccLoadBalancerConfig_subnetCount(rName, 3, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", acctest.Ct2),
@@ -1001,7 +1001,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnet(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_subnetCount(rName, 3),
+				Config: testAccLoadBalancerConfig_subnetCount(rName, 3, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerNotRecreated(&pre, &post),
@@ -1030,7 +1030,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnet(t *testing.T)
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_subnetCount(rName, 3),
+				Config: testAccLoadBalancerConfig_subnetCount(rName, 3, 3),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
 					resource.TestCheckResourceAttr(resourceName, "subnet_mapping.#", acctest.Ct3),
@@ -1038,7 +1038,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnet(t *testing.T)
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_subnetCount(rName, 2),
+				Config: testAccLoadBalancerConfig_subnetCount(rName, 3, 2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
 					testAccCheckLoadBalancerNotRecreated(&pre, &post),
@@ -2212,21 +2212,21 @@ resource "aws_security_group" "test" {
 }
 
 func testAccLoadBalancerConfig_basic(rName string) string {
-	return testAccLoadBalancerConfig_subnetCount(rName, 2)
+	return testAccLoadBalancerConfig_subnetCount(rName, 2, 2)
 }
 
-func testAccLoadBalancerConfig_subnetCount(rName string, subnetCount int) string {
-	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, subnetCount), fmt.Sprintf(`
+func testAccLoadBalancerConfig_subnetCount(rName string, nSubnets, nSubnetsReferenced int) string {
+	return acctest.ConfigCompose(testAccLoadBalancerConfig_baseInternal(rName, nSubnets), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
   security_groups = [aws_security_group.test.id]
-  subnets         = aws_subnet.test[*].id
+  subnets         = slice(aws_subnet.test[*].id, 0, %[2]d)
 
   idle_timeout               = 30
   enable_deletion_protection = false
 }
-`, rName))
+`, rName, nSubnetsReferenced))
 }
 
 func testAccLoadBalancerConfig_subnetMappingCount(rName string, subnetCount int) string {
