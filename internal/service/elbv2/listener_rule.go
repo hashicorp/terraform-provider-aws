@@ -763,9 +763,17 @@ func findListenerRule(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 func findListenerRules(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeRulesInput, filter tfslices.Predicate[*awstypes.Rule]) ([]awstypes.Rule, error) {
 	var output []awstypes.Rule
 
-	err := describeRulesPages(ctx, conn, input, func(page *elasticloadbalancingv2.DescribeRulesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := elasticloadbalancingv2.NewDescribeRulesPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if errs.IsA[*awstypes.RuleNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+		if err != nil {
+			return nil, err
 		}
 
 		for _, v := range page.Rules {
@@ -773,19 +781,6 @@ func findListenerRules(ctx context.Context, conn *elasticloadbalancingv2.Client,
 				output = append(output, v)
 			}
 		}
-
-		return !lastPage
-	})
-
-	if errs.IsA[*awstypes.RuleNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil
