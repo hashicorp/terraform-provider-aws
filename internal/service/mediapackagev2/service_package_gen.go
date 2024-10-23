@@ -39,7 +39,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return mediapackagev2.NewFromConfig(cfg,
-		mediapackagev2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		mediapackagev2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }
