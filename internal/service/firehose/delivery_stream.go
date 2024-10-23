@@ -38,6 +38,7 @@ const (
 	destinationTypeElasticsearch        destinationType = "elasticsearch"
 	destinationTypeExtendedS3           destinationType = "extended_s3"
 	destinationTypeHTTPEndpoint         destinationType = "http_endpoint"
+	destinationTypeIceberg              destinationType = "iceberg"
 	destinationTypeOpenSearch           destinationType = "opensearch"
 	destinationTypeOpenSearchServerless destinationType = "opensearchserverless"
 	destinationTypeRedshift             destinationType = "redshift"
@@ -50,6 +51,7 @@ func (destinationType) Values() []destinationType {
 		destinationTypeElasticsearch,
 		destinationTypeExtendedS3,
 		destinationTypeHTTPEndpoint,
+		destinationTypeIceberg,
 		destinationTypeOpenSearch,
 		destinationTypeOpenSearchServerless,
 		destinationTypeRedshift,
@@ -61,7 +63,7 @@ func (destinationType) Values() []destinationType {
 // @SDKResource("aws_kinesis_firehose_delivery_stream", name="Delivery Stream")
 // @Tags(identifierAttribute="name")
 func resourceDeliveryStream() *schema.Resource {
-	//lintignore:R011
+	// lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeliveryStreamCreate,
 		ReadWithoutTimeout:   resourceDeliveryStreamRead,
@@ -113,6 +115,35 @@ func resourceDeliveryStream() *schema.Resource {
 							"log_stream_name": {
 								Type:     schema.TypeString,
 								Optional: true,
+							},
+						},
+					},
+				}
+			}
+			destinationTableConfigurationSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrDatabaseName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							names.AttrTableName: {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"s3_error_output_prefix": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
+							"unique_keys": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 						},
 					},
@@ -821,6 +852,52 @@ func resourceDeliveryStream() *schema.Resource {
 						},
 					},
 				},
+				"iceberg_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"buffering_interval": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  300,
+							},
+							"buffering_size": {
+								Type:     schema.TypeInt,
+								Optional: true,
+								Default:  5,
+							},
+							"catalog_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"cloudwatch_logging_options":      cloudWatchLoggingOptionsSchema(),
+							"destination_table_configuration": destinationTableConfigurationSchema(),
+							"processing_configuration":        processingConfigurationSchema(),
+							"retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      300,
+								ValidateFunc: validation.IntBetween(0, 7200),
+							},
+							names.AttrRoleARN: {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
+							},
+							"s3_backup_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.IcebergS3BackupModeFailedDataOnly,
+								ValidateDiagFunc: enum.Validate[types.IcebergS3BackupMode](),
+							},
+							"s3_configuration": s3ConfigurationSchema(),
+						},
+					},
+				},
 				"kinesis_source_configuration": {
 					Type:          schema.TypeList,
 					ForceNew:      true,
@@ -1376,6 +1453,7 @@ func resourceDeliveryStream() *schema.Resource {
 					destinationTypeElasticsearch:        "elasticsearch_configuration",
 					destinationTypeExtendedS3:           "extended_s3_configuration",
 					destinationTypeHTTPEndpoint:         "http_endpoint_configuration",
+					destinationTypeIceberg:              "iceberg_configuration",
 					destinationTypeOpenSearch:           "opensearch_configuration",
 					destinationTypeOpenSearchServerless: "opensearchserverless_configuration",
 					destinationTypeRedshift:             "redshift_configuration",
@@ -1424,6 +1502,10 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	case destinationTypeHTTPEndpoint:
 		if v, ok := d.GetOk("http_endpoint_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.HttpEndpointDestinationConfiguration = expandHTTPEndpointDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		}
+	case destinationTypeIceberg:
+		if v, ok := d.GetOk("iceberg_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.IcebergDestinationConfiguration = expandIcebergDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 	case destinationTypeOpenSearch:
 		if v, ok := d.GetOk("opensearch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1546,6 +1628,11 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 			if err := d.Set("http_endpoint_configuration", flattenHTTPEndpointDestinationDescription(destination.HttpEndpointDestinationDescription, configuredAccessKey)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting http_endpoint_configuration: %s", err)
 			}
+		case destination.IcebergDestinationDescription != nil:
+			d.Set(names.AttrDestination, destinationTypeIceberg)
+			if err := d.Set("iceberg_configuration", flattenIcebergDestinationDescription(destination.IcebergDestinationDescription)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting iceberg_configuration: %s", err)
+			}
 		case destination.AmazonopensearchserviceDestinationDescription != nil:
 			d.Set(names.AttrDestination, destinationTypeOpenSearch)
 			if err := d.Set("opensearch_configuration", flattenAmazonopensearchserviceDestinationDescription(destination.AmazonopensearchserviceDestinationDescription)); err != nil {
@@ -1611,6 +1698,10 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 		case destinationTypeHTTPEndpoint:
 			if v, ok := d.GetOk("http_endpoint_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.HttpEndpointDestinationUpdate = expandHTTPEndpointDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			}
+		case destinationTypeIceberg:
+			if v, ok := d.GetOk("iceberg_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.IcebergDestinationUpdate = expandIcebergDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
 			}
 		case destinationTypeOpenSearch:
 			if v, ok := d.GetOk("opensearch_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1817,7 +1908,6 @@ func waitDeliveryStreamDeleted(ctx context.Context, conn *firehose.Client, name 
 
 func findDeliveryStreamEncryptionConfigurationByName(ctx context.Context, conn *firehose.Client, name string) (*types.DeliveryStreamEncryptionConfiguration, error) {
 	output, err := findDeliveryStreamByName(ctx, conn, name)
-
 	if err != nil {
 		return nil, err
 	}
@@ -2432,6 +2522,86 @@ func expandPrefix(s3 map[string]interface{}) *string {
 	}
 
 	return nil
+}
+
+func expandIcebergDestinationConfiguration(tfMap map[string]interface{}) *types.IcebergDestinationConfiguration {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.IcebergDestinationConfiguration{
+		BufferingHints: &types.BufferingHints{
+			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
+		},
+		CatalogConfiguration: &types.CatalogConfiguration{
+			CatalogARN: aws.String(tfMap["catalog_arn"].(string)),
+		},
+		RoleARN:         aws.String(roleARN),
+		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]interface{})),
+	}
+
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
+	}
+
+	if _, ok := tfMap["destination_table_configuration"]; ok {
+		apiObject.DestinationTableConfigurationList = expandDestinationTableConfigurationList(tfMap)
+	}
+
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeIceberg, roleARN)
+	}
+
+	if _, ok := tfMap["retry_duration"]; ok {
+		apiObject.RetryOptions = expandIcebergRetryOptions(tfMap)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.IcebergS3BackupMode(v.(string))
+	}
+
+	return apiObject
+}
+
+func expandIcebergDestinationUpdate(tfMap map[string]interface{}) *types.IcebergDestinationUpdate {
+	roleARN := tfMap[names.AttrRoleARN].(string)
+	apiObject := &types.IcebergDestinationUpdate{
+		BufferingHints: &types.BufferingHints{
+			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
+			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
+		},
+		RoleARN: aws.String(roleARN),
+	}
+
+	if catalogARN, ok := tfMap["catalog_arn"].(string); ok {
+		apiObject.CatalogConfiguration = &types.CatalogConfiguration{
+			CatalogARN: aws.String(catalogARN),
+		}
+	}
+
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
+	}
+
+	if _, ok := tfMap["destination_table_configuration"]; ok {
+		apiObject.DestinationTableConfigurationList = expandDestinationTableConfigurationList(tfMap)
+	}
+
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeIceberg, roleARN)
+	}
+
+	if _, ok := tfMap["retry_duration"]; ok {
+		apiObject.RetryOptions = expandIcebergRetryOptions(tfMap)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.IcebergS3BackupMode(v.(string))
+	}
+
+	if v, ok := tfMap["s3_configuration"]; ok {
+		apiObject.S3Configuration = expandS3DestinationConfiguration(v.([]interface{}))
+	}
+
+	return apiObject
 }
 
 func expandRedshiftDestinationConfiguration(tfMap map[string]interface{}) *types.RedshiftDestinationConfiguration {
@@ -3123,6 +3293,16 @@ func expandAmazonOpenSearchServerlessBufferingHints(es map[string]interface{}) *
 	return bufferingHints
 }
 
+func expandIcebergRetryOptions(tfMap map[string]interface{}) *types.RetryOptions {
+	apiObject := &types.RetryOptions{}
+
+	if v, ok := tfMap["retry_duration"].(int); ok {
+		apiObject.DurationInSeconds = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
 func expandElasticsearchRetryOptions(es map[string]interface{}) *types.ElasticsearchRetryOptions {
 	retryOptions := &types.ElasticsearchRetryOptions{}
 
@@ -3228,6 +3408,37 @@ func expandSplunkRetryOptions(splunk map[string]interface{}) *types.SplunkRetryO
 	}
 
 	return retryOptions
+}
+
+func expandDestinationTableConfigurationList(tfMap map[string]interface{}) []types.DestinationTableConfiguration {
+	tfList := tfMap["destination_table_configuration"].([]interface{})
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]types.DestinationTableConfiguration, 0, len(tfList))
+	for _, table := range tfList {
+		apiObjects = append(apiObjects, expandDestinationTableConfiguration(table.(map[string]interface{})))
+	}
+
+	return apiObjects
+}
+
+func expandDestinationTableConfiguration(tfMap map[string]interface{}) types.DestinationTableConfiguration {
+	apiObject := types.DestinationTableConfiguration{
+		DestinationDatabaseName: aws.String(tfMap[names.AttrDatabaseName].(string)),
+		DestinationTableName:    aws.String(tfMap[names.AttrTableName].(string)),
+	}
+
+	if v, ok := tfMap["s3_error_output_prefix"].(string); ok {
+		apiObject.S3ErrorOutputPrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["unique_keys"].([]interface{}); ok {
+		apiObject.UniqueKeys = flex.ExpandStringValueList(v)
+	}
+
+	return apiObject
 }
 
 func expandCopyCommand(redshift map[string]interface{}) *types.CopyCommand {
@@ -4007,6 +4218,54 @@ func flattenHTTPEndpointDestinationDescription(apiObject *types.HttpEndpointDest
 
 	if apiObject.RetryOptions != nil {
 		tfMap["retry_duration"] = int(aws.ToInt32(apiObject.RetryOptions.DurationInSeconds))
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenIcebergDestinationDescription(apiObject *types.IcebergDestinationDescription) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"catalog_arn":      aws.ToString(apiObject.CatalogConfiguration.CatalogARN),
+		"s3_configuration": flattenS3DestinationDescription(apiObject.S3DestinationDescription),
+		names.AttrRoleARN:  aws.ToString(apiObject.RoleARN),
+	}
+
+	if apiObject.BufferingHints != nil {
+		tfMap["buffering_interval"] = int(aws.ToInt32(apiObject.BufferingHints.IntervalInSeconds))
+		tfMap["buffering_size"] = int(aws.ToInt32(apiObject.BufferingHints.SizeInMBs))
+	}
+
+	if apiObject.CloudWatchLoggingOptions != nil {
+		tfMap["cloudwatch_logging_options"] = flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions)
+	}
+
+	if apiObject.DestinationTableConfigurationList != nil {
+		tableConfigurations := make([]map[string]interface{}, 0, len(apiObject.DestinationTableConfigurationList))
+		for _, table := range apiObject.DestinationTableConfigurationList {
+			tableConfigurations = append(tableConfigurations, map[string]interface{}{
+				names.AttrDatabaseName:   aws.ToString(table.DestinationDatabaseName),
+				names.AttrTableName:      aws.ToString(table.DestinationTableName),
+				"s3_error_output_prefix": table.S3ErrorOutputPrefix,
+				"unique_keys":            table.UniqueKeys,
+			})
+		}
+		tfMap["destination_table_configuration"] = tableConfigurations
+	}
+
+	if apiObject.ProcessingConfiguration != nil {
+		tfMap["processing_configuration"] = flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeIceberg, aws.ToString(apiObject.RoleARN))
+	}
+
+	if apiObject.RetryOptions != nil {
+		tfMap["retry_duration"] = int(aws.ToInt32(apiObject.RetryOptions.DurationInSeconds))
+	}
+
+	if apiObject.S3BackupMode != "" {
+		tfMap["s3_backup_mode"] = apiObject.S3BackupMode
 	}
 
 	return []interface{}{tfMap}
