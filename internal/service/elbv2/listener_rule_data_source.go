@@ -6,6 +6,7 @@ package elbv2
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
@@ -52,7 +53,7 @@ func (d *dataSourceListenerRule) Schema(ctx context.Context, req datasource.Sche
 				Optional:   true,
 				Computed:   true,
 			},
-			names.AttrPriority: schema.StringAttribute{
+			names.AttrPriority: schema.Int32Attribute{
 				Optional: true,
 				Computed: true,
 			},
@@ -316,7 +317,7 @@ func (d *dataSourceListenerRule) Read(ctx context.Context, req datasource.ReadRe
 		}
 	} else {
 		var err error
-		out, err = findListenerRuleByListenerAndPriority(ctx, conn, data.ListenerARN.ValueString(), data.Priority.ValueString())
+		out, err = findListenerRuleByListenerAndPriority(ctx, conn, data.ListenerARN.ValueString(), strconv.Itoa(int(data.Priority.ValueInt32())))
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.ELBV2, create.ErrActionReading, dsNameListenerRule, fmt.Sprintf("%s/%s", data.ListenerARN.String(), data.Priority.String()), err),
@@ -336,6 +337,16 @@ func (d *dataSourceListenerRule) Read(ctx context.Context, req datasource.ReadRe
 	// The listener arn isn't in the response but can be derived from the rule arn
 	data.ListenerARN = fwtypes.ARNValue(listenerARNFromRuleARN(aws.ToString(out.RuleArn)))
 
+	priority, err := strconv.ParseInt(aws.ToString(out.Priority), 10, 32)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ELBV2, create.ErrActionReading, dsNameListenerRule, data.ARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	data.Priority = types.Int32Value(int32(priority))
+
 	tags, err := listTags(ctx, conn, aws.ToString(out.RuleArn))
 	if err != nil {
 		resp.Diagnostics.AddError("listing tags for ELBv2 Listener Rule", err.Error())
@@ -352,7 +363,7 @@ type dataSourceListenerRuleModel struct {
 	ARN         fwtypes.ARN                                        `tfsdk:"arn"`
 	Condition   fwtypes.SetNestedObjectValueOf[ruleConditionModel] `tfsdk:"condition"`
 	ListenerARN fwtypes.ARN                                        `tfsdk:"listener_arn"`
-	Priority    types.String                                       `tfsdk:"priority"`
+	Priority    types.Int32                                        `tfsdk:"priority" autoflex:"-"`
 	Tags        tftags.Map                                         `tfsdk:"tags"`
 }
 
