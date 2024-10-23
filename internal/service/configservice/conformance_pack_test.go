@@ -145,7 +145,7 @@ func testAccConformancePack_inputParameters(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_bucket", ""),
 					resource.TestCheckResourceAttr(resourceName, "delivery_s3_key_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
 						"parameter_name":  "TestKey",
 						"parameter_value": "TestValue",
@@ -250,7 +250,7 @@ func testAccConformancePack_updateInputParameters(t *testing.T) {
 				Config: testAccConformancePackConfig_updateInputParameter(rName, "TestKey1", "TestKey2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConformancePackExists(ctx, resourceName, &pack),
-					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "input_parameter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "input_parameter.*", map[string]string{
 						"parameter_name":  "TestKey1",
 						"parameter_value": "TestValue1",
