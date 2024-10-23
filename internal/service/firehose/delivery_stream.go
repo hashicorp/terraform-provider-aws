@@ -1532,11 +1532,13 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	_, err := retryDeliveryStreamOp(ctx, func() (interface{}, error) {
 		return conn.CreateDeliveryStream(ctx, input)
 	})
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
 	output, err := waitDeliveryStreamCreated(ctx, conn, sn, d.Timeout(schema.TimeoutCreate))
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Firehose Delivery Stream (%s) create: %s", sn, err)
 	}
@@ -1550,6 +1552,7 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 
 		_, err := conn.StartDeliveryStreamEncryption(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
 		}
@@ -1725,6 +1728,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err := retryDeliveryStreamOp(ctx, func() (interface{}, error) {
 			return conn.UpdateDestination(ctx, input)
 		})
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 		}
@@ -1738,6 +1742,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 			}
 
 			_, err := conn.StopDeliveryStreamEncryption(ctx, input)
+
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "stopping Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
 			}
@@ -1752,6 +1757,7 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 			}
 
 			_, err := conn.StartDeliveryStreamEncryption(ctx, input)
+
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "starting Kinesis Firehose Delivery Stream (%s) encryption: %s", sn, err)
 			}
@@ -2521,14 +2527,14 @@ func expandPrefix(s3 map[string]interface{}) *string {
 func expandIcebergDestinationConfiguration(tfMap map[string]interface{}) *types.IcebergDestinationConfiguration {
 	roleARN := tfMap[names.AttrRoleARN].(string)
 	apiObject := &types.IcebergDestinationConfiguration{
-		CatalogConfiguration: &types.CatalogConfiguration{
-			CatalogARN: aws.String(tfMap["catalog_arn"].(string)),
-		},
-		RoleARN: aws.String(roleARN),
 		BufferingHints: &types.BufferingHints{
 			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
 			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
+		CatalogConfiguration: &types.CatalogConfiguration{
+			CatalogARN: aws.String(tfMap["catalog_arn"].(string)),
+		},
+		RoleARN:         aws.String(roleARN),
 		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]interface{})),
 	}
 
@@ -2558,11 +2564,11 @@ func expandIcebergDestinationConfiguration(tfMap map[string]interface{}) *types.
 func expandIcebergDestinationUpdate(tfMap map[string]interface{}) *types.IcebergDestinationUpdate {
 	roleARN := tfMap[names.AttrRoleARN].(string)
 	apiObject := &types.IcebergDestinationUpdate{
-		RoleARN: aws.String(roleARN),
 		BufferingHints: &types.BufferingHints{
 			IntervalInSeconds: aws.Int32(int32(tfMap["buffering_interval"].(int))),
 			SizeInMBs:         aws.Int32(int32(tfMap["buffering_size"].(int))),
 		},
+		RoleARN: aws.String(roleARN),
 	}
 
 	if catalogARN, ok := tfMap["catalog_arn"].(string); ok {
@@ -3287,14 +3293,14 @@ func expandAmazonOpenSearchServerlessBufferingHints(es map[string]interface{}) *
 	return bufferingHints
 }
 
-func expandIcebergRetryOptions(iceberg map[string]interface{}) *types.RetryOptions {
-	retryOptions := &types.RetryOptions{}
+func expandIcebergRetryOptions(tfMap map[string]interface{}) *types.RetryOptions {
+	apiObject := &types.RetryOptions{}
 
-	if retryDuration, ok := iceberg["retry_duration"].(int); ok {
-		retryOptions.DurationInSeconds = aws.Int32(int32(retryDuration))
+	if v, ok := tfMap["retry_duration"].(int); ok {
+		apiObject.DurationInSeconds = aws.Int32(int32(v))
 	}
 
-	return retryOptions
+	return apiObject
 }
 
 func expandElasticsearchRetryOptions(es map[string]interface{}) *types.ElasticsearchRetryOptions {
@@ -3405,34 +3411,34 @@ func expandSplunkRetryOptions(splunk map[string]interface{}) *types.SplunkRetryO
 }
 
 func expandDestinationTableConfigurationList(tfMap map[string]interface{}) []types.DestinationTableConfiguration {
-	config := tfMap["destination_table_configuration"].([]interface{})
-	if len(config) == 0 {
+	tfList := tfMap["destination_table_configuration"].([]interface{})
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	tableConfigurations := make([]types.DestinationTableConfiguration, 0, len(config))
-	for _, table := range config {
-		tableConfigurations = append(tableConfigurations, expandDestinationTableConfiguration(table.(map[string]interface{})))
+	apiObjects := make([]types.DestinationTableConfiguration, 0, len(tfList))
+	for _, table := range tfList {
+		apiObjects = append(apiObjects, expandDestinationTableConfiguration(table.(map[string]interface{})))
 	}
 
-	return tableConfigurations
+	return apiObjects
 }
 
 func expandDestinationTableConfiguration(tfMap map[string]interface{}) types.DestinationTableConfiguration {
-	destinationTable := types.DestinationTableConfiguration{
+	apiObject := types.DestinationTableConfiguration{
 		DestinationDatabaseName: aws.String(tfMap["database_name"].(string)),
 		DestinationTableName:    aws.String(tfMap["table_name"].(string)),
 	}
 
 	if v, ok := tfMap["s3_error_output_prefix"].(string); ok {
-		destinationTable.S3ErrorOutputPrefix = aws.String(v)
+		apiObject.S3ErrorOutputPrefix = aws.String(v)
 	}
 
 	if v, ok := tfMap["unique_keys"].([]interface{}); ok {
-		destinationTable.UniqueKeys = flex.ExpandStringValueList(v)
+		apiObject.UniqueKeys = flex.ExpandStringValueList(v)
 	}
 
-	return destinationTable
+	return apiObject
 }
 
 func expandCopyCommand(redshift map[string]interface{}) *types.CopyCommand {
