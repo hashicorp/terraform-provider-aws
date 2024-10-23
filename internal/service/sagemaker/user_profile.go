@@ -84,6 +84,12 @@ func resourceUserProfile() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"auto_mount_home_efs": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AutoMountHomeEFS](),
+						},
 						"canvas_app_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -96,6 +102,25 @@ func resourceUserProfile() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
+												names.AttrStatus: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.FeatureStatus](),
+												},
+											},
+										},
+									},
+									"emr_serverless_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrExecutionRoleARN: {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
 												names.AttrStatus: {
 													Type:             schema.TypeString,
 													Optional:         true,
@@ -224,6 +249,49 @@ func resourceUserProfile() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"lifecycle_management": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.LifecycleManagement](),
+															},
+															"max_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"min_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"built_in_lifecycle_config_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 									"default_resource_spec": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -348,6 +416,49 @@ func resourceUserProfile() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"app_lifecycle_management": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_settings": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"lifecycle_management": {
+																Type:             schema.TypeString,
+																Optional:         true,
+																ValidateDiagFunc: enum.Validate[awstypes.LifecycleManagement](),
+															},
+															"max_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+															"min_idle_timeout_in_minutes": {
+																Type:         schema.TypeInt,
+																Optional:     true,
+																ValidateFunc: validation.IntBetween(60, 525600),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"built_in_lifecycle_config_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 									"code_repository": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -412,6 +523,31 @@ func resourceUserProfile() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
+									"emr_settings": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"assumable_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
+												},
+												"execution_role_arns": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Schema{
+														Type:         schema.TypeString,
+														ValidateFunc: verify.ValidARN,
+													},
 												},
 											},
 										},
@@ -719,6 +855,14 @@ func resourceUserProfile() *schema.Resource {
 										Elem: &schema.Schema{
 											Type:             schema.TypeString,
 											ValidateDiagFunc: enum.Validate[awstypes.AppType](),
+										},
+									},
+									"hidden_instance_types": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Schema{
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.AppInstanceType](),
 										},
 									},
 									"hidden_ml_tools": {

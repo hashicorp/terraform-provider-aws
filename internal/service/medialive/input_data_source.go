@@ -123,7 +123,7 @@ func (d *dataSourceInput) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 

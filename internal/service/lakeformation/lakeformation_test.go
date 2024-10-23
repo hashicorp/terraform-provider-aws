@@ -18,6 +18,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			acctest.CtDisappears: testAccDataLakeSettings_disappears,
 			"withoutCatalogId":   testAccDataLakeSettings_withoutCatalogID,
 			"readOnlyAdmins":     testAccDataLakeSettings_readOnlyAdmins,
+			"parameters":         testAccDataLakeSettings_parameters,
 		},
 		"DataCellsFilter": {
 			acctest.CtBasic:      testAccDataCellsFilter_basic,

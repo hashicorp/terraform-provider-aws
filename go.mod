@@ -29,21 +29,21 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.45.3
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.33.2
-	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.28.2
+	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.6.2
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.38.2
-	github.com/aws/aws-sdk-go-v2/service/athena v1.47.2
+	github.com/aws/aws-sdk-go-v2/service/athena v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.37.2
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.45.2
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/backup v1.39.3
 	github.com/aws/aws-sdk-go-v2/service/batch v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.2
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.20.2
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.23.2
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.21.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/chime v1.34.2
@@ -83,12 +83,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.42.2
-	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.43.0
+	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.33.2
-	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.32.2
+	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.42.2
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.22.2
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/detective v1.31.2
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.28.2
@@ -100,12 +100,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.36.2
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.182.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.184.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.2
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.47.3
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.47.4
 	github.com/aws/aws-sdk-go-v2/service/efs v1.33.2
-	github.com/aws/aws-sdk-go-v2/service/eks v1.50.2
+	github.com/aws/aws-sdk-go-v2/service/eks v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.2
@@ -120,7 +120,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/fis v1.30.2
-	github.com/aws/aws-sdk-go-v2/service/fms v1.37.2
+	github.com/aws/aws-sdk-go-v2/service/fms v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/fsx v1.49.2
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.26.2
@@ -187,16 +187,16 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/pcs v1.2.2
 	github.com/aws/aws-sdk-go-v2/service/pinpoint v1.34.2
-	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.15.2
-	github.com/aws/aws-sdk-go-v2/service/pipes v1.17.2
+	github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.16.0
+	github.com/aws/aws-sdk-go-v2/service/pipes v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/polly v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.25.2
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.76.2
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.77.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.20.2
-	github.com/aws/aws-sdk-go-v2/service/rds v1.87.2
+	github.com/aws/aws-sdk-go-v2/service/rds v1.87.3
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.23.2
@@ -253,7 +253,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.12.2
 	github.com/aws/aws-sdk-go-v2/service/waf v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.25.2
-	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.54.2
+	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.48.2
@@ -283,7 +283,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0
-	github.com/hashicorp/terraform-plugin-framework-validators v0.13.0
+	github.com/hashicorp/terraform-plugin-framework-validators v0.14.0
 	github.com/hashicorp/terraform-plugin-go v0.24.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
 	github.com/hashicorp/terraform-plugin-mux v0.16.0

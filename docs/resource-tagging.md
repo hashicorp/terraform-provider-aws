@@ -407,7 +407,7 @@ In the resource `Read` operation, implement the logic to convert the service tag
     ```go
     // Typically declared near conn := /*...*/
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
     /* ... other d.Set(...) logic ... */
 
@@ -429,7 +429,7 @@ use the generated `listTags` function, e.g., with Athena Workgroups:
     ```go
     // Typically declared near conn := /*...*/
     defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
-    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
     /* ... other d.Set(...) logic ... */
 
@@ -543,8 +543,10 @@ In that case, add the annotations `@Testing(existsTakesT=true)` and `@Testing(de
 The generated acceptance tests use `ImportState` steps.
 In most cases, these will work as-is.
 To ignore the values of certain parameters when importing, set the annotation `@Testing(importIgnore="...")` to a list of the parameter names separated by semi-colons (`;`).
-To override the import ID, use the annotation `@Testing(importStateId=<var name>)` if it can be retrieved from an existing variable,
-or use `@Testing(importStateIdFunc=<func name>)` to reference a function that returns a `resource.ImportStateIdFunc`.
+There are multiple methods for overriding the import ID, if needed.
+To use the value of an existing variable, use the annotation `@Testing(importStateId=<var name>)`.
+If the identifier can be retrieved from a specific resource attribute, use the annotation `@Testing(importStateIdAttribute=<attribute name>)`.
+If the identifier can be retrieved from a `resource.ImportStateIdFunc`, use the annotation `@Testing(importStateIdFunc=<func name>)`.
 If the resource type does not support importing, use the annotation `@Testing(noImport=true)`.
 
 If the tests need to be serialized, use the annotion `@Testing(serialize=true)`.

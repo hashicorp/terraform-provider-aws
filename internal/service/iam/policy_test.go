@@ -349,6 +349,57 @@ func TestAccIAMPolicy_policyDuplicateKeys(t *testing.T) {
 	})
 }
 
+// TestAccIAMPolicy_malformedCondition verifies that malformed policy content
+// that is stored in state does not prevent subsequent plan and apply operations
+// from proceeding.
+//
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/39833
+func TestAccIAMPolicy_malformedCondition(t *testing.T) {
+	ctx := acctest.Context(t)
+	var out awstypes.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_policy.test"
+	expectedPolicyText1 := `{"Statement":[{"Action":["s3:ListBucket"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
+	expectedPolicyText2 := `{"Statement":[{"Action":["s3:ListBucket"],"Condition":{"StringLike":["demo-prefix/"]}",Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
+	expectedPolicyText3 := `{"Statement":[{"Action":["s3:ListBucket"],"Condition":{"StringLike":{"s3:prefix":["demo-prefix/"]}},"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_MalformedCondition_setup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText1),
+				),
+			},
+			{
+				Config:      testAccPolicyConfig_MalformedCondition_failure(rName),
+				ExpectError: regexache.MustCompile(`MalformedPolicyDocument: Syntax errors in policy`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					// Because this is a Plugin SDK V2-based resource, the malformed content
+					// is stored in state despite the failed update.
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText2),
+				),
+			},
+			{
+				Config: testAccPolicyConfig_MalformedCondition_fix(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &out),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText3),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.Policy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -621,6 +672,77 @@ resource "aws_iam_policy" "test" {
   ]
 }
 EOF
+}
+`, rName)
+}
+
+func testAccPolicyConfig_MalformedCondition_setup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Resource = "*"
+        Action = [
+          "s3:ListBucket",
+        ]
+      },
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccPolicyConfig_MalformedCondition_failure(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Resource = "*"
+        Action = [
+          "s3:ListBucket",
+        ]
+        "Condition" : {
+          "StringLike" : ["demo-prefix/"]
+        }
+      },
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccPolicyConfig_MalformedCondition_fix(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %q
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect   = "Allow"
+        Resource = "*"
+        Action = [
+          "s3:ListBucket",
+        ]
+        "Condition" : {
+          "StringLike" : {
+            "s3:prefix" : ["demo-prefix/"]
+          }
+        }
+      },
+    ]
+  })
 }
 `, rName)
 }

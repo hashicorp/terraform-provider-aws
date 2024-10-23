@@ -123,6 +123,53 @@ func testAccDataLakeSettings_readOnlyAdmins(t *testing.T) {
 	})
 }
 
+func testAccDataLakeSettings_parameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_lakeformation_data_lake_settings.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataLakeSettingsConfig_parametersEmpty(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeSettingsExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct2), // In fresh account, with empty config, API returns map[CROSS_ACCOUNT_VERSION:1 SET_CONTEXT:TRUE]
+					resource.TestCheckResourceAttr(resourceName, "parameters.SET_CONTEXT", acctest.CtTrueCaps),
+					resource.TestCheckResourceAttr(resourceName, "parameters.CROSS_ACCOUNT_VERSION", acctest.Ct1),
+				),
+			},
+			{
+				Config: testAccDataLakeSettingsConfig_parameters("CROSS_ACCOUNT_VERSION", acctest.Ct3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeSettingsExists(ctx, resourceName),
+					// resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct2), // this is 2 because SET_CONTEXT:TRUE is here but it's not important for the test and if AWS changes things and adds more parameters, this test would fail
+					resource.TestCheckResourceAttr(resourceName, "parameters.CROSS_ACCOUNT_VERSION", acctest.Ct3),
+				),
+			},
+			{
+				Config: testAccDataLakeSettingsConfig_parameters("CROSS_ACCOUNT_VERSION", acctest.Ct1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeSettingsExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.CROSS_ACCOUNT_VERSION", acctest.Ct1),
+				),
+			},
+			{
+				Config: testAccDataLakeSettingsConfig_parametersEmpty(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeSettingsExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct2), // In fresh account, with empty config, API returns map[CROSS_ACCOUNT_VERSION:1 SET_CONTEXT:TRUE]
+					resource.TestCheckResourceAttr(resourceName, "parameters.SET_CONTEXT", acctest.CtTrueCaps),
+					resource.TestCheckResourceAttr(resourceName, "parameters.CROSS_ACCOUNT_VERSION", acctest.Ct1),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDataLakeSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
@@ -240,3 +287,30 @@ resource "aws_lakeformation_data_lake_settings" "test" {
   read_only_admins = [data.aws_iam_session_context.current.issuer_arn]
 }
 `
+
+func testAccDataLakeSettingsConfig_parametersEmpty() string {
+	return `
+data "aws_caller_identity" "current" {}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  catalog_id = data.aws_caller_identity.current.account_id
+
+  parameters = {
+  }
+}
+`
+}
+
+func testAccDataLakeSettingsConfig_parameters(key1, value1 string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  catalog_id = data.aws_caller_identity.current.account_id
+
+  parameters = {
+    %[1]q = %[2]q
+  }
+}
+`, key1, value1)
+}

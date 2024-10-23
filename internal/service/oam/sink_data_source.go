@@ -68,7 +68,7 @@ func dataSourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, DSNameSink, d.Id(), err)
 	}
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionSetting, DSNameSink, d.Id(), err)

@@ -371,6 +371,7 @@ type ResourceDatum struct {
 	Generator                        string
 	NoImport                         bool
 	ImportStateID                    string
+	importStateIDAttribute           string
 	ImportStateIDFunc                string
 	ImportIgnore                     []string
 	Implementation                   implementation
@@ -398,6 +399,14 @@ func (d ResourceDatum) AdditionalTfVars() map[string]string {
 	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
 		return acctestgen.ConstOrQuote(k)
 	})
+}
+
+func (d ResourceDatum) HasImportStateIDAttribute() bool {
+	return d.importStateIDAttribute != ""
+}
+
+func (d ResourceDatum) ImportStateIDAttribute() string {
+	return namesgen.ConstOrQuote(d.importStateIDAttribute)
 }
 
 func (d ResourceDatum) OverrideIdentifier() bool {
@@ -643,6 +652,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["importStateId"]; ok {
 					d.ImportStateID = attr
 				}
+				if attr, ok := args.Keyword["importStateIdAttribute"]; ok {
+					d.importStateIDAttribute = attr
+				}
 				if attr, ok := args.Keyword["importStateIdFunc"]; ok {
 					d.ImportStateIDFunc = attr
 				}
@@ -777,6 +789,10 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 	if tagged {
 		if !skip {
+			if d.Name == "" {
+				v.errs = append(v.errs, fmt.Errorf("no name parameter set: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				return
+			}
 			if !hasIdentifierAttribute && len(d.overrideIdentifierAttribute) == 0 {
 				v.errs = append(v.errs, fmt.Errorf("@Tags specification for %s does not use identifierAttribute. Missing @Testing(tagsIdentifierAttribute) and possibly tagsResourceType", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				return

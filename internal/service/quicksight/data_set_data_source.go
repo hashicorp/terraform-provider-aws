@@ -118,7 +118,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// Cannot use transparent tagging because it has to handle `tags_all` as well
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 
@@ -128,7 +128,6 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	//lintignore:AWSR002
 	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}

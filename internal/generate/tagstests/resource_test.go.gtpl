@@ -52,15 +52,20 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{ if gt (len .ImportStateID) 0 -}}
 	ImportStateId: {{ .ImportStateID }},
 {{ end -}}
-{{ if gt (len .ImportStateIDFunc) 0 -}}
+{{ if .HasImportStateIDAttribute -}}
+	ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, {{ .ImportStateIDAttribute }}),
+{{ else if gt (len .ImportStateIDFunc) 0 -}}
 	ImportStateIdFunc: {{ .ImportStateIDFunc }}(resourceName),
 {{ end -}}
 	ImportStateVerify: true,
+{{ if .HasImportStateIDAttribute -}}
+	ImportStateVerifyIdentifierAttribute: {{ .ImportStateIDAttribute }},
+{{ end }}
 {{- end }}
 
 {{ define "ImportBody" }}
-{{ template "CommonImportBody" . }}
-{{ if gt (len .ImportIgnore) 0 -}}
+{{ template "CommonImportBody" . -}}
+{{- if gt (len .ImportIgnore) 0 -}}
 	ImportStateVerifyIgnore: []string{
 	{{ range $i, $v := .ImportIgnore }}{{ $v }},{{ end }}
 	},
@@ -68,7 +73,7 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{ end }}
 
 {{ define "ImportBodyIgnoreKey1" }}
-{{ template "CommonImportBody" . }}
+{{ template "CommonImportBody" . -}}
 {{ if eq .Implementation "framework" -}}
 	ImportStateVerifyIgnore: []string{
         acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
@@ -84,7 +89,7 @@ plancheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTagsAll), know
 {{ end }}
 
 {{ define "ImportBodyIgnoreResourceKey1" }}
-{{ template "CommonImportBody" . }}
+{{ template "CommonImportBody" . -}}
 {{ if eq .Implementation "framework" -}}
 	ImportStateVerifyIgnore: []string{
         "tags.resourcekey1", // The canonical value returned by the AWS API is ""

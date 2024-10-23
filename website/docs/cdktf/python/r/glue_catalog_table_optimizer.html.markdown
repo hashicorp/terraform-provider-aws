@@ -82,4 +82,4 @@ Using `terraform import`, import Glue Catalog Table Optimizer using the `catalog
 % terraform import aws_glue_catalog_table_optimizer.example 123456789012,example_database,example_table,compaction
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-3335fd2cbae3343257c662340b64d64292d5fbaf6e5abb8cfb6c6d1b4239c55a -->
+<!-- cache-key: cdktf-0.20.8 input-3335fd2cbae3343257c662340b64d64292d5fbaf6e5abb8cfb6c6d1b4239c55a -->
