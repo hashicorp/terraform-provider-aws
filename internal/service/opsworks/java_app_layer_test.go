@@ -34,10 +34,10 @@ func TestAccOpsWorksJavaAppLayer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "tomcat"),
-					resource.TestCheckResourceAttr(resourceName, "app_server_version", acctest.Ct7),
+					resource.TestCheckResourceAttr(resourceName, "app_server_version", "7"),
 					resource.TestCheckResourceAttr(resourceName, "jvm_options", ""),
 					resource.TestCheckResourceAttr(resourceName, "jvm_type", "openjdk"),
-					resource.TestCheckResourceAttr(resourceName, "jvm_version", acctest.Ct7),
+					resource.TestCheckResourceAttr(resourceName, "jvm_version", "7"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, "Java App Server"),
 				),
 			},
