@@ -19,6 +19,7 @@ var (
 	AliasNamePrefix           = aliasNamePrefix
 	FindCustomKeyStoreByID    = findCustomKeyStoreByID
 	FindGrantByTwoPartKey     = findGrantByTwoPartKey
+	FindKeyByID               = findKeyByID
 	FindKeyPolicyByTwoPartKey = findKeyPolicyByTwoPartKey
 	GrantParseResourceID      = grantParseResourceID
 	KeyARNOrIDEqual           = keyARNOrIDEqual
