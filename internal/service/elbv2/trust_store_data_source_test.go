@@ -7,11 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elbv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	_ "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBV2TrustStoreDataSource_basic(t *testing.T) {
@@ -22,22 +21,22 @@ func TestAccELBV2TrustStoreDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 
 			{
 				Config: testAccTrustStoreDataSourceConfig_withName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNameByName, "name", rName),
-					resource.TestCheckResourceAttrSet(datasourceNameByName, "arn"),
+					resource.TestCheckResourceAttr(datasourceNameByName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(datasourceNameByName, names.AttrARN),
 				),
 			},
 			{
 				Config: testAccTrustStoreDataSourceConfig_withARN(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceNameByArn, "name", rName),
-					resource.TestCheckResourceAttrSet(datasourceNameByArn, "arn"),
+					resource.TestCheckResourceAttr(datasourceNameByArn, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(datasourceNameByArn, names.AttrARN),
 				),
 			},
 		},

@@ -35,7 +35,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_basic(t *testing.T) {
 				Config: testAccServiceNetworkVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 				),
 			},
 			{
@@ -68,7 +68,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_arn(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +76,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_arn(t *testing.T) {
 				Config: testAccServiceNetworkVPCAssociationConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttrSet(resourceName, "service_network_identifier"),
 				),
 			},
@@ -102,7 +102,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -131,7 +131,7 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_full(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -139,10 +139,10 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_full(t *testing.T) {
 				Config: testAccServiceNetworkVPCAssociationConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("servicenetworkvpcassociation/.+$")),
 					resource.TestCheckResourceAttrSet(resourceName, "service_network_identifier"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -166,16 +166,16 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceNetworkVPCAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceNetworkVPCAssociationConfig_tags1(rName, "key1", "value1"),
+				Config: testAccServiceNetworkVPCAssociationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -184,20 +184,20 @@ func TestAccVPCLatticeServiceNetworkVPCAssociation_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccServiceNetworkVPCAssociationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccServiceNetworkVPCAssociationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &servicenetworkvpcasc2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccServiceNetworkVPCAssociationConfig_tags1(rName, "key2", "value2"),
+				Config: testAccServiceNetworkVPCAssociationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceNetworkVPCAssociationExists(ctx, resourceName, &service3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

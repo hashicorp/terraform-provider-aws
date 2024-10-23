@@ -18,15 +18,18 @@ import (
 
 	"github.com/hashicorp/hcl/v2/hclsimple"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type ServiceDatum struct {
-	ProviderPackage string
-	HumanFriendly   string
-	VpcLock         bool
-	Parallelism     int
-	Region          string
+	ProviderPackage         string
+	HumanFriendly           string
+	VpcLock                 bool
+	Parallelism             int
+	Region                  string
+	PatternOverride         string
+	SplitPackageRealPackage string
+	ExcludePattern          string
 }
 
 type TemplateData struct {
@@ -36,7 +39,6 @@ type TemplateData struct {
 func main() {
 	const (
 		servicesAllFile   = `../../../.teamcity/components/generated/services_all.kt`
-		namesDataFile     = "../../../names/names_data.csv"
 		serviceConfigFile = "./acctest_services.hcl"
 	)
 	g := common.NewGenerator()
@@ -49,46 +51,39 @@ func main() {
 		g.Fatalf("error reading %s: %s", serviceConfigFile, err)
 	}
 
-	data, err := common.ReadAllCSVData(namesDataFile)
+	data, err := data.ReadAllServiceData()
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{}
 
-	for i, l := range data {
-		if i < 1 { // no header
+	for _, l := range data {
+		if l.Exclude() && l.SplitPackageRealPackage() == "" {
 			continue
 		}
 
-		if l[names.ColExclude] != "" {
-			continue
-		}
+		p := l.ProviderPackage()
 
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
-			continue
-		}
+		_, err := os.Stat(fmt.Sprintf("../../service/%s", p))
 
-		p := l[names.ColProviderPackageCorrect]
-
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
-		}
-
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
+		if (err != nil || errors.Is(err, fs.ErrNotExist)) && l.SplitPackageRealPackage() == "" {
 			continue
 		}
 
 		sd := ServiceDatum{
 			ProviderPackage: p,
-			HumanFriendly:   l[names.ColHumanFriendly],
+			HumanFriendly:   l.HumanFriendly(),
 		}
 		serviceConfig, ok := serviceConfigs[p]
 		if ok {
 			sd.VpcLock = serviceConfig.VpcLock
 			sd.Parallelism = serviceConfig.Parallelism
 			sd.Region = serviceConfig.Region
+			sd.PatternOverride = serviceConfig.PatternOverride
+			sd.SplitPackageRealPackage = serviceConfig.SplitPackageRealPackage
+			sd.ExcludePattern = serviceConfig.ExcludePattern
 		}
 
 		if serviceConfig.Skip {
@@ -122,11 +117,14 @@ type acctestConfig struct {
 }
 
 type acctestServiceConfig struct {
-	Service     string `hcl:",label"`
-	VpcLock     bool   `hcl:"vpc_lock,optional"`
-	Parallelism int    `hcl:"parallelism,optional"`
-	Skip        bool   `hcl:"skip,optional"`
-	Region      string `hcl:"region,optional"`
+	Service                 string `hcl:",label"`
+	VpcLock                 bool   `hcl:"vpc_lock,optional"`
+	Parallelism             int    `hcl:"parallelism,optional"`
+	Skip                    bool   `hcl:"skip,optional"`
+	Region                  string `hcl:"region,optional"`
+	PatternOverride         string `hcl:"pattern_override,optional"`
+	SplitPackageRealPackage string `hcl:"split_package_real_package,optional"`
+	ExcludePattern          string `hcl:"exclude_pattern,optional"`
 }
 
 func acctestConfigurations(filename string) (map[string]acctestServiceConfig, error) {

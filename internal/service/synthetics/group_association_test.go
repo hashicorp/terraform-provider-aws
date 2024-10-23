@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/synthetics"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,17 +17,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsynthetics "github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSyntheticsGroupAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_group_association.test"
-	var groupSummary synthetics.GroupSummary
+	var groupSummary awstypes.GroupSummary
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,9 +36,9 @@ func TestAccSyntheticsGroupAssociation_basic(t *testing.T) {
 				Config: testAccGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupAssociationExists(ctx, resourceName, &groupSummary),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "canary_arn", synthetics.ServiceName, regexache.MustCompile(`canary:.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "group_arn", synthetics.ServiceName, regexache.MustCompile(`group:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "canary_arn", "synthetics", regexache.MustCompile(`canary:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "group_arn", "synthetics", regexache.MustCompile(`group:.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrGroupName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
 				),
 			},
@@ -54,11 +55,11 @@ func TestAccSyntheticsGroupAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_synthetics_group_association.test"
-	var groupSummary synthetics.GroupSummary
+	var groupSummary awstypes.GroupSummary
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, synthetics.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SyntheticsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,7 +75,7 @@ func TestAccSyntheticsGroupAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckGroupAssociationExists(ctx context.Context, name string, v *synthetics.GroupSummary) resource.TestCheckFunc {
+func testAccCheckGroupAssociationExists(ctx context.Context, name string, v *awstypes.GroupSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -91,7 +92,7 @@ func testAccCheckGroupAssociationExists(ctx context.Context, name string, v *syn
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsClient(ctx)
 		output, err := tfsynthetics.FindAssociatedGroup(ctx, conn, canaryArn, groupName)
 
 		if err != nil {
@@ -106,7 +107,7 @@ func testAccCheckGroupAssociationExists(ctx context.Context, name string, v *syn
 
 func testAccCheckGroupAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SyntheticsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_synthetics_group_association" {

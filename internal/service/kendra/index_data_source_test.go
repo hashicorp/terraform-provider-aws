@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKendraIndexDataSource_basic(t *testing.T) {
@@ -23,32 +23,32 @@ func TestAccKendraIndexDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIndexDataSourceConfig_userTokenJSON(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "capacity_units.#", resourceName, "capacity_units.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "capacity_units.0.query_capacity_units", resourceName, "capacity_units.0.query_capacity_units"),
 					resource.TestCheckResourceAttrPair(datasourceName, "capacity_units.0.storage_capacity_units", resourceName, "capacity_units.0.storage_capacity_units"),
-					resource.TestCheckResourceAttrPair(datasourceName, "created_at", resourceName, "created_at"),
-					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCreatedAt, resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, "document_metadata_configuration_updates.#", resourceName, "document_metadata_configuration_updates.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "edition", resourceName, "edition"),
-					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, "index_statistics.#", resourceName, "index_statistics.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "index_statistics.0.faq_statistics.#", resourceName, "index_statistics.0.faq_statistics.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "index_statistics.0.faq_statistics.0.indexed_question_answers_count", resourceName, "index_statistics.0.faq_statistics.0.indexed_question_answers_count"),
 					resource.TestCheckResourceAttrPair(datasourceName, "index_statistics.0.text_document_statistics.#", resourceName, "index_statistics.0.text_document_statistics.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "index_statistics.0.text_document_statistics.0.indexed_text_bytes", resourceName, "index_statistics.0.text_document_statistics.0.indexed_text_bytes"),
 					resource.TestCheckResourceAttrPair(datasourceName, "index_statistics.0.text_document_statistics.0.indexed_text_documents_count", resourceName, "index_statistics.0.text_document_statistics.0.indexed_text_documents_count"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "role_arn", resourceName, "role_arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrRoleARN, resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "server_side_encryption_configuration.#", resourceName, "server_side_encryption_configuration.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "server_side_encryption_configuration.0.kms_key_id", resourceName, "server_side_encryption_configuration.0.kms_key_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "status", resourceName, "status"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStatus, resourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(datasourceName, "updated_at", resourceName, "updated_at"),
 					resource.TestCheckResourceAttrPair(datasourceName, "user_context_policy", resourceName, "user_context_policy"),
 					resource.TestCheckResourceAttrPair(datasourceName, "user_group_resolution_configuration.#", resourceName, "user_group_resolution_configuration.#"),
@@ -56,7 +56,7 @@ func TestAccKendraIndexDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "user_token_configurations.0.json_token_type_configuration.#", resourceName, "user_token_configurations.0.json_token_type_configuration.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field", resourceName, "user_token_configurations.0.json_token_type_configuration.0.group_attribute_field"),
 					resource.TestCheckResourceAttrPair(datasourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field", resourceName, "user_token_configurations.0.json_token_type_configuration.0.user_name_attribute_field"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key1", resourceName, "tags.Key1"),
 				),
 			},

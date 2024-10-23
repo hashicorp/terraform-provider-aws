@@ -48,7 +48,7 @@ resource "aws_guardduty_organization_configuration" "example" {
 
 ~> **NOTE:** One of `auto_enable` or `auto_enable_organization_members` must be specified.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `auto_enable` - (Optional) *Deprecated:* Use `auto_enable_organization_members` instead. When this setting is enabled, all new accounts that are created in, or added to, the organization are added as a member accounts of the organization’s GuardDuty delegated administrator and GuardDuty is enabled in that AWS Region.
 * `auto_enable_organization_members` - (Optional) Indicates the auto-enablement configuration of GuardDuty for the member accounts in the organization. Valid values are `ALL`, `NEW`, `NONE`.

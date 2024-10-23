@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_msk_replicator: Fix incorrect `detect_and_copy_new_topics` attribute value from state read/refresh
+```

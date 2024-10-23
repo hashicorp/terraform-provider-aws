@@ -51,7 +51,7 @@ func resourceApplication() *schema.Resource {
 				Default:          types.ArchitectureX8664,
 				ValidateDiagFunc: enum.Validate[types.Architecture](),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,7 +62,7 @@ func resourceApplication() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -77,7 +77,7 @@ func resourceApplication() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  true,
@@ -155,6 +155,26 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
+			"interactive_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"livy_endpoint_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+						"studio_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"maximum_capacity": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -179,26 +199,26 @@ func resourceApplication() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
-			"network_configuration": {
+			names.AttrNetworkConfiguration: {
 				Type:             schema.TypeList,
 				Optional:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				MaxItems:         1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"security_group_ids": {
+						names.AttrSecurityGroupIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-						"subnet_ids": {
+						names.AttrSubnetIDs: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							ForceNew: true,
@@ -213,7 +233,7 @@ func resourceApplication() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -229,13 +249,13 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &emrserverless.CreateApplicationInput{
 		ClientToken:  aws.String(id.UniqueId()),
 		ReleaseLabel: aws.String(d.Get("release_label").(string)),
 		Name:         aws.String(name),
 		Tags:         getTagsIn(ctx),
-		Type:         aws.String(d.Get("type").(string)),
+		Type:         aws.String(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("architecture"); ok {
@@ -258,11 +278,15 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.InitialCapacity = expandInitialCapacity(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("interactive_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.InteractiveConfiguration = expandInteractiveConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("maximum_capacity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.MaximumCapacity = expandMaximumCapacity(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -298,10 +322,10 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("architecture", application.Architecture)
-	d.Set("arn", application.Arn)
-	d.Set("name", application.Name)
+	d.Set(names.AttrARN, application.Arn)
+	d.Set(names.AttrName, application.Name)
 	d.Set("release_label", application.ReleaseLabel)
-	d.Set("type", strings.ToLower(aws.ToString(application.Type)))
+	d.Set(names.AttrType, strings.ToLower(aws.ToString(application.Type)))
 
 	if err := d.Set("auto_start_configuration", []interface{}{flattenAutoStartConfig(application.AutoStartConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_start_configuration: %s", err)
@@ -319,11 +343,15 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting initial_capacity: %s", err)
 	}
 
+	if err := d.Set("interactive_configuration", []interface{}{flattenInteractiveConfiguration(application.InteractiveConfiguration)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting interactive_configuration: %s", err)
+	}
+
 	if err := d.Set("maximum_capacity", []interface{}{flattenMaximumCapacity(application.MaximumCapacity)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting maximum_capacity: %s", err)
 	}
 
-	if err := d.Set("network_configuration", []interface{}{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
+	if err := d.Set(names.AttrNetworkConfiguration, []interface{}{flattenNetworkConfiguration(application.NetworkConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
@@ -336,7 +364,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRServerlessClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &emrserverless.UpdateApplicationInput{
 			ApplicationId: aws.String(d.Id()),
 			ClientToken:   aws.String(id.UniqueId()),
@@ -362,11 +390,15 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			input.InitialCapacity = expandInitialCapacity(v.(*schema.Set))
 		}
 
+		if v, ok := d.GetOk("interactive_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.InteractiveConfiguration = expandInteractiveConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		}
+
 		if v, ok := d.GetOk("maximum_capacity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.MaximumCapacity = expandMaximumCapacity(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("network_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v, ok := d.GetOk(names.AttrNetworkConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.NetworkConfiguration = expandNetworkConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
@@ -516,7 +548,7 @@ func expandAutoStartConfig(tfMap map[string]interface{}) *types.AutoStartConfig 
 
 	apiObject := &types.AutoStartConfig{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -531,7 +563,7 @@ func flattenAutoStartConfig(apiObject *types.AutoStartConfig) map[string]interfa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	return tfMap
@@ -544,7 +576,7 @@ func expandAutoStopConfig(tfMap map[string]interface{}) *types.AutoStopConfig {
 
 	apiObject := &types.AutoStopConfig{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -563,11 +595,47 @@ func flattenAutoStopConfig(apiObject *types.AutoStopConfig) map[string]interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.IdleTimeoutMinutes; v != nil {
 		tfMap["idle_timeout_minutes"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func expandInteractiveConfiguration(tfMap map[string]interface{}) *types.InteractiveConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.InteractiveConfiguration{}
+
+	if v, ok := tfMap["livy_endpoint_enabled"].(bool); ok {
+		apiObject.LivyEndpointEnabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["studio_enabled"].(bool); ok {
+		apiObject.StudioEnabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func flattenInteractiveConfiguration(apiObject *types.InteractiveConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.LivyEndpointEnabled; v != nil {
+		tfMap["livy_endpoint_enabled"] = aws.ToBool(v)
+	}
+
+	if v := apiObject.StudioEnabled; v != nil {
+		tfMap["studio_enabled"] = aws.ToBool(v)
 	}
 
 	return tfMap
@@ -624,11 +692,11 @@ func expandNetworkConfiguration(tfMap map[string]interface{}) *types.NetworkConf
 
 	apiObject := &types.NetworkConfiguration{}
 
-	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSecurityGroupIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrSubnetIDs].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
@@ -643,11 +711,11 @@ func flattenNetworkConfiguration(apiObject *types.NetworkConfiguration) map[stri
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.SecurityGroupIds; v != nil {
-		tfMap["security_group_ids"] = flex.FlattenStringValueSet(v)
+		tfMap[names.AttrSecurityGroupIDs] = flex.FlattenStringValueSet(v)
 	}
 
 	if v := apiObject.SubnetIds; v != nil {
-		tfMap["subnet_ids"] = flex.FlattenStringValueSet(v)
+		tfMap[names.AttrSubnetIDs] = flex.FlattenStringValueSet(v)
 	}
 
 	return tfMap
@@ -728,7 +796,7 @@ func expandInitialCapacityConfig(tfMap map[string]interface{}) types.InitialCapa
 	apiObject := types.InitialCapacityConfig{}
 
 	if v, ok := tfMap["worker_count"].(int); ok {
-		apiObject.WorkerCount = int64(v)
+		apiObject.WorkerCount = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["worker_configuration"].([]interface{}); ok && v[0] != nil {

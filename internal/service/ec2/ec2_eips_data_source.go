@@ -7,17 +7,19 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_eips")
-func DataSourceEIPs() *schema.Resource {
+// @SDKDataSource("aws_eips", name="EIPs")
+func dataSourceEIPs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEIPsRead,
 
@@ -31,39 +33,39 @@ func DataSourceEIPs() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
+			names.AttrFilter: customFiltersSchema(),
 			"public_ips": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchema(),
 		},
 	}
 }
 
 func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeAddressesInput{}
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		input.Filters = append(input.Filters, BuildTagFilterList(
+	if tags, tagsOk := d.GetOk(names.AttrTags); tagsOk {
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	if filters, filtersOk := d.GetOk("filter"); filtersOk {
+	if filters, filtersOk := d.GetOk(names.AttrFilter); filtersOk {
 		input.Filters = append(input.Filters,
-			BuildCustomFilterList(filters.(*schema.Set))...)
+			newCustomFilterList(filters.(*schema.Set))...)
 	}
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	output, err := FindEIPs(ctx, conn, input)
+	output, err := findEIPs(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIPs: %s", err)
@@ -73,10 +75,10 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var publicIPs []string
 
 	for _, v := range output {
-		publicIPs = append(publicIPs, aws.StringValue(v.PublicIp))
+		publicIPs = append(publicIPs, aws.ToString(v.PublicIp))
 
-		if aws.StringValue(v.Domain) == ec2.DomainTypeVpc {
-			allocationIDs = append(allocationIDs, aws.StringValue(v.AllocationId))
+		if v.Domain == types.DomainTypeVpc {
+			allocationIDs = append(allocationIDs, aws.ToString(v.AllocationId))
 		}
 	}
 

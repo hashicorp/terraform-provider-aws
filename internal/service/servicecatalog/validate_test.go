@@ -5,13 +5,15 @@ package servicecatalog
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidSharePrincipal(t *testing.T) {
 	t.Parallel()
 
 	v := ""
-	_, errors := validSharePrincipal(v, "arn")
+	_, errors := validSharePrincipal(v, names.AttrARN)
 	if len(errors) == 0 {
 		t.Fatalf("%q should not be validated as a principal %d: %q", v, len(errors), errors)
 	}
@@ -24,7 +26,7 @@ func TestValidSharePrincipal(t *testing.T) {
 		"arn:aws-us-gov:organizations::111122223333:ou/o-abcdefghijkl/ou-ab00-cdefgh", // lintignore:AWSAT005    // GovCloud ou
 	}
 	for _, v := range validNames {
-		_, errors := validSharePrincipal(v, "arn")
+		_, errors := validSharePrincipal(v, names.AttrARN)
 		if len(errors) != 0 {
 			t.Fatalf("%q should be a valid principal: %q", v, errors)
 		}
@@ -33,7 +35,7 @@ func TestValidSharePrincipal(t *testing.T) {
 	invalidNames := []string{
 		"IAM_ALLOWED_PRINCIPALS",     // Special principal
 		"IAM_NOT_ALLOWED_PRINCIPALS", // doesn't exist
-		"arn",
+		names.AttrARN,
 		"1234567890125", //not an account id
 		"arn:aws",
 		"arn:aws:logs",            //lintignore:AWSAT005
@@ -54,7 +56,7 @@ func TestValidSharePrincipal(t *testing.T) {
 		"arn:aws:quicksight:us-east-1:111122223333:group/default/data_scientists",          // lintignore:AWSAT003,AWSAT005 // quicksight group
 	}
 	for _, v := range invalidNames {
-		_, errors := validSharePrincipal(v, "arn")
+		_, errors := validSharePrincipal(v, names.AttrARN)
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid principal", v)
 		}

@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2SerialConsoleAccess_basic(t *testing.T) {
@@ -22,7 +23,7 @@ func TestAccEC2SerialConsoleAccess_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSerialConsoleAccessDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -30,7 +31,7 @@ func TestAccEC2SerialConsoleAccess_basic(t *testing.T) {
 				Config: testAccSerialConsoleAccessConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSerialConsoleAccess(ctx, resourceName, false),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -42,7 +43,7 @@ func TestAccEC2SerialConsoleAccess_basic(t *testing.T) {
 				Config: testAccSerialConsoleAccessConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSerialConsoleAccess(ctx, resourceName, true),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 		},
@@ -51,14 +52,14 @@ func TestAccEC2SerialConsoleAccess_basic(t *testing.T) {
 
 func testAccCheckSerialConsoleAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		response, err := conn.GetSerialConsoleAccessStatusWithContext(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
+		response, err := conn.GetSerialConsoleAccessStatus(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
 		if err != nil {
 			return err
 		}
 
-		if aws.BoolValue(response.SerialConsoleAccessEnabled) != false {
+		if aws.ToBool(response.SerialConsoleAccessEnabled) != false {
 			return fmt.Errorf("Serial console access not disabled on resource removal")
 		}
 
@@ -77,14 +78,14 @@ func testAccCheckSerialConsoleAccess(ctx context.Context, n string, enabled bool
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		response, err := conn.GetSerialConsoleAccessStatusWithContext(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
+		response, err := conn.GetSerialConsoleAccessStatus(ctx, &ec2.GetSerialConsoleAccessStatusInput{})
 		if err != nil {
 			return err
 		}
 
-		if aws.BoolValue(response.SerialConsoleAccessEnabled) != enabled {
+		if aws.ToBool(response.SerialConsoleAccessEnabled) != enabled {
 			return fmt.Errorf("Serial console access is not in expected state (%t)", enabled)
 		}
 

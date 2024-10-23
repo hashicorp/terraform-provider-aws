@@ -9,12 +9,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func SecurityGroupRuleMigrateState(
+func securityGroupRuleMigrateState(
 	v int, is *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
 	switch v {
 	case 0:
@@ -44,15 +45,15 @@ func migrateSGRuleStateV0toV1(is *terraform.InstanceState) (*terraform.InstanceS
 	}
 
 	log.Printf("[DEBUG] Attributes before migration: %#v", is.Attributes)
-	newID := SecurityGroupRuleCreateID(is.Attributes["security_group_id"], is.Attributes["type"], perm)
-	is.Attributes["id"] = newID
+	newID := securityGroupRuleCreateID(is.Attributes["security_group_id"], is.Attributes[names.AttrType], perm)
+	is.Attributes[names.AttrID] = newID
 	is.ID = newID
 	log.Printf("[DEBUG] Attributes after migration: %#v, new id: %s", is.Attributes, newID)
 	return is, nil
 }
 
-func migrateExpandIPPerm(attrs map[string]string) (*ec2.IpPermission, error) {
-	var perm ec2.IpPermission
+func migrateExpandIPPerm(attrs map[string]string) (*awstypes.IpPermission, error) {
+	var perm awstypes.IpPermission
 	tp, err := strconv.Atoi(attrs["to_port"])
 	if err != nil {
 		return nil, fmt.Errorf("converting to_port in Security Group migration")
@@ -63,9 +64,9 @@ func migrateExpandIPPerm(attrs map[string]string) (*ec2.IpPermission, error) {
 		return nil, fmt.Errorf("converting from_port in Security Group migration")
 	}
 
-	perm.ToPort = aws.Int64(int64(tp))
-	perm.FromPort = aws.Int64(int64(fp))
-	perm.IpProtocol = aws.String(attrs["protocol"])
+	perm.ToPort = aws.Int32(int32(tp))
+	perm.FromPort = aws.Int32(int32(fp))
+	perm.IpProtocol = aws.String(attrs[names.AttrProtocol])
 
 	groups := make(map[string]bool)
 	if attrs["self"] == "true" {
@@ -77,7 +78,7 @@ func migrateExpandIPPerm(attrs map[string]string) (*ec2.IpPermission, error) {
 	}
 
 	if len(groups) > 0 {
-		perm.UserIdGroupPairs = make([]*ec2.UserIdGroupPair, len(groups))
+		perm.UserIdGroupPairs = make([]awstypes.UserIdGroupPair, len(groups))
 		// build string list of group name/ids
 		var gl []string
 		for k := range groups {
@@ -85,7 +86,7 @@ func migrateExpandIPPerm(attrs map[string]string) (*ec2.IpPermission, error) {
 		}
 
 		for i, name := range gl {
-			perm.UserIdGroupPairs[i] = &ec2.UserIdGroupPair{
+			perm.UserIdGroupPairs[i] = awstypes.UserIdGroupPair{
 				GroupId: aws.String(name),
 			}
 		}
@@ -98,9 +99,9 @@ func migrateExpandIPPerm(attrs map[string]string) (*ec2.IpPermission, error) {
 		}
 	}
 	if len(cb) > 0 {
-		perm.IpRanges = make([]*ec2.IpRange, len(cb))
+		perm.IpRanges = make([]awstypes.IpRange, len(cb))
 		for i, v := range cb {
-			perm.IpRanges[i] = &ec2.IpRange{CidrIp: aws.String(v)}
+			perm.IpRanges[i] = awstypes.IpRange{CidrIp: aws.String(v)}
 		}
 	}
 

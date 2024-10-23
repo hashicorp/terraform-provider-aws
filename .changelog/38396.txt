@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_elasticache_replication_group: Requires `description`.
+```
+
+```release-note:bug
+resource/aws_elasticache_replication_group: `num_cache_clusters` must be at least 2 when `automatic_failover_enabled` is `true`.
+```
+
+```release-note:bug
+resource/aws_elasticache_replication_group: When `num_cache_clusters` is set, prevents setting `replicas_per_node_group`.
+```
+
+```release-note:bug
+resource/aws_elasticache_replication_group: Allows setting `replicas_per_node_group` to `0` and sets the maximum to `5`.
+```

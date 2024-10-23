@@ -32,7 +32,7 @@ func TestAccEvidentlySegment_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSegmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -40,13 +40,13 @@ func TestAccEvidentlySegment_basic(t *testing.T) {
 				Config: testAccSegmentConfig_basic(rName, pattern),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "evidently", fmt.Sprintf("segment/%s", rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "evidently", fmt.Sprintf("segment/%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrSet(resourceName, "experiment_count"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "id", "evidently", fmt.Sprintf("segment/%s", rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "last_updated_time"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrID, "evidently", fmt.Sprintf("segment/%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrLastUpdatedTime),
 					resource.TestCheckResourceAttrSet(resourceName, "launch_count"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", pattern),
 				),
 			},
@@ -72,7 +72,7 @@ func TestAccEvidentlySegment_description(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSegmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +80,7 @@ func TestAccEvidentlySegment_description(t *testing.T) {
 				Config: testAccSegmentConfig_description(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					resource.TestCheckResourceAttr(resourceName, "description", description),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
 			{
@@ -105,7 +105,7 @@ func TestAccEvidentlySegment_patternJSON(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSegmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -137,16 +137,16 @@ func TestAccEvidentlySegment_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSegmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSegmentConfig_tags1(rName, "key1", "value1"),
+				Config: testAccSegmentConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -155,12 +155,12 @@ func TestAccEvidentlySegment_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSegmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccSegmentConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -169,11 +169,11 @@ func TestAccEvidentlySegment_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccSegmentConfig_tags1(rName, "key2", "value2"),
+				Config: testAccSegmentConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSegmentExists(ctx, resourceName, &segment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -190,7 +190,7 @@ func TestAccEvidentlySegment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSegmentDestroy(ctx),
 		Steps: []resource.TestStep{

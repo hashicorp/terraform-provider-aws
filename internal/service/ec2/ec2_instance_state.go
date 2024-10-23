@@ -8,25 +8,25 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_instance_state")
-func ResourceInstanceState() *schema.Resource {
+// @SDKResource("aws_ec2_instance_state", name="Instance State")
+func resourceInstanceState() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceStateCreate,
 		ReadWithoutTimeout:   resourceInstanceStateRead,
 		UpdateWithoutTimeout: resourceInstanceStateUpdate,
-		DeleteWithoutTimeout: resourceInstanceStateDelete,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -44,15 +44,15 @@ func ResourceInstanceState() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"instance_id": {
+			names.AttrInstanceID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice([]string{ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopped}, false),
+				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.InstanceStateNameRunning, awstypes.InstanceStateNameStopped), false),
 			},
 		},
 	}
@@ -60,67 +60,59 @@ func ResourceInstanceState() *schema.Resource {
 
 func resourceInstanceStateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	instanceId := d.Get("instance_id").(string)
-
-	instance, instanceErr := waitInstanceReady(ctx, conn, instanceId, d.Timeout(schema.TimeoutCreate))
-
-	if instanceErr != nil {
-		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstance, instanceId, instanceErr)
-	}
-
-	err := updateInstanceState(ctx, conn, instanceId, aws.StringValue(instance.State.Name), d.Get("state").(string), d.Get("force").(bool))
+	instanceID := d.Get(names.AttrInstanceID).(string)
+	instance, err := waitInstanceReady(ctx, conn, instanceID, d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) ready: %s", instanceID, err)
+	}
+
+	if err := updateInstanceState(ctx, conn, instanceID, string(instance.State.Name), d.Get(names.AttrState).(string), d.Get("force").(bool)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(d.Get("instance_id").(string))
+	d.SetId(instanceID)
 
 	return append(diags, resourceInstanceStateRead(ctx, d, meta)...)
 }
 
 func resourceInstanceStateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-
-	state, err := FindInstanceStateByID(ctx, conn, d.Id())
+	state, err := findInstanceStateByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.EC2, create.ErrActionReading, ResInstanceState, d.Id())
+		log.Printf("[WARN] EC2 Instance State %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstanceState, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance State (%s): %s", d.Id(), err)
 	}
 
-	d.Set("instance_id", d.Id())
-	d.Set("state", state.Name)
 	d.Set("force", d.Get("force").(bool))
+	d.Set(names.AttrInstanceID, d.Id())
+	d.Set(names.AttrState, state.Name)
 
 	return diags
 }
 
 func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-
-	instance, instanceErr := waitInstanceReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-
-	if instanceErr != nil {
-		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, ResInstance, aws.StringValue(instance.InstanceId), instanceErr)
+	if _, err := waitInstanceReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) ready: %s", d.Id(), err)
 	}
 
-	if d.HasChange("state") {
-		o, n := d.GetChange("state")
-		err := updateInstanceState(ctx, conn, d.Id(), o.(string), n.(string), d.Get("force").(bool))
+	if d.HasChange(names.AttrState) {
+		o, n := d.GetChange(names.AttrState)
 
-		if err != nil {
+		if err := updateInstanceState(ctx, conn, d.Id(), o.(string), n.(string), d.Get("force").(bool)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -128,25 +120,19 @@ func resourceInstanceStateUpdate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourceInstanceStateRead(ctx, d, meta)...)
 }
 
-func resourceInstanceStateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	log.Printf("[DEBUG] %s %s deleting an aws_ec2_instance_state resource only stops managing instance state, The Instance is left in its current state.: %s", names.EC2, ResInstanceState, d.Id())
-
-	return nil // nosemgrep:ci.semgrep.pluginsdk.return-diags-not-nil
-}
-
-func updateInstanceState(ctx context.Context, conn *ec2.EC2, id string, currentState string, configuredState string, force bool) error {
+func updateInstanceState(ctx context.Context, conn *ec2.Client, id string, currentState string, configuredState string, force bool) error {
 	if currentState == configuredState {
 		return nil
 	}
 
 	if configuredState == "stopped" {
-		if err := stopInstance(ctx, conn, id, force, InstanceStopTimeout); err != nil {
+		if err := stopInstance(ctx, conn, id, force, instanceStopTimeout); err != nil {
 			return err
 		}
 	}
 
 	if configuredState == "running" {
-		if err := startInstance(ctx, conn, id, InstanceStartTimeout); err != nil {
+		if err := startInstance(ctx, conn, id, false, instanceStartTimeout); err != nil {
 			return err
 		}
 	}

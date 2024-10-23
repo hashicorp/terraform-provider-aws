@@ -5,21 +5,22 @@ package apigateway
 
 import (
 	"context"
+	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_api_gateway_account")
-func ResourceAccount() *schema.Resource {
+// @SDKResource("aws_api_gateway_account", name="Account")
+func resourceAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountUpdate,
 		ReadWithoutTimeout:   resourceAccountRead,
@@ -67,19 +68,19 @@ func ResourceAccount() *schema.Resource {
 
 func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	input := &apigateway.UpdateAccountInput{}
 
 	if v, ok := d.GetOk("cloudwatch_role_arn"); ok {
-		input.PatchOperations = []*apigateway.PatchOperation{{
-			Op:    aws.String(apigateway.OpReplace),
+		input.PatchOperations = []types.PatchOperation{{
+			Op:    types.OpReplace,
 			Path:  aws.String("/cloudwatchRoleArn"),
 			Value: aws.String(v.(string)),
 		}}
 	} else {
-		input.PatchOperations = []*apigateway.PatchOperation{{
-			Op:    aws.String(apigateway.OpReplace),
+		input.PatchOperations = []types.PatchOperation{{
+			Op:    types.OpReplace,
 			Path:  aws.String("/cloudwatchRoleArn"),
 			Value: aws.String(""),
 		}}
@@ -87,14 +88,14 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.UpdateAccountWithContext(ctx, input)
+			return conn.UpdateAccount(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "The role ARN does not have required permissions") {
+			if errs.IsAErrorMessageContains[*types.BadRequestException](err, "The role ARN does not have required permissions") {
 				return true, err
 			}
 
-			if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "API Gateway could not successfully write to CloudWatch Logs using the ARN specified") {
+			if errs.IsAErrorMessageContains[*types.BadRequestException](err, "API Gateway could not successfully write to CloudWatch Logs using the ARN specified") {
 				return true, err
 			}
 
@@ -115,9 +116,15 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	account, err := conn.GetAccountWithContext(ctx, &apigateway.GetAccountInput{})
+	account, err := findAccount(ctx, conn)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] API Gateway Account (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Account: %s", err)
@@ -125,10 +132,26 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("api_key_version", account.ApiKeyVersion)
 	d.Set("cloudwatch_role_arn", account.CloudwatchRoleArn)
-	d.Set("features", flex.FlattenStringSet(account.Features))
+	d.Set("features", account.Features)
 	if err := d.Set("throttle_settings", flattenThrottleSettings(account.ThrottleSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting throttle_settings: %s", err)
 	}
 
 	return diags
+}
+
+func findAccount(ctx context.Context, conn *apigateway.Client) (*apigateway.GetAccountOutput, error) {
+	input := &apigateway.GetAccountInput{}
+
+	output, err := conn.GetAccount(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

@@ -39,7 +39,7 @@ func (d *dataSourceApplicationProviders) Metadata(_ context.Context, req datasou
 func (d *dataSourceApplicationProviders) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			"application_providers": schema.ListNestedBlock{
@@ -54,10 +54,10 @@ func (d *dataSourceApplicationProviders) Schema(ctx context.Context, req datasou
 						"display_data": schema.ListNestedBlock{
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"description": schema.StringAttribute{
+									names.AttrDescription: schema.StringAttribute{
 										Computed: true,
 									},
-									"display_name": schema.StringAttribute{
+									names.AttrDisplayName: schema.StringAttribute{
 										Computed: true,
 									},
 									"icon_url": schema.StringAttribute{
@@ -120,9 +120,9 @@ var applicationProviderAttrTypes = map[string]attr.Type{
 }
 
 var displayDataAttrTypes = map[string]attr.Type{
-	"description":  types.StringType,
-	"display_name": types.StringType,
-	"icon_url":     types.StringType,
+	names.AttrDescription: types.StringType,
+	names.AttrDisplayName: types.StringType,
+	"icon_url":            types.StringType,
 }
 
 func flattenApplicationProviders(ctx context.Context, apiObjects []awstypes.ApplicationProvider) (types.List, diag.Diagnostics) {
@@ -164,9 +164,9 @@ func flattenDisplayData(ctx context.Context, apiObject *awstypes.DisplayData) (t
 	}
 
 	obj := map[string]attr.Value{
-		"description":  flex.StringToFramework(ctx, apiObject.Description),
-		"display_name": flex.StringToFramework(ctx, apiObject.DisplayName),
-		"icon_url":     flex.StringToFramework(ctx, apiObject.IconUrl),
+		names.AttrDescription: flex.StringToFramework(ctx, apiObject.Description),
+		names.AttrDisplayName: flex.StringToFramework(ctx, apiObject.DisplayName),
+		"icon_url":            flex.StringToFramework(ctx, apiObject.IconUrl),
 	}
 	objVal, d := types.ObjectValue(displayDataAttrTypes, obj)
 	diags.Append(d...)

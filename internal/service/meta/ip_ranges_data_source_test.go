@@ -52,8 +52,8 @@ func TestAccMetaIPRangesDataSource_none(t *testing.T) {
 			{
 				Config: testAccIPRangesDataSourceConfig_none,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "cidr_blocks.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "ipv6_cidr_blocks.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "cidr_blocks.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "ipv6_cidr_blocks.#", acctest.Ct0),
 				),
 			},
 		},

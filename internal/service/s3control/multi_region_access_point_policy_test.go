@@ -28,7 +28,7 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Multi-Region Access Point Policy cannot be deleted once applied.
 		// Ensure parent resource is destroyed instead.
@@ -38,8 +38,8 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_basic(t *testing.T) {
 				Config: testAccMultiRegionAccessPointPolicyConfig_basic(bucketName, multiRegionAccessPointName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionAccessPointPolicyExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
-					resource.TestCheckResourceAttr(resourceName, "details.#", "1"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttr(resourceName, "details.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "details.0.name", multiRegionAccessPointName),
 					resource.TestCheckResourceAttrSet(resourceName, "details.0.policy"),
 					resource.TestCheckResourceAttrSet(resourceName, "established"),
@@ -66,7 +66,7 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_disappears_MultiRegionAccessPo
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Multi-Region Access Point Policy cannot be deleted once applied.
 		// Ensure parent resource is destroyed instead.
@@ -93,7 +93,7 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_details_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Multi-Region Access Point Policy cannot be deleted once applied.
 		// Ensure parent resource is destroyed instead.
@@ -131,7 +131,7 @@ func TestAccS3ControlMultiRegionAccessPointPolicy_details_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		// Multi-Region Access Point Policy cannot be deleted once applied.
 		// Ensure parent resource is destroyed instead.

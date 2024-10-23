@@ -22,7 +22,7 @@ resource "aws_lightsail_instance" "test" {
   name              = "mytestinstance"
   availability_zone = "us-east-1b"
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
 }
 
 resource "aws_lightsail_bucket_resource_access" "test" {

@@ -19,9 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_s3control_object_lambda_access_point")
@@ -37,22 +39,22 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"configuration": {
+			names.AttrConfiguration: {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -81,7 +83,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"actions": {
+									names.AttrActions: {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem: &schema.Schema{
@@ -101,7 +103,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"function_arn": {
+															names.AttrFunctionARN: {
 																Type:         schema.TypeString,
 																Required:     true,
 																ValidateFunc: verify.ValidARN,
@@ -122,7 +124,7 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -132,40 +134,42 @@ func resourceObjectLambdaAccessPoint() *schema.Resource {
 }
 
 func resourceObjectLambdaAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
-	if v, ok := d.GetOk("account_id"); ok {
+	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	id := ObjectLambdaAccessPointCreateResourceID(accountID, name)
 	input := &s3control.CreateAccessPointForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandObjectLambdaConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	_, err := conn.CreateAccessPointForObjectLambda(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating S3 Object Lambda Access Point (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating S3 Object Lambda Access Point (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceObjectLambdaAccessPointRead(ctx, d, meta)
+	return append(diags, resourceObjectLambdaAccessPointRead(ctx, d, meta)...)
 }
 
 func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	outputConfiguration, err := findObjectLambdaAccessPointConfigurationByTwoPartKey(ctx, conn, accountID, name)
@@ -173,14 +177,14 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object Lambda Access Point (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading S3 Object Lambda Access Point (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Object Lambda Access Point (%s): %s", d.Id(), err)
 	}
 
-	d.Set("account_id", accountID)
+	d.Set(names.AttrAccountID, accountID)
 	// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3objectlambda.html#amazons3objectlambda-resources-for-iam-policies.
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -189,29 +193,30 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", name),
 	}.String()
-	d.Set("arn", arn)
-	if err := d.Set("configuration", []interface{}{flattenObjectLambdaConfiguration(outputConfiguration)}); err != nil {
-		return diag.Errorf("setting configuration: %s", err)
+	d.Set(names.AttrARN, arn)
+	if err := d.Set(names.AttrConfiguration, []interface{}{flattenObjectLambdaConfiguration(outputConfiguration)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
 	}
-	d.Set("name", name)
+	d.Set(names.AttrName, name)
 
 	outputAlias, err := findObjectLambdaAccessPointAliasByTwoPartKey(ctx, conn, accountID, name)
 
 	if err != nil {
-		return diag.Errorf("reading S3 Object Lambda Access Point (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Object Lambda Access Point (%s): %s", d.Id(), err)
 	}
 
-	d.Set("alias", outputAlias.Value)
+	d.Set(names.AttrAlias, outputAlias.Value)
 
-	return nil
+	return diags
 }
 
 func resourceObjectLambdaAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &s3control.PutAccessPointConfigurationForObjectLambdaInput{
@@ -219,25 +224,26 @@ func resourceObjectLambdaAccessPointUpdate(ctx context.Context, d *schema.Resour
 		Name:      aws.String(name),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk(names.AttrConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.Configuration = expandObjectLambdaConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	_, err = conn.PutAccessPointConfigurationForObjectLambda(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating S3 Object Lambda Access Point (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating S3 Object Lambda Access Point (%s): %s", d.Id(), err)
 	}
 
-	return resourceObjectLambdaAccessPointRead(ctx, d, meta)
+	return append(diags, resourceObjectLambdaAccessPointRead(ctx, d, meta)...)
 }
 
 func resourceObjectLambdaAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := ObjectLambdaAccessPointParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Object Lambda Access Point: %s", d.Id())
@@ -247,14 +253,14 @@ func resourceObjectLambdaAccessPointDelete(ctx context.Context, d *schema.Resour
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting S3 Object Lambda Access Point (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting S3 Object Lambda Access Point (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findObjectLambdaAccessPointConfigurationByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, name string) (*types.ObjectLambdaConfiguration, error) {
@@ -361,7 +367,7 @@ func expandObjectLambdaTransformationConfiguration(tfMap map[string]interface{})
 
 	apiObject := &types.ObjectLambdaTransformationConfiguration{}
 
-	if v, ok := tfMap["actions"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrActions].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Actions = flex.ExpandStringyValueSet[types.ObjectLambdaTransformationConfigurationAction](v)
 	}
 
@@ -415,7 +421,7 @@ func expandObjectLambdaContentTransformation(tfMap map[string]interface{}) types
 func expandLambdaTransformation(tfMap map[string]interface{}) types.AwsLambdaTransformation {
 	apiObject := types.AwsLambdaTransformation{}
 
-	if v, ok := tfMap["function_arn"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrFunctionARN].(string); ok && v != "" {
 		apiObject.FunctionArn = aws.String(v)
 	}
 
@@ -454,7 +460,7 @@ func flattenObjectLambdaTransformationConfiguration(apiObject types.ObjectLambda
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Actions; v != nil {
-		tfMap["actions"] = v
+		tfMap[names.AttrActions] = v
 	}
 
 	if v := apiObject.ContentTransformation; v != nil {
@@ -492,7 +498,7 @@ func flattenLambdaTransformation(apiObject types.AwsLambdaTransformation) map[st
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.FunctionArn; v != nil {
-		tfMap["function_arn"] = aws.ToString(v)
+		tfMap[names.AttrFunctionARN] = aws.ToString(v)
 	}
 
 	if v := apiObject.FunctionPayload; v != nil {

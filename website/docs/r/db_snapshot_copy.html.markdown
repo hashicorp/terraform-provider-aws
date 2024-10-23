@@ -67,6 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `license_model` - License model information for the restored DB instance.
 * `option_group_name` - Provides the option group name for the DB snapshot.
+* `shared_accounts` - (Optional) List of AWS Account ids to share snapshot with, use `all` to make snaphot public.
 * `source_db_snapshot_identifier` - The DB snapshot Arn that the DB snapshot was copied from. It only has value in case of cross customer or cross region copy.
 * `source_region` - The region that the DB snapshot was created in or copied from.
 * `storage_type` - Specifies the storage type associated with DB snapshot.

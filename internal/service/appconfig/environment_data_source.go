@@ -8,8 +8,9 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,12 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appconfig_environment")
+// @SDKDataSource("aws_appconfig_environment", name="Environment")
+// @Tags(identifierAttribute="arn")
 func DataSourceEnvironment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEnvironmentRead,
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
@@ -34,15 +36,15 @@ func DataSourceEnvironment() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -62,11 +64,11 @@ func DataSourceEnvironment() *schema.Resource {
 					},
 				},
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -78,9 +80,9 @@ const (
 func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	appID := d.Get("application_id").(string)
+	appID := d.Get(names.AttrApplicationID).(string)
 	envID := d.Get("environment_id").(string)
 	ID := fmt.Sprintf("%s:%s", envID, appID)
 
@@ -91,11 +93,11 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(ID)
 
-	d.Set("application_id", appID)
+	d.Set(names.AttrApplicationID, appID)
 	d.Set("environment_id", envID)
-	d.Set("description", out.Description)
-	d.Set("name", out.Name)
-	d.Set("state", out.State)
+	d.Set(names.AttrDescription, out.Description)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrState, out.State)
 
 	if err := d.Set("monitor", flattenEnvironmentMonitors(out.Monitors)); err != nil {
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameEnvironment, ID, err)
@@ -103,27 +105,13 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	arn := environmentARN(meta.(*conns.AWSClient), appID, envID).String()
 
-	d.Set("arn", arn)
-
-	tags, err := listTags(ctx, conn, arn)
-
-	if err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameEnvironment, ID, err)
-	}
-
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.Map()); err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameEnvironment, ID, err)
-	}
+	d.Set(names.AttrARN, arn)
 
 	return diags
 }
 
-func findEnvironmentByApplicationAndEnvironment(ctx context.Context, conn *appconfig.AppConfig, appId string, envId string) (*appconfig.GetEnvironmentOutput, error) {
-	res, err := conn.GetEnvironmentWithContext(ctx, &appconfig.GetEnvironmentInput{
+func findEnvironmentByApplicationAndEnvironment(ctx context.Context, conn *appconfig.Client, appId string, envId string) (*appconfig.GetEnvironmentOutput, error) {
+	res, err := conn.GetEnvironment(ctx, &appconfig.GetEnvironmentInput{
 		ApplicationId: aws.String(appId),
 		EnvironmentId: aws.String(envId),
 	})
@@ -135,7 +123,7 @@ func findEnvironmentByApplicationAndEnvironment(ctx context.Context, conn *appco
 	return res, nil
 }
 
-func flattenEnvironmentMonitors(monitors []*appconfig.Monitor) []interface{} {
+func flattenEnvironmentMonitors(monitors []awstypes.Monitor) []interface{} {
 	if len(monitors) == 0 {
 		return nil
 	}
@@ -143,29 +131,21 @@ func flattenEnvironmentMonitors(monitors []*appconfig.Monitor) []interface{} {
 	var tfList []interface{}
 
 	for _, monitor := range monitors {
-		if monitor == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenEnvironmentMonitor(monitor))
 	}
 
 	return tfList
 }
 
-func flattenEnvironmentMonitor(monitor *appconfig.Monitor) map[string]interface{} {
-	if monitor == nil {
-		return nil
-	}
-
+func flattenEnvironmentMonitor(monitor awstypes.Monitor) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := monitor.AlarmArn; v != nil {
-		tfMap["alarm_arn"] = aws.StringValue(v)
+		tfMap["alarm_arn"] = aws.ToString(v)
 	}
 
 	if v := monitor.AlarmRoleArn; v != nil {
-		tfMap["alarm_role_arn"] = aws.StringValue(v)
+		tfMap["alarm_role_arn"] = aws.ToString(v)
 	}
 
 	return tfMap

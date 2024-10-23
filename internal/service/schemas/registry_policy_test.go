@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/schemas"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/schemas"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSchemasRegistryPolicy_basic(t *testing.T) {
@@ -26,8 +27,8 @@ func TestAccSchemasRegistryPolicy_basic(t *testing.T) {
 	resourceName := "aws_schemas_registry_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,9 +39,10 @@ func TestAccSchemasRegistryPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrPolicy},
 			},
 		},
 	})
@@ -52,8 +54,8 @@ func TestAccSchemasRegistryPolicy_disappears(t *testing.T) {
 	resourceName := "aws_schemas_registry_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,8 +78,8 @@ func TestAccSchemasRegistryPolicy_disappears_Registry(t *testing.T) {
 	resourceName := "aws_schemas_registry_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -99,8 +101,8 @@ func TestAccSchemasRegistryPolicy_Policy(t *testing.T) {
 	resourceName := "aws_schemas_registry_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.SchemasEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,11 +131,8 @@ func testAccCheckRegistryPolicyExists(ctx context.Context, name string, v *schem
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EventBridge Schemas Registry ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn(ctx)
 		output, err := tfschemas.FindRegistryPolicyByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -141,13 +140,14 @@ func testAccCheckRegistryPolicyExists(ctx context.Context, name string, v *schem
 		}
 
 		*v = *output
+
 		return nil
 	}
 }
 
 func testAccCheckRegistryPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_schemas_registry_policy" {
@@ -182,10 +182,6 @@ func testAccCheckRegistryPolicy(ctx context.Context, name string, expectedSid st
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EventBridge Schemas Registry ID is set")
-		}
-
 		expectedPolicyText := fmt.Sprintf(`{
 			"Version": "2012-10-17",
 			"Statement": [
@@ -205,13 +201,15 @@ func testAccCheckRegistryPolicy(ctx context.Context, name string, expectedSid st
 			]
 		}`, expectedSid, partition, region, account_id, rs.Primary.ID)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasConn(ctx)
-		policy, err := tfschemas.FindRegistryPolicyByName(ctx, conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchemasClient(ctx)
+
+		output, err := tfschemas.FindRegistryPolicyByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		actualPolicyText, _ := structure.FlattenJsonToString(policy.Policy)
+		actualPolicyText := aws.ToString(output.Policy)
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 		if err != nil {

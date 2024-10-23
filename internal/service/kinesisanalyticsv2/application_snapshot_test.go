@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,18 +16,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkinesisanalyticsv2 "github.com/hashicorp/terraform-provider-aws/internal/service/kinesisanalyticsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalyticsv2.SnapshotDetails
+	var v awstypes.SnapshotDetails
 	resourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	applicationResourceName := "aws_kinesisanalyticsv2_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisAnalyticsV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,8 +36,8 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
 				Config: testAccApplicationSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationSnapshotExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "application_name", applicationResourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "application_version_id", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "application_name", applicationResourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "application_version_id", acctest.Ct1),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_creation_timestamp"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_name", rName),
 				),
@@ -52,13 +53,13 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_basic(t *testing.T) {
 
 func TestAccKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalyticsv2.SnapshotDetails
+	var v awstypes.SnapshotDetails
 	resourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisAnalyticsV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,14 +77,14 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_disappears(t *testing.T) {
 
 func TestAccKinesisAnalyticsV2ApplicationSnapshot_Disappears_application(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v kinesisanalyticsv2.SnapshotDetails
+	var v awstypes.SnapshotDetails
 	resourceName := "aws_kinesisanalyticsv2_application_snapshot.test"
 	applicationResourceName := "aws_kinesisanalyticsv2_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kinesisanalyticsv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisAnalyticsV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,14 +102,14 @@ func TestAccKinesisAnalyticsV2ApplicationSnapshot_Disappears_application(t *test
 
 func testAccCheckApplicationSnapshotDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_kinesisanalyticsv2_application_snapshot" {
 				continue
 			}
 
-			_, err := tfkinesisanalyticsv2.FindSnapshotDetailsByApplicationAndSnapshotNames(ctx, conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
+			_, err := tfkinesisanalyticsv2.FindSnapshotDetailsByTwoPartKey(ctx, conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -124,26 +125,22 @@ func testAccCheckApplicationSnapshotDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckApplicationSnapshotExists(ctx context.Context, n string, v *kinesisanalyticsv2.SnapshotDetails) resource.TestCheckFunc {
+func testAccCheckApplicationSnapshotExists(ctx context.Context, n string, v *awstypes.SnapshotDetails) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Kinesis Analytics v2 Application Snapshot ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Client(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisAnalyticsV2Conn(ctx)
-
-		application, err := tfkinesisanalyticsv2.FindSnapshotDetailsByApplicationAndSnapshotNames(ctx, conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
+		output, err := tfkinesisanalyticsv2.FindSnapshotDetailsByTwoPartKey(ctx, conn, rs.Primary.Attributes["application_name"], rs.Primary.Attributes["snapshot_name"])
 
 		if err != nil {
 			return err
 		}
 
-		*v = *application
+		*v = *output
 
 		return nil
 	}

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Fix `error marshaling prior state: a number is required` when upgrading from v5.58.0 to v5.59.0
+```

@@ -14,24 +14,23 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
+var (
+	_ basetypes.SetTypable  = (*setTypeOf[basetypes.StringValue])(nil)
+	_ basetypes.SetValuable = (*SetValueOf[basetypes.StringValue])(nil)
+)
+
 // setTypeOf is the attribute type of a SetValueOf.
 type setTypeOf[T attr.Value] struct {
 	basetypes.SetType
 }
 
 var (
+	// SetOfStringType is a custom type used for defining a Set of strings.
 	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}}
-)
 
-var (
-	_ basetypes.SetTypable  = (*setTypeOf[basetypes.StringValue])(nil)
-	_ basetypes.SetValuable = (*SetValueOf[basetypes.StringValue])(nil)
+	// SetOfARNType is a custom type used for defining a Set of ARNs.
+	SetOfARNType = setTypeOf[ARN]{basetypes.SetType{ElemType: ARNType}}
 )
-
-func newAttrTypeOf[T attr.Value](ctx context.Context) attr.Type {
-	var zero T
-	return zero.Type(ctx)
-}
 
 func NewSetTypeOf[T attr.Value](ctx context.Context) setTypeOf[T] {
 	return setTypeOf[T]{basetypes.SetType{ElemType: newAttrTypeOf[T](ctx)}}
@@ -62,17 +61,13 @@ func (t setTypeOf[T]) ValueFromSet(ctx context.Context, in basetypes.SetValue) (
 		return NewSetValueOfUnknown[T](ctx), diags
 	}
 
-	setValue, d := basetypes.NewSetValue(newAttrTypeOf[T](ctx), in.Elements())
+	v, d := basetypes.NewSetValue(newAttrTypeOf[T](ctx), in.Elements())
 	diags.Append(d...)
 	if diags.HasError() {
 		return NewSetValueOfUnknown[T](ctx), diags
 	}
 
-	value := SetValueOf[T]{
-		SetValue: setValue,
-	}
-
-	return value, diags
+	return SetValueOf[T]{SetValue: v}, diags
 }
 
 func (t setTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -106,6 +101,11 @@ type SetValueOf[T attr.Value] struct {
 	basetypes.SetValue
 }
 
+type (
+	SetOfString = SetValueOf[basetypes.StringValue]
+	SetOfARN    = SetValueOf[ARN]
+)
+
 func (v SetValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(SetValueOf[T])
 
@@ -129,7 +129,10 @@ func NewSetValueOfUnknown[T attr.Value](ctx context.Context) SetValueOf[T] {
 }
 
 func NewSetValueOf[T attr.Value](ctx context.Context, elements []attr.Value) (SetValueOf[T], diag.Diagnostics) {
-	v, diags := basetypes.NewSetValue(newAttrTypeOf[T](ctx), elements)
+	var diags diag.Diagnostics
+
+	v, d := basetypes.NewSetValue(newAttrTypeOf[T](ctx), elements)
+	diags.Append(d...)
 	if diags.HasError() {
 		return NewSetValueOfUnknown[T](ctx), diags
 	}

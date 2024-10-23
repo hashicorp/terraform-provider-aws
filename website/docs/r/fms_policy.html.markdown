@@ -105,7 +105,7 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The AWS account ID of the AWS Firewall Manager administrator account.
+* `id` - The ID of the AWS Firewall Manager policy.
 * `policy_update_token` - A unique identifier for each update to the policy.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 

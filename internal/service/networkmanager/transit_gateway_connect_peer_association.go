@@ -10,19 +10,22 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/networkmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_networkmanager_transit_gateway_connect_peer_association")
-func ResourceTransitGatewayConnectPeerAssociation() *schema.Resource {
+// @SDKResource("aws_networkmanager_transit_gateway_connect_peer_association", name="Transit Gateway Connect Peer Association")
+func resourceTransitGatewayConnectPeerAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayConnectPeerAssociationCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayConnectPeerAssociationRead,
@@ -64,11 +67,13 @@ func ResourceTransitGatewayConnectPeerAssociation() *schema.Resource {
 }
 
 func resourceTransitGatewayConnectPeerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	connectPeerARN := d.Get("transit_gateway_connect_peer_arn").(string)
-	id := TransitGatewayConnectPeerAssociationCreateResourceID(globalNetworkID, connectPeerARN)
+	id := transitGatewayConnectPeerAssociationCreateResourceID(globalNetworkID, connectPeerARN)
 	input := &networkmanager.AssociateTransitGatewayConnectPeerInput{
 		DeviceId:                     aws.String(d.Get("device_id").(string)),
 		GlobalNetworkId:              aws.String(globalNetworkID),
@@ -79,41 +84,43 @@ func resourceTransitGatewayConnectPeerAssociationCreate(ctx context.Context, d *
 		input.LinkId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Network Manager Transit Gateway Connect Peer Association: %s", input)
-	_, err := conn.AssociateTransitGatewayConnectPeerWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Network Manager Transit Gateway Connect Peer Association: %#v", input)
+	_, err := conn.AssociateTransitGatewayConnectPeer(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager Transit Gateway Connect Peer Association (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Transit Gateway Connect Peer Association (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitTransitGatewayConnectPeerAssociationCreated(ctx, conn, globalNetworkID, connectPeerARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Transit Gateway Connect Peer Association (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Transit Gateway Connect Peer Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceTransitGatewayConnectPeerAssociationRead(ctx, d, meta)
+	return append(diags, resourceTransitGatewayConnectPeerAssociationRead(ctx, d, meta)...)
 }
 
 func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	var diags diag.Diagnostics
 
-	globalNetworkID, connectPeerARN, err := TransitGatewayConnectPeerAssociationParseResourceID(d.Id())
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
+
+	globalNetworkID, connectPeerARN, err := transitGatewayConnectPeerAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	output, err := FindTransitGatewayConnectPeerAssociationByTwoPartKey(ctx, conn, globalNetworkID, connectPeerARN)
+	output, err := findTransitGatewayConnectPeerAssociationByTwoPartKey(ctx, conn, globalNetworkID, connectPeerARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Transit Gateway Connect Peer Association %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Transit Gateway Connect Peer Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Transit Gateway Connect Peer Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("device_id", output.DeviceId)
@@ -121,37 +128,39 @@ func resourceTransitGatewayConnectPeerAssociationRead(ctx context.Context, d *sc
 	d.Set("link_id", output.LinkId)
 	d.Set("transit_gateway_connect_peer_arn", output.TransitGatewayConnectPeerArn)
 
-	return nil
+	return diags
 }
 
 func resourceTransitGatewayConnectPeerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
+	var diags diag.Diagnostics
 
-	globalNetworkID, connectPeerARN, err := TransitGatewayConnectPeerAssociationParseResourceID(d.Id())
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
+
+	globalNetworkID, connectPeerARN, err := transitGatewayConnectPeerAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	err = disassociateTransitGatewayConnectPeer(ctx, conn, globalNetworkID, connectPeerARN, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return nil
+	return diags
 }
 
-func disassociateTransitGatewayConnectPeer(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectPeerARN string, timeout time.Duration) error {
-	id := TransitGatewayConnectPeerAssociationCreateResourceID(globalNetworkID, connectPeerARN)
+func disassociateTransitGatewayConnectPeer(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectPeerARN string, timeout time.Duration) error {
+	id := transitGatewayConnectPeerAssociationCreateResourceID(globalNetworkID, connectPeerARN)
 
 	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Connect Peer Association: %s", id)
-	_, err := conn.DisassociateTransitGatewayConnectPeerWithContext(ctx, &networkmanager.DisassociateTransitGatewayConnectPeerInput{
+	_, err := conn.DisassociateTransitGatewayConnectPeer(ctx, &networkmanager.DisassociateTransitGatewayConnectPeerInput{
 		GlobalNetworkId:              aws.String(globalNetworkID),
 		TransitGatewayConnectPeerArn: aws.String(connectPeerARN),
 	})
 
-	if globalNetworkIDNotFoundError(err) || tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
+	if globalNetworkIDNotFoundError(err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -166,14 +175,14 @@ func disassociateTransitGatewayConnectPeer(ctx context.Context, conn *networkman
 	return nil
 }
 
-func FindTransitGatewayConnectPeerAssociation(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.GetTransitGatewayConnectPeerAssociationsInput) (*networkmanager.TransitGatewayConnectPeerAssociation, error) {
-	output, err := FindTransitGatewayConnectPeerAssociations(ctx, conn, input)
+func findTransitGatewayConnectPeerAssociation(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetTransitGatewayConnectPeerAssociationsInput) (*awstypes.TransitGatewayConnectPeerAssociation, error) {
+	output, err := findTransitGatewayConnectPeerAssociations(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(output) == 0 || output[0] == nil || output[0].State == nil {
+	if len(output) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -181,63 +190,54 @@ func FindTransitGatewayConnectPeerAssociation(ctx context.Context, conn *network
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output[0], nil
+	return &output[0], nil
 }
 
-func FindTransitGatewayConnectPeerAssociations(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.GetTransitGatewayConnectPeerAssociationsInput) ([]*networkmanager.TransitGatewayConnectPeerAssociation, error) {
-	var output []*networkmanager.TransitGatewayConnectPeerAssociation
+func findTransitGatewayConnectPeerAssociations(ctx context.Context, conn *networkmanager.Client, input *networkmanager.GetTransitGatewayConnectPeerAssociationsInput) ([]awstypes.TransitGatewayConnectPeerAssociation, error) {
+	var output []awstypes.TransitGatewayConnectPeerAssociation
 
-	err := conn.GetTransitGatewayConnectPeerAssociationsPagesWithContext(ctx, input, func(page *networkmanager.GetTransitGatewayConnectPeerAssociationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := networkmanager.NewGetTransitGatewayConnectPeerAssociationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.TransitGatewayConnectPeerAssociations {
-			if v == nil {
-				continue
+		if globalNetworkIDNotFoundError(err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
-
-			output = append(output, v)
 		}
 
-		return !lastPage
-	})
-
-	if globalNetworkIDNotFoundError(err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		output = append(output, page.TransitGatewayConnectPeerAssociations...)
 	}
 
 	return output, nil
 }
 
-func FindTransitGatewayConnectPeerAssociationByTwoPartKey(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectPeerARN string) (*networkmanager.TransitGatewayConnectPeerAssociation, error) {
+func findTransitGatewayConnectPeerAssociationByTwoPartKey(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectPeerARN string) (*awstypes.TransitGatewayConnectPeerAssociation, error) {
 	input := &networkmanager.GetTransitGatewayConnectPeerAssociationsInput{
 		GlobalNetworkId:               aws.String(globalNetworkID),
-		TransitGatewayConnectPeerArns: aws.StringSlice([]string{connectPeerARN}),
+		TransitGatewayConnectPeerArns: []string{connectPeerARN},
 	}
 
-	output, err := FindTransitGatewayConnectPeerAssociation(ctx, conn, input)
+	output, err := findTransitGatewayConnectPeerAssociation(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if state := aws.StringValue(output.State); state == networkmanager.TransitGatewayConnectPeerAssociationStateDeleted {
+	if state := output.State; state == awstypes.TransitGatewayConnectPeerAssociationStateDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     state,
+			Message:     string(state),
 			LastRequest: input,
 		}
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.GlobalNetworkId) != globalNetworkID || aws.StringValue(output.TransitGatewayConnectPeerArn) != connectPeerARN {
+	if aws.ToString(output.GlobalNetworkId) != globalNetworkID || aws.ToString(output.TransitGatewayConnectPeerArn) != connectPeerARN {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -246,9 +246,9 @@ func FindTransitGatewayConnectPeerAssociationByTwoPartKey(ctx context.Context, c
 	return output, nil
 }
 
-func statusTransitGatewayConnectPeerAssociationState(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectPeerARN string) retry.StateRefreshFunc {
+func statusTransitGatewayConnectPeerAssociationState(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectPeerARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTransitGatewayConnectPeerAssociationByTwoPartKey(ctx, conn, globalNetworkID, connectPeerARN)
+		output, err := findTransitGatewayConnectPeerAssociationByTwoPartKey(ctx, conn, globalNetworkID, connectPeerARN)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -258,30 +258,30 @@ func statusTransitGatewayConnectPeerAssociationState(ctx context.Context, conn *
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.State), nil
+		return output, string(output.State), nil
 	}
 }
 
-func waitTransitGatewayConnectPeerAssociationCreated(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectPeerARN string, timeout time.Duration) (*networkmanager.TransitGatewayConnectPeerAssociation, error) {
+func waitTransitGatewayConnectPeerAssociationCreated(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectPeerARN string, timeout time.Duration) (*awstypes.TransitGatewayConnectPeerAssociation, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{networkmanager.TransitGatewayConnectPeerAssociationStatePending},
-		Target:  []string{networkmanager.TransitGatewayConnectPeerAssociationStateAvailable},
+		Pending: enum.Slice(awstypes.TransitGatewayConnectPeerAssociationStatePending),
+		Target:  enum.Slice(awstypes.TransitGatewayConnectPeerAssociationStateAvailable),
 		Timeout: timeout,
 		Refresh: statusTransitGatewayConnectPeerAssociationState(ctx, conn, globalNetworkID, connectPeerARN),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*networkmanager.TransitGatewayConnectPeerAssociation); ok {
+	if output, ok := outputRaw.(*awstypes.TransitGatewayConnectPeerAssociation); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitTransitGatewayConnectPeerAssociationDeleted(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, connectPeerARN string, timeout time.Duration) (*networkmanager.TransitGatewayConnectPeerAssociation, error) {
+func waitTransitGatewayConnectPeerAssociationDeleted(ctx context.Context, conn *networkmanager.Client, globalNetworkID, connectPeerARN string, timeout time.Duration) (*awstypes.TransitGatewayConnectPeerAssociation, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{networkmanager.TransitGatewayConnectPeerAssociationStateAvailable, networkmanager.TransitGatewayConnectPeerAssociationStateDeleting},
+		Pending: enum.Slice(awstypes.TransitGatewayConnectPeerAssociationStateAvailable, awstypes.TransitGatewayConnectPeerAssociationStateDeleting),
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusTransitGatewayConnectPeerAssociationState(ctx, conn, globalNetworkID, connectPeerARN),
@@ -289,7 +289,7 @@ func waitTransitGatewayConnectPeerAssociationDeleted(ctx context.Context, conn *
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*networkmanager.TransitGatewayConnectPeerAssociation); ok {
+	if output, ok := outputRaw.(*awstypes.TransitGatewayConnectPeerAssociation); ok {
 		return output, err
 	}
 
@@ -298,14 +298,14 @@ func waitTransitGatewayConnectPeerAssociationDeleted(ctx context.Context, conn *
 
 const transitGatewayConnectPeerAssociationIDSeparator = ","
 
-func TransitGatewayConnectPeerAssociationCreateResourceID(globalNetworkID, connectPeerARN string) string {
+func transitGatewayConnectPeerAssociationCreateResourceID(globalNetworkID, connectPeerARN string) string {
 	parts := []string{globalNetworkID, connectPeerARN}
 	id := strings.Join(parts, transitGatewayConnectPeerAssociationIDSeparator)
 
 	return id
 }
 
-func TransitGatewayConnectPeerAssociationParseResourceID(id string) (string, string, error) {
+func transitGatewayConnectPeerAssociationParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, transitGatewayConnectPeerAssociationIDSeparator)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {

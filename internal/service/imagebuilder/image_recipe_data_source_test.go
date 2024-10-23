@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccImageBuilderImageRecipeDataSource_arn(t *testing.T) {
@@ -21,14 +21,14 @@ func TestAccImageBuilderImageRecipeDataSource_arn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckImageRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccImageRecipeDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "block_device_mapping.#", resourceName, "block_device_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "component.#", resourceName, "component.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "component.0.component_arn", resourceName, "component.0.component_arn"),
@@ -36,14 +36,14 @@ func TestAccImageBuilderImageRecipeDataSource_arn(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "component.0.parameter.0.name", resourceName, "component.0.parameter.0.name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "component.0.parameter.0.value", resourceName, "component.0.parameter.0.value"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "date_created", resourceName, "date_created"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "owner", resourceName, "owner"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrOwner, resourceName, names.AttrOwner),
 					resource.TestCheckResourceAttrPair(dataSourceName, "parent_image", resourceName, "parent_image"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "platform", resourceName, "platform"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_data_base64", resourceName, "user_data_base64"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVersion, resourceName, names.AttrVersion),
 					resource.TestCheckResourceAttrPair(dataSourceName, "working_directory", resourceName, "working_directory"),
 				),
 			},

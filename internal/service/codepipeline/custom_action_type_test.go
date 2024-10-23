@@ -8,8 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/codepipeline"
-	"github.com/aws/aws-sdk-go/service/codestarconnections"
+	"github.com/aws/aws-sdk-go-v2/service/codepipeline/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,20 +16,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodepipeline "github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v codepipeline.ActionType
+	var v types.ActionType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codepipeline_custom_action_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomActionTypeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -38,20 +38,20 @@ func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 				Config: testAccCustomActionTypeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "category", "Test"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_property.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.0.maximum_count", "5"),
-					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.0.minimum_count", "0"),
-					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.0.maximum_count", "4"),
-					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.0.minimum_count", "1"),
-					resource.TestCheckResourceAttr(resourceName, "owner", "Custom"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.0.minimum_count", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.0.maximum_count", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.0.minimum_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "Custom"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, rName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{
@@ -65,16 +65,16 @@ func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 
 func TestAccCodePipelineCustomActionType_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v codepipeline.ActionType
+	var v types.ActionType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codepipeline_custom_action_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomActionTypeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -92,25 +92,25 @@ func TestAccCodePipelineCustomActionType_disappears(t *testing.T) {
 
 func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v codepipeline.ActionType
+	var v types.ActionType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codepipeline_custom_action_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomActionTypeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomActionTypeConfig_tags1(rName, "key1", "value1"),
+				Config: testAccCustomActionTypeConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -119,20 +119,20 @@ func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCustomActionTypeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccCustomActionTypeConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccCustomActionTypeConfig_tags1(rName, "key2", "value2"),
+				Config: testAccCustomActionTypeConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -141,16 +141,16 @@ func TestAccCodePipelineCustomActionType_tags(t *testing.T) {
 
 func TestAccCodePipelineCustomActionType_allAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v codepipeline.ActionType
+	var v types.ActionType
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codepipeline_custom_action_type.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, codestarconnections.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, codepipeline.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomActionTypeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,38 +158,38 @@ func TestAccCodePipelineCustomActionType_allAttributes(t *testing.T) {
 				Config: testAccCustomActionTypeConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "category", "Test"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_property.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.description", ""),
-					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.key", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.key", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.name", "pk"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.queryable", "true"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.required", "true"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.secret", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.queryable", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.required", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.secret", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.type", "Number"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.description", "Date of birth"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.key", "false"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.key", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.name", "dob"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.queryable", "false"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.required", "false"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.secret", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.queryable", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.required", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.secret", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "configuration_property.1.type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.0.maximum_count", "3"),
-					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.0.minimum_count", "2"),
-					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.0.maximum_count", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.0.minimum_count", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.0.maximum_count", "5"),
-					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.0.minimum_count", "4"),
-					resource.TestCheckResourceAttr(resourceName, "owner", "Custom"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "output_artifact_details.0.minimum_count", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, names.AttrOwner, "Custom"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProviderName, rName),
+					resource.TestCheckResourceAttr(resourceName, "settings.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.entity_url_template", "https://example.com/entity"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.execution_url_template", ""),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.revision_url_template", "https://example.com/configuration"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.third_party_configuration_url", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
 				),
 			},
 			{
@@ -205,24 +205,19 @@ func TestAccCodePipelineCustomActionType_allAttributes(t *testing.T) {
 	})
 }
 
-func testAccCheckCustomActionTypeExists(ctx context.Context, n string, v *codepipeline.ActionType) resource.TestCheckFunc {
+func testAccCheckCustomActionTypeExists(ctx context.Context, n string, v *types.ActionType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CodePipeline Custom Action Type ID is set")
-		}
-
 		category, provider, version, err := tfcodepipeline.CustomActionTypeParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineClient(ctx)
 
 		output, err := tfcodepipeline.FindCustomActionTypeByThreePartKey(ctx, conn, category, provider, version)
 
@@ -238,7 +233,7 @@ func testAccCheckCustomActionTypeExists(ctx context.Context, n string, v *codepi
 
 func testAccCheckCustomActionTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_codepipeline_custom_action_type" {
@@ -246,7 +241,6 @@ func testAccCheckCustomActionTypeDestroy(ctx context.Context) resource.TestCheck
 			}
 
 			category, provider, version, err := tfcodepipeline.CustomActionTypeParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}

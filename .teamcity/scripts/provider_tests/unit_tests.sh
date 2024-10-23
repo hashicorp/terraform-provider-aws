@@ -15,18 +15,22 @@ go test \
     ./internal/experimental/... \
     ./internal/flex/... \
     ./internal/framework/... \
+    ./internal/function/... \
     ./internal/generate/... \
+    ./internal/io/... \
+    ./internal/json/... \
     ./internal/logging/... \
     ./internal/maps/... \
+    ./internal/namevaluesfilters/... \
     ./internal/provider/... \
     ./internal/retry/... \
-    ./internal/sdktypes/... \
+    ./internal/sdkv2/... \
+    ./internal/semver/... \
     ./internal/slices/... \
     ./internal/sweep/... \
     ./internal/tags/... \
     ./internal/tfresource/... \
     ./internal/types/... \
-    ./internal/ujson/... \
     ./internal/vault/... \
     ./internal/verify/... \
     -json

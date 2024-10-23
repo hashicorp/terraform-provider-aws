@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_securityhub_invite_accepter")
-func ResourceInviteAccepter() *schema.Resource {
+// @SDKResource("aws_securityhub_invite_accepter", name="Invite Accepter")
+func resourceInviteAccepter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInviteAccepterCreate,
 		ReadWithoutTimeout:   resourceInviteAccepterRead,
@@ -79,16 +79,16 @@ func resourceInviteAccepterRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	master, err := FindMasterAccount(ctx, conn)
+	master, err := findMasterAccount(ctx, conn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Master Account (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Security Hub Master Account (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Master Account (%s): %s", d.Id(), err)
 	}
 
 	d.Set("invitation_id", master.InvitationId)
@@ -115,7 +115,7 @@ func resourceInviteAccepterDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func FindMasterAccount(ctx context.Context, conn *securityhub.Client) (*types.Invitation, error) {
+func findMasterAccount(ctx context.Context, conn *securityhub.Client) (*types.Invitation, error) {
 	input := &securityhub.GetMasterAccountInput{}
 
 	output, err := conn.GetMasterAccount(ctx, input)
@@ -145,11 +145,11 @@ func findInvitation(ctx context.Context, conn *securityhub.Client, input *securi
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findInvitations(ctx context.Context, conn *securityhub.Client, input *securityhub.ListInvitationsInput, filter tfslices.Predicate[*types.Invitation]) ([]*types.Invitation, error) {
-	var output []*types.Invitation
+func findInvitations(ctx context.Context, conn *securityhub.Client, input *securityhub.ListInvitationsInput, filter tfslices.Predicate[*types.Invitation]) ([]types.Invitation, error) {
+	var output []types.Invitation
 
 	pages := securityhub.NewListInvitationsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -167,8 +167,7 @@ func findInvitations(ctx context.Context, conn *securityhub.Client, input *secur
 		}
 
 		for _, v := range page.Invitations {
-			v := v
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}

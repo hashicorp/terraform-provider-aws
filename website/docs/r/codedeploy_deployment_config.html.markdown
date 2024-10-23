@@ -138,6 +138,7 @@ a percentage of the total number of instances in the Availability Zone during a 
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the deployment config.
 * `id` - The deployment group's config name.
 * `deployment_config_id` - The AWS Assigned deployment config id
 

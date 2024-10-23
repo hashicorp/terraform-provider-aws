@@ -7,14 +7,16 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/glue"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/glue"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_glue_data_catalog_encryption_settings")
@@ -29,7 +31,7 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"catalog_id": {
+			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Optional: true,
@@ -66,9 +68,14 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"catalog_encryption_mode": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CatalogEncryptionMode](),
+									},
+									"catalog_encryption_service_role": {
 										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(glue.CatalogEncryptionMode_Values(), false),
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
 									},
 									"sse_aws_kms_key_id": {
 										Type:         schema.TypeString,
@@ -87,7 +94,7 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 
 func resourceDataCatalogEncryptionSettingsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
 	input := &glue.PutDataCatalogEncryptionSettingsInput{
@@ -98,8 +105,8 @@ func resourceDataCatalogEncryptionSettingsPut(ctx context.Context, d *schema.Res
 		input.DataCatalogEncryptionSettings = expandDataCatalogEncryptionSettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Putting Glue Data Catalog Encryption Settings: %s", input)
-	_, err := conn.PutDataCatalogEncryptionSettingsWithContext(ctx, input)
+	log.Printf("[DEBUG] Putting Glue Data Catalog Encryption Settings: %+v", input)
+	_, err := conn.PutDataCatalogEncryptionSettings(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting Glue Data Catalog Encryption Settings (%s): %s", catalogID, err)
@@ -112,9 +119,9 @@ func resourceDataCatalogEncryptionSettingsPut(ctx context.Context, d *schema.Res
 
 func resourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
-	output, err := conn.GetDataCatalogEncryptionSettingsWithContext(ctx, &glue.GetDataCatalogEncryptionSettingsInput{
+	output, err := conn.GetDataCatalogEncryptionSettings(ctx, &glue.GetDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(d.Id()),
 	})
 
@@ -122,7 +129,7 @@ func resourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading Glue Data Catalog Encryption Settings (%s): %s", d.Id(), err)
 	}
 
-	d.Set("catalog_id", d.Id())
+	d.Set(names.AttrCatalogID, d.Id())
 	if output.DataCatalogEncryptionSettings != nil {
 		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting data_catalog_encryption_settings: %s", err)
@@ -136,15 +143,15 @@ func resourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.Re
 
 func resourceDataCatalogEncryptionSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GlueConn(ctx)
+	conn := meta.(*conns.AWSClient).GlueClient(ctx)
 
 	input := &glue.PutDataCatalogEncryptionSettingsInput{
 		CatalogId:                     aws.String(d.Id()),
-		DataCatalogEncryptionSettings: &glue.DataCatalogEncryptionSettings{},
+		DataCatalogEncryptionSettings: &awstypes.DataCatalogEncryptionSettings{},
 	}
 
-	log.Printf("[DEBUG] Deleting Glue Data Catalog Encryption Settings: %s", input)
-	_, err := conn.PutDataCatalogEncryptionSettingsWithContext(ctx, input)
+	log.Printf("[DEBUG] Deleting Glue Data Catalog Encryption Settings: %+v", input)
+	_, err := conn.PutDataCatalogEncryptionSettings(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting Glue Data Catalog Encryption Settings (%s): %s", d.Id(), err)
@@ -153,12 +160,12 @@ func resourceDataCatalogEncryptionSettingsDelete(ctx context.Context, d *schema.
 	return diags
 }
 
-func expandDataCatalogEncryptionSettings(tfMap map[string]interface{}) *glue.DataCatalogEncryptionSettings {
+func expandDataCatalogEncryptionSettings(tfMap map[string]interface{}) *awstypes.DataCatalogEncryptionSettings {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &glue.DataCatalogEncryptionSettings{}
+	apiObject := &awstypes.DataCatalogEncryptionSettings{}
 
 	if v, ok := tfMap["connection_password_encryption"].([]interface{}); ok && len(v) > 0 {
 		apiObject.ConnectionPasswordEncryption = expandConnectionPasswordEncryption(v[0].(map[string]interface{}))
@@ -171,33 +178,37 @@ func expandDataCatalogEncryptionSettings(tfMap map[string]interface{}) *glue.Dat
 	return apiObject
 }
 
-func expandConnectionPasswordEncryption(tfMap map[string]interface{}) *glue.ConnectionPasswordEncryption {
+func expandConnectionPasswordEncryption(tfMap map[string]interface{}) *awstypes.ConnectionPasswordEncryption {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &glue.ConnectionPasswordEncryption{}
+	apiObject := &awstypes.ConnectionPasswordEncryption{}
 
 	if v, ok := tfMap["aws_kms_key_id"].(string); ok && v != "" {
 		apiObject.AwsKmsKeyId = aws.String(v)
 	}
 
 	if v, ok := tfMap["return_connection_password_encrypted"].(bool); ok {
-		apiObject.ReturnConnectionPasswordEncrypted = aws.Bool(v)
+		apiObject.ReturnConnectionPasswordEncrypted = v
 	}
 
 	return apiObject
 }
 
-func expandEncryptionAtRest(tfMap map[string]interface{}) *glue.EncryptionAtRest {
+func expandEncryptionAtRest(tfMap map[string]interface{}) *awstypes.EncryptionAtRest {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &glue.EncryptionAtRest{}
+	apiObject := &awstypes.EncryptionAtRest{}
 
 	if v, ok := tfMap["catalog_encryption_mode"].(string); ok && v != "" {
-		apiObject.CatalogEncryptionMode = aws.String(v)
+		apiObject.CatalogEncryptionMode = awstypes.CatalogEncryptionMode(v)
+	}
+
+	if v, ok := tfMap["catalog_encryption_service_role"].(string); ok && v != "" {
+		apiObject.CatalogEncryptionServiceRole = aws.String(v)
 	}
 
 	if v, ok := tfMap["sse_aws_kms_key_id"].(string); ok && v != "" {
@@ -207,7 +218,7 @@ func expandEncryptionAtRest(tfMap map[string]interface{}) *glue.EncryptionAtRest
 	return apiObject
 }
 
-func flattenDataCatalogEncryptionSettings(apiObject *glue.DataCatalogEncryptionSettings) map[string]interface{} {
+func flattenDataCatalogEncryptionSettings(apiObject *awstypes.DataCatalogEncryptionSettings) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -225,7 +236,7 @@ func flattenDataCatalogEncryptionSettings(apiObject *glue.DataCatalogEncryptionS
 	return tfMap
 }
 
-func flattenConnectionPasswordEncryption(apiObject *glue.ConnectionPasswordEncryption) map[string]interface{} {
+func flattenConnectionPasswordEncryption(apiObject *awstypes.ConnectionPasswordEncryption) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -233,29 +244,29 @@ func flattenConnectionPasswordEncryption(apiObject *glue.ConnectionPasswordEncry
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AwsKmsKeyId; v != nil {
-		tfMap["aws_kms_key_id"] = aws.StringValue(v)
+		tfMap["aws_kms_key_id"] = aws.ToString(v)
 	}
 
-	if v := apiObject.ReturnConnectionPasswordEncrypted; v != nil {
-		tfMap["return_connection_password_encrypted"] = aws.BoolValue(v)
-	}
+	tfMap["return_connection_password_encrypted"] = apiObject.ReturnConnectionPasswordEncrypted
 
 	return tfMap
 }
 
-func flattenEncryptionAtRest(apiObject *glue.EncryptionAtRest) map[string]interface{} {
+func flattenEncryptionAtRest(apiObject *awstypes.EncryptionAtRest) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.CatalogEncryptionMode; v != nil {
-		tfMap["catalog_encryption_mode"] = aws.StringValue(v)
+	tfMap["catalog_encryption_mode"] = string(apiObject.CatalogEncryptionMode)
+
+	if v := apiObject.CatalogEncryptionServiceRole; v != nil {
+		tfMap["catalog_encryption_service_role"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SseAwsKmsKeyId; v != nil {
-		tfMap["sse_aws_kms_key_id"] = aws.StringValue(v)
+		tfMap["sse_aws_kms_key_id"] = aws.ToString(v)
 	}
 
 	return tfMap

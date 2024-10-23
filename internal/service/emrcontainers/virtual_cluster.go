@@ -9,14 +9,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emrcontainers"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/emrcontainers"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emrcontainers/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,7 +28,7 @@ import (
 
 // @SDKResource("aws_emrcontainers_virtual_cluster", name="Virtual Cluster")
 // @Tags(identifierAttribute="arn")
-func ResourceVirtualCluster() *schema.Resource {
+func resourceVirtualCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualClusterCreate,
 		ReadWithoutTimeout:   resourceVirtualClusterRead,
@@ -42,7 +44,7 @@ func ResourceVirtualCluster() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +55,7 @@ func ResourceVirtualCluster() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
@@ -74,7 +76,7 @@ func ResourceVirtualCluster() *schema.Resource {
 										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"namespace": {
+												names.AttrNamespace: {
 													Type:     schema.TypeString,
 													Optional: true,
 													ForceNew: true,
@@ -85,16 +87,16 @@ func ResourceVirtualCluster() *schema.Resource {
 								},
 							},
 						},
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(emrcontainers.ContainerProviderType_Values(), false),
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ContainerProviderType](),
 						},
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -113,10 +115,9 @@ func ResourceVirtualCluster() *schema.Resource {
 
 func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
-	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
-
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &emrcontainers.CreateVirtualClusterInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -126,23 +127,22 @@ func resourceVirtualClusterCreate(ctx context.Context, d *schema.ResourceData, m
 		input.ContainerProvider = expandContainerProvider(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.CreateVirtualClusterWithContext(ctx, input)
+	output, err := conn.CreateVirtualCluster(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EMR Containers Virtual Cluster (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Id))
+	d.SetId(aws.ToString(output.Id))
 
 	return append(diags, resourceVirtualClusterRead(ctx, d, meta)...)
 }
 
 func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
-	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
-
-	vc, err := FindVirtualClusterByID(ctx, conn, d.Id())
+	vc, err := findVirtualClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Containers Virtual Cluster %s not found, removing from state", d.Id())
@@ -154,7 +154,7 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading EMR Containers Virtual Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", vc.Arn)
+	d.Set(names.AttrARN, vc.Arn)
 	if vc.ContainerProvider != nil {
 		if err := d.Set("container_provider", []interface{}{flattenContainerProvider(vc.ContainerProvider)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting container_provider: %s", err)
@@ -162,7 +162,7 @@ func resourceVirtualClusterRead(ctx context.Context, d *schema.ResourceData, met
 	} else {
 		d.Set("container_provider", nil)
 	}
-	d.Set("name", vc.Name)
+	d.Set(names.AttrName, vc.Name)
 
 	setTagsOut(ctx, vc.Tags)
 
@@ -176,15 +176,24 @@ func resourceVirtualClusterUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
+	conn := meta.(*conns.AWSClient).EMRContainersClient(ctx)
 
 	log.Printf("[INFO] Deleting EMR Containers Virtual Cluster: %s", d.Id())
-	_, err := conn.DeleteVirtualClusterWithContext(ctx, &emrcontainers.DeleteVirtualClusterInput{
+	_, err := conn.DeleteVirtualCluster(ctx, &emrcontainers.DeleteVirtualClusterInput{
 		Id: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, emrcontainers.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	// Not actually a validation exception
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "not found") {
+		return diags
+	}
+
+	// Not actually a validation exception
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "already terminated") {
 		return diags
 	}
 
@@ -192,117 +201,17 @@ func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "deleting EMR Containers Virtual Cluster (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitVirtualClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := waitVirtualClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EMR Containers Virtual Cluster (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func expandContainerProvider(tfMap map[string]interface{}) *emrcontainers.ContainerProvider {
-	if tfMap == nil {
-		return nil
-	}
+func findVirtualCluster(ctx context.Context, conn *emrcontainers.Client, input *emrcontainers.DescribeVirtualClusterInput) (*awstypes.VirtualCluster, error) {
+	output, err := conn.DescribeVirtualCluster(ctx, input)
 
-	apiObject := &emrcontainers.ContainerProvider{}
-
-	if v, ok := tfMap["id"].(string); ok && v != "" {
-		apiObject.Id = aws.String(v)
-	}
-
-	if v, ok := tfMap["info"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Info = expandContainerInfo(v[0].(map[string]interface{}))
-	}
-
-	if v, ok := tfMap["type"].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func expandContainerInfo(tfMap map[string]interface{}) *emrcontainers.ContainerInfo {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &emrcontainers.ContainerInfo{}
-
-	if v, ok := tfMap["eks_info"].([]interface{}); ok && len(v) > 0 {
-		apiObject.EksInfo = expandEKSInfo(v[0].(map[string]interface{}))
-	}
-
-	return apiObject
-}
-
-func expandEKSInfo(tfMap map[string]interface{}) *emrcontainers.EksInfo {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &emrcontainers.EksInfo{}
-
-	if v, ok := tfMap["namespace"].(string); ok && v != "" {
-		apiObject.Namespace = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func flattenContainerProvider(apiObject *emrcontainers.ContainerProvider) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Id; v != nil {
-		tfMap["id"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Info; v != nil {
-		tfMap["info"] = []interface{}{flattenContainerInfo(v)}
-	}
-
-	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
-	}
-
-	return tfMap
-}
-
-func flattenContainerInfo(apiObject *emrcontainers.ContainerInfo) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.EksInfo; v != nil {
-		tfMap["eks_info"] = []interface{}{flattenEKSInfo(v)}
-	}
-
-	return tfMap
-}
-
-func flattenEKSInfo(apiObject *emrcontainers.EksInfo) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Namespace; v != nil {
-		tfMap["namespace"] = aws.StringValue(v)
-	}
-
-	return tfMap
-}
-
-func findVirtualCluster(ctx context.Context, conn *emrcontainers.EMRContainers, input *emrcontainers.DescribeVirtualClusterInput) (*emrcontainers.VirtualCluster, error) {
-	output, err := conn.DescribeVirtualClusterWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, emrcontainers.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -320,7 +229,7 @@ func findVirtualCluster(ctx context.Context, conn *emrcontainers.EMRContainers, 
 	return output.VirtualCluster, nil
 }
 
-func FindVirtualClusterByID(ctx context.Context, conn *emrcontainers.EMRContainers, id string) (*emrcontainers.VirtualCluster, error) {
+func findVirtualClusterByID(ctx context.Context, conn *emrcontainers.Client, id string) (*awstypes.VirtualCluster, error) {
 	input := &emrcontainers.DescribeVirtualClusterInput{
 		Id: aws.String(id),
 	}
@@ -331,9 +240,9 @@ func FindVirtualClusterByID(ctx context.Context, conn *emrcontainers.EMRContaine
 		return nil, err
 	}
 
-	if state := aws.StringValue(output.State); state == emrcontainers.VirtualClusterStateTerminated {
+	if output.State == awstypes.VirtualClusterStateTerminated {
 		return nil, &retry.NotFoundError{
-			Message:     state,
+			Message:     string(output.State),
 			LastRequest: input,
 		}
 	}
@@ -341,9 +250,9 @@ func FindVirtualClusterByID(ctx context.Context, conn *emrcontainers.EMRContaine
 	return output, nil
 }
 
-func statusVirtualCluster(ctx context.Context, conn *emrcontainers.EMRContainers, id string) retry.StateRefreshFunc {
+func statusVirtualCluster(ctx context.Context, conn *emrcontainers.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVirtualClusterByID(ctx, conn, id)
+		output, err := findVirtualClusterByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -353,13 +262,13 @@ func statusVirtualCluster(ctx context.Context, conn *emrcontainers.EMRContainers
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.State), nil
+		return output, string(output.State), nil
 	}
 }
 
-func waitVirtualClusterDeleted(ctx context.Context, conn *emrcontainers.EMRContainers, id string, timeout time.Duration) (*emrcontainers.VirtualCluster, error) {
+func waitVirtualClusterDeleted(ctx context.Context, conn *emrcontainers.Client, id string, timeout time.Duration) (*awstypes.VirtualCluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{emrcontainers.VirtualClusterStateTerminating},
+		Pending: enum.Slice(awstypes.VirtualClusterStateTerminating),
 		Target:  []string{},
 		Refresh: statusVirtualCluster(ctx, conn, id),
 		Timeout: timeout,
@@ -368,9 +277,104 @@ func waitVirtualClusterDeleted(ctx context.Context, conn *emrcontainers.EMRConta
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*emrcontainers.VirtualCluster); ok {
+	if v, ok := outputRaw.(*awstypes.VirtualCluster); ok {
 		return v, err
 	}
 
 	return nil, err
+}
+
+func expandContainerProvider(tfMap map[string]interface{}) *awstypes.ContainerProvider {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ContainerProvider{}
+
+	if v, ok := tfMap[names.AttrID].(string); ok && v != "" {
+		apiObject.Id = aws.String(v)
+	}
+
+	if v, ok := tfMap["info"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Info = expandContainerInfo(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = awstypes.ContainerProviderType(v)
+	}
+
+	return apiObject
+}
+
+func expandContainerInfo(tfMap map[string]interface{}) awstypes.ContainerInfo {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.ContainerInfoMemberEksInfo{}
+
+	if v, ok := tfMap["eks_info"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Value = expandEKSInfo(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandEKSInfo(tfMap map[string]interface{}) awstypes.EksInfo {
+	apiObject := awstypes.EksInfo{}
+
+	if v, ok := tfMap[names.AttrNamespace].(string); ok && v != "" {
+		apiObject.Namespace = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenContainerProvider(apiObject *awstypes.ContainerProvider) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Id; v != nil {
+		tfMap[names.AttrID] = aws.ToString(v)
+	}
+
+	if v := apiObject.Info; v != nil {
+		tfMap["info"] = []interface{}{flattenContainerInfo(v)}
+	}
+
+	tfMap[names.AttrType] = string(apiObject.Type)
+
+	return tfMap
+}
+
+func flattenContainerInfo(apiObject awstypes.ContainerInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	switch v := apiObject.(type) {
+	case *awstypes.ContainerInfoMemberEksInfo:
+		tfMap["eks_info"] = []interface{}{flattenEKSInfo(&v.Value)}
+	}
+
+	return tfMap
+}
+
+func flattenEKSInfo(apiObject *awstypes.EksInfo) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Namespace; v != nil {
+		tfMap[names.AttrNamespace] = aws.ToString(v)
+	}
+
+	return tfMap
 }

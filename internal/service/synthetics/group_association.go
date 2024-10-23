@@ -9,14 +9,16 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/synthetics"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/synthetics"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_synthetics_group_association", name="Group Association")
@@ -44,7 +46,7 @@ func ResourceGroupAssociation() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"group_name": {
+			names.AttrGroupName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -55,17 +57,17 @@ func ResourceGroupAssociation() *schema.Resource {
 
 func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
+	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
 	canaryArn := d.Get("canary_arn").(string)
-	groupName := d.Get("group_name").(string)
+	groupName := d.Get(names.AttrGroupName).(string)
 
 	in := &synthetics.AssociateResourceInput{
 		ResourceArn:     aws.String(canaryArn),
 		GroupIdentifier: aws.String(groupName),
 	}
 
-	out, err := conn.AssociateResourceWithContext(ctx, in)
+	out, err := conn.AssociateResource(ctx, in)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "associating canary (%s) with group (%s): %s", canaryArn, groupName, err)
@@ -82,12 +84,12 @@ func resourceGroupAssociationCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
+	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
 	canaryArn, groupName, err := GroupAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	group, err := FindAssociatedGroup(ctx, conn, canaryArn, groupName)
@@ -95,7 +97,7 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Synthetics Group Association between canary (%s) and group (%s) not found, removing from state", canaryArn, groupName)
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -105,21 +107,21 @@ func resourceGroupAssociationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("canary_arn", canaryArn)
 	d.Set("group_arn", group.Arn)
 	d.Set("group_id", group.Id)
-	d.Set("group_name", group.Name)
+	d.Set(names.AttrGroupName, group.Name)
 
 	return diags
 }
 
 func resourceGroupAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
+	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Synthetics Group Association %s", d.Id())
 
 	canaryArn, groupName, err := GroupAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	in := &synthetics.DisassociateResourceInput{
@@ -127,9 +129,13 @@ func resourceGroupAssociationDelete(ctx context.Context, d *schema.ResourceData,
 		GroupIdentifier: aws.String(groupName),
 	}
 
-	_, err = conn.DisassociateResourceWithContext(ctx, in)
+	_, err = conn.DisassociateResource(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, synthetics.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "does not exist in group") {
 		return diags
 	}
 
