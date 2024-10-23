@@ -14,19 +14,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-var _ elasticsearchservice.EndpointResolverV2 = resolverSDKv2{}
+var _ elasticsearchservice.EndpointResolverV2 = resolverV2{}
 
-type resolverSDKv2 struct {
+type resolverV2 struct {
 	defaultResolver elasticsearchservice.EndpointResolverV2
 }
 
-func newEndpointResolverSDKv2() resolverSDKv2 {
-	return resolverSDKv2{
+func newEndpointResolverV2() resolverV2 {
+	return resolverV2{
 		defaultResolver: elasticsearchservice.NewDefaultEndpointResolverV2(),
 	}
 }
 
-func (r resolverSDKv2) ResolveEndpoint(ctx context.Context, params elasticsearchservice.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
+func (r resolverV2) ResolveEndpoint(ctx context.Context, params elasticsearchservice.EndpointParameters) (endpoint smithyendpoints.Endpoint, err error) {
 	params = params.WithDefaults()
 	useFIPS := aws.ToBool(params.UseFIPS)
 
