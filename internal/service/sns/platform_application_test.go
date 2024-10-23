@@ -268,7 +268,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
 					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role1ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "success_feedback_sample_rate", acctest.Ct25),
+					resource.TestCheckResourceAttr(resourceName, "success_feedback_sample_rate", "25"),
 				),
 			},
 			{
@@ -292,7 +292,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "platform", "GCM"),
 					resource.TestCheckResourceAttrPair(resourceName, "success_feedback_role_arn", role0ResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "success_feedback_sample_rate", acctest.Ct50),
+					resource.TestCheckResourceAttr(resourceName, "success_feedback_sample_rate", "50"),
 				),
 			},
 		},
@@ -353,8 +353,8 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 	}{
 		{
 			AttributeKey:         "success_feedback_sample_rate",
-			AttributeValue:       acctest.Ct100,
-			AttributeValueUpdate: acctest.Ct99,
+			AttributeValue:       "100",
+			AttributeValueUpdate: "99",
 		},
 	}
 
