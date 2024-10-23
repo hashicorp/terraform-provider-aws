@@ -640,8 +640,11 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Protocol = awstypes.ProtocolEnum(v.(string))
 		}
 
-		if v, ok := d.GetOk("ssl_policy"); ok {
-			input.SslPolicy = aws.String(v.(string))
+		if d.HasChange("ssl_policy") {
+			v := d.Get("ssl_policy")
+			if v.(string) != "" {
+				input.SslPolicy = aws.String(v.(string))
+			}
 		}
 
 		attributes = append(attributes, listenerAttributes.expand(d, awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)), true)...)
