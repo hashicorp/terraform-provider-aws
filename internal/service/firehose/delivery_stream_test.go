@@ -1007,6 +1007,9 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_mskClusterSource(t *testing.T) {
 }
 
 func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
+	// "InvalidArgumentException: Role ... is not authorized to perform: glue:GetTable for the given table or the table does not exist."
+	acctest.Skip(t, "Unresolvable Glue permission issue")
+
 	ctx := acctest.Context(t)
 	var stream types.DeliveryStreamDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
