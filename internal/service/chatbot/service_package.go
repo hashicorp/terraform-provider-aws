@@ -18,7 +18,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return chatbot.NewFromConfig(cfg,
-		chatbot.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		chatbot.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *chatbot.Options) {
 			if config["partition"].(string) == names.StandardPartitionID {

@@ -15,10 +15,8 @@ import (
 )
 
 type ServiceDatum struct {
-	SDKVersion         int
-	GoPackage          string
-	GoV1ClientTypeName string
-	ProviderNameUpper  string
+	GoPackage         string
+	ProviderNameUpper string
 }
 
 type TemplateData struct {
@@ -49,14 +47,13 @@ func main() {
 			continue
 		}
 
-		s := ServiceDatum{
-			ProviderNameUpper: l.ProviderNameUpper(),
-			SDKVersion:        l.SDKVersion(),
-			GoPackage:         l.GoPackageName(),
+		if l.IsClientSDKV1() {
+			continue
 		}
 
-		if l.IsClientSDKV1() {
-			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
+		s := ServiceDatum{
+			ProviderNameUpper: l.ProviderNameUpper(),
+			GoPackage:         l.GoPackageName(),
 		}
 
 		td.Services = append(td.Services, s)

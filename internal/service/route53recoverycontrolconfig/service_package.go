@@ -17,7 +17,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return r53rcc.NewFromConfig(cfg,
-		r53rcc.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		r53rcc.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *r53rcc.Options) {
 			// Always override the service region
