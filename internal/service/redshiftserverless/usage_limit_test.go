@@ -34,7 +34,7 @@ func TestAccRedshiftServerlessUsageLimit_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_redshiftserverless_workgroup.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "amount", acctest.Ct60),
+					resource.TestCheckResourceAttr(resourceName, "amount", "60"),
 					resource.TestCheckResourceAttr(resourceName, "usage_type", "serverless-compute"),
 					resource.TestCheckResourceAttr(resourceName, "breach_action", "log"),
 					resource.TestCheckResourceAttr(resourceName, "period", "monthly"),
@@ -50,7 +50,7 @@ func TestAccRedshiftServerlessUsageLimit_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsageLimitExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, "aws_redshiftserverless_workgroup.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "amount", acctest.Ct120),
+					resource.TestCheckResourceAttr(resourceName, "amount", "120"),
 				),
 			},
 		},
