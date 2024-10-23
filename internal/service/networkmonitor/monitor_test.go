@@ -36,7 +36,7 @@ func TestAccNetworkMonitorMonitor_basic(t *testing.T) {
 				Config: testAccMonitorConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "aggregation_period", acctest.Ct60),
+					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "60"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "networkmonitor", fmt.Sprintf("monitor/%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "monitor_name"),
 					resource.TestCheckResourceAttr(resourceName, "monitor_name", rName),
@@ -55,7 +55,7 @@ func TestAccNetworkMonitorMonitor_basic(t *testing.T) {
 				Config: testAccMonitorConfig_aggregationPeriod(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "aggregation_period", acctest.Ct30),
+					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "30"),
 				),
 			},
 		},
@@ -100,7 +100,7 @@ func TestAccNetworkMonitorMonitor_aggregationPeriod(t *testing.T) {
 				Config: testAccMonitorConfig_aggregationPeriod(rName, 30),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "aggregation_period", acctest.Ct30),
+					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "30"),
 				),
 			},
 			{
@@ -112,7 +112,7 @@ func TestAccNetworkMonitorMonitor_aggregationPeriod(t *testing.T) {
 				Config: testAccMonitorConfig_aggregationPeriod(rName, 60),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "aggregation_period", acctest.Ct60),
+					resource.TestCheckResourceAttr(resourceName, "aggregation_period", "60"),
 				),
 			},
 		},
