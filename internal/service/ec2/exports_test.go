@@ -69,6 +69,7 @@ var (
 	ResourceRouteTableAssociation                         = resourceRouteTableAssociation
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
+	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
 	ResourceSnapshotCreateVolumePermission                = resourceSnapshotCreateVolumePermission
 	ResourceSpotDataFeedSubscription                      = resourceSpotDataFeedSubscription
 	ResourceSpotFleetRequest                              = resourceSpotFleetRequest

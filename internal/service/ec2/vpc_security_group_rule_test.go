@@ -360,6 +360,31 @@ func TestAccVPCSecurityGroupRule_egress(t *testing.T) {
 	})
 }
 
+func TestAccVPCSecurityGroupRule_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.SecurityGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_security_group_rule.test"
+	sgResourceName := "aws_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecurityGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupRuleConfig_egress(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSecurityGroupExists(ctx, sgResourceName, &group),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupRule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccVPCSecurityGroupRule_selfReference(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group awstypes.SecurityGroup
@@ -992,10 +1017,11 @@ func TestAccVPCSecurityGroupRule_DescriptionAllPorts_nonZeroPorts(t *testing.T) 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSecurityGroupRuleImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"from_port", "to_port"},
 			},
 			{
 				Config: testAccVPCSecurityGroupRuleConfig_descriptionAllPortsNonZeroPorts(rName, "description2"),
@@ -1065,16 +1091,18 @@ func TestAccVPCSecurityGroupRule_MultipleRuleSearching_allProtocolCrash(t *testi
 				),
 			},
 			{
-				ResourceName:      resource1Name,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resource1Name),
-				ImportStateVerify: true,
+				ResourceName:            resource1Name,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSecurityGroupRuleImportStateIdFunc(resource1Name),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"to_port"},
 			},
 			{
-				ResourceName:      resource2Name,
-				ImportState:       true,
-				ImportStateIdFunc: testAccSecurityGroupRuleImportStateIdFunc(resource2Name),
-				ImportStateVerify: true,
+				ResourceName:            resource2Name,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccSecurityGroupRuleImportStateIdFunc(resource2Name),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"to_port"},
 			},
 		},
 	})
