@@ -23,7 +23,7 @@ func TestAccPinpointBaiduChannel_basic(t *testing.T) {
 	var channel awstypes.BaiduChannelResponse
 	resourceName := "aws_pinpoint_baidu_channel.channel"
 
-	apiKey := acctest.Ct123
+	apiKey := "123"
 	apikeyUpdated := "234"
 	secretKey := "456"
 
