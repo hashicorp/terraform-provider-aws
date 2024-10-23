@@ -63,7 +63,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return route53profiles.NewFromConfig(cfg,
-		route53profiles.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		route53profiles.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }
