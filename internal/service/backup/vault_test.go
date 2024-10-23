@@ -172,7 +172,7 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "1"),
 				),
 			},
 		},
