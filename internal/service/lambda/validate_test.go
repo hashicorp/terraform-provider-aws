@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -106,7 +105,7 @@ func TestValidQualifier(t *testing.T) {
 	t.Parallel()
 
 	validNames := []string{
-		acctest.Ct123,
+		"123",
 		"prod",
 		"PROD",
 		"MyTestEnv",
@@ -143,7 +142,7 @@ func TestValidPolicyStatementID(t *testing.T) {
 	validNames := []string{
 		"YadaHereAndThere",
 		"Valid-5tatement_Id",
-		acctest.Ct1234,
+		"1234",
 	}
 	for _, v := range validNames {
 		_, errors := tflambda.ValidPolicyStatementID()(v, "statement_id")
