@@ -127,7 +127,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `alarms` - (Optional) Information about the CloudWatch alarms. [See below](#alarms).
-* `availability_zone_rebalancing` - (Optional) ECS automatically redistributes tasks within a service across Availability Zones (AZs) to mitigate the risk of impaired application availability due to underlying infrastructure failures and task lifecycle activities. The valid values are `ENABLED` AND `DISABLED`. Defaults to `DISABLED`.
+* `availability_zone_rebalancing` - (Optional) ECS automatically redistributes tasks within a service across Availability Zones (AZs) to mitigate the risk of impaired application availability due to underlying infrastructure failures and task lifecycle activities. The valid values are `ENABLED` and `DISABLED`. Defaults to `DISABLED`.
 * `capacity_provider_strategy` - (Optional) Capacity provider strategies to use for the service. Can be one or more. These can be updated without destroying and recreating the service only if `force_new_deployment = true` and not changing from 0 `capacity_provider_strategy` blocks to greater than 0, or vice versa. See below. Conflicts with `launch_type`.
 * `cluster` - (Optional) ARN of an ECS cluster.
 * `deployment_circuit_breaker` - (Optional) Configuration block for deployment circuit breaker. See below.
