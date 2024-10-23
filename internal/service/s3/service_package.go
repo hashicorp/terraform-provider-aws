@@ -20,7 +20,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return s3.NewFromConfig(cfg,
-		s3.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		s3.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *s3.Options) {
 			if o.Region == names.USEast1RegionID && config["s3_us_east_1_regional_endpoint"].(string) != "regional" {
