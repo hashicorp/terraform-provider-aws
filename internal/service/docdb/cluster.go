@@ -393,6 +393,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
 		}
 
+		if v, ok := d.GetOk("master_password"); ok {
+			inputM.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
+		}
+
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
 			return conn.RestoreDBClusterFromSnapshot(ctx, input)
 		}, errCodeInvalidParameterValue, "IAM role ARN value is invalid or does not include the required permissions")
