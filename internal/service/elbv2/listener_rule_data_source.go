@@ -287,6 +287,10 @@ func (d *dataSourceListenerRule) ConfigValidators(_ context.Context) []datasourc
 			path.MatchRoot("listener_arn"),
 			path.MatchRoot(names.AttrPriority),
 		),
+		datasourcevalidator.Conflicting(
+			path.MatchRoot(names.AttrARN),
+			path.MatchRoot(names.AttrPriority),
+		),
 	}
 }
 
