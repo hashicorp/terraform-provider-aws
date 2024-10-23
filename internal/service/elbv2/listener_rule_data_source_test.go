@@ -377,6 +377,200 @@ func TestAccELBV2ListenerRuleDataSource_actionAuthenticateOIDC(t *testing.T) {
 	})
 }
 
+func TestAccELBV2ListenerRuleDataSource_actionFixedResponse(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+	resourceName := "aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_actionFixedResponse(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"authenticate_cognito": knownvalue.Null(),
+							"authenticate_oidc":    knownvalue.Null(),
+							"fixed_response":       knownvalue.NotNull(),
+							"forward":              knownvalue.Null(),
+							"order":                knownvalue.NotNull(),
+							"redirect":             knownvalue.Null(),
+							"target_group_arn":     knownvalue.Null(),
+							names.AttrType:         knownvalue.NotNull(),
+						}),
+					})),
+
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("order"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("order"),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey(names.AttrType),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey(names.AttrType),
+						compare.ValuesSame(),
+					),
+
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("fixed_response"), knownvalue.NotNull()),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("fixed_response"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("fixed_response").AtSliceIndex(0),
+						compare.ValuesSame(),
+					),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_actionForwardWeightedStickiness(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+	resourceName := "aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_actionForwardWeightedStickiness(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"authenticate_cognito": knownvalue.Null(),
+							"authenticate_oidc":    knownvalue.Null(),
+							"fixed_response":       knownvalue.Null(),
+							"forward":              knownvalue.NotNull(),
+							"order":                knownvalue.NotNull(),
+							"redirect":             knownvalue.Null(),
+							"target_group_arn":     knownvalue.Null(),
+							names.AttrType:         knownvalue.NotNull(),
+						}),
+					})),
+
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("order"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("order"),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey(names.AttrType),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey(names.AttrType),
+						compare.ValuesSame(),
+					),
+
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward"), knownvalue.ObjectExact(map[string]knownvalue.Check{
+						"stickiness":   knownvalue.NotNull(),
+						"target_group": knownvalue.NotNull(),
+					})),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtMapKey("stickiness"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtSliceIndex(0).AtMapKey("stickiness").AtSliceIndex(0),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtMapKey("target_group"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("forward").AtSliceIndex(0).AtMapKey("target_group"),
+						compare.ValuesSame(),
+					),
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRuleDataSource_actionRedirect(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var listenerRule awstypes.Rule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lb_listener_rule.test"
+	resourceName := "aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleDataSourceConfig_actionRedirect(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, dataSourceName, &listenerRule),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "listener_arn", resourceName, "listener_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrPriority, resourceName, names.AttrPriority),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"authenticate_cognito": knownvalue.Null(),
+							"authenticate_oidc":    knownvalue.Null(),
+							"fixed_response":       knownvalue.Null(),
+							"forward":              knownvalue.Null(),
+							"order":                knownvalue.NotNull(),
+							"redirect":             knownvalue.NotNull(),
+							"target_group_arn":     knownvalue.Null(),
+							names.AttrType:         knownvalue.NotNull(),
+						}),
+					})),
+
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("order"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("order"),
+						compare.ValuesSame(),
+					),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey(names.AttrType),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey(names.AttrType),
+						compare.ValuesSame(),
+					),
+
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("redirect"), knownvalue.NotNull()),
+					statecheck.CompareValuePairs(
+						dataSourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("redirect"),
+						resourceName, tfjsonpath.New(names.AttrAction).AtSliceIndex(0).AtMapKey("redirect").AtSliceIndex(0),
+						compare.ValuesSame(),
+					),
+				},
+			},
+		},
+	})
+}
+
 func TestAccELBV2ListenerRuleDataSource_conditionHostHeader(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -783,6 +977,183 @@ resource "aws_cognito_user_pool_domain" "test" {
   user_pool_id = aws_cognito_user_pool.test.id
 }
 `, rName))
+}
+
+func testAccListenerRuleDataSourceConfig_actionFixedResponse(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Hello"
+      status_code  = "200"
+    }
+  }
+
+  condition {
+    host_header {
+      values = ["example.com"]
+    }
+  }
+}
+`)
+}
+
+func testAccListenerRuleDataSourceConfig_actionForwardWeightedStickiness(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type = "forward"
+
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.test1.arn
+        weight = 1
+      }
+
+      target_group {
+        arn    = aws_lb_target_group.test2.arn
+        weight = 1
+      }
+
+      stickiness {
+        enabled  = true
+        duration = 3600
+      }
+    }
+  }
+
+  condition {
+    host_header {
+      values = ["example.com"]
+    }
+  }
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTP"
+  port              = "80"
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test1.arn
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+}
+
+resource "aws_lb_target_group" "test1" {
+  name     = "%[1]s-1"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+resource "aws_lb_target_group" "test2" {
+  name     = "%[1]s-2"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName[:30]))
+}
+
+func testAccListenerRuleDataSourceConfig_actionRedirect(rName string) string {
+	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithHTTPListener(rName), `
+data "aws_lb_listener_rule" "test" {
+  arn = aws_lb_listener_rule.test.arn
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+  priority     = 100
+
+  action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      query       = "param1=value1"
+      status_code = "HTTP_301"
+    }
+  }
+
+  condition {
+    host_header {
+      values = ["example.com"]
+    }
+  }
+}
+`)
 }
 
 func testAccListenerRuleDataSourceConfig_conditionHostHeader(rName string) string {
