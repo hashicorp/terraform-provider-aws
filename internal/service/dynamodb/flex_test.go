@@ -64,7 +64,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberL{
 					Value: []awstypes.AttributeValue{
 						&awstypes.AttributeValueMemberS{Value: "one"},
-						&awstypes.AttributeValueMemberN{Value: acctest.Ct2},
+						&awstypes.AttributeValueMemberN{Value: "2"},
 					},
 				},
 			},
@@ -75,7 +75,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberM{
 					Value: map[string]awstypes.AttributeValue{
 						"one": &awstypes.AttributeValueMemberS{Value: "one"},
-						"two": &awstypes.AttributeValueMemberN{Value: acctest.Ct2},
+						"two": &awstypes.AttributeValueMemberN{Value: "2"},
 					},
 				},
 			},
@@ -84,7 +84,7 @@ func TestExpandTableItemAttributes(t *testing.T) {
 			input: `{"attr":{"N":"123"}}`,
 			expected: map[string]awstypes.AttributeValue{
 				"attr": &awstypes.AttributeValueMemberN{
-					Value: acctest.Ct123,
+					Value: "123",
 				},
 			},
 		},
@@ -216,7 +216,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberL{
 					Value: []awstypes.AttributeValue{
 						&awstypes.AttributeValueMemberS{Value: "one"},
-						&awstypes.AttributeValueMemberN{Value: acctest.Ct2},
+						&awstypes.AttributeValueMemberN{Value: "2"},
 					},
 				},
 			},
@@ -227,7 +227,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 				"attr": &awstypes.AttributeValueMemberM{
 					Value: map[string]awstypes.AttributeValue{
 						"one": &awstypes.AttributeValueMemberS{Value: "one"},
-						"two": &awstypes.AttributeValueMemberN{Value: acctest.Ct2},
+						"two": &awstypes.AttributeValueMemberN{Value: "2"},
 					},
 				},
 			},
@@ -236,7 +236,7 @@ func TestFlattenTableItemAttributes(t *testing.T) {
 		"N": {
 			attrs: map[string]awstypes.AttributeValue{
 				"attr": &awstypes.AttributeValueMemberN{
-					Value: acctest.Ct123,
+					Value: "123",
 				},
 			},
 			expected: `{"attr":{"N":"123"}}`,
