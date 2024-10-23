@@ -23,6 +23,7 @@ ENHANCEMENTS:
 * resource/aws_lakeformation_data_lake_settings: Add `parameters` map argument enabling `CROSS_ACCOUNT_VERSION` to be set ([#39826](https://github.com/hashicorp/terraform-provider-aws/issues/39826))
 * resource/aws_lb: Add `enable_zonal_shift` argument ([#39585](https://github.com/hashicorp/terraform-provider-aws/issues/39585))
 * resource/aws_lb_listener: Add `tcp_idle_timeout_seconds` argument ([#39585](https://github.com/hashicorp/terraform-provider-aws/issues/39585))
+* resource/aws_route53profiles_association: Add regex and string length validation for `name` argument ([#39798](https://github.com/hashicorp/terraform-provider-aws/issues/39798))
 * resource/aws_s3_bucket_object: Remove the call to `kms:DescribeKey` for the S3 default AWS managed key (`alias/aws/s3`) on Read ([#39782](https://github.com/hashicorp/terraform-provider-aws/issues/39782))
 * resource/aws_s3_object: Remove the call to `kms:DescribeKey` for the S3 default AWS managed key (`alias/aws/s3`) on Read ([#39782](https://github.com/hashicorp/terraform-provider-aws/issues/39782))
 * resource/aws_s3_object_copy: Remove the call to `kms:DescribeKey` for the S3 default AWS managed key (`alias/aws/s3`) on Read ([#39782](https://github.com/hashicorp/terraform-provider-aws/issues/39782))
