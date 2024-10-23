@@ -71,7 +71,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return identitystore.NewFromConfig(cfg,
-		identitystore.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		identitystore.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }
