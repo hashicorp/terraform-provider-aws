@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -20,7 +19,7 @@ func TestValidLogGroupName(t *testing.T) {
 		"ValidLogGroupName",
 		"ValidLogGroup.Name",
 		"valid/Log-group",
-		acctest.Ct1234,
+		"1234",
 		"YadaValid#0123",
 		"Also_valid-name",
 		strings.Repeat("W", 512),
@@ -57,7 +56,7 @@ func TestValidLogGroupNamePrefix(t *testing.T) {
 		"ValidLogGroupName",
 		"ValidLogGroup.Name",
 		"valid/Log-group",
-		acctest.Ct1234,
+		"1234",
 		"YadaValid#0123",
 		"Also_valid-name",
 		strings.Repeat("W", 483),
@@ -94,7 +93,7 @@ func TestValidLogMetricFilterName(t *testing.T) {
 		"YadaHereAndThere",
 		"Valid-5Metric_Name",
 		"This . is also %% valid@!)+(",
-		acctest.Ct1234,
+		"1234",
 		strings.Repeat("W", 512),
 	}
 	for _, v := range validNames {
@@ -126,7 +125,7 @@ func TestValidLogMetricTransformationName(t *testing.T) {
 		"YadaHereAndThere",
 		"Valid-5Metric_Name",
 		"This . is also %% valid@!)+(",
-		acctest.Ct1234,
+		"1234",
 		"",
 		strings.Repeat("W", 255),
 	}
