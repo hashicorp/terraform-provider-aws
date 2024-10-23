@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 )
 
@@ -26,7 +25,7 @@ func TestCertificateAuthorityMigrateState(t *testing.T) {
 				"permanent_deletion_time_in_days": "",
 			},
 			Expected: map[string]string{
-				"permanent_deletion_time_in_days": acctest.Ct30,
+				"permanent_deletion_time_in_days": "30",
 			},
 		},
 	}
