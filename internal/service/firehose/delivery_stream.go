@@ -4247,8 +4247,8 @@ func flattenIcebergDestinationDescription(apiObject *types.IcebergDestinationDes
 		tableConfigurations := make([]map[string]interface{}, 0, len(apiObject.DestinationTableConfigurationList))
 		for _, table := range apiObject.DestinationTableConfigurationList {
 			tableConfigurations = append(tableConfigurations, map[string]interface{}{
-				names.AttrDatabaseName:          aws.ToString(table.DestinationDatabaseName),
-				names.AttrTableName:             aws.ToString(table.DestinationTableName),
+				names.AttrDatabaseName:   aws.ToString(table.DestinationDatabaseName),
+				names.AttrTableName:      aws.ToString(table.DestinationTableName),
 				"s3_error_output_prefix": table.S3ErrorOutputPrefix,
 				"unique_keys":            table.UniqueKeys,
 			})
