@@ -17,7 +17,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return costandusagereportservice.NewFromConfig(cfg,
-		costandusagereportservice.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		costandusagereportservice.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *costandusagereportservice.Options) {
 			if config["partition"].(string) == names.StandardPartitionID {
