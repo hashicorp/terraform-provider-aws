@@ -44,14 +44,14 @@ func TestAccBudgetsBudgetAction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action_type", "APPLY_IAM_POLICY"),
 					resource.TestCheckResourceAttr(resourceName, "approval_model", string(awstypes.ApprovalModelAuto)),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "ACTUAL"),
-					resource.TestCheckResourceAttr(resourceName, "action_threshold.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "action_threshold.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.0.action_threshold_type", "ABSOLUTE_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.0.action_threshold_value", thresholdValue),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "definition.0.iam_action_definition.0.policy_arn", "aws_iam_policy.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.0.roles.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "subscriber.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.0.roles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subscriber.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ActionStatusStandby)),
 				),
 			},
@@ -70,7 +70,7 @@ func TestAccBudgetsBudgetAction_triggeredAutomatic(t *testing.T) {
 	resourceName := "aws_budgets_budget_action.test"
 	var conf awstypes.Action
 
-	const thresholdValue = acctest.Ct100
+	const thresholdValue = "100"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
@@ -88,14 +88,14 @@ func TestAccBudgetsBudgetAction_triggeredAutomatic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action_type", "APPLY_IAM_POLICY"),
 					resource.TestCheckResourceAttr(resourceName, "approval_model", string(awstypes.ApprovalModelAuto)),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "ACTUAL"),
-					resource.TestCheckResourceAttr(resourceName, "action_threshold.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "action_threshold.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.0.action_threshold_type", "ABSOLUTE_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.0.action_threshold_value", thresholdValue),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "definition.0.iam_action_definition.0.policy_arn", "aws_iam_policy.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.0.roles.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "subscriber.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.0.roles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subscriber.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 				),
 			},
@@ -114,7 +114,7 @@ func TestAccBudgetsBudgetAction_triggeredManual(t *testing.T) {
 	resourceName := "aws_budgets_budget_action.test"
 	var conf awstypes.Action
 
-	const thresholdValue = acctest.Ct100
+	const thresholdValue = "100"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BudgetsEndpointID) },
@@ -132,14 +132,14 @@ func TestAccBudgetsBudgetAction_triggeredManual(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action_type", "APPLY_IAM_POLICY"),
 					resource.TestCheckResourceAttr(resourceName, "approval_model", string(awstypes.ApprovalModelManual)),
 					resource.TestCheckResourceAttr(resourceName, "notification_type", "ACTUAL"),
-					resource.TestCheckResourceAttr(resourceName, "action_threshold.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "action_threshold.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.0.action_threshold_type", "ABSOLUTE_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "action_threshold.0.action_threshold_value", thresholdValue),
-					resource.TestCheckResourceAttr(resourceName, "definition.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "definition.0.iam_action_definition.0.policy_arn", "aws_iam_policy.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.0.roles.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "subscriber.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.iam_action_definition.0.roles.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subscriber.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus), // Race condition between "STANDBY" and "PENDING"
 				),
 			},
@@ -170,7 +170,7 @@ func TestAccBudgetsBudgetAction_tags(t *testing.T) {
 				Config: testAccBudgetActionConfig_tags1(rName, string(awstypes.ApprovalModelManual), thresholdValue, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -183,7 +183,7 @@ func TestAccBudgetsBudgetAction_tags(t *testing.T) {
 				Config: testAccBudgetActionConfig_tags2(rName, string(awstypes.ApprovalModelManual), thresholdValue, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -192,7 +192,7 @@ func TestAccBudgetsBudgetAction_tags(t *testing.T) {
 				Config: testAccBudgetActionConfig_tags1(rName, string(awstypes.ApprovalModelManual), thresholdValue, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -213,7 +213,7 @@ func TestAccBudgetsBudgetAction_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBudgetActionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelAuto), acctest.Ct100),
+				Config: testAccBudgetActionConfig_basic(rName, string(awstypes.ApprovalModelAuto), "100"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccBudgetActionExists(ctx, resourceName, &conf),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbudgets.ResourceBudgetAction(), resourceName),
