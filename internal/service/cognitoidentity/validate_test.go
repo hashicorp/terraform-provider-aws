@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfcognitoidentity "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -17,7 +16,7 @@ func TestValidIdentityPoolName(t *testing.T) {
 	t.Parallel()
 
 	validValues := []string{
-		acctest.Ct123,
+		"123",
 		"1 2 3",
 		"foo",
 		"foo bar",
@@ -123,7 +122,7 @@ func TestValidProviderDeveloperName(t *testing.T) {
 	t.Parallel()
 
 	validValues := []string{
-		acctest.Ct1,
+		"1",
 		"foo",
 		"1.2",
 		"foo1-bar2-baz3",
