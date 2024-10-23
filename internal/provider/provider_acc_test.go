@@ -13,7 +13,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/aws/smithy-go/middleware"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -734,8 +734,8 @@ func testAccCheckSTSRegion(ctx context.Context, t *testing.T, p **schema.Provide
 		var stsRegion string
 
 		stsClient := (*p).Meta().(*conns.AWSClient).STSClient(ctx)
-		_, err := stsClient.GetCallerIdentity(ctx, &sts_sdkv2.GetCallerIdentityInput{},
-			func(opts *sts_sdkv2.Options) {
+		_, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{},
+			func(opts *sts.Options) {
 				opts.APIOptions = append(opts.APIOptions,
 					addRegionRetrieverMiddleware(&stsRegion),
 					addCancelRequestMiddleware(),

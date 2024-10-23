@@ -6,8 +6,8 @@ import (
 	"context"
 
 {{ if .GenerateClient }}
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
 {{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -122,11 +122,11 @@ func (p *servicePackage) ServicePackageName() string {
 
 {{- if .GenerateClient }}
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*{{ .GoV2Package }}_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*{{ .GoV2Package }}.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return {{ .GoV2Package }}_sdkv2.NewFromConfig(cfg,
-		{{ .GoV2Package }}_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return {{ .GoV2Package }}.NewFromConfig(cfg,
+		{{ .GoV2Package }}.WithEndpointResolverV2(newEndpointResolverSDKv2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

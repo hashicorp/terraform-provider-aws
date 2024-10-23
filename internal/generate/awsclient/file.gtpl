@@ -5,14 +5,14 @@ import (
 	"context"
 
 {{ range .Services }}
-	{{ .GoPackage }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoPackage }}"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .GoPackage }}"
 {{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 {{ range .Services }}
-func (c *AWSClient) {{ .ProviderNameUpper }}Client(ctx context.Context) *{{ .GoPackage }}_sdkv2.Client {
-	return errs.Must(client[*{{ .GoPackage }}_sdkv2.Client](ctx, c, names.{{ .ProviderNameUpper }}, make(map[string]any)))
+func (c *AWSClient) {{ .ProviderNameUpper }}Client(ctx context.Context) *{{ .GoPackage }}.Client {
+	return errs.Must(client[*{{ .GoPackage }}.Client](ctx, c, names.{{ .ProviderNameUpper }}, make(map[string]any)))
 }
 {{ end }}
