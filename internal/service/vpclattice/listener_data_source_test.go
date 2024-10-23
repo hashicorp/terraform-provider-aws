@@ -102,9 +102,9 @@ func TestAccVPCLatticeListenerDataSource_forwardMultiTargetGroupHTTP(t *testing.
 				Config: testAccListenerDataSourceConfig_forwardMultiTargetGroupHTTP(rName, targetGroupName1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.0.forward.0.target_groups.0.target_group_identifier", targetGroupResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(dataSourceName, "default_action.0.forward.0.target_groups.0.weight", acctest.Ct80),
+					resource.TestCheckResourceAttr(dataSourceName, "default_action.0.forward.0.target_groups.0.weight", "80"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "default_action.0.forward.0.target_groups.1.target_group_identifier", targetGroup1ResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(dataSourceName, "default_action.0.forward.0.target_groups.1.weight", acctest.Ct20),
+					resource.TestCheckResourceAttr(dataSourceName, "default_action.0.forward.0.target_groups.1.weight", "20"),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`service/svc-.*/listener/listener-.+`)),
 				),
 			},
