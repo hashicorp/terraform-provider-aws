@@ -34,18 +34,18 @@ import (
 {{- if and .IncludeComments .AWSGoSDKV2 }}
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// awstypes.<Type Name>.
 {{- end }}
 	"context"
 {{ if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 {{- else }}
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
+	"github.com/aws/aws-sdk-go/service/{{ .SDKPackage }}"
 {{- end }}
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
