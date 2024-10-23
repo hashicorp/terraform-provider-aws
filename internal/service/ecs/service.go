@@ -1097,8 +1097,9 @@ func resourceService() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 						"port_name": {
-							Type:     schema.TypeString,
-							Optional: false,
+							Type:         schema.TypeString,
+							Optional:     false,
+							ValidateFunc: validation.StringLenBetween(1, 64),
 						},
 					},
 				},
