@@ -78,7 +78,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.50.2
 	github.com/aws/aws-sdk-go-v2/service/connect v1.113.2
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.21.2
-	github.com/aws/aws-sdk-go-v2/service/controltower v1.18.2
+	github.com/aws/aws-sdk-go-v2/service/controltower v1.18.3
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.10.2
@@ -133,7 +133,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/iam v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.27.2
-	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.37.3
+	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.19.2
@@ -160,7 +160,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/location v1.42.2
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.31.2
-	github.com/aws/aws-sdk-go-v2/service/m2 v1.17.2
+	github.com/aws/aws-sdk-go-v2/service/m2 v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.61.2
@@ -196,7 +196,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.77.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.20.2
-	github.com/aws/aws-sdk-go-v2/service/rds v1.87.3
+	github.com/aws/aws-sdk-go-v2/service/rds v1.88.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.23.2
