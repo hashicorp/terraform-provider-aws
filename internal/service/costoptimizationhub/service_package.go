@@ -17,7 +17,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return costoptimizationhub.NewFromConfig(cfg,
-		costoptimizationhub.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		costoptimizationhub.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *costoptimizationhub.Options) {
 			if config["partition"].(string) == names.StandardPartitionID {
