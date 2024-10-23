@@ -19,6 +19,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 		{
 			Factory: newJobDefinitionDataSource,
 			Name:    "Job Definition",
+			Tags:    &types.ServicePackageResourceTags{},
 		},
 	}
 }
