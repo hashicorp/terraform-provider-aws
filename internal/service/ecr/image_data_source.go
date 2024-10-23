@@ -6,8 +6,10 @@ package ecr
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"slices"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
@@ -18,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -56,6 +59,12 @@ func dataSourceImage() *schema.Resource {
 			"image_uri": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"image_tag_regex": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  validation.StringIsValidRegExp,
+				ConflictsWith: []string{"image_digest", "image_tag"},
 			},
 			names.AttrMostRecent: {
 				Type:          schema.TypeBool,
@@ -109,7 +118,11 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		input.RegistryId = aws.String(v.(string))
 	}
 
-	imageDetails, err := findImageDetails(ctx, conn, input)
+	var imageTagRegexp *regexp.Regexp = nil
+	if v, ok := d.GetOk("image_tag_regex"); ok {
+		imageTagRegexp = regexache.MustCompile(v.(string))
+	}
+	imageDetails, err := findImageDetails(ctx, conn, input, imageTagRegexp)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Images: %s", err)
@@ -161,7 +174,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func findImageDetails(ctx context.Context, conn *ecr.Client, input *ecr.DescribeImagesInput) ([]types.ImageDetail, error) {
+func findImageDetails(ctx context.Context, conn *ecr.Client, input *ecr.DescribeImagesInput, imageTagRegexp *regexp.Regexp) ([]types.ImageDetail, error) {
 	var output []types.ImageDetail
 
 	pages := ecr.NewDescribeImagesPaginator(conn, input)
@@ -179,7 +192,16 @@ func findImageDetails(ctx context.Context, conn *ecr.Client, input *ecr.Describe
 			return nil, err
 		}
 
-		output = append(output, page.ImageDetails...)
+		var imageDetails = page.ImageDetails
+		if imageTagRegexp != nil {
+			imageDetails = tfslices.Filter(page.ImageDetails, func(v types.ImageDetail) bool {
+				return tfslices.Any(v.ImageTags, func(t string) bool {
+					return imageTagRegexp.MatchString(t)
+				})
+			})
+		}
+
+		output = append(output, imageDetails...)
 	}
 
 	return output, nil
