@@ -43,8 +43,8 @@ func TestAccNeptuneParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "neptune1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -178,15 +178,15 @@ func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccParameterGroupConfig_basic(rName, "neptune_query_timeout", acctest.Ct25, "pending-reboot"),
+				Config: testAccParameterGroupConfig_basic(rName, "neptune_query_timeout", "25", "pending-reboot"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"apply_method":  "pending-reboot",
 						names.AttrName:  "neptune_query_timeout",
-						names.AttrValue: acctest.Ct25,
+						names.AttrValue: "25",
 					}),
 				),
 			},
@@ -197,7 +197,7 @@ func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 			},
 			// This test should be updated with a dynamic parameter when available
 			{
-				Config:      testAccParameterGroupConfig_basic(rName, "neptune_query_timeout", acctest.Ct25, "immediate"),
+				Config:      testAccParameterGroupConfig_basic(rName, "neptune_query_timeout", "25", "immediate"),
 				ExpectError: regexache.MustCompile(`cannot use immediate apply method for static parameter`),
 			},
 			// Test removing the configuration
@@ -206,7 +206,7 @@ func TestAccNeptuneParameterGroup_parameter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckParameterGroupAttributes(&v, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 				),
 			},
 		},
@@ -230,7 +230,7 @@ func TestAccNeptuneParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -243,7 +243,7 @@ func TestAccNeptuneParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -252,7 +252,7 @@ func TestAccNeptuneParameterGroup_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
