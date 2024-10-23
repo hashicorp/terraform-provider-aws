@@ -48,7 +48,6 @@ func resourceImagePipeline() *schema.Resource {
 			"container_recipe_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`), "valid container recipe ARN must be provided"),
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
@@ -91,7 +90,6 @@ func resourceImagePipeline() *schema.Resource {
 			"image_recipe_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
