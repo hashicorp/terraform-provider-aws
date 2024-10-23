@@ -51,7 +51,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return serverlessapplicationrepository.NewFromConfig(cfg,
-		serverlessapplicationrepository.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		serverlessapplicationrepository.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }
