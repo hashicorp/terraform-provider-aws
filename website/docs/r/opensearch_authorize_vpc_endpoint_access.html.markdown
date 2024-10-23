@@ -5,14 +5,7 @@ page_title: "AWS: aws_opensearch_authorize_vpc_endpoint_access"
 description: |-
   Terraform resource for managing an AWS OpenSearch Authorize Vpc Endpoint Access.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_opensearch_authorize_vpc_endpoint_access
 
 Terraform resource for managing an AWS OpenSearch Authorize Vpc Endpoint Access.
@@ -22,7 +15,11 @@ Terraform resource for managing an AWS OpenSearch Authorize Vpc Endpoint Access.
 ### Basic Usage
 
 ```terraform
-resource "aws_opensearch_authorize_vpc_endpoint_access" "example" {
+data "aws_caller_identity" "current" {}
+
+resource "aws_opensearch_authorize_vpc_endpoint_access" "test" {
+  domain_name = aws_opensearch_domain.test.domain_name
+  account = data.aws_caller_identity.current.account_id
 }
 ```
 
@@ -30,26 +27,19 @@ resource "aws_opensearch_authorize_vpc_endpoint_access" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `account` - (Required) AWS account ID to grant access to.
+* `domain_name` - (Required) Name of OpenSearch Service domain to provide access to.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Authorize Vpc Endpoint Access. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `authorized_principal` - Information about the Amazon Web Services account or service that was provided access to the domain. See [authorized principal](#authorized_principal) attribute for further details.
 
-## Timeouts
+### authorized_principal
 
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `principal` - IAM principal that is allowed to access to the domain.
+* `principal_type` - Type of principal.
 
 ## Import
 
