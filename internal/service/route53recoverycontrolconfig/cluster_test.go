@@ -38,7 +38,7 @@ func testAccCluster_basic(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "DEPLOYED"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_endpoints.#", acctest.Ct5),
+					resource.TestCheckResourceAttr(resourceName, "cluster_endpoints.#", "5"),
 				),
 			},
 			{
