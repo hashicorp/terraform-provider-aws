@@ -35,18 +35,43 @@ func TestAccDeployDeploymentConfig_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfigConfig_fleet(rName, 75),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeploymentConfigExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "zonal_config.#", acctest.Ct0),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDeployDeploymentConfig_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var config types.DeploymentConfigInfo
+	resourceName := "aws_codedeploy_deployment_config.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentConfigDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentConfigConfig_fleet(rName, 75),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentConfigExists(ctx, resourceName, &config),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodedeploy.ResourceDeploymentConfig(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
