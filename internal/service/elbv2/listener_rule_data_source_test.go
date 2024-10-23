@@ -725,12 +725,12 @@ func TestAccELBV2ListenerRuleDataSource_conditionQueryString(t *testing.T) {
 						expectKnownCondition("query_string", knownvalue.ObjectExact(map[string]knownvalue.Check{
 							names.AttrValues: knownvalue.SetExact([]knownvalue.Check{
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"key":   knownvalue.StringExact("one"),
-									"value": knownvalue.StringExact("un"),
+									names.AttrKey:   knownvalue.StringExact("one"),
+									names.AttrValue: knownvalue.StringExact("un"),
 								}),
 								knownvalue.ObjectExact(map[string]knownvalue.Check{
-									"key":   knownvalue.StringExact("two"),
-									"value": knownvalue.StringExact("deux"),
+									names.AttrKey:   knownvalue.StringExact("two"),
+									names.AttrValue: knownvalue.StringExact("deux"),
 								}),
 							}),
 						})),
