@@ -131,7 +131,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return cognitoidentityprovider.NewFromConfig(cfg,
-		cognitoidentityprovider.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		cognitoidentityprovider.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }
