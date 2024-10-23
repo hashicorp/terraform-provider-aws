@@ -111,7 +111,7 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 			{
 				ResourceName:  resourceName,
 				ImportState:   true,
-				ImportStateId: "arn:aws:firehose:us-east-1:123456789012:missing-slash", //lintignore:AWSAT003,AWSAT005
+				ImportStateId: "arn:aws:firehose:us-east-1:123456789012:missing-slash", // lintignore:AWSAT003,AWSAT005
 				ExpectError:   regexache.MustCompile(`Expected ID in format`),
 			},
 		},
@@ -1000,6 +1000,138 @@ func TestAccFirehoseDeliveryStream_ExtendedS3_mskClusterSource(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_icebergUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStream_iceberg(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_interval", "300"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_size", "5"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.destination_table_configuration.0.database_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.destination_table_configuration.0.table_name"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode", "FailedDataOnly"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStream_icebergUpdates(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_interval", "900"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_size", "100"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.destination_table_configuration.0.database_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.destination_table_configuration.0.table_name"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode.#", acctest.Ct0),
+				),
+			},
+			{
+				Config: testAccDeliveryStream_icebergUpdatesMetadataProcessor(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_interval", "300"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_size", "5"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.destination_table_configuration.0.database_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.destination_table_configuration.0.table_name"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.0.s3_error_output_prefix", "error"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.0.unique_keys.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.0.unique_keys.0", "my_column_1"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.processors.0.type", "MetadataExtraction"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.processors.0.parameters.#", acctest.Ct2),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iceberg_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name":  "MetadataExtractionQuery",
+						"parameter_value": "{destinationDatabaseName: .databaseName, destinationTableName: .tableName, operation: .operation}",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iceberg_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name":  "JsonParsingEngine",
+						"parameter_value": "JQ-1.6",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode", "FailedDataOnly"),
+				),
+			},
+			{
+				Config: testAccDeliveryStream_icebergUpdatesLambdaProcessor(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.role_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "iceberg_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_interval", "300"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.buffering_size", "5"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.destination_table_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.processors.0.type", "Lambda"),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.processing_configuration.0.processors.0.parameters.#", acctest.Ct3),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iceberg_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name": "LambdaArn",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iceberg_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name": "RoleArn",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "iceberg_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name":  "NumberOfRetries",
+						"parameter_value": "5",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.retry_options.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "iceberg_configuration.0.s3_backup_mode.#", acctest.Ct0),
+				),
 			},
 		},
 	})
@@ -2277,7 +2409,6 @@ func testAccCheckDeliveryStreamExists(ctx context.Context, n string, v *types.De
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FirehoseClient(ctx)
 
 		output, err := tffirehose.FindDeliveryStreamByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
-
 		if err != nil {
 			return err
 		}
@@ -3825,6 +3956,276 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   extended_s3_configuration {
     role_arn   = aws_iam_role.firehose.arn
     bucket_arn = aws_s3_bucket.bucket.arn
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_baseIceberg(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamConfig_baseLambda(rName),
+		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_iam_role" "firehose" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "firehose.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "${data.aws_caller_identity.current.account_id}"
+        }
+      }
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "firehose" {
+  name = %[1]q
+  role = aws_iam_role.firehose.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Action": [
+        "s3:AbortMultipartUpload",
+        "s3:GetBucketLocation",
+        "s3:GetObject",
+        "s3:ListBucket",
+        "s3:ListBucketMultipartUploads",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "${aws_s3_bucket.bucket.arn}",
+        "${aws_s3_bucket.bucket.arn}/*"
+      ]
+    },
+    {
+      "Sid": "GlueAccess",
+      "Effect": "Allow",
+      "Action": [
+        "glue:GetTable",
+        "glue:GetTableVersion",
+        "glue:GetTableVersions"
+      ],
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Sid": "LakeFormationDataAccess",
+      "Effect": "Allow",
+      "Action": [
+        "lakeformation:GetDataAccess"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = replace(%[1]q, "-", "_")
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = replace(%[1]q, "-", "_")
+  database_name = aws_glue_catalog_database.test.name
+  parameters = {
+    format = "parquet"
+  }
+
+  table_type = "EXTERNAL_TABLE"
+
+  open_table_format_input {
+    iceberg_input {
+      metadata_operation = "CREATE"
+      version            = 2
+    }
+  }
+
+  storage_descriptor {
+    location = "s3://${aws_s3_bucket.bucket.id}"
+
+    columns {
+      name    = "my_column_1"
+      type    = "int"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStream_iceberg(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamConfig_baseIceberg(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "iceberg"
+
+  iceberg_configuration {
+    role_arn        = aws_iam_role.firehose.arn
+    s3_backup_mode  = "FailedDataOnly"
+    catalog_arn     = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.bucket.arn
+      role_arn   = aws_iam_role.firehose.arn
+    }
+	
+    destination_table_configuration {
+      database_name = aws_glue_catalog_database.test.name
+      table_name    = aws_glue_catalog_table.test.name
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStream_icebergUpdates(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamConfig_baseIceberg(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "iceberg"
+
+  iceberg_configuration {
+    role_arn           = aws_iam_role.firehose.arn
+    s3_backup_mode     = "FailedDataOnly"
+    catalog_arn     = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+    buffering_interval = 900
+    buffering_size     = 100
+    retry_duration     = 900
+
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.bucket.arn
+      role_arn   = aws_iam_role.firehose.arn
+    }
+
+	destination_table_configuration {
+      database_name = aws_glue_catalog_database.test.name
+      table_name    = aws_glue_catalog_table.test.name
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStream_icebergUpdatesMetadataProcessor(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamConfig_baseIceberg(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "iceberg"
+
+  iceberg_configuration {
+    role_arn        = aws_iam_role.firehose.arn
+    s3_backup_mode  = "FailedDataOnly"
+    catalog_arn     = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+
+    s3_configuration {
+      bucket_arn = aws_s3_bucket.bucket.arn
+      role_arn   = aws_iam_role.firehose.arn
+    }
+
+	destination_table_configuration {
+      database_name          = aws_glue_catalog_database.test.name
+      table_name             = aws_glue_catalog_table.test.name
+	  unique_keys            = ["my_column_1"]
+	  s3_error_output_prefix = "error"
+    }
+
+    processing_configuration {
+      processors {
+        type = "MetadataExtraction"
+
+        parameters {
+          parameter_name  = "MetadataExtractionQuery"
+          parameter_value = "{destinationDatabaseName: .databaseName, destinationTableName: .tableName, operation: .operation}"
+        }
+
+        parameters {
+          parameter_name  = "JsonParsingEngine"
+          parameter_value = "JQ-1.6"
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStream_icebergUpdatesLambdaProcessor(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDeliveryStreamConfig_baseIceberg(rName),
+		fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "iceberg"
+
+  iceberg_configuration {
+    role_arn        = aws_iam_role.firehose.arn
+    s3_backup_mode  = "FailedDataOnly"
+    catalog_arn     = "arn:${data.aws_partition.current.partition}:glue:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:catalog"
+
+	s3_configuration {
+      bucket_arn = aws_s3_bucket.bucket.arn
+      role_arn   = aws_iam_role.firehose.arn
+    }
+
+    processing_configuration {
+      enabled = false
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+
+        parameters {
+          parameter_name  = "RoleArn"
+          parameter_value = "${aws_iam_role.iam_for_lambda.arn}"
+        }
+
+        parameters {
+          parameter_name  = "NumberOfRetries"
+          parameter_value = "5"
+        }
+      }
+    }
   }
 }
 `, rName))
