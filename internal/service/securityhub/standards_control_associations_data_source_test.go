@@ -23,7 +23,7 @@ func testAccStandardsControlAssociationsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccStandardsControlAssociationsDataSourceConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "standards_control_associations.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "standards_control_associations.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "standards_control_associations.*", map[string]string{
 						"association_status":  "ENABLED",
 						"security_control_id": "IAM.1",
