@@ -76,6 +76,7 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.RegexMatches(resourceAssociationNameRegex, ""),
+					stringvalidator.LengthBetween(0, 64),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
