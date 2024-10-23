@@ -288,7 +288,7 @@ func TestAccFSxDataRepositoryAssociation_importedFileChunkSizeUpdated(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataRepositoryAssociationExists(ctx, resourceName, &association2),
 					testAccCheckDataRepositoryAssociationNotRecreated(&association1, &association2),
-					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", acctest.Ct512),
+					resource.TestCheckResourceAttr(resourceName, "imported_file_chunk_size", "512"),
 				),
 			},
 		},
