@@ -4217,7 +4217,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
         parameters {
           parameter_name  = "RoleArn"
-          parameter_value = "${aws_iam_role.iam_for_lambda.arn}"
+          parameter_value = aws_iam_role.iam_for_lambda.arn
         }
 
         parameters {
