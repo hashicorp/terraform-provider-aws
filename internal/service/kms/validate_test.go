@@ -7,7 +7,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -16,7 +15,7 @@ func TestValidGrantName(t *testing.T) {
 	t.Parallel()
 
 	validValues := []string{
-		acctest.Ct123,
+		"123",
 		"Abc",
 		"grant_1",
 		"grant:/-",
