@@ -224,7 +224,7 @@ func TestAccCodeBuildWebhook_scopeConfiguration(t *testing.T) {
 				Config: testAccWebhookConfig_scopeConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scope_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "scope_configuration.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scope_configuration.0.scope", "GITHUB_GLOBAL"),
 				),
