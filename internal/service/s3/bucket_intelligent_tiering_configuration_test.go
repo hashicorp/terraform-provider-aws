@@ -20,6 +20,39 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func TestAccS3BucketIntelligentTieringConfiguration_noTiering(t *testing.T) {
+	ctx := acctest.Context(t)
+	var itc types.IntelligentTieringConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_intelligent_tiering_configuration.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketIntelligentTieringConfigurationConfig_noTiering(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBucketIntelligentTieringConfigurationExists(ctx, resourceName, &itc),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, bucketResourceName, names.AttrBucket),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "tiering.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var itc types.IntelligentTieringConfiguration
@@ -269,6 +302,19 @@ func testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx context.Contex
 
 		return nil
 	}
+}
+
+func testAccBucketIntelligentTieringConfigurationConfig_noTiering(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
+  bucket = aws_s3_bucket.test.bucket
+  name   = %[1]q
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+`, rName)
 }
 
 func testAccBucketIntelligentTieringConfigurationConfig_basic(rName string) string {
