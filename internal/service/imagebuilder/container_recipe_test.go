@@ -405,7 +405,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.throughput", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "instance_configuration.0.block_device_mapping.0.ebs.0.throughput", "200"),
 				),
 			},
 			{

@@ -276,7 +276,7 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_throughput(t *testing.
 					testAccCheckImageRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
-						"ebs.0.throughput": acctest.Ct200,
+						"ebs.0.throughput": "200",
 					}),
 				),
 			},
