@@ -1378,7 +1378,7 @@ func testAccDomain_spaceStorageSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", "10"),
-					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "200"),
 				),
 			},
 			{
@@ -1616,7 +1616,7 @@ func testAccDomain_spaceSettingsSpaceStorageSettings(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_spaceSettingsSpaceStorageSettings(rName, "100", acctest.Ct200),
+				Config: testAccDomainConfig_spaceSettingsSpaceStorageSettings(rName, "100", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
@@ -1629,7 +1629,7 @@ func testAccDomain_spaceSettingsSpaceStorageSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.default_ebs_volume_size_in_gb", "10"),
-					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "default_space_settings.0.space_storage_settings.0.default_ebs_storage_settings.0.maximum_ebs_volume_size_in_gb", "200"),
 				),
 			},
 			{

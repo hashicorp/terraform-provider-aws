@@ -259,7 +259,7 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_serverlessProvisio
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.max_concurrency", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.max_concurrency", "200"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.memory_size_in_mb", "5120"),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.0.serverless_config.0.provisioned_concurrency", "100"),
 				),

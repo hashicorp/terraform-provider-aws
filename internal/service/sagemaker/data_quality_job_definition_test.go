@@ -57,7 +57,7 @@ func TestAccSageMakerDataQualityJobDefinition_endpoint(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "network_config.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "stopping_condition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", acctest.Ct3600),
+					resource.TestCheckResourceAttr(resourceName, "stopping_condition.0.max_runtime_in_seconds", "3600"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
