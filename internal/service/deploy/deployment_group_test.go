@@ -58,6 +58,7 @@ func TestAccDeployDeploymentGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_group_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "termination_hook_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -1597,7 +1598,7 @@ func TestAccDeployDeploymentGroup_TermationHook_enabled(t *testing.T) {
 				Config: testAccDeploymentGroupConfig_terminationHookEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "termination_hook_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "termination_hook_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -1620,7 +1621,7 @@ func TestAccDeployDeploymentGroup_TermationHook_disabled(t *testing.T) {
 				Config: testAccDeploymentGroupConfig_terminationHookDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
-					resource.TestCheckResourceAttr(resourceName, "termination_hook_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "termination_hook_enabled", acctest.CtFalse),
 				),
 			},
 		},
