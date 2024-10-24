@@ -14,12 +14,6 @@ import (
 func ConstOrQuote(constant string) string {
 	allConstants := map[string]string{
 		"123456789012":          "Ct12Digit",
-		"200":                   "Ct200",
-		"3600":                  "Ct3600",
-		"365":                   "Ct365",
-		"404":                   "Ct404",
-		"443":                   "Ct443",
-		"8080":                  "Ct8080",
 		"basic":                 "CtBasic",
 		"certificate_pem":       "CtCertificatePEM",
 		"disappears":            "CtDisappears",

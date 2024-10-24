@@ -6,12 +6,6 @@ package acctest
 
 const (
 	Ct12Digit               = "123456789012"
-	Ct200                   = "200"
-	Ct3600                  = "3600"
-	Ct365                   = "365"
-	Ct404                   = "404"
-	Ct443                   = "443"
-	Ct8080                  = "8080"
 	CtBasic                 = "basic"
 	CtCertificatePEM        = "certificate_pem"
 	CtDisappears            = "disappears"
