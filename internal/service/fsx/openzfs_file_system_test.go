@@ -143,7 +143,7 @@ func TestAccFSxOpenZFSFileSystem_diskIops(t *testing.T) {
 					testAccCheckOpenZFSFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.mode", "USER_PROVISIONED"),
-					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "disk_iops_configuration.0.iops", "200"),
 				),
 			},
 		},
