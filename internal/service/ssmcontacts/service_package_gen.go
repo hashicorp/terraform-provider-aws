@@ -19,6 +19,9 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 		{
 			Factory: newDataSourceRotation,
 			Name:    "Rotation",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }
