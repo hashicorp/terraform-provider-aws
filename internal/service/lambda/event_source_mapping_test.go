@@ -77,7 +77,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_kinesisUpdateFunctionName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "batch_size", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "batch_size", "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrFunctionARN, functionResourceNameUpdated, names.AttrARN),

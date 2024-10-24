@@ -362,7 +362,7 @@ func TestAccLambdaFunctionEventInvokeConfig_maximumEventAgeInSeconds(t *testing.
 				Config: testAccFunctionEventInvokeConfigConfig_maximumAgeInSeconds(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionEventInvokeConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "maximum_event_age_in_seconds", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "maximum_event_age_in_seconds", "200"),
 				),
 			},
 		},
