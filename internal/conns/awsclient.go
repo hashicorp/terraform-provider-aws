@@ -100,6 +100,16 @@ func (c *AWSClient) RegionalARN(ctx context.Context, service, resource string) s
 	}.String()
 }
 
+// RegionalARNNoAccount returns a regional ARN for the specified service namespace and resource without AWS account ID.
+func (c *AWSClient) RegionalARNNoAccount(ctx context.Context, service, resource string) string {
+	return arn.ARN{
+		Partition: c.PartitionID(ctx),
+		Service:   service,
+		Region:    c.Region,
+		Resource:  resource,
+	}.String()
+}
+
 // RegionalHostname returns a hostname with the provider domain suffix for the region and partition
 // e.g. PREFIX.us-west-2.amazonaws.com
 // The prefix should not contain a trailing period.
