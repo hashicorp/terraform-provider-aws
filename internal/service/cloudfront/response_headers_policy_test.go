@@ -85,7 +85,7 @@ func TestAccCloudFrontResponseHeadersPolicy_cors(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_expose_headers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_expose_headers.0.items.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "cors_config.0.access_control_expose_headers.0.items.*", "HEAD"),
-					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_max_age_sec", acctest.Ct3600),
+					resource.TestCheckResourceAttr(resourceName, "cors_config.0.access_control_max_age_sec", "3600"),
 					resource.TestCheckResourceAttr(resourceName, "cors_config.0.origin_override", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "custom_headers_config.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
