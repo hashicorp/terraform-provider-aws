@@ -179,7 +179,7 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 						"mappings.overwrite:statuscode":  "403",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "response_parameters.*", map[string]string{
-						names.AttrStatusCode:           acctest.Ct404,
+						names.AttrStatusCode:           "404",
 						"mappings.%":                   "1",
 						"mappings.append:header.error": "$stageVariables.environmentId",
 					}),
