@@ -715,7 +715,7 @@ func TestAccECSService_DeploymentValues_basic(t *testing.T) {
 				Config: testAccServiceConfig_deploymentValues(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "deployment_maximum_percent", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "deployment_maximum_percent", "200"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_minimum_healthy_percent", "100"),
 				),
 			},
@@ -1549,7 +1549,7 @@ func TestAccECSService_ServiceConnect_ingressPortOverride(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.dns_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.port", acctest.Ct8080),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.client_alias.0.port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.discovery_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.ingress_port_override", "0"),
 					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.0.service.0.port_name", "nginx-http"),
