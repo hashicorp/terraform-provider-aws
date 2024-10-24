@@ -60,9 +60,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceContact,
 			TypeName: "aws_ssmcontacts_contact",
-			Name:     "Context",
+			Name:     "Contact",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
