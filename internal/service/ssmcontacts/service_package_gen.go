@@ -43,6 +43,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceContact,
 			TypeName: "aws_ssmcontacts_contact",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  DataSourceContactChannel,
