@@ -34,7 +34,7 @@ import (
 {{- if and .IncludeComments .AWSGoSDKV2 }}
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// awstypes.<Type Name>.
 {{- end }}
@@ -43,11 +43,11 @@ import (
 	"time"
 {{ if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 {{- else }}
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
+	"github.com/aws/aws-sdk-go/service/{{ .SDKPackage }}"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 {{- end }}
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -86,7 +86,7 @@ import (
 {{- end }}
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource("aws_{{ .ServicePackage }}_{{ .ResourceSnake }}", name="{{ .HumanResourceName }}")
+// @FrameworkResource("{{ .ProviderResourceName }}", name="{{ .HumanResourceName }}")
 {{- if .IncludeTags }}
 // @Tags(identifierAttribute="arn")
 {{- end }}
@@ -116,7 +116,7 @@ type resource{{ .Resource }} struct {
 }
 
 func (r *resource{{ .Resource }}) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_{{ .ServicePackage }}_{{ .ResourceSnake }}"
+	resp.TypeName = "{{ .ProviderResourceName }}"
 }
 {{ if .IncludeComments }}
 // TIP: ==== SCHEMA ====
@@ -271,7 +271,7 @@ func (r *resource{{ .Resource }}) Create(ctx context.Context, req resource.Creat
 	{{ if .IncludeComments -}}
 	// TIP: -- 3. Populate a Create input structure
 	{{- end }}
-	var input {{ .ServicePackage }}.Create{{ .Resource }}Input
+	var input {{ .SDKPackage }}.Create{{ .Resource }}Input
 	{{ if .IncludeComments -}}
 	// TIP: Using a field name prefix allows mapping fields such as `ID` to `{{ .Resource }}Id`
 	{{- end }}
@@ -439,7 +439,7 @@ func (r *resource{{ .Resource }}) Update(ctx context.Context, req resource.Updat
 		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
 		!plan.Type.Equal(state.Type) {
 
-		var input {{ .ServicePackage }}.Update{{ .Resource }}Input
+		var input {{ .SDKPackage }}.Update{{ .Resource }}Input
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
 		if resp.Diagnostics.HasError() {
 			return

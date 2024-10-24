@@ -41,17 +41,17 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
 					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+$`)),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "body"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`[0-9a-z]+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexache.MustCompile(`[0-9a-z]+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -104,8 +104,8 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 				Config: testAccRestAPIConfig_endpointConfiguration(rName, "REGIONAL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
 				),
 			},
@@ -120,8 +120,8 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 				Config: testAccRestAPIConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
 				),
 			},
@@ -157,8 +157,8 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 				Config: testAccRestAPIConfig_endpointConfiguration(rName, "EDGE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "EDGE"),
 				),
 			},
@@ -207,8 +207,8 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 				Config: testAccRestAPIConfig_endpointConfiguration(rName, "PRIVATE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
 				),
 			},
@@ -351,7 +351,7 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 				Config: testAccRestAPIConfig_binaryMediaTypes1(rName, "application/octet-stream"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet-stream"),
 				),
 			},
@@ -365,7 +365,7 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 				Config: testAccRestAPIConfig_binaryMediaTypes1(rName, "application/octet"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet"),
 				),
 			},
@@ -389,7 +389,7 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 				Config: testAccRestAPIConfig_binaryMediaTypes1OverrideBody(rName, "application/octet-stream", "image/jpeg"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet-stream"),
 				),
 			},
@@ -404,7 +404,7 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 				Config: testAccRestAPIConfig_binaryMediaTypes1OverrideBody(rName, "application/octet", "image/jpeg"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet"),
 				),
 			},
@@ -413,7 +413,7 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 				Config: testAccRestAPIConfig_binaryMediaTypes1OverrideBody(rName, "application/octet", "image/png"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet"),
 				),
 			},
@@ -437,7 +437,7 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_setByBody(t *testing.T) {
 				Config: testAccRestAPIConfig_binaryMediaTypes1SetByBody(rName, "application/octet-stream"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet-stream"),
 				),
 			},
@@ -736,10 +736,10 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 				Config: testAccRestAPIConfig_vpcEndpointIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 				),
 			},
@@ -753,10 +753,10 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIds2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName2, names.AttrID),
 				),
@@ -765,10 +765,10 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 				Config: testAccRestAPIConfig_vpcEndpointIDs1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 				),
 			},
@@ -795,8 +795,8 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsOverrideBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -812,8 +812,8 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsOverrideBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -823,8 +823,8 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsOverrideBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -852,8 +852,8 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -870,8 +870,8 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -881,8 +881,8 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -909,8 +909,8 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideToMergeBody(t *test
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsOverrideBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -927,8 +927,8 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideToMergeBody(t *test
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -960,8 +960,8 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsSetByBody(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName, names.AttrID),
 				),
 			},
@@ -988,10 +988,10 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSize(rName, acctest.Ct1),
+				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "1"),
 				),
 			},
 			{
@@ -1031,10 +1031,10 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, acctest.Ct1, 5242880),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "1", 5242880),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "1"),
 				),
 			},
 			{
@@ -1045,18 +1045,18 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 			},
 			// Verify updated minimum compression size still overrides
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, acctest.Ct2, 5242880),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "2", 5242880),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "2"),
 				),
 			},
 			// Verify updated body minimum compression size is still overridden
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, acctest.Ct2, 1048576),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "2", 1048576),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "2"),
 				),
 			},
 		},

@@ -59,7 +59,7 @@ func main() {
 
 	d := g.NewGoFileDestination(constsFilename)
 
-	if err := d.WriteTemplate("constantlist", tmpl, td); err != nil {
+	if err := d.BufferTemplate("constantlist", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", constsFilename, err)
 	}
 
@@ -72,7 +72,7 @@ func main() {
 
 	d = g.NewGoFileDestination(constOrQuoteFilename)
 
-	if err := d.WriteTemplate("constOrQuote", constOrQuoteTmpl, td); err != nil {
+	if err := d.BufferTemplate("constOrQuote", constOrQuoteTmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", constOrQuoteFilename, err)
 	}
 
@@ -85,7 +85,7 @@ func main() {
 
 	d = g.NewUnformattedFileDestination(semgrepFilename)
 
-	if err := d.WriteTemplate("semgrep-constants", semgrepTmpl, td); err != nil {
+	if err := d.BufferTemplate("semgrep-constants", semgrepTmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", semgrepFilename, err)
 	}
 

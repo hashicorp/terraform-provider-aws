@@ -44,7 +44,7 @@ func TestAccElastiCacheReservedCacheNode_Redis_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccReservedInstanceExists(ctx, resourceName, &reservation),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticache", regexache.MustCompile(`reserved-instance:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cache_node_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_node_count", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cache_node_type", resourceName, "cache_node_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDuration, resourceName, names.AttrDuration),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),
@@ -87,7 +87,7 @@ func TestAccElastiCacheReservedCacheNode_Valkey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccReservedInstanceExists(ctx, resourceName, &reservation),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticache", regexache.MustCompile(`reserved-instance:.+`)),
-					resource.TestCheckResourceAttr(resourceName, "cache_node_count", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_node_count", "1"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cache_node_type", resourceName, "cache_node_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDuration, resourceName, names.AttrDuration),
 					resource.TestCheckResourceAttrPair(dataSourceName, "fixed_price", resourceName, "fixed_price"),

@@ -485,7 +485,8 @@ semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-constants.yml \
-		--config .ci/.semgrep-test-constants.yml
+		--config .ci/.semgrep-test-constants.yml \
+		--config .ci/.semgrep-test-constants-temp.yml
 
 semgrep-docker: semgrep-validate ## Run Semgrep (Legacy, use caution)
 	@echo "make: Legacy target, use caution..."
@@ -601,7 +602,7 @@ t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 
 test: prereq-go fmt-check ## Run unit tests
 	@echo "make: Running unit tests..."
-	$(GO_VER) test -count $(TEST_COUNT) $(TEST) $(TESTARGS) -timeout=5m
+	$(GO_VER) test -count $(TEST_COUNT) $(TEST) $(TESTARGS) -timeout=15m
 
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \

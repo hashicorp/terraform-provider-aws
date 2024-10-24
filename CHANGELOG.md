@@ -1,4 +1,13 @@
 ## 5.74.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_lb_listener_rule` ([#39865](https://github.com/hashicorp/terraform-provider-aws/issues/39865))
+
+ENHANCEMENTS:
+
+* resource/aws_codedeploy_deployment_group: Add `termination_hook_enabled` argument ([#35482](https://github.com/hashicorp/terraform-provider-aws/issues/35482))
+
 ## 5.73.0 (October 24, 2024)
 
 FEATURES:

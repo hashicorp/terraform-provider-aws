@@ -34,17 +34,17 @@ func TestIPProtocol(t *testing.T) {
 	tests := map[string]testCase{
 		"name, number (equivalent)": {
 			val1:   tfec2.IPProtocol{StringValue: types.StringValue("icmp")},
-			val2:   tfec2.IPProtocol{StringValue: types.StringValue(acctest.Ct1)},
+			val2:   tfec2.IPProtocol{StringValue: types.StringValue("1")},
 			equals: true,
 		},
 		"number, name (equivalent)": {
-			val1:   tfec2.IPProtocol{StringValue: types.StringValue(acctest.Ct1)},
+			val1:   tfec2.IPProtocol{StringValue: types.StringValue("1")},
 			val2:   tfec2.IPProtocol{StringValue: types.StringValue("icmp")},
 			equals: true,
 		},
 		"name, number (not equivalent)": {
 			val1:   tfec2.IPProtocol{StringValue: types.StringValue("icmp")},
-			val2:   tfec2.IPProtocol{StringValue: types.StringValue(acctest.Ct2)},
+			val2:   tfec2.IPProtocol{StringValue: types.StringValue("2")},
 			equals: false,
 		},
 	}
@@ -244,7 +244,7 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv4(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "cidr_ipv6"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "from_port", "-1"),
-					resource.TestCheckResourceAttr(resourceName, "ip_protocol", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "ip_protocol", "1"),
 					resource.TestCheckNoResourceAttr(resourceName, "prefix_list_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
