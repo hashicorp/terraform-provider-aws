@@ -579,7 +579,7 @@ func TestAccELBLoadBalancer_listener(t *testing.T) {
 					testAccCheckLoadBalancerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "listener.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
-						"instance_port":     acctest.Ct8080,
+						"instance_port":     "8080",
 						"instance_protocol": "http",
 						"lb_port":           "80",
 						"lb_protocol":       "http",
@@ -689,7 +689,7 @@ func TestAccELBLoadBalancer_timeout(t *testing.T) {
 			{
 				Config: testAccLoadBalancerConfig_idleTimeout(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "idle_timeout", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "idle_timeout", "200"),
 				),
 			},
 			{
