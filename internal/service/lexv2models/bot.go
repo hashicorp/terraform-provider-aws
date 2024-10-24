@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -200,17 +199,11 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 		)
 		return
 	}
-	botArn := arn.ARN{
-		Partition: r.Meta().Partition,
-		Service:   "lex",
-		Region:    r.Meta().Region,
-		AccountID: r.Meta().AccountID,
-		Resource:  fmt.Sprintf("bot/%s", aws.ToString(out.BotId)),
-	}.String()
+	botARN := r.Meta().RegionalARN(ctx, "lex", fmt.Sprintf("bot/%s", aws.ToString(out.BotId)))
 	plan.ID = flex.StringToFramework(ctx, out.BotId)
 	state := plan
 	state.Type = flex.StringValueToFramework(ctx, out.BotType)
-	state.ARN = flex.StringValueToFramework(ctx, botArn)
+	state.ARN = flex.StringValueToFramework(ctx, botARN)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 
@@ -246,14 +239,8 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	botArn := arn.ARN{
-		Partition: r.Meta().Partition,
-		Service:   "lex",
-		Region:    r.Meta().Region,
-		AccountID: r.Meta().AccountID,
-		Resource:  fmt.Sprintf("bot/%s", aws.ToString(out.BotId)),
-	}.String()
-	state.ARN = flex.StringValueToFramework(ctx, botArn)
+	botARN := r.Meta().RegionalARN(ctx, "lex", fmt.Sprintf("bot/%s", aws.ToString(out.BotId)))
+	state.ARN = flex.StringValueToFramework(ctx, botARN)
 	state.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn)
 	state.ID = flex.StringToFramework(ctx, out.BotId)
 	state.Name = flex.StringToFramework(ctx, out.BotName)
