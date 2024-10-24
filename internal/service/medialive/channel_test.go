@@ -186,7 +186,7 @@ func TestAccMediaLiveChannel_M2TS_settings(t *testing.T) {
 						"audio_buffer_model":        "ATSC",
 						"buffer_model":              "MULTIPLEX",
 						"rate_mode":                 "CBR",
-						"audio_pids":                acctest.Ct200,
+						"audio_pids":                "200",
 						"dvb_sub_pids":              "300",
 						"arib_captions_pid":         "100",
 						"arib_captions_pid_control": "AUTO",
