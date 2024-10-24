@@ -43,7 +43,7 @@ func TestAccCustomerProfilesDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_base(rName, 365),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", acctest.Ct365),
+					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "365"),
 				),
 			},
 		},
@@ -111,7 +111,7 @@ func TestAccCustomerProfilesDomain_full(t *testing.T) {
 				Config: testAccDomainConfig_fullUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", acctest.Ct365),
+					resource.TestCheckResourceAttr(resourceName, "default_expiration_days", "365"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "matching.0.auto_merging.0.%", "4"),
