@@ -58,6 +58,7 @@ func main() {
 		v := &visitor{
 			g: g,
 
+			ephemeralResources:   make([]ResourceDatum, 0),
 			frameworkDataSources: make([]ResourceDatum, 0),
 			frameworkResources:   make([]ResourceDatum, 0),
 			sdkDataSources:       make(map[string]ResourceDatum),
@@ -76,6 +77,7 @@ func main() {
 			GoV2Package:          l.GoV2Package(),
 			ProviderPackage:      p,
 			ProviderNameUpper:    l.ProviderNameUpper(),
+			EphemeralResources:   v.ephemeralResources,
 			FrameworkDataSources: v.frameworkDataSources,
 			FrameworkResources:   v.frameworkResources,
 			SDKDataSources:       v.sdkDataSources,
@@ -131,6 +133,7 @@ type ServiceDatum struct {
 	GoV2Package          string // AWS SDK for Go v2 package name
 	ProviderPackage      string
 	ProviderNameUpper    string
+	EphemeralResources   []ResourceDatum
 	FrameworkDataSources []ResourceDatum
 	FrameworkResources   []ResourceDatum
 	SDKDataSources       map[string]ResourceDatum
@@ -156,6 +159,7 @@ type visitor struct {
 	functionName string
 	packageName  string
 
+	ephemeralResources   []ResourceDatum
 	frameworkDataSources []ResourceDatum
 	frameworkResources   []ResourceDatum
 	sdkDataSources       map[string]ResourceDatum
@@ -239,6 +243,12 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			}
 
 			switch annotationName := m[1]; annotationName {
+			case "EphemeralResource":
+				if slices.ContainsFunc(v.ephemeralResources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
+					v.errs = append(v.errs, fmt.Errorf("duplicate Ephemeral Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+				} else {
+					v.ephemeralResources = append(v.ephemeralResources, d)
+				}
 			case "FrameworkDataSource":
 				if slices.ContainsFunc(v.frameworkDataSources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
 					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

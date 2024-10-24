@@ -19,6 +19,13 @@ type ServicePackage interface {
 	ServicePackageName() string
 }
 
+// ServicePackageWithEphemeralResources is an interface that extends ServicePackage with ephemeral resources.
+// Ephemeral resources are resources that are not part of the Terraform state, but are used to create other resources.
+type ServicePackageWithEphemeralResources interface {
+	ServicePackage
+	EphemeralResources(context.Context) []*types.ServicePackageEphemeralResource
+}
+
 type (
 	contextKeyType int
 )
@@ -29,9 +36,10 @@ var (
 
 // InContext represents the resource information kept in Context.
 type InContext struct {
-	IsDataSource       bool   // Data source?
-	ResourceName       string // Friendly resource name, e.g. "Subnet"
-	ServicePackageName string // Canonical name defined as a constant in names package
+	IsDataSource        bool   // Data source?
+	IsEphemeralResource bool   // Ephemeral resource?
+	ResourceName        string // Friendly resource name, e.g. "Subnet"
+	ServicePackageName  string // Canonical name defined as a constant in names package
 }
 
 func NewDataSourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
@@ -39,6 +47,16 @@ func NewDataSourceContext(ctx context.Context, servicePackageName, resourceName 
 		IsDataSource:       true,
 		ResourceName:       resourceName,
 		ServicePackageName: servicePackageName,
+	}
+
+	return context.WithValue(ctx, contextKey, &v)
+}
+
+func NewEphemeralResourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
+	v := InContext{
+		IsEphemeralResource: true,
+		ResourceName:        resourceName,
+		ServicePackageName:  servicePackageName,
 	}
 
 	return context.WithValue(ctx, contextKey, &v)
