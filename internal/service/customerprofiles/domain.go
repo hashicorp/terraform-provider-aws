@@ -5,7 +5,6 @@ package customerprofiles
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -313,7 +312,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading Customer Profiles Domain: (%s) %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, buildDomainARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, domainARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrDomainName, output.DomainName)
 	d.Set("dead_letter_queue_url", output.DeadLetterQueueUrl)
 	d.Set("default_encryption_key", output.DefaultEncryptionKey)
@@ -910,6 +909,6 @@ func flattenMatchingRules(apiObject []types.MatchingRule) []interface{} {
 
 // CreateDomainOutput does not have an ARN attribute which is needed for Tagging, therefore we construct it.
 // https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonconnectcustomerprofiles.html#amazonconnectcustomerprofiles-resources-for-iam-policies
-func buildDomainARN(conn *conns.AWSClient, domainName string) string {
-	return fmt.Sprintf("arn:%s:profile:%s:%s:domains/%s", conn.Partition, conn.Region, conn.AccountID, domainName)
+func domainARN(ctx context.Context, c *conns.AWSClient, domainName string) string {
+	return c.RegionalARN(ctx, "profile", "domains/"+domainName) // nosemgrep:ci.literal-profile-string-constant
 }

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -115,7 +114,7 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway VPC Link (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, vpcLinkARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrDescription, vpcLink.Description)
 	d.Set(names.AttrName, vpcLink.Name)
 	d.Set("target_arns", vpcLink.TargetArns)
@@ -278,11 +277,6 @@ func waitVPCLinkDeleted(ctx context.Context, conn *apigateway.Client, id string)
 	return nil, err
 }
 
-func vpcLinkARN(c *conns.AWSClient, vpcLinkID string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "apigateway",
-		Region:    c.Region,
-		Resource:  fmt.Sprintf("/vpclinks/%s", vpcLinkID),
-	}.String()
+func vpcLinkARN(ctx context.Context, c *conns.AWSClient, vpcLinkID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/vpclinks/%s", vpcLinkID))
 }

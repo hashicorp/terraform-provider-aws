@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -254,7 +253,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err := d.Set("access_log_settings", flattenAccessLogSettings(stage.AccessLogSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
-	d.Set(names.AttrARN, stageARN(meta.(*conns.AWSClient), apiID, stageName))
+	d.Set(names.AttrARN, stageARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
 	if stage.CacheClusterStatus == types.CacheClusterStatusDeleteInProgress {
 		d.Set("cache_cluster_enabled", false)
 		d.Set("cache_cluster_size", d.Get("cache_cluster_size"))
@@ -274,7 +273,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("deployment_id", stage.DeploymentId)
 	d.Set(names.AttrDescription, stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
-	d.Set("execution_arn", stageInvokeARN(meta.(*conns.AWSClient), apiID, stageName))
+	d.Set("execution_arn", stageInvokeARN(ctx, meta.(*conns.AWSClient), apiID, stageName))
 	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayInvokeURL(ctx, apiID, stageName))
 	if err := d.Set("variables", stage.Variables); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting variables: %s", err)
@@ -652,21 +651,10 @@ func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldC
 	return operations
 }
 
-func stageARN(c *conns.AWSClient, apiID, stageName string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Region:    c.Region,
-		Service:   "apigateway",
-		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", apiID, stageName),
-	}.String()
+func stageARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/restapis/%s/stages/%s", apiID, stageName))
 }
 
-func stageInvokeARN(c *conns.AWSClient, apiID, stageName string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "execute-api",
-		Region:    c.Region,
-		AccountID: c.AccountID,
-		Resource:  fmt.Sprintf("%s/%s", apiID, stageName),
-	}.String()
+func stageInvokeARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {
+	return c.RegionalARN(ctx, "execute-api", fmt.Sprintf("%s/%s", apiID, stageName))
 }

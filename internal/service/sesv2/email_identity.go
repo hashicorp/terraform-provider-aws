@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -177,9 +176,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameEmailIdentity, d.Id(), err)
 	}
 
-	arn := emailIdentityARN(meta, d.Id())
-
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, emailIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 	d.Set("email_identity", d.Id())
 
@@ -354,12 +351,6 @@ func flattenDKIMAttributes(apiObject *types.DkimAttributes) map[string]interface
 	return m
 }
 
-func emailIdentityARN(meta interface{}, emailIdentityName string) string {
-	return arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("identity/%s", emailIdentityName),
-	}.String()
+func emailIdentityARN(ctx context.Context, c *conns.AWSClient, emailIdentityName string) string {
+	return c.RegionalARN(ctx, "ses", fmt.Sprintf("identity/%s", emailIdentityName))
 }

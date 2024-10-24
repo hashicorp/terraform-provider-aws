@@ -78,8 +78,8 @@ func dataSourceDedicatedIPPoolRead(ctx context.Context, d *schema.ResourceData, 
 
 	poolName := aws.ToString(out.PoolName)
 	d.SetId(poolName)
+	d.Set(names.AttrARN, dedicatedIPPoolARN(ctx, meta.(*conns.AWSClient), poolName))
 	d.Set("scaling_mode", out.ScalingMode)
-	d.Set(names.AttrARN, dedicatedIPPoolARN(meta, poolName))
 
 	outIP, err := findDedicatedIPsByPoolName(ctx, conn, poolName)
 	if err != nil {

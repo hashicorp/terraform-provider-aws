@@ -510,7 +510,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 					}
 
 					// ISO partitions may not support tagging, giving error.
-					if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
+					if errs.IsUnsupportedOperationInPartitionError(meta.PartitionID(ctx), err) {
 						return ctx, diags
 					}
 
@@ -639,7 +639,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 					}
 
 					// ISO partitions may not support tagging, giving error.
-					if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
+					if errs.IsUnsupportedOperationInPartitionError(meta.PartitionID(ctx), err) {
 						return ctx, diags
 					}
 

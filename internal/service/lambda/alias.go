@@ -126,7 +126,7 @@ func resourceAliasRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set(names.AttrARN, aliasARN)
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("function_version", output.FunctionVersion)
-	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), aliasARN))
+	d.Set("invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), aliasARN))
 	d.Set(names.AttrName, output.Name)
 	if err := d.Set("routing_config", flattenAliasRoutingConfiguration(output.RoutingConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting routing_config: %s", err)

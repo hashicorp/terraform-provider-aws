@@ -156,7 +156,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).PartitionID(ctx),
 		Region:    aws.ToString(lag.Region),
 		Service:   "directconnect",
 		AccountID: aws.ToString(lag.OwnerAccount),

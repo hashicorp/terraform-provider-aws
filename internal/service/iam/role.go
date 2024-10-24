@@ -216,7 +216,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := retryCreateRole(ctx, conn, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).PartitionID(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 

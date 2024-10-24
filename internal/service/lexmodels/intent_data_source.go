@@ -85,7 +85,7 @@ func dataSourceIntentRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).PartitionID(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "lex",
 		AccountID: meta.(*conns.AWSClient).AccountID,

@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
@@ -246,7 +245,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	address := outputRaw.(*types.Address)
 	allocationID := aws.ToString(address.AllocationId)
 	d.Set("allocation_id", allocationID)
-	d.Set(names.AttrARN, eipARN(meta.(*conns.AWSClient), allocationID))
+	d.Set(names.AttrARN, eipARN(ctx, meta.(*conns.AWSClient), allocationID))
 	d.Set(names.AttrAssociationID, address.AssociationId)
 	d.Set("carrier_ip", address.CarrierIp)
 	d.Set("customer_owned_ip", address.CustomerOwnedIp)
@@ -444,14 +443,8 @@ func disassociateEIP(ctx context.Context, conn *ec2.Client, associationID string
 	return nil
 }
 
-func eipARN(c *conns.AWSClient, allocationID string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   names.EC2,
-		Region:    c.Region,
-		AccountID: c.AccountID,
-		Resource:  "elastic-ip/" + allocationID,
-	}.String()
+func eipARN(ctx context.Context, c *conns.AWSClient, allocationID string) string {
+	return c.RegionalARN(ctx, names.EC2, "elastic-ip/"+allocationID)
 }
 
 func findIPAMPoolAllocationsForEIP(ctx context.Context, conn *ec2.Client, ipamPoolID, eipAllocationID string) ([]types.IpamPoolAllocation, error) {

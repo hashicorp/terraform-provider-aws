@@ -503,7 +503,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	})
 
 	// Some partitions (e.g. US GovCloud) may not support tags.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).PartitionID(ctx), err) {
 		input.Tags = nil
 
 		output, err = retryEventSourceMapping(ctx, func() (*lambda.CreateEventSourceMappingOutput, error) {

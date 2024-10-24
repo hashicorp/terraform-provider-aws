@@ -208,7 +208,7 @@ func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheck
 		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
 		conn := awsClient.SecurityHubClient(ctx)
 
-		arn := tfsecurityhub.AccountHubARN(awsClient)
+		arn := tfsecurityhub.AccountHubARN(ctx, awsClient)
 		_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
 
 		return err
@@ -225,7 +225,7 @@ func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			arn := tfsecurityhub.AccountHubARN(awsClient)
+			arn := tfsecurityhub.AccountHubARN(ctx, awsClient)
 			_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
 
 			if tfresource.NotFound(err) {

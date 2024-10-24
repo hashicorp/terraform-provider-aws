@@ -106,13 +106,13 @@ func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(aws.ToString(match.Id))
 	d.Set("api_key_source", match.ApiKeySource)
-	d.Set(names.AttrARN, apiARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("binary_media_types", match.BinaryMediaTypes)
 	d.Set(names.AttrDescription, match.Description)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
-	d.Set("execution_arn", apiInvokeARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	if match.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", nil)
 	} else {

@@ -15,7 +15,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -330,7 +329,7 @@ func resourceDocumentRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	documentType, name := doc.DocumentType, aws.ToString(doc.Name)
-	d.Set(names.AttrARN, documentARN(meta.(*conns.AWSClient), documentType, name))
+	d.Set(names.AttrARN, documentARN(ctx, meta.(*conns.AWSClient), documentType, name))
 	d.Set(names.AttrCreatedDate, aws.ToTime(doc.CreatedDate).Format(time.RFC3339))
 	d.Set("default_version", doc.DefaultVersion)
 	d.Set(names.AttrDescription, doc.Description)
@@ -716,20 +715,14 @@ func flattenDocumentParameters(apiObjects []awstypes.DocumentParameter) []interf
 	return tfList
 }
 
-func documentARN(c *conns.AWSClient, documentType awstypes.DocumentType, name string) string {
-	arn := arn.ARN{
-		Partition: c.Partition,
-		Service:   "ssm",
-		Region:    c.Region,
-		AccountID: c.AccountID,
-	}
-
+func documentARN(ctx context.Context, c *conns.AWSClient, documentType awstypes.DocumentType, name string) string {
+	var resource string
 	switch documentType {
 	case awstypes.DocumentTypeAutomation:
-		arn.Resource = "automation-definition/" + name
+		resource = "automation-definition/" + name
 	default:
-		arn.Resource = "document/" + name
+		resource = "document/" + name
 	}
 
-	return arn.String()
+	return c.RegionalARN(ctx, "ssm", resource)
 }

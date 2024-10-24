@@ -103,10 +103,8 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, dsNameEmailIdentity, name, err)
 	}
 
-	arn := emailIdentityARN(meta, name)
-
 	d.SetId(name)
-	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrARN, emailIdentityARN(ctx, meta.(*conns.AWSClient), name))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 	d.Set("email_identity", name)
 

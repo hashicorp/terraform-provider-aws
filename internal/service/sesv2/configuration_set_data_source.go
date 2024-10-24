@@ -157,7 +157,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(out.ConfigurationSetName))
 
-	d.Set(names.AttrARN, configurationSetNameToARN(meta, aws.ToString(out.ConfigurationSetName)))
+	d.Set(names.AttrARN, configurationSetARN(ctx, meta.(*conns.AWSClient), aws.ToString(out.ConfigurationSetName)))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 
 	if out.DeliveryOptions != nil {
