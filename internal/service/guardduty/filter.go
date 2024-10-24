@@ -203,7 +203,7 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).PartitionID(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "guardduty",
 		AccountID: meta.(*conns.AWSClient).AccountID,
