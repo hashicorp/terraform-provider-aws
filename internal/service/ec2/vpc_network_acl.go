@@ -214,7 +214,7 @@ func resourceNetworkACLRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	ownerID := aws.ToString(nacl.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).PartitionID(ctx),
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,
