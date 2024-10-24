@@ -1219,6 +1219,10 @@ func TestAccELBV2ListenerRule_cognito(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "action.0.authenticate_cognito.0.user_pool_domain", cognitoPoolDomainResourceName, names.AttrDomain),
 					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.0.authentication_request_extra_params.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.0.authentication_request_extra_params.param", "test"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.0.on_unauthenticated_request", "authenticate"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.0.scope", "openid"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.0.session_cookie_name", "AWSELBAuthSessionCookie"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.0.session_timeout", "604800"),
 					resource.TestCheckResourceAttr(resourceName, "action.1.order", "2"),
 					resource.TestCheckResourceAttr(resourceName, "action.1.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "action.1.target_group_arn", targetGroupResourceName, names.AttrARN),
@@ -2141,7 +2145,7 @@ func testAccCheckListenerRuleExists(ctx context.Context, n string, v *awstypes.R
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-		output, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 		if err != nil {
 			return err
@@ -2162,7 +2166,7 @@ func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.ID)
+			_, err := tfelbv2.FindListenerRuleByARN(ctx, conn, rs.Primary.Attributes[names.AttrARN])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -2172,7 +2176,7 @@ func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 				return err
 			}
 
-			return fmt.Errorf("ELBv2 Listener Rule %s still exists", rs.Primary.ID)
+			return fmt.Errorf("ELBv2 Listener Rule %s still exists", rs.Primary.Attributes[names.AttrARN])
 		}
 
 		return nil

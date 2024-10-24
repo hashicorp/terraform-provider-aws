@@ -35,7 +35,7 @@ import (
 {{- if and .IncludeComments .AWSGoSDKV2 }}
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// types.<Type Name>.
 {{- end }}
@@ -46,11 +46,11 @@ import (
 	"github.com/YakDriver/regexache"
 {{- if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 {{- else }}
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
+	"github.com/aws/aws-sdk-go/service/{{ .SDKPackage }}"
 {{- end }}
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -170,7 +170,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var {{ .DataSourceLower }} {{ .ServicePackage }}.Describe{{ .DataSource }}Response
+	var {{ .DataSourceLower }} {{ .SDKPackage }}.Describe{{ .DataSource }}Response
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_{{ .ServicePackage }}_{{ .DataSourceSnake }}.test"
 
