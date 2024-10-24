@@ -18,7 +18,6 @@ package names
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -68,6 +67,7 @@ const (
 	ConnectEndpointID                      = "connect"
 	DataExchangeEndpointID                 = "dataexchange"
 	DataPipelineEndpointID                 = "datapipeline"
+	DataZoneEndpointID                     = "datazone"
 	DetectiveEndpointID                    = "api.detective"
 	DeviceFarmEndpointID                   = "devicefarm"
 	DevOpsGuruEndpointID                   = "devops-guru"
@@ -92,7 +92,9 @@ const (
 	IVSEndpointID                          = "ivs"
 	IVSChatEndpointID                      = "ivschat"
 	IdentityStoreEndpointID                = "identitystore"
+	ImageBuilderEndpointID                 = "imagebuilder"
 	Inspector2EndpointID                   = "inspector2"
+	InternetMonitorEndpointID              = "internetmonitor"
 	KMSEndpointID                          = "kms"
 	KafkaConnectEndpointID                 = "kafkaconnect"
 	KendraEndpointID                       = "kendra"
@@ -140,7 +142,6 @@ const (
 	VerifiedPermissionsEndpointID          = "verifiedpermissions"
 	WAFEndpointID                          = "waf"
 	WAFRegionalEndpointID                  = "waf-regional"
-	DataZoneEndpointID                     = "datazone"
 )
 
 // These should move to aws-sdk-go-base.
@@ -286,17 +287,6 @@ func PartitionForRegion(region string) string {
 	}
 
 	return endpoints.AwsPartitionID
-}
-
-// ReverseDNS switches a DNS hostname to reverse DNS and vice-versa.
-func ReverseDNS(hostname string) string {
-	parts := strings.Split(hostname, ".")
-
-	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
-		parts[i], parts[j] = parts[j], parts[i]
-	}
-
-	return strings.Join(parts, ".")
 }
 
 // Type ServiceDatum corresponds closely to attributes and blocks in `data/names_data.hcl` and are

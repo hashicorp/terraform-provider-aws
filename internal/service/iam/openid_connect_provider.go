@@ -25,7 +25,7 @@ import (
 )
 
 // @SDKResource("aws_iam_openid_connect_provider", name="OIDC Provider")
-// @Tags(identifierAttribute="id", resourceType="OIDCProvider")
+// @Tags(identifierAttribute="arn", resourceType="OIDCProvider")
 // @Testing(name="OpenIDConnectProvider")
 func resourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{

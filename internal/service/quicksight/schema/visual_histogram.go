@@ -8,7 +8,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -58,11 +57,7 @@ func histogramVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"bin_count_limit": {
-														Type:         schema.TypeInt,
-														Optional:     true,
-														ValidateFunc: validation.IntBetween(0, 1000),
-													},
+													"bin_count_limit": intBetweenSchema(attrOptional, 0, 1000),
 													names.AttrValue: {
 														Type:         schema.TypeFloat,
 														Optional:     true,
@@ -71,7 +66,7 @@ func histogramVisualSchema() *schema.Schema {
 												},
 											},
 										},
-										"selected_bin_type": stringSchema(false, enum.Validate[awstypes.HistogramBinType]()),
+										"selected_bin_type": stringEnumSchema[awstypes.HistogramBinType](attrOptional),
 										"start_value": {
 											Type:     schema.TypeFloat,
 											Optional: true,

@@ -1530,6 +1530,50 @@ func TestAccRoute53Record_Allow_overwrite(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Record_ttl0(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	zoneName := acctest.RandomDomain()
+	recordName := zoneName.RandomSubdomain()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_ttl(zoneName.String(), strings.ToUpper(recordName.String()), 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ttl", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+			},
+			{
+				Config: testAccRecordConfig_ttl(zoneName.String(), strings.ToUpper(recordName.String()), 45),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ttl", "45"),
+				),
+			},
+			{
+				Config: testAccRecordConfig_ttl(zoneName.String(), strings.ToUpper(recordName.String()), 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ttl", acctest.Ct0),
+				),
+			},
+		},
+	})
+}
+
 // testAccErrorCheckSkip skips Route53 tests that have error messages indicating unsupported features
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
@@ -3195,3 +3239,19 @@ resource "aws_route53_record" "www-server1" {
   records = ["127.0.0.1"]
 }
 `
+
+func testAccRecordConfig_ttl(zoneName, recordName string, ttl int) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  name = %[1]q
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test.zone_id
+  name    = %[2]q
+  type    = "A"
+  ttl     = %[3]d
+  records = ["127.0.0.1", "127.0.0.27"]
+}
+`, zoneName, recordName, ttl)
+}

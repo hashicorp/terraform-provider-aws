@@ -9,16 +9,19 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -38,7 +41,7 @@ func newResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, 
 	r := &resourceAssociation{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute) // tags only
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -46,6 +49,11 @@ func newResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, 
 
 const (
 	ResNameAssociation = "Association"
+)
+
+var (
+	// Converted from (?!^[0-9]+$)([a-zA-Z0-9\-_' ']+) because of the negative lookahead.
+	resourceAssociationNameRegex = regexache.MustCompile("(^[^0-9][a-zA-Z0-9\\-_' ']+$)")
 )
 
 type resourceAssociation struct {
@@ -66,6 +74,10 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 			names.AttrID:  framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(resourceAssociationNameRegex, ""),
+					stringvalidator.LengthBetween(0, 64),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -107,7 +119,7 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Read:   true,
+				Update: true,
 				Delete: true,
 			}),
 		},

@@ -62,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the blueprint
 * `blueprintProvider` - Provider of the blueprint
 
-<!-- cache-key: cdktf-0.20.9 input-4aae41440f79405cc207b075a00bfe248bee74bde2c2f2a8ab1a8f5b3f6fe80e -->
+<!-- cache-key: cdktf-0.20.8 input-4aae41440f79405cc207b075a00bfe248bee74bde2c2f2a8ab1a8f5b3f6fe80e -->

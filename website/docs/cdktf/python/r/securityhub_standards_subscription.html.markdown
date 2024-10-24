@@ -54,6 +54,7 @@ Currently available standards (remember to replace `${var.partition}` and `${var
 | AWS Resource Tagging Standard            | `arn:${var.partition}:securityhub:${var.region}::standards/aws-resource-tagging-standard/v/1.0.0`            |
 | CIS AWS Foundations Benchmark v1.2.0     | `arn:${var.partition}:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0`                           |
 | CIS AWS Foundations Benchmark v1.4.0     | `arn:${var.partition}:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/1.4.0`            |
+| CIS AWS Foundations Benchmark v3.0.0     | `arn:${var.partition}:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/3.0.0`            |
 | NIST SP 800-53 Rev. 5                    | `arn:${var.partition}:securityhub:${var.region}::standards/nist-800-53/v/5.0.0`                              |
 | PCI DSS                                  | `arn:${var.partition}:securityhub:${var.region}::standards/pci-dss/v/3.2.1`                                  |
 
@@ -126,4 +127,4 @@ Using `terraform import`, import Security Hub standards subscriptions using the 
 % terraform import aws_securityhub_standards_subscription.nist_800_53_rev_5 arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-e828397733ad879e9c35b84b66fffae49264ce301108afb52d8dd7f4882122fa -->
+<!-- cache-key: cdktf-0.20.8 input-1dc0e821402cbe9c5d05c2a06a4c4a136423a27592e2e2dc7b6613093e3784e9 -->

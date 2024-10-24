@@ -62,6 +62,16 @@ This resource supports the following arguments:
 
 * `feature_name` - (Required) The name of a feature. `feature_name` cannot be any of the following: `is_deleted`, `write_time`, `api_invocation_time`.
 * `feature_type` - (Required) The value type of a feature. Valid values are `Integral`, `Fractional`, or `String`.
+* `collection_config` - (Optional) Configuration for your collection. See [Collection Config](#collection-config) Below.
+* `collection_type` - (Optional) A grouping of elements where each element within the collection must have the same feature type (String, Integral, or Fractional). Valid values are `List`, `Set`, and `Vector`.
+
+### Collection Config
+
+* `vector_config` - (Optional) Configuration for your vector collection type. See [Vector Config](#vector-config) Below.
+
+### Vector Config
+
+* `dimension` - (Optional) The number of elements in your vector. Valid values are between `1` and `8192`.
 
 ### Offline Store Config
 
@@ -98,6 +108,12 @@ This resource supports the following arguments:
 * `unit` - (Optional) TtlDuration time unit. Valid values are `Seconds`, `Minutes`, `Hours`, `Days`, or `Weeks`.
 * `value` - (Optional) TtlDuration time value.
 
+### Throughput Config
+
+* `throughput_mode` - (Required) The mode used for your feature group throughput: `OnDemand` or `Provisioned`.
+* `provisioned_read_capacity_units` - (Optional) For provisioned feature groups with online store enabled, this indicates the read throughput you are billed for and can consume without throttling. This field is not applicable for on-demand feature groups. Valid values are between `0` and `10000000`.
+* `provisioned_write_capacity_units` - (Optional) For provisioned feature groups, this indicates the write throughput you are billed for and can consume without throttling. This field is not applicable for on-demand feature groups. Valid values are between `0` and `10000000`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -131,4 +147,4 @@ Using `terraform import`, import Feature Groups using the `name`. For example:
 % terraform import aws_sagemaker_feature_group.test_feature_group feature_group-foo
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-3be94431d796f9b9ec09230c1283d4f41ae089366185d32e9b6f25a4d055142c -->
+<!-- cache-key: cdktf-0.20.8 input-3be94431d796f9b9ec09230c1283d4f41ae089366185d32e9b6f25a4d055142c -->

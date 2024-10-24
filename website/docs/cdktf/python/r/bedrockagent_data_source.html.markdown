@@ -214,4 +214,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-a6844c8d1576a70595f0eb27383ed66b24e7350d2c18bdf84a9bc5f9440c3698 -->
+<!-- cache-key: cdktf-0.20.8 input-a6844c8d1576a70595f0eb27383ed66b24e7350d2c18bdf84a9bc5f9440c3698 -->

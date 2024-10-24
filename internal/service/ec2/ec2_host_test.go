@@ -39,7 +39,7 @@ func TestAccEC2Host_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_placement", "on"),
 					resource.TestCheckResourceAttr(resourceName, "host_recovery", "off"),
 					resource.TestCheckResourceAttr(resourceName, "instance_family", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "c5.large"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "c8g.large"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
@@ -96,7 +96,7 @@ func TestAccEC2Host_instanceFamily(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`dedicated-host/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_placement", "off"),
 					resource.TestCheckResourceAttr(resourceName, "host_recovery", "on"),
-					resource.TestCheckResourceAttr(resourceName, "instance_family", "c5"),
+					resource.TestCheckResourceAttr(resourceName, "instance_family", "c8g"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
@@ -116,7 +116,7 @@ func TestAccEC2Host_instanceFamily(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_placement", "on"),
 					resource.TestCheckResourceAttr(resourceName, "host_recovery", "off"),
 					resource.TestCheckResourceAttr(resourceName, "instance_family", ""),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "c5.xlarge"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "c8g.xlarge"),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -278,7 +278,7 @@ func testAccHostConfig_basic() string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), `
 resource "aws_ec2_host" "test" {
   availability_zone = data.aws_availability_zones.available.names[1]
-  instance_type     = "c5.large"
+  instance_type     = "c8g.large"
 }
 `)
 }
@@ -289,7 +289,7 @@ resource "aws_ec2_host" "test" {
   auto_placement    = "off"
   availability_zone = data.aws_availability_zones.available.names[0]
   host_recovery     = "on"
-  instance_family   = "c5"
+  instance_family   = "c8g"
 
   tags = {
     Name = %[1]q
@@ -304,7 +304,7 @@ resource "aws_ec2_host" "test" {
   auto_placement    = "on"
   availability_zone = data.aws_availability_zones.available.names[0]
   host_recovery     = "off"
-  instance_type     = "c5.xlarge"
+  instance_type     = "c8g.xlarge"
 
   tags = {
     Name = %[1]q
@@ -317,7 +317,7 @@ func testAccHostConfig_tags1(tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_host" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  instance_type     = "c5.large"
+  instance_type     = "c8g.large"
 
   tags = {
     %[1]q = %[2]q
@@ -330,7 +330,7 @@ func testAccHostConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) stri
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_ec2_host" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  instance_type     = "c5.large"
+  instance_type     = "c8g.large"
 
   tags = {
     %[1]q = %[2]q

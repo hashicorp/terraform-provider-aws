@@ -38,7 +38,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 // @SDKResource("aws_alb", name="Load Balancer")
 // @SDKResource("aws_lb", name="Load Balancer")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;types.LoadBalancer")
 func resourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
@@ -200,6 +200,12 @@ func resourceLoadBalancer() *schema.Resource {
 				Optional:         true,
 				Default:          false,
 				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumApplication),
+			},
+			"enable_zonal_shift": {
+				Type:             schema.TypeBool,
+				Optional:         true,
+				Default:          false,
+				DiffSuppressFunc: suppressIfLBTypeNot(awstypes.LoadBalancerTypeEnumNetwork),
 			},
 			"enforce_security_group_inbound_rules_on_private_link_traffic": {
 				Type:             schema.TypeString,
@@ -760,6 +766,11 @@ var loadBalancerAttributes = loadBalancerAttributeMap(map[string]loadBalancerAtt
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPXFFClientPortEnabled,
 		tfType:                     schema.TypeBool,
 		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumApplication},
+	},
+	"enable_zonal_shift": {
+		apiAttributeKey:            loadBalancerAttributeZonalShiftConfigEnabled,
+		tfType:                     schema.TypeBool,
+		loadBalancerTypesSupported: []awstypes.LoadBalancerTypeEnum{awstypes.LoadBalancerTypeEnumNetwork},
 	},
 	"idle_timeout": {
 		apiAttributeKey:            loadBalancerAttributeIdleTimeoutTimeoutSeconds,

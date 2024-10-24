@@ -1072,6 +1072,45 @@ func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_delete(t *test
 	})
 }
 
+func TestAccDeployDeploymentGroup_LoadBalancerInfoTargetGroupInfo_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group types.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentGroupConfig_loadBalancerInfoTargetInfoMultiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_info.0.target_group_info.#", acctest.Ct3),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.target_group_info.*", map[string]string{
+						names.AttrName: "acc-test-codedeploy-dep-group-1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.target_group_info.*", map[string]string{
+						names.AttrName: "acc-test-codedeploy-dep-group-2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "load_balancer_info.0.target_group_info.*", map[string]string{
+						names.AttrName: "acc-test-codedeploy-dep-group-3",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccDeploymentGroupImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDeployDeploymentGroup_InPlaceDeploymentWithTrafficControl_create(t *testing.T) {
 	ctx := acctest.Context(t)
 	var group types.DeploymentGroupInfo
@@ -2178,6 +2217,30 @@ resource "aws_codedeploy_deployment_group" "test" {
   app_name              = aws_codedeploy_app.test.name
   deployment_group_name = %[1]q
   service_role_arn      = aws_iam_role.test.arn
+}
+`, rName))
+}
+
+func testAccDeploymentGroupConfig_loadBalancerInfoTargetInfoMultiple(rName string) string {
+	return acctest.ConfigCompose(testAccDeploymentGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name              = aws_codedeploy_app.test.name
+  deployment_group_name = %[1]q
+  service_role_arn      = aws_iam_role.test.arn
+
+  load_balancer_info {
+    target_group_info {
+      name = "acc-test-codedeploy-dep-group-1"
+    }
+
+    target_group_info {
+      name = "acc-test-codedeploy-dep-group-2"
+    }
+
+    target_group_info {
+      name = "acc-test-codedeploy-dep-group-3"
+    }
+  }
 }
 `, rName))
 }

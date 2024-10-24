@@ -28,6 +28,8 @@ import (
 
 // @SDKResource("aws_backup_report_plan", name="Report Plan")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup/types;awstypes;awstypes.ReportPlan")
+// @Testing(generator="randomReportPlanName()")
 func resourceReportPlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReportPlanCreate,

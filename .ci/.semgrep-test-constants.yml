@@ -252,6 +252,30 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-ProviderValue1Again-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtProviderValue1Again` for the string literal "providervalue1again" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"providervalue1again"'
+    severity: ERROR
+    fix: "acctest.CtProviderValue1Again"
+    options:
+      constant_propagation: false
+
+  - id: literal-ProviderValue1Updated-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtProviderValue1Updated` for the string literal "providervalue1updated" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"providervalue1updated"'
+    severity: ERROR
+    fix: "acctest.CtProviderValue1Updated"
+    options:
+      constant_propagation: false
+
   - id: literal-RName-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtRName` for the string literal "rName" in test files
@@ -324,6 +348,18 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-ResourceValue1Again-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtResourceValue1Again` for the string literal "resourcevalue1again" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"resourcevalue1again"'
+    severity: ERROR
+    fix: "acctest.CtResourceValue1Again"
+    options:
+      constant_propagation: false
+
   - id: literal-ResourceValue1Updated-string-test-constant
     languages: [go]
     message: Use the constant `acctest.CtResourceValue1Updated` for the string literal "resourcevalue1updated" in test files
@@ -345,6 +381,18 @@ rules:
     pattern: '"resourcevalue2"'
     severity: ERROR
     fix: "acctest.CtResourceValue2"
+    options:
+      constant_propagation: false
+
+  - id: literal-ResourceValue2Updated-string-test-constant
+    languages: [go]
+    message: Use the constant `acctest.CtResourceValue2Updated` for the string literal "resourcevalue2updated" in test files
+    paths:
+      include:
+        - "internal/service/**/*_test.go"
+    pattern: '"resourcevalue2updated"'
+    severity: ERROR
+    fix: "acctest.CtResourceValue2Updated"
     options:
       constant_propagation: false
 

@@ -239,7 +239,7 @@ var (
 )
 
 // @SDKResource("aws_sns_topic", name="Topic")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="map[string]string")
 func resourceTopic() *schema.Resource {
 	return &schema.Resource{

@@ -1389,7 +1389,7 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 				Config: testAccUserPoolConfig_schemaAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool1),
-					resource.TestCheckResourceAttr(resourceName, "schema.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "schema.#", acctest.Ct4),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
 						"attribute_data_type":                       "String",
 						"developer_only_attribute":                  acctest.CtFalse,
@@ -1410,14 +1410,31 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"required":                       acctest.CtFalse,
 						"string_attribute_constraints.#": acctest.Ct0,
 					}),
-				),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "String",
+						"developer_only_attribute":       acctest.CtFalse,
+						"mutable":                        acctest.CtTrue,
+						names.AttrName:                   "strattr",
+						"number_attribute_constraints.#": acctest.Ct0,
+						"required":                       acctest.CtFalse,
+						"string_attribute_constraints.#": acctest.Ct1,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "Number",
+						"developer_only_attribute":       acctest.CtFalse,
+						"mutable":                        acctest.CtTrue,
+						names.AttrName:                   "numattr",
+						"required":                       acctest.CtFalse,
+						"number_attribute_constraints.#": acctest.Ct1,
+						"string_attribute_constraints.#": acctest.Ct0,
+					})),
 			},
 			{
 				Config: testAccUserPoolConfig_schemaAttributesUpdated(rName, "mybool"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool2),
 					testAccCheckUserPoolNotRecreated(&pool1, &pool2),
-					resource.TestCheckResourceAttr(resourceName, "schema.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "schema.#", "5"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
 						"attribute_data_type":                       "String",
 						"developer_only_attribute":                  acctest.CtFalse,
@@ -1449,12 +1466,36 @@ func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 						"required":                                 acctest.CtFalse,
 						"string_attribute_constraints.#":           acctest.Ct0,
 					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "String",
+						"developer_only_attribute":       acctest.CtFalse,
+						"mutable":                        acctest.CtTrue,
+						names.AttrName:                   "strattr",
+						"number_attribute_constraints.#": acctest.Ct0,
+						"required":                       acctest.CtFalse,
+						"string_attribute_constraints.#": acctest.Ct1,
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "schema.*", map[string]string{
+						"attribute_data_type":            "Number",
+						"developer_only_attribute":       acctest.CtFalse,
+						"mutable":                        acctest.CtTrue,
+						names.AttrName:                   "numattr",
+						"required":                       acctest.CtFalse,
+						"number_attribute_constraints.#": acctest.Ct1,
+						"string_attribute_constraints.#": acctest.Ct0,
+					}),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"schema.2.number_attribute_constraints.0.max_value",
+					"schema.2.number_attribute_constraints.0.min_value",
+					"schema.4.string_attribute_constraints.0.max_length",
+					"schema.4.string_attribute_constraints.0.min_length",
+				},
 			},
 		},
 	})
@@ -2663,6 +2704,24 @@ resource "aws_cognito_user_pool" "test" {
   }
 
   schema {
+    attribute_data_type      = "String"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "strattr"
+    required                 = false
+    string_attribute_constraints {}
+  }
+
+  schema {
+    attribute_data_type      = "Number"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "numattr"
+    required                 = false
+    number_attribute_constraints {}
+  }
+
+  schema {
     attribute_data_type      = "Boolean"
     developer_only_attribute = true
     mutable                  = false
@@ -2689,6 +2748,24 @@ resource "aws_cognito_user_pool" "test" {
       min_length = 5
       max_length = 10
     }
+  }
+
+  schema {
+    attribute_data_type      = "String"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "strattr"
+    required                 = false
+    string_attribute_constraints {}
+  }
+
+  schema {
+    attribute_data_type      = "Number"
+    developer_only_attribute = false
+    mutable                  = true
+    name                     = "numattr"
+    required                 = false
+    number_attribute_constraints {}
   }
 
   schema {

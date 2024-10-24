@@ -34,8 +34,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="VPC Connection")
+// @FrameworkResource("aws_quicksight_vpc_connection", name="VPC Connection")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.VPCConnection")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func newVPCConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcConnectionResource{}
 

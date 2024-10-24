@@ -4,12 +4,13 @@
 package schema
 
 import (
+	"sync"
+
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -53,8 +54,8 @@ func pivotTableVisualSchema() *schema.Schema {
 														MaxItems: 20,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"field_id":    stringSchema(true, validation.StringLenBetween(1, 512)),
-																"field_value": stringSchema(true, validation.StringLenBetween(1, 2048)),
+																"field_id":    stringLenBetweenSchema(attrRequired, 1, 512),
+																"field_value": stringLenBetweenSchema(attrRequired, 1, 2048),
 															},
 														},
 													},
@@ -72,9 +73,9 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id":     stringSchema(true, validation.StringLenBetween(1, 512)),
-													"custom_label": stringSchema(false, validation.StringLenBetween(1, 2048)),
-													"visibility":   stringSchema(false, enum.Validate[awstypes.Visibility]()),
+													"field_id":     stringLenBetweenSchema(attrRequired, 1, 512),
+													"custom_label": stringLenBetweenSchema(attrOptional, 1, 2048),
+													"visibility":   stringEnumSchema[awstypes.Visibility](attrOptional),
 												},
 											},
 										},
@@ -111,8 +112,8 @@ func pivotTableVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"overflow_column_header_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-										"vertical_overflow_visibility":      stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"overflow_column_header_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+										"vertical_overflow_visibility":      stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
@@ -131,7 +132,7 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 200,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+													"field_id": stringLenBetweenSchema(attrRequired, 1, 512),
 													"sort_by": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableSortBy.html
 														Type:     schema.TypeList,
 														Required: true,
@@ -147,7 +148,7 @@ func pivotTableVisualSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			"direction":  stringSchema(true, enum.Validate[awstypes.SortDirection]()),
+																			"direction":  stringEnumSchema[awstypes.SortDirection](attrRequired),
 																			"sort_paths": dataPathValueSchema(dataPathValueMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathValue.html
 																		},
 																	},
@@ -170,15 +171,15 @@ func pivotTableVisualSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"cell_style":                          tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-										"collapsed_row_dimensions_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"collapsed_row_dimensions_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 										"column_header_style":                 tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-										"column_names_visibility":             stringSchema(false, enum.Validate[awstypes.Visibility]()),
-										"metric_placement":                    stringSchema(false, enum.Validate[awstypes.PivotTableMetricPlacement]()),
+										"column_names_visibility":             stringEnumSchema[awstypes.Visibility](attrOptional),
+										"metric_placement":                    stringEnumSchema[awstypes.PivotTableMetricPlacement](attrOptional),
 										"row_alternate_color_options":         rowAlternateColorOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RowAlternateColorOptions.html
 										"row_field_names_style":               tableCellStyleSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 										"row_header_style":                    tableCellStyleSchema(),           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-										"single_metric_visibility":            stringSchema(false, enum.Validate[awstypes.Visibility]()),
-										"toggle_buttons_visibility":           stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"single_metric_visibility":            stringEnumSchema[awstypes.Visibility](attrOptional),
+										"toggle_buttons_visibility":           stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
@@ -220,7 +221,7 @@ func pivotTableVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+													"field_id": stringLenBetweenSchema(attrRequired, 1, 512),
 													names.AttrScope: { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableConditionalFormattingScope.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -228,7 +229,7 @@ func pivotTableVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																names.AttrRole: stringSchema(false, enum.Validate[awstypes.PivotTableConditionalFormattingScopeRole]()),
+																names.AttrRole: stringEnumSchema[awstypes.PivotTableConditionalFormattingScopeRole](attrOptional),
 															},
 														},
 													},
@@ -249,7 +250,7 @@ func pivotTableVisualSchema() *schema.Schema {
 	}
 }
 
-func tableBorderOptionsSchema() *schema.Schema {
+var tableBorderOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableBorderOptions.html
 		Type:     schema.TypeList,
 		Required: true,
@@ -257,15 +258,15 @@ func tableBorderOptionsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"color":     stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-				"style":     stringSchema(false, enum.Validate[awstypes.TableBorderStyle]()),
-				"thickness": intSchema(false, validation.IntBetween(1, 4)),
+				"color":     hexColorSchema(attrOptional),
+				"style":     stringEnumSchema[awstypes.TableBorderStyle](attrOptional),
+				"thickness": intBetweenSchema(attrOptional, 1, 4),
 			},
 		},
 	}
-}
+})
 
-func tableCellStyleSchema() *schema.Schema {
+var tableCellStyleSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -273,7 +274,7 @@ func tableCellStyleSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"background_color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+				"background_color": hexColorSchema(attrOptional),
 				"border": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GlobalTableBorderOptions.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -302,17 +303,17 @@ func tableCellStyleSchema() *schema.Schema {
 					},
 				},
 				"font_configuration":        fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				"height":                    intSchema(false, validation.IntBetween(8, 500)),
-				"horizontal_text_alignment": stringSchema(false, enum.Validate[awstypes.HorizontalTextAlignment]()),
-				"text_wrap":                 stringSchema(false, enum.Validate[awstypes.TextWrap]()),
-				"vertical_text_alignment":   stringSchema(false, enum.Validate[awstypes.VerticalTextAlignment]()),
-				"visibility":                stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"height":                    intBetweenSchema(attrOptional, 8, 500),
+				"horizontal_text_alignment": stringEnumSchema[awstypes.HorizontalTextAlignment](attrOptional),
+				"text_wrap":                 stringEnumSchema[awstypes.TextWrap](attrOptional),
+				"vertical_text_alignment":   stringEnumSchema[awstypes.VerticalTextAlignment](attrOptional),
+				"visibility":                stringEnumSchema[awstypes.Visibility](attrOptional),
 			},
 		},
 	}
-}
+})
 
-func subtotalOptionsSchema() *schema.Schema {
+var subtotalOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SubtotalOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -324,7 +325,7 @@ func subtotalOptionsSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"field_level": stringSchema(false, enum.Validate[awstypes.PivotTableSubtotalLevel]()),
+				"field_level": stringEnumSchema[awstypes.PivotTableSubtotalLevel](attrOptional),
 				"field_level_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTableFieldSubtotalOptions.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -332,20 +333,20 @@ func subtotalOptionsSchema() *schema.Schema {
 					MaxItems: 100,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"field_id": stringSchema(false, validation.StringLenBetween(1, 512)),
+							"field_id": stringLenBetweenSchema(attrOptional, 1, 512),
 						},
 					},
 				},
 				"metric_header_cell_style": tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 				"total_cell_style":         tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-				"totals_visibility":        stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"totals_visibility":        stringEnumSchema[awstypes.Visibility](attrOptional),
 				"value_cell_style":         tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 			},
 		},
 	}
-}
+})
 
-func pivotTotalOptionsSchema() *schema.Schema {
+var pivotTotalOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PivotTotalOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -358,17 +359,17 @@ func pivotTotalOptionsSchema() *schema.Schema {
 					Optional: true,
 				},
 				"metric_header_cell_style": tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-				"placement":                stringSchema(false, enum.Validate[awstypes.TableTotalsPlacement]()),
-				"scroll_status":            stringSchema(false, enum.Validate[awstypes.TableTotalsScrollStatus]()),
+				"placement":                stringEnumSchema[awstypes.TableTotalsPlacement](attrOptional),
+				"scroll_status":            stringEnumSchema[awstypes.TableTotalsScrollStatus](attrOptional),
 				"total_cell_style":         tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
-				"totals_visibility":        stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"totals_visibility":        stringEnumSchema[awstypes.Visibility](attrOptional),
 				"value_cell_style":         tableCellStyleSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TableCellStyle.html
 			},
 		},
 	}
-}
+})
 
-func rowAlternateColorOptionsSchema() *schema.Schema {
+var rowAlternateColorOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RowAlternateColorOptions.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -383,13 +384,13 @@ func rowAlternateColorOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem:     &schema.Schema{Type: schema.TypeString, ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")},
 				},
-				names.AttrStatus: stringSchema(false, enum.Validate[awstypes.Status]()),
+				names.AttrStatus: stringEnumSchema[awstypes.Status](attrOptional),
 			},
 		},
 	}
-}
+})
 
-func textConditionalFormatSchema() *schema.Schema {
+var textConditionalFormatSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TextConditionalFormat.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -403,7 +404,7 @@ func textConditionalFormatSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandPivotTableVisual(tfList []interface{}) *awstypes.PivotTableVisual {
 	if len(tfList) == 0 || tfList[0] == nil {

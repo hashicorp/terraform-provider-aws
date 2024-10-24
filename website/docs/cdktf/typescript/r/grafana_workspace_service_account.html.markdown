@@ -87,4 +87,4 @@ Using `terraform import`, import Managed Grafana Workspace Service Account using
 % terraform import aws_grafana_workspace_service_account.example g-abc12345,1
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-c43b25d66e75854c57dd4cbfafac566f2b75e1ac87bdb00024836806e46ac0b1 -->
+<!-- cache-key: cdktf-0.20.8 input-c43b25d66e75854c57dd4cbfafac566f2b75e1ac87bdb00024836806e46ac0b1 -->

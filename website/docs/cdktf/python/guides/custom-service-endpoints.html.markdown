@@ -329,6 +329,7 @@ class MyConvertedCode(TerraformStack):
 |SSM (Systems Manager)|`ssm`|`AWS_ENDPOINT_URL_SSM`|`ssm`|
 |SSM Contacts|`ssmcontacts`|`AWS_ENDPOINT_URL_SSM_CONTACTS`|`ssm_contacts`|
 |SSM Incident Manager Incidents|`ssmincidents`|`AWS_ENDPOINT_URL_SSM_INCIDENTS`|`ssm_incidents`|
+|SSM Quick Setup|`ssmquicksetup`|`AWS_ENDPOINT_URL_SSM_QUICKSETUP`|`ssm_quicksetup`|
 |Systems Manager for SAP|`ssmsap`|`AWS_ENDPOINT_URL_SSM_SAP`|`ssm_sap`|
 |SSO (Single Sign-On)|`sso`|`AWS_ENDPOINT_URL_SSO`|`sso`|
 |SSO Admin|`ssoadmin`|`AWS_ENDPOINT_URL_SSO_ADMIN`|`sso_admin`|
@@ -449,4 +450,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-7f8e5bac5eaae6449261e2943a5adf9c4c2e01b33e93356dd6555fc464bd56a4 -->
+<!-- cache-key: cdktf-0.20.8 input-d0a8223c41ffa69ec9860297a292de0f947723f1e74ea61de738b44154e87b43 -->

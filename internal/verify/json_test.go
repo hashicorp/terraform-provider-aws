@@ -354,6 +354,48 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
 			newPolicy: "",
 			want:      "",
 		},
+		{
+			name: "malformed old",
+			oldPolicy: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Condition" : {
+        "StringLike" : ["demo-prefix/"]
+      },
+      "Resource": "*"
+    }
+  ]
+}`,
+			newPolicy: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "*"
+    }
+  ]
+}`,
+			want: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "*"
+    }
+  ]
+}`,
+		},
 	}
 
 	for _, v := range testCases {

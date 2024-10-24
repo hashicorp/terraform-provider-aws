@@ -37,7 +37,7 @@ class MyConvertedCode(TerraformStack):
         selected = DataAwsSubnet(self, "selected",
             id=subnet_id.string_value
         )
-        SecurityGroup(self, "subnet",
+        SecurityGroup(self, "subnet_security_group",
             ingress=[SecurityGroupIngress(
                 cidr_blocks=[Token.as_string(selected.cidr_block)],
                 from_port=80,
@@ -126,4 +126,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.20.9 input-4038416b655586cab52609dedf5c41d129209560a5619712772e26a29f2bcdfb -->
+<!-- cache-key: cdktf-0.20.8 input-8a9fda3028558b6010b7b76726cf6c3068ab14636d15ca194ba35a571298be40 -->

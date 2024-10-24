@@ -25,18 +25,21 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:                 testAccFeatureGroup_basic,
-		"storageType":                   testAccFeatureGroup_storageType,
-		"description":                   testAccFeatureGroup_description,
-		acctest.CtDisappears:            TestAccSageMakerFeatureGroup_disappears,
-		"multipleFeatures":              testAccFeatureGroup_multipleFeatures,
-		"offlineConfig_basic":           testAccFeatureGroup_offlineConfig_basic,
-		"offlineConfig_format":          testAccFeatureGroup_offlineConfig_format,
-		"offlineConfig_createCatalog":   testAccFeatureGroup_offlineConfig_createCatalog,
-		"offlineConfig_providedCatalog": TestAccSageMakerFeatureGroup_Offline_providedCatalog,
-		"onlineConfigSecurityConfig":    testAccFeatureGroup_onlineConfigSecurityConfig,
-		"onlineConfig_TTLDuration":      testAccFeatureGroup_onlineConfigTTLDuration,
-		"tags":                          testAccFeatureGroup_tags,
+		acctest.CtBasic:                      testAccFeatureGroup_basic,
+		"storageType":                        testAccFeatureGroup_storageType,
+		"featureDefinition_collectionType":   testAccFeatureGroup_featureDefinition_collectionType,
+		"featureDefinition_collectionConfig": testAccFeatureGroup_featureDefinition_collectionConfig,
+		"description":                        testAccFeatureGroup_description,
+		acctest.CtDisappears:                 TestAccSageMakerFeatureGroup_disappears,
+		"multipleFeatures":                   testAccFeatureGroup_multipleFeatures,
+		"offlineConfig_basic":                testAccFeatureGroup_offlineConfig_basic,
+		"offlineConfig_format":               testAccFeatureGroup_offlineConfig_format,
+		"offlineConfig_createCatalog":        testAccFeatureGroup_offlineConfig_createCatalog,
+		"offlineConfig_providedCatalog":      TestAccSageMakerFeatureGroup_Offline_providedCatalog,
+		"onlineConfigSecurityConfig":         testAccFeatureGroup_onlineConfigSecurityConfig,
+		"onlineConfig_TTLDuration":           testAccFeatureGroup_onlineConfigTTLDuration,
+		"throughputConfig":                   testAccFeatureGroup_throughputConfig,
+		"tags":                               testAccFeatureGroup_tags,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -323,6 +326,8 @@ func testAccFeatureGroup_offlineConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.s3_storage_config.0.s3_uri", fmt.Sprintf("s3://%s/prefix/", rName)),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.table_format", "Glue"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "throughput_config.0.throughput_mode", "OnDemand"),
 				),
 			},
 			{
@@ -430,6 +435,118 @@ func TestAccSageMakerFeatureGroup_Offline_providedCatalog(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "offline_store_config.0.data_catalog_config.0.catalog", glueTableResourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttrPair(resourceName, "offline_store_config.0.data_catalog_config.0.database", glueTableResourceName, names.AttrDatabaseName),
 					resource.TestCheckResourceAttrPair(resourceName, "offline_store_config.0.data_catalog_config.0.table_name", glueTableResourceName, names.AttrName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccFeatureGroup_throughputConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var featureGroup sagemaker.DescribeFeatureGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureGroupConfig_throughputConfigOnDemand(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "throughput_config.0.throughput_mode", "OnDemand"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFeatureGroupConfig_throughputConfigProvisioned(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "throughput_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "throughput_config.0.throughput_mode", "Provisioned"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_config.0.provisioned_write_capacity_units", acctest.Ct1),
+				),
+			},
+		},
+	})
+}
+
+func testAccFeatureGroup_featureDefinition_collectionType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var featureGroup sagemaker.DescribeFeatureGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureGroupConfig_featureDefinition_collectionType(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_name", fmt.Sprintf("%s-1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_type", "List"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_config.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccFeatureGroup_featureDefinition_collectionConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var featureGroup sagemaker.DescribeFeatureGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureGroupConfig_featureDefinition_collectionConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_name", fmt.Sprintf("%s-1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_type", "Fractional"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_type", "Vector"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_config.0.vector_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.collection_config.0.vector_config.0.dimension", acctest.Ct2),
 				),
 			},
 			{
@@ -894,4 +1011,130 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value))
+}
+
+func testAccFeatureGroupConfig_featureDefinition_collectionType(rName string) string {
+	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+    feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  feature_definition {
+    feature_name    = "%[1]s-1"
+    feature_type    = "String"
+    collection_type = "List"
+  }
+
+  online_store_config {
+    enable_online_store = true
+    storage_type        = "InMemory"
+  }
+}
+`, rName))
+}
+
+func testAccFeatureGroupConfig_featureDefinition_collectionConfig(rName string) string {
+	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+    feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  feature_definition {
+    feature_name    = "%[1]s-1"
+    feature_type    = "Fractional"
+    collection_type = "Vector"
+    collection_config {
+      vector_config {
+        dimension = 2
+      }
+    }
+  }
+
+  online_store_config {
+    enable_online_store = true
+    storage_type        = "InMemory"
+  }
+}
+`, rName))
+}
+
+func testAccFeatureGroupConfig_throughputConfigOnDemand(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFeatureGroupConfig_base(rName),
+		testAccFeatureGroupConfig_baseOffline(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+    feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  offline_store_config {
+    disable_glue_table_creation = true
+
+    s3_storage_config {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
+    }
+  }
+
+  throughput_config {
+    throughput_mode = "OnDemand"
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName))
+}
+
+func testAccFeatureGroupConfig_throughputConfigProvisioned(rName string) string {
+	return acctest.ConfigCompose(
+		testAccFeatureGroupConfig_base(rName),
+		testAccFeatureGroupConfig_baseOffline(rName),
+		fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+    feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  offline_store_config {
+    disable_glue_table_creation = true
+
+    s3_storage_config {
+      s3_uri = "s3://${aws_s3_bucket.test.bucket}/prefix/"
+    }
+  }
+
+  throughput_config {
+    throughput_mode                  = "Provisioned"
+    provisioned_write_capacity_units = 1
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName))
 }

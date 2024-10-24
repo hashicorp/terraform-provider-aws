@@ -49,8 +49,8 @@ func (d *defaultTagsDataSource) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	defaultTagsConfig := d.Meta().DefaultTagsConfig
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	defaultTagsConfig := d.Meta().DefaultTagsConfig(ctx)
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 	tags := defaultTagsConfig.GetTags()
 
 	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition)

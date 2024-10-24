@@ -6,8 +6,7 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_imagebuilder_distribution_configuration")
-func DataSourceDistributionConfiguration() *schema.Resource {
+// @SDKDataSource("aws_imagebuilder_distribution_configuration", name="Distribution Configuration")
+// @Tags
+func dataSourceDistributionConfiguration() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDistributionConfigurationRead,
 
@@ -241,35 +241,27 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 
 func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetDistributionConfigurationInput{}
-
-	if v, ok := d.GetOk(names.AttrARN); ok {
-		input.DistributionConfigurationArn = aws.String(v.(string))
-	}
-
-	output, err := conn.GetDistributionConfigurationWithContext(ctx, input)
+	arn := d.Get(names.AttrARN).(string)
+	distributionConfiguration, err := findDistributionConfigurationByARN(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Distribution Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Distribution Configuration (%s): %s", arn, err)
 	}
 
-	if output == nil || output.DistributionConfiguration == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Distribution Configuration (%s): empty response", d.Id())
-	}
-
-	distributionConfiguration := output.DistributionConfiguration
-
-	d.SetId(aws.StringValue(distributionConfiguration.Arn))
-	d.Set(names.AttrARN, distributionConfiguration.Arn)
+	arn = aws.ToString(distributionConfiguration.Arn)
+	d.SetId(arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("date_created", distributionConfiguration.DateCreated)
 	d.Set("date_updated", distributionConfiguration.DateUpdated)
 	d.Set(names.AttrDescription, distributionConfiguration.Description)
-	d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions))
+	if err := d.Set("distribution", flattenDistributions(distributionConfiguration.Distributions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting distribution: %s", err)
+	}
 	d.Set(names.AttrName, distributionConfiguration.Name)
-	d.Set(names.AttrTags, KeyValueTags(ctx, distributionConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+
+	setTagsOut(ctx, distributionConfiguration.Tags)
 
 	return diags
 }

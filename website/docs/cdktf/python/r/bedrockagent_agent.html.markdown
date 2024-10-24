@@ -188,4 +188,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent using the agent
 % terraform import aws_bedrockagent_agent.example GGRRAED6JP
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-10f9ce234966d8f331fa5178176b4ca97f3e0030ff6d304adc93b7f4d8d02f59 -->
+<!-- cache-key: cdktf-0.20.8 input-10f9ce234966d8f331fa5178176b4ca97f3e0030ff6d304adc93b7f4d8d02f59 -->

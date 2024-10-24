@@ -85,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html
 
-<!-- cache-key: cdktf-0.20.9 input-86581368f66aad8815bf1d7ad238630d56cadb2709c7c6b32c933a80a4a25b30 -->
+<!-- cache-key: cdktf-0.20.8 input-86581368f66aad8815bf1d7ad238630d56cadb2709c7c6b32c933a80a4a25b30 -->

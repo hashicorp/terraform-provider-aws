@@ -86,7 +86,7 @@ func DataSourceStream() *schema.Resource {
 func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KinesisClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	stream, err := findStreamByName(ctx, conn, name)

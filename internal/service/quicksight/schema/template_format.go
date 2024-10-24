@@ -4,16 +4,15 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func numericFormatConfigurationSchema() *schema.Schema {
+var numericFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -31,11 +30,11 @@ func numericFormatConfigurationSchema() *schema.Schema {
 							"decimal_places_configuration":    decimalPlacesConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 							"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 							"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-							"number_scale":                    stringSchema(false, enum.Validate[awstypes.NumberScale]()),
-							names.AttrPrefix:                  stringSchema(false, validation.StringLenBetween(1, 128)),
+							"number_scale":                    stringEnumSchema[awstypes.NumberScale](attrOptional),
+							names.AttrPrefix:                  stringLenBetweenSchema(attrOptional, 1, 128),
 							"separator_configuration":         separatorConfigurationSchema(),
-							"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
-							"symbol":                          stringSchema(false, validation.StringMatch(regexache.MustCompile(`[A-Z]{3}`), "must be a 3 character currency symbol")),
+							"suffix":                          stringLenBetweenSchema(attrOptional, 1, 128),
+							"symbol":                          stringMatchSchema(attrOptional, `[A-Z]{3}`, "must be a 3 character currency symbol"),
 						},
 					},
 				},
@@ -44,9 +43,9 @@ func numericFormatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func dateTimeFormatConfigurationSchema() *schema.Schema {
+var dateTimeFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -54,15 +53,15 @@ func dateTimeFormatConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"date_time_format":                stringSchema(false, validation.StringLenBetween(1, 128)),
+				"date_time_format":                stringLenBetweenSchema(attrOptional, 1, 128),
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
 				"numeric_format_configuration":    numericFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
 			},
 		},
 	}
-}
+})
 
-func numberDisplayFormatConfigurationSchema() *schema.Schema {
+var numberDisplayFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberDisplayFormatConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -73,16 +72,16 @@ func numberDisplayFormatConfigurationSchema() *schema.Schema {
 				"decimal_places_configuration":    decimalPlacesConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 				"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-				"number_scale":                    stringSchema(false, enum.Validate[awstypes.NumberScale]()),
-				names.AttrPrefix:                  stringSchema(false, validation.StringLenBetween(1, 128)),
+				"number_scale":                    stringEnumSchema[awstypes.NumberScale](attrOptional),
+				names.AttrPrefix:                  stringLenBetweenSchema(attrOptional, 1, 128),
 				"separator_configuration":         separatorConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
-				"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
+				"suffix":                          stringLenBetweenSchema(attrOptional, 1, 128),
 			},
 		},
 	}
-}
+})
 
-func percentageDisplayFormatConfigurationSchema() *schema.Schema {
+var percentageDisplayFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PercentageDisplayFormatConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -93,15 +92,15 @@ func percentageDisplayFormatConfigurationSchema() *schema.Schema {
 				"decimal_places_configuration":    decimalPlacesConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 				"negative_value_configuration":    negativeValueConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NegativeValueConfiguration.html
 				"null_value_format_configuration": nullValueConfigurationSchema(),     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NullValueFormatConfiguration.html
-				names.AttrPrefix:                  stringSchema(false, validation.StringLenBetween(1, 128)),
+				names.AttrPrefix:                  stringLenBetweenSchema(attrOptional, 1, 128),
 				"separator_configuration":         separatorConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericSeparatorConfiguration.html
-				"suffix":                          stringSchema(false, validation.StringLenBetween(1, 128)),
+				"suffix":                          stringLenBetweenSchema(attrOptional, 1, 128),
 			},
 		},
 	}
-}
+})
 
-func numberFormatConfigurationSchema() *schema.Schema {
+var numberFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumberFormatConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -113,9 +112,9 @@ func numberFormatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func stringFormatConfigurationSchema() *schema.Schema {
+var stringFormatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -128,9 +127,9 @@ func stringFormatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func decimalPlacesConfigurationSchema() *schema.Schema {
+var decimalPlacesConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DecimalPlacesConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -138,17 +137,13 @@ func decimalPlacesConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"decimal_places": {
-					Type:         schema.TypeInt,
-					Required:     true,
-					ValidateFunc: validation.IntBetween(0, 20),
-				},
+				"decimal_places": intBetweenSchema(attrRequired, 0, 20),
 			},
 		},
 	}
-}
+})
 
-func negativeValueConfigurationSchema() *schema.Schema {
+var negativeValueConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -156,13 +151,13 @@ func negativeValueConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"display_mode": stringSchema(true, enum.Validate[awstypes.NegativeValueDisplayMode]()),
+				"display_mode": stringEnumSchema[awstypes.NegativeValueDisplayMode](attrRequired),
 			},
 		},
 	}
-}
+})
 
-func nullValueConfigurationSchema() *schema.Schema {
+var nullValueConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -170,13 +165,13 @@ func nullValueConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"null_string": stringSchema(true, validation.StringLenBetween(1, 128)),
+				"null_string": stringLenBetweenSchema(attrRequired, 1, 128),
 			},
 		},
 	}
-}
+})
 
-func separatorConfigurationSchema() *schema.Schema {
+var separatorConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -184,7 +179,7 @@ func separatorConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"decimal_separator": stringSchema(false, enum.Validate[awstypes.NumericSeparatorSymbol]()),
+				"decimal_separator": stringEnumSchema[awstypes.NumericSeparatorSymbol](attrOptional),
 				"thousands_separator": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThousandSeparatorOptions.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -192,17 +187,17 @@ func separatorConfigurationSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"symbol":     stringSchema(false, enum.Validate[awstypes.NumericSeparatorSymbol]()),
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"symbol":     stringEnumSchema[awstypes.NumericSeparatorSymbol](attrOptional),
+							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
 			},
 		},
 	}
-}
+})
 
-func labelOptionsSchema() *schema.Schema {
+var labelOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -215,13 +210,13 @@ func labelOptionsSchema() *schema.Schema {
 					Optional: true,
 				},
 				"font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				"visibility":         stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"visibility":         stringEnumSchema[awstypes.Visibility](attrOptional),
 			},
 		},
 	}
-}
+})
 
-func fontConfigurationSchema() *schema.Schema {
+var fontConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -229,35 +224,35 @@ func fontConfigurationSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"font_color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-				"font_decoration": stringSchema(false, enum.Validate[awstypes.FontDecoration]()),
+				"font_color":      hexColorSchema(attrOptional),
+				"font_decoration": stringEnumSchema[awstypes.FontDecoration](attrOptional),
 				"font_size": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontSize.html
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"relative": stringSchema(false, enum.Validate[awstypes.RelativeFontSize]()),
+							"relative": stringEnumSchema[awstypes.RelativeFontSize](attrOptional),
 						},
 					},
 				},
-				"font_style": stringSchema(false, enum.Validate[awstypes.FontStyle]()),
+				"font_style": stringEnumSchema[awstypes.FontStyle](attrOptional),
 				"font_weight": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontWeight.html
 					Type:     schema.TypeList,
 					MaxItems: 1,
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrName: stringSchema(false, enum.Validate[awstypes.FontWeightName]()),
+							names.AttrName: stringEnumSchema[awstypes.FontWeightName](attrOptional),
 						},
 					},
 				},
 			},
 		},
 	}
-}
+})
 
-func formatConfigurationSchema() *schema.Schema {
+var formatConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 		Type:     schema.TypeList,
 		MinItems: 1,
@@ -271,7 +266,7 @@ func formatConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandFormatConfiguration(tfList []interface{}) *awstypes.FormatConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {

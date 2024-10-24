@@ -8,7 +8,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,8 +36,8 @@ func boxPlotVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"all_data_points_visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
-										"outlier_visibility":         stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"all_data_points_visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
+										"outlier_visibility":         stringEnumSchema[awstypes.Visibility](attrOptional),
 										"style_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotStyleOptions.html
 											Type:     schema.TypeList,
 											Optional: true,
@@ -46,7 +45,7 @@ func boxPlotVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"fill_style": stringSchema(false, enum.Validate[awstypes.BoxPlotFillStyle]()),
+													"fill_style": stringEnumSchema[awstypes.BoxPlotFillStyle](attrOptional),
 												},
 											},
 										},
@@ -77,10 +76,10 @@ func boxPlotVisualSchema() *schema.Schema {
 									},
 								},
 							},
-							"legend":                         legendOptionsSchema(),                       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"primary_y_axis_display_options": axisDisplayOptionsSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
-							"primary_y_axis_label_options":   chartAxisLabelOptionsSchema(),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
-							"reference_lines":                referenceLineSchema(referenceLinesMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
+							"legend":                         legendOptionsSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
+							"primary_y_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
+							"primary_y_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
+							"reference_lines":                referenceLineSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLine.html
 							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BoxPlotSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
@@ -89,8 +88,8 @@ func boxPlotVisualSchema() *schema.Schema {
 								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"category_sort":            fieldSortOptionsSchema(fieldSortOptionsMaxItems100), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
-										"pagination_configuration": paginationConfigurationSchema(),                     // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PaginationConfiguration.html
+										"category_sort":            fieldSortOptionsSchema(),        // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FieldSortOptions.html,
+										"pagination_configuration": paginationConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PaginationConfiguration.html
 									},
 								},
 							},

@@ -22,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_security_group")
 // @Tags
+// @Testing(tagsIdentifierAttribute="id")
 func dataSourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecurityGroupRead,

@@ -19,4 +19,6 @@ var (
 	FindJobDefinitionByARN                  = findJobDefinitionByARN
 	FindJobQueueByID                        = findJobQueueByID
 	FindSchedulingPolicyByARN               = findSchedulingPolicyByARN
+
+	ListTags = listTags
 )

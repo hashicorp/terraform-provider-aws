@@ -365,6 +365,10 @@ Amplitude, Datadog, Dynatrace, Google Analytics, Infor Nexus, Marketo, ServiceNo
 ##### SAPOData Source Properties
 
 * `objectPath` - (Required) Object path specified in the SAPOData flow source.
+* `paginationConfig` - (Optional) Sets the page size for each concurrent process that transfers OData records from your SAP instance.
+    * `maxPageSize` - (Optional) he maximum number of records that Amazon AppFlow receives in each page of the response from your SAP application.
+* `parallelismConfig` - (Optional) Sets the number of concurrent processes that transfers OData records from your SAP instance.
+    * `max_parallelism` - (Optional) The maximum number of processes that Amazon AppFlow runs at the same time when it retrieves your data from your SAP application.
 
 ##### Veeva Source Properties
 
@@ -508,4 +512,4 @@ Using `terraform import`, import AppFlow flows using the `arn`. For example:
 % terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-6f3ec4a8895ccd6fb5d184ebcaed08261aceef9021b237bf13fae83d59353eee -->
+<!-- cache-key: cdktf-0.20.8 input-f192b09e300b934b584e0b1c5452829b823418f222f4290dc0020e6e128ba592 -->

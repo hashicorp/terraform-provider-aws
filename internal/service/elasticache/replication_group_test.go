@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_Redis_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -48,7 +48,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_basic(rName),
+				Config: testAccReplicationGroupConfig_basic_engine(rName, "redis"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -60,7 +60,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtFalse),
-					testCheckEngineStuffDefault(ctx, resourceName),
+					testCheckEngineStuffRedisDefault(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", acctest.CtFalse),
 				),
@@ -75,7 +75,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_Redis_basic_v5(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -92,7 +92,7 @@ func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_v5(rName),
+				Config: testAccReplicationGroupConfig_Redis_v5(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -100,6 +100,50 @@ func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
 					// Even though it is ignored, the API returns `true` in this case
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_Valkey_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_basic_engine(rName, "valkey"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticache", fmt.Sprintf("replicationgroup:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "member_clusters.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "replicas_per_node_group", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtFalse),
+					testCheckEngineStuffValkeyDefault(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -145,7 +189,7 @@ func TestAccElastiCacheReplicationGroup_uppercase(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_EngineVersion_v7(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_Redis_EngineVersion_v7(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -298,6 +342,50 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_6xToRealVersion(t *testing
 	})
 }
 
+func TestAccElastiCacheReplicationGroup_Engine_RedisToValkey(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v1, v2 awstypes.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_basic_engine(rName, "redis"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+				),
+			},
+			{
+				Config: testAccReplicationGroupConfig_basic_engine(rName, "valkey"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &v2),
+					testAccCheckReplicationGroupNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+				),
+				ExpectError: regexache.MustCompile("must explicitly set 'engine_version' attribute"),
+			},
+			{
+				Config: testAccReplicationGroupConfig_update_Valkey(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &v2),
+					testAccCheckReplicationGroupNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheReplicationGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -315,7 +403,7 @@ func TestAccElastiCacheReplicationGroup_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_basic(rName),
+				Config: testAccReplicationGroupConfig_basic_engine(rName, "redis"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceReplicationGroup(), resourceName),
@@ -343,7 +431,7 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_basic(rName),
+				Config: testAccReplicationGroupConfig_basic_engine(rName, "redis"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.Ct1),
@@ -385,7 +473,7 @@ func TestAccElastiCacheReplicationGroup_updateMaintenanceWindow(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_basic(rName),
+				Config: testAccReplicationGroupConfig_basic_engine(rName, "redis"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window", "tue:06:30-tue:07:30"),
@@ -469,7 +557,7 @@ func TestAccElastiCacheReplicationGroup_updateNodeSize(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_basic(rName),
+				Config: testAccReplicationGroupConfig_basic_engine(rName, "redis"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", acctest.Ct1),
@@ -631,14 +719,14 @@ func TestAccElastiCacheReplicationGroup_stateUpgrade5270(t *testing.T) {
 						VersionConstraint: "5.26.0",
 					},
 				},
-				Config: testAccReplicationGroupConfig_basic(rName),
+				Config: testAccReplicationGroupConfig_basic_engine(rName, "redis"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 				),
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccReplicationGroupConfig_basic(rName),
+				Config:                   testAccReplicationGroupConfig_basic_engine(rName, "redis"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 				),
@@ -670,14 +758,14 @@ func TestAccElastiCacheReplicationGroup_stateUpgrade5590(t *testing.T) {
 						VersionConstraint: "4.67.0",
 					},
 				},
-				Config: testAccReplicationGroupConfig_basic(rName),
+				Config: testAccReplicationGroupConfig_basic_engine(rName, "redis"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 				),
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccReplicationGroupConfig_basic(rName),
+				Config:                   testAccReplicationGroupConfig_basic_engine(rName, "redis"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 				),
@@ -1483,7 +1571,7 @@ func TestAccElastiCacheReplicationGroup_enableSnapshotting(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_basic(rName),
+				Config: testAccReplicationGroupConfig_basic_engine(rName, "redis"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", acctest.Ct0),
@@ -2262,20 +2350,20 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.5", acctest.CtKey1, acctest.CtValue1),
+				Config: testAccReplicationGroupConfig_versionAndTag(rName, "6.0", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.0"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{acctest.CtKey1, acctest.CtValue1},
 					}),
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "5.0.6", acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccReplicationGroupConfig_versionAndTag(rName, "6.2", acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.6"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.2"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{acctest.CtKey1, acctest.CtValue1Updated},
 					}),
@@ -2658,7 +2746,7 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 				Config: testAccReplicationGroupConfig_dataTiering(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					testCheckRedisEngineVersionLatest(ctx, &version),
+					testCheckEngineVersionLatest(ctx, "redis", &version),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 					func(s *terraform.State) error {
 						return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
@@ -3023,15 +3111,15 @@ func testAccCheckReplicationGroupNotRecreated(i, j *awstypes.ReplicationGroup) r
 	}
 }
 
-func testCheckEngineStuffDefault(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testCheckEngineStuffRedisDefault(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	var (
 		version        awstypes.CacheEngineVersion
 		parameterGroup awstypes.CacheParameterGroup
 	)
 
 	checks := []resource.TestCheckFunc{
-		testCheckRedisEngineVersionLatest(ctx, &version),
-		testCheckRedisParameterGroupDefault(ctx, &version, &parameterGroup),
+		testCheckEngineVersionLatest(ctx, "redis", &version),
+		testCheckParameterGroupDefault(ctx, &version, &parameterGroup),
 		func(s *terraform.State) error {
 			return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
 		},
@@ -3046,12 +3134,35 @@ func testCheckEngineStuffDefault(ctx context.Context, resourceName string) resou
 	return resource.ComposeAggregateTestCheckFunc(checks...)
 }
 
-func testCheckRedisEngineVersionLatest(ctx context.Context, v *awstypes.CacheEngineVersion) resource.TestCheckFunc {
+func testCheckEngineStuffValkeyDefault(ctx context.Context, resourceName string) resource.TestCheckFunc {
+	var (
+		version        awstypes.CacheEngineVersion
+		parameterGroup awstypes.CacheParameterGroup
+	)
+
+	checks := []resource.TestCheckFunc{
+		testCheckEngineVersionLatest(ctx, "valkey", &version),
+		testCheckParameterGroupDefault(ctx, &version, &parameterGroup),
+		func(s *terraform.State) error {
+			return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
+		},
+		func(s *terraform.State) error {
+			return resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(fmt.Sprintf(`^%s\.[[:digit:]]+$`, *version.EngineVersion)))(s)
+		},
+		func(s *terraform.State) error {
+			return resource.TestCheckResourceAttr(resourceName, names.AttrParameterGroupName, *parameterGroup.CacheParameterGroupName)(s)
+		},
+	}
+
+	return resource.ComposeAggregateTestCheckFunc(checks...)
+}
+
+func testCheckEngineVersionLatest(ctx context.Context, engine string, v *awstypes.CacheEngineVersion) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
 		versions, err := conn.DescribeCacheEngineVersions(ctx, &elasticache.DescribeCacheEngineVersionsInput{
-			Engine:      aws.String("redis"),
+			Engine:      aws.String(engine),
 			DefaultOnly: aws.Bool(true),
 		})
 		if err != nil {
@@ -3070,7 +3181,7 @@ func testCheckRedisEngineVersionLatest(ctx context.Context, v *awstypes.CacheEng
 	}
 }
 
-func testCheckRedisParameterGroupDefault(ctx context.Context, version *awstypes.CacheEngineVersion, v *awstypes.CacheParameterGroup) resource.TestCheckFunc {
+func testCheckParameterGroupDefault(ctx context.Context, version *awstypes.CacheEngineVersion, v *awstypes.CacheParameterGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheClient(ctx)
 
@@ -3101,7 +3212,7 @@ func testCheckEngineStuffClusterEnabledDefault(ctx context.Context, resourceName
 	)
 
 	checks := []resource.TestCheckFunc{
-		testCheckRedisEngineVersionLatest(ctx, &version),
+		testCheckEngineVersionLatest(ctx, "redis", &version),
 		testCheckRedisParameterGroupClusterEnabledDefault(ctx, &version, &parameterGroup),
 		func(s *terraform.State) error {
 			return resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, *version.EngineVersion)(s)
@@ -3166,7 +3277,7 @@ func testAccCheckResourceTags(resourceName string, kvs []kvp) []resource.TestChe
 	return checks
 }
 
-func testAccReplicationGroupConfig_basic(rName string) string {
+func testAccReplicationGroupConfig_basic_engine(rName string, engine string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[1]q
@@ -3176,6 +3287,24 @@ resource "aws_elasticache_replication_group" "test" {
   apply_immediately    = true
   maintenance_window   = "tue:06:30-tue:07:30"
   snapshot_window      = "01:00-02:00"
+  engine               = %[2]q
+}
+`, rName, engine)
+}
+
+func testAccReplicationGroupConfig_update_Valkey(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[1]q
+  description          = "test description"
+  node_type            = "cache.t3.small"
+  port                 = 6379
+  apply_immediately    = true
+  maintenance_window   = "tue:06:30-tue:07:30"
+  snapshot_window      = "01:00-02:00"
+  engine               = "valkey"
+  engine_version       = "7.2"
+  #parameter_group_name = "default.valkey7"
 }
 `, rName)
 }
@@ -3194,7 +3323,7 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName)
 }
 
-func testAccReplicationGroupConfig_v5(rName string) string {
+func testAccReplicationGroupConfig_Redis_v5(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
   replication_group_id = %[1]q

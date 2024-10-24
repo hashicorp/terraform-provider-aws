@@ -470,4 +470,4 @@ Using `terraform import`, import Batch Job Definition using the `arn`. For examp
 % terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-869b943f136098d1f2f82e01bebded433786f75d430a7d0e7b3a1cae42afb918 -->
+<!-- cache-key: cdktf-0.20.8 input-869b943f136098d1f2f82e01bebded433786f75d430a7d0e7b3a1cae42afb918 -->

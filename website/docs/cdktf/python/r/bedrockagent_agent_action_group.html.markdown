@@ -275,4 +275,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent Action Group th
 % terraform import aws_bedrockagent_agent_action_group.example MMAUDBZTH4,GGRRAED6JP,DRAFT
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-24717de6bf2c6ea146670ed6baa29be12e190a23071aa74b2516abd638ffcd16 -->
+<!-- cache-key: cdktf-0.20.8 input-24717de6bf2c6ea146670ed6baa29be12e190a23071aa74b2516abd638ffcd16 -->

@@ -75,4 +75,4 @@ Using `terraform import`, import Pinpoint GCM Channel using the `application-id`
 % terraform import aws_pinpoint_gcm_channel.gcm application-id
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-200362337b5bd04b62d3e5237c42fed5c951481ede3469edf838e6a12fe27f02 -->
+<!-- cache-key: cdktf-0.20.8 input-200362337b5bd04b62d3e5237c42fed5c951481ede3469edf838e6a12fe27f02 -->

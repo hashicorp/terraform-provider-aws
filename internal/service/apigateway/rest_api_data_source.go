@@ -23,6 +23,7 @@ import (
 
 // @SDKDataSource("aws_api_gateway_rest_api", name="REST API")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceRestAPI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRestAPIRead,

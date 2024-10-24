@@ -5,7 +5,6 @@ package elbv2
 
 import (
 	"context"
-	"log"
 	"sort"
 	"time"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -25,7 +23,7 @@ import (
 
 // @SDKDataSource("aws_alb_listener", name="Listener")
 // @SDKDataSource("aws_lb_listener", name="Listener")
-// @Testing(tagsTest=true)
+// @Tags(identifierAttribute="arn")
 func dataSourceListener() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceListenerRead,
@@ -306,7 +304,6 @@ func dataSourceListener() *schema.Resource {
 func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &elasticloadbalancingv2.DescribeListenersInput{}
 
@@ -350,21 +347,6 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrPort, listener.Port)
 	d.Set(names.AttrProtocol, listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
-
-	tags, err := listTags(ctx, conn, d.Id())
-
-	if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
-		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

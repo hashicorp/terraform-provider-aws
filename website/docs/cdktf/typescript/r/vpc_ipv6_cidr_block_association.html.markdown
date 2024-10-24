@@ -69,7 +69,9 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the VPC CIDR association
+* `id` - The ID of the VPC CIDR association.
+* `ipSource` - The source that allocated the IP address space. Values: `amazon`, `byoip`, `none`.
+* `ipv6AddressAttribute` - Public IPv6 addresses are those advertised on the internet from AWS. Private IP addresses are not and cannot be advertised on the internet from AWS. Values: `public`, `private`.
 
 ## Import
 
@@ -103,4 +105,4 @@ Using `terraform import`, import `aws_vpc_ipv6_cidr_block_association` using the
 % terraform import aws_vpc_ipv6_cidr_block_association.example vpc-cidr-assoc-xxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.20.9 input-a8b8992f527374062a54ace4dc559feae40a1d9d8b746a264a4d0a5ccdea445c -->
+<!-- cache-key: cdktf-0.20.8 input-67cbe87b319fc509a835faa358e13e1f63bd3e44b936514da32599a8545d1ddd -->

@@ -152,6 +152,11 @@ func testAccIndex_type(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "LOCAL"),
 				),
 			},
+			{
+				Config:      testAccIndexConfig_type("AGGREGATOR"),
+				ExpectError: regexache.MustCompile("cool down period has expired"),
+				Check:       testAccCheckIndexDestroy(ctx),
+			},
 		},
 	})
 }
