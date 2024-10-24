@@ -3074,6 +3074,14 @@ func TestAccWAFV2WebACL_ruleJSON(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"rule_json"},
 				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
 			},
+			{
+				Config: testAccWebACLConfig_JSONruleUpdate(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "rule_json"),
+				),
+			},
 		},
 	})
 }
@@ -6157,6 +6165,83 @@ resource "aws_wafv2_web_acl" "test" {
       SampledRequestsEnabled   = false,
     },
   }])
+}
+`, rName)
+}
+
+func testAccWebACLConfig_JSONruleUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+
+  rule_json = jsonencode([
+    {
+      Name     = "rule-1",
+      Priority = 1,
+      Action = {
+        Count = {}
+      },
+      Statement = {
+        RateBasedStatement = {
+          Limit               = 10000,
+          AggregateKeyType    = "IP",
+          EvaluationWindowSec = 600,
+          ScopeDownStatement = {
+            GeoMatchStatement = {
+              CountryCodes = ["US", "NL"]
+            },
+          },
+        },
+      },
+
+      VisibilityConfig = {
+        CloudwatchMetricsEnabled = false,
+        MetricName               = "test-metric-name",
+        SampledRequestsEnabled   = false,
+      },
+    },
+    {
+      "Name" : "test_rule0",
+      "Priority" : 0,
+      "Statement" : {
+        "ByteMatchStatement" : {
+          "SearchString" : "test",
+          "FieldToMatch" : {
+            "SingleHeader" : {
+              "Name" : "host"
+            }
+          },
+          "TextTransformations" : [
+            {
+              "Priority" : 0,
+              "Type" : "NONE"
+            }
+          ],
+          "PositionalConstraint" : "EXACTLY"
+        }
+      },
+      "Action" : {
+        "Block" : {}
+      },
+      "VisibilityConfig" : {
+        "SampledRequestsEnabled" : true,
+        "CloudWatchMetricsEnabled" : true,
+        "MetricName" : "test_rule0"
+      }
+    }
+  ])
 }
 `, rName)
 }
