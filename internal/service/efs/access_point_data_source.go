@@ -5,21 +5,21 @@ package efs
 
 import (
 	"context"
-	"fmt"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_efs_access_point")
-func DataSourceAccessPoint() *schema.Resource {
+// @SDKDataSource("aws_efs_access_point", name="Access Point")
+// @Tags
+func dataSourceAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessPointRead,
 
@@ -28,19 +28,19 @@ func DataSourceAccessPoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"file_system_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"file_system_id": {
+			names.AttrFileSystemID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"owner_id": {
+			names.AttrOwnerID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,14 +53,13 @@ func DataSourceAccessPoint() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"uid": {
-							Type:     schema.TypeInt,
-							Computed: true,
-						},
 						"secondary_gids": {
 							Type:     schema.TypeSet,
 							Elem:     &schema.Schema{Type: schema.TypeInt},
-							Set:      schema.HashInt,
+							Computed: true,
+						},
+						"uid": {
+							Type:     schema.TypeInt,
 							Computed: true,
 						},
 					},
@@ -71,10 +70,6 @@ func DataSourceAccessPoint() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"path": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"creation_info": {
 							Type:     schema.TypeList,
 							Computed: true,
@@ -88,66 +83,57 @@ func DataSourceAccessPoint() *schema.Resource {
 										Type:     schema.TypeInt,
 										Computed: true,
 									},
-									"permissions": {
+									names.AttrPermissions: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
 								},
 							},
 						},
+						names.AttrPath: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EFSConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EFSClient(ctx)
 
-	resp, err := conn.DescribeAccessPointsWithContext(ctx, &efs.DescribeAccessPointsInput{
-		AccessPointId: aws.String(d.Get("access_point_id").(string)),
-	})
+	accessPointID := d.Get("access_point_id").(string)
+	ap, err := findAccessPointByID(ctx, conn, accessPointID)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EFS access point %s: %s", d.Id(), err)
-	}
-	if len(resp.AccessPoints) != 1 {
-		return sdkdiag.AppendErrorf(diags, "Search returned %d results, please revise so only one is returned", len(resp.AccessPoints))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EFS Access Point", err))
 	}
 
-	ap := resp.AccessPoints[0]
-
-	log.Printf("[DEBUG] Found EFS access point: %#v", ap)
-
-	d.SetId(aws.StringValue(ap.AccessPointId))
-
+	d.SetId(aws.ToString(ap.AccessPointId))
+	d.Set(names.AttrARN, ap.AccessPointArn)
+	fsID := aws.ToString(ap.FileSystemId)
 	fsARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(ap.FileSystemId)),
+		Resource:  "file-system/" + fsID,
 		Service:   "elasticfilesystem",
 	}.String()
-
 	d.Set("file_system_arn", fsARN)
-	d.Set("file_system_id", ap.FileSystemId)
-	d.Set("arn", ap.AccessPointArn)
-	d.Set("owner_id", ap.OwnerId)
-
+	d.Set(names.AttrFileSystemID, fsID)
+	d.Set(names.AttrOwnerID, ap.OwnerId)
 	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting posix user: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting posix_user: %s", err)
 	}
-
 	if err := d.Set("root_directory", flattenAccessPointRootDirectory(ap.RootDirectory)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting root directory: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting root_directory: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, ap.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, ap.Tags)
 
 	return diags
 }

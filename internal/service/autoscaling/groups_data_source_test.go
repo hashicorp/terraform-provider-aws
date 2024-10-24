@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/autoscaling"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
@@ -23,20 +23,20 @@ func TestAccAutoScalingGroupsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupsDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(datasource1Name, "names.#", "3"),
-					resource.TestCheckResourceAttr(datasource1Name, "arns.#", "3"),
-					resource.TestCheckResourceAttr(datasource2Name, "names.#", "3"),
-					resource.TestCheckResourceAttr(datasource2Name, "arns.#", "3"),
-					resource.TestCheckResourceAttr(datasource3Name, "names.#", "1"),
-					resource.TestCheckResourceAttr(datasource3Name, "arns.#", "1"),
-					resource.TestCheckResourceAttr(datasource4Name, "names.#", "2"),
-					resource.TestCheckResourceAttr(datasource4Name, "arns.#", "2"),
+					resource.TestCheckResourceAttr(datasource1Name, "names.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(datasource1Name, "arns.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(datasource2Name, "names.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(datasource2Name, "arns.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(datasource3Name, "names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasource3Name, "arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(datasource4Name, "names.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(datasource4Name, "arns.#", acctest.Ct2),
 				),
 			},
 		},

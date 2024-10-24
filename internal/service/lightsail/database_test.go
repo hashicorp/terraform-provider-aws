@@ -21,17 +21,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tflightsail "github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLightsailDatabase_basic(t *testing.T) {
+func testAccDatabase_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -46,14 +48,14 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 					testAccCheckDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "blueprint_id", "mysql_8_0"),
-					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_1_0"),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_2_0"),
 					resource.TestCheckResourceAttr(resourceName, "master_database_name", "testdatabasename"),
 					resource.TestCheckResourceAttr(resourceName, "master_username", "test"),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrSet(resourceName, "cpu_count"),
 					resource.TestCheckResourceAttrSet(resourceName, "ram_size"),
 					resource.TestCheckResourceAttrSet(resourceName, "disk_size"),
@@ -67,7 +69,7 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -77,7 +79,7 @@ func TestAccLightsailDatabase_basic(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
+func testAccDatabase_relationalDatabaseName(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -89,6 +91,7 @@ func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -129,7 +132,7 @@ func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -139,7 +142,7 @@ func TestAccLightsailDatabase_relationalDatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
+func testAccDatabase_masterDatabaseName(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -152,6 +155,7 @@ func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -188,7 +192,7 @@ func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -205,7 +209,7 @@ func TestAccLightsailDatabase_masterDatabaseName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_masterUsername(t *testing.T) {
+func testAccDatabase_masterUsername(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -219,6 +223,7 @@ func TestAccLightsailDatabase_masterUsername(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -259,7 +264,7 @@ func TestAccLightsailDatabase_masterUsername(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -276,7 +281,7 @@ func TestAccLightsailDatabase_masterUsername(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_masterPassword(t *testing.T) {
+func testAccDatabase_masterPassword(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	password := "testpassword"
@@ -289,6 +294,7 @@ func TestAccLightsailDatabase_masterPassword(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -325,7 +331,7 @@ func TestAccLightsailDatabase_masterPassword(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
+func testAccDatabase_preferredBackupWindow(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -334,6 +340,7 @@ func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -344,11 +351,11 @@ func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_preferredBackupWindow(rName, backupWindowInvalidHour),
-				ExpectError: regexache.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\"`),
 			},
 			{
 				Config:      testAccDatabaseConfig_preferredBackupWindow(rName, backupWindowInvalidMinute),
-				ExpectError: regexache.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"hh24:mi-hh24:mi\"`),
 			},
 			{
 				Config: testAccDatabaseConfig_preferredBackupWindow(rName, "09:30-10:00"),
@@ -362,7 +369,7 @@ func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -379,7 +386,7 @@ func TestAccLightsailDatabase_preferredBackupWindow(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
+func testAccDatabase_preferredMaintenanceWindow(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -389,6 +396,7 @@ func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -399,21 +407,21 @@ func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidDay),
-				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\"`),
 			},
 			{
 				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidHour),
-				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\"`),
 			},
 			{
 				Config:      testAccDatabaseConfig_preferredMaintenanceWindow(rName, maintenanceWindowInvalidMinute),
-				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\".`),
+				ExpectError: regexache.MustCompile(`must satisfy the format of \"ddd:hh24:mi-ddd:hh24:mi\"`),
 			},
 			{
 				Config: testAccDatabaseConfig_preferredMaintenanceWindow(rName, "tue:04:30-tue:05:00"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:30-tue:05:00"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:30-tue:05:00"),
 				),
 			},
 			{
@@ -421,7 +429,7 @@ func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -431,20 +439,21 @@ func TestAccLightsailDatabase_preferredMaintenanceWindow(t *testing.T) {
 				Config: testAccDatabaseConfig_preferredMaintenanceWindow(rName, "wed:06:00-wed:07:30"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "wed:06:00-wed:07:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "wed:06:00-wed:07:30"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
+func testAccDatabase_publiclyAccessible(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -457,7 +466,7 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 				Config: testAccDatabaseConfig_publiclyAccessible(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
 				),
 			},
 			{
@@ -465,7 +474,7 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -475,20 +484,21 @@ func TestAccLightsailDatabase_publiclyAccessible(t *testing.T) {
 				Config: testAccDatabaseConfig_publiclyAccessible(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 				),
 			},
 		},
 	})
 }
 
-func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
+func testAccDatabase_backupRetentionEnabled(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -501,7 +511,7 @@ func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
 				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -509,7 +519,7 @@ func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -519,14 +529,14 @@ func TestAccLightsailDatabase_backupRetentionEnabled(t *testing.T) {
 				Config: testAccDatabaseConfig_backupRetentionEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_enabled", acctest.CtFalse),
 				),
 			},
 		},
 	})
 }
 
-func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
+func testAccDatabase_finalSnapshotName(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -538,6 +548,7 @@ func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -573,7 +584,7 @@ func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -583,13 +594,14 @@ func TestAccLightsailDatabase_finalSnapshotName(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_tags(t *testing.T) {
+func testAccDatabase_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -599,11 +611,11 @@ func TestAccLightsailDatabase_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDatabaseConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -611,40 +623,97 @@ func TestAccLightsailDatabase_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
 				},
 			},
 			{
-				Config: testAccDatabaseConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDatabaseConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccDatabaseConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDatabaseConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
 	})
 }
 
-func TestAccLightsailDatabase_ha(t *testing.T) {
+func testAccDatabase_keyOnlyTags(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lightsail_database.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(lightsail.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabaseConfig_tags1(rName, acctest.CtKey1, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					"master_password",
+					"skip_final_snapshot",
+					"final_snapshot_name",
+				},
+			},
+			{
+				Config: testAccDatabaseConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
+				),
+			},
+			{
+				Config: testAccDatabaseConfig_tags1(rName, acctest.CtKey2, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, ""),
+				),
+			},
+		},
+	})
+}
+
+func testAccDatabase_ha(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_database.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -658,8 +727,8 @@ func TestAccLightsailDatabase_ha(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatabaseExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "relational_database_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_ha_1_0"),
-					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttr(resourceName, "bundle_id", "micro_ha_2_0"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 				),
 			},
 			{
@@ -667,7 +736,7 @@ func TestAccLightsailDatabase_ha(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
+					names.AttrApplyImmediately,
 					"master_password",
 					"skip_final_snapshot",
 					"final_snapshot_name",
@@ -677,7 +746,7 @@ func TestAccLightsailDatabase_ha(t *testing.T) {
 	})
 }
 
-func TestAccLightsailDatabase_disappears(t *testing.T) {
+func testAccDatabase_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lightsail_database.test"
@@ -703,6 +772,7 @@ func TestAccLightsailDatabase_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckLightsailSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, strings.ToLower(lightsail.ServiceID))
 			testAccPreCheck(ctx, t)
@@ -844,13 +914,13 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   skip_final_snapshot      = true
 }
 `, rName))
 }
 
-func testAccDatabaseConfig_masterDatabaseName(rName string, masterDatabaseName string) string {
+func testAccDatabaseConfig_masterDatabaseName(rName, masterDatabaseName string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -861,13 +931,13 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   skip_final_snapshot      = true
 }
 `, rName, masterDatabaseName))
 }
 
-func testAccDatabaseConfig_masterUsername(rName string, masterUsername string) string {
+func testAccDatabaseConfig_masterUsername(rName, masterUsername string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -878,13 +948,13 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = %[2]q
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   skip_final_snapshot      = true
 }
 `, rName, masterUsername))
 }
 
-func testAccDatabaseConfig_masterPassword(rName string, masterPassword string) string {
+func testAccDatabaseConfig_masterPassword(rName, masterPassword string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -895,13 +965,13 @@ resource "aws_lightsail_database" "test" {
   master_password          = %[2]q
   master_username          = "testusername"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   skip_final_snapshot      = true
 }
 `, rName, masterPassword))
 }
 
-func testAccDatabaseConfig_preferredBackupWindow(rName string, preferredBackupWindow string) string {
+func testAccDatabaseConfig_preferredBackupWindow(rName, preferredBackupWindow string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -912,7 +982,7 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   preferred_backup_window  = %[2]q
   apply_immediately        = true
   skip_final_snapshot      = true
@@ -920,7 +990,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, preferredBackupWindow))
 }
 
-func testAccDatabaseConfig_preferredMaintenanceWindow(rName string, preferredMaintenanceWindow string) string {
+func testAccDatabaseConfig_preferredMaintenanceWindow(rName, preferredMaintenanceWindow string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -931,7 +1001,7 @@ resource "aws_lightsail_database" "test" {
   master_password              = "testdatabasepassword"
   master_username              = "test"
   blueprint_id                 = "mysql_8_0"
-  bundle_id                    = "micro_1_0"
+  bundle_id                    = "micro_2_0"
   preferred_maintenance_window = %[2]q
   apply_immediately            = true
   skip_final_snapshot          = true
@@ -950,7 +1020,7 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   publicly_accessible      = %[2]t
   apply_immediately        = true
   skip_final_snapshot      = true
@@ -969,7 +1039,7 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   backup_retention_enabled = %[2]t
   apply_immediately        = true
   skip_final_snapshot      = true
@@ -977,7 +1047,7 @@ resource "aws_lightsail_database" "test" {
 `, rName, backupRetentionEnabled))
 }
 
-func testAccDatabaseConfig_finalSnapshotName(rName string, sName string) string {
+func testAccDatabaseConfig_finalSnapshotName(rName, sName string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -988,13 +1058,13 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   final_snapshot_name      = %[2]q
 }
 `, rName, sName))
 }
 
-func testAccDatabaseConfig_tags1(rName string, tagKey1, tagValue1 string) string {
+func testAccDatabaseConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccDatabaseConfig_base(),
 		fmt.Sprintf(`	
@@ -1005,7 +1075,7 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   skip_final_snapshot      = true
   tags = {
     %[2]q = %[3]q
@@ -1025,7 +1095,7 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_1_0"
+  bundle_id                = "micro_2_0"
   skip_final_snapshot      = true
   tags = {
     %[2]q = %[3]q
@@ -1045,7 +1115,7 @@ resource "aws_lightsail_database" "test" {
   master_password          = "testdatabasepassword"
   master_username          = "test"
   blueprint_id             = "mysql_8_0"
-  bundle_id                = "micro_ha_1_0"
+  bundle_id                = "micro_ha_2_0"
   skip_final_snapshot      = true
 }
 `, rName))

@@ -5,19 +5,29 @@ package ec2
 
 import (
 	"context"
-	"fmt"
+	"sort"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// BuildTagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
+func newFilter(name string, values []string) awstypes.Filter {
+	return awstypes.Filter{
+		Name:   aws.String(name),
+		Values: values,
+	}
+}
+
+// newTagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
 // represents exact matches for all of the tag key/value pairs given in
 // the tag set.
 //
@@ -37,17 +47,10 @@ import (
 //	tags {
 //	  Name = "my-awesome-subnet"
 //	}
-func BuildTagFilterList(tags []*ec2.Tag) []*ec2.Filter {
-	filters := make([]*ec2.Filter, len(tags))
-
-	for i, tag := range tags {
-		filters[i] = &ec2.Filter{
-			Name:   aws.String(fmt.Sprintf("tag:%s", *tag.Key)),
-			Values: []*string{tag.Value},
-		}
-	}
-
-	return filters
+func newTagFilterList(tags []awstypes.Tag) []awstypes.Filter {
+	return tfslices.ApplyToAll(tags, func(tag awstypes.Tag) awstypes.Filter {
+		return newFilter("tag:"+aws.ToString(tag.Key), []string{aws.ToString(tag.Value)})
+	})
 }
 
 // attributeFiltersFromMultimap returns an array of EC2 Filter objects to be used when listing resources.
@@ -58,38 +61,26 @@ func BuildTagFilterList(tags []*ec2.Tag) []*ec2.Filter {
 // The values of the specified map are lists of resource attribute values used in the filter. The resource can
 // match any of the filter values to be included in the result.
 // See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Filtering.html#Filtering_Resources_CLI for more details.
-func attributeFiltersFromMultimap(m map[string][]string) []*ec2.Filter {
+func attributeFiltersFromMultimap(m map[string][]string) []awstypes.Filter {
 	if len(m) == 0 {
 		return nil
 	}
 
-	filters := []*ec2.Filter{}
+	filters := []awstypes.Filter{}
+
 	for k, v := range m {
-		filters = append(filters, &ec2.Filter{
-			Name:   aws.String(k),
-			Values: aws.StringSlice(v),
-		})
+		filters = append(filters, newFilter(k, v))
 	}
 
 	return filters
 }
 
 // tagFilters returns an array of EC2 Filter objects to be used when listing resources by tag.
-func tagFilters(ctx context.Context) []*ec2.Filter {
-	tags := getTagsIn(ctx)
-	filters := make([]*ec2.Filter, len(tags))
-
-	for i, tag := range tags {
-		filters[i] = &ec2.Filter{
-			Name:   aws.String(fmt.Sprintf("tag:%s", aws.StringValue(tag.Key))),
-			Values: aws.StringSlice([]string{aws.StringValue(tag.Value)}),
-		}
-	}
-
-	return filters
+func tagFilters(ctx context.Context) []awstypes.Filter {
+	return newTagFilterList(getTagsIn(ctx))
 }
 
-// CustomFiltersSchema returns a *schema.Schema that represents
+// customFiltersSchema returns a *schema.Schema that represents
 // a set of custom filtering criteria that a user can specify as input
 // to a data source that wraps one of the many "Describe..." API calls
 // in the EC2 API.
@@ -104,17 +95,17 @@ func tagFilters(ctx context.Context) []*ec2.Filter {
 //	  name   = "availabilityZone"
 //	  values = ["us-west-2a", "us-west-2b"]
 //	}
-func CustomFiltersSchema() *schema.Schema {
+func customFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeSet,
 					Required: true,
 					Elem: &schema.Schema{
@@ -126,17 +117,17 @@ func CustomFiltersSchema() *schema.Schema {
 	}
 }
 
-func CustomRequiredFiltersSchema() *schema.Schema {
+func customRequiredFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Required: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"name": {
+				names.AttrName: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"values": {
+				names.AttrValues: {
 					Type:     schema.TypeSet,
 					Required: true,
 					Elem: &schema.Schema{
@@ -148,15 +139,15 @@ func CustomRequiredFiltersSchema() *schema.Schema {
 	}
 }
 
-// CustomFiltersBlock is the Plugin Framework variant of CustomFiltersSchema.
-func CustomFiltersBlock() datasourceschema.Block {
+// customFiltersBlock is the Plugin Framework variant of customFiltersSchema.
+func customFiltersBlock() datasourceschema.Block {
 	return datasourceschema.SetNestedBlock{
 		NestedObject: datasourceschema.NestedBlockObject{
 			Attributes: map[string]datasourceschema.Attribute{
-				"name": datasourceschema.StringAttribute{
+				names.AttrName: datasourceschema.StringAttribute{
 					Required: true,
 				},
-				"values": datasourceschema.SetAttribute{
+				names.AttrValues: datasourceschema.SetAttribute{
 					ElementType: types.StringType,
 					Required:    true,
 				},
@@ -165,13 +156,13 @@ func CustomFiltersBlock() datasourceschema.Block {
 	}
 }
 
-// customFilterData represents a single configured filter.
-type customFilterData struct {
+// customFilterModel represents a single configured filter.
+type customFilterModel struct {
 	Name   types.String `tfsdk:"name"`
 	Values types.Set    `tfsdk:"values"`
 }
 
-// BuildCustomFilterList takes the set value extracted from a schema
+// newCustomFilterList takes the set value extracted from a schema
 // attribute conforming to the schema returned by CustomFiltersSchema,
 // and transforms it into a []*ec2.Filter representing the same filter
 // expressions which is ready to pass into the "Filters" attribute on most
@@ -180,62 +171,18 @@ type customFilterData struct {
 // This function is intended only to be used in conjunction with
 // CustomFiltersSchema. See the docs on that function for more details
 // on the configuration pattern this is intended to support.
-func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
-	if filterSet == nil {
-		return []*ec2.Filter{}
+func newCustomFilterList(s *schema.Set) []awstypes.Filter {
+	if s == nil {
+		return []awstypes.Filter{}
 	}
 
-	customFilters := filterSet.List()
-	filters := make([]*ec2.Filter, len(customFilters))
-
-	for filterIdx, customFilterI := range customFilters {
-		customFilterMapI := customFilterI.(map[string]interface{})
-		name := customFilterMapI["name"].(string)
-		valuesI := customFilterMapI["values"].(*schema.Set).List()
-		values := make([]*string, len(valuesI))
-		for valueIdx, valueI := range valuesI {
-			values[valueIdx] = aws.String(valueI.(string))
-		}
-
-		filters[filterIdx] = &ec2.Filter{
-			Name:   &name,
-			Values: values,
-		}
-	}
-
-	return filters
+	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) awstypes.Filter {
+		tfMap := tfList.(map[string]interface{})
+		return newFilter(tfMap[names.AttrName].(string), flex.ExpandStringValueEmptySet(tfMap[names.AttrValues].(*schema.Set)))
+	})
 }
 
-func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter {
-	if filterSet.IsNull() || filterSet.IsUnknown() {
-		return nil
-	}
-
-	var filters []*ec2.Filter
-
-	for _, v := range filterSet.Elements() {
-		var data customFilterData
-
-		if tfsdk.ValueAs(ctx, v, &data).HasError() {
-			continue
-		}
-
-		if data.Name.IsNull() || data.Name.IsUnknown() {
-			continue
-		}
-
-		if v := flex.ExpandFrameworkStringSet(ctx, data.Values); v != nil {
-			filters = append(filters, &ec2.Filter{
-				Name:   flex.StringFromFramework(ctx, data.Name),
-				Values: v,
-			})
-		}
-	}
-
-	return filters
-}
-
-func BuildCustomFiltersV2(ctx context.Context, filterSet types.Set) []awstypes.Filter {
+func newCustomFilterListFramework(ctx context.Context, filterSet types.Set) []awstypes.Filter {
 	if filterSet.IsNull() || filterSet.IsUnknown() {
 		return nil
 	}
@@ -243,7 +190,7 @@ func BuildCustomFiltersV2(ctx context.Context, filterSet types.Set) []awstypes.F
 	var filters []awstypes.Filter
 
 	for _, v := range filterSet.Elements() {
-		var data customFilterData
+		var data customFilterModel
 
 		if tfsdk.ValueAs(ctx, v, &data).HasError() {
 			continue
@@ -253,12 +200,52 @@ func BuildCustomFiltersV2(ctx context.Context, filterSet types.Set) []awstypes.F
 			continue
 		}
 
-		if v := flex.ExpandFrameworkStringValueSet(ctx, data.Values); v != nil {
+		if v := fwflex.ExpandFrameworkStringValueSet(ctx, data.Values); v != nil {
 			filters = append(filters, awstypes.Filter{
-				Name:   flex.StringFromFramework(ctx, data.Name),
+				Name:   fwflex.StringFromFramework(ctx, data.Name),
 				Values: v,
 			})
 		}
+	}
+
+	return filters
+}
+
+// newAttributeFilterList takes a flat map of scalar attributes (most
+// likely values extracted from a *schema.ResourceData on an EC2-querying
+// data source) and produces a []*ec2.Filter representing an exact match
+// for each of the given non-empty attributes.
+//
+// The keys of the given attributes map are the attribute names expected
+// by the EC2 API, which are usually either in camelcase or with dash-separated
+// words. We conventionally map these to underscore-separated identifiers
+// with the same words when presenting these as data source query attributes
+// in Terraform.
+//
+// It's the callers responsibility to transform any non-string values into
+// the appropriate string serialization required by the AWS API when
+// encoding the given filter. Any attributes given with empty string values
+// are ignored, assuming that the user wishes to leave that attribute
+// unconstrained while filtering.
+//
+// The purpose of this function is to create values to pass in
+// for the "Filters" attribute on most of the "Describe..." API functions in
+// the EC2 API, to aid in the implementation of Terraform data sources that
+// retrieve data about EC2 objects.
+func newAttributeFilterList(m map[string]string) []awstypes.Filter {
+	var filters []awstypes.Filter
+
+	// Sort the filters by name to make the output deterministic.
+	names := tfmaps.Keys(m)
+	sort.Strings(names)
+
+	for _, name := range names {
+		value := m[name]
+		if value == "" {
+			continue
+		}
+
+		filters = append(filters, newFilter(name, []string{value}))
 	}
 
 	return filters

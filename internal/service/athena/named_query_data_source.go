@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_athena_named_query")
@@ -23,15 +24,15 @@ func dataSourceNamedQuery() *schema.Resource {
 		ReadWithoutTimeout: dataSourceNamedQueryRead,
 
 		Schema: map[string]*schema.Schema{
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -68,7 +69,7 @@ func dataSourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta 
 		queryIDs = append(queryIDs, page.NamedQueryIds...)
 	}
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	query, err := findNamedQueryByName(ctx, conn, queryIDs, name)
 
 	if err != nil {
@@ -76,9 +77,9 @@ func dataSourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(query.NamedQueryId))
-	d.Set("database", query.Database)
-	d.Set("description", query.Description)
-	d.Set("name", query.Name)
+	d.Set(names.AttrDatabase, query.Database)
+	d.Set(names.AttrDescription, query.Description)
+	d.Set(names.AttrName, query.Name)
 	d.Set("querystring", query.QueryString)
 	d.Set("workgroup", query.WorkGroup)
 

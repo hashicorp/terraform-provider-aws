@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -36,10 +37,9 @@ func sweepDeliveryStreams(region string) error {
 			return !lastPage
 		}
 
-		for _, v := range page.DeliveryStreamNames {
+		for _, name := range page.DeliveryStreamNames {
 			r := resourceDeliveryStream()
 			d := r.Data(nil)
-			name := v
 			arn := arn.ARN{
 				Partition: client.Partition,
 				Service:   "firehose",
@@ -48,7 +48,7 @@ func sweepDeliveryStreams(region string) error {
 				Resource:  fmt.Sprintf("deliverystream/%s", name),
 			}.String()
 			d.SetId(arn)
-			d.Set("name", name)
+			d.Set(names.AttrName, name)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2EBSSnapshotIDsDataSource_basic(t *testing.T) {
@@ -20,14 +20,14 @@ func TestAccEC2EBSSnapshotIDsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotIdsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", 0),
-					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ids.*", "aws_ebs_snapshot.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ids.*", "aws_ebs_snapshot.test", names.AttrID),
 				),
 			},
 		},
@@ -43,15 +43,15 @@ func TestAccEC2EBSSnapshotIDsDataSource_sorted(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotIdsDataSourceConfig_sorted(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "ids.#", "2"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", resource2Name, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "ids.1", resource1Name, "id"),
+					resource.TestCheckResourceAttr(dataSourceName, "ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ids.0", resource2Name, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ids.1", resource1Name, names.AttrID),
 				),
 			},
 		},
@@ -62,13 +62,13 @@ func TestAccEC2EBSSnapshotIDsDataSource_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotIdsDataSourceConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_ebs_snapshot_ids.empty", "ids.#", "0"),
+					resource.TestCheckResourceAttr("data.aws_ebs_snapshot_ids.empty", "ids.#", acctest.Ct0),
 				),
 			},
 		},

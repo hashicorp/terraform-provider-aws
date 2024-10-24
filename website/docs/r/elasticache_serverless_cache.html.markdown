@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_elasticache_serverless_cache
 
-Provides an ElastiCache Serverless Cache resource which manages memcached or redis.
+Provides an ElastiCache Serverless Cache resource which manages memcached, redis or valkey.
 
 ## Example Usage
 
@@ -24,7 +24,7 @@ resource "aws_elasticache_serverless_cache" "example" {
       unit    = "GB"
     }
     ecpu_per_second {
-      maximum = 5
+      maximum = 5000
     }
   }
   description          = "Test Server"
@@ -35,7 +35,7 @@ resource "aws_elasticache_serverless_cache" "example" {
 }
 ```
 
-### Redis Serverless
+### Redis OSS Serverless
 
 ```terraform
 resource "aws_elasticache_serverless_cache" "example" {
@@ -47,7 +47,32 @@ resource "aws_elasticache_serverless_cache" "example" {
       unit    = "GB"
     }
     ecpu_per_second {
-      maximum = 5
+      maximum = 5000
+    }
+  }
+  daily_snapshot_time      = "09:00"
+  description              = "Test Server"
+  kms_key_id               = aws_kms_key.test.arn
+  major_engine_version     = "7"
+  snapshot_retention_limit = 1
+  security_group_ids       = [aws_security_group.test.id]
+  subnet_ids               = aws_subnet.test[*].id
+}
+```
+
+### Valkey Serverless
+
+```terraform
+resource "aws_elasticache_serverless_cache" "example" {
+  engine = "valkey"
+  name   = "example"
+  cache_usage_limits {
+    data_storage {
+      maximum = 10
+      unit    = "GB"
+    }
+    ecpu_per_second {
+      maximum = 5000
     }
   }
   daily_snapshot_time      = "09:00"
@@ -64,13 +89,13 @@ resource "aws_elasticache_serverless_cache" "example" {
 
 The following arguments are required:
 
-* `engine` – (Required) Name of the cache engine to be used for this cache cluster. Valid values are `memcached` or `redis`.
+* `engine` – (Required) Name of the cache engine to be used for this cache cluster. Valid values are `memcached`, `redis` or `valkey`.
 * `name` – (Required) The Cluster name which serves as a unique identifier to the serverless cache
 
 The following arguments are optional:
 
-* `cache_usage_limits` - (Optional) Sets the cache usage limits for storage and ElastiCache Processing Units for the cache. See configuration below.
-* `daily_snapshot_time` - (Optional) The daily time that snapshots will be created from the new serverless cache. Only supported for engine type `"redis"`. Defaults to `0`.
+* `cache_usage_limits` - (Optional) Sets the cache usage limits for storage and ElastiCache Processing Units for the cache. See [`cache_usage_limits` Block](#cache_usage_limits-block) for details.
+* `daily_snapshot_time` - (Optional) The daily time that snapshots will be created from the new serverless cache. Only supported for engine types `"redis"` or `"valkey"`. Defaults to `0`.
 * `description` - (Optional) User-provided description for the serverless cache. The default is NULL.
 * `kms_key_id` - (Optional) ARN of the customer managed key for encrypting the data at rest. If no KMS key is provided, a default service key is used.
 * `major_engine_version` – (Optional) The version of the cache engine that will be used to create the serverless cache.
@@ -82,19 +107,27 @@ The following arguments are optional:
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_group_id` - (Optional) The identifier of the UserGroup to be associated with the serverless cache. Available for Redis only. Default is NULL.
 
-### CacheUsageLimits Configuration
+### `cache_usage_limits` Block
 
-* `data_storage` - The maximum data storage limit in the cache, expressed in Gigabytes. See Data Storage config for more details.
-* `ecpu_per_second` - The configuration for the number of ElastiCache Processing Units (ECPU) the cache can consume per second.See config block for more details.
+The `cache_usage_limits` configuration block supports the following arguments:
 
-### DataStorage Configuration
+* `data_storage` - The maximum data storage limit in the cache, expressed in Gigabytes. See [`data_storage` Block](#data_storage-block) for details.
+* `ecpu_per_second` - The configuration for the number of ElastiCache Processing Units (ECPU) the cache can consume per second. See [`ecpu_per_second` Block](#ecpu_per_second-block) for details.
 
-* `maximum` - The upper limit for data storage the cache is set to use. Set as Integer.
+### `data_storage` Block
+
+The `data_storage` configuration block supports the following arguments:
+
+* `minimum` - The lower limit for data storage the cache is set to use. Must be between 1 and 5,000.
+* `maximum` - The upper limit for data storage the cache is set to use. Must be between 1 and 5,000.
 * `unit` - The unit that the storage is measured in, in GB.
 
-### ECPUPerSecond Configuration
+### `ecpu_per_second` Block
 
-* `maximum` - The upper limit for data storage the cache is set to use. Set as Integer.
+The `ecpu_per_second` configuration block supports the following arguments:
+
+* `minimum` - The minimum number of ECPUs the cache can consume per second. Must be between 1,000 and 15,000,000.
+* `maximum` - The maximum number of ECPUs the cache can consume per second. Must be between 1,000 and 15,000,000.
 
 ## Attribute Reference
 
@@ -102,13 +135,22 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) of the serverless cache.
 * `create_time` - Timestamp of when the serverless cache was created.
-* `endpoint` - Represents the information required for client programs to connect to a cache node. See config below for details.
+* `endpoint` - Represents the information required for client programs to connect to a cache node. See [`endpoint` Block](#endpoint-block) for details.
 * `full_engine_version` - The name and version number of the engine the serverless cache is compatible with.
 * `major_engine_version` - The version number of the engine the serverless cache is compatible with.
-* `reader_endpoint` - Represents the information required for client programs to connect to a cache node. See config below for details.
+* `reader_endpoint` - Represents the information required for client programs to connect to a cache node. See [`reader_endpoint` Block](#reader_endpoint-block) for details.
 * `status` - The current status of the serverless cache. The allowed values are CREATING, AVAILABLE, DELETING, CREATE-FAILED and MODIFYING.
 
-### Endpoint Configuration
+### `endpoint` Block
+
+The `endpoint` configuration block exports the following attributes:
+
+* `address` - The DNS hostname of the cache node.
+* `port` - The port number that the cache engine is listening on. Set as integer.
+
+### `reader_endpoint` Block
+
+The `reader_endpoint` configuration block exports the following attributes:
 
 * `address` - The DNS hostname of the cache node.
 * `port` - The port number that the cache engine is listening on. Set as integer.

@@ -6,16 +6,16 @@ package iam
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKResource("aws_iam_account_alias")
-func ResourceAccountAlias() *schema.Resource {
+// @SDKResource("aws_iam_account_alias", name="Account Alias")
+func resourceAccountAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountAliasCreate,
 		ReadWithoutTimeout:   resourceAccountAliasRead,
@@ -38,32 +38,32 @@ func ResourceAccountAlias() *schema.Resource {
 
 func resourceAccountAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	account_alias := d.Get("account_alias").(string)
+	accountAlias := d.Get("account_alias").(string)
 
 	params := &iam.CreateAccountAliasInput{
-		AccountAlias: aws.String(account_alias),
+		AccountAlias: aws.String(accountAlias),
 	}
 
-	_, err := conn.CreateAccountAliasWithContext(ctx, params)
+	_, err := conn.CreateAccountAlias(ctx, params)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating account alias with name '%s': %s", account_alias, err)
+		return sdkdiag.AppendErrorf(diags, "creating account alias with name '%s': %s", accountAlias, err)
 	}
 
-	d.SetId(account_alias)
+	d.SetId(accountAlias)
 
 	return diags
 }
 
 func resourceAccountAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	params := &iam.ListAccountAliasesInput{}
 
-	resp, err := conn.ListAccountAliasesWithContext(ctx, params)
+	resp, err := conn.ListAccountAliases(ctx, params)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing account aliases: %s", err)
@@ -74,28 +74,28 @@ func resourceAccountAliasRead(ctx context.Context, d *schema.ResourceData, meta 
 		return diags
 	}
 
-	account_alias := aws.StringValue(resp.AccountAliases[0])
+	accountAlias := resp.AccountAliases[0]
 
-	d.SetId(account_alias)
-	d.Set("account_alias", account_alias)
+	d.SetId(accountAlias)
+	d.Set("account_alias", accountAlias)
 
 	return diags
 }
 
 func resourceAccountAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	account_alias := d.Get("account_alias").(string)
+	accountAlias := d.Get("account_alias").(string)
 
 	params := &iam.DeleteAccountAliasInput{
-		AccountAlias: aws.String(account_alias),
+		AccountAlias: aws.String(accountAlias),
 	}
 
-	_, err := conn.DeleteAccountAliasWithContext(ctx, params)
+	_, err := conn.DeleteAccountAlias(ctx, params)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting account alias with name '%s': %s", account_alias, err)
+		return sdkdiag.AppendErrorf(diags, "deleting account alias with name '%s': %s", accountAlias, err)
 	}
 
 	return diags

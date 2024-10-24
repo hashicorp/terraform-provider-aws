@@ -34,7 +34,7 @@ func TestAccEKSFargateProfile_basic(t *testing.T) {
 			acctest.PreCheckPartition(t, names.StandardPartitionID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,14 +42,14 @@ func TestAccEKSFargateProfile_basic(t *testing.T) {
 				Config: testAccFargateProfileConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(ctx, resourceName, &fargateProfile),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexache.MustCompile(fmt.Sprintf("fargateprofile/%[1]s/%[1]s/.+", rName))),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", eksClusterResourceName, "name"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("fargateprofile/%[1]s/%[1]s/.+", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterName, eksClusterResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "fargate_profile_name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "pod_execution_role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "selector.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.FargateProfileStatusActive)),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "pod_execution_role_arn", iamRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "selector.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.FargateProfileStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
 			{
@@ -73,7 +73,7 @@ func TestAccEKSFargateProfile_disappears(t *testing.T) {
 			acctest.PreCheckPartition(t, names.StandardPartitionID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,7 +102,7 @@ func TestAccEKSFargateProfile_Multi_profile(t *testing.T) {
 			acctest.PreCheckPartition(t, names.StandardPartitionID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,12 +129,12 @@ func TestAccEKSFargateProfile_Selector_labels(t *testing.T) {
 			acctest.PreCheckPartition(t, names.StandardPartitionID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFargateProfileConfig_selectorLabels1(rName, "key1", "value1"),
+				Config: testAccFargateProfileConfig_selectorLabels1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(ctx, resourceName, &fargateProfile1),
 				),
@@ -160,16 +160,16 @@ func TestAccEKSFargateProfile_tags(t *testing.T) {
 			acctest.PreCheckPartition(t, names.StandardPartitionID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFargateProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFargateProfileConfig_tags1(rName, "key1", "value1"),
+				Config: testAccFargateProfileConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(ctx, resourceName, &fargateProfile1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -178,20 +178,20 @@ func TestAccEKSFargateProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccFargateProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccFargateProfileConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(ctx, resourceName, &fargateProfile2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccFargateProfileConfig_tags1(rName, "key2", "value2"),
+				Config: testAccFargateProfileConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFargateProfileExists(ctx, resourceName, &fargateProfile3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},

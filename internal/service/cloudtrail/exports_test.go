@@ -5,5 +5,12 @@ package cloudtrail
 
 // Exports for use in tests only.
 var (
-	FindTrailByARN = findTrailByARN
+	ResourceEventDataStore                    = resourceEventDataStore
+	ResourceOrganizationDelegatedAdminAccount = newOrganizationDelegatedAdminAccountResource
+	ResourceTrail                             = resourceTrail
+
+	FindEventDataStoreByARN    = findEventDataStoreByARN
+	FindTrailByARN             = findTrailByARN
+	ServiceAccountPerRegionMap = serviceAccountPerRegionMap
+	ServicePrincipal           = servicePrincipal
 )

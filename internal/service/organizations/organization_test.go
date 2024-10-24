@@ -10,24 +10,25 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccOrganization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var organization organizations.Organization
+	var organization awstypes.Organization
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,22 +36,22 @@ func testAccOrganization_basic(t *testing.T) {
 				Config: testAccOrganizationConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "accounts.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "accounts.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.arn", resourceName, "master_account_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.email", resourceName, "master_account_email"),
 					resource.TestCheckResourceAttrPair(resourceName, "accounts.0.id", resourceName, "master_account_id"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexache.MustCompile(`organization/o-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "organizations", regexache.MustCompile(`organization/o-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "feature_set", string(awstypes.OrganizationFeatureSetAll)),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "master_account_arn", "organizations", regexache.MustCompile(`account/o-.+/.+`)),
 					resource.TestMatchResourceAttr(resourceName, "master_account_email", regexache.MustCompile(`.+@.+`)),
 					acctest.CheckResourceAttrAccountID(resourceName, "master_account_id"),
-					resource.TestCheckResourceAttr(resourceName, "non_master_accounts.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "roots.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "non_master_accounts.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "roots.#", acctest.Ct1),
 					resource.TestMatchResourceAttr(resourceName, "roots.0.id", regexache.MustCompile(`r-[0-9a-z]{4,32}`)),
 					resource.TestCheckResourceAttrSet(resourceName, "roots.0.name"),
 					resource.TestCheckResourceAttrSet(resourceName, "roots.0.arn"),
-					resource.TestCheckResourceAttr(resourceName, "roots.0.policy_types.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "roots.0.policy_types.#", acctest.Ct0),
 				),
 			},
 			{
@@ -64,12 +65,12 @@ func testAccOrganization_basic(t *testing.T) {
 
 func testAccOrganization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var organization organizations.Organization
+	var organization awstypes.Organization
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,12 +88,12 @@ func testAccOrganization_disappears(t *testing.T) {
 
 func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 	ctx := acctest.Context(t)
-	var organization organizations.Organization
+	var organization awstypes.Organization
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -100,7 +101,7 @@ func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 				Config: testAccOrganizationConfig_serviceAccessPrincipals1("config.amazonaws.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "config.amazonaws.com"),
 				),
 			},
@@ -113,7 +114,7 @@ func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 				Config: testAccOrganizationConfig_serviceAccessPrincipals2("config.amazonaws.com", "ds.amazonaws.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", acctest.Ct2),
 					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "config.amazonaws.com"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "ds.amazonaws.com"),
 				),
@@ -122,7 +123,7 @@ func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 				Config: testAccOrganizationConfig_serviceAccessPrincipals1("fms.amazonaws.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "aws_service_access_principals.#", acctest.Ct1),
 					resource.TestCheckTypeSetElemAttr(resourceName, "aws_service_access_principals.*", "fms.amazonaws.com"),
 				),
 			},
@@ -132,21 +133,21 @@ func testAccOrganization_serviceAccessPrincipals(t *testing.T) {
 
 func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var organization organizations.Organization
+	var organization awstypes.Organization
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeServiceControlPolicy)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeServiceControlPolicy),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeServiceControlPolicy)),
 				),
 			},
 			{
@@ -158,39 +159,39 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				Config: testAccOrganizationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct0),
 				),
 			},
 			{
-				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeAiservicesOptOutPolicy),
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeAiservicesOptOutPolicy)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeAiservicesOptOutPolicy),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeAiservicesOptOutPolicy)),
 				),
 			},
 			{
-				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeServiceControlPolicy),
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeServiceControlPolicy)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeServiceControlPolicy),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeServiceControlPolicy)),
 				),
 			},
 			{
-				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeBackupPolicy),
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeBackupPolicy)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeBackupPolicy),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeBackupPolicy)),
 				),
 			},
 			{
-				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeTagPolicy),
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeTagPolicy)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", organizations.PolicyTypeTagPolicy),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeTagPolicy)),
 				),
 			},
 			{
@@ -202,14 +203,14 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				Config: testAccOrganizationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct0),
 				),
 			},
 			{
-				Config: testAccOrganizationConfig_enabledPolicyTypes1(organizations.PolicyTypeTagPolicy),
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeTagPolicy)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", acctest.Ct1),
 				),
 			},
 		},
@@ -218,20 +219,20 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 
 func testAccOrganization_FeatureSet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var organization organizations.Organization
+	var organization awstypes.Organization
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfig_featureSet(organizations.OrganizationFeatureSetConsolidatedBilling),
+				Config: testAccOrganizationConfig_featureSet(string(awstypes.OrganizationFeatureSetConsolidatedBilling)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
-					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetConsolidatedBilling),
+					resource.TestCheckResourceAttr(resourceName, "feature_set", string(awstypes.OrganizationFeatureSetConsolidatedBilling)),
 				),
 			},
 			{
@@ -245,20 +246,20 @@ func testAccOrganization_FeatureSet(t *testing.T) {
 
 func testAccOrganization_FeatureSetForcesNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var beforeValue, afterValue organizations.Organization
+	var beforeValue, afterValue awstypes.Organization
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfig_featureSet(organizations.OrganizationFeatureSetAll),
+				Config: testAccOrganizationConfig_featureSet(string(awstypes.OrganizationFeatureSetAll)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &beforeValue),
-					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
+					resource.TestCheckResourceAttr(resourceName, "feature_set", string(awstypes.OrganizationFeatureSetAll)),
 				),
 			},
 			{
@@ -267,10 +268,10 @@ func testAccOrganization_FeatureSetForcesNew(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccOrganizationConfig_featureSet(organizations.OrganizationFeatureSetConsolidatedBilling),
+				Config: testAccOrganizationConfig_featureSet(string(awstypes.OrganizationFeatureSetConsolidatedBilling)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &afterValue),
-					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetConsolidatedBilling),
+					resource.TestCheckResourceAttr(resourceName, "feature_set", string(awstypes.OrganizationFeatureSetConsolidatedBilling)),
 					testAccOrganizationRecreated(&beforeValue, &afterValue),
 				),
 			},
@@ -280,20 +281,20 @@ func testAccOrganization_FeatureSetForcesNew(t *testing.T) {
 
 func testAccOrganization_FeatureSetUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var beforeValue, afterValue organizations.Organization
+	var beforeValue, afterValue awstypes.Organization
 	resourceName := "aws_organizations_organization.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationsAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationConfig_featureSet(organizations.OrganizationFeatureSetConsolidatedBilling),
+				Config: testAccOrganizationConfig_featureSet(string(awstypes.OrganizationFeatureSetConsolidatedBilling)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &beforeValue),
-					resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetConsolidatedBilling),
+					resource.TestCheckResourceAttr(resourceName, "feature_set", string(awstypes.OrganizationFeatureSetConsolidatedBilling)),
 				),
 			},
 			{
@@ -302,14 +303,14 @@ func testAccOrganization_FeatureSetUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config:             testAccOrganizationConfig_featureSet(organizations.OrganizationFeatureSetAll),
+				Config:             testAccOrganizationConfig_featureSet(string(awstypes.OrganizationFeatureSetAll)),
 				ExpectNonEmptyPlan: true, // See note below on this perpetual difference
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &afterValue),
 					// The below check cannot be performed here because the user must confirm the change
 					// via Console. Until then, the FeatureSet will not actually be toggled to ALL
 					// and will continue to show as CONSOLIDATED_BILLING when calling DescribeOrganization
-					// resource.TestCheckResourceAttr(resourceName, "feature_set", organizations.OrganizationFeatureSetAll),
+					// resource.TestCheckResourceAttr(resourceName, "feature_set", string(awstypes.OrganizationFeatureSetAll)),
 					testAccOrganizationNotRecreated(&beforeValue, &afterValue),
 				),
 			},
@@ -319,7 +320,7 @@ func testAccOrganization_FeatureSetUpdate(t *testing.T) {
 
 func testAccCheckOrganizationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_organizations_organization" {
@@ -336,21 +337,21 @@ func testAccCheckOrganizationDestroy(ctx context.Context) resource.TestCheckFunc
 				return err
 			}
 
-			return errors.New("Organization still exists")
+			return errors.New("Organizations Organization still exists")
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckOrganizationExists(ctx context.Context, n string, v *organizations.Organization) resource.TestCheckFunc {
+func testAccCheckOrganizationExists(ctx context.Context, n string, v *awstypes.Organization) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
 
 		output, err := tforganizations.FindOrganization(ctx, conn)
 
@@ -364,19 +365,19 @@ func testAccCheckOrganizationExists(ctx context.Context, n string, v *organizati
 	}
 }
 
-func testAccOrganizationRecreated(before, after *organizations.Organization) resource.TestCheckFunc {
+func testAccOrganizationRecreated(before, after *awstypes.Organization) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(before.Id) == aws.StringValue(after.Id) {
-			return fmt.Errorf("Organization (%s) not recreated", aws.StringValue(before.Id))
+		if aws.ToString(before.Id) == aws.ToString(after.Id) {
+			return fmt.Errorf("Organization (%s) not recreated", aws.ToString(before.Id))
 		}
 		return nil
 	}
 }
 
-func testAccOrganizationNotRecreated(before, after *organizations.Organization) resource.TestCheckFunc {
+func testAccOrganizationNotRecreated(before, after *awstypes.Organization) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(before.Id) != aws.StringValue(after.Id) {
-			return fmt.Errorf("Organization (%s) recreated", aws.StringValue(before.Id))
+		if aws.ToString(before.Id) != aws.ToString(after.Id) {
+			return fmt.Errorf("Organization (%s) recreated", aws.ToString(before.Id))
 		}
 		return nil
 	}

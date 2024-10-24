@@ -6,10 +6,10 @@ package dynamodb
 import (
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 
-func ARNForNewRegion(rn string, newRegion string) (string, error) {
+func arnForNewRegion(rn string, newRegion string) (string, error) {
 	parsedARN, err := arn.Parse(rn)
 	if err != nil {
 		return "", err
@@ -20,7 +20,7 @@ func ARNForNewRegion(rn string, newRegion string) (string, error) {
 	return parsedARN.String(), nil
 }
 
-func RegionFromARN(rn string) (string, error) {
+func regionFromARN(rn string) (string, error) {
 	parsedARN, err := arn.Parse(rn)
 	if err != nil {
 		return "", err
@@ -29,7 +29,7 @@ func RegionFromARN(rn string) (string, error) {
 	return parsedARN.Region, nil
 }
 
-func TableNameFromARN(rn string) (string, error) {
+func tableNameFromARN(rn string) (string, error) {
 	parsedARN, err := arn.Parse(rn)
 	if err != nil {
 		return "", err

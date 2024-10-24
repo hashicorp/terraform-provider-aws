@@ -10,10 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_elastic_beanstalk_application")
-func DataSourceApplication() *schema.Resource {
+// @SDKDataSource("aws_elastic_beanstalk_application", name="Application")
+func dataSourceApplication() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceApplicationRead,
 
@@ -35,22 +36,22 @@ func DataSourceApplication() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"service_role": {
+						names.AttrServiceRole: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -60,10 +61,10 @@ func DataSourceApplication() *schema.Resource {
 
 func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	name := d.Get("name").(string)
-	app, err := FindApplicationByName(ctx, conn, name)
+	name := d.Get(names.AttrName).(string)
+	app, err := findApplicationByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Application (%s): %s", name, err)
@@ -73,9 +74,9 @@ func dataSourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta
 	if err := d.Set("appversion_lifecycle", flattenApplicationResourceLifecycleConfig(app.ResourceLifecycleConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting appversion_lifecycle: %s", err)
 	}
-	d.Set("arn", app.ApplicationArn)
-	d.Set("description", app.Description)
-	d.Set("name", app.ApplicationName)
+	d.Set(names.AttrARN, app.ApplicationArn)
+	d.Set(names.AttrDescription, app.Description)
+	d.Set(names.AttrName, app.ApplicationName)
 
 	return diags
 }

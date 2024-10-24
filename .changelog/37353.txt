@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_fsx_ontap_storage_virtual_machine: Correctly set `tags` and `tags_all` on resource Read
+```
+
+```release-note:bug
+data-source/aws_fsx_ontap_storage_virtual_machine: Correctly set `tags` on Read
+```
+
+```release-note:bug
+resource/aws_fsx_openzfs_file_system: Correctly set `tags` and `tags_all` on resource Read
+```

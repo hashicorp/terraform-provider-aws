@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfappmesh "github.com/hashicorp/terraform-provider-aws/internal/service/appmesh"
 )
 
@@ -22,29 +23,29 @@ func TestVirtualNodeMigrateState(t *testing.T) {
 		"v0_1-noBackendsOrDns": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				"spec.0.backends.#":          "0",
-				"spec.0.service_discovery.#": "0",
+				"spec.0.backends.#":          acctest.Ct0,
+				"spec.0.service_discovery.#": acctest.Ct0,
 			},
 			Expected: map[string]string{
-				"spec.0.backend.#":           "0",
-				"spec.0.service_discovery.#": "0",
+				"spec.0.backend.#":           acctest.Ct0,
+				"spec.0.service_discovery.#": acctest.Ct0,
 			},
 		},
 		"v0_1-withBackendAndDns": {
 			StateVersion: 0,
 			Attributes: map[string]string{
-				"spec.0.backends.#":                             "1",
+				"spec.0.backends.#":                             acctest.Ct1,
 				"spec.0.backends.1255689679":                    "servicea.simpleapp.local",
-				"spec.0.service_discovery.#":                    "1",
-				"spec.0.service_discovery.0.dns.#":              "1",
+				"spec.0.service_discovery.#":                    acctest.Ct1,
+				"spec.0.service_discovery.0.dns.#":              acctest.Ct1,
 				"spec.0.service_discovery.0.dns.0.service_name": "serviceb.simpleapp.local",
 			},
 			Expected: map[string]string{
-				"spec.0.backend.#":                                        "1",
-				"spec.0.backend.0.virtual_service.#":                      "1",
+				"spec.0.backend.#":                                        acctest.Ct1,
+				"spec.0.backend.0.virtual_service.#":                      acctest.Ct1,
 				"spec.0.backend.0.virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
-				"spec.0.service_discovery.#":                              "1",
-				"spec.0.service_discovery.0.dns.#":                        "1",
+				"spec.0.service_discovery.#":                              acctest.Ct1,
+				"spec.0.service_discovery.0.dns.#":                        acctest.Ct1,
 				"spec.0.service_discovery.0.dns.0.hostname":               "serviceb.simpleapp.local",
 			},
 		},

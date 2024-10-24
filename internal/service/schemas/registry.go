@@ -8,13 +8,15 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/schemas"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/schemas"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/schemas/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -24,29 +26,28 @@ import (
 
 // @SDKResource("aws_schemas_registry", name="Registry")
 // @Tags(identifierAttribute="arn")
-func ResourceRegistry() *schema.Resource {
+func resourceRegistry() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegistryCreate,
 		ReadWithoutTimeout:   resourceRegistryRead,
 		UpdateWithoutTimeout: resourceRegistryUpdate,
 		DeleteWithoutTimeout: resourceRegistryDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
-
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,35 +66,34 @@ func ResourceRegistry() *schema.Resource {
 
 func resourceRegistryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
+	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &schemas.CreateRegistryInput{
 		RegistryName: aws.String(name),
 		Tags:         getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EventBridge Schemas Registry: %s", input)
-	_, err := conn.CreateRegistryWithContext(ctx, input)
+	_, err := conn.CreateRegistry(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EventBridge Schemas Registry (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(input.RegistryName))
+	d.SetId(aws.ToString(input.RegistryName))
 
 	return append(diags, resourceRegistryRead(ctx, d, meta)...)
 }
 
 func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
+	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
-	output, err := FindRegistryByName(ctx, conn, d.Id())
+	output, err := findRegistryByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Schemas Registry (%s) not found, removing from state", d.Id())
@@ -105,25 +105,24 @@ func resourceRegistryRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Schemas Registry (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", output.RegistryArn)
-	d.Set("description", output.Description)
-	d.Set("name", output.RegistryName)
+	d.Set(names.AttrARN, output.RegistryArn)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set(names.AttrName, output.RegistryName)
 
 	return diags
 }
 
 func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
+	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
-	if d.HasChanges("description") {
+	if d.HasChanges(names.AttrDescription) {
 		input := &schemas.UpdateRegistryInput{
-			Description:  aws.String(d.Get("description").(string)),
+			Description:  aws.String(d.Get(names.AttrDescription).(string)),
 			RegistryName: aws.String(d.Id()),
 		}
 
-		log.Printf("[DEBUG] Updating EventBridge Schemas Registry: %s", input)
-		_, err := conn.UpdateRegistryWithContext(ctx, input)
+		_, err := conn.UpdateRegistry(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EventBridge Schemas Registry (%s): %s", d.Id(), err)
@@ -135,14 +134,14 @@ func resourceRegistryUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
+	conn := meta.(*conns.AWSClient).SchemasClient(ctx)
 
 	log.Printf("[INFO] Deleting EventBridge Schemas Registry (%s)", d.Id())
-	_, err := conn.DeleteRegistryWithContext(ctx, &schemas.DeleteRegistryInput{
+	_, err := conn.DeleteRegistry(ctx, &schemas.DeleteRegistryInput{
 		RegistryName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, schemas.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -151,4 +150,29 @@ func resourceRegistryDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return diags
+}
+
+func findRegistryByName(ctx context.Context, conn *schemas.Client, name string) (*schemas.DescribeRegistryOutput, error) {
+	input := &schemas.DescribeRegistryInput{
+		RegistryName: aws.String(name),
+	}
+
+	output, err := conn.DescribeRegistry(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

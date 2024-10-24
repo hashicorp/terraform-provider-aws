@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/docdb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/docdb"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/docdb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -20,10 +21,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdocdb "github.com/hashicorp/terraform-provider-aws/internal/service/docdb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(docdb.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.DocDBServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -34,13 +36,13 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 
 func TestAccDocDBCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -48,40 +50,40 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckNoResourceAttr(resourceName, "allow_major_version_upgrade"),
-					resource.TestCheckNoResourceAttr(resourceName, "apply_immediately"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
-					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "db_cluster_parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "audit"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.1", "profiler"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
-					resource.TestCheckNoResourceAttr(resourceName, "final_snapshot_identifier"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "docdb"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrFinalSnapshotIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "master_password", "avoid-plaintext-passwords"),
 					resource.TestCheckResourceAttr(resourceName, "master_username", "tfacctest"),
-					resource.TestCheckResourceAttr(resourceName, "port", "27017"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "27017"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
-					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", acctest.CtTrue),
 					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -89,9 +91,9 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -102,13 +104,13 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 
 func TestAccDocDBCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -126,12 +128,12 @@ func TestAccDocDBCluster_disappears(t *testing.T) {
 
 func TestAccDocDBCluster_identifierGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -139,7 +141,7 @@ func TestAccDocDBCluster_identifierGenerated(t *testing.T) {
 				Config: testAccClusterConfig_identifierGenerated(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "cluster_identifier", "tf-"),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, names.AttrClusterIdentifier, "tf-"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", "tf-"),
 				),
 			},
@@ -148,9 +150,9 @@ func TestAccDocDBCluster_identifierGenerated(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -161,12 +163,12 @@ func TestAccDocDBCluster_identifierGenerated(t *testing.T) {
 
 func TestAccDocDBCluster_identifierPrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -174,7 +176,7 @@ func TestAccDocDBCluster_identifierPrefix(t *testing.T) {
 				Config: testAccClusterConfig_identifierPrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "cluster_identifier", "tf-acc-test-prefix-"),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrClusterIdentifier, "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", "tf-acc-test-prefix-"),
 				),
 			},
@@ -183,9 +185,9 @@ func TestAccDocDBCluster_identifierPrefix(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -196,22 +198,22 @@ func TestAccDocDBCluster_identifierPrefix(t *testing.T) {
 
 func TestAccDocDBCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_tags1(rName, "key1", "value1"),
+				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -219,28 +221,28 @@ func TestAccDocDBCluster_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
 			},
 			{
-				Config: testAccClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccClusterConfig_tags1(rName, "key2", "value2"),
+				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -249,14 +251,14 @@ func TestAccDocDBCluster_tags(t *testing.T) {
 
 func TestAccDocDBCluster_takeFinalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	snapshotName := fmt.Sprintf("%s-snapshot", rName)
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroyWithFinalSnapshot(ctx),
 		Steps: []resource.TestStep{
@@ -271,9 +273,9 @@ func TestAccDocDBCluster_takeFinalSnapshot(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -290,7 +292,7 @@ func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -304,13 +306,13 @@ func TestAccDocDBCluster_missingUserNameCausesError(t *testing.T) {
 
 func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -318,7 +320,7 @@ func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 				Config: testAccClusterConfig_noCloudWatchLogs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct0),
 				),
 			},
 			{
@@ -326,9 +328,9 @@ func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -337,7 +339,7 @@ func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.0", "audit"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.1", "profiler"),
 				),
@@ -348,13 +350,13 @@ func TestAccDocDBCluster_updateCloudWatchLogsExports(t *testing.T) {
 
 func TestAccDocDBCluster_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -362,7 +364,7 @@ func TestAccDocDBCluster_kmsKey(t *testing.T) {
 				Config: testAccClusterConfig_kmsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, "aws_kms_key.test", names.AttrARN),
 				),
 			},
 			{
@@ -370,9 +372,9 @@ func TestAccDocDBCluster_kmsKey(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -383,13 +385,13 @@ func TestAccDocDBCluster_kmsKey(t *testing.T) {
 
 func TestAccDocDBCluster_encrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -397,7 +399,7 @@ func TestAccDocDBCluster_encrypted(t *testing.T) {
 				Config: testAccClusterConfig_encrypted(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtTrue),
 				),
 			},
 			{
@@ -405,9 +407,9 @@ func TestAccDocDBCluster_encrypted(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -418,13 +420,13 @@ func TestAccDocDBCluster_encrypted(t *testing.T) {
 
 func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v docdb.DBCluster
+	var v awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -434,7 +436,7 @@ func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "5"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "07:00-09:00"),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "tue:04:00-tue:04:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "tue:04:00-tue:04:30"),
 				),
 			},
 			{
@@ -442,9 +444,9 @@ func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -453,32 +455,33 @@ func TestAccDocDBCluster_backupsUpdate(t *testing.T) {
 				Config: testAccClusterConfig_backupsUpdate(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "10"),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct10),
 					resource.TestCheckResourceAttr(resourceName, "preferred_backup_window", "03:00-09:00"),
-					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "wed:01:00-wed:01:30"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPreferredMaintenanceWindow, "wed:01:00-wed:01:30"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccDocDBCluster_port(t *testing.T) {
+func TestAccDocDBCluster_pointInTimeRestore(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster1, dbCluster2 docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_docdb_cluster.test"
+	sourceResourceName := "aws_docdb_cluster.test"
+	resourceName := "aws_docdb_cluster.restore"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_port(rName, 5432),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
-					resource.TestCheckResourceAttr(resourceName, "port", "5432"),
+				Config: testAccClusterConfig_pointInTimeRestoreSource(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, sourceResourceName, &dbCluster),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
 			},
 			{
@@ -486,9 +489,45 @@ func TestAccDocDBCluster_port(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					"master_password",
+					"restore_to_point_in_time",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
+func TestAccDocDBCluster_port(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2 awstypes.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_docdb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_port(rName, 5432),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "5432"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -498,7 +537,7 @@ func TestAccDocDBCluster_port(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
 					testAccCheckClusterRecreated(&dbCluster1, &dbCluster2),
-					resource.TestCheckResourceAttr(resourceName, "port", "2345"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "2345"),
 				),
 			},
 		},
@@ -507,13 +546,13 @@ func TestAccDocDBCluster_port(t *testing.T) {
 
 func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -521,7 +560,7 @@ func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 				Config: testAccClusterConfig_deleteProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
@@ -529,9 +568,9 @@ func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -540,21 +579,21 @@ func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 				Config: testAccClusterConfig_deleteProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccClusterConfig_deleteProtection(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccClusterConfig_deleteProtection(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 				),
 			},
 		},
@@ -563,14 +602,14 @@ func TestAccDocDBCluster_deleteProtection(t *testing.T) {
 
 func TestAccDocDBCluster_GlobalClusterIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName := "aws_docdb_cluster.test"
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -578,7 +617,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier(t *testing.T) {
 				Config: testAccClusterConfig_globalIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, names.AttrID),
 				),
 			},
 			{
@@ -586,9 +625,9 @@ func TestAccDocDBCluster_GlobalClusterIdentifier(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -599,7 +638,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier(t *testing.T) {
 
 func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
@@ -609,7 +648,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -625,9 +664,9 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -642,14 +681,14 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 
 func TestAccDocDBCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName := "aws_docdb_global_cluster.test"
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -657,7 +696,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 				Config: testAccClusterConfig_globalIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, names.AttrID),
 				),
 			},
 			{
@@ -665,9 +704,9 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -685,7 +724,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 
 func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	globalClusterResourceName1 := "aws_docdb_global_cluster.test.0"
 	globalClusterResourceName2 := "aws_docdb_global_cluster.test.1"
@@ -693,7 +732,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -701,7 +740,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 				Config: testAccClusterConfig_globalIdentifierUpdate(rName, globalClusterResourceName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName1, names.AttrID),
 				),
 			},
 			{
@@ -709,9 +748,9 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -731,7 +770,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *tes
 
 	ctx := acctest.Context(t)
 	var providers []*schema.Provider
-	var primaryDbCluster, secondaryDbCluster docdb.DBCluster
+	var primaryDbCluster, secondaryDbCluster awstypes.DBCluster
 	rNameGlobal := sdkacctest.RandomWithPrefix("tf-acc-test-global")
 	rNamePrimary := sdkacctest.RandomWithPrefix("tf-acc-test-primary")
 	rNameSecondary := sdkacctest.RandomWithPrefix("tf-acc-test-secondary")
@@ -744,7 +783,7 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *tes
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckGlobalCluster(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -764,13 +803,13 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 	acctest.Skip(t, "Amazon DocumentDB has identified an issue and is temporarily disallowing major version upgrades (MVU) in all regions.")
 
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -778,38 +817,38 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 				Config: testAccClusterConfig_engineVersion(rName, "4.0.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "allow_major_version_upgrade", "true"),
-					resource.TestCheckResourceAttr(resourceName, "apply_immediately", "true"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
-					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, acctest.CtTrue),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", acctest.Ct0),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.docdb4.0"),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", "default"),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "engine", "docdb"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "4.0.0"),
-					resource.TestCheckNoResourceAttr(resourceName, "final_snapshot_identifier"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", acctest.Ct0),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "docdb"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "4.0.0"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrFinalSnapshotIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "global_cluster_identifier", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "hosted_zone_id"),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrHostedZoneID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "master_password", "avoid-plaintext-passwords"),
 					resource.TestCheckResourceAttr(resourceName, "master_username", "tfacctest"),
-					resource.TestCheckResourceAttr(resourceName, "port", "27017"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "27017"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
-					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPreferredMaintenanceWindow),
 					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint"),
-					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", acctest.CtTrue),
 					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
-					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", ""),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", acctest.Ct1),
 				),
 			},
 			{
@@ -817,9 +856,9 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -828,9 +867,9 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 				Config: testAccClusterConfig_engineVersion(rName, "5.0.0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_members.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "db_cluster_parameter_group_name", "default.docdb5.0"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.0.0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "5.0.0"),
 				),
 			},
 		},
@@ -839,13 +878,13 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 
 func TestAccDocDBCluster_storageType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dbCluster docdb.DBCluster
+	var dbCluster awstypes.DBCluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_docdb_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, docdb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DocDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -853,7 +892,7 @@ func TestAccDocDBCluster_storageType(t *testing.T) {
 				Config: testAccClusterConfig_storageType(rName, "standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
 				),
 			},
 			{
@@ -861,9 +900,9 @@ func TestAccDocDBCluster_storageType(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"allow_major_version_upgrade",
-					"apply_immediately",
-					"final_snapshot_identifier",
+					names.AttrAllowMajorVersionUpgrade,
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
 					"master_password",
 					"skip_final_snapshot",
 				},
@@ -872,14 +911,14 @@ func TestAccDocDBCluster_storageType(t *testing.T) {
 				Config: testAccClusterConfig_storageType(rName, "iopt1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "iopt1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "iopt1"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_storageType(rName, "standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, ""),
 				),
 			},
 		},
@@ -888,7 +927,7 @@ func TestAccDocDBCluster_storageType(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster" {
@@ -912,18 +951,18 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, n string, v *docdb.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.DBCluster) resource.TestCheckFunc {
 	return testAccCheckClusterExistsProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
 }
 
-func testAccCheckClusterExistsProvider(ctx context.Context, n string, v *docdb.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckClusterExistsProvider(ctx context.Context, n string, v *awstypes.DBCluster, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := providerF().Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		output, err := tfdocdb.FindDBClusterByID(ctx, conn, rs.Primary.ID)
 
@@ -939,15 +978,15 @@ func testAccCheckClusterExistsProvider(ctx context.Context, n string, v *docdb.D
 
 func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DocDBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_docdb_cluster" {
 				continue
 			}
 
-			finalSnapshotID := rs.Primary.Attributes["final_snapshot_identifier"]
-			_, err := conn.DeleteDBClusterSnapshotWithContext(ctx, &docdb.DeleteDBClusterSnapshotInput{
+			finalSnapshotID := rs.Primary.Attributes[names.AttrFinalSnapshotIdentifier]
+			_, err := conn.DeleteDBClusterSnapshot(ctx, &docdb.DeleteDBClusterSnapshotInput{
 				DBClusterSnapshotIdentifier: aws.String(finalSnapshotID),
 			})
 
@@ -972,9 +1011,9 @@ func testAccCheckClusterDestroyWithFinalSnapshot(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckClusterRecreated(i, j *docdb.DBCluster) resource.TestCheckFunc {
+func testAccCheckClusterRecreated(i, j *awstypes.DBCluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.ClusterCreateTime).Equal(aws.TimeValue(j.ClusterCreateTime)) {
+		if aws.ToTime(i.ClusterCreateTime).Equal(aws.ToTime(j.ClusterCreateTime)) {
 			return errors.New("DocumentDB Cluster was not recreated")
 		}
 
@@ -1229,6 +1268,45 @@ resource "aws_docdb_cluster" "test" {
   skip_final_snapshot = true
 }
 `, rName, port))
+}
+
+func testAccClusterConfig_baseForPITR(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_docdb_cluster" "test" {
+  cluster_identifier = %[1]q
+
+  availability_zones = [
+    data.aws_availability_zones.available.names[0],
+    data.aws_availability_zones.available.names[1],
+    data.aws_availability_zones.available.names[2]
+  ]
+
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+
+  enabled_cloudwatch_logs_exports = [
+    "audit",
+    "profiler",
+  ]
+}
+`, rName))
+}
+
+func testAccClusterConfig_pointInTimeRestoreSource(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_baseForPITR(rName), fmt.Sprintf(`
+resource "aws_docdb_cluster" "restore" {
+  cluster_identifier = "%[1]s-restore"
+
+  restore_to_point_in_time {
+    source_cluster_identifier  = aws_docdb_cluster.test.cluster_identifier
+    restore_type               = "full-copy"
+    use_latest_restorable_time = true
+  }
+
+  skip_final_snapshot = true
+}
+`, rName))
 }
 
 func testAccClusterConfig_deleteProtection(rName string, isProtected bool) string {

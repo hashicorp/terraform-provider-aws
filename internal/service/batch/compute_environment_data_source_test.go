@@ -7,35 +7,40 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/batch"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBatchComputeEnvironmentDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_batch_compute_environment.test"
-	datasourceName := "data.aws_batch_compute_environment.by_name"
+	dataSourceName := "data.aws_batch_compute_environment.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_name", resourceName, "compute_environment_name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "ecs_cluster_arn", resourceName, "ecs_cluster_arn"),
-					resource.TestCheckResourceAttrPair(datasourceName, "service_role", resourceName, "service_role"),
-					resource.TestCheckResourceAttrPair(datasourceName, "state", resourceName, "state"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(datasourceName, "type", resourceName, "type"),
-					resource.TestCheckResourceAttr(datasourceName, "update_policy.#", "0"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(dataSourceName, "compute_environment_name", resourceName, "compute_environment_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "ecs_cluster_arn", resourceName, "ecs_cluster_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrServiceRole, resourceName, names.AttrServiceRole),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrState, resourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrType, resourceName, names.AttrType),
+					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", acctest.Ct0),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(dataSourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
+				},
 			},
 		},
 	})
@@ -45,21 +50,21 @@ func TestAccBatchComputeEnvironmentDataSource_basicUpdatePolicy(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
 	resourceName := "aws_batch_compute_environment.test"
-	datasourceName := "data.aws_batch_compute_environment.by_name"
+	dataSourceName := "data.aws_batch_compute_environment.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccComputeEnvironmentDataSourceConfig_updatePolicy(rName, 30, false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttr(datasourceName, "update_policy.#", "1"),
-					resource.TestCheckResourceAttr(datasourceName, "update_policy.0.%", "2"),
-					resource.TestCheckResourceAttr(datasourceName, "update_policy.0.terminate_jobs_on_update", "false"),
-					resource.TestCheckResourceAttr(datasourceName, "update_policy.0.job_execution_timeout_minutes", "30"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, "update_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.terminate_jobs_on_update", acctest.CtFalse),
+					resource.TestCheckResourceAttr(dataSourceName, "update_policy.0.job_execution_timeout_minutes", "30"),
 				),
 			},
 		},

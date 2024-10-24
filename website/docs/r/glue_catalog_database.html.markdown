@@ -13,7 +13,7 @@ Provides a Glue Catalog Database Resource. You can refer to the [Glue Developer 
 ## Example Usage
 
 ```terraform
-resource "aws_glue_catalog_database" "aws_glue_catalog_database" {
+resource "aws_glue_catalog_database" "example" {
   name = "MyCatalogDatabase"
 }
 ```
@@ -21,7 +21,7 @@ resource "aws_glue_catalog_database" "aws_glue_catalog_database" {
 ### Create Table Default Permissions
 
 ```terraform
-resource "aws_glue_catalog_database" "aws_glue_catalog_database" {
+resource "aws_glue_catalog_database" "example" {
   name = "MyCatalogDatabase"
 
   create_table_default_permission {
@@ -41,11 +41,17 @@ This resource supports the following arguments:
 * `catalog_id` - (Optional) ID of the Glue Catalog to create the database in. If omitted, this defaults to the AWS Account ID.
 * `create_table_default_permission` - (Optional) Creates a set of default permissions on the table for principals. See [`create_table_default_permission`](#create_table_default_permission) below.
 * `description` - (Optional) Description of the database.
+* `federated_database` - (Optional) Configuration block that references an entity outside the AWS Glue Data Catalog. See [`federated_database`](#federated_database) below.
 * `location_uri` - (Optional) Location of the database (for example, an HDFS path).
 * `name` - (Required) Name of the database. The acceptable characters are lowercase letters, numbers, and the underscore character.
 * `parameters` - (Optional) List of key-value pairs that define parameters and properties of the database.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `target_database` - (Optional) Configuration block for a target database for resource linking. See [`target_database`](#target_database) below.
+
+### federated_database
+
+* `connection_name` - (Optional) Name of the connection to the external metastore.
+* `identifier` - (Optional) Unique identifier for the federated database.
 
 ### target_database
 

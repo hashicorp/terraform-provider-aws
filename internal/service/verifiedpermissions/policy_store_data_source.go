@@ -7,12 +7,13 @@ import (
 	"context"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,19 +38,19 @@ func (d *dataSourcePolicyStore) Metadata(_ context.Context, req datasource.Metad
 func (d *dataSourcePolicyStore) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"created_date": schema.StringAttribute{
-				CustomType: fwtypes.TimestampType,
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrCreatedDate: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
+			names.AttrID: schema.StringAttribute{
 				Required: true,
 			},
-			"last_updated_date": schema.StringAttribute{
-				CustomType: fwtypes.TimestampType,
+			names.AttrLastUpdatedDate: schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
 			"validation_settings": schema.ListAttribute{
@@ -79,7 +80,7 @@ func (d *dataSourcePolicyStore) Read(ctx context.Context, req datasource.ReadReq
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &data)...)
 
 	if resp.Diagnostics.HasError() {
 		return
@@ -90,10 +91,10 @@ func (d *dataSourcePolicyStore) Read(ctx context.Context, req datasource.ReadReq
 
 type dataSourcePolicyStoreData struct {
 	ARN                types.String                                                  `tfsdk:"arn"`
-	CreatedDate        fwtypes.Timestamp                                             `tfsdk:"created_date"`
+	CreatedDate        timetypes.RFC3339                                             `tfsdk:"created_date"`
 	Description        types.String                                                  `tfsdk:"description"`
 	ID                 types.String                                                  `tfsdk:"id"`
-	LastUpdatedDate    fwtypes.Timestamp                                             `tfsdk:"last_updated_date"`
+	LastUpdatedDate    timetypes.RFC3339                                             `tfsdk:"last_updated_date"`
 	ValidationSettings fwtypes.ListNestedObjectValueOf[validationSettingsDataSource] `tfsdk:"validation_settings"`
 }
 

@@ -46,11 +46,11 @@ func resourceKeyspace() *schema.Resource {
 		CustomizeDiff: verify.SetTagsDiff,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
@@ -70,7 +70,7 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &keyspaces.CreateKeyspaceInput{
 		KeyspaceName: aws.String(name),
 		Tags:         getTagsIn(ctx),
@@ -112,8 +112,8 @@ func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Keyspaces Keyspace (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", keyspace.ResourceArn)
-	d.Set("name", keyspace.KeyspaceName)
+	d.Set(names.AttrARN, keyspace.ResourceArn)
+	d.Set(names.AttrName, keyspace.KeyspaceName)
 
 	return diags
 }

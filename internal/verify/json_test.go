@@ -354,6 +354,48 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
 			newPolicy: "",
 			want:      "",
 		},
+		{
+			name: "malformed old",
+			oldPolicy: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Condition" : {
+        "StringLike" : ["demo-prefix/"]
+      },
+      "Resource": "*"
+    }
+  ]
+}`,
+			newPolicy: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "*"
+    }
+  ]
+}`,
+			want: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "*"
+    }
+  ]
+}`,
+		},
 	}
 
 	for _, v := range testCases {
@@ -384,14 +426,25 @@ func TestNormalizeJSONOrYAMLString(t *testing.T) {
 		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedJSON)
 	}
 
-	validNormalizedYaml := `abc: 1
+	validNormalizedYAML := `abc: 1
 `
-	actual, err = NormalizeJSONOrYAMLString(validNormalizedYaml)
+	actual, err = NormalizeJSONOrYAMLString(validNormalizedYAML)
 	if err != nil {
 		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
 	}
-	if actual != validNormalizedYaml {
-		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedYaml)
+	if actual != validNormalizedYAML {
+		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedYAML)
+	}
+
+	validNormalizedYAMLWithCarriageReturn := "abc: 1\r\n"
+	expectedNormalizedYAML := `abc: 1
+`
+	actual, err = NormalizeJSONOrYAMLString(validNormalizedYAMLWithCarriageReturn)
+	if err != nil {
+		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
+	}
+	if actual != expectedNormalizedYAML {
+		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, expectedNormalizedYAML)
 	}
 }
 
@@ -777,7 +830,6 @@ func TestLegacyPolicyNormalize(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
 			t.Parallel()
 

@@ -25,7 +25,7 @@ func TestAccCodeCommitTrigger_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -33,9 +33,9 @@ func TestAccCodeCommitTrigger_basic(t *testing.T) {
 				Config: testAccTriggerConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "trigger.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.0", "all"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.name", rName),
 				),
@@ -51,7 +51,7 @@ func TestAccCodeCommitTrigger_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,7 +74,7 @@ func TestAccCodeCommitTrigger_branches(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,10 +82,10 @@ func TestAccCodeCommitTrigger_branches(t *testing.T) {
 				Config: testAccTriggerConfig_branches(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.0", "main"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.1", "develop"),
-					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", acctest.Ct2),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.0", "updateReference"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.1", "createReference"),
 					resource.TestCheckResourceAttr(resourceName, "trigger.0.name", rName),

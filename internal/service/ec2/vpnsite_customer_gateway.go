@@ -9,14 +9,16 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,7 +28,8 @@ import (
 
 // @SDKResource("aws_customer_gateway", name="Customer Gateway")
 // @Tags(identifierAttribute="id")
-func ResourceCustomerGateway() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerGatewayCreate,
 		ReadWithoutTimeout:   resourceCustomerGatewayRead,
@@ -38,29 +41,37 @@ func ResourceCustomerGateway() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"bgp_asn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.Valid4ByteASN,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  verify.Valid4ByteASN,
+				ConflictsWith: []string{"bgp_asn_extended"},
 			},
-			"certificate_arn": {
+			"bgp_asn_extended": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  verify.Valid4ByteASN,
+				ConflictsWith: []string{"bgp_asn"},
+			},
+			names.AttrCertificateARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"device_name": {
+			names.AttrDeviceName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -68,11 +79,11 @@ func ResourceCustomerGateway() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.GatewayType_Values(), false),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.GatewayType](),
 			},
 		},
 
@@ -82,45 +93,54 @@ func ResourceCustomerGateway() *schema.Resource {
 
 func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateCustomerGatewayInput{
-		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeCustomerGateway),
-		Type:              aws.String(d.Get("type").(string)),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeCustomerGateway),
+		Type:              awstypes.GatewayType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("bgp_asn"); ok {
+		v, err := strconv.ParseInt(v.(string), 10, 32)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		input.BgpAsn = aws.Int32(int32(v))
+	}
+
+	if v, ok := d.GetOk("bgp_asn_extended"); ok {
 		v, err := strconv.ParseInt(v.(string), 10, 64)
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input.BgpAsn = aws.Int64(v)
+		input.BgpAsnExtended = aws.Int64(v)
 	}
 
-	if v, ok := d.GetOk("certificate_arn"); ok {
+	if v, ok := d.GetOk(names.AttrCertificateARN); ok {
 		input.CertificateArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("device_name"); ok {
+	if v, ok := d.GetOk(names.AttrDeviceName); ok {
 		input.DeviceName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("ip_address"); ok {
+	if v, ok := d.GetOk(names.AttrIPAddress); ok {
 		input.IpAddress = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateCustomerGatewayWithContext(ctx, input)
+	output, err := conn.CreateCustomerGateway(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Customer Gateway: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.CustomerGateway.CustomerGatewayId))
+	d.SetId(aws.ToString(output.CustomerGateway.CustomerGatewayId))
 
-	if _, err := WaitCustomerGatewayCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitCustomerGatewayCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Customer Gateway (%s) create: %s", d.Id(), err)
 	}
 
@@ -129,10 +149,9 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-
-	customerGateway, err := FindCustomerGatewayByID(ctx, conn, d.Id())
+	customerGateway, err := findCustomerGatewayByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Customer Gateway (%s) not found, removing from state", d.Id())
@@ -146,17 +165,18 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("bgp_asn", customerGateway.BgpAsn)
-	d.Set("certificate_arn", customerGateway.CertificateArn)
-	d.Set("device_name", customerGateway.DeviceName)
-	d.Set("ip_address", customerGateway.IpAddress)
-	d.Set("type", customerGateway.Type)
+	d.Set("bgp_asn_extended", customerGateway.BgpAsnExtended)
+	d.Set(names.AttrCertificateARN, customerGateway.CertificateArn)
+	d.Set(names.AttrDeviceName, customerGateway.DeviceName)
+	d.Set(names.AttrIPAddress, customerGateway.IpAddress)
+	d.Set(names.AttrType, customerGateway.Type)
 
 	setTagsOut(ctx, customerGateway.Tags)
 
@@ -170,11 +190,10 @@ func resourceCustomerGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceCustomerGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Customer Gateway: %s", d.Id())
-	_, err := conn.DeleteCustomerGatewayWithContext(ctx, &ec2.DeleteCustomerGatewayInput{
+	_, err := conn.DeleteCustomerGateway(ctx, &ec2.DeleteCustomerGatewayInput{
 		CustomerGatewayId: aws.String(d.Id()),
 	})
 
@@ -186,7 +205,7 @@ func resourceCustomerGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Customer Gateway (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitCustomerGatewayDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitCustomerGatewayDeleted(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Customer Gateway (%s) delete: %s", d.Id(), err)
 	}
 

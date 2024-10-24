@@ -10,23 +10,26 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/wafv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/wafv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_wafv2_web_acl_logging_configuration")
-func ResourceWebACLLoggingConfiguration() *schema.Resource {
+// @SDKResource("aws_wafv2_web_acl_logging_configuration", name="Web ACL Logging Configuration")
+func resourceWebACLLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLLoggingConfigurationPut,
 		ReadWithoutTimeout:   resourceWebACLLoggingConfigurationRead,
@@ -58,21 +61,21 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"default_behavior": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringInSlice(wafv2.FilterBehavior_Values(), false),
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[awstypes.FilterBehavior](),
 							},
-							"filter": {
+							names.AttrFilter: {
 								Type:     schema.TypeSet,
 								Required: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"behavior": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringInSlice(wafv2.FilterBehavior_Values(), false),
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.FilterBehavior](),
 										},
-										"condition": {
+										names.AttrCondition: {
 											Type:     schema.TypeSet,
 											Required: true,
 											MinItems: 1,
@@ -84,10 +87,10 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"action": {
-																	Type:         schema.TypeString,
-																	Required:     true,
-																	ValidateFunc: validation.StringInSlice(wafv2.ActionValue_Values(), false),
+																names.AttrAction: {
+																	Type:             schema.TypeString,
+																	Required:         true,
+																	ValidateDiagFunc: enum.Validate[awstypes.ActionValue](),
 																},
 															},
 														},
@@ -113,9 +116,9 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 											},
 										},
 										"requirement": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringInSlice(wafv2.FilterRequirement_Values(), false),
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[awstypes.FilterRequirement](),
 										},
 									},
 								},
@@ -141,7 +144,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"name": {
+										names.AttrName: {
 											Type:     schema.TypeString,
 											Required: true,
 											ValidateFunc: validation.All(
@@ -160,7 +163,7 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 					Description:      "Parts of the request to exclude from logs",
 					DiffSuppressFunc: suppressRedactedFieldsDiff,
 				},
-				"resource_arn": {
+				names.AttrResourceARN: {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
@@ -174,11 +177,11 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 
 func resourceWebACLLoggingConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	resourceARN := d.Get("resource_arn").(string)
-	config := &wafv2.LoggingConfiguration{
-		LogDestinationConfigs: flex.ExpandStringSet(d.Get("log_destination_configs").(*schema.Set)),
+	resourceARN := d.Get(names.AttrResourceARN).(string)
+	config := &awstypes.LoggingConfiguration{
+		LogDestinationConfigs: flex.ExpandStringValueSet(d.Get("log_destination_configs").(*schema.Set)),
 		ResourceArn:           aws.String(resourceARN),
 	}
 
@@ -189,21 +192,21 @@ func resourceWebACLLoggingConfigurationPut(ctx context.Context, d *schema.Resour
 	if v, ok := d.GetOk("redacted_fields"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		config.RedactedFields = expandRedactedFields(v.([]interface{}))
 	} else {
-		config.RedactedFields = []*wafv2.FieldToMatch{}
+		config.RedactedFields = []awstypes.FieldToMatch{}
 	}
 
 	input := &wafv2.PutLoggingConfigurationInput{
 		LoggingConfiguration: config,
 	}
 
-	output, err := conn.PutLoggingConfigurationWithContext(ctx, input)
+	output, err := conn.PutLoggingConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting WAFv2 WebACL Logging Configuration (%s): %s", resourceARN, err)
 	}
 
 	if d.IsNewResource() {
-		d.SetId(aws.StringValue(output.LoggingConfiguration.ResourceArn))
+		d.SetId(aws.ToString(output.LoggingConfiguration.ResourceArn))
 	}
 
 	return append(diags, resourceWebACLLoggingConfigurationRead(ctx, d, meta)...)
@@ -211,9 +214,9 @@ func resourceWebACLLoggingConfigurationPut(ctx context.Context, d *schema.Resour
 
 func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
-	loggingConfig, err := FindLoggingConfigurationByARN(ctx, conn, d.Id())
+	loggingConfig, err := findLoggingConfigurationByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAFv2 WebACL Logging Configuration (%s) not found, removing from state", d.Id())
@@ -222,10 +225,10 @@ func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAFv2 WebACL Logging Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAFv2 WebACL Logging Configuration (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("log_destination_configs", flex.FlattenStringList(loggingConfig.LogDestinationConfigs)); err != nil {
+	if err := d.Set("log_destination_configs", flex.FlattenStringValueList(loggingConfig.LogDestinationConfigs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting log_destination_configs: %s", err)
 	}
 	if err := d.Set("logging_filter", flattenLoggingFilter(loggingConfig.LoggingFilter)); err != nil {
@@ -234,21 +237,21 @@ func resourceWebACLLoggingConfigurationRead(ctx context.Context, d *schema.Resou
 	if err := d.Set("redacted_fields", flattenRedactedFields(loggingConfig.RedactedFields)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting redacted_fields: %s", err)
 	}
-	d.Set("resource_arn", loggingConfig.ResourceArn)
+	d.Set(names.AttrResourceARN, loggingConfig.ResourceArn)
 
 	return diags
 }
 
 func resourceWebACLLoggingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).WAFV2Client(ctx)
 
 	log.Printf("[INFO] Deleting WAFv2 WebACL Logging Configuration: %s", d.Id())
-	_, err := conn.DeleteLoggingConfigurationWithContext(ctx, &wafv2.DeleteLoggingConfigurationInput{
+	_, err := conn.DeleteLoggingConfiguration(ctx, &wafv2.DeleteLoggingConfigurationInput{
 		ResourceArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return diags
 	}
 
@@ -259,14 +262,14 @@ func resourceWebACLLoggingConfigurationDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func FindLoggingConfigurationByARN(ctx context.Context, conn *wafv2.WAFV2, arn string) (*wafv2.LoggingConfiguration, error) {
+func findLoggingConfigurationByARN(ctx context.Context, conn *wafv2.Client, arn string) (*awstypes.LoggingConfiguration, error) {
 	input := &wafv2.GetLoggingConfigurationInput{
 		ResourceArn: aws.String(arn),
 	}
 
-	output, err := conn.GetLoggingConfigurationWithContext(ctx, input)
+	output, err := conn.GetLoggingConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, wafv2.ErrCodeWAFNonexistentItemException) {
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -284,7 +287,7 @@ func FindLoggingConfigurationByARN(ctx context.Context, conn *wafv2.WAFV2, arn s
 	return output.LoggingConfiguration, nil
 }
 
-func expandLoggingFilter(l []interface{}) *wafv2.LoggingFilter {
+func expandLoggingFilter(l []interface{}) *awstypes.LoggingFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -295,25 +298,25 @@ func expandLoggingFilter(l []interface{}) *wafv2.LoggingFilter {
 		return nil
 	}
 
-	loggingFilter := &wafv2.LoggingFilter{}
+	loggingFilter := &awstypes.LoggingFilter{}
 
 	if v, ok := tfMap["default_behavior"].(string); ok && v != "" {
-		loggingFilter.DefaultBehavior = aws.String(v)
+		loggingFilter.DefaultBehavior = awstypes.FilterBehavior(v)
 	}
 
-	if v, ok := tfMap["filter"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap[names.AttrFilter].(*schema.Set); ok && v.Len() > 0 {
 		loggingFilter.Filters = expandFilters(v.List())
 	}
 
 	return loggingFilter
 }
 
-func expandFilters(l []interface{}) []*wafv2.Filter {
+func expandFilters(l []interface{}) []awstypes.Filter {
 	if len(l) == 0 {
 		return nil
 	}
 
-	var filters []*wafv2.Filter
+	var filters []awstypes.Filter
 
 	for _, tfMapRaw := range l {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -321,18 +324,18 @@ func expandFilters(l []interface{}) []*wafv2.Filter {
 			continue
 		}
 
-		filter := &wafv2.Filter{}
+		filter := awstypes.Filter{}
 
 		if v, ok := tfMap["behavior"].(string); ok && v != "" {
-			filter.Behavior = aws.String(v)
+			filter.Behavior = awstypes.FilterBehavior(v)
 		}
 
-		if v, ok := tfMap["condition"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap[names.AttrCondition].(*schema.Set); ok && v.Len() > 0 {
 			filter.Conditions = expandFilterConditions(v.List())
 		}
 
 		if v, ok := tfMap["requirement"].(string); ok && v != "" {
-			filter.Requirement = aws.String(v)
+			filter.Requirement = awstypes.FilterRequirement(v)
 		}
 
 		filters = append(filters, filter)
@@ -341,12 +344,12 @@ func expandFilters(l []interface{}) []*wafv2.Filter {
 	return filters
 }
 
-func expandFilterConditions(l []interface{}) []*wafv2.Condition {
+func expandFilterConditions(l []interface{}) []awstypes.Condition {
 	if len(l) == 0 {
 		return nil
 	}
 
-	var conditions []*wafv2.Condition
+	var conditions []awstypes.Condition
 
 	for _, tfMapRaw := range l {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -354,7 +357,7 @@ func expandFilterConditions(l []interface{}) []*wafv2.Condition {
 			continue
 		}
 
-		condition := &wafv2.Condition{}
+		condition := awstypes.Condition{}
 
 		if v, ok := tfMap["action_condition"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 			condition.ActionCondition = expandActionCondition(v)
@@ -370,7 +373,7 @@ func expandFilterConditions(l []interface{}) []*wafv2.Condition {
 	return conditions
 }
 
-func expandActionCondition(l []interface{}) *wafv2.ActionCondition {
+func expandActionCondition(l []interface{}) *awstypes.ActionCondition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -380,16 +383,16 @@ func expandActionCondition(l []interface{}) *wafv2.ActionCondition {
 		return nil
 	}
 
-	condition := &wafv2.ActionCondition{}
+	condition := &awstypes.ActionCondition{}
 
-	if v, ok := tfMap["action"].(string); ok && v != "" {
-		condition.Action = aws.String(v)
+	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
+		condition.Action = awstypes.ActionValue(v)
 	}
 
 	return condition
 }
 
-func expandLabelNameCondition(l []interface{}) *wafv2.LabelNameCondition {
+func expandLabelNameCondition(l []interface{}) *awstypes.LabelNameCondition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -399,7 +402,7 @@ func expandLabelNameCondition(l []interface{}) *wafv2.LabelNameCondition {
 		return nil
 	}
 
-	condition := &wafv2.LabelNameCondition{}
+	condition := &awstypes.LabelNameCondition{}
 
 	if v, ok := tfMap["label_name"].(string); ok && v != "" {
 		condition.LabelName = aws.String(v)
@@ -408,29 +411,29 @@ func expandLabelNameCondition(l []interface{}) *wafv2.LabelNameCondition {
 	return condition
 }
 
-func expandRedactedFields(fields []interface{}) []*wafv2.FieldToMatch {
-	redactedFields := make([]*wafv2.FieldToMatch, 0, len(fields))
+func expandRedactedFields(fields []interface{}) []awstypes.FieldToMatch {
+	redactedFields := make([]awstypes.FieldToMatch, 0, len(fields))
 	for _, field := range fields {
 		redactedFields = append(redactedFields, expandRedactedField(field))
 	}
 	return redactedFields
 }
 
-func expandRedactedField(field interface{}) *wafv2.FieldToMatch {
+func expandRedactedField(field interface{}) awstypes.FieldToMatch {
 	m := field.(map[string]interface{})
 
-	f := &wafv2.FieldToMatch{}
+	f := awstypes.FieldToMatch{}
 
 	// While the FieldToMatch struct allows more than 1 of its fields to be set,
 	// the WAFv2 API does not. In addition, in the context of Logging Configuration requests,
 	// the WAFv2 API only supports the following redacted fields.
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14244
 	if v, ok := m["method"]; ok && len(v.([]interface{})) > 0 {
-		f.Method = &wafv2.Method{}
+		f.Method = &awstypes.Method{}
 	}
 
 	if v, ok := m["query_string"]; ok && len(v.([]interface{})) > 0 {
-		f.QueryString = &wafv2.QueryString{}
+		f.QueryString = &awstypes.QueryString{}
 	}
 
 	if v, ok := m["single_header"]; ok && len(v.([]interface{})) > 0 {
@@ -438,26 +441,26 @@ func expandRedactedField(field interface{}) *wafv2.FieldToMatch {
 	}
 
 	if v, ok := m["uri_path"]; ok && len(v.([]interface{})) > 0 {
-		f.UriPath = &wafv2.UriPath{}
+		f.UriPath = &awstypes.UriPath{}
 	}
 
 	return f
 }
 
-func flattenLoggingFilter(filter *wafv2.LoggingFilter) []interface{} {
+func flattenLoggingFilter(filter *awstypes.LoggingFilter) []interface{} {
 	if filter == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"default_behavior": aws.StringValue(filter.DefaultBehavior),
-		"filter":           flattenFilters(filter.Filters),
+		"default_behavior": string(filter.DefaultBehavior),
+		names.AttrFilter:   flattenFilters(filter.Filters),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenFilters(f []*wafv2.Filter) []interface{} {
+func flattenFilters(f []awstypes.Filter) []interface{} {
 	if len(f) == 0 {
 		return []interface{}{}
 	}
@@ -465,14 +468,10 @@ func flattenFilters(f []*wafv2.Filter) []interface{} {
 	var filters []interface{}
 
 	for _, filter := range f {
-		if filter == nil {
-			continue
-		}
-
 		m := map[string]interface{}{
-			"behavior":    aws.StringValue(filter.Behavior),
-			"condition":   flattenFilterConditions(filter.Conditions),
-			"requirement": aws.StringValue(filter.Requirement),
+			"behavior":          string(filter.Behavior),
+			names.AttrCondition: flattenFilterConditions(filter.Conditions),
+			"requirement":       string(filter.Requirement),
 		}
 
 		filters = append(filters, m)
@@ -481,7 +480,7 @@ func flattenFilters(f []*wafv2.Filter) []interface{} {
 	return filters
 }
 
-func flattenFilterConditions(c []*wafv2.Condition) []interface{} {
+func flattenFilterConditions(c []awstypes.Condition) []interface{} {
 	if len(c) == 0 {
 		return []interface{}{}
 	}
@@ -489,10 +488,6 @@ func flattenFilterConditions(c []*wafv2.Condition) []interface{} {
 	var conditions []interface{}
 
 	for _, condition := range c {
-		if condition == nil {
-			continue
-		}
-
 		m := map[string]interface{}{
 			"action_condition":     flattenActionCondition(condition.ActionCondition),
 			"label_name_condition": flattenLabelNameCondition(condition.LabelNameCondition),
@@ -504,31 +499,31 @@ func flattenFilterConditions(c []*wafv2.Condition) []interface{} {
 	return conditions
 }
 
-func flattenActionCondition(a *wafv2.ActionCondition) []interface{} {
+func flattenActionCondition(a *awstypes.ActionCondition) []interface{} {
 	if a == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"action": aws.StringValue(a.Action),
+		names.AttrAction: string(a.Action),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenLabelNameCondition(l *wafv2.LabelNameCondition) []interface{} {
+func flattenLabelNameCondition(l *awstypes.LabelNameCondition) []interface{} {
 	if l == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"label_name": aws.StringValue(l.LabelName),
+		"label_name": aws.ToString(l.LabelName),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenRedactedFields(fields []*wafv2.FieldToMatch) []interface{} {
+func flattenRedactedFields(fields []awstypes.FieldToMatch) []interface{} {
 	redactedFields := make([]interface{}, 0, len(fields))
 	for _, field := range fields {
 		redactedFields = append(redactedFields, flattenRedactedField(field))
@@ -536,12 +531,8 @@ func flattenRedactedFields(fields []*wafv2.FieldToMatch) []interface{} {
 	return redactedFields
 }
 
-func flattenRedactedField(f *wafv2.FieldToMatch) map[string]interface{} {
+func flattenRedactedField(f awstypes.FieldToMatch) map[string]interface{} {
 	m := map[string]interface{}{}
-
-	if f == nil {
-		return m
-	}
 
 	// In the context of Logging Configuration requests,
 	// the WAFv2 API only supports the following redacted fields.
@@ -586,7 +577,7 @@ func redactedFieldsHash(v interface{}) int {
 	if v, ok := m["single_header"].([]interface{}); ok && len(v) > 0 {
 		sh, ok := v[0].(map[string]interface{})
 		if ok {
-			if name, ok := sh["name"].(string); ok {
+			if name, ok := sh[names.AttrName].(string); ok {
 				buf.WriteString(fmt.Sprintf("%s-", name))
 			}
 		}

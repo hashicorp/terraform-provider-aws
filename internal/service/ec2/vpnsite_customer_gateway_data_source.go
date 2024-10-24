@@ -9,19 +9,22 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_customer_gateway")
-func DataSourceCustomerGateway() *schema.Resource {
+// @SDKDataSource("aws_customer_gateway", name="Customer Gateway")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomerGatewayRead,
 
@@ -30,7 +33,7 @@ func DataSourceCustomerGateway() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,26 +41,30 @@ func DataSourceCustomerGateway() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"certificate_arn": {
+			"bgp_asn_extended": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"device_name": {
+			names.AttrDeviceName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
-			"id": {
+			names.AttrFilter: customFiltersSchema(),
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"ip_address": {
+			names.AttrIPAddress: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -67,37 +74,35 @@ func DataSourceCustomerGateway() *schema.Resource {
 
 func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeCustomerGatewaysInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildCustomFilterList(v.(*schema.Set))
+	if v, ok := d.GetOk(names.AttrFilter); ok {
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("id"); ok {
-		input.CustomerGatewayIds = aws.StringSlice([]string{v.(string)})
+	if v, ok := d.GetOk(names.AttrID); ok {
+		input.CustomerGatewayIds = []string{v.(string)}
 	}
 
-	cgw, err := FindCustomerGateway(ctx, conn, input)
+	cgw, err := findCustomerGateway(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Customer Gateway", err))
 	}
 
-	d.SetId(aws.StringValue(cgw.CustomerGatewayId))
+	d.SetId(aws.ToString(cgw.CustomerGatewayId))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
-	if v := aws.StringValue(cgw.BgpAsn); v != "" {
+	d.Set(names.AttrARN, arn)
+	if v := aws.ToString(cgw.BgpAsn); v != "" {
 		v, err := strconv.ParseInt(v, 0, 0)
 
 		if err != nil {
@@ -108,14 +113,23 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	} else {
 		d.Set("bgp_asn", nil)
 	}
-	d.Set("certificate_arn", cgw.CertificateArn)
-	d.Set("device_name", cgw.DeviceName)
-	d.Set("ip_address", cgw.IpAddress)
-	d.Set("type", cgw.Type)
+	if v := aws.ToString(cgw.BgpAsnExtended); v != "" {
+		v, err := strconv.ParseInt(v, 0, 0)
 
-	if err := d.Set("tags", KeyValueTags(ctx, cgw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		d.Set("bgp_asn_extended", v)
+	} else {
+		d.Set("bgp_asn_extended", nil)
 	}
+	d.Set(names.AttrCertificateARN, cgw.CertificateArn)
+	d.Set(names.AttrDeviceName, cgw.DeviceName)
+	d.Set(names.AttrIPAddress, cgw.IpAddress)
+	d.Set(names.AttrType, cgw.Type)
+
+	setTagsOut(ctx, cgw.Tags)
 
 	return diags
 }

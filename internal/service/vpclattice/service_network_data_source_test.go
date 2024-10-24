@@ -25,20 +25,20 @@ func TestAccVPCLatticeServiceNetworkDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceNetworkDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_at"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_services", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_vpcs", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_services", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_vpcs", acctest.Ct0),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},
@@ -58,20 +58,20 @@ func TestAccVPCLatticeServiceNetworkDataSource_shared(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VPCLatticeEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VPCLatticeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccServiceNetworkDataSourceConfig_shared(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "auth_type", dataSourceName, "auth_type"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrSet(dataSourceName, "last_updated_at"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
-					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_services", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_vpcs", "0"),
-					resource.TestCheckNoResourceAttr(dataSourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
+					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_services", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "number_of_associated_vpcs", acctest.Ct0),
+					resource.TestCheckNoResourceAttr(dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 		},

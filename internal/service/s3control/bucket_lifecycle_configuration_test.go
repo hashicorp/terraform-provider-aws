@@ -28,7 +28,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,13 +36,13 @@ func TestAccS3ControlBucketLifecycleConfiguration_basic(t *testing.T) {
 				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, "test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3control_bucket.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3control_bucket.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":      "1",
+						"expiration.#":      acctest.Ct1,
 						"expiration.0.days": "365",
-						"id":                "test",
-						"status":            string(types.ExpirationStatusEnabled),
+						names.AttrID:        "test",
+						names.AttrStatus:    string(types.ExpirationStatusEnabled),
 					}),
 				),
 			},
@@ -62,7 +62,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleAbortIncompleteMultipartUp
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,10 +93,10 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleAbortIncompleteMultipartUp
 				Config: testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUploadDaysAfterInitiation(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"abort_incomplete_multipart_upload.#":                       "1",
-						"abort_incomplete_multipart_upload.0.days_after_initiation": "1",
+						"abort_incomplete_multipart_upload.#":                       acctest.Ct1,
+						"abort_incomplete_multipart_upload.0.days_after_initiation": acctest.Ct1,
 					}),
 				),
 			},
@@ -109,10 +109,10 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleAbortIncompleteMultipartUp
 				Config: testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUploadDaysAfterInitiation(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"abort_incomplete_multipart_upload.#":                       "1",
-						"abort_incomplete_multipart_upload.0.days_after_initiation": "2",
+						"abort_incomplete_multipart_upload.#":                       acctest.Ct1,
+						"abort_incomplete_multipart_upload.0.days_after_initiation": acctest.Ct2,
 					}),
 				),
 			},
@@ -129,7 +129,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_date(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -137,9 +137,9 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_date(t *testing
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationDate(rName, date1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":      "1",
+						"expiration.#":      acctest.Ct1,
 						"expiration.0.date": date1,
 					}),
 				),
@@ -153,9 +153,9 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_date(t *testing
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationDate(rName, date2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":      "1",
+						"expiration.#":      acctest.Ct1,
 						"expiration.0.date": date2,
 					}),
 				),
@@ -171,7 +171,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_days(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -179,9 +179,9 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_days(t *testing
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationDays(rName, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":      "1",
+						"expiration.#":      acctest.Ct1,
 						"expiration.0.days": "7",
 					}),
 				),
@@ -195,9 +195,9 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_days(t *testing
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationDays(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#":      "1",
+						"expiration.#":      acctest.Ct1,
 						"expiration.0.days": "30",
 					}),
 				),
@@ -214,7 +214,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_expiredObjectDe
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -222,10 +222,10 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_expiredObjectDe
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredObjectDeleteMarker(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#": "1",
-						"expiration.0.expired_object_delete_marker": "true",
+						"expiration.#": acctest.Ct1,
+						"expiration.0.expired_object_delete_marker": acctest.CtTrue,
 					}),
 				),
 			},
@@ -238,10 +238,10 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleExpiration_expiredObjectDe
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredObjectDeleteMarker(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"expiration.#": "1",
-						"expiration.0.expired_object_delete_marker": "false",
+						"expiration.#": acctest.Ct1,
+						"expiration.0.expired_object_delete_marker": acctest.CtFalse,
 					}),
 				),
 			},
@@ -256,7 +256,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_prefix(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -264,9 +264,9 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_prefix(t *testing.T
 				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterPrefix(rName, "test1/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"filter.#":        "1",
+						"filter.#":        acctest.Ct1,
 						"filter.0.prefix": "test1/",
 					}),
 				),
@@ -280,9 +280,9 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_prefix(t *testing.T
 				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterPrefix(rName, "test2/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"filter.#":        "1",
+						"filter.#":        acctest.Ct1,
 						"filter.0.prefix": "test2/",
 					}),
 				),
@@ -298,19 +298,19 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_tags(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterTags1(rName, "key1", "value1"),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterTags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"filter.#":           "1",
-						"filter.0.tags.%":    "1",
-						"filter.0.tags.key1": "value1",
+						"filter.#":           acctest.Ct1,
+						"filter.0.tags.%":    acctest.Ct1,
+						"filter.0.tags.key1": acctest.CtValue1,
 					}),
 				),
 			},
@@ -336,14 +336,14 @@ func TestAccS3ControlBucketLifecycleConfiguration_RuleFilter_tags(t *testing.T) 
 			// 	),
 			// },
 			{
-				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterTags1(rName, "key2", "value2"),
+				Config: testAccBucketLifecycleConfigurationConfig_ruleFilterTags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"filter.#":           "1",
-						"filter.0.tags.%":    "1",
-						"filter.0.tags.key2": "value2",
+						"filter.#":           acctest.Ct1,
+						"filter.0.tags.%":    acctest.Ct1,
+						"filter.0.tags.key2": acctest.CtValue2,
 					}),
 				),
 			},
@@ -358,7 +358,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_id(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -366,9 +366,9 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_id(t *testing.T) {
 				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id": "test1",
+						names.AttrID: "test1",
 					}),
 				),
 			},
@@ -381,9 +381,9 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_id(t *testing.T) {
 				Config: testAccBucketLifecycleConfigurationConfig_ruleID(rName, "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"id": "test2",
+						names.AttrID: "test2",
 					}),
 				),
 			},
@@ -398,7 +398,7 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_status(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -406,9 +406,9 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_status(t *testing.T) {
 				Config: testAccBucketLifecycleConfigurationConfig_ruleStatus(rName, string(types.ExpirationStatusDisabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"status": string(types.ExpirationStatusDisabled),
+						names.AttrStatus: string(types.ExpirationStatusDisabled),
 					}),
 				),
 			},
@@ -421,9 +421,9 @@ func TestAccS3ControlBucketLifecycleConfiguration_Rule_status(t *testing.T) {
 				Config: testAccBucketLifecycleConfigurationConfig_ruleStatus(rName, string(types.ExpirationStatusEnabled)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"status": string(types.ExpirationStatusEnabled),
+						names.AttrStatus: string(types.ExpirationStatusEnabled),
 					}),
 				),
 			},

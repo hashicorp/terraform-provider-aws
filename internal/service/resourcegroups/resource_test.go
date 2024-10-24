@@ -27,7 +27,7 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,9 +35,9 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 				Config: testAccResourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName, &r),
-					resource.TestCheckResourceAttr(resourceName, "resource_type", "AWS::EC2::Host"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "AWS::EC2::Host"),
 					resource.TestCheckResourceAttrSet(resourceName, "group_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
 				),
 			},
 		},
@@ -53,7 +53,7 @@ func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfresourcegroups.FindResourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes["resource_arn"])
+			_, err := tfresourcegroups.FindResourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes[names.AttrResourceARN])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -79,7 +79,7 @@ func testAccCheckResourceExists(ctx context.Context, n string, v *types.ListGrou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsClient(ctx)
 
-		output, err := tfresourcegroups.FindResourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes["resource_arn"])
+		output, err := tfresourcegroups.FindResourceByTwoPartKey(ctx, conn, rs.Primary.Attributes["group_arn"], rs.Primary.Attributes[names.AttrResourceARN])
 
 		if err != nil {
 			return err

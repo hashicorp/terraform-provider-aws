@@ -27,7 +27,7 @@ func TestAccKinesisStreamConsumer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamConsumerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -35,9 +35,9 @@ func TestAccKinesisStreamConsumer_basic(t *testing.T) {
 				Config: testAccStreamConsumerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccStreamConsumerExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "stream_arn", streamName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kinesis", regexache.MustCompile(fmt.Sprintf("stream/%[1]s/consumer/%[1]s", rName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrStreamARN, streamName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_timestamp"),
 				),
 			},
@@ -57,7 +57,7 @@ func TestAccKinesisStreamConsumer_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -80,7 +80,7 @@ func TestAccKinesisStreamConsumer_maxConcurrentConsumers(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamConsumerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -106,7 +106,7 @@ func TestAccKinesisStreamConsumer_exceedMaxConcurrentConsumers(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStreamConsumerDestroy(ctx),
 		Steps: []resource.TestStep{

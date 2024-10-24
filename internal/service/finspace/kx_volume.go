@@ -46,7 +46,7 @@ func ResourceKxVolume() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,7 +54,7 @@ func ResourceKxVolume() *schema.Resource {
 				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"cluster_name": {
+						names.AttrClusterName: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
@@ -76,7 +76,7 @@ func ResourceKxVolume() *schema.Resource {
 				},
 				Computed: true,
 			},
-			"availability_zones": {
+			names.AttrAvailabilityZones: {
 				Type: schema.TypeList,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
@@ -94,7 +94,7 @@ func ResourceKxVolume() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
@@ -116,13 +116,13 @@ func ResourceKxVolume() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"size": {
+						names.AttrSize: {
 							Type:         schema.TypeInt,
 							Required:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1200, 33600),
 						},
-						"type": {
+						names.AttrType: {
 							Type:             schema.TypeString,
 							Required:         true,
 							ForceNew:         true,
@@ -131,23 +131,23 @@ func ResourceKxVolume() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 63),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -168,28 +168,28 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
 
 	environmentId := d.Get("environment_id").(string)
-	volumeName := d.Get("name").(string)
+	volumeName := d.Get(names.AttrName).(string)
 	idParts := []string{
 		environmentId,
 		volumeName,
 	}
 	rID, err := flex.FlattenResourceId(idParts, kxVolumeIDPartCount, false)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxVolume, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxVolume, d.Get(names.AttrName).(string), err)
 	}
 	d.SetId(rID)
 
 	in := &finspace.CreateKxVolumeInput{
 		ClientToken:         aws.String(id.UniqueId()),
-		AvailabilityZoneIds: flex.ExpandStringValueList(d.Get("availability_zones").([]interface{})),
+		AvailabilityZoneIds: flex.ExpandStringValueList(d.Get(names.AttrAvailabilityZones).([]interface{})),
 		EnvironmentId:       aws.String(environmentId),
-		VolumeType:          types.KxVolumeType(d.Get("type").(string)),
+		VolumeType:          types.KxVolumeType(d.Get(names.AttrType).(string)),
 		VolumeName:          aws.String(volumeName),
 		AzMode:              types.KxAzMode(d.Get("az_mode").(string)),
 		Tags:                getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		in.Description = aws.String(v.(string))
 	}
 
@@ -199,11 +199,11 @@ func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	out, err := conn.CreateKxVolume(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.VolumeName == nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	if _, err := waitKxVolumeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -235,17 +235,17 @@ func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxVolume, d.Id(), err)
 	}
 
-	d.Set("arn", out.VolumeArn)
-	d.Set("name", out.VolumeName)
-	d.Set("description", out.Description)
-	d.Set("type", out.VolumeType)
-	d.Set("status", out.Status)
-	d.Set("status_reason", out.StatusReason)
+	d.Set(names.AttrARN, out.VolumeArn)
+	d.Set(names.AttrName, out.VolumeName)
+	d.Set(names.AttrDescription, out.Description)
+	d.Set(names.AttrType, out.VolumeType)
+	d.Set(names.AttrStatus, out.Status)
+	d.Set(names.AttrStatusReason, out.StatusReason)
 	d.Set("az_mode", out.AzMode)
-	d.Set("description", out.Description)
+	d.Set(names.AttrDescription, out.Description)
 	d.Set("created_timestamp", out.CreatedTimestamp.String())
 	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
-	d.Set("availability_zones", aws.StringSlice(out.AvailabilityZoneIds))
+	d.Set(names.AttrAvailabilityZones, aws.StringSlice(out.AvailabilityZoneIds))
 
 	if err := d.Set("nas1_configuration", flattenNas1Configuration(out.Nas1Configuration)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)
@@ -272,10 +272,10 @@ func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	in := &finspace.UpdateKxVolumeInput{
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		VolumeName:    aws.String(d.Get("name").(string)),
+		VolumeName:    aws.String(d.Get(names.AttrName).(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok && d.HasChanges("description") {
+	if v, ok := d.GetOk(names.AttrDescription); ok && d.HasChanges(names.AttrDescription) {
 		in.Description = aws.String(v.(string))
 		updateVolume = true
 	}
@@ -307,7 +307,7 @@ func resourceKxVolumeDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Printf("[INFO] Deleting FinSpace Kx Volume: %s", d.Id())
 	_, err := conn.DeleteKxVolume(ctx, &finspace.DeleteKxVolumeInput{
-		VolumeName:    aws.String(d.Get("name").(string)),
+		VolumeName:    aws.String(d.Get(names.AttrName).(string)),
 		EnvironmentId: aws.String(d.Get("environment_id").(string)),
 	})
 
@@ -435,11 +435,11 @@ func expandNas1Configuration(tfList []interface{}) *types.KxNAS1Configuration {
 
 	a := &types.KxNAS1Configuration{}
 
-	if v, ok := tfMap["size"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrSize].(int); ok && v != 0 {
 		a.Size = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 		a.Type = types.KxNAS1Type(v)
 	}
 	return a
@@ -453,11 +453,11 @@ func flattenNas1Configuration(apiObject *types.KxNAS1Configuration) []interface{
 	m := map[string]interface{}{}
 
 	if v := apiObject.Size; v != nil {
-		m["size"] = aws.ToInt32(v)
+		m[names.AttrSize] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.Type; v != "" {
-		m["type"] = v
+		m[names.AttrType] = v
 	}
 
 	return []interface{}{m}
@@ -471,7 +471,7 @@ func flattenCluster(apiObject *types.KxAttachedCluster) map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if v := apiObject.ClusterName; aws.ToString(v) != "" {
-		m["cluster_name"] = aws.ToString(v)
+		m[names.AttrClusterName] = aws.ToString(v)
 	}
 
 	if v := apiObject.ClusterStatus; v != "" {

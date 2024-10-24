@@ -159,7 +159,7 @@ class MyConvertedCode extends TerraformStack {
       dataLocation: {
         arn: Token.asString(awsLakeformationResourceExample.arn),
       },
-      permissions: ["ALL"],
+      permissions: ["DATA_LOCATION_ACCESS"],
       principal: workflowRole.arn,
     });
   }
@@ -235,13 +235,14 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `permissions` – (Required) List of permissions granted to the principal. Valid values may include `ALL`, `ALTER`, `ASSOCIATE`, `CREATE_DATABASE`, `CREATE_TABLE`, `DATA_LOCATION_ACCESS`, `DELETE`, `DESCRIBE`, `DROP`, `INSERT`, and `SELECT`. For details on each permission, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
-* `principal` – (Required) Principal to be granted the permissions on the resource. Supported principals include `IAM_ALLOWED_PRINCIPALS` (see [Default Behavior and `IAMAllowedPrincipals`](#default-behavior-and-iamallowedprincipals) above), IAM roles, users, groups, SAML groups and users, QuickSight groups, OUs, and organizations as well as AWS account IDs for cross-account permissions. For more information, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
+* `principal` – (Required) Principal to be granted the permissions on the resource. Supported principals include `IAM_ALLOWED_PRINCIPALS` (see [Default Behavior and `IAMAllowedPrincipals`](#default-behavior-and-iamallowedprincipals) above), IAM roles, users, groups, Federated Users, SAML groups and users, QuickSight groups, OUs, and organizations as well as AWS account IDs for cross-account permissions. For more information, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 
 ~> **NOTE:** We highly recommend that the `principal` _NOT_ be a Lake Formation administrator (granted using `aws_lakeformation_data_lake_settings`). The entity (e.g., IAM role) running Terraform will most likely need to be a Lake Formation administrator. As such, the entity will have implicit permissions and does not need permissions granted through this resource.
 
 One of the following is required:
 
 * `catalogResource` - (Optional) Whether the permissions are to be granted for the Data Catalog. Defaults to `false`.
+* `dataCellsFilter` - (Optional) Configuration block for a data cells filter resource. Detailed below.
 * `dataLocation` - (Optional) Configuration block for a data location resource. Detailed below.
 * `database` - (Optional) Configuration block for a database resource. Detailed below.
 * `lfTag` - (Optional) Configuration block for an LF-tag resource. Detailed below.
@@ -253,6 +254,13 @@ The following arguments are optional:
 
 * `catalogId` – (Optional) Identifier for the Data Catalog. By default, the account ID. The Data Catalog is the persistent metadata store. It contains database definitions, table definitions, and other control information to manage your Lake Formation environment.
 * `permissionsWithGrantOption` - (Optional) Subset of `permissions` which the principal can pass.
+
+### data_cells_filter
+
+* `databaseName` - (Required) The name of the database.
+* `name` - (Required) The name of the data cells filter.
+* `tableCatalogId` - (Required) The ID of the Data Catalog.
+* `tableName` - (Required) The name of the table.
 
 ### data_location
 
@@ -331,4 +339,4 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.1 input-fd78e0884a6908a814356ab7d33f0f75b98fe926eb713d3c171ff4fd77586027 -->
+<!-- cache-key: cdktf-0.20.8 input-c1a13cdc6f3576ec23a53baebb8ac25331d0bfdd163e8db3dd0778f8476c72db -->

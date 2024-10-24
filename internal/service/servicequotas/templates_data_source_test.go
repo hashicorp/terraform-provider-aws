@@ -23,15 +23,15 @@ func testAccTemplatesDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTemplatesDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "region", regionDataSourceName, "name"),
-					resource.TestCheckResourceAttr(dataSourceName, "templates.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrRegion, regionDataSourceName, names.AttrName),
+					resource.TestCheckResourceAttr(dataSourceName, "templates.#", acctest.Ct1),
 				),
 			},
 		},

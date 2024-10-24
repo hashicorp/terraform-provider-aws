@@ -12,7 +12,7 @@ description: |-
 
 Manages a S3 Bucket Notification Configuration. For additional information, see the [Configuring S3 Event Notifications section in the Amazon S3 Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html).
 
-~> **NOTE:** S3 Buckets only support a single notification configuration. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. See the example "Trigger multiple Lambda functions" for an option.
+~> **NOTE:** S3 Buckets only support a single notification configuration resource. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. This resource will overwrite any existing event notifications configured for the S3 bucket it's associated with. See the example "Trigger multiple Lambda functions" for an option of how to configure multiple triggers within this resource.
 
 -> This resource cannot be used with S3 directory buckets.
 
@@ -173,7 +173,7 @@ class MyConvertedCode(TerraformStack):
             function_name="example_lambda_name",
             handler="exports.example",
             role=iam_for_lambda.arn,
-            runtime="go1.x"
+            runtime="nodejs20.x"
         )
         allow_bucket = LambdaPermission(self, "allow_bucket",
             action="lambda:InvokeFunction",
@@ -218,12 +218,15 @@ class MyConvertedCode(TerraformStack):
             bucket="your-bucket-name"
         )
         assume_role = DataAwsIamPolicyDocument(self, "assume_role",
-            actions=["sts:AssumeRole"],
-            effect="Allow",
-            principals=[{
-                "identifiers": ["lambda.amazonaws.com"],
-                "type": "Service"
-            }
+            statement=[DataAwsIamPolicyDocumentStatement(
+                actions=["sts:AssumeRole"],
+                effect="Allow",
+                principals=[DataAwsIamPolicyDocumentStatementPrincipals(
+                    identifiers=["lambda.amazonaws.com"],
+                    type="Service"
+                )
+                ]
+            )
             ]
         )
         iam_for_lambda = IamRole(self, "iam_for_lambda",
@@ -235,7 +238,7 @@ class MyConvertedCode(TerraformStack):
             function_name="example_lambda_name1",
             handler="exports.example",
             role=iam_for_lambda.arn,
-            runtime="go1.x"
+            runtime="nodejs20.x"
         )
         func2 = LambdaFunction(self, "func2",
             filename="your-function2.zip",
@@ -449,4 +452,4 @@ Using `terraform import`, import S3 bucket notification using the `bucket`. For 
 % terraform import aws_s3_bucket_notification.bucket_notification bucket-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-806af2b73f38b1023adb097eb9375961d9c80b720fc588a2e4a83e327c3bfb93 -->
+<!-- cache-key: cdktf-0.20.8 input-711adefb8489e0fd4ea9dba1542457d59f20b23308521f2b80c2174f2e1144a0 -->

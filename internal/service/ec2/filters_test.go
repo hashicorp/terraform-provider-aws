@@ -4,21 +4,22 @@
 package ec2_test
 
 import (
-	"reflect"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestBuildAttributeFilterList(t *testing.T) {
+func TestNewAttributeFilterList(t *testing.T) {
 	t.Parallel()
 
 	type TestCase struct {
 		Attrs    map[string]string
-		Expected []*ec2.Filter
+		Expected []awstypes.Filter
 	}
 	testCases := []TestCase{
 		{
@@ -26,14 +27,14 @@ func TestBuildAttributeFilterList(t *testing.T) {
 				"foo": "bar",
 				"baz": "boo",
 			},
-			[]*ec2.Filter{
+			[]awstypes.Filter{
 				{
 					Name:   aws.String("baz"),
-					Values: []*string{aws.String("boo")},
+					Values: []string{"boo"},
 				},
 				{
 					Name:   aws.String("foo"),
-					Values: []*string{aws.String("bar")},
+					Values: []string{"bar"},
 				},
 			},
 		},
@@ -42,37 +43,34 @@ func TestBuildAttributeFilterList(t *testing.T) {
 				"foo": "bar",
 				"baz": "",
 			},
-			[]*ec2.Filter{
+			[]awstypes.Filter{
 				{
 					Name:   aws.String("foo"),
-					Values: []*string{aws.String("bar")},
+					Values: []string{"bar"},
 				},
 			},
 		},
 	}
 
-	for i, testCase := range testCases {
-		result := tfec2.BuildAttributeFilterList(testCase.Attrs)
+	for _, testCase := range testCases {
+		result := tfec2.NewAttributeFilterList(testCase.Attrs)
 
-		if !reflect.DeepEqual(result, testCase.Expected) {
-			t.Errorf(
-				"test case %d: got %#v, but want %#v",
-				i, result, testCase.Expected,
-			)
+		if diff := cmp.Diff(result, testCase.Expected, cmp.AllowUnexported(awstypes.Filter{})); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
 }
 
-func TestBuildTagFilterList(t *testing.T) {
+func TestNewTagFilterList(t *testing.T) {
 	t.Parallel()
 
 	type TestCase struct {
-		Tags     []*ec2.Tag
-		Expected []*ec2.Filter
+		Tags     []awstypes.Tag
+		Expected []awstypes.Filter
 	}
 	testCases := []TestCase{
 		{
-			[]*ec2.Tag{
+			[]awstypes.Tag{
 				{
 					Key:   aws.String("foo"),
 					Value: aws.String("bar"),
@@ -82,32 +80,29 @@ func TestBuildTagFilterList(t *testing.T) {
 					Value: aws.String("boo"),
 				},
 			},
-			[]*ec2.Filter{
+			[]awstypes.Filter{
 				{
 					Name:   aws.String("tag:foo"),
-					Values: []*string{aws.String("bar")},
+					Values: []string{"bar"},
 				},
 				{
 					Name:   aws.String("tag:baz"),
-					Values: []*string{aws.String("boo")},
+					Values: []string{"boo"},
 				},
 			},
 		},
 	}
 
-	for i, testCase := range testCases {
-		result := tfec2.BuildTagFilterList(testCase.Tags)
+	for _, testCase := range testCases {
+		result := tfec2.NewTagFilterList(testCase.Tags)
 
-		if !reflect.DeepEqual(result, testCase.Expected) {
-			t.Errorf(
-				"test case %d: got %#v, but want %#v",
-				i, result, testCase.Expected,
-			)
+		if diff := cmp.Diff(result, testCase.Expected, cmp.AllowUnexported(awstypes.Filter{})); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
 }
 
-func TestBuildCustomFilterList(t *testing.T) {
+func TestNewCustomFilterList(t *testing.T) {
 	t.Parallel()
 
 	// We need to get a set with the appropriate hash function,
@@ -122,7 +117,7 @@ func TestBuildCustomFilterList(t *testing.T) {
 
 	// We also need an appropriately-configured set for
 	// the list of values.
-	valuesSchema := filtersSchema.Elem.(*schema.Resource).Schema["values"]
+	valuesSchema := filtersSchema.Elem.(*schema.Resource).Schema[names.AttrValues]
 	valuesSet := func(vals ...string) *schema.Set {
 		ret := valuesSchema.ZeroValue().(*schema.Set)
 		for _, val := range vals {
@@ -132,15 +127,15 @@ func TestBuildCustomFilterList(t *testing.T) {
 	}
 
 	filters.Add(map[string]interface{}{
-		"name":   "foo",
-		"values": valuesSet("bar", "baz"),
+		names.AttrName:   "foo",
+		names.AttrValues: valuesSet("bar", "baz"),
 	})
 	filters.Add(map[string]interface{}{
-		"name":   "pizza",
-		"values": valuesSet("cheese"),
+		names.AttrName:   "pizza",
+		names.AttrValues: valuesSet("cheese"),
 	})
 
-	expected := []*ec2.Filter{
+	expected := []awstypes.Filter{
 		// These are produced in the deterministic order guaranteed
 		// by schema.Set.List(), which happens to produce them in
 		// the following order for our current input. If this test
@@ -148,19 +143,16 @@ func TestBuildCustomFilterList(t *testing.T) {
 		// will likely be emitted in a different order, which is fine.
 		{
 			Name:   aws.String("pizza"),
-			Values: []*string{aws.String("cheese")},
+			Values: []string{"cheese"},
 		},
 		{
 			Name:   aws.String("foo"),
-			Values: []*string{aws.String("bar"), aws.String("baz")},
+			Values: []string{"bar", "baz"},
 		},
 	}
-	result := tfec2.BuildCustomFilterList(filters)
+	result := tfec2.NewCustomFilterList(filters)
 
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf(
-			"got %#v, but want %#v",
-			result, expected,
-		)
+	if diff := cmp.Diff(result, expected, cmp.AllowUnexported(awstypes.Filter{})); diff != "" {
+		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 	}
 }

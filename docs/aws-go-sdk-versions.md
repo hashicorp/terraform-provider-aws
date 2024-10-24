@@ -1,6 +1,6 @@
 # AWS Go SDK Versions
 
-The Terraform AWS Provider relies on the [AWS SDK for Go](https://aws.amazon.com/sdk-for-go/) which is maintained and published by AWS to allow us to safely and securely interact with AWS API's in a consistent fashion.
+The Terraform AWS Provider relies on the [AWS SDK for Go](https://aws.amazon.com/sdk-for-go/) which is maintained and published by AWS to allow us to safely and securely interact with AWS APIs consistently.
 There are two versions of this API, both of which are considered Generally Available and fully supported by AWS at present.
 
 - [AWS SDKs and Tools maintenance policy](https://docs.aws.amazon.com/sdkref/latest/guide/maint-policy.html)
@@ -34,12 +34,12 @@ The AWS SDKs also automatically retry several common failure cases, such as netw
 
 The AWS SDK for Go v1.0.0 was released in late 2015, when the current version of Go was v1.5.
 The Go language has evolved significantly since then.
-Many currently-recommended practices were not possible at that time,
+Many currently recommended practices were not possible at that time,
 including the use of the `context` package, introduced in Go v1.7,
 and error wrapping, introduced in Go v1.13.
 
 The AWS SDK for Go v2 uses a modern Go style
-and has also been modularized, so that individual services are packaged and imported separately.
+and has also been modularized so that individual services are packaged and imported separately.
 
 For details on the specific changes to the AWS SDK for Go v2,
 see [Migrating to the AWS SDK for Go v2](https://aws.github.io/aws-sdk-go-v2/docs/migrating/),

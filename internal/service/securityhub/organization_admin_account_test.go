@@ -26,7 +26,7 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -55,7 +55,7 @@ func testAccOrganizationAdminAccount_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,7 +83,7 @@ func testAccOrganizationAdminAccount_MultiRegion(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckOrganizationAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{

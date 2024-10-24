@@ -56,8 +56,8 @@ func TestAccFinSpaceKxCluster_basic(t *testing.T) {
 				Config: testAccKxClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 			{
@@ -125,7 +125,7 @@ func TestAccFinSpaceKxCluster_description(t *testing.T) {
 				Config: testAccKxClusterConfig_description(rName, "cluster description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "description", "cluster description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "cluster description"),
 				),
 			},
 		},
@@ -157,7 +157,7 @@ func TestAccFinSpaceKxCluster_database(t *testing.T) {
 				Config: testAccKxClusterConfig_database(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -188,7 +188,7 @@ func TestAccFinSpaceKxCluster_cacheConfigurations(t *testing.T) {
 				Config: testAccKxClusterConfig_cacheConfigurations(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -219,10 +219,10 @@ func TestAccFinSpaceKxCluster_cache250Configurations(t *testing.T) {
 				Config: testAccKxClusterConfig_cache250Configurations(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_storage_configurations.*", map[string]string{
-						"size": "1200",
-						"type": "CACHE_250",
+						names.AttrSize: "1200",
+						names.AttrType: "CACHE_250",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.0.cache_configurations.*", map[string]string{
 						"cache_type": "CACHE_250",
@@ -257,10 +257,10 @@ func TestAccFinSpaceKxCluster_cache12Configurations(t *testing.T) {
 				Config: testAccKxClusterConfig_cache12Configurations(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cache_storage_configurations.*", map[string]string{
-						"size": "6000",
-						"type": "CACHE_12",
+						names.AttrSize: "6000",
+						names.AttrType: "CACHE_12",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "database.0.cache_configurations.*", map[string]string{
 						"cache_type": "CACHE_12",
@@ -298,10 +298,10 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "code.*", map[string]string{
-						"s3_bucket": rName,
-						"s3_key":    codePath,
+						names.AttrS3Bucket: rName,
+						"s3_key":           codePath,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 			{
@@ -309,10 +309,10 @@ func TestAccFinSpaceKxCluster_code(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "code.*", map[string]string{
-						"s3_bucket": rName,
-						"s3_key":    updatedCodePath,
+						names.AttrS3Bucket: rName,
+						"s3_key":           updatedCodePath,
 					}),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -343,7 +343,7 @@ func TestAccFinSpaceKxCluster_multiAZ(t *testing.T) {
 				Config: testAccKxClusterConfig_multiAZ(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -374,7 +374,7 @@ func TestAccFinSpaceKxCluster_rdb(t *testing.T) {
 				Config: testAccKxClusterConfig_rdb(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -405,7 +405,7 @@ func TestAccFinSpaceKxCluster_executionRole(t *testing.T) {
 				Config: testAccKxClusterConfig_executionRole(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -436,7 +436,7 @@ func TestAccFinSpaceKxCluster_autoScaling(t *testing.T) {
 				Config: testAccKxClusterConfig_autoScaling(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -470,14 +470,14 @@ func TestAccFinSpaceKxCluster_initializationScript(t *testing.T) {
 				Config: testAccKxClusterConfig_initScript(rName, codePath, initScriptPath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 			{
 				Config: testAccKxClusterConfig_initScript(rName, codePath, updatedInitScriptPath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -506,21 +506,21 @@ func TestAccFinSpaceKxCluster_commandLineArgs(t *testing.T) {
 		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKxClusterConfig_commandLineArgs(rName, "arg1", "value1", codePath),
+				Config: testAccKxClusterConfig_commandLineArgs(rName, "arg1", acctest.CtValue1, codePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", acctest.CtValue1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 			{
-				Config: testAccKxClusterConfig_commandLineArgs(rName, "arg1", "value2", codePath),
+				Config: testAccKxClusterConfig_commandLineArgs(rName, "arg1", acctest.CtValue2, codePath),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", "value2"),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "command_line_arguments.arg1", acctest.CtValue2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -548,28 +548,28 @@ func TestAccFinSpaceKxCluster_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckKxClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKxClusterConfig_tags1(rName, "key1", "value1"),
+				Config: testAccKxClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
-				Config: testAccKxClusterConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccKxClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccKxClusterConfig_tags1(rName, "key2", "value2"),
+				Config: testAccKxClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -600,8 +600,8 @@ func TestAccFinSpaceKxCluster_ScalingGroup(t *testing.T) {
 				Config: testAccKxClusterConfig_ScalingGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -632,8 +632,8 @@ func TestAccFinSpaceKxCluster_RDBInScalingGroupWithKxVolume(t *testing.T) {
 				Config: testAccKxRDBClusterConfigInScalingGroup_withKxVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -664,8 +664,8 @@ func TestAccFinSpaceKxCluster_TPInScalingGroupWithKxVolume(t *testing.T) {
 				Config: testAccKxTPClusterConfigInScalingGroup_withKxVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -696,8 +696,8 @@ func TestAccFinSpaceKxCluster_InScalingGroupWithKxDataview(t *testing.T) {
 				Config: testAccKxClusterConfigInScalingGroup_withKxDataview(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxClusterExists(ctx, resourceName, &kxcluster),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", string(types.KxClusterStatusRunning)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.KxClusterStatusRunning)),
 				),
 			},
 		},
@@ -714,7 +714,7 @@ func testAccCheckKxClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			input := &finspace.GetKxClusterInput{
-				ClusterName:   aws.String(rs.Primary.Attributes["name"]),
+				ClusterName:   aws.String(rs.Primary.Attributes[names.AttrName]),
 				EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
 			}
 			_, err := conn.GetKxCluster(ctx, input)
@@ -746,7 +746,7 @@ func testAccCheckKxClusterExists(ctx context.Context, name string, kxcluster *fi
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 		resp, err := conn.GetKxCluster(ctx, &finspace.GetKxClusterInput{
-			ClusterName:   aws.String(rs.Primary.Attributes["name"]),
+			ClusterName:   aws.String(rs.Primary.Attributes[names.AttrName]),
 			EnvironmentId: aws.String(rs.Primary.Attributes["environment_id"]),
 		})
 
@@ -781,6 +781,7 @@ resource "aws_finspace_kx_environment" "test" {
 data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
+      "kms:Encrypt",
       "kms:Decrypt",
       "kms:GenerateDataKey"
     ]
@@ -1812,11 +1813,6 @@ resource "aws_s3_object" "object" {
   source = %[2]q
 }
 
-resource "aws_finspace_kx_database" "test" {
-  name           = %[1]q
-  environment_id = aws_finspace_kx_environment.test.id
-}
-
 resource "aws_finspace_kx_cluster" "test" {
   name                  = %[1]q
   environment_id        = aws_finspace_kx_environment.test.id
@@ -1835,19 +1831,6 @@ resource "aws_finspace_kx_cluster" "test" {
     security_group_ids = [aws_security_group.test.id]
     subnet_ids         = [aws_subnet.test.id]
     ip_address_type    = "IP_V4"
-  }
-
-  cache_storage_configurations {
-    type = "CACHE_1000"
-    size = 1200
-  }
-
-  database {
-    database_name = aws_finspace_kx_database.test.name
-    cache_configurations {
-      cache_type = "CACHE_1000"
-      db_paths   = ["/"]
-    }
   }
 
   code {

@@ -16,23 +16,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsIncludeTrustContext(t *testing.T) {
+func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsIncludeTrustContext(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-
 	var v types.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
 	instanceResourceName := "aws_verifiedaccess_instance.test"
-
 	include_trust_context_original := true
 	include_trust_context_updated := false
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
 		},
@@ -44,9 +44,9 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsIncludeTrustCon
 				Config: testAccLoggingConfigurationConfig_basic_accessLogsIncludeTrustContext(include_trust_context_original),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.include_trust_context", strconv.FormatBool(include_trust_context_original)),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 			{
@@ -59,27 +59,26 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsIncludeTrustCon
 				Config: testAccLoggingConfigurationConfig_basic_accessLogsIncludeTrustContext(include_trust_context_updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.include_trust_context", strconv.FormatBool(include_trust_context_updated)),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 		},
 	})
 }
 
-func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsLogVersion(t *testing.T) {
+func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsLogVersion(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-
 	var v types.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
 	instanceResourceName := "aws_verifiedaccess_instance.test"
-
 	log_version_original := "ocsf-0.1"
 	log_version_updated := "ocsf-1.0.0-rc.2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
 		},
@@ -91,9 +90,9 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsLogVersion(t *t
 				Config: testAccLoggingConfigurationConfig_basic_accessLogsLogVersion(log_version_original),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.log_version", log_version_original),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 			{
@@ -106,18 +105,17 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsLogVersion(t *t
 				Config: testAccLoggingConfigurationConfig_basic_accessLogsLogVersion(log_version_updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.log_version", log_version_updated),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 		},
 	})
 }
 
-func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogs(t *testing.T) {
+func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogs(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-
 	var v types.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
 	instanceResourceName := "aws_verifiedaccess_instance.test"
@@ -126,6 +124,7 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogs(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
 		},
@@ -137,11 +136,11 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogs(
 				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogs("first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 			{
@@ -154,32 +153,31 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogs(
 				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogs("second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName2, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName2, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 		},
 	})
 }
 
-func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsKinesisDataFirehose(t *testing.T) {
+func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsKinesisDataFirehose(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-
 	var v types.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
 	instanceResourceName := "aws_verifiedaccess_instance.test"
 	kinesisStreamName := "aws_kinesis_firehose_delivery_stream.test"
 	kinesisStreamName2 := "aws_kinesis_firehose_delivery_stream.test2"
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
 		},
@@ -188,14 +186,14 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsKinesisDataFire
 		CheckDestroy:             testAccCheckVerifiedAccessInstanceLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_basic_accessLogsKinesisDataFirehose(rName, rName2, rName3, "first"),
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsKinesisDataFirehose(rName1, rName2, rName3, "first"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 			{
@@ -205,36 +203,35 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsKinesisDataFire
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_basic_accessLogsKinesisDataFirehose(rName, rName2, rName3, "second"),
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsKinesisDataFirehose(rName1, rName2, rName3, "second"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName2, "name"),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName2, names.AttrName),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 		},
 	})
 }
 
-func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsS3(t *testing.T) {
+func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsS3(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-
 	var v types.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
 	instanceResourceName := "aws_verifiedaccess_instance.test"
 	bucketName := "aws_s3_bucket.test"
 	bucketName2 := "aws_s3_bucket.test2"
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	prefix_original := "prefix-original"
 	prefix_updated := "prefix-updated"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
 		},
@@ -243,16 +240,16 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsS3(t *testing.T
 		CheckDestroy:             testAccCheckVerifiedAccessInstanceLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoggingConfigurationConfig_basic_accessLogsS3(rName, rName2, "first", prefix_original),
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsS3(rName1, rName2, "first", prefix_original),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName, names.AttrID),
 					acctest.CheckResourceAttrAccountID(resourceName, "access_logs.0.s3.0.bucket_owner"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.prefix", prefix_original),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 			{
@@ -262,38 +259,37 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsS3(t *testing.T
 				ImportStateVerifyIgnore: []string{},
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_basic_accessLogsS3(rName, rName2, "second", prefix_updated),
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsS3(rName1, rName2, "second", prefix_updated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName2, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName2, names.AttrID),
 					acctest.CheckResourceAttrAccountID(resourceName, "access_logs.0.s3.0.bucket_owner"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.prefix", prefix_updated),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 		},
 	})
 }
 
-func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogsKinesisDataFirehoseS3(t *testing.T) {
+func testAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogsKinesisDataFirehoseS3(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-
 	var v types.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance_logging_configuration.test"
 	instanceResourceName := "aws_verifiedaccess_instance.test"
 	logGroupName := "aws_cloudwatch_log_group.test"
 	kinesisStreamName := "aws_kinesis_firehose_delivery_stream.test"
 	bucketName := "aws_s3_bucket.test"
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
 		},
@@ -303,20 +299,20 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogsK
 		Steps: []resource.TestStep{
 			{
 				// Test all 3 logging configurations together - CloudWatch, Kinesis Data Firehose, S3
-				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogsKinesisDataFirehoseS3(rName, rName2, rName3),
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogsKinesisDataFirehoseS3(rName1, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 			{
@@ -327,69 +323,69 @@ func TestAccVerifiedAccessInstanceLoggingConfiguration_accessLogsCloudWatchLogsK
 			},
 			{
 				// Test 2 logging configurations together - CloudWatch, Kinesis Data Firehose
-				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogsKinesisDataFirehose(rName, rName2, rName3),
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogsKinesisDataFirehose(rName1, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 			{
 				// Test 2 logging configurations together - CloudWatch, S3
-				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogsS3(rName, rName2, rName3),
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsCloudWatchLogsS3(rName1, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.cloudwatch_logs.0.log_group", logGroupName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 			{
 				// Test 2 logging configurations together - Kinesis Data Firehose, S3
-				Config: testAccLoggingConfigurationConfig_basic_accessLogsKinesisDataFirehoseS3(rName, rName2, rName3),
+				Config: testAccLoggingConfigurationConfig_basic_accessLogsKinesisDataFirehoseS3(rName1, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVerifiedAccessInstanceLoggingConfigurationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.cloudwatch_logs.0.enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.kinesis_data_firehose.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.kinesis_data_firehose.0.delivery_stream", kinesisStreamName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_logs.0.s3.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "access_logs.0.s3.0.bucket_name", bucketName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "verifiedaccess_instance_id", instanceResourceName, names.AttrID),
 				),
 			},
 		},
 	})
 }
 
-func TestAccVerifiedAccessInstanceLoggingConfiguration_disappears(t *testing.T) {
+func testAccVerifiedAccessInstanceLoggingConfiguration_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	// note: disappears test does not test the logging configuration since the instance is deleted
 	// the logging configuration cannot be deleted, rather, the boolean flags and logging version are reset to the default values
 	ctx := acctest.Context(t)
-
 	var v types.VerifiedAccessInstanceLoggingConfiguration
 	resourceName := "aws_verifiedaccess_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccessInstanceLoggingConfiguration(ctx, t)
 		},
