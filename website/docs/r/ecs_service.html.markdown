@@ -154,7 +154,7 @@ The following arguments are optional:
 * `task_definition` - (Optional) Family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with `plantimestamp()`. See example above.
 * `volume_configuration` - (Optional) Configuration for a volume specified in the task definition as a volume that is configured at launch time. Currently, the only supported volume type is an Amazon EBS volume. [See below](#volume_configuration).
-* `vpc_lattice_configuration` - (Optional) The VPC Lattice configuration for your service that allows Lattice to connect, secure, and monitor your service across multiple accounts and VPCs. See below. [See below](#vpc_lattice_configuration).
+* `vpc_lattice_configurations` - (Optional) The VPC Lattice configuration for your service that allows Lattice to connect, secure, and monitor your service across multiple accounts and VPCs. See below. [See below](#vpc_lattice_configurations).
 * `wait_for_steady_state` - (Optional) If `true`, Terraform will wait for the service to reach a steady state (like [`aws ecs wait services-stable`](https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html)) before continuing. Default `false`.
 
 ### alarms
@@ -172,9 +172,9 @@ The `volume_configuration` configuration block supports the following:
 * `name` - (Required) Name of the volume.
 * `managed_ebs_volume` - (Required) Configuration for the Amazon EBS volume that Amazon ECS creates and manages on your behalf. [See below](#managed_ebs_volume).
 
-### vpc_lattice_configuration
+### vpc_lattice_configurations
 
-`vpc_lattice_configuration` supports the following:
+`vpc_lattice_configurations` supports the following:
 
 * `role_arn` - (Required) The ARN of the IAM role to associate with this volume. This is the Amazon ECS infrastructure IAM role that is used to manage your AWS infrastructure
 * `target_group_arn` - (Required) The full ARN of the target group or groups associated with the VPC Lattice configuration.
