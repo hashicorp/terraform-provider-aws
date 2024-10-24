@@ -588,7 +588,7 @@ func flattenRouteSettings(settings map[string]awstypes.RouteSettings) []interfac
 }
 
 func stageARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {
-	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("apis/%s/stages/%s", apiID, stageName))
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/apis/%s/stages/%s", apiID, stageName))
 }
 
 func stageInvokeARN(ctx context.Context, c *conns.AWSClient, apiID, stageName string) string {

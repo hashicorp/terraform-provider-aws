@@ -256,7 +256,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameConfigurationSet, d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, configurationSetNameToARN(ctx, meta.(*conns.AWSClient), aws.ToString(out.ConfigurationSetName)))
+	d.Set(names.AttrARN, configurationSetARN(ctx, meta.(*conns.AWSClient), aws.ToString(out.ConfigurationSetName)))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 
 	if out.DeliveryOptions != nil {
@@ -746,6 +746,6 @@ func expandGuardianOptions(tfMap map[string]interface{}) *types.GuardianOptions 
 	return a
 }
 
-func configurationSetNameToARN(ctx context.Context, c *conns.AWSClient, configurationSetName string) string {
+func configurationSetARN(ctx context.Context, c *conns.AWSClient, configurationSetName string) string {
 	return c.RegionalARN(ctx, "ses", fmt.Sprintf("configuration-set/%s", configurationSetName))
 }
