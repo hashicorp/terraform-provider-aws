@@ -32,7 +32,7 @@ func testAccWorkspaceAPIKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKey),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "key_role", string(awstypes.RoleEditor)),
-					resource.TestCheckResourceAttr(resourceName, "seconds_to_live", acctest.Ct3600),
+					resource.TestCheckResourceAttr(resourceName, "seconds_to_live", "3600"),
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, names.AttrID),
 				),
 			},
