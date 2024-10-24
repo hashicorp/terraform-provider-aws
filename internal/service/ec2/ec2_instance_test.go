@@ -2552,7 +2552,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io1(t *testing.T) {
 	volumeType := "io1"
 
 	originalIOPS := "100"
-	updatedIOPS := acctest.Ct200
+	updatedIOPS := "200"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2595,7 +2595,7 @@ func TestAccEC2Instance_EBSRootDeviceModifyIOPS_io2(t *testing.T) {
 	volumeType := "io2"
 
 	originalIOPS := "100"
-	updatedIOPS := acctest.Ct200
+	updatedIOPS := "200"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2722,7 +2722,7 @@ func TestAccEC2Instance_EBSRootDevice_modifyAll(t *testing.T) {
 	originalType := "gp2"
 	updatedType := "io1"
 
-	updatedIOPS := acctest.Ct200
+	updatedIOPS := "200"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },

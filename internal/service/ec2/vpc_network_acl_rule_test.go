@@ -48,7 +48,7 @@ func TestAccVPCNetworkACLRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resource1Name, "ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resource1Name, names.AttrProtocol, "6"),
 					resource.TestCheckResourceAttr(resource1Name, "rule_action", "allow"),
-					resource.TestCheckResourceAttr(resource1Name, "rule_number", acctest.Ct200),
+					resource.TestCheckResourceAttr(resource1Name, "rule_number", "200"),
 					resource.TestCheckResourceAttr(resource1Name, "to_port", "22"),
 
 					resource.TestCheckResourceAttr(resource2Name, names.AttrCIDRBlock, "0.0.0.0/0"),

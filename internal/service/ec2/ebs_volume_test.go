@@ -226,7 +226,7 @@ func TestAccEC2EBSVolume_UpdateIops_io1(t *testing.T) {
 				Config: testAccEBSVolumeConfig_iopsIo1Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
@@ -264,7 +264,7 @@ func TestAccEC2EBSVolume_UpdateIops_io2(t *testing.T) {
 				Config: testAccEBSVolumeConfig_iopsIo2Updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "0"),
 				),
 			},
@@ -573,7 +573,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 		CheckDestroy:             testAccCheckVolumeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "4000", acctest.Ct200),
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "4000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
@@ -586,7 +586,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},
@@ -597,7 +597,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"final_snapshot"},
 			},
 			{
-				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "5000", acctest.Ct200),
+				Config: testAccEBSVolumeConfig_sizeTypeIOPSThroughput(rName, "10", "gp3", "5000", "200"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`volume/vol-.+`)),
@@ -610,7 +610,7 @@ func TestAccEC2EBSVolume_GP3_iops(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrSnapshotID, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, names.AttrThroughput, "200"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "gp3"),
 				),
 			},

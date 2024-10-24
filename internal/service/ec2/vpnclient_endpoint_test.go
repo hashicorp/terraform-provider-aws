@@ -68,7 +68,7 @@ func testAccClientVPNEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "udp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVPCID, ""),
-					resource.TestCheckResourceAttr(resourceName, "vpn_port", acctest.Ct443),
+					resource.TestCheckResourceAttr(resourceName, "vpn_port", "443"),
 				),
 			},
 			{
@@ -568,7 +568,7 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T, semaphore tfs
 					resource.TestCheckResourceAttr(resourceName, "session_timeout_hours", "10"),
 					resource.TestCheckResourceAttr(resourceName, "split_tunnel", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "transport_protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "vpn_port", acctest.Ct443),
+					resource.TestCheckResourceAttr(resourceName, "vpn_port", "443"),
 				),
 			},
 		},

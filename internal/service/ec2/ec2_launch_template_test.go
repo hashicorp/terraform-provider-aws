@@ -2631,7 +2631,7 @@ func TestAccEC2LaunchTemplate_instanceRequirements_networkBandwidthGbps(t *testi
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "instance_requirements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.network_bandwidth_gbps.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.network_bandwidth_gbps.0.max", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "instance_requirements.0.network_bandwidth_gbps.0.max", "200"),
 				),
 			},
 			{

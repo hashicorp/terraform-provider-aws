@@ -1754,7 +1754,7 @@ func TestAccEC2Fleet_LaunchTemplateOverride_instanceRequirements_networkBandwidt
 
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.max", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.0.override.0.instance_requirements.0.network_bandwidth_gbps.0.max", "200"),
 				),
 			},
 			{

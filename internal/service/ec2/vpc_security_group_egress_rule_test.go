@@ -45,7 +45,7 @@ func TestAccVPCSecurityGroupEgressRule_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "referenced_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "security_group_rule_id"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrTags),
-					resource.TestCheckResourceAttr(resourceName, "to_port", acctest.Ct8080),
+					resource.TestCheckResourceAttr(resourceName, "to_port", "8080"),
 				),
 			},
 			{

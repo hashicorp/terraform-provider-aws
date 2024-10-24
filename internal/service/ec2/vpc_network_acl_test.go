@@ -226,8 +226,8 @@ func TestAccVPCNetworkACL_egressAndIngressRules(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						names.AttrProtocol:  "6",
 						"rule_no":           "2",
-						"from_port":         acctest.Ct443,
-						"to_port":           acctest.Ct443,
+						"from_port":         "443",
+						"to_port":           "443",
 						names.AttrAction:    "allow",
 						names.AttrCIDRBlock: "10.3.0.0/18",
 					}),
@@ -256,8 +256,8 @@ func TestAccVPCNetworkACL_OnlyIngressRules_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						names.AttrProtocol:  "6",
 						"rule_no":           "2",
-						"from_port":         acctest.Ct443,
-						"to_port":           acctest.Ct443,
+						"from_port":         "443",
+						"to_port":           "443",
 						names.AttrAction:    "deny",
 						names.AttrCIDRBlock: "10.2.0.0/18",
 					}),
@@ -293,7 +293,7 @@ func TestAccVPCNetworkACL_OnlyIngressRules_update(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
 						names.AttrCIDRBlock: "10.2.0.0/18",
-						"from_port":         acctest.Ct443,
+						"from_port":         "443",
 						"rule_no":           "2",
 					}),
 				),
