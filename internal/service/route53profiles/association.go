@@ -11,7 +11,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -158,16 +157,8 @@ func (r *resourceAssociation) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	data.ID = flex.StringToFramework(ctx, out.ProfileAssociation.Id)
-
-	associationArn := arn.ARN{
-		Partition: r.Meta().Partition,
-		Service:   "route53profiles",
-		Region:    r.Meta().Region,
-		AccountID: r.Meta().AccountID,
-		Resource:  fmt.Sprintf("profile-association/%s", aws.ToString(out.ProfileAssociation.Id)),
-	}.String()
-
-	data.ARN = flex.StringValueToFramework(ctx, associationArn)
+	associationARN := r.Meta().RegionalARN(ctx, "route53profiles", fmt.Sprintf("profile-association/%s", aws.ToString(out.ProfileAssociation.Id)))
+	data.ARN = flex.StringValueToFramework(ctx, associationARN)
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
 	profileAssociation, err := waitAssociationCreated(ctx, conn, data.ID.ValueString(), createTimeout)
@@ -209,14 +200,8 @@ func (r *resourceAssociation) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	associationArn := arn.ARN{
-		Partition: r.Meta().Partition,
-		Service:   "route53profiles",
-		Region:    r.Meta().Region,
-		AccountID: r.Meta().AccountID,
-		Resource:  fmt.Sprintf("profile-association/%s", aws.ToString(out.Id)),
-	}.String()
-	state.ARN = flex.StringValueToFramework(ctx, associationArn)
+	associationARN := r.Meta().RegionalARN(ctx, "route53profiles", fmt.Sprintf("profile-association/%s", aws.ToString(out.Id)))
+	state.ARN = flex.StringValueToFramework(ctx, associationARN)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
