@@ -20,7 +20,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			acctest.CtDisappears: testAccContact_disappears,
 			"updateAlias":        testAccContact_updateAlias,
 			"updateDisplayName":  testAccContact_updateDisplayName,
-			"updateTags":         testAccContact_updateTags,
+			"tags":               testAccSSMContactsContact_tagsSerial,
 			"updateType":         testAccContact_updateType,
 		},
 		"ContactDataSource": {
