@@ -1088,17 +1088,17 @@ func resourceService() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"role_arn": {
 							Type:         schema.TypeString,
-							Optional:     false,
+							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"target_group_arn": {
 							Type:         schema.TypeString,
-							Optional:     false,
+							Required:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"port_name": {
 							Type:         schema.TypeString,
-							Optional:     false,
+							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 64),
 						},
 					},
