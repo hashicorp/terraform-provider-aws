@@ -359,7 +359,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
-	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	arn, err := newObjectARN(meta.(*conns.AWSClient).PartitionID(ctx), bucket, key)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
