@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
@@ -86,6 +87,17 @@ func (c *AWSClient) PartitionID(context.Context) string {
 // The prefix should not contain a trailing period.
 func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string {
 	return fmt.Sprintf("%s.%s", prefix, c.DNSSuffix(ctx))
+}
+
+// RegionalARN returns a regional ARN for the specified service namespace and resource.
+func (c *AWSClient) RegionalARN(ctx context.Context, service, resource string) string {
+	return arn.ARN{
+		Partition: c.PartitionID(ctx),
+		Service:   service,
+		Region:    c.Region,
+		AccountID: c.AccountID,
+		Resource:  resource,
+	}.String()
 }
 
 // RegionalHostname returns a hostname with the provider domain suffix for the region and partition
