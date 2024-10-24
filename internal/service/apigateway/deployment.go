@@ -155,7 +155,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrCreatedDate, deployment.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, deployment.Description)
 	executionARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).PartitionID(ctx),
 		Service:   "execute-api",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
