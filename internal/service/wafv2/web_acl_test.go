@@ -6208,16 +6208,16 @@ resource "aws_wafv2_web_acl" "test" {
 
       VisibilityConfig = {
         CloudwatchMetricsEnabled = false,
-        MetricName               = "friendly-rule-metric-name",
+        MetricName               = "test-metric-name",
         SampledRequestsEnabled   = false,
       },
     },
     {
-      "Name" : "example_rule0",
+      "Name" : "test_rule0",
       "Priority" : 0,
       "Statement" : {
         "ByteMatchStatement" : {
-          "SearchString" : "example.com",
+          "SearchString" : "test",
           "FieldToMatch" : {
             "SingleHeader" : {
               "Name" : "host"
@@ -6238,7 +6238,7 @@ resource "aws_wafv2_web_acl" "test" {
       "VisibilityConfig" : {
         "SampledRequestsEnabled" : true,
         "CloudWatchMetricsEnabled" : true,
-        "MetricName" : "example_rule0"
+        "MetricName" : "test_rule0"
       }
     }
   ])
