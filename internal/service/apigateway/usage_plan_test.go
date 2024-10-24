@@ -290,7 +290,7 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUsagePlanExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.limit", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.limit", "200"),
 					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.offset", "20"),
 					resource.TestCheckResourceAttr(resourceName, "quota_settings.0.period", "MONTH"),
 				),
