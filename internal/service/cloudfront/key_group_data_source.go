@@ -208,7 +208,7 @@ func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadReques
 	out, err := findKeyGroupByID(ctx, conn, keyGroupID)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, DSNameKeyGroup, data.Name.String(), err),
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionReading, DSNameKeyGroup, keyGroupID, err),
 			err.Error(),
 		)
 		return
