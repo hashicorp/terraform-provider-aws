@@ -292,7 +292,7 @@ func TestAccKeyspacesTable_update(t *testing.T) {
 					testAccCheckTableExists(ctx, resourceName, &v1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cassandra", fmt.Sprintf("/keyspace/%s/table/%s", rName1, rName2)),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.read_capacity_units", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.read_capacity_units", "200"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PROVISIONED"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.write_capacity_units", "100"),
 					resource.TestCheckResourceAttr(resourceName, "comment.#", "1"),
