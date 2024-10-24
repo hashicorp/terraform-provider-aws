@@ -58,6 +58,7 @@ func TestAccDeployDeploymentGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttrSet(resourceName, "deployment_group_id"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "termination_hook_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -1581,6 +1582,52 @@ func TestAccDeployDeploymentGroup_OutdatedInstancesStrategy_ignore(t *testing.T)
 	})
 }
 
+func TestAccDeployDeploymentGroup_TermationHook_enabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group types.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentGroupConfig_terminationHookEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "termination_hook_enabled", acctest.CtTrue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDeployDeploymentGroup_TermationHook_disabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group types.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentGroupConfig_terminationHookDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "termination_hook_enabled", acctest.CtFalse),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDeploymentGroupTriggerEvents(group *types.DeploymentGroupInfo, triggerName string, expectedEvents []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		found := false
@@ -2890,4 +2937,26 @@ resource "aws_codedeploy_deployment_group" "test" {
   outdated_instances_strategy = %[2]q
 }
 `, rName, outdatedInstancesStrategy))
+}
+
+func testAccDeploymentGroupConfig_terminationHookEnabled(rName string) string {
+	return acctest.ConfigCompose(testAccDeploymentGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name                 = aws_codedeploy_app.test.name
+  deployment_group_name    = %[1]q
+  service_role_arn         = aws_iam_role.test.arn
+  termination_hook_enabled = true
+}
+`, rName))
+}
+
+func testAccDeploymentGroupConfig_terminationHookDisabled(rName string) string {
+	return acctest.ConfigCompose(testAccDeploymentGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_codedeploy_deployment_group" "test" {
+  app_name                 = aws_codedeploy_app.test.name
+  deployment_group_name    = %[1]q
+  service_role_arn         = aws_iam_role.test.arn
+  termination_hook_enabled = false
+}
+`, rName))
 }
