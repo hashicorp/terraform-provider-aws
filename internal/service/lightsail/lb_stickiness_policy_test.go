@@ -53,7 +53,7 @@ func testAccLoadBalancerStickinessPolicy_cookieDuration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_lb_stickiness_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	cookieDuration1 := acctest.Ct200
+	cookieDuration1 := "200"
 	cookieDuration2 := "500"
 
 	resource.Test(t, resource.TestCase{
@@ -93,7 +93,7 @@ func testAccLoadBalancerStickinessPolicy_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_lb_stickiness_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	cookieDuration := acctest.Ct200
+	cookieDuration := "200"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -132,7 +132,7 @@ func testAccLoadBalancerStickinessPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lightsail_lb_stickiness_policy.test"
 	rName := sdkacctest.RandomWithPrefix("tf-acc-test")
-	cookieDuration := acctest.Ct200
+	cookieDuration := "200"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

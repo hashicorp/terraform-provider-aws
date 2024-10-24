@@ -78,8 +78,8 @@ func TestAccLightsailInstancePublicPorts_multiple(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "port_info.*", map[string]string{
 						names.AttrProtocol: "tcp",
-						"from_port":        acctest.Ct443,
-						"to_port":          acctest.Ct443,
+						"from_port":        "443",
+						"to_port":          "443",
 					}),
 				),
 			},

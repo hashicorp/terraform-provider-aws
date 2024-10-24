@@ -389,7 +389,7 @@ func TestAccLightsailContainerServiceDeploymentVersion_container_publicEndpoint(
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.healthy_threshold", "3"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.interval_seconds", "6"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.path", "/."),
-					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.success_codes", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.success_codes", "200"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.timeout_seconds", "3"),
 					resource.TestCheckResourceAttr(resourceName, "public_endpoint.0.health_check.0.unhealthy_threshold", "3"),
 				),
