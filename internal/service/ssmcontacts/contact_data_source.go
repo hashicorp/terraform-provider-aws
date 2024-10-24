@@ -16,6 +16,9 @@ import (
 )
 
 // @SDKDataSource("aws_ssmcontacts_contact")
+// @Testing(tagsTest=false)
+// @Testing(tagsIdentifierAttribute="arn")
+// @Testing(serialize=true)
 func DataSourceContact() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContactRead,

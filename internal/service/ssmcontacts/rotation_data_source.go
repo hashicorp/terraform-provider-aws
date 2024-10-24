@@ -19,7 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Rotation")
+// @FrameworkDataSource("aws_ssmcontacts_rotation", name="Rotation")
+// @Testing(tagsTest=false)
+// @Testing(serialize=true)
 func newDataSourceRotation(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRotation{}
 

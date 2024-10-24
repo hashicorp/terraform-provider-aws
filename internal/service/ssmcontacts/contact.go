@@ -23,6 +23,8 @@ import (
 
 // @SDKResource("aws_ssmcontacts_contact", name="Context")
 // @Tags(identifierAttribute="id")
+// @Testing(serialize=true)
+// @Testing(tagsTest=false)
 func ResourceContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactCreate,
