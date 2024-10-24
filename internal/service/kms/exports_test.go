@@ -26,4 +26,9 @@ var (
 	PropagationTimeout        = propagationTimeout
 	PolicyNameDefault         = policyNameDefault
 	SecretRemovedMessage      = secretRemovedMessage
+
+	ValidNameForResource   = validNameForResource
+	ValidateKeyARN         = validateKeyARN
+	ValidGrantName         = validGrantName
+	ValidNameForDataSource = validNameForDataSource
 )

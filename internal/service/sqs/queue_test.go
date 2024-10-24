@@ -332,7 +332,7 @@ func TestAccSQSQueue_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, ""),
-					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "redrive_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
 				),
@@ -383,7 +383,7 @@ func TestAccSQSQueue_Policy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
-					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
 				),
 			},
@@ -437,7 +437,7 @@ func TestAccSQSQueue_Policy_ignoreEquivalent(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
-					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "receive_wait_time_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "60"),
 				),
 			},
@@ -495,7 +495,7 @@ func TestAccSQSQueue_redrivePolicy(t *testing.T) {
 				Config: testAccQueueConfig_redrivePolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "delay_seconds", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_policy"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "300"),
 				),
@@ -525,7 +525,7 @@ func TestAccSQSQueue_redriveAllowPolicy(t *testing.T) {
 				Config: testAccQueueConfig_redriveAllowPolicy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "delay_seconds", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "0"),
 					//resource.TestCheckResourceAttrSet(resourceName, "redrive_allow_policy"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "300"),
 				),
@@ -779,7 +779,7 @@ func TestAccSQSQueue_zeroVisibilityTimeoutSeconds(t *testing.T) {
 				Config: testAccQueueConfig_zeroVisibilityTimeoutSeconds(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "visibility_timeout_seconds", "0"),
 				),
 			},
 			{

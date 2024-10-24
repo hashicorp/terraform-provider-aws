@@ -13,12 +13,7 @@ import (
 // generated code and templates.
 func ConstOrQuote(constant string) string {
 	allConstants := map[string]string{
-		"0":                     "Ct0",
-		"1":                     "Ct1",
-		"10":                    "Ct10",
-		"2":                     "Ct2",
-		"3":                     "Ct3",
-		"4":                     "Ct4",
+		"123456789012":          "Ct12Digit",
 		"basic":                 "CtBasic",
 		"certificate_pem":       "CtCertificatePEM",
 		"disappears":            "CtDisappears",

@@ -100,7 +100,7 @@ func main() {
 
 	d := g.NewUnformattedFileDestination(servicesAllFile)
 
-	if err := d.WriteTemplate("teamcity", tmpl, td); err != nil {
+	if err := d.BufferTemplate("teamcity", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", servicesAllFile, err)
 	}
 

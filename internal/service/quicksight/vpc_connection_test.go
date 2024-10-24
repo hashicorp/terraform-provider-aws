@@ -39,8 +39,8 @@ func TestAccQuickSightVPCConnection_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("vpcConnection/%[1]s", rId)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_connection_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 				),
 			},
 			{

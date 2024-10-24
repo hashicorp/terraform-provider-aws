@@ -38,12 +38,12 @@ func TestAccELBV2LoadBalancersDataSource_basic(t *testing.T) {
 			{
 				Config: testAccLoadBalancersDataSourceConfig_basic(rName, lbName1, lbName2, sharedTagVal),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceNameMatchFirstTag, "arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceNameMatchFirstTag, "arns.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceNameMatchFirstTag, "arns.*", resource1, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceNameMatchBothTag, "arns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceNameMatchBothTag, "arns.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceNameMatchBothTag, "arns.*", resource1, names.AttrARN),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceNameMatchBothTag, "arns.*", resource2, names.AttrARN),
-					resource.TestCheckResourceAttr(dataSourceNameMatchNoneTag, "arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceNameMatchNoneTag, "arns.#", "0"),
 				),
 			},
 		},
