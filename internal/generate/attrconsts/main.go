@@ -7,8 +7,9 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
@@ -27,13 +28,13 @@ var constOrQuoteTmpl string
 //go:embed semgrep.gtpl
 var semgrepTmpl string
 
-type ConstantDatum struct {
+type constantDatum struct {
 	Constant string
 	Literal  string
 }
 
 type TemplateData struct {
-	Constants []ConstantDatum
+	Constants []constantDatum
 }
 
 func main() {
@@ -94,28 +95,28 @@ func main() {
 	}
 }
 
-func readConstants(filename string) ([]ConstantDatum, error) {
+func readConstants(filename string) ([]constantDatum, error) {
 	constants, err := common.ReadAllCSVData(filename)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var constantList []ConstantDatum
+	var constantList []constantDatum
 
 	for _, row := range constants {
 		if row[0] == "" {
 			continue
 		}
 
-		constantList = append(constantList, ConstantDatum{
+		constantList = append(constantList, constantDatum{
 			Literal:  row[0],
 			Constant: row[1],
 		})
 	}
 
-	sort.SliceStable(constantList, func(i, j int) bool {
-		return constantList[j].Constant > constantList[i].Constant
+	slices.SortStableFunc(constantList, func(a, b constantDatum) int {
+		return cmp.Compare(a.Constant, b.Constant)
 	})
 
 	return constantList, nil
