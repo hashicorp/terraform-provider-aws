@@ -46,6 +46,84 @@ func ResourceConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"authentication_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"authentication_type": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AuthenticationType](),
+						},
+						"oauth2_properties": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"authorization_code_properties": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"authorization_code": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"redirect_uri": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"oauth2_client_application": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"aws_managed_client_application_reference": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"user_managed_client_application_client_id": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"oauth2_grant_type": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.OAuth2GrantType](),
+									},
+									"token_url": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.IsURLWithHTTPS,
+									},
+									"token_url_parameters_map": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"secret_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
 			names.AttrCatalogID: {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -186,6 +264,10 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "setting physical_connection_requirements: %s", err)
 	}
 
+	if err := d.Set("authentication_configuration", flattenAuthenticationConfiguration(connection.AuthenticationConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting authentication_configuration: %s", err)
+	}
+
 	return diags
 }
 
@@ -272,6 +354,11 @@ func expandConnectionInput(d *schema.ResourceData) *awstypes.ConnectionInput {
 		Name:                 aws.String(d.Get(names.AttrName).(string)),
 	}
 
+	if v, ok := d.GetOk("authentication_configuration"); ok && v.([]interface{})[0] != nil {
+		authenticationConfigurationMap := v.([]interface{})[0].(map[string]interface{})
+		connectionInput.AuthenticationConfiguration = expandAuthenticationConfiguration(authenticationConfigurationMap)
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		connectionInput.Description = aws.String(v.(string))
 	}
@@ -315,6 +402,154 @@ func flattenPhysicalConnectionRequirements(physicalConnectionRequirements *awsty
 		names.AttrAvailabilityZone: aws.ToString(physicalConnectionRequirements.AvailabilityZone),
 		"security_group_id_list":   flex.FlattenStringValueSet(physicalConnectionRequirements.SecurityGroupIdList),
 		names.AttrSubnetID:         aws.ToString(physicalConnectionRequirements.SubnetId),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandAuthenticationConfiguration(m map[string]interface{}) *awstypes.AuthenticationConfigurationInput {
+	conf := &awstypes.AuthenticationConfigurationInput{}
+
+	if v, ok := m["authentication_type"]; ok {
+		conf.AuthenticationType = awstypes.AuthenticationType(v.(string))
+	}
+
+	if v, ok := m["code_editor_app_settings"].([]interface{}); ok && len(v) > 0 {
+		conf.OAuth2Properties = expandOAuth2Properties(v)
+	}
+
+	if v, ok := m["secret_arn"]; ok {
+		conf.SecretArn = aws.String(v.(string))
+	}
+
+	return conf
+}
+
+func expandOAuth2Properties(l []interface{}) *awstypes.OAuth2PropertiesInput {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.OAuth2PropertiesInput{}
+
+	if v, ok := m["authorization_code_properties"].([]interface{}); ok && len(v) > 0 {
+		config.AuthorizationCodeProperties = expandAuthorizationCodeProperties(v)
+	}
+
+	if v, ok := m["oauth2_client_application"].([]interface{}); ok && len(v) > 0 {
+		config.OAuth2ClientApplication = expandOAuth2ClientApplication(v)
+	}
+
+	if v, ok := m["oauth2_grant_type"]; ok {
+		config.OAuth2GrantType = awstypes.OAuth2GrantType(v.(string))
+	}
+
+	if v, ok := m["token_url"]; ok {
+		config.TokenUrl = aws.String(v.(string))
+	}
+
+	if v, ok := m["token_url_parameters_map"]; ok {
+		config.TokenUrlParametersMap = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	}
+
+	return config
+}
+
+func expandOAuth2ClientApplication(l []interface{}) *awstypes.OAuth2ClientApplication {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.OAuth2ClientApplication{}
+
+	if v, ok := m["aws_managed_client_application_reference"]; ok {
+		config.AWSManagedClientApplicationReference = aws.String(v.(string))
+	}
+
+	if v, ok := m["user_managed_client_application_client_id"]; ok {
+		config.UserManagedClientApplicationClientId = aws.String(v.(string))
+	}
+
+	return config
+}
+
+func expandAuthorizationCodeProperties(l []interface{}) *awstypes.AuthorizationCodeProperties {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &awstypes.AuthorizationCodeProperties{}
+
+	if v, ok := m["authorization_code"]; ok {
+		config.AuthorizationCode = aws.String(v.(string))
+	}
+
+	if v, ok := m["redirect_uri"]; ok {
+		config.RedirectUri = aws.String(v.(string))
+	}
+
+	return config
+}
+
+func flattenAuthenticationConfiguration(conf *awstypes.AuthenticationConfiguration) []map[string]interface{} {
+	if conf == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"authentication_type": conf.AuthenticationType,
+		"oauth2_properties":   flattenOAuth2Properties(conf.OAuth2Properties),
+		"secret_arn":          aws.ToString(conf.SecretArn),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenOAuth2Properties(config *awstypes.OAuth2Properties) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.OAuth2ClientApplication != nil {
+		m["oauth2_client_application"] = flattenOAuth2ClientApplication(config.OAuth2ClientApplication)
+	}
+
+	if config.OAuth2GrantType != "" {
+		m["oauth2_grant_type"] = config.OAuth2GrantType
+	}
+
+	if config.TokenUrl != nil {
+		m["token_url"] = aws.ToString(config.TokenUrl)
+	}
+
+	if config.TokenUrlParametersMap != nil {
+		m["token_url_parameters_map"] = flex.FlattenStringValueMap(config.TokenUrlParametersMap)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenOAuth2ClientApplication(config *awstypes.OAuth2ClientApplication) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.AWSManagedClientApplicationReference != nil {
+		m["aws_managed_client_application_reference"] = aws.ToString(config.AWSManagedClientApplicationReference)
+	}
+
+	if config.UserManagedClientApplicationClientId != nil {
+		m["user_managed_client_application_client_id"] = aws.ToString(config.UserManagedClientApplicationClientId)
 	}
 
 	return []map[string]interface{}{m}

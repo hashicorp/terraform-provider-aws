@@ -46,6 +46,7 @@ func TestAccGlueConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.USERNAME", "testusername"),
 					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", acctest.Ct0),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
 				),
 			},
