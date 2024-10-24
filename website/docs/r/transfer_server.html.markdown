@@ -161,6 +161,7 @@ This resource supports the following arguments:
     * `TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04`
     * `TransferSecurityPolicy-Restricted-2018-11`
     * `TransferSecurityPolicy-Restricted-2020-06`
+    * `TransferSecurityPolicy-Restricted-2024-06`
 
    See [Security policies for AWS Transfer Family servers](https://docs.aws.amazon.com/transfer/latest/userguide/security-policies.html) for details.
 * `structured_log_destinations` - (Optional) A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs. If provided this enables the transfer server to emit structured logs to the specified locations.
