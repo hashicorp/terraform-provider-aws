@@ -2641,7 +2641,7 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.0.custom_response.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.0.custom_response.0.response_code", acctest.Ct404),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.0.custom_response.0.response_code", "404"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, "REGIONAL"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -2677,7 +2677,7 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.0.custom_response.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.0.custom_response.0.response_code", acctest.Ct404),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.0.custom_response.0.response_code", "404"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScope, "REGIONAL"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
