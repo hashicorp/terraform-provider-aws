@@ -320,7 +320,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	if output.Code != nil {
 		d.Set("image_uri", output.Code.ImageUri)
 	}
-	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), unqualifiedARN))
+	d.Set("invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), unqualifiedARN))
 	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
@@ -331,7 +331,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("memory_size", function.MemorySize)
 	d.Set("qualified_arn", qualifiedARN)
-	d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), qualifiedARN))
+	d.Set("qualified_invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), qualifiedARN))
 	if output.Concurrency != nil {
 		d.Set("reserved_concurrent_executions", output.Concurrency.ReservedConcurrentExecutions)
 	} else {
@@ -363,7 +363,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	setTagsOut(ctx, output.Tags)
 
 	// See r/aws_lambda_function.
-	if partition, region := meta.(*conns.AWSClient).Partition, meta.(*conns.AWSClient).Region; partition == names.StandardPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).PartitionID(ctx), meta.(*conns.AWSClient).Region; partition == names.StandardPartitionID && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		if function.PackageType == awstypes.PackageTypeZip {
