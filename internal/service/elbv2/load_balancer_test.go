@@ -706,8 +706,8 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_clientKeepAlive(t *testing
 				Config: testAccLoadBalancerConfig_clientKeepAlive(rName, 3600),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
-					testAccCheckLoadBalancerAttribute(ctx, resourceName, tfelbv2.LoadBalancerAttributeClientKeepAliveSeconds, acctest.Ct3600),
-					resource.TestCheckResourceAttr(resourceName, "client_keep_alive", acctest.Ct3600),
+					testAccCheckLoadBalancerAttribute(ctx, resourceName, tfelbv2.LoadBalancerAttributeClientKeepAliveSeconds, "3600"),
+					resource.TestCheckResourceAttr(resourceName, "client_keep_alive", "3600"),
 				),
 			},
 			{
