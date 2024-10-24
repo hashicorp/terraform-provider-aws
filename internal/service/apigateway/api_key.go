@@ -251,5 +251,5 @@ func findAPIKeyByID(ctx context.Context, conn *apigateway.Client, id string) (*a
 }
 
 func apiKeyARN(ctx context.Context, c *conns.AWSClient, id string) string {
-	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("apikeys/%s", id))
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/apikeys/%s", id))
 }
