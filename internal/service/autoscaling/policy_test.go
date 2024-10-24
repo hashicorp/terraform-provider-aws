@@ -49,7 +49,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceStepName, "adjustment_type", "ChangeInCapacity"),
 					resource.TestCheckResourceAttr(resourceStepName, "autoscaling_group_name", rName),
 					resource.TestCheckResourceAttr(resourceStepName, names.AttrEnabled, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceStepName, "estimated_instance_warmup", acctest.Ct200),
+					resource.TestCheckResourceAttr(resourceStepName, "estimated_instance_warmup", "200"),
 					resource.TestCheckResourceAttr(resourceStepName, "metric_aggregation_type", "Minimum"),
 					resource.TestCheckResourceAttr(resourceStepName, names.AttrName, rName+"-step"),
 					resource.TestCheckResourceAttr(resourceStepName, "policy_type", "StepScaling"),

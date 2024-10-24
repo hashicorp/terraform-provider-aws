@@ -32,13 +32,13 @@ func TestGroupStateUpgradeV0(t *testing.T) {
 			rawState: map[string]interface{}{
 				"capacity_rebalance":        acctest.CtTrue,
 				"health_check_grace_period": "600",
-				"max_instance_lifetime":     acctest.Ct3600,
+				"max_instance_lifetime":     "3600",
 			},
 			want: map[string]interface{}{
 				"capacity_rebalance":               acctest.CtTrue,
 				"health_check_grace_period":        "600",
 				"ignore_failed_scaling_activities": acctest.CtFalse,
-				"max_instance_lifetime":            acctest.Ct3600,
+				"max_instance_lifetime":            "3600",
 			},
 		},
 		{
