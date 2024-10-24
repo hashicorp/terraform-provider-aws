@@ -386,10 +386,10 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc),
 					resource.TestCheckResourceAttr(resourceName, "ec2_inbound_permission.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_inbound_permission.*", map[string]string{
-						"from_port":        acctest.Ct8080,
+						"from_port":        "8080",
 						"ip_range":         "8.8.8.8/32",
 						names.AttrProtocol: "TCP",
-						"to_port":          acctest.Ct8080,
+						"to_port":          "8080",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ec2_inbound_permission.*", map[string]string{
 						"from_port":        "8443",
