@@ -910,5 +910,5 @@ func flattenMatchingRules(apiObject []types.MatchingRule) []interface{} {
 // CreateDomainOutput does not have an ARN attribute which is needed for Tagging, therefore we construct it.
 // https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonconnectcustomerprofiles.html#amazonconnectcustomerprofiles-resources-for-iam-policies
 func domainARN(ctx context.Context, c *conns.AWSClient, domainName string) string {
-	return c.RegionalARN(ctx, "profile", "domains/"+domainName)
+	return c.RegionalARN(ctx, "profile", "domains/"+domainName) // nosemgrep:ci.literal-profile-string-constant
 }
