@@ -123,7 +123,7 @@ func TestAccNetworkMonitorProbe_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "address_family"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDestination, "10.0.0.1"),
-					resource.TestCheckResourceAttr(resourceName, "destination_port", acctest.Ct8080),
+					resource.TestCheckResourceAttr(resourceName, "destination_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "packet_size", "256"),
 					resource.TestCheckResourceAttrSet(resourceName, "probe_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
