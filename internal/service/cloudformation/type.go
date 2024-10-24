@@ -175,6 +175,22 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation Type (%s) register: %s", typeName, err)
 	}
 
+	_, versionID, err := typeVersionARNToTypeARNAndVersionID(aws.ToString(registrationOutput.TypeVersionArn))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	setDefaultInput := &cloudformation.SetTypeDefaultVersionInput{
+		TypeName:  input.TypeName,
+		Type:      input.Type,
+		VersionId: aws.String(versionID),
+	}
+	_, err = conn.SetTypeDefaultVersion(ctx, setDefaultInput)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting default version for CloudFormation Type (%s): %s", typeName, err)
+	}
+
 	// Type Version ARN is not available until after registration is complete
 	d.SetId(aws.ToString(registrationOutput.TypeVersionArn))
 
