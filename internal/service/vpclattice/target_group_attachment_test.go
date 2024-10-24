@@ -70,7 +70,7 @@ func TestAccVPCLatticeTargetGroupAttachment_ip(t *testing.T) {
 					testAccCheckTargetsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.id", instanceResourceName, "private_ip"),
-					resource.TestCheckResourceAttr(resourceName, "target.0.port", acctest.Ct8080),
+					resource.TestCheckResourceAttr(resourceName, "target.0.port", "8080"),
 				),
 			},
 		},

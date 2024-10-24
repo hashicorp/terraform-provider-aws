@@ -78,7 +78,7 @@ func TestAccVPCLatticeListenerRule_fixedResponse(t *testing.T) {
 					testAccCheckListenerRuleExists(ctx, resourceName, &listenerRule),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "10"),
-					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.status_code", acctest.Ct404),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.status_code", "404"),
 				),
 			},
 			{
