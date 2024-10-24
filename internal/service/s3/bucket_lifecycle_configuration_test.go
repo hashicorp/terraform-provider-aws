@@ -40,7 +40,7 @@ func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
-						"expiration.0.days": acctest.Ct365,
+						"expiration.0.days": "365",
 						"filter.#":          "1",
 						"filter.0.prefix":   "",
 						names.AttrID:        rName,
@@ -544,7 +544,7 @@ func TestAccS3BucketLifecycleConfiguration_prefix(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
-						"expiration.0.days": acctest.Ct365,
+						"expiration.0.days": "365",
 						names.AttrID:        rName,
 						names.AttrPrefix:    "path1/",
 						names.AttrStatus:    tfs3.LifecycleRuleStatusEnabled,
@@ -579,7 +579,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_Tag(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":         "1",
-						"expiration.0.days":    acctest.Ct365,
+						"expiration.0.days":    "365",
 						names.AttrID:           rName,
 						"filter.#":             "1",
 						"filter.0.tag.#":       "1",
@@ -1087,7 +1087,7 @@ func TestAccS3BucketLifecycleConfiguration_basicTransitionDefaultMinimumObjectSi
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
-						"expiration.0.days": acctest.Ct365,
+						"expiration.0.days": "365",
 						"filter.#":          "1",
 						"filter.0.prefix":   "",
 						names.AttrID:        rName,
@@ -1109,7 +1109,7 @@ func TestAccS3BucketLifecycleConfiguration_basicTransitionDefaultMinimumObjectSi
 					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
-						"expiration.0.days": acctest.Ct365,
+						"expiration.0.days": "365",
 						"filter.#":          "1",
 						"filter.0.prefix":   "",
 						names.AttrID:        rName,

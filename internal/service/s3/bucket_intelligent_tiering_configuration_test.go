@@ -169,7 +169,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
 						"access_tier": "ARCHIVE_ACCESS",
-						"days":        acctest.Ct365,
+						"days":        "365",
 					}),
 				),
 			},
@@ -188,7 +188,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
 						"access_tier": "DEEP_ARCHIVE_ACCESS",
-						"days":        acctest.Ct365,
+						"days":        "365",
 					}),
 				),
 			},
