@@ -206,11 +206,11 @@ func TestAccECSService_LatticeConfigurations(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					testAccCheckServiceExists(ctx, serviceName, &service),
-					resource.TestCheckResourceAttr(serviceName, "vpc_lattice_configuration.#", "2"),
-					resource.TestCheckTypeSetElemNestedAttrs(serviceName, "vpc_lattice_configuration.*", map[string]string{
+					resource.TestCheckResourceAttr(serviceName, "vpc_lattice_configurations.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(serviceName, "vpc_lattice_configurations.*", map[string]string{
 						"port_name": "testvpclattice",
 					}),
-					resource.TestCheckTypeSetElemNestedAttrs(serviceName, "vpc_lattice_configuration.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(serviceName, "vpc_lattice_configurations.*", map[string]string{
 						"port_name": "testvpclattice-ipv6",
 					}),
 				),
@@ -4613,13 +4613,13 @@ resource "aws_ecs_service" "test" {
     security_groups = [aws_security_group.test.id]
     assign_public_ip = true
   }
- vpc_lattice_configuration {
+ vpc_lattice_configurations {
     role_arn         = aws_iam_role.vpc_lattice_infrastructure.arn
     target_group_arn = aws_vpclattice_target_group.test.arn
     port_name        = "testvpclattice"
   }
 
- vpc_lattice_configuration {
+ vpc_lattice_configurations {
     role_arn         = aws_iam_role.vpc_lattice_infrastructure.arn
     target_group_arn = aws_vpclattice_target_group.test_ipv6.arn
     port_name        = "testvpclattice-ipv6"

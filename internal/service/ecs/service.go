@@ -1081,7 +1081,7 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
-			"vpc_lattice_configuration": {
+			"vpc_lattice_configurations": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -1166,7 +1166,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		SchedulingStrategy:       schedulingStrategy,
 		ServiceName:              aws.String(name),
 		Tags:                     getTagsIn(ctx),
-		VpcLatticeConfigurations: expandVpcLatticeConfiguration(d.Get("vpc_lattice_configuration").(*schema.Set)),
+		VpcLatticeConfigurations: expandVpcLatticeConfiguration(d.Get("vpc_lattice_configurations").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1370,8 +1370,8 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if service.Deployments != nil {
 		for _, deployment := range service.Deployments {
 			if aws.ToString(deployment.Status) == "PRIMARY" {
-				if err := d.Set("vpc_lattice_configuration", flattenVpcLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configuration: %s", err)
+				if err := d.Set("vpc_lattice_configurations", flattenVpcLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
 				}
 			}
 		}
@@ -1549,8 +1549,8 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.VolumeConfigurations = expandVolumeConfigurations(ctx, d.Get("volume_configuration").([]interface{}))
 		}
 
-		if d.HasChange("vpc_lattice_configuration") {
-			input.VpcLatticeConfigurations = expandVpcLatticeConfiguration(d.Get("vpc_lattice_configuration").(*schema.Set))
+		if d.HasChange("vpc_lattice_configurations") {
+			input.VpcLatticeConfigurations = expandVpcLatticeConfiguration(d.Get("vpc_lattice_configurations").(*schema.Set))
 		}
 
 		// Retry due to IAM eventual consistency.
