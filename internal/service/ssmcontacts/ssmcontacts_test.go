@@ -64,6 +64,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			acctest.CtBasic:   testAccRotationDataSource_basic,
 			"dailySettings":   testAccRotationDataSource_dailySettings,
 			"monthlySettings": testAccRotationDataSource_monthlySettings,
+			"tags":            testAccSSMContactsRotationDataSource_tagsSerial,
 		},
 	}
 

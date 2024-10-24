@@ -20,7 +20,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_ssmcontacts_rotation", name="Rotation")
-// @Testing(tagsTest=false)
+// @Tags(identifierAttribute="arn")
 // @Testing(serialize=true)
 func newDataSourceRotation(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRotation{}
@@ -120,18 +120,6 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 	data.StartTime = fwflex.TimeToFramework(ctx, output.StartTime)
 	data.TimeZoneID = fwflex.StringToFramework(ctx, output.TimeZoneId)
 	data.ID = fwflex.StringToFramework(ctx, output.RotationArn)
-
-	tags, err := listTags(ctx, conn, data.ARN.ValueString())
-
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SSMContacts, create.ErrActionSetting, ResNameRotation, data.ARN.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
