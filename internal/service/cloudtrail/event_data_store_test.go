@@ -214,7 +214,7 @@ func TestAccCloudTrailEventDataStore_options(t *testing.T) {
 					testAccCheckEventDataStoreExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, acctest.Ct365),
+					resource.TestCheckResourceAttr(resourceName, names.AttrRetentionPeriod, "365"),
 					resource.TestCheckResourceAttr(resourceName, "termination_protection_enabled", acctest.CtTrue),
 				),
 			},
