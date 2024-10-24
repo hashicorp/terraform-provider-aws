@@ -367,7 +367,7 @@ func dataSourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, met
 
 	table := out.Table
 	tableArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).PartitionID(ctx),
 		Service:   "glue",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
