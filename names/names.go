@@ -210,38 +210,6 @@ const (
 	EUISOEWest1RegionID = "eu-isoe-west-1" // EU ISOE West.
 )
 
-// SPN region unique taken from
-// https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
-func ServicePrincipalNameForPartition(service string, partition endpoints.Partition) string {
-	if partitionID := partition.ID(); service != "" && partitionID != endpoints.AwsPartitionID {
-		switch partitionID {
-		case endpoints.AwsIsoPartitionID:
-			switch service {
-			case "cloudhsm",
-				"config",
-				"logs",
-				"workspaces":
-				return partition.DNSSuffix()
-			}
-		case endpoints.AwsIsoBPartitionID:
-			switch service {
-			case "dms",
-				"logs":
-				return partition.DNSSuffix()
-			}
-		case endpoints.AwsCnPartitionID:
-			switch service {
-			case "codedeploy",
-				"elasticmapreduce",
-				"logs":
-				return partition.DNSSuffix()
-			}
-		}
-	}
-
-	return "amazonaws.com"
-}
-
 // PartitionForRegion returns the partition for the given Region.
 // Returns the empty partition if the Region is empty.
 // Returns the standard partition if no known partition includes the Region.

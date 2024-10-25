@@ -93,7 +93,7 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 
 	regionID := region.ID()
 	serviceName := fwflex.StringValueFromFramework(ctx, data.ServiceName)
-	sourceServicePrincipal := names.ServicePrincipalNameForPartition(serviceName, names.PartitionForRegion(regionID))
+	sourceServicePrincipal := servicePrincipalNameForPartition(serviceName, names.PartitionForRegion(regionID))
 
 	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+regionID+"."+sourceServicePrincipal)
 	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+sourceServicePrincipal)
@@ -109,4 +109,36 @@ type servicePrincipalDataSourceModel struct {
 	Region      types.String `tfsdk:"region"`
 	ServiceName types.String `tfsdk:"service_name"`
 	Suffix      types.String `tfsdk:"suffix"`
+}
+
+// SPN region unique taken from
+// https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
+func servicePrincipalNameForPartition(service string, partition endpoints.Partition) string {
+	if partitionID := partition.ID(); service != "" && partitionID != endpoints.AwsPartitionID {
+		switch partitionID {
+		case endpoints.AwsIsoPartitionID:
+			switch service {
+			case "cloudhsm",
+				"config",
+				"logs",
+				"workspaces":
+				return partition.DNSSuffix()
+			}
+		case endpoints.AwsIsoBPartitionID:
+			switch service {
+			case "dms",
+				"logs":
+				return partition.DNSSuffix()
+			}
+		case endpoints.AwsCnPartitionID:
+			switch service {
+			case "codedeploy",
+				"elasticmapreduce",
+				"logs":
+				return partition.DNSSuffix()
+			}
+		}
+	}
+
+	return "amazonaws.com"
 }
