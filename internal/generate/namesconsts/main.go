@@ -64,7 +64,7 @@ func main() {
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("consts", tmpl, td); err != nil {
+	if err := d.BufferTemplate("consts", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

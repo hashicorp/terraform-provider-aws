@@ -17,7 +17,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return route53domains.NewFromConfig(cfg,
-		route53domains.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		route53domains.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *route53domains.Options) {
 			if config["partition"].(string) == names.StandardPartitionID {

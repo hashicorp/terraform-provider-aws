@@ -6,22 +6,7 @@ package backup
 import "time"
 
 const (
-	iamPropagationTimeout = 2 * time.Minute
-)
-
-const (
-	frameworkStatusCompleted          = "COMPLETED"
-	frameworkStatusCreationInProgress = "CREATE_IN_PROGRESS"
-	frameworkStatusDeletionInProgress = "DELETE_IN_PROGRESS"
-	frameworkStatusFailed             = "FAILED"
-	frameworkStatusUpdateInProgress   = "UPDATE_IN_PROGRESS"
-)
-
-const (
-	reportPlanDeploymentStatusCompleted        = "COMPLETED"
-	reportPlanDeploymentStatusCreateInProgress = "CREATE_IN_PROGRESS"
-	reportPlanDeploymentStatusDeleteInProgress = "DELETE_IN_PROGRESS"
-	reportPlanDeploymentStatusUpdateInProgress = "UPDATE_IN_PROGRESS"
+	propagationTimeout = 2 * time.Minute
 )
 
 const (

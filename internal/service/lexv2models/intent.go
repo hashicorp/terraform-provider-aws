@@ -1091,10 +1091,10 @@ func (r *resourceIntent) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	in := &lexmodelsv2.DeleteIntentInput{
-		IntentId:   aws.String(state.IntentID.ValueString()),
-		BotId:      aws.String(state.BotID.ValueString()),
-		BotVersion: aws.String(state.BotVersion.ValueString()),
-		LocaleId:   aws.String(state.LocaleID.ValueString()),
+		IntentId:   state.IntentID.ValueStringPointer(),
+		BotId:      state.BotID.ValueStringPointer(),
+		BotVersion: state.BotVersion.ValueStringPointer(),
+		LocaleId:   state.LocaleID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteIntent(ctx, in)

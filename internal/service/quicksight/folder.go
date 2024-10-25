@@ -30,6 +30,8 @@ import (
 
 // @SDKResource("aws_quicksight_folder", name="Folder")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.Folder")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func resourceFolder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceFolderCreate,

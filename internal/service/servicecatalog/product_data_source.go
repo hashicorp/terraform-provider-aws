@@ -19,6 +19,8 @@ import (
 
 // @SDKDataSource("aws_servicecatalog_product", name="Product")
 // @Tags
+// @Testing(tagsIdentifierAttribute="id")
+// @Testing(tagsIdentifierAttribute="id", tagsResourceType="Product")
 func dataSourceProduct() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProductRead,

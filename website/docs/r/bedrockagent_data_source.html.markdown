@@ -68,6 +68,7 @@ The `server_side_encryption_configuration` configuration block supports the foll
 The `vector_ingestion_configuration` configuration block supports the following arguments:
 
 * `chunking_configuration` - (Optional, Forces new resource) Details about how to chunk the documents in the data source. A chunk refers to an excerpt from a data source that is returned when the knowledge base that it belongs to is queried. See [`chunking_configuration` block](#chunking_configuration-block) for details.
+* `custom_transformation_configuration`- (Optional, Forces new resource) Configuration for custom transformation of data source documents.
 * `parsing_configuration` - (Optional, Forces new resource) Configuration for custom parsing of data source documents. See [`parsing_configuration` block](#parsing_configuration-block) for details.
 
 ### `chunking_configuration` block
@@ -106,6 +107,38 @@ The `semantic_chunking_configuration` block supports the following arguments:
 * `breakpoint_percentile_threshold` - (Required, Forces new resource) The dissimilarity threshold for splitting chunks.
 * `buffer_size` - (Required, Forces new resource) The buffer size.
 * `max_tokens` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
+
+### `custom_transformation_configuration` block
+
+The `custom_transformation_configuration` block supports the following arguments:
+
+* `intermediate_storage` - (Required, Forces new resource) The intermediate storage for custom transformation.
+* `transformation_function` - (Required) The configuration of transformation function.
+
+### `intermediate_storage` block
+
+The `intermediate_storage` block supports the following arguments:
+
+* `s3_location` - (Required, Forces new resource) Configuration block for intermedia S3 storage.
+
+### `s3_location` block
+
+The `s3_location` block supports the following arguments:
+
+* `uri` - (Required, Forces new resource) S3 URI for intermediate storage.
+
+### `transformation_function` block
+
+The `transformation_function` block supports the following arguments:
+
+* `step_to_apply` - (Required, Forces new resource) Currently only `POST_CHUNKING` is supported.
+* `transformation_lambda_configuration` - (Required, Forces new resource) The lambda configuration for custom transformation.
+
+### `transformation_lambda_configuration` block
+
+The `transformation_lambda_configuration` block supports the following arguments:
+
+* `lambda_arn` - (Required, Forces new resource) The ARN of the lambda to use for custom transformation.
 
 ### `parsing_configuration` block
 

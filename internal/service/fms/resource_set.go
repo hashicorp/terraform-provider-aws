@@ -260,7 +260,7 @@ func (r *resourceResourceSet) Delete(ctx context.Context, req resource.DeleteReq
 	}
 
 	in := &fms.DeleteResourceSetInput{
-		Identifier: aws.String(state.ID.ValueString()),
+		Identifier: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteResourceSet(ctx, in)

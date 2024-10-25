@@ -39,7 +39,7 @@ func testAccAppBundle_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppBundleExists(ctx, resourceName, &appbundle),
 					resource.TestCheckNoResourceAttr(resourceName, "customer_managed_key_arn"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

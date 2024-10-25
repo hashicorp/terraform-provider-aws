@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Template Alias")
+// @FrameworkResource("aws_quicksight_template_alias", name="Template Alias")
 func newTemplateAliasResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &templateAliasResource{}, nil
 }
@@ -93,7 +93,7 @@ func (r *templateAliasResource) Create(ctx context.Context, req resource.CreateR
 		AliasName:             aws.String(aliasName),
 		AwsAccountId:          aws.String(awsAccountID),
 		TemplateId:            aws.String(templateID),
-		TemplateVersionNumber: aws.Int64(plan.TemplateVersionNumber.ValueInt64()),
+		TemplateVersionNumber: plan.TemplateVersionNumber.ValueInt64Pointer(),
 	}
 
 	out, err := conn.CreateTemplateAlias(ctx, in)
@@ -182,7 +182,7 @@ func (r *templateAliasResource) Update(ctx context.Context, req resource.UpdateR
 			AliasName:             aws.String(aliasName),
 			AwsAccountId:          aws.String(awsAccountID),
 			TemplateId:            aws.String(templateID),
-			TemplateVersionNumber: aws.Int64(plan.TemplateVersionNumber.ValueInt64()),
+			TemplateVersionNumber: plan.TemplateVersionNumber.ValueInt64Pointer(),
 		}
 
 		out, err := conn.UpdateTemplateAlias(ctx, in)

@@ -149,52 +149,6 @@ func TestPartitionForRegion(t *testing.T) {
 	}
 }
 
-func TestReverseDNS(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "empty",
-			input:    "",
-			expected: "",
-		},
-		{
-			name:     "amazonaws.com",
-			input:    "amazonaws.com",
-			expected: "com.amazonaws",
-		},
-		{
-			name:     "amazonaws.com.cn",
-			input:    "amazonaws.com.cn",
-			expected: "cn.com.amazonaws",
-		},
-		{
-			name:     "sc2s.sgov.gov",
-			input:    "sc2s.sgov.gov",
-			expected: "gov.sgov.sc2s",
-		},
-		{
-			name:     "c2s.ic.gov",
-			input:    "c2s.ic.gov",
-			expected: "gov.ic.c2s",
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			t.Parallel()
-
-			if got, want := ReverseDNS(testCase.input), testCase.expected; got != want {
-				t.Errorf("got: %s, expected: %s", got, want)
-			}
-		})
-	}
-}
-
 func TestProviderPackageForAlias(t *testing.T) {
 	t.Parallel()
 
@@ -509,74 +463,6 @@ func TestFullHumanFriendly(t *testing.T) {
 			t.Parallel()
 
 			got, err := FullHumanFriendly(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
-func TestAWSGoV1ClientName(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: Elasticsearch,
-			Input:    Elasticsearch,
-			Expected: "ElasticsearchService",
-			Error:    false,
-		},
-		{
-			TestName: Deploy,
-			Input:    Deploy,
-			Expected: "CodeDeploy",
-			Error:    false,
-		},
-		{
-			TestName: RUM,
-			Input:    RUM,
-			Expected: "CloudWatchRUM",
-			Error:    false,
-		},
-		{
-			TestName: CloudControl,
-			Input:    CloudControl,
-			Expected: "CloudControlApi",
-			Error:    false,
-		},
-		{
-			TestName: "doesnotexist",
-			Input:    "doesnotexist",
-			Expected: "",
-			Error:    true,
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-
-			got, err := AWSGoV1ClientTypeName(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)

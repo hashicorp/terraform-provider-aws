@@ -34,8 +34,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="VPC Connection")
+// @FrameworkResource("aws_quicksight_vpc_connection", name="VPC Connection")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.VPCConnection")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func newVPCConnectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &vpcConnectionResource{}
 
@@ -166,8 +168,8 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 	awsAccountID, vpcConnectionID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.VPCConnectionID)
 	in := &quicksight.CreateVPCConnectionInput{
 		AwsAccountId:     aws.String(awsAccountID),
-		Name:             aws.String(plan.Name.ValueString()),
-		RoleArn:          aws.String(plan.RoleArn.ValueString()),
+		Name:             plan.Name.ValueStringPointer(),
+		RoleArn:          plan.RoleArn.ValueStringPointer(),
 		SecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIds),
 		SubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds),
 		Tags:             getTagsIn(ctx),
@@ -287,8 +289,8 @@ func (r *vpcConnectionResource) Update(ctx context.Context, req resource.UpdateR
 		!plan.SubnetIds.Equal(state.SubnetIds) {
 		in := quicksight.UpdateVPCConnectionInput{
 			AwsAccountId:     aws.String(awsAccountID),
-			Name:             aws.String(plan.Name.ValueString()),
-			RoleArn:          aws.String(plan.RoleArn.ValueString()),
+			Name:             plan.Name.ValueStringPointer(),
+			RoleArn:          plan.RoleArn.ValueStringPointer(),
 			SecurityGroupIds: flex.ExpandFrameworkStringValueSet(ctx, plan.SecurityGroupIds),
 			SubnetIds:        flex.ExpandFrameworkStringValueSet(ctx, plan.SubnetIds),
 			VPCConnectionId:  aws.String(vpcConnectionID),

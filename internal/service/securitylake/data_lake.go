@@ -327,12 +327,17 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 
 	conn := r.Meta().SecurityLakeClient(ctx)
-
-	input := &securitylake.DeleteDataLakeInput{
-		Regions: []string{errs.Must(regionFromARNString(data.ID.ValueString()))},
+	region, err := regionFromARNString(data.ID.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Security Lake Data Lake (%s)", data.ID.ValueString()), err.Error())
+		return
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteDataLakeOutput, error) {
+	input := &securitylake.DeleteDataLakeInput{
+		Regions: []string{region},
+	}
+
+	_, err = retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteDataLakeOutput, error) {
 		return conn.DeleteDataLake(ctx, input)
 	})
 
@@ -362,8 +367,13 @@ func (r *dataLakeResource) ModifyPlan(ctx context.Context, req resource.ModifyPl
 }
 
 func findDataLakeByARN(ctx context.Context, conn *securitylake.Client, arn string) (*awstypes.DataLakeResource, error) {
+	region, err := regionFromARNString(arn)
+	if err != nil {
+		return nil, err
+	}
+
 	input := &securitylake.ListDataLakesInput{
-		Regions: []string{errs.Must(regionFromARNString(arn))},
+		Regions: []string{region},
 	}
 
 	return findDataLake(ctx, conn, input, func(v *awstypes.DataLakeResource) bool {

@@ -20,6 +20,7 @@ import (
 // @Tags
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
 // @Testing(tlsKey=true, tlsKeyDomain="rName")
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDomainNameRead,

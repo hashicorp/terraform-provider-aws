@@ -42,7 +42,7 @@ func TestAccIAMServerCertificate_basic(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("server-certificate/%s", rName)),
 					acctest.CheckResourceAttrRFC3339(resourceName, "expiration"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "upload_date"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPath, "/"),

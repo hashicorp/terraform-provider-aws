@@ -160,7 +160,7 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 	dpInput := expandDataPrivacy(ctx, dp)
 
 	in := lexmodelsv2.CreateBotInput{
-		BotName:                 aws.String(plan.Name.ValueString()),
+		BotName:                 plan.Name.ValueStringPointer(),
 		DataPrivacy:             dpInput,
 		IdleSessionTTLInSeconds: aws.Int32(int32(plan.IdleSessionTTLInSeconds.ValueInt64())),
 		RoleArn:                 flex.StringFromFramework(ctx, plan.RoleARN),
@@ -172,7 +172,7 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 
 	var bm []membersData
@@ -310,7 +310,7 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 		}
 
 		if !plan.Description.IsNull() {
-			in.Description = aws.String(plan.Description.ValueString())
+			in.Description = plan.Description.ValueStringPointer()
 		}
 
 		if !plan.Members.IsNull() {
@@ -366,7 +366,7 @@ func (r *resourceBot) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 
 	in := &lexmodelsv2.DeleteBotInput{
-		BotId: aws.String(state.ID.ValueString()),
+		BotId: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteBot(ctx, in)

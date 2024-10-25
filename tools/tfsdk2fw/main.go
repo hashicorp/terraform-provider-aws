@@ -122,7 +122,7 @@ func (m *migrator) migrate(outputFilename string) error {
 
 	d := m.Generator.NewGoFileDestination(outputFilename)
 
-	if err := d.WriteTemplate("schema", m.Template, templateData); err != nil {
+	if err := d.BufferTemplate("schema", m.Template, templateData); err != nil {
 		return err
 	}
 

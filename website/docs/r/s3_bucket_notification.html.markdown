@@ -135,7 +135,7 @@ resource "aws_lambda_function" "func" {
   function_name = "example_lambda_name"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "go1.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_s3_bucket" "bucket" {
@@ -190,7 +190,7 @@ resource "aws_lambda_function" "func1" {
   function_name = "example_lambda_name1"
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "exports.example"
-  runtime       = "go1.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_permission" "allow_bucket2" {

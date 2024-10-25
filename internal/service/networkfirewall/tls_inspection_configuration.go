@@ -392,7 +392,7 @@ func (r *tlsInspectionConfigurationResource) Update(ctx context.Context, request
 			return
 		}
 
-		input.UpdateToken = aws.String(old.UpdateToken.ValueString())
+		input.UpdateToken = old.UpdateToken.ValueStringPointer()
 
 		output, err := conn.UpdateTLSInspectionConfiguration(ctx, input)
 
@@ -436,7 +436,7 @@ func (r *tlsInspectionConfigurationResource) Delete(ctx context.Context, request
 	conn := r.Meta().NetworkFirewallClient(ctx)
 
 	_, err := conn.DeleteTLSInspectionConfiguration(ctx, &networkfirewall.DeleteTLSInspectionConfigurationInput{
-		TLSInspectionConfigurationArn: aws.String(data.ID.ValueString()),
+		TLSInspectionConfigurationArn: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

@@ -20,6 +20,7 @@ import (
 // @SDKDataSource("aws_appmesh_route", name="Route")
 // @Tags
 // @Testing(serialize=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceRoute() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteRead,

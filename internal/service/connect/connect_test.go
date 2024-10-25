@@ -58,6 +58,7 @@ func TestAccConnect_serial(t *testing.T) {
 			"directory":        testAccInstance_directory,
 			"saml":             testAccInstance_saml,
 			"dataSource_basic": testAccInstanceDataSource_basic,
+			"tags":             testAccInstance_tags,
 		},
 		"InstanceStorageConfig": {
 			acctest.CtBasic:                             testAccInstanceStorageConfig_basic,

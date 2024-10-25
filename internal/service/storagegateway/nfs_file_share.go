@@ -319,7 +319,7 @@ func resourceNFSFileShareRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("fileshare_id", fileshare.FileShareId)
 	d.Set("gateway_arn", fileshare.GatewayARN)
 	d.Set("guess_mime_type_enabled", fileshare.GuessMIMETypeEnabled)
-	d.Set("kms_encrypted", fileshare.KMSEncrypted)
+	d.Set("kms_encrypted", fileshare.KMSEncrypted) //nolint:staticcheck // deprecated by AWS, but must remain for backward compatibility
 	d.Set(names.AttrKMSKeyARN, fileshare.KMSKey)
 	d.Set("location_arn", fileshare.LocationARN)
 	if err := d.Set("nfs_file_share_defaults", flattenNFSFileShareDefaults(fileshare.NFSFileShareDefaults)); err != nil {

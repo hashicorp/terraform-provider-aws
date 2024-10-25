@@ -335,8 +335,9 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
 				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if meta != nil {
-					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
+					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
 					ctx = meta.RegisterLogger(ctx)
+					ctx = flex.RegisterLogger(ctx)
 				}
 
 				return ctx
@@ -405,7 +406,7 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 			bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
 				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if meta != nil {
-					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig, meta.IgnoreTagsConfig)
+					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
 					ctx = meta.RegisterLogger(ctx)
 					ctx = flex.RegisterLogger(ctx)
 				}
@@ -467,22 +468,5 @@ func (p *fwprovider) Functions(_ context.Context) []func() function.Function {
 		tffunction.NewARNBuildFunction,
 		tffunction.NewARNParseFunction,
 		tffunction.NewTrimIAMRolePathFunction,
-	}
-}
-
-func endpointsBlock() schema.SetNestedBlock {
-	endpointsAttributes := make(map[string]schema.Attribute)
-
-	for _, serviceKey := range names.Aliases() {
-		endpointsAttributes[serviceKey] = schema.StringAttribute{
-			Optional:    true,
-			Description: "Use this to override the default service endpoint URL",
-		}
-	}
-
-	return schema.SetNestedBlock{
-		NestedObject: schema.NestedBlockObject{
-			Attributes: endpointsAttributes,
-		},
 	}
 }

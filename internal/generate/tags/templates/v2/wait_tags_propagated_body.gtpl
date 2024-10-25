@@ -22,7 +22,7 @@ func {{ .WaitTagsPropagatedFunc }}(ctx context.Context, conn {{ .ClientType }}, 
 			output = output.IgnoreConfig(inContext.IgnoreConfig)
 		}
 
-		return output.Equal(tags), nil
+        return output.{{ .WaitFuncComparator }}(tags), nil
 	}
 	opts := tfresource.WaitOpts{
 		{{- if ne .WaitContinuousOccurence 0 }}

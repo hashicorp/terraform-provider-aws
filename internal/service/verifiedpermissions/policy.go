@@ -246,7 +246,7 @@ func (r *resourcePolicy) Create(ctx context.Context, req resource.CreateRequest,
 	in := &verifiedpermissions.CreatePolicyInput{}
 
 	in.ClientToken = aws.String(id.UniqueId())
-	in.PolicyStoreId = aws.String(plan.PolicyStoreID.ValueString())
+	in.PolicyStoreId = plan.PolicyStoreID.ValueStringPointer()
 
 	def, diags := plan.Definition.ToPtr(ctx)
 	resp.Diagnostics.Append(diags...)
@@ -277,7 +277,7 @@ func (r *resourcePolicy) Create(ctx context.Context, req resource.CreateRequest,
 		}
 
 		value := awstypes.TemplateLinkedPolicyDefinition{
-			PolicyTemplateId: aws.String(templateLinked.PolicyTemplateID.ValueString()),
+			PolicyTemplateId: templateLinked.PolicyTemplateID.ValueStringPointer(),
 		}
 
 		if !templateLinked.Principal.IsNull() {
@@ -488,8 +488,8 @@ func (r *resourcePolicy) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	in := &verifiedpermissions.DeletePolicyInput{
-		PolicyId:      aws.String(state.PolicyID.ValueString()),
-		PolicyStoreId: aws.String(state.PolicyStoreID.ValueString()),
+		PolicyId:      state.PolicyID.ValueStringPointer(),
+		PolicyStoreId: state.PolicyStoreID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeletePolicy(ctx, in)

@@ -396,10 +396,6 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
 
-	if err := setObjectKMSKeyID(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
 	return diags
 }
 
@@ -646,7 +642,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 		input.TaggingDirective = types.TaggingDirective(v.(string))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	tags := tftags.New(ctx, getContextTags(ctx))
 	tags = defaultTagsConfig.MergeTags(tags)
 	if len(tags) > 0 {

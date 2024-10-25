@@ -187,7 +187,7 @@ func testAccCheckObjectLambdaAccessPointPolicyExists(ctx context.Context, n stri
 }
 
 func testAccObjectLambdaAccessPointPolicyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccObjectLambdaAccessPointConfig_base(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "test" {
@@ -236,7 +236,7 @@ resource "aws_s3control_object_lambda_access_point_policy" "test" {
 }
 
 func testAccObjectLambdaAccessPointPolicyConfig_updated(rName string) string {
-	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccObjectLambdaAccessPointConfig_base(rName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket" "test" {

@@ -33,8 +33,9 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-// @SDKResource("aws_budgets_budget")
+// @SDKResource("aws_budgets_budget", name="Budget")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/budgets/types;awstypes;awstypes.Budget")
 func ResourceBudget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBudgetCreate,

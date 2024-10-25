@@ -223,7 +223,7 @@ func (r *resourceProfilingGroup) Delete(ctx context.Context, req resource.Delete
 	}
 
 	in := &codeguruprofiler.DeleteProfilingGroupInput{
-		ProfilingGroupName: aws.String(state.ID.ValueString()),
+		ProfilingGroupName: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteProfilingGroup(ctx, in)

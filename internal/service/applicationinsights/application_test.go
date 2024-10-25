@@ -40,7 +40,7 @@ func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "cwe_monitor_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ops_center_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -57,7 +57,7 @@ func TestAccApplicationInsightsApplication_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cwe_monitor_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ops_center_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -85,7 +85,7 @@ func TestAccApplicationInsightsApplication_autoConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_config_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "cwe_monitor_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ops_center_enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

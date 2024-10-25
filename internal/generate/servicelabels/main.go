@@ -59,7 +59,7 @@ func main() {
 
 	d := g.NewUnformattedFileDestination(filename)
 
-	if err := d.WriteTemplate("servicelabeler", tmpl, td); err != nil {
+	if err := d.BufferTemplate("servicelabeler", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

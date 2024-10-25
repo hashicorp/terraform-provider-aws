@@ -184,6 +184,7 @@ The `managed_ebs_volume` configuration block supports the following:
 * `snapshot_id` - (Optional) Snapshot that Amazon ECS uses to create the volume. You must specify either a `size_in_gb` or a `snapshot_id`.
 * `throughput` - (Optional) Throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
 * `volume_type` - (Optional) Volume type.
+* `tag_specifications` - (Optional) The tags to apply to the volume. [See below](#tag_specifications).
 
 ### capacity_provider_strategy
 
@@ -317,6 +318,14 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `dns_name` - (Optional) Name that you use in the applications of client tasks to connect to this service.
 * `port` - (Required) Listening port number for the Service Connect proxy. This port is available inside of all of the tasks within the same namespace.
+
+### tag_specifications
+
+`tag_specifications` supports the following:
+
+* `resource_type` - (Required) The type of volume resource. Valid values, `volume`.
+* `propagate_tags` - (Optional) Determines whether to propagate the tags from the task definition to the Amazon EBS volume.
+* `tags` - (Optional) The tags applied to this Amazon EBS volume. `AmazonECSCreated` and `AmazonECSManaged` are reserved tags that can't be used.
 
 ## Attribute Reference
 

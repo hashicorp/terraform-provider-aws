@@ -5226,6 +5226,142 @@ func TestFlattenFlattener(t *testing.T) {
 	runAutoFlattenTestCases(t, testCases)
 }
 
+func TestFlattenStructListOfStringEnum(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := map[string]autoFlexTestCases{
+		"struct with list of string enum": {
+			"valid value": {
+				Source: awsSliceOfStringEnum{
+					Field1: []testEnum{testEnumScalar, testEnumList},
+				},
+				Target: &tfListOfStringEnum{},
+				WantTarget: &tfListOfStringEnum{
+					Field1: fwtypes.NewListValueOfMust[fwtypes.StringEnum[testEnum]](ctx, []attr.Value{
+						fwtypes.StringEnumValue(testEnumScalar),
+						fwtypes.StringEnumValue(testEnumList),
+					}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSliceOfStringEnum](), reflect.TypeFor[*tfListOfStringEnum]()),
+					infoConverting(reflect.TypeFor[awsSliceOfStringEnum](), reflect.TypeFor[*tfListOfStringEnum]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfStringEnum](), "Field1", reflect.TypeFor[*tfListOfStringEnum]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]testEnum](), "Field1", reflect.TypeFor[fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]]]()),
+					traceFlatteningWithListValue("Field1", reflect.TypeFor[[]testEnum](), 2, "Field1", reflect.TypeFor[fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]]]()),
+				},
+			},
+			"empty value": {
+				Source: awsSliceOfStringEnum{
+					Field1: []testEnum{},
+				},
+				Target: &tfListOfStringEnum{},
+				WantTarget: &tfListOfStringEnum{
+					Field1: fwtypes.NewListValueOfMust[fwtypes.StringEnum[testEnum]](ctx, []attr.Value{}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSliceOfStringEnum](), reflect.TypeFor[*tfListOfStringEnum]()),
+					infoConverting(reflect.TypeFor[awsSliceOfStringEnum](), reflect.TypeFor[*tfListOfStringEnum]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfStringEnum](), "Field1", reflect.TypeFor[*tfListOfStringEnum]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]testEnum](), "Field1", reflect.TypeFor[fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]]]()),
+					traceFlatteningWithListValue("Field1", reflect.TypeFor[[]testEnum](), 0, "Field1", reflect.TypeFor[fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]]]()),
+				},
+			},
+			"null value": {
+				Source: awsSliceOfStringEnum{},
+				Target: &tfListOfStringEnum{},
+				WantTarget: &tfListOfStringEnum{
+					Field1: fwtypes.NewListValueOfNull[fwtypes.StringEnum[testEnum]](ctx),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSliceOfStringEnum](), reflect.TypeFor[*tfListOfStringEnum]()),
+					infoConverting(reflect.TypeFor[awsSliceOfStringEnum](), reflect.TypeFor[*tfListOfStringEnum]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfStringEnum](), "Field1", reflect.TypeFor[*tfListOfStringEnum]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]testEnum](), "Field1", reflect.TypeFor[fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]]]()),
+					traceFlatteningWithListNull("Field1", reflect.TypeFor[[]testEnum](), "Field1", reflect.TypeFor[fwtypes.ListValueOf[fwtypes.StringEnum[testEnum]]]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoFlattenTestCases(t, cases)
+		})
+	}
+}
+
+func TestFlattenStructSetOfStringEnum(t *testing.T) {
+	t.Parallel()
+
+	ctx := context.Background()
+
+	testCases := map[string]autoFlexTestCases{
+		"struct with set of string enum": {
+			"valid value": {
+				Source: awsSliceOfStringEnum{
+					Field1: []testEnum{testEnumScalar, testEnumList},
+				},
+				Target: &tfSetOfStringEnum{},
+				WantTarget: &tfSetOfStringEnum{
+					Field1: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[testEnum]](ctx, []attr.Value{
+						fwtypes.StringEnumValue(testEnumScalar),
+						fwtypes.StringEnumValue(testEnumList),
+					}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSliceOfStringEnum](), reflect.TypeFor[*tfSetOfStringEnum]()),
+					infoConverting(reflect.TypeFor[awsSliceOfStringEnum](), reflect.TypeFor[*tfSetOfStringEnum]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfStringEnum](), "Field1", reflect.TypeFor[*tfSetOfStringEnum]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]testEnum](), "Field1", reflect.TypeFor[fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]]]()),
+					traceFlatteningWithSetValue("Field1", reflect.TypeFor[[]testEnum](), 2, "Field1", reflect.TypeFor[fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]]]()),
+				},
+			},
+			"empty value": {
+				Source: awsSliceOfStringEnum{
+					Field1: []testEnum{},
+				},
+				Target: &tfSetOfStringEnum{},
+				WantTarget: &tfSetOfStringEnum{
+					Field1: fwtypes.NewSetValueOfMust[fwtypes.StringEnum[testEnum]](ctx, []attr.Value{}),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSliceOfStringEnum](), reflect.TypeFor[*tfSetOfStringEnum]()),
+					infoConverting(reflect.TypeFor[awsSliceOfStringEnum](), reflect.TypeFor[*tfSetOfStringEnum]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfStringEnum](), "Field1", reflect.TypeFor[*tfSetOfStringEnum]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]testEnum](), "Field1", reflect.TypeFor[fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]]]()),
+					traceFlatteningWithSetValue("Field1", reflect.TypeFor[[]testEnum](), 0, "Field1", reflect.TypeFor[fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]]]()),
+				},
+			},
+			"null value": {
+				Source: awsSliceOfStringEnum{},
+				Target: &tfSetOfStringEnum{},
+				WantTarget: &tfSetOfStringEnum{
+					Field1: fwtypes.NewSetValueOfNull[fwtypes.StringEnum[testEnum]](ctx),
+				},
+				expectedLogLines: []map[string]any{
+					infoFlattening(reflect.TypeFor[awsSliceOfStringEnum](), reflect.TypeFor[*tfSetOfStringEnum]()),
+					infoConverting(reflect.TypeFor[awsSliceOfStringEnum](), reflect.TypeFor[*tfSetOfStringEnum]()),
+					traceMatchedFields("Field1", reflect.TypeFor[awsSliceOfStringEnum](), "Field1", reflect.TypeFor[*tfSetOfStringEnum]()),
+					infoConvertingWithPath("Field1", reflect.TypeFor[[]testEnum](), "Field1", reflect.TypeFor[fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]]]()),
+					traceFlatteningWithSetNull("Field1", reflect.TypeFor[[]testEnum](), "Field1", reflect.TypeFor[fwtypes.SetValueOf[fwtypes.StringEnum[testEnum]]]()),
+				},
+			},
+		},
+	}
+
+	for testName, cases := range testCases {
+		t.Run(testName, func(t *testing.T) {
+			t.Parallel()
+
+			runAutoFlattenTestCases(t, cases)
+		})
+	}
+}
+
 func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
 	t.Helper()
 

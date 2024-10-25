@@ -1,4 +1,4 @@
-// Copyright (c) HashiCorp, Inc.
+// Copyright (c) HashiCorp, Inc.fms/sweep
 // SPDX-License-Identifier: MPL-2.0
 
 package fms
@@ -103,7 +103,7 @@ func (aas adminAccountSweeper) Delete(ctx context.Context, timeout time.Duration
 		})
 		return nil
 	}
-	if err != nil && errs.Must(regexp.MatchString(`InvalidOperationException: This operation is not supported in the '[-a-z0-9]+' region`, err.Error())) {
+	if err != nil && errs.Must(regexp.MatchString(`InvalidOperationException: This operation is not supported in the '[-a-z0-9]+' region`, err.Error())) { // nosemgrep: ci.avoid-errs-Must
 		tflog.Warn(ctx, "Skipping resource", map[string]any{
 			"attr.account_id": aas.d.Get(names.AttrAccountID),
 			"error":           err.Error(),

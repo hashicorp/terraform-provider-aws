@@ -45,3 +45,7 @@ func (o tagOptions) Legacy() bool {
 func (o tagOptions) OmitEmpty() bool {
 	return o.Contains("omitempty")
 }
+
+func (o tagOptions) NoFlatten() bool {
+	return o.Contains("noflatten")
+}

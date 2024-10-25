@@ -114,34 +114,22 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 		},
 		Blocks: map[string]schema.Block{
 			"composite_slot_type_setting": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[CompositeSlotTypeSetting](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"subslots": subSlotTypeCompositionLNB,
+						"sub_slots": subSlotTypeCompositionLNB,
 					},
 				},
 			},
 			"external_source_setting": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[ExternalSourceSetting](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"grammar_slot_type_setting": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
 							CustomType: fwtypes.NewListNestedObjectTypeOf[GrammarSlotTypeSetting](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Blocks: map[string]schema.Block{
 									names.AttrSource: schema.ListNestedBlock{
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
 										CustomType: fwtypes.NewListNestedObjectTypeOf[Source](ctx),
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
@@ -251,7 +239,7 @@ func (r *resourceSlotType) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	in := &lexmodelsv2.CreateSlotTypeInput{
-		SlotTypeName: aws.String(plan.Name.ValueString()),
+		SlotTypeName: plan.Name.ValueStringPointer(),
 	}
 	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in, slotTypeFlexOpt)...)
 	if resp.Diagnostics.HasError() {
@@ -381,10 +369,10 @@ func (r *resourceSlotType) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	in := &lexmodelsv2.DeleteSlotTypeInput{
-		BotId:      aws.String(state.BotID.ValueString()),
-		BotVersion: aws.String(state.BotVersion.ValueString()),
-		LocaleId:   aws.String(state.LocaleID.ValueString()),
-		SlotTypeId: aws.String(state.SlotTypeID.ValueString()),
+		BotId:      state.BotID.ValueStringPointer(),
+		BotVersion: state.BotVersion.ValueStringPointer(),
+		LocaleId:   state.LocaleID.ValueStringPointer(),
+		SlotTypeId: state.SlotTypeID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteSlotType(ctx, in)
@@ -456,8 +444,8 @@ type resourceSlotTypeData struct {
 }
 
 type SubSlotTypeComposition struct {
-	Name      types.String `tfsdk:"name"`
-	SubSlotID types.String `tfsdk:"sub_slot_id"`
+	Name       types.String `tfsdk:"name"`
+	SlotTypeID types.String `tfsdk:"slot_type_id"`
 }
 
 type CompositeSlotTypeSetting struct {

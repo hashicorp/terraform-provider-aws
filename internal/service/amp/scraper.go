@@ -244,7 +244,7 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	if !data.Alias.IsNull() {
-		input.Alias = aws.String(data.Alias.ValueString())
+		input.Alias = data.Alias.ValueStringPointer()
 	}
 
 	output, err := conn.CreateScraper(ctx, input)
@@ -368,7 +368,7 @@ func (r *scraperResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	_, err := conn.DeleteScraper(ctx, &amp.DeleteScraperInput{
 		ClientToken: aws.String(sdkid.UniqueId()),
-		ScraperId:   aws.String(data.ID.ValueString()),
+		ScraperId:   data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {

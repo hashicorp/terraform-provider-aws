@@ -22,10 +22,7 @@ const (
 type containerProperties awstypes.ContainerProperties
 
 func (cp *containerProperties) reduce() {
-	// Deal with Environment objects which may be re-ordered in the API.
-	sort.Slice(cp.Environment, func(i, j int) bool {
-		return aws.ToString(cp.Environment[i].Name) < aws.ToString(cp.Environment[j].Name)
-	})
+	cp.sortEnvironment()
 
 	// Prevent difference of API response that adds an empty array when not configured during the request.
 	if len(cp.Command) == 0 {
@@ -108,6 +105,13 @@ func (cp *containerProperties) reduce() {
 	}
 }
 
+func (cp *containerProperties) sortEnvironment() {
+	// Deal with Environment objects which may be re-ordered in the API.
+	sort.Slice(cp.Environment, func(i, j int) bool {
+		return aws.ToString(cp.Environment[i].Name) < aws.ToString(cp.Environment[j].Name)
+	})
+}
+
 // equivalentContainerPropertiesJSON determines equality between two Batch ContainerProperties JSON strings
 func equivalentContainerPropertiesJSON(str1, str2 string) (bool, error) {
 	if str1 == "" {
@@ -163,6 +167,8 @@ func flattenContainerProperties(apiObject *awstypes.ContainerProperties) (string
 	if apiObject == nil {
 		return "", nil
 	}
+
+	(*containerProperties)(apiObject).sortEnvironment()
 
 	jsonEncoder := smithyjson.NewEncoder()
 	err := serializeContainerProperties(apiObject, jsonEncoder.Value)

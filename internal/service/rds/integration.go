@@ -222,7 +222,7 @@ func (r *integrationResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().RDSClient(ctx)
 
 	_, err := conn.DeleteIntegration(ctx, &rds.DeleteIntegrationInput{
-		IntegrationIdentifier: aws.String(data.ID.ValueString()),
+		IntegrationIdentifier: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.IntegrationNotFoundFault](err) {

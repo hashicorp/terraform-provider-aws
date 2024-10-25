@@ -79,7 +79,7 @@ class MyConvertedCode(TerraformStack):
             function_name="firehose_lambda_processor",
             handler="exports.handler",
             role=lambda_iam.arn,
-            runtime="nodejs16.x"
+            runtime="nodejs20.x"
         )
         KinesisFirehoseDeliveryStream(self, "extended_s3_stream",
             destination="extended_s3",
@@ -637,6 +637,8 @@ class MyConvertedCode(TerraformStack):
             name="example-snowflake-destination",
             snowflake_configuration=KinesisFirehoseDeliveryStreamSnowflakeConfiguration(
                 account_url="https://example.snowflakecomputing.com",
+                buffering_interval=600,
+                buffering_size=15,
                 database="example-db",
                 private_key="...",
                 role_arn=firehose.arn,
@@ -831,6 +833,8 @@ The `http_endpoint_configuration` configuration block supports the following arg
 The `snowflake_configuration` configuration block supports the following arguments:
 
 * `account_url` - (Required) The URL of the Snowflake account. Format: https://[account_identifier].snowflakecomputing.com.
+* `buffering_size` - (Optional) Buffer incoming data to the specified size, in MBs between 1 to 128, before delivering it to the destination.  The default value is 1MB.
+* `buffering_interval` - (Optional) Buffer incoming data for the specified period of time, in seconds between 0 to 900, before delivering it to the destination.  The default value is 0s.
 * `private_key` - (Optional) The private key for authentication. This value is required if `secrets_manager_configuration` is not provided.
 * `key_passphrase` - (Optional) The passphrase for the private key.
 * `user` - (Optional) The user for authentication. This value is required if `secrets_manager_configuration` is not provided.
@@ -872,14 +876,14 @@ The `processing_configuration` configuration block supports the following argume
 
 The `processors` configuration block supports the following arguments:
 
-* `type` - (Required) The type of processor. Valid Values: `RecordDeAggregation`, `Lambda`, `MetadataExtraction`, `AppendDelimiterToRecord`. Validation is done against [AWS SDK constants](https://docs.aws.amazon.com/sdk-for-go/api/service/firehose/#pkg-constants); so that values not explicitly listed may also work.
+* `type` - (Required) The type of processor. Valid Values: `RecordDeAggregation`, `Lambda`, `MetadataExtraction`, `AppendDelimiterToRecord`, `Decompression`, `CloudWatchLogProcessing`. Validation is done against [AWS SDK constants](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/firehose/types#ProcessorType); so values not explicitly listed may also work.
 * `parameters` - (Optional) Specifies the processor parameters as multiple blocks. See [`parameters` block](#parameters-block) below for details.
 
 ### `parameters` block
 
 The `parameters` configuration block supports the following arguments:
 
-* `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `MetadataExtractionQuery`, `JsonParsingEngine`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`, `SubRecordType`, `Delimiter`. Validation is done against [AWS SDK constants](https://docs.aws.amazon.com/sdk-for-go/api/service/firehose/#pkg-constants); so that values not explicitly listed may also work.
+* `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `MetadataExtractionQuery`, `JsonParsingEngine`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`, `SubRecordType`, `Delimiter`, `CompressionFormat`, `DataMessageExtraction`. Validation is done against [AWS SDK constants](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/firehose/types#ProcessorParameterName); so values not explicitly listed may also work.
 * `parameter_value` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
 
 ~> **NOTE:** Parameters with default values, including `NumberOfRetries`(default: 3), `RoleArn`(default: firehose role ARN), `BufferSizeInMBs`(default: 1), and `BufferIntervalInSeconds`(default: 60), are not stored in terraform state. To prevent perpetual differences, it is therefore recommended to only include parameters with non-default values.
@@ -1123,4 +1127,4 @@ Using `terraform import`, import Kinesis Firehose Delivery streams using the str
 
 Note: Import does not work for stream destination `s3`. Consider using `extended_s3` since `s3` destination is deprecated.
 
-<!-- cache-key: cdktf-0.20.1 input-542173d779b798e435a3f65b63119440e76a1f7f3289989b1ee44bb96fe4a601 -->
+<!-- cache-key: cdktf-0.20.8 input-f0df132e88d6ade116a961661329e78308e73ef98ed2d04c1e7282ada2d8c2af -->
