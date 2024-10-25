@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccOpenSearchAuthorizeVpcEndpointAccess_basic(t *testing.T) {
+func TestAccOpenSearchAuthorizeVPCEndpointAccess_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -38,12 +38,12 @@ func TestAccOpenSearchAuthorizeVpcEndpointAccess_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizeVpcEndpointAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizeVpcEndpointAccessConfig_basic(rName, domainName),
+				Config: testAccAuthorizeVPCEndpointAccessConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizeVpcEndpointAccessExists(ctx, resourceName, &authorizevpcendpointaccess),
+					testAccCheckAuthorizeVPCEndpointAccessExists(ctx, resourceName, &authorizevpcendpointaccess),
 					resource.TestCheckResourceAttrSet(resourceName, "account"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrDomainName),
 				),
@@ -53,13 +53,13 @@ func TestAccOpenSearchAuthorizeVpcEndpointAccess_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateId:                        domainName,
 				ImportStateVerifyIdentifierAttribute: names.AttrDomainName,
-				ImportStateIdFunc:                    testAccAuthorizeVpcEndpointAccessImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    testAccAuthorizeVPCEndpointAccessImportStateIDFunc(resourceName),
 			},
 		},
 	})
 }
 
-func TestAccOpenSearchAuthorizeVpcEndpointAccess_disappears(t *testing.T) {
+func TestAccOpenSearchAuthorizeVPCEndpointAccess_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var authorizevpcendpointaccess awstypes.AuthorizedPrincipal
@@ -73,12 +73,12 @@ func TestAccOpenSearchAuthorizeVpcEndpointAccess_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAuthorizeVpcEndpointAccessDestroy(ctx),
+		CheckDestroy:             testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizeVpcEndpointAccessConfig_basic(rName, domainName),
+				Config: testAccAuthorizeVPCEndpointAccessConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAuthorizeVpcEndpointAccessExists(ctx, resourceName, &authorizevpcendpointaccess),
+					testAccCheckAuthorizeVPCEndpointAccessExists(ctx, resourceName, &authorizevpcendpointaccess),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceAuthorizeVpcEndpointAccess, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -87,7 +87,7 @@ func TestAccOpenSearchAuthorizeVpcEndpointAccess_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAuthorizeVpcEndpointAccessDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
@@ -113,22 +113,22 @@ func testAccCheckAuthorizeVpcEndpointAccessDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckAuthorizeVpcEndpointAccessExists(ctx context.Context, name string, authorizevpcendpointaccess *awstypes.AuthorizedPrincipal) resource.TestCheckFunc {
+func testAccCheckAuthorizeVPCEndpointAccessExists(ctx context.Context, name string, authorizevpcendpointaccess *awstypes.AuthorizedPrincipal) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVpcEndpointAccess, name, errors.New("not found"))
+			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVPCEndpointAccess, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.Route53Profiles, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVpcEndpointAccess, name, errors.New("not set"))
+			return create.Error(names.Route53Profiles, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVPCEndpointAccess, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
 		resp, err := tfopensearch.FindAuthorizeVpcEndpointAccessByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 		if err != nil {
-			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVpcEndpointAccess, rs.Primary.ID, err)
+			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVPCEndpointAccess, rs.Primary.ID, err)
 		}
 
 		*authorizevpcendpointaccess = *resp
@@ -137,7 +137,7 @@ func testAccCheckAuthorizeVpcEndpointAccessExists(ctx context.Context, name stri
 	}
 }
 
-func testAccAuthorizeVpcEndpointAccessImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAuthorizeVPCEndpointAccessImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -148,7 +148,7 @@ func testAccAuthorizeVpcEndpointAccessImportStateIDFunc(resourceName string) res
 	}
 }
 
-func testAccAuthorizeVpcEndpointAccessConfig_basic(rName, domainName string) string {
+func testAccAuthorizeVPCEndpointAccessConfig_basic(rName, domainName string) string {
 	return acctest.ConfigCompose(testAccVPCEndpointConfig_base(rName, domainName), `
 data "aws_caller_identity" "current" {}
 
