@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -21,7 +22,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *shield.Options) {
 			// Force "global" services to correct Regions.
-			if config["partition"].(string) == names.StandardPartitionID {
+			if config["partition"].(string) == endpoints.AwsPartitionID {
 				if cfg.Region != names.USEast1RegionID {
 					tflog.Info(ctx, "overriding region", map[string]any{
 						"original_region": cfg.Region,
