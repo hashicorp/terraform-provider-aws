@@ -79,7 +79,7 @@ func TestAccOpenSearchAuthorizeVPCEndpointAccess_disappears(t *testing.T) {
 				Config: testAccAuthorizeVPCEndpointAccessConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizeVPCEndpointAccessExists(ctx, resourceName, &authorizevpcendpointaccess),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceAuthorizeVpcEndpointAccess, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceAuthorizeVPCEndpointAccess, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,7 +96,7 @@ func testAccCheckAuthorizeVPCEndpointAccessDestroy(ctx context.Context) resource
 				continue
 			}
 
-			_, err := tfopensearch.FindAuthorizeVpcEndpointAccessByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
+			_, err := tfopensearch.FindAuthorizeVPCEndpointAccessByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -126,7 +126,7 @@ func testAccCheckAuthorizeVPCEndpointAccessExists(ctx context.Context, name stri
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
-		resp, err := tfopensearch.FindAuthorizeVpcEndpointAccessByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
+		resp, err := tfopensearch.FindAuthorizeVPCEndpointAccessByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 		if err != nil {
 			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVPCEndpointAccess, rs.Primary.ID, err)
 		}
