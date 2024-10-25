@@ -74,7 +74,7 @@ func checkPartition(partition string) error {
 	switch partition {
 	case names.StandardPartitionID:
 	case endpoints.AwsCnPartitionID:
-	case names.USGovCloudPartitionID:
+	case endpoints.AwsUsGovPartitionID:
 	default:
 		return fmt.Errorf("partion %q is not recognized", partition)
 	}
