@@ -147,7 +147,6 @@ const (
 // These should move to aws-sdk-go-base.
 // See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
 const (
-	ISOBPartitionID       = "aws-iso-b"  // AWS ISOB (US) partition.
 	ISOEPartitionID       = "aws-iso-e"  // AWS ISOE (Europe) partition.
 	ISOFPartitionID       = "aws-iso-f"  // AWS ISOF partition.
 	StandardPartitionID   = "aws"        // AWS Standard partition.

@@ -613,7 +613,7 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 				Config: testAccProviderConfig_region(names.USISOBEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "sc2s.sgov.gov"),
-					testAccCheckPartition(ctx, t, &provider, names.ISOBPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoBPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "gov.sgov.sc2s"),
 				),
 				PlanOnly: true,
