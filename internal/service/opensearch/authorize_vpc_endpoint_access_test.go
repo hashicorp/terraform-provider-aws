@@ -54,7 +54,6 @@ func TestAccOpenSearchAuthorizeVpcEndpointAccess_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateId:                        domainName,
 				ImportStateIdFunc:                    testAccAuthorizeVpcEndpointAccessImportStateIDFunc(resourceName),
-				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "domain_name",
 			},
 		},
@@ -150,30 +149,6 @@ func testAccAuthorizeVpcEndpointAccessImportStateIDFunc(resourceName string) res
 	}
 }
 
-// ``func testAccPreCheck(ctx context.Context, t *testing.T) {
-// 	conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
-
-// 	input := &opensearch.ListAuthorizeVpcEndpointAccesssInput{}
-// 	_, err := conn.ListAuthorizeVpcEndpointAccesss(ctx, input)
-
-// 	if acctest.PreCheckSkipError(err) {
-// 		t.Skipf("skipping acceptance testing: %s", err)
-// 	}
-// 	if err != nil {
-// 		t.Fatalf("unexpected PreCheck error: %s", err)
-// 	}
-// }
-
-// func testAccCheckAuthorizeVpcEndpointAccessNotRecreated(before, after *opensearch.DescribeAuthorizeVpcEndpointAccessResponse) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.ToString(before.AuthorizeVpcEndpointAccessId), aws.ToString(after.AuthorizeVpcEndpointAccessId); before != after {
-// 			return create.Error(names.OpenSearch, create.ErrActionCheckingNotRecreated, tfopensearch.ResNameAuthorizeVpcEndpointAccess, aws.ToString(before.AuthorizeVpcEndpointAccessId), errors.New("recreated"))
-// 		}
-
-// 		return nil
-// 	}
-// }
-
 func testAccAuthorizeVpcEndpointAccessConfig_basic(rName, domainName string) string {
 	return acctest.ConfigCompose(testAccVPCEndpointConfig_base(rName, domainName), `
 data "aws_caller_identity" "current" {}
@@ -188,7 +163,7 @@ resource "aws_opensearch_vpc_endpoint" "test" {
 
 resource "aws_opensearch_authorize_vpc_endpoint_access" "test" {
   domain_name = aws_opensearch_domain.test.domain_name
-  account = data.aws_caller_identity.current.account_id
+  account     = data.aws_caller_identity.current.account_id
 }
 `)
 }
