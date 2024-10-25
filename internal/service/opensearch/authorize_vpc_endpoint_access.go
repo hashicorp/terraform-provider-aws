@@ -56,7 +56,7 @@ func (r *resourceAuthorizeVpcEndpointAccess) Schema(ctx context.Context, req res
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"domain_name": schema.StringAttribute{
+			names.AttrDomainName: schema.StringAttribute{
 				Required: true,
 			},
 			"authorized_principal": schema.ListAttribute{
@@ -171,7 +171,7 @@ func (r *resourceAuthorizeVpcEndpointAccess) Delete(ctx context.Context, req res
 }
 
 func (r *resourceAuthorizeVpcEndpointAccess) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("domain_name"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrDomainName), req, resp)
 }
 
 func findAuthorizeVpcEndpointAccessByName(ctx context.Context, conn *opensearch.Client, domainName string) (*awstypes.AuthorizedPrincipal, error) {

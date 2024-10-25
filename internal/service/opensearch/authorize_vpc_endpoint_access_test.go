@@ -52,7 +52,7 @@ func TestAccOpenSearchAuthorizeVpcEndpointAccess_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateId:                        domainName,
-				ImportStateVerifyIdentifierAttribute: "domain_name",
+				ImportStateVerifyIdentifierAttribute: names.AttrDomainName,
 				ImportStateIdFunc:                    testAccAuthorizeVpcEndpointAccessImportStateIDFunc(resourceName),
 			},
 		},
@@ -96,7 +96,7 @@ func testAccCheckAuthorizeVpcEndpointAccessDestroy(ctx context.Context) resource
 				continue
 			}
 
-			_, err := tfopensearch.FindAuthorizeVpcEndpointAccessByName(ctx, conn, rs.Primary.Attributes["domain_name"])
+			_, err := tfopensearch.FindAuthorizeVpcEndpointAccessByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -126,7 +126,7 @@ func testAccCheckAuthorizeVpcEndpointAccessExists(ctx context.Context, name stri
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
-		resp, err := tfopensearch.FindAuthorizeVpcEndpointAccessByName(ctx, conn, rs.Primary.Attributes["domain_name"])
+		resp, err := tfopensearch.FindAuthorizeVpcEndpointAccessByName(ctx, conn, rs.Primary.Attributes[names.AttrDomainName])
 		if err != nil {
 			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVpcEndpointAccess, rs.Primary.ID, err)
 		}
@@ -144,7 +144,7 @@ func testAccAuthorizeVpcEndpointAccessImportStateIDFunc(resourceName string) res
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["domain_name"], nil
+		return rs.Primary.Attributes[names.AttrDomainName], nil
 	}
 }
 
