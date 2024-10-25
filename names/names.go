@@ -144,12 +144,6 @@ const (
 	WAFRegionalEndpointID                  = "waf-regional"
 )
 
-// These should move to aws-sdk-go-base.
-// See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
-const (
-	StandardPartitionID = "aws" // AWS Standard partition.
-)
-
 const (
 	// AWS Standard partition's regions.
 	GlobalRegionID = "aws-global" // AWS Standard global region.

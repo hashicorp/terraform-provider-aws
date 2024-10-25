@@ -1340,7 +1340,7 @@ func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	switch Partition() {
-	case names.StandardPartitionID:
+	case endpoints.AwsPartitionID:
 		PreCheckRegion(t, names.USEast1RegionID)
 	case endpoints.AwsCnPartitionID:
 		PreCheckRegion(t, names.CNNorthwest1RegionID)
@@ -2202,7 +2202,7 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 	t.Helper()
 
-	if Partition() != names.StandardPartitionID {
+	if Partition() != endpoints.AwsPartitionID {
 		t.Skipf("skipping test; Endpoint Configuration type EDGE is not supported in this partition (%s)", Partition())
 	}
 }

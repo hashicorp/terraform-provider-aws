@@ -567,7 +567,7 @@ func TestAccProvider_Region_commercial(t *testing.T) {
 				Config: testAccProviderConfig_region(names.USWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
-					testAccCheckPartition(ctx, t, &provider, names.StandardPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "com.amazonaws"),
 				),
 				PlanOnly: true,
