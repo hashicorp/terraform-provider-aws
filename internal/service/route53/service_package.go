@@ -39,7 +39,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 					o.BaseEndpoint = aws.String("https://api.route53.cn")
 				}
 				o.Region = names.CNNorthwest1RegionID
-			case names.USGovCloudPartitionID:
+			case endpoints.AwsUsGovPartitionID:
 				if cfg.Region != names.USGovWest1RegionID {
 					tflog.Info(ctx, "overriding region", map[string]any{
 						"original_region": cfg.Region,
