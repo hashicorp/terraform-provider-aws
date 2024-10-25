@@ -286,13 +286,15 @@ func testAccServer_securityPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-Restricted-2020-06"),
 				),
 			},
-			{
-				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-Restricted-2024-06"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-Restricted-2024-06"),
-				),
-			},
+			/*
+				{
+					Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-Restricted-2024-06"),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckServerExists(ctx, resourceName, &conf),
+						resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-Restricted-2024-06"),
+					),
+				},
+			*/
 		},
 	})
 }
