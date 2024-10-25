@@ -16,10 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 )
 
 func TestAccOpenSearchAuthorizeVpcEndpointAccess_basic(t *testing.T) {
@@ -53,8 +52,8 @@ func TestAccOpenSearchAuthorizeVpcEndpointAccess_basic(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateId:                        domainName,
-				ImportStateIdFunc:                    testAccAuthorizeVpcEndpointAccessImportStateIDFunc(resourceName),
 				ImportStateVerifyIdentifierAttribute: "domain_name",
+				ImportStateIdFunc:                    testAccAuthorizeVpcEndpointAccessImportStateIDFunc(resourceName),
 			},
 		},
 	})

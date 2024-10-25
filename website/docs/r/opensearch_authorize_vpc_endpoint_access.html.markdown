@@ -19,7 +19,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_opensearch_authorize_vpc_endpoint_access" "test" {
   domain_name = aws_opensearch_domain.test.domain_name
-  account = data.aws_caller_identity.current.account_id
+  account     = data.aws_caller_identity.current.account_id
 }
 ```
 
