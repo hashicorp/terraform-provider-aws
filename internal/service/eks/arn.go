@@ -18,7 +18,6 @@ import (
 
 	awsarn "github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Canonicalize validates IAM resources are appropriate for the authenticator
@@ -72,7 +71,7 @@ func Canonicalize(arn string) (string, error) {
 
 func checkPartition(partition string) error {
 	switch partition {
-	case names.StandardPartitionID:
+	case endpoints.AwsPartitionID:
 	case endpoints.AwsCnPartitionID:
 	case endpoints.AwsUsGovPartitionID:
 	default:
