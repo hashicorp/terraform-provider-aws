@@ -197,7 +197,7 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_empty(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "0"),
 				),
 				// The empty `policy_arns` argument in the exclusive lock will remove the
 				// managed policy defined in this configuration, so a diff is expected
@@ -242,7 +242,7 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_outOfBandRemoval(t *testing.T) {
 					testAccCheckGroupPolicyAttachmentCount(ctx, rName, 1),
 					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "1"),
 				),
 			},
 		},
@@ -280,7 +280,7 @@ func TestAccIAMGroupPolicyAttachmentsExclusive_outOfBandAddition(t *testing.T) {
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "1"),
 				),
 			},
 		},

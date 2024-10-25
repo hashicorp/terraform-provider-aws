@@ -68,4 +68,9 @@ var (
 	ErrCodeNoSuchCORSConfiguration = errCodeNoSuchCORSConfiguration
 	LifecycleRuleStatusDisabled    = lifecycleRuleStatusDisabled
 	LifecycleRuleStatusEnabled     = lifecycleRuleStatusEnabled
+
+	NewObjectARN   = newObjectARN
+	ParseObjectARN = parseObjectARN
 )
+
+type ObjectARN = objectARN

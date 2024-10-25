@@ -17,7 +17,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return shield.NewFromConfig(cfg,
-		shield.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		shield.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *shield.Options) {
 			// Force "global" services to correct Regions.

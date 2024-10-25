@@ -41,8 +41,8 @@ func testAccIPGroup_basic(t *testing.T) {
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipGroupName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipGroupDescription),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -56,7 +56,7 @@ func testAccIPGroup_basic(t *testing.T) {
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ipGroupNewName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ipGroupDescription),
-					resource.TestCheckResourceAttr(resourceName, "rules.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
 				),
 			},
 			{
@@ -84,7 +84,7 @@ func testAccIPGroup_tags(t *testing.T) {
 				Config: testAccIPGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -97,7 +97,7 @@ func testAccIPGroup_tags(t *testing.T) {
 				Config: testAccIPGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -106,7 +106,7 @@ func testAccIPGroup_tags(t *testing.T) {
 				Config: testAccIPGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIPGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

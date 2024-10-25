@@ -171,7 +171,7 @@ func TestAccIAMGroupPoliciesExclusive_empty(t *testing.T) {
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "0"),
 				),
 				// The empty `policy_names` argument in the exclusive lock will remove the
 				// inline policy defined in this configuration, so a diff is expected
@@ -211,7 +211,7 @@ func TestAccIAMGroupPoliciesExclusive_outOfBandRemoval(t *testing.T) {
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 				),
 			},
 		},
@@ -249,7 +249,7 @@ func TestAccIAMGroupPoliciesExclusive_outOfBandAddition(t *testing.T) {
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 				),
 			},
 		},

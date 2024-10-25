@@ -299,7 +299,7 @@ func TestAccAPIGatewayDeployment_variables(t *testing.T) {
 				Config: testAccDeploymentConfig_variables(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "variables.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "variables.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "variables.key1", acctest.CtValue1),
 				),
 			},
@@ -348,9 +348,9 @@ func TestAccAPIGatewayDeployment_deploymentCanarySettings(t *testing.T) {
 				Config: testAccStageConfig_deploymentCanarySettings(rName, url),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "variables.one", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "variables.one", "1"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "33.33"),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", "3"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtTrue),
 				),
 			},

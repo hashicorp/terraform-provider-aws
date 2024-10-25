@@ -16,6 +16,7 @@ var (
 	ResourceEndpointConfiguration                  = resourceEndpointConfiguration
 	ResourceFeatureGroup                           = resourceFeatureGroup
 	ResourceFlowDefinition                         = resourceFlowDefinition
+	ResourceHub                                    = resourceHub
 	ResourceHumanTaskUI                            = resourceHumanTaskUI
 	ResourceImage                                  = resourceImage
 	ResourceImageVersion                           = resourceImageVersion
@@ -45,6 +46,7 @@ var (
 	FindEndpointConfigByName                  = findEndpointConfigByName
 	FindFeatureGroupByName                    = findFeatureGroupByName
 	FindFlowDefinitionByName                  = findFlowDefinitionByName
+	FindHubByName                             = findHubByName
 	FindHumanTaskUIByName                     = findHumanTaskUIByName
 	FindImageByName                           = findImageByName
 	FindImageVersionByName                    = findImageVersionByName
@@ -78,4 +80,7 @@ var (
 	PrebuiltECRImageIDByRegion_SageMakerCustom     = prebuiltECRImageIDByRegion_SageMakerCustom     // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_SageMakerRL         = prebuiltECRImageIDByRegion_SageMakerRL         // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
+
+	ValidName   = validName
+	ValidPrefix = validPrefix
 )

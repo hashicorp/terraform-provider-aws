@@ -70,7 +70,7 @@ func TestAccResilienceHubResiliencyPolicy_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -118,7 +118,7 @@ func TestAccResilienceHubResiliencyPolicy_dataLocationConstraint(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -140,7 +140,7 @@ func TestAccResilienceHubResiliencyPolicy_dataLocationConstraint(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -193,7 +193,7 @@ func TestAccResilienceHubResiliencyPolicy_description(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -215,7 +215,7 @@ func TestAccResilienceHubResiliencyPolicy_description(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -264,7 +264,7 @@ func TestAccResilienceHubResiliencyPolicy_name(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -286,7 +286,7 @@ func TestAccResilienceHubResiliencyPolicy_name(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -346,7 +346,7 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -375,7 +375,7 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -404,7 +404,7 @@ func TestAccResilienceHubResiliencyPolicy_policy(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -464,7 +464,7 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -493,7 +493,7 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -522,7 +522,7 @@ func TestAccResilienceHubResiliencyPolicy_policyWithRegion(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -570,7 +570,7 @@ func TestAccResilienceHubResiliencyPolicy_tier(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 			},
@@ -592,55 +592,9 @@ func TestAccResilienceHubResiliencyPolicy_tier(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccAttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
-			},
-		},
-	})
-}
-
-func TestAccResilienceHubResiliencyPolicy_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var policy1, policy2 resiliencehub.DescribeResiliencyPolicyOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_resiliencehub_resiliency_policy.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ResilienceHubServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckResiliencyPolicyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccResiliencyPolicyConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy1),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
-				),
-			},
-			{
-				Config: testAccResiliencyPolicyConfig_tag2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResiliencyPolicyExists(ctx, resourceName, &policy2),
-					testAccCheckResiliencyPolicyNotRecreated(&policy1, &policy2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.ResilienceHubServiceID, regexache.MustCompile(`resiliency-policy/.+`)),
-				),
 			},
 		},
 	})
@@ -731,17 +685,6 @@ func testAccCheckResiliencyPolicyExists(ctx context.Context, name string, policy
 	}
 }
 
-func testAccAttrImportStateIdFunc(resourceName, attrName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[attrName], nil
-	}
-}
-
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ResilienceHubClient(ctx)
 
@@ -753,16 +696,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckResiliencyPolicyNotRecreated(before, after *resiliencehub.DescribeResiliencyPolicyOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.Policy.PolicyArn), aws.ToString(after.Policy.PolicyArn); before != after {
-			return create.Error(names.ResilienceHub, create.ErrActionCheckingNotRecreated, tfresiliencehub.ResNameResiliencyPolicy, before, errors.New("recreated"))
-		}
-
-		return nil
 	}
 }
 
@@ -924,79 +857,4 @@ resource "aws_resiliencehub_resiliency_policy" "test" {
   }
 }
 `, rName, duration)
-}
-
-func testAccResiliencyPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_resiliencehub_resiliency_policy" "test" {
-  name = %[1]q
-
-  description = %[1]q
-
-  tier = "NotApplicable"
-
-  data_location_constraint = "AnyLocation"
-
-  policy {
-    region {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-    az {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-    hardware {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-    software {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccResiliencyPolicyConfig_tag2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_resiliencehub_resiliency_policy" "test" {
-  name = %[1]q
-
-  description = %[1]q
-
-  tier = "NotApplicable"
-
-  data_location_constraint = "AnyLocation"
-
-  policy {
-    region {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-    az {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-    hardware {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-    software {
-      rpo = "1h0m0s"
-      rto = "1h0m0s"
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

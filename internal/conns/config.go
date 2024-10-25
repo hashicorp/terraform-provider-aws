@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	imds_sdkv2 "github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
 	basediag "github.com/hashicorp/aws-sdk-go-base/v2/diag"
@@ -33,7 +33,7 @@ type Config struct {
 	AssumeRoleWithWebIdentity      *awsbase.AssumeRoleWithWebIdentity
 	CustomCABundle                 string
 	DefaultTagsConfig              *tftags.DefaultConfig
-	EC2MetadataServiceEnableState  imds_sdkv2.ClientEnableState
+	EC2MetadataServiceEnableState  imds.ClientEnableState
 	EC2MetadataServiceEndpoint     string
 	EC2MetadataServiceEndpointMode string
 	Endpoints                      map[string]string
@@ -46,7 +46,7 @@ type Config struct {
 	NoProxy                        string
 	Profile                        string
 	Region                         string
-	RetryMode                      aws_sdkv2.RetryMode
+	RetryMode                      aws.RetryMode
 	S3UsePathStyle                 bool
 	S3USEast1RegionalEndpoint      string
 	SecretKey                      string

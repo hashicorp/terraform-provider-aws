@@ -395,43 +395,43 @@ func main() {
 			templateData.TagPackage = ""
 		}
 
-		if err := d.WriteTemplate("header", templateBody.header, templateData); err != nil {
+		if err := d.BufferTemplate("header", templateBody.header, templateData); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
 	if *getTag {
-		if err := d.WriteTemplate("gettag", templateBody.getTag, templateData); err != nil {
+		if err := d.BufferTemplate("gettag", templateBody.getTag, templateData); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
 	if *listTags {
-		if err := d.WriteTemplate("listtags", templateBody.listTags, templateData); err != nil {
+		if err := d.BufferTemplate("listtags", templateBody.listTags, templateData); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
 	if *serviceTagsMap {
-		if err := d.WriteTemplate("servicetagsmap", templateBody.serviceTagsMap, templateData); err != nil {
+		if err := d.BufferTemplate("servicetagsmap", templateBody.serviceTagsMap, templateData); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
 	if *serviceTagsSlice {
-		if err := d.WriteTemplate("servicetagsslice", templateBody.serviceTagsSlice, templateData); err != nil {
+		if err := d.BufferTemplate("servicetagsslice", templateBody.serviceTagsSlice, templateData); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
 	if *updateTags {
-		if err := d.WriteTemplate("updatetags", templateBody.updateTags, templateData); err != nil {
+		if err := d.BufferTemplate("updatetags", templateBody.updateTags, templateData); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
 	if *waitForPropagation {
-		if err := d.WriteTemplate("waittagspropagated", templateBody.waitTagsPropagated, templateData); err != nil {
+		if err := d.BufferTemplate("waittagspropagated", templateBody.waitTagsPropagated, templateData); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}

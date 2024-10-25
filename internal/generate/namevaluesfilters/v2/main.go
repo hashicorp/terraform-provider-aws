@@ -54,7 +54,7 @@ func main() {
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("namevaluesfiltersv2", tmpl, td, templateFuncMap); err != nil {
+	if err := d.BufferTemplate("namevaluesfiltersv2", tmpl, td, templateFuncMap); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

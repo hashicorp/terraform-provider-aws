@@ -52,7 +52,7 @@ func TestAccVPCSubnet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "ip-name"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -496,7 +496,7 @@ func TestAccVPCSubnet_enableLNIAtDeviceIndex(t *testing.T) {
 				Config: testAccVPCSubnetConfig_enableLniAtDeviceIndex(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "1"),
 				),
 			},
 			{
@@ -508,14 +508,14 @@ func TestAccVPCSubnet_enableLNIAtDeviceIndex(t *testing.T) {
 				Config: testAccVPCSubnetConfig_enableLniAtDeviceIndex(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "1"),
 				),
 			},
 			{
 				Config: testAccVPCSubnetConfig_enableLniAtDeviceIndex(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(ctx, resourceName, &subnet),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "1"),
 				),
 			},
 		},

@@ -43,14 +43,14 @@ func TestClusterIDAndRegionFromARN(t *testing.T) {
 		},
 		{
 			TestName:       "normal ARN",
-			Input:          "arn:aws:rds:us-west-2:012345678901:cluster:tf-acc-test-1467354933239945971", // lintignore:AWSAT003,AWSAT005
+			Input:          "arn:aws:rds:us-west-2:123456789012:cluster:tf-acc-test-1467354933239945971", // lintignore:AWSAT003,AWSAT005
 			ExpectedID:     "tf-acc-test-1467354933239945971",
 			ExpectedRegion: "us-west-2", // lintignore:AWSAT003
 			ExpectedErr:    false,
 		},
 		{
 			TestName:       "another good ARN",
-			Input:          "arn:aws:rds:us-east-1:012345678901:cluster:tf-acc-test-1467354933239945971", // lintignore:AWSAT003,AWSAT005
+			Input:          "arn:aws:rds:us-east-1:123456789012:cluster:tf-acc-test-1467354933239945971", // lintignore:AWSAT003,AWSAT005
 			ExpectedID:     "tf-acc-test-1467354933239945971",
 			ExpectedRegion: "us-east-1", // lintignore:AWSAT003
 			ExpectedErr:    false,
@@ -64,7 +64,7 @@ func TestClusterIDAndRegionFromARN(t *testing.T) {
 		},
 		{
 			TestName:       "wrong service",
-			Input:          "arn:aws:connect:us-west-2:012345678901:instance/1032bdc4-d72c-5490-a9fa-3c9b4dba67bb", // lintignore:AWSAT003,AWSAT005
+			Input:          "arn:aws:connect:us-west-2:123456789012:instance/1032bdc4-d72c-5490-a9fa-3c9b4dba67bb", // lintignore:AWSAT003,AWSAT005
 			ExpectedID:     "",
 			ExpectedRegion: "",
 			ExpectedErr:    true,

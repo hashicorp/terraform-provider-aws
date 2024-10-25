@@ -61,7 +61,7 @@ func main() {
 
 	d := g.NewUnformattedFileDestination(filename)
 
-	if err := d.WriteTemplate("allowsubcats", tmpl, td); err != nil {
+	if err := d.BufferTemplate("allowsubcats", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
