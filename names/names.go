@@ -229,44 +229,31 @@ func DNSSuffixForPartition(partition string) string {
 	}
 }
 
-func ServicePrincipalSuffixForPartition(partition string) string {
-	switch partition {
-	case ChinaPartitionID:
-		return "amazonaws.com.cn"
-	case ISOPartitionID:
-		return "c2s.ic.gov"
-	case ISOBPartitionID:
-		return "sc2s.sgov.gov"
-	default:
-		return "amazonaws.com"
-	}
-}
-
 // SPN region unique taken from
 // https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
-func ServicePrincipalNameForPartition(service string, partition string) string {
-	if service != "" && partition != StandardPartitionID {
-		switch partition {
-		case ISOPartitionID:
+func ServicePrincipalNameForPartition(service string, partition endpoints.Partition) string {
+	if partitionID := partition.ID(); service != "" && partitionID != endpoints.AwsPartitionID {
+		switch partitionID {
+		case endpoints.AwsIsoPartitionID:
 			switch service {
 			case "cloudhsm",
 				"config",
 				"logs",
 				"workspaces":
-				return DNSSuffixForPartition(partition)
+				return partition.DNSSuffix()
 			}
-		case ISOBPartitionID:
+		case endpoints.AwsIsoBPartitionID:
 			switch service {
 			case "dms",
 				"logs":
-				return DNSSuffixForPartition(partition)
+				return partition.DNSSuffix()
 			}
-		case ChinaPartitionID:
+		case endpoints.AwsCnPartitionID:
 			switch service {
 			case "codedeploy",
 				"elasticmapreduce",
 				"logs":
-				return DNSSuffixForPartition(partition)
+				return partition.DNSSuffix()
 			}
 		}
 	}
@@ -274,19 +261,19 @@ func ServicePrincipalNameForPartition(service string, partition string) string {
 	return "amazonaws.com"
 }
 
-// PartitionForRegion returns the partition ID for the given Region.
-// Returns "" if the Region is empty.
-// Returns "aws" if no known partition includes the Region.
-func PartitionForRegion(region string) string {
+// PartitionForRegion returns the partition for the given Region.
+// Returns the empty partition if the Region is empty.
+// Returns the standard partition if no known partition includes the Region.
+func PartitionForRegion(region string) endpoints.Partition {
 	if region == "" {
-		return ""
+		return endpoints.Partition{}
 	}
 
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
-		return partition.ID()
+		return partition
 	}
 
-	return endpoints.AwsPartitionID
+	return PartitionForRegion(endpoints.UsEast1RegionID)
 }
 
 // Type ServiceDatum corresponds closely to attributes and blocks in `data/names_data.hcl` and are

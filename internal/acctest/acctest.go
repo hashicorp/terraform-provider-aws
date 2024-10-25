@@ -890,7 +890,7 @@ func ThirdRegion() string {
 }
 
 func Partition() string {
-	return names.PartitionForRegion(Region())
+	return names.PartitionForRegion(Region()).ID()
 }
 
 func PartitionRegions() []string {
@@ -906,11 +906,11 @@ func PartitionReverseDNSPrefix() string {
 }
 
 func alternateRegionPartition() string {
-	return names.PartitionForRegion(AlternateRegion())
+	return names.PartitionForRegion(AlternateRegion()).ID()
 }
 
 func thirdRegionPartition() string {
-	return names.PartitionForRegion(ThirdRegion())
+	return names.PartitionForRegion(ThirdRegion()).ID()
 }
 
 func PreCheckAlternateAccount(t *testing.T) {

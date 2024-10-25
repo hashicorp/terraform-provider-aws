@@ -96,7 +96,7 @@ func TestPartitionForRegion(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			if got, want := PartitionForRegion(testCase.input), testCase.expected; got != want {
+			if got, want := PartitionForRegion(testCase.input).ID(), testCase.expected; got != want {
 				t.Errorf("got: %s, expected: %s", got, want)
 			}
 		})

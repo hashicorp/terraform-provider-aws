@@ -267,7 +267,7 @@ func resourceCapacityProviderImport(ctx context.Context, d *schema.ResourceData,
 }
 
 func partitionFromConn(conn *ecs.Client) string {
-	return names.PartitionForRegion(conn.Options().Region)
+	return names.PartitionForRegion(conn.Options().Region).ID()
 }
 
 func findCapacityProvider(ctx context.Context, conn *ecs.Client, input *ecs.DescribeCapacityProvidersInput) (*awstypes.CapacityProvider, error) {

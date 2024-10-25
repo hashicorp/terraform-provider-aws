@@ -91,20 +91,14 @@ func (d *servicePrincipalDataSource) Read(ctx context.Context, request datasourc
 		region = matchingRegion
 	}
 
-	partition := names.PartitionForRegion(region.ID())
+	regionID := region.ID()
+	serviceName := fwflex.StringValueFromFramework(ctx, data.ServiceName)
+	sourceServicePrincipal := names.ServicePrincipalNameForPartition(serviceName, names.PartitionForRegion(regionID))
 
-	serviceName := ""
-
-	if !data.ServiceName.IsNull() {
-		serviceName = data.ServiceName.ValueString()
-	}
-
-	sourceServicePrincipal := names.ServicePrincipalNameForPartition(serviceName, partition)
-
-	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+region.ID()+"."+sourceServicePrincipal)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+regionID+"."+sourceServicePrincipal)
 	data.Name = fwflex.StringValueToFrameworkLegacy(ctx, serviceName+"."+sourceServicePrincipal)
 	data.Suffix = fwflex.StringValueToFrameworkLegacy(ctx, sourceServicePrincipal)
-	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, region.ID())
+	data.Region = fwflex.StringValueToFrameworkLegacy(ctx, regionID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
