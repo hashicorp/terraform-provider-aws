@@ -27,7 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_opensearch_authroize_vpc_endpoint_access", name="Authorize Vpc Endpoint Access")
+// @FrameworkResource("aws_opensearch_authorize_vpc_endpoint_access", name="Authorize VPC Endpoint Access")
 func newResourceAuthorizeVpcEndpointAccess(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAuthorizeVpcEndpointAccess{}
 
@@ -40,8 +40,8 @@ const (
 
 type resourceAuthorizeVpcEndpointAccess struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithNoUpdate
-	framework.WithTimeouts
 }
 
 func (r *resourceAuthorizeVpcEndpointAccess) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -52,40 +52,18 @@ func (r *resourceAuthorizeVpcEndpointAccess) Schema(ctx context.Context, req res
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"account": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
+				Required: true, PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"domain_name": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
-		},
-		Blocks: map[string]schema.Block{
-			"authorized_principal": schema.ListNestedBlock{
+			"authorized_principal": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[authorizedPrincipalData](ctx),
+				Computed:   true,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[resourceAuthorizeVpcEndpointAccessData](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"principal": schema.StringAttribute{
-							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-						"principal_type": schema.StringAttribute{
-							CustomType: fwtypes.StringEnumType[awstypes.PrincipalType](),
-							Computed:   true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
-						},
-					},
 				},
 			},
 		},
@@ -102,9 +80,10 @@ func (r *resourceAuthorizeVpcEndpointAccess) Create(ctx context.Context, req res
 	}
 
 	in := &opensearch.AuthorizeVpcEndpointAccessInput{
-		Account:    aws.String(plan.Account.ValueString()),
-		DomainName: aws.String(plan.DomainName.ValueString()),
+		Account:    plan.Account.ValueStringPointer(),
+		DomainName: plan.DomainName.ValueStringPointer(),
 	}
+
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -118,6 +97,7 @@ func (r *resourceAuthorizeVpcEndpointAccess) Create(ctx context.Context, req res
 		)
 		return
 	}
+
 	if out == nil || out.AuthorizedPrincipal == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.OpenSearch, create.ErrActionCreating, ResNameAuthorizeVpcEndpointAccess, plan.DomainName.String(), nil),
@@ -172,7 +152,6 @@ func (r *resourceAuthorizeVpcEndpointAccess) Delete(ctx context.Context, req res
 		return
 	}
 
-	// TIP: -- 3. Populate a delete input structure
 	in := &opensearch.RevokeVpcEndpointAccessInput{
 		Account:    aws.String(state.Account.ValueString()),
 		DomainName: aws.String(state.DomainName.ValueString()),
@@ -192,18 +171,18 @@ func (r *resourceAuthorizeVpcEndpointAccess) Delete(ctx context.Context, req res
 }
 
 func (r *resourceAuthorizeVpcEndpointAccess) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root("domain_name"), req, resp)
 }
 
 func findAuthorizeVpcEndpointAccessByName(ctx context.Context, conn *opensearch.Client, domainName string) (*awstypes.AuthorizedPrincipal, error) {
 	in := &opensearch.ListVpcEndpointAccessInput{
-		DomainName: aws.String(id),
+		DomainName: aws.String(domainName),
 	}
 
-	return findAuthroizeVpcEndpointAccess(ctx, conn, in)
+	return findAuthorizeVpcEndpointAccess(ctx, conn, in)
 }
 
-func findAuthroizeVpcEndpointAccess(ctx context.Context, conn *opensearch.Client, input *opensearch.ListVpcEndpointAccessInput) (*awstypes.AuthorizedPrincipal, error) {
+func findAuthorizeVpcEndpointAccess(ctx context.Context, conn *opensearch.Client, input *opensearch.ListVpcEndpointAccessInput) (*awstypes.AuthorizedPrincipal, error) {
 	output, err := findAuthorizeVpcEndpointAccesses(ctx, conn, input)
 
 	if err != nil {
@@ -240,6 +219,6 @@ type resourceAuthorizeVpcEndpointAccessData struct {
 }
 
 type authorizedPrincipalData struct {
-	Principal     types.String                               `tfsdk:"principal"`
-	PrincipalType fwtypes.StringEnum[awstypes.PrincipalType] `tfsdk:"principal_type"`
+	Principal     types.String `tfsdk:"principal"`
+	PrincipalType types.String `tfsdk:"principal_type"`
 }
