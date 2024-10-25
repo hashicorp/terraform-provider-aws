@@ -181,7 +181,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	}
 
 	tflog.Debug(ctx, "Retrieving AWS account details")
-	accountID, partition, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
+	accountID, partitionID, awsDiags := awsbase.GetAwsAccountIDAndPartition(ctx, cfg, &awsbaseConfig)
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
 			Severity: baseSeverityToSDKSeverity(d.Severity()),
@@ -201,16 +201,15 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		return nil, sdkdiag.AppendErrorf(diags, "%s", err.Error())
 	}
 
-	dnsSuffix := "amazonaws.com"
-	if p, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), c.Region); ok {
-		dnsSuffix = p.DNSSuffix()
+	for _, partition := range endpoints.DefaultPartitions() {
+		if partition.ID() == partitionID {
+			client.partition = partition
+		}
 	}
 
 	client.AccountID = accountID
 	client.defaultTagsConfig = c.DefaultTagsConfig
-	client.dnsSuffix = dnsSuffix
 	client.ignoreTagsConfig = c.IgnoreTagsConfig
-	client.partition = partition
 	client.Region = c.Region
 	client.SetHTTPClient(ctx, session.Config.HTTPClient) // Must be called while client.Session is nil.
 	client.session = session

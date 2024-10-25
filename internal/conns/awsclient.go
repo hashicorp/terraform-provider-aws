@@ -35,12 +35,11 @@ type AWSClient struct {
 	awsConfig                 *aws.Config
 	clients                   map[string]any
 	conns                     map[string]any
-	dnsSuffix                 string
 	endpoints                 map[string]string // From provider configuration.
 	httpClient                *http.Client
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
-	partition                 string
+	partition                 endpoints.Partition
 	session                   *session_sdkv1.Session
 	s3ExpressClient           *s3.Client
 	s3UsePathStyle            bool   // From provider configuration.
@@ -79,7 +78,7 @@ func (c *AWSClient) Endpoints(context.Context) map[string]string {
 
 // PartitionID returns the ID of the configured AWS partition.
 func (c *AWSClient) PartitionID(context.Context) string {
-	return c.partition
+	return c.partition.ID()
 }
 
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
@@ -221,7 +220,12 @@ func (c *AWSClient) GlobalAcceleratorHostedZoneID(context.Context) string {
 
 // DNSSuffix returns the domain suffix for the configured AWS partition.
 func (c *AWSClient) DNSSuffix(context.Context) string {
-	return c.dnsSuffix
+	dnsSuffix := c.partition.DNSSuffix()
+	if dnsSuffix == "" {
+		dnsSuffix = "amazonaws.com"
+	}
+
+	return dnsSuffix
 }
 
 // ReverseDNSPrefix returns the reverse DNS prefix for the configured AWS partition.
