@@ -36,7 +36,6 @@ func TestAccOpenSearchAuthorizeVpcEndpointAccess_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.OpenSearchServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -51,9 +50,12 @@ func TestAccOpenSearchAuthorizeVpcEndpointAccess_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateId:                        domainName,
+				ImportStateIdFunc:                    testAccAuthorizeVpcEndpointAccessImportStateIDFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "domain_name",
 			},
 		},
 	})
@@ -79,7 +81,7 @@ func TestAccOpenSearchAuthorizeVpcEndpointAccess_disappears(t *testing.T) {
 				Config: testAccAuthorizeVpcEndpointAccessConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAuthorizeVpcEndpointAccessExists(ctx, resourceName, &authorizevpcendpointaccess),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearch.resourceAuthorizeVpcEndpointAccess, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfopensearch.ResourceAuthorizeVpcEndpointAccess, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -120,10 +122,13 @@ func testAccCheckAuthorizeVpcEndpointAccessExists(ctx context.Context, name stri
 			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVpcEndpointAccess, name, errors.New("not found"))
 		}
 
+		if rs.Primary.ID == "" {
+			return create.Error(names.Route53Profiles, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVpcEndpointAccess, name, errors.New("not set"))
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
-		resp, err := tfopensearch.FindAuthorizeVpcEndpointAccessByName(ctx, conn, rs.Primary.Attributes["authorized_principal"])
-
+		resp, err := tfopensearch.FindAuthorizeVpcEndpointAccessByName(ctx, conn, rs.Primary.Attributes["domain_name"])
 		if err != nil {
 			return create.Error(names.OpenSearch, create.ErrActionCheckingExistence, tfopensearch.ResNameAuthorizeVpcEndpointAccess, rs.Primary.ID, err)
 		}
@@ -131,6 +136,17 @@ func testAccCheckAuthorizeVpcEndpointAccessExists(ctx context.Context, name stri
 		*authorizevpcendpointaccess = *resp
 
 		return nil
+	}
+}
+
+func testAccAuthorizeVpcEndpointAccessImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["domain_name"], nil
 	}
 }
 
@@ -171,9 +187,8 @@ resource "aws_opensearch_vpc_endpoint" "test" {
 }
 
 resource "aws_opensearch_authorize_vpc_endpoint_access" "test" {
-  domain_name = aws_opensearch_domain.name
+  domain_name = aws_opensearch_domain.test.domain_name
   account = data.aws_caller_identity.current.account_id
-
 }
 `)
 }

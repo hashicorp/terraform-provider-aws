@@ -22,7 +22,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	return []*types.ServicePackageFrameworkResource{
 		{
 			Factory: newResourceAuthorizeVpcEndpointAccess,
-			Name:    "Authorize Vpc Endpoint Access",
+			Name:    "Authorize VPC Endpoint Access",
 		},
 	}
 }
