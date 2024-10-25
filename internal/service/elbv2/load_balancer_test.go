@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -346,7 +347,7 @@ func TestAccELBV2LoadBalancer_ipv6SubnetMapping(t *testing.T) {
 		"idle_timeout",
 	}
 	// GovCloud doesn't support dns_record_client_routing_policy.
-	if acctest.Partition() == names.USGovCloudPartitionID {
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "dns_record_client_routing_policy")
 	}
 
@@ -499,7 +500,7 @@ func TestAccELBV2LoadBalancer_NLB_privateIPv4Address(t *testing.T) {
 
 	var importStateVerifyIgnore []string
 	// GovCloud doesn't support dns_record_client_routing_policy.
-	if acctest.Partition() == names.USGovCloudPartitionID {
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "dns_record_client_routing_policy")
 	}
 
@@ -949,7 +950,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSecurityGroups(t *t
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// GovCloud Regions don't always have 3 AZs.
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -986,7 +987,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnet(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// GovCloud Regions don't always have 3 AZs.
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1023,7 +1024,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnet(t *testing.T)
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// GovCloud Regions don't always have 3 AZs.
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1060,7 +1061,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnetMapping(t *testin
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// GovCloud Regions don't always have 3 AZs.
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1097,7 +1098,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnetMapping(t *tes
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// GovCloud Regions don't always have 3 AZs.
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1432,7 +1433,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_accessLogs(t *testing.T) {
 
 	var importStateVerifyIgnore []string
 	// GovCloud doesn't support dns_record_client_routing_policy.
-	if acctest.Partition() == names.USGovCloudPartitionID {
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "dns_record_client_routing_policy")
 	}
 
@@ -1512,7 +1513,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_accessLogsPrefix(t *testing.T)
 
 	var importStateVerifyIgnore []string
 	// GovCloud doesn't support dns_record_client_routing_policy.
-	if acctest.Partition() == names.USGovCloudPartitionID {
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "dns_record_client_routing_policy")
 	}
 
@@ -1581,7 +1582,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateDNSRecordClientRoutingPo
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// GovCloud doesn't support dns_record_client_routing_policy.
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1676,7 +1677,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.
 
 	var importStateVerifyIgnore []string
 	// GovCloud doesn't support dns_record_client_routing_policy.
-	if acctest.Partition() == names.USGovCloudPartitionID {
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		importStateVerifyIgnore = append(importStateVerifyIgnore, "dns_record_client_routing_policy")
 	}
 
@@ -1745,7 +1746,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnet(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// GovCloud Regions don't always have 3 AZs.
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1780,7 +1781,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnet(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// GovCloud Regions don't always have 3 AZs.
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1815,7 +1816,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnetMapping(t *testing.T)
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// GovCloud Regions don't always have 3 AZs.
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -1852,7 +1853,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// GovCloud Regions don't always have 3 AZs.
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
