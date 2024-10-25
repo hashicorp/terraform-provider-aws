@@ -210,25 +210,6 @@ const (
 	EUISOEWest1RegionID = "eu-isoe-west-1" // EU ISOE West.
 )
 
-func DNSSuffixForPartition(partition string) string {
-	switch partition {
-	case "":
-		return ""
-	case ChinaPartitionID:
-		return "amazonaws.com.cn"
-	case ISOPartitionID:
-		return "c2s.ic.gov"
-	case ISOBPartitionID:
-		return "sc2s.sgov.gov"
-	case ISOEPartitionID:
-		return "cloud.adc-e.uk"
-	case ISOFPartitionID:
-		return "csp.hci.ic.gov"
-	default:
-		return "amazonaws.com"
-	}
-}
-
 // SPN region unique taken from
 // https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
 func ServicePrincipalNameForPartition(service string, partition endpoints.Partition) string {

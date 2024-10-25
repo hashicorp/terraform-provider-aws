@@ -898,7 +898,7 @@ func PartitionRegions() []string {
 }
 
 func PartitionDNSSuffix() string {
-	return names.DNSSuffixForPartition(Partition())
+	return names.PartitionForRegion(Region()).DNSSuffix()
 }
 
 func PartitionReverseDNSPrefix() string {
