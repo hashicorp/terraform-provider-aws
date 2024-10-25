@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,7 +20,7 @@ import (
 )
 
 func testAccPreCheck(t *testing.T) {
-	acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+	acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 }
 
 func TestAccMemoryDBSubnetGroup_basic(t *testing.T) {
