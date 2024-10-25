@@ -41,7 +41,7 @@ func TestAccLambdaCodeSigningConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Code Signing Config for test account"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile2, "version_arn"),
 					resource.TestCheckResourceAttr(resourceName, "policies.0.untrusted_artifact_on_deployment", "Warn"),
@@ -101,7 +101,7 @@ func TestAccLambdaCodeSigningConfig_tags(t *testing.T) {
 				Config: testAccCodeSigningConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -114,7 +114,7 @@ func TestAccLambdaCodeSigningConfig_tags(t *testing.T) {
 				Config: testAccCodeSigningConfigConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -123,7 +123,7 @@ func TestAccLambdaCodeSigningConfig_tags(t *testing.T) {
 				Config: testAccCodeSigningConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -190,7 +190,7 @@ func TestAccLambdaCodeSigningConfig_updatePublishers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Code Signing Config for test account"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile2, "version_arn"),
 				),
@@ -199,7 +199,7 @@ func TestAccLambdaCodeSigningConfig_updatePublishers(t *testing.T) {
 				Config: testAccCodeSigningConfigConfig_updatePublishers(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCodeSigningConfigExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "allowed_publishers.0.signing_profile_version_arns.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "allowed_publishers.0.signing_profile_version_arns.*", signingProfile1, "version_arn"),
 				),
 			},

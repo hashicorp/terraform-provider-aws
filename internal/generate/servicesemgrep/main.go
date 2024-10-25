@@ -78,7 +78,7 @@ func main() {
 
 	d := g.NewUnformattedFileDestination(filenameCAE)
 
-	if err := d.WriteTemplate("caps-aws-ec2", tmplCAE, cd); err != nil {
+	if err := d.BufferTemplate("caps-aws-ec2", tmplCAE, cd); err != nil {
 		g.Fatalf("generating file (%s): %s", filenameCAE, err)
 	}
 
@@ -90,7 +90,7 @@ func main() {
 
 	d = g.NewUnformattedFileDestination(filenameConfigs)
 
-	if err := d.WriteBytes([]byte(configs)); err != nil {
+	if err := d.BufferBytes([]byte(configs)); err != nil {
 		g.Fatalf("generating file (%s): %s", filenameConfigs, err)
 	}
 
@@ -167,7 +167,7 @@ func main() {
 
 	d = g.NewUnformattedFileDestination(filename)
 
-	if err := d.WriteTemplate("servicesemgrep", tmpl, td); err != nil {
+	if err := d.BufferTemplate("servicesemgrep", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

@@ -218,7 +218,7 @@ func TestAccEventsRule_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "event_pattern"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
@@ -247,7 +247,7 @@ func TestAccEventsRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_bus_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
@@ -559,7 +559,7 @@ func TestAccEventsRule_tags(t *testing.T) {
 				Config: testAccRuleConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -573,7 +573,7 @@ func TestAccEventsRule_tags(t *testing.T) {
 				Config: testAccRuleConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -582,7 +582,7 @@ func TestAccEventsRule_tags(t *testing.T) {
 				Config: testAccRuleConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -722,7 +722,7 @@ func TestAccEventsRule_partnerEventBus(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -761,7 +761,7 @@ func TestAccEventsRule_eventBusARN(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRoleARN, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrScheduleExpression, ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

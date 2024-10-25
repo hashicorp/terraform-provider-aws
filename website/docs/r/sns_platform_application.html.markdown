@@ -84,12 +84,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_sns_platform_application.gcm_application
-  id = "arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application"
+  id = "arn:aws:sns:us-west-2:123456789012:app/GCM/gcm_application"
 }
 ```
 
 Using `terraform import`, import SNS platform applications using the ARN. For example:
 
 ```console
-% terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:0123456789012:app/GCM/gcm_application
+% terraform import aws_sns_platform_application.gcm_application arn:aws:sns:us-west-2:123456789012:app/GCM/gcm_application
 ```

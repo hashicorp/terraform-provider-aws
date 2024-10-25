@@ -337,6 +337,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				if meta != nil {
 					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
 					ctx = meta.RegisterLogger(ctx)
+					ctx = flex.RegisterLogger(ctx)
 				}
 
 				return ctx

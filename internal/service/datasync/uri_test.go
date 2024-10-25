@@ -126,32 +126,32 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 		},
 		{
 			TestName:             "FSx Windows URI top level",
-			InputURI:             "fsxw://us-west-2.fs-abcdef012345678901/", //lintignore:AWSAT003
+			InputURI:             "fsxw://us-west-2.fs-abcdef123456789012/", //lintignore:AWSAT003
 			ExpectedSubdirectory: "/",
 		},
 		{
 			TestName:             "FSx Windows URI one level",
-			InputURI:             "fsxw://us-west-2.fs-abcdef012345678901/my-folder-1/", //lintignore:AWSAT003
+			InputURI:             "fsxw://us-west-2.fs-abcdef123456789012/my-folder-1/", //lintignore:AWSAT003
 			ExpectedSubdirectory: "/my-folder-1/",
 		},
 		{
 			TestName:             "FSx Windows URI two levels",
-			InputURI:             "fsxw://us-west-2.fs-abcdef012345678901/my-folder-1/my-folder-2", //lintignore:AWSAT003
+			InputURI:             "fsxw://us-west-2.fs-abcdef123456789012/my-folder-1/my-folder-2", //lintignore:AWSAT003
 			ExpectedSubdirectory: "/my-folder-1/my-folder-2",
 		},
 		{
 			TestName:             "FSx Zfs URI top level",
-			InputURI:             "fsxz://us-west-2.fs-abcdef012345678901/", //lintignore:AWSAT003
+			InputURI:             "fsxz://us-west-2.fs-abcdef123456789012/", //lintignore:AWSAT003
 			ExpectedSubdirectory: "/",
 		},
 		{
 			TestName:             "FSx Zfs URI one level",
-			InputURI:             "fsxz://us-west-2.fs-abcdef012345678901/my-folder-1/", //lintignore:AWSAT003
+			InputURI:             "fsxz://us-west-2.fs-abcdef123456789012/my-folder-1/", //lintignore:AWSAT003
 			ExpectedSubdirectory: "/my-folder-1/",
 		},
 		{
 			TestName:             "FSx Zfs URI two levels",
-			InputURI:             "fsxz://us-west-2.fs-abcdef012345678901/my-folder-1/my-folder-2", //lintignore:AWSAT003
+			InputURI:             "fsxz://us-west-2.fs-abcdef123456789012/my-folder-1/my-folder-2", //lintignore:AWSAT003
 			ExpectedSubdirectory: "/my-folder-1/my-folder-2",
 		},
 		{
