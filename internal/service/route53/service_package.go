@@ -23,7 +23,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *route53.Options) {
 			// Always override the service region
 			switch config["partition"].(string) {
-			case names.StandardPartitionID:
+			case endpoints.AwsPartitionID:
 				// https://docs.aws.amazon.com/general/latest/gr/r53.html Setting default to us-east-1.
 				if cfg.Region != names.USEast1RegionID {
 					tflog.Info(ctx, "overriding region", map[string]any{
