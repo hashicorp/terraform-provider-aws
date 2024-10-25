@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -235,7 +236,7 @@ func TestAccCodeBuildProject_publicVisibility(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
@@ -1017,7 +1018,7 @@ func TestAccCodeBuildProject_buildBatchConfigDelete(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
@@ -1458,7 +1459,7 @@ func TestAccCodeBuildProject_SourceBuildStatus_gitHubEnterprise(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithubEnterprise)
 		},
@@ -1875,7 +1876,7 @@ func TestAccCodeBuildProject_windowsServer2019Container(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
@@ -1914,7 +1915,7 @@ func TestAccCodeBuildProject_armContainer(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
@@ -1946,7 +1947,7 @@ func TestAccCodeBuildProject_linuxLambdaContainer(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 			testAccPreCheck(ctx, t)
 			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
@@ -2360,7 +2361,7 @@ func TestAccCodeBuildProject_Artifacts_bucketOwnerAccess(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
