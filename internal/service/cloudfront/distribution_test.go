@@ -1558,7 +1558,7 @@ func testAccDistributionRetainConfig() string {
 // are necessary and overwrites the "aws" provider configuration.
 func testAccRegionProviderConfig() string {
 	switch acctest.Partition() {
-	case names.StandardPartitionID:
+	case endpoints.AwsPartitionID:
 		return acctest.ConfigRegionalProvider(names.USEast1RegionID)
 	case endpoints.AwsCnPartitionID:
 		return acctest.ConfigRegionalProvider(names.CNNorthwest1RegionID)
