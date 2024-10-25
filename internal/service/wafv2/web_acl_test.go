@@ -3060,7 +3060,7 @@ func TestAccWAFV2WebACL_ruleJSON(t *testing.T) {
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWebACLConfig_JSONrule(webACLName),
+				Config: testAccWebACLConfig_jsonRule(webACLName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
@@ -3075,11 +3075,67 @@ func TestAccWAFV2WebACL_ruleJSON(t *testing.T) {
 				ImportStateIdFunc:       testAccWebACLImportStateIdFunc(resourceName),
 			},
 			{
-				Config: testAccWebACLConfig_JSONruleUpdate(webACLName),
+				Config: testAccWebACLConfig_jsonRuleUpdate(webACLName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "rule_json"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccWAFV2WebACL_ruleJSONToRule(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_jsonRule(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "rule_json"),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_jsonRuleEquivalent(webACLName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						names.AttrName:        "rule-1",
+						names.AttrPriority:    "10",
+						"action.#":            "1",
+						"action.0.allow.#":    "0",
+						"action.0.block.#":    "0",
+						"action.0.count.#":    "1",
+						"visibility_config.#": "1",
+						"visibility_config.0.cloudwatch_metrics_enabled": acctest.CtFalse,
+						"visibility_config.0.metric_name":                "friendly-rule-metric-name",
+						"visibility_config.0.sampled_requests_enabled":   acctest.CtFalse,
+						"statement.#":                        "1",
+						"statement.0.rate_based_statement.#": "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                                           "IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                                        "600",
+						"statement.0.rate_based_statement.0.limit":                                                        "10000",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                                       "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.#":                 "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.#": "2",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.0": "US",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.geo_match_statement.0.country_codes.1": "NL",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "rule_json", ""),
 				),
 			},
 		},
@@ -6123,7 +6179,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName)
 }
 
-func testAccWebACLConfig_JSONrule(rName string) string {
+func testAccWebACLConfig_jsonRule(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -6169,7 +6225,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName)
 }
 
-func testAccWebACLConfig_JSONruleUpdate(rName string) string {
+func testAccWebACLConfig_jsonRuleUpdate(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -6242,6 +6298,54 @@ resource "aws_wafv2_web_acl" "test" {
       }
     }
   ])
+}
+`, rName)
+}
+
+func testAccWebACLConfig_jsonRuleEquivalent(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 10
+
+    action {
+      count {}
+    }
+
+    statement {
+      rate_based_statement {
+        limit                 = 10000
+        aggregate_key_type    = "IP"
+        evaluation_window_sec = 600
+        scope_down_statement {
+          geo_match_statement {
+            country_codes = ["US", "NL"]
+          }
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
 }
 `, rName)
 }
