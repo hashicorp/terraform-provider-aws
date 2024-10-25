@@ -27,7 +27,7 @@ func TestIsIsolatedPartition(t *testing.T) {
 			expected: false,
 		},
 		{
-			input:    names.USGovCloudPartitionID,
+			input:    endpoints.AwsUsGovPartitionID,
 			expected: false,
 		},
 		{
@@ -119,7 +119,7 @@ func TestIsStandardPartition(t *testing.T) {
 			expected: false,
 		},
 		{
-			input:    names.USGovCloudPartitionID,
+			input:    endpoints.AwsUsGovPartitionID,
 			expected: false,
 		},
 		{

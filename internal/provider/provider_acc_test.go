@@ -590,7 +590,7 @@ func TestAccProvider_Region_govCloud(t *testing.T) {
 				Config: testAccProviderConfig_region(names.USGovWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
-					testAccCheckPartition(ctx, t, &provider, names.USGovCloudPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsUsGovPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "com.amazonaws"),
 				),
 				PlanOnly: true,
