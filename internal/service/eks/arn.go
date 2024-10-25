@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	awsarn "github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,7 +73,7 @@ func Canonicalize(arn string) (string, error) {
 func checkPartition(partition string) error {
 	switch partition {
 	case names.StandardPartitionID:
-	case names.ChinaPartitionID:
+	case endpoints.AwsCnPartitionID:
 	case names.USGovCloudPartitionID:
 	default:
 		return fmt.Errorf("partion %q is not recognized", partition)

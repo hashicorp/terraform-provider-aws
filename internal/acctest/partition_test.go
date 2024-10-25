@@ -6,6 +6,7 @@ package acctest_test
 import (
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,7 +23,7 @@ func TestIsIsolatedPartition(t *testing.T) {
 			expected: false,
 		},
 		{
-			input:    names.ChinaPartitionID,
+			input:    endpoints.AwsCnPartitionID,
 			expected: false,
 		},
 		{
@@ -114,7 +115,7 @@ func TestIsStandardPartition(t *testing.T) {
 			expected: true,
 		},
 		{
-			input:    names.ChinaPartitionID,
+			input:    endpoints.AwsCnPartitionID,
 			expected: false,
 		},
 		{

@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -31,7 +32,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 					})
 				}
 				o.Region = names.USEast1RegionID
-			case names.ChinaPartitionID:
+			case endpoints.AwsCnPartitionID:
 				// The AWS Go SDK is missing endpoint information for Route 53 in the AWS China partition.
 				// This can likely be removed in the future.
 				if aws.ToString(o.BaseEndpoint) == "" {

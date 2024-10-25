@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -1559,7 +1560,7 @@ func testAccRegionProviderConfig() string {
 	switch acctest.Partition() {
 	case names.StandardPartitionID:
 		return acctest.ConfigRegionalProvider(names.USEast1RegionID)
-	case names.ChinaPartitionID:
+	case endpoints.AwsCnPartitionID:
 		return acctest.ConfigRegionalProvider(names.CNNorthwest1RegionID)
 	default:
 		return acctest.ConfigRegionalProvider(acctest.Region())

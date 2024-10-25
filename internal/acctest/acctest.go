@@ -1342,7 +1342,7 @@ func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
 	switch Partition() {
 	case names.StandardPartitionID:
 		PreCheckRegion(t, names.USEast1RegionID)
-	case names.ChinaPartitionID:
+	case endpoints.AwsCnPartitionID:
 		PreCheckRegion(t, names.CNNorthwest1RegionID)
 	}
 

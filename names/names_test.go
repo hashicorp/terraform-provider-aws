@@ -9,6 +9,8 @@ import (
 	"io/fs"
 	"os"
 	"testing"
+
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 )
 
 func TestPartitionForRegion(t *testing.T) {
@@ -26,23 +28,23 @@ func TestPartitionForRegion(t *testing.T) {
 		},
 		{
 			name:     "China",
-			input:    CNNorth1RegionID,
-			expected: ChinaPartitionID,
+			input:    endpoints.CnNorth1RegionID,
+			expected: endpoints.AwsCnPartitionID,
 		},
 		{
 			name:     "GovCloud",
-			input:    USGovWest1RegionID,
-			expected: USGovCloudPartitionID,
+			input:    endpoints.UsGovWest1RegionID,
+			expected: endpoints.AwsUsGovPartitionID,
 		},
 		{
 			name:     "standard",
-			input:    USWest2RegionID,
-			expected: StandardPartitionID,
+			input:    endpoints.UsWest2RegionID,
+			expected: endpoints.AwsPartitionID,
 		},
 		{
 			name:     "default",
 			input:    "custom",
-			expected: StandardPartitionID,
+			expected: endpoints.AwsPartitionID,
 		},
 	}
 
