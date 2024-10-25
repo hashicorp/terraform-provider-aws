@@ -43,7 +43,7 @@ func TestIsIsolatedPartition(t *testing.T) {
 			expected: true,
 		},
 		{
-			input:    names.ISOFPartitionID,
+			input:    endpoints.AwsIsoFPartitionID,
 			expected: true,
 		},
 	}
@@ -135,7 +135,7 @@ func TestIsStandardPartition(t *testing.T) {
 			expected: false,
 		},
 		{
-			input:    names.ISOFPartitionID,
+			input:    endpoints.AwsIsoFPartitionID,
 			expected: false,
 		},
 	}
