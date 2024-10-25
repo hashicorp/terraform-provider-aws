@@ -12,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/chatbot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/chatbot/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -19,8 +21,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -30,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -95,12 +100,20 @@ func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request 
 			"slack_team_name": schema.StringAttribute{
 				Computed: true,
 			},
-			"sns_topic_arns": schema.ListAttribute{
+			"sns_topic_arns": schema.SetAttribute{
+				CustomType:  types.SetType{ElemType: types.StringType},
+				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
-				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						stringvalidator.Any(
+							validators.ARN(),
+						),
+					),
+				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -407,7 +420,7 @@ type slackChannelConfigurationResourceModel struct {
 	SlackChannelName          types.String                     `tfsdk:"slack_channel_name"`
 	SlackTeamID               types.String                     `tfsdk:"slack_team_id"`
 	SlackTeamName             types.String                     `tfsdk:"slack_team_name"`
-	SNSTopicARNs              types.List                       `tfsdk:"sns_topic_arns"`
+	SNSTopicARNs              types.Set                        `tfsdk:"sns_topic_arns"`
 	Tags                      tftags.Map                       `tfsdk:"tags"`
 	TagsAll                   tftags.Map                       `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                   `tfsdk:"timeouts"`
