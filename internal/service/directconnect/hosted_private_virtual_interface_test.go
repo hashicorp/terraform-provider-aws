@@ -58,7 +58,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 					// Accepter's attributes:
 					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(accepterResourceName, "virtual_interface_id", resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(accepterResourceName, "vpn_gateway_id", vpnGatewayResourceName, names.AttrID),
 				),
@@ -112,7 +112,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 					// Accepter's attributes:
 					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key2", "Value2a"),
@@ -138,7 +138,7 @@ func TestAccDirectConnectHostedPrivateVirtualInterface_accepterTags(t *testing.T
 					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
 					// Accepter's attributes:
 					resource.TestCheckResourceAttrSet(accepterResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(accepterResourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key3", "Value3"),

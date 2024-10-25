@@ -16,7 +16,7 @@ Terraform data source for managing an AWS SSO Admin Application.
 
 ```terraform
 data "aws_ssoadmin_application" "example" {
-  application_arn = "arn:aws:sso::012345678901:application/ssoins-1234/apl-5678"
+  application_arn = "arn:aws:sso::123456789012:application/ssoins-1234/apl-5678"
 }
 ```
 

@@ -91,7 +91,7 @@ func main() {
 
 		d := g.NewGoFileDestination(filename)
 
-		if err := d.WriteTemplate("servicepackagedata", tmpl, s); err != nil {
+		if err := d.BufferTemplate("servicepackagedata", tmpl, s); err != nil {
 			g.Fatalf("generating %s service package data: %s", p, err)
 		}
 
@@ -104,7 +104,7 @@ func main() {
 
 			d = g.NewGoFileDestination(endpointResolverFilename)
 
-			if err := d.WriteTemplate("endpointresolver", endpointResolverTmpl, s); err != nil {
+			if err := d.BufferTemplate("endpointresolver", endpointResolverTmpl, s); err != nil {
 				g.Fatalf("generating %s endpoint resolver: %s", p, err)
 			}
 

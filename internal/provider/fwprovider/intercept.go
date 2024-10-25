@@ -237,6 +237,15 @@ func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.Co
 	w.inner.Configure(ctx, request, response)
 }
 
+func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
+	if v, ok := w.inner.(datasource.DataSourceWithConfigValidators); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+		return v.ConfigValidators(ctx)
+	}
+
+	return nil
+}
+
 // tagsDataSourceInterceptor implements transparent tagging for data sources.
 type tagsDataSourceInterceptor struct {
 	tags *types.ServicePackageResourceTags

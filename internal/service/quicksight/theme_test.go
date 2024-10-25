@@ -140,7 +140,7 @@ func TestAccQuickSightTheme_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.data_color_palette.0.empty_fill_color", "#FFFFFF"),
-					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func TestAccQuickSightTheme_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.data_color_palette.0.empty_fill_color", "#000000"),
-					resource.TestCheckResourceAttr(resourceName, "version_number", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
 				),
 			},
 		},

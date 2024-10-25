@@ -37,6 +37,7 @@ type TemplateData struct {
 	IncludeComments      bool
 	IncludeTags          bool
 	HumanFriendlyService string
+	SDKPackage           string
 	ServicePackage       string
 	Service              string
 	ServiceLower         string
@@ -81,6 +82,7 @@ func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags
 		HumanFriendlyService: service.HumanFriendly(),
 		IncludeComments:      comments,
 		IncludeTags:          tags,
+		SDKPackage:           service.GoV2Package(),
 		ServicePackage:       servicePackage,
 		Service:              service.ProviderNameUpper(),
 		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),

@@ -68,7 +68,7 @@ func main() {
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("endpoints-schema", tmpl, td); err != nil {
+	if err := d.BufferTemplate("endpoints-schema", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

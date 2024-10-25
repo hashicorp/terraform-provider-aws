@@ -125,7 +125,7 @@ func TestAccPinpointEmailTemplate_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "template_name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},

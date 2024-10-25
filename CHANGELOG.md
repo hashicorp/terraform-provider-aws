@@ -1,4 +1,14 @@
-## 5.73.0 (Unreleased)
+## 5.74.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_lb_listener_rule` ([#39865](https://github.com/hashicorp/terraform-provider-aws/issues/39865))
+
+ENHANCEMENTS:
+
+* resource/aws_codedeploy_deployment_group: Add `termination_hook_enabled` argument ([#35482](https://github.com/hashicorp/terraform-provider-aws/issues/35482))
+
+## 5.73.0 (October 24, 2024)
 
 FEATURES:
 
@@ -15,6 +25,7 @@ ENHANCEMENTS:
 * data-source/aws_lb: Add `enable_zonal_shift` attribute ([#39585](https://github.com/hashicorp/terraform-provider-aws/issues/39585))
 * resource/aws_apprunner_auto_scaling_configuration_version: Remove the upper limit on `min_size` and `max_size` ([#39843](https://github.com/hashicorp/terraform-provider-aws/issues/39843))
 * resource/aws_batch_job_definition: Ensure that new revisions are created with tags ([#39797](https://github.com/hashicorp/terraform-provider-aws/issues/39797))
+* resource/aws_codedeploy_deployment_config: Add `zonal_config` argument ([#34850](https://github.com/hashicorp/terraform-provider-aws/issues/34850))
 * resource/aws_dynamodb_kinesis_streaming_destination: Add `approximate_creation_date_time_precision` argument ([#38098](https://github.com/hashicorp/terraform-provider-aws/issues/38098))
 * resource/aws_elasticache_cluster: Support `valkey` as valid value for `engine` ([#39745](https://github.com/hashicorp/terraform-provider-aws/issues/39745))
 * resource/aws_elasticache_global_replication_group: Support Valkey versions for `engine_version` ([#39745](https://github.com/hashicorp/terraform-provider-aws/issues/39745))

@@ -80,4 +80,7 @@ var (
 	PrebuiltECRImageIDByRegion_SageMakerCustom     = prebuiltECRImageIDByRegion_SageMakerCustom     // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_SageMakerRL         = prebuiltECRImageIDByRegion_SageMakerRL         // nosemgrep:ci.sagemaker-in-var-name
 	PrebuiltECRImageIDByRegion_spark               = prebuiltECRImageIDByRegion_spark
+
+	ValidName   = validName
+	ValidPrefix = validPrefix
 )
