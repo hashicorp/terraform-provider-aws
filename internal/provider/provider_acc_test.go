@@ -521,7 +521,7 @@ func TestAccProvider_Region_c2s(t *testing.T) {
 				Config: testAccProviderConfig_region(names.USISOEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "c2s.ic.gov"),
-					testAccCheckPartition(ctx, t, &provider, names.ISOPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "gov.ic.c2s"),
 				),
 				PlanOnly: true,

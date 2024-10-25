@@ -31,7 +31,7 @@ func TestIsIsolatedPartition(t *testing.T) {
 			expected: false,
 		},
 		{
-			input:    names.ISOPartitionID,
+			input:    endpoints.AwsIsoPartitionID,
 			expected: true,
 		},
 		{
@@ -123,7 +123,7 @@ func TestIsStandardPartition(t *testing.T) {
 			expected: false,
 		},
 		{
-			input:    names.ISOPartitionID,
+			input:    endpoints.AwsIsoPartitionID,
 			expected: false,
 		},
 		{
