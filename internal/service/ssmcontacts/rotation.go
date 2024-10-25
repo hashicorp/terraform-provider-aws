@@ -111,7 +111,7 @@ func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRe
 						"shift_coverages": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[shiftCoveragesData](ctx),
 							PlanModifiers: []planmodifier.List{
-								ShiftCoveragesPlanModifier(),
+								shiftCoveragesPlanModifier(),
 								listplanmodifier.UseStateForUnknown(),
 							},
 							NestedObject: schema.NestedBlockObject{
