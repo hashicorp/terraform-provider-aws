@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -637,7 +638,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	if acctest.Partition() == names.USGovCloudPartitionID {
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		t.Skip("Amazon FSx for Windows File Server volumes for ECS tasks are not supported in GovCloud partition")
 	}
 
