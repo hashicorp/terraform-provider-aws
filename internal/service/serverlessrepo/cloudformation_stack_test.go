@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	cloudformationtypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -327,7 +328,7 @@ func testAccCloudFormationStackNameNoPrefixImportStateIdFunc(resourceName string
 func testAccCloudFormationApplicationID() string {
 	arnRegion := names.USEast1RegionID
 	arnAccountID := "297356227824"
-	if acctest.Partition() == names.USGovCloudPartitionID {
+	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
 		arnRegion = names.USGovWest1RegionID
 		arnAccountID = "023102451235"
 	}
