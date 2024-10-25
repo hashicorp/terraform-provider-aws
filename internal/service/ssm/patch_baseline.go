@@ -328,7 +328,7 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("approved_patches_compliance_level", output.ApprovedPatchesComplianceLevel)
 	d.Set("approved_patches_enable_non_security", output.ApprovedPatchesEnableNonSecurity)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).PartitionID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "ssm",
 		AccountID: meta.(*conns.AWSClient).AccountID,

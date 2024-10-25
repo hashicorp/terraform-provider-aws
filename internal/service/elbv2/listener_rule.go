@@ -513,7 +513,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := retryListenerRuleCreate(ctx, conn, d, input, listenerARN)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).PartitionID(ctx), err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		output, err = retryListenerRuleCreate(ctx, conn, d, input, listenerARN)
@@ -530,7 +530,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).PartitionID(ctx), err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 		}
 

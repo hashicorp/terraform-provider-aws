@@ -135,7 +135,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(aws.ToString(volume.VolumeId))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).PartitionID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,

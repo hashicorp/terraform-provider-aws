@@ -76,8 +76,8 @@ func (c *AWSClient) Endpoints(context.Context) map[string]string {
 	return maps.Clone(c.endpoints)
 }
 
-// PartitionID returns the ID of the configured AWS partition.
-func (c *AWSClient) PartitionID(context.Context) string {
+// Partition returns the ID of the configured AWS partition.
+func (c *AWSClient) Partition(context.Context) string {
 	return c.partition.ID()
 }
 
@@ -91,7 +91,7 @@ func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string
 // RegionalARN returns a regional ARN for the specified service namespace and resource.
 func (c *AWSClient) RegionalARN(ctx context.Context, service, resource string) string {
 	return arn.ARN{
-		Partition: c.PartitionID(ctx),
+		Partition: c.Partition(ctx),
 		Service:   service,
 		Region:    c.Region,
 		AccountID: c.AccountID,
@@ -102,7 +102,7 @@ func (c *AWSClient) RegionalARN(ctx context.Context, service, resource string) s
 // RegionalARNNoAccount returns a regional ARN for the specified service namespace and resource without AWS account ID.
 func (c *AWSClient) RegionalARNNoAccount(ctx context.Context, service, resource string) string {
 	return arn.ARN{
-		Partition: c.PartitionID(ctx),
+		Partition: c.Partition(ctx),
 		Service:   service,
 		Region:    c.Region,
 		Resource:  resource,
@@ -185,7 +185,7 @@ func (c *AWSClient) APIGatewayV2InvokeURL(ctx context.Context, protocolType apig
 // CloudFrontDistributionHostedZoneID returns the Route 53 hosted zone ID
 // for Amazon CloudFront distributions in the configured AWS partition.
 func (c *AWSClient) CloudFrontDistributionHostedZoneID(ctx context.Context) string {
-	if c.PartitionID(ctx) == endpoints.AwsCnPartitionID {
+	if c.Partition(ctx) == endpoints.AwsCnPartitionID {
 		return "Z3RFFRIM2A3IF5" // See https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
 	}
 	return "Z2FDTNDATAQYW2" // See https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html#Route53-Type-AliasTarget-HostedZoneId
@@ -209,7 +209,7 @@ func (c *AWSClient) DefaultKMSKeyPolicy(ctx context.Context) string {
 		}
 	]
 }	
-`, c.PartitionID(ctx), c.AccountID)
+`, c.Partition(ctx), c.AccountID)
 }
 
 // GlobalAcceleratorHostedZoneID returns the Route 53 hosted zone ID
@@ -283,7 +283,7 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 	m := map[string]any{
 		"aws_sdkv2_config": c.awsConfig,
 		"endpoint":         c.endpoints[servicePackageName],
-		"partition":        c.PartitionID(ctx),
+		"partition":        c.Partition(ctx),
 	}
 	switch servicePackageName {
 	case names.S3:

@@ -426,7 +426,7 @@ func resourceReplicationGroup() *schema.Resource {
 func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
-	partition := meta.(*conns.AWSClient).PartitionID(ctx)
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	replicationGroupID := d.Get("replication_group_id").(string)
 	input := &elasticache.CreateReplicationGroupInput{

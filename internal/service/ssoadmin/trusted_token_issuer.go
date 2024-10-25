@@ -490,7 +490,7 @@ func TrustedTokenIssuerParseInstanceARN(ctx context.Context, c *conns.AWSClient,
 	parts := strings.Split(id, "/")
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return fmt.Sprintf("arn:%s:sso:::instance/%s", c.PartitionID(ctx), parts[1]), diags
+		return fmt.Sprintf("arn:%s:sso:::instance/%s", c.Partition(ctx), parts[1]), diags
 	}
 
 	return "", diags

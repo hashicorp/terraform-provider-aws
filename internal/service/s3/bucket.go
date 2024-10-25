@@ -798,7 +798,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).PartitionID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "s3",
 		Resource:  d.Id(),
 	}.String()
@@ -1107,7 +1107,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("object_lock_configuration", nil)
 		d.Set("object_lock_enabled", nil)
 	default:
-		if partition := meta.(*conns.AWSClient).PartitionID(ctx); partition == names.StandardPartitionID || partition == names.USGovCloudPartitionID {
+		if partition := meta.(*conns.AWSClient).Partition(ctx); partition == names.StandardPartitionID || partition == names.USGovCloudPartitionID {
 			return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) object lock configuration: %s", d.Id(), err)
 		}
 		log.Printf("[WARN] Unable to read S3 Bucket (%s) Object Lock Configuration: %s", d.Id(), err)

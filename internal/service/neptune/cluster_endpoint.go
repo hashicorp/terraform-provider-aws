@@ -105,7 +105,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Tags are currently only supported in AWS Commercial.
-	if meta.(*conns.AWSClient).PartitionID(ctx) != names.StandardPartitionID {
+	if meta.(*conns.AWSClient).Partition(ctx) != names.StandardPartitionID {
 		input.Tags = nil
 	}
 

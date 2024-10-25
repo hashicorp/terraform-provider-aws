@@ -231,13 +231,13 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 		conn := client.BackupClient(ctx)
 
 		iamRoleARN := arn.ARN{
-			Partition: client.PartitionID(ctx),
+			Partition: client.Partition(ctx),
 			Service:   "iam",
 			AccountID: client.AccountID,
 			Resource:  "role/service-role/AWSBackupDefaultServiceRole",
 		}.String()
 		resourceARN := arn.ARN{
-			Partition: client.PartitionID(ctx),
+			Partition: client.Partition(ctx),
 			Service:   "dynamodb",
 			Region:    client.Region,
 			AccountID: client.AccountID,

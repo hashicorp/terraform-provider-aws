@@ -685,7 +685,7 @@ func testAccCheckPartition(ctx context.Context, t *testing.T, p **schema.Provide
 			return fmt.Errorf("provider not initialized")
 		}
 
-		providerPartition := (*p).Meta().(*conns.AWSClient).PartitionID(ctx)
+		providerPartition := (*p).Meta().(*conns.AWSClient).Partition(ctx)
 
 		if providerPartition != expectedPartition {
 			return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedPartition, providerPartition)

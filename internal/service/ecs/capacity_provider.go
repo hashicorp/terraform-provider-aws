@@ -128,7 +128,7 @@ func resourceCapacityProvider() *schema.Resource {
 func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).PartitionID(ctx)
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := ecs.CreateCapacityProviderInput{
@@ -256,7 +256,7 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 func resourceCapacityProviderImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set(names.AttrName, d.Id())
 	d.SetId(arn.ARN{
-		Partition: meta.(*conns.AWSClient).PartitionID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Service:   "ecs",

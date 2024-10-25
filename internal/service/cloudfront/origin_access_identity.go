@@ -191,7 +191,7 @@ func expandCloudFrontOriginAccessIdentityConfig(d *schema.ResourceData) *awstype
 
 func originAccessIdentityARN(ctx context.Context, c *conns.AWSClient, originAccessControlID string) string {
 	return arn.ARN{
-		Partition: c.PartitionID(ctx),
+		Partition: c.Partition(ctx),
 		Service:   "iam",
 		AccountID: "cloudfront",
 		Resource:  "user/CloudFront Origin Access Identity " + originAccessControlID,

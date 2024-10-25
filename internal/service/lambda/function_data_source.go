@@ -363,7 +363,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	setTagsOut(ctx, output.Tags)
 
 	// See r/aws_lambda_function.
-	if partition, region := meta.(*conns.AWSClient).PartitionID(ctx), meta.(*conns.AWSClient).Region; partition == names.StandardPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region; partition == names.StandardPartitionID && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		if function.PackageType == awstypes.PackageTypeZip {

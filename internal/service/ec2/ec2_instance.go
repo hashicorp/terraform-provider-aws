@@ -1361,7 +1361,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// ARN
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).PartitionID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   names.EC2,
 		AccountID: meta.(*conns.AWSClient).AccountID,
@@ -1375,10 +1375,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			Attribute:  awstypes.InstanceAttributeNameDisableApiStop,
 			InstanceId: aws.String(d.Id()),
 		})
-		if err != nil && !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).PartitionID(ctx), err) {
+		if err != nil && !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiStop, err)
 		}
-		if !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).PartitionID(ctx), err) {
+		if !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			d.Set("disable_api_stop", attr.DisableApiStop.Value)
 		}
 	}

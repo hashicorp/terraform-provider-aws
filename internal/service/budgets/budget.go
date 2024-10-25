@@ -371,7 +371,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.Set(names.AttrAccountID, accountID)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).PartitionID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "budgets",
 		AccountID: accountID,
 		Resource:  "budget/" + budgetName,
