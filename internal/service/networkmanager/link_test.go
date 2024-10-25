@@ -46,7 +46,7 @@ func TestAccNetworkManagerLink_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccLinkImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify: true,
 			},
 		},
@@ -98,7 +98,7 @@ func TestAccNetworkManagerLink_tags(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccLinkImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify: true,
 			},
 			{
@@ -148,7 +148,7 @@ func TestAccNetworkManagerLink_allAttributes(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccLinkImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify: true,
 			},
 			{
@@ -375,15 +375,4 @@ resource "aws_networkmanager_link" "test" {
   }
 }
 `, rName)
-}
-
-func testAccLinkImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrARN], nil
-	}
 }

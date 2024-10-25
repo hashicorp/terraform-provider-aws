@@ -42,7 +42,7 @@ func TestAccNetworkManagerSite_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSiteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify: true,
 			},
 		},
@@ -94,7 +94,7 @@ func TestAccNetworkManagerSite_tags(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSiteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify: true,
 			},
 			{
@@ -139,7 +139,7 @@ func TestAccNetworkManagerSite_description(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSiteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify: true,
 			},
 			{
@@ -177,7 +177,7 @@ func TestAccNetworkManagerSite_location(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccSiteImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify: true,
 			},
 			{
@@ -355,15 +355,4 @@ resource "aws_networkmanager_site" "test" {
   }
 }
 `, rName)
-}
-
-func testAccSiteImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrARN], nil
-	}
 }
