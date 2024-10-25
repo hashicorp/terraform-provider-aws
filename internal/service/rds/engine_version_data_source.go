@@ -428,7 +428,7 @@ func sortEngineVersions(engineVersions []awstypes.DBEngineVersion) {
 		return
 	}
 
-	sort.Slice(engineVersions, func(i, j int) bool {
+	sort.Slice(engineVersions, func(i, j int) bool { // nosemgrep:ci.semgrep.stdlib.prefer-slices-sortfunc
 		return version.LessThanWithTime(engineVersions[i].CreateTime, engineVersions[j].CreateTime, aws.ToString(engineVersions[i].EngineVersion), aws.ToString(engineVersions[j].EngineVersion))
 	})
 }
