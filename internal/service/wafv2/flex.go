@@ -4,8 +4,7 @@
 package wafv2
 
 import (
-	"encoding/base64"
-	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -14,6 +13,8 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -984,23 +985,28 @@ func expandHeaderMatchPattern(l []interface{}) *awstypes.HeaderMatchPattern {
 }
 
 func expandWebACLRulesJSON(rawRules string) ([]awstypes.Rule, error) {
+	// Backwards compatibility.
+	if rawRules == "" {
+		return nil, errors.New("decoding JSON: unexpected end of JSON input")
+	}
+
 	var temp []any
-	err := json.Unmarshal([]byte(rawRules), &temp)
+	err := tfjson.DecodeFromBytes([]byte(rawRules), &temp)
 	if err != nil {
-		return nil, fmt.Errorf("decoding JSON: %s", err)
+		return nil, fmt.Errorf("decoding JSON: %w", err)
 	}
 
 	for _, v := range temp {
 		walkWebACLJSON(reflect.ValueOf(v))
 	}
 
-	out, err := json.Marshal(temp)
+	out, err := tfjson.EncodeToBytes(temp)
 	if err != nil {
 		return nil, err
 	}
 
 	var rules []awstypes.Rule
-	err = json.Unmarshal(out, &rules)
+	err = tfjson.DecodeFromBytes(out, &rules)
 	if err != nil {
 		return nil, err
 	}
@@ -1041,7 +1047,7 @@ func walkWebACLJSON(v reflect.Value) {
 					case reflect.Slice, reflect.Array:
 						switch reflect.ValueOf(va.outputType).Type().Elem().Kind() {
 						case reflect.Uint8:
-							base64String := base64.StdEncoding.EncodeToString([]byte(str.(string)))
+							base64String := itypes.Base64Encode([]byte(str.(string)))
 							st[va.key] = base64String
 						default:
 						}
