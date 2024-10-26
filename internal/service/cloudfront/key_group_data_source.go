@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -65,10 +64,6 @@ func (d *dataSourceKeyGroup) Schema(ctx context.Context, req datasource.SchemaRe
 			},
 			names.AttrComment: schema.StringAttribute{
 				Optional: true,
-			},
-			"last_modified_time": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
 			},
 		},
 	}
@@ -152,18 +147,15 @@ func (d *dataSourceKeyGroup) Read(ctx context.Context, req datasource.ReadReques
 	}
 	data.Comment = flex.StringToFramework(ctx, comment)
 
-	data.LastModifiedTime = flex.TimeToFramework(ctx, out.KeyGroup.LastModifiedTime)
-
 	data.Etag = flex.StringToFramework(ctx, out.ETag)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 type dataSourceKeyGroupModel struct {
-	Etag             types.String      `tfsdk:"etag"`
-	Items            types.List        `tfsdk:"items"`
-	Comment          types.String      `tfsdk:"comment"`
-	ID               types.String      `tfsdk:"id"`
-	Name             types.String      `tfsdk:"name"`
-	LastModifiedTime timetypes.RFC3339 `tfsdk:"last_modified_time"`
+	Etag    types.String `tfsdk:"etag"`
+	Items   types.List   `tfsdk:"items"`
+	Comment types.String `tfsdk:"comment"`
+	ID      types.String `tfsdk:"id"`
+	Name    types.String `tfsdk:"name"`
 }
