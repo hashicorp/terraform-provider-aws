@@ -24,8 +24,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_lb_listener_rule", name="Listener Rule")
-// @Testing(tagsTest=true)
-// @Testing(tagsIdentifierAttribute="arn")
+// @Tags(identifierAttribute="arn")
 func newDataSourceListenerRule(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceListenerRule{}, nil
 }
@@ -348,14 +347,6 @@ func (d *dataSourceListenerRule) Read(ctx context.Context, req datasource.ReadRe
 		return
 	}
 	data.Priority = types.Int32Value(int32(priority))
-
-	tags, err := listTags(ctx, conn, aws.ToString(out.RuleArn))
-	if err != nil {
-		resp.Diagnostics.AddError("listing tags for ELBv2 Listener Rule", err.Error())
-		return
-	}
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
-	data.Tags = tftags.FlattenStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

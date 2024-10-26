@@ -19,7 +19,7 @@ import (
 )
 
 // @FrameworkDataSource("aws_medialive_input", name="Input")
-// @Testing(tagsTest=true)
+// @Tags
 // @Testing(tagsIdentifierAttribute="arn")
 func newDataSourceInput(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceInput{}, nil
@@ -123,9 +123,7 @@ func (d *dataSourceInput) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
-	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	data.Tags = tftags.FlattenStringValueMap(ctx, tags.Map())
+	setTagsOut(ctx, out.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

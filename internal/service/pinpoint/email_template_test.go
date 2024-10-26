@@ -97,13 +97,6 @@ func TestAccPinpointEmailTemplate_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "email_template.0.subject", "update"),
 				),
 			},
-			// {
-			// 	ResourceName:                         resourceName,
-			// 	ImportState:                          true,
-			// 	ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
-			// 	ImportStateVerifyIdentifierAttribute: "template_name",
-			// 	ImportStateVerify:                    true,
-			// },
 		},
 	})
 }

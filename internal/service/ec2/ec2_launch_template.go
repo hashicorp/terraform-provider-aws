@@ -771,7 +771,7 @@ func resourceLaunchTemplate() *schema.Resource {
 						"interface_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"efa", "interface"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"efa", "efa-only", "interface"}, false),
 						},
 						"ipv4_address_count": {
 							Type:     schema.TypeInt,
