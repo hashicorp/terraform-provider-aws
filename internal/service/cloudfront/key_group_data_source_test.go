@@ -11,7 +11,6 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -120,7 +119,7 @@ data "aws_cloudfront_key_group" "test" {
 func testAccKeyGroupDataSourceBaseConfig(keyGroupName, publicKeyName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_public_key" "test" {
-  name = %[2]q
+  name        = %[2]q
   encoded_key = file("test-fixtures/cloudfront-public-key.pem")
 }
 

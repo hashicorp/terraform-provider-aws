@@ -167,8 +167,3 @@ type dataSourceKeyGroupModel struct {
 	Name             types.String      `tfsdk:"name"`
 	LastModifiedTime timetypes.RFC3339 `tfsdk:"last_modified_time"`
 }
-
-type complexArgumentModel struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
-}
