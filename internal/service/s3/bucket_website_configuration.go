@@ -103,7 +103,6 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 			"routing_rule": {
 				Type:          schema.TypeList,
 				Optional:      true,
-				Computed:      true,
 				ConflictsWith: []string{"routing_rules"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -160,7 +159,6 @@ func resourceBucketWebsiteConfiguration() *schema.Resource {
 			"routing_rules": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				Computed:      true,
 				ConflictsWith: []string{"routing_rule"},
 				ValidateFunc:  validation.StringIsJSON,
 				StateFunc: func(v interface{}) string {
