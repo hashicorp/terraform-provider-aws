@@ -10,3 +10,10 @@ rules:
     message: Prefer slices.SortStableFunc to sort.SliceStable
     pattern: sort.SliceStable(...)
     severity: WARNING
+
+  - id: sort-Ints
+    languages: [go]
+    message: Prefer slices.Sort to sort.Ints
+    pattern: sort.Ints($X)
+    fix: slices.Sort($X)
+    severity: WARNING
