@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.28.0
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.41
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.17
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.33
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.34
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/account v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.30.2
@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.2
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.21.1
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.24.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/chime v1.34.2
@@ -59,9 +59,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.42.2
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.41.2
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.33.2
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.46.0
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/codeconnections v1.5.2
@@ -152,7 +152,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/kms v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.37.2
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.63.2
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.49.2
@@ -199,7 +199,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rds v1.88.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.30.2
-	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.23.2
+	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.45.2
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.15.3
@@ -213,7 +213,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/rum v1.21.2
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.66.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.66.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.49.2
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.2
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.163.2
