@@ -66,25 +66,27 @@ func sweepGeneralPurposeBucketObjects(ctx context.Context, client *conns.AWSClie
 		for _, bucket := range page.Buckets {
 			bucketName := aws.ToString(bucket.Name)
 			tflog.SetField(ctx, "bucket_name", bucketName)
-			if bucketNameFilter(ctx, bucket) {
-				var objectLockEnabled bool
-				objLockConfig, err := findObjectLockConfiguration(ctx, conn, bucketName, "")
-				if !tfresource.NotFound(err) {
-					if err != nil {
-						tflog.Warn(ctx, "Reading S3 Bucket Object Lock Configuration", map[string]any{
-							"error": err.Error(),
-						})
-						continue
-					}
-					objectLockEnabled = objLockConfig.ObjectLockEnabled == types.ObjectLockEnabledEnabled
-				}
-
-				sweepables = append(sweepables, objectSweeper{
-					conn:   conn,
-					bucket: bucketName,
-					locked: objectLockEnabled,
-				})
+			if !bucketNameFilter(ctx, bucket) {
+				continue
 			}
+
+			var objectLockEnabled bool
+			objLockConfig, err := findObjectLockConfiguration(ctx, conn, bucketName, "")
+			if !tfresource.NotFound(err) {
+				if err != nil {
+					tflog.Warn(ctx, "Reading S3 Bucket Object Lock Configuration", map[string]any{
+						"error": err.Error(),
+					})
+					continue
+				}
+				objectLockEnabled = objLockConfig.ObjectLockEnabled == types.ObjectLockEnabledEnabled
+			}
+
+			sweepables = append(sweepables, objectSweeper{
+				conn:   conn,
+				bucket: bucketName,
+				locked: objectLockEnabled,
+			})
 		}
 	}
 
@@ -106,12 +108,14 @@ func sweepDirectoryBucketObjects(ctx context.Context, client *conns.AWSClient) (
 		for _, bucket := range page.Buckets {
 			bucketName := aws.ToString(bucket.Name)
 			tflog.SetField(ctx, "bucket_name", bucketName)
-			if bucketNameFilter(ctx, bucket) {
-				sweepables = append(sweepables, directoryBucketObjectSweeper{
-					conn:   conn,
-					bucket: bucketName,
-				})
+			if !bucketNameFilter(ctx, bucket) {
+				continue
 			}
+
+			sweepables = append(sweepables, directoryBucketObjectSweeper{
+				conn:   conn,
+				bucket: bucketName,
+			})
 		}
 	}
 
@@ -172,12 +176,14 @@ func sweepBuckets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 
 		for _, bucket := range page.Buckets {
 			tflog.SetField(ctx, "bucket_name", aws.ToString(bucket.Name))
-			if bucketNameFilter(ctx, bucket) {
-				d := r.Data(nil)
-				d.SetId(aws.ToString(bucket.Name))
-
-				sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
+			if !bucketNameFilter(ctx, bucket) {
+				continue
 			}
+
+			d := r.Data(nil)
+			d.SetId(aws.ToString(bucket.Name))
+
+			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
 	}
 
