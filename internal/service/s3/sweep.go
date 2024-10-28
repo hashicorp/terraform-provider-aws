@@ -65,7 +65,7 @@ func sweepGeneralPurposeBucketObjects(ctx context.Context, client *conns.AWSClie
 
 		for _, bucket := range page.Buckets {
 			bucketName := aws.ToString(bucket.Name)
-			tflog.SetField(ctx, "bucket_name", bucketName)
+			ctx = tflog.SetField(ctx, "bucket_name", bucketName)
 			if !bucketNameFilter(ctx, bucket) {
 				continue
 			}
@@ -107,7 +107,7 @@ func sweepDirectoryBucketObjects(ctx context.Context, client *conns.AWSClient) (
 
 		for _, bucket := range page.Buckets {
 			bucketName := aws.ToString(bucket.Name)
-			tflog.SetField(ctx, "bucket_name", bucketName)
+			ctx = tflog.SetField(ctx, "bucket_name", bucketName)
 			if !bucketNameFilter(ctx, bucket) {
 				continue
 			}
@@ -175,7 +175,7 @@ func sweepBuckets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepab
 		}
 
 		for _, bucket := range page.Buckets {
-			tflog.SetField(ctx, "bucket_name", aws.ToString(bucket.Name))
+			ctx = tflog.SetField(ctx, "bucket_name", aws.ToString(bucket.Name))
 			if !bucketNameFilter(ctx, bucket) {
 				continue
 			}
@@ -232,7 +232,7 @@ func sweepDirectoryBuckets(ctx context.Context, client *conns.AWSClient) ([]swee
 		}
 
 		for _, bucket := range page.Buckets {
-			tflog.SetField(ctx, "bucket_name", aws.ToString(bucket.Name))
+			ctx = tflog.SetField(ctx, "bucket_name", aws.ToString(bucket.Name))
 			if !bucketNameFilter(ctx, bucket) {
 				continue
 			}
