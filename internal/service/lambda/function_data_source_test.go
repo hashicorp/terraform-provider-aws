@@ -370,6 +370,32 @@ func TestAccLambdaFunctionDataSource_loggingConfig(t *testing.T) {
 	})
 }
 
+func TestAccLambdaFunctionDataSource_reservedConcurrentExecutions(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+	checkFunc := resource.ComposeAggregateTestCheckFunc(
+		resource.TestCheckResourceAttrPair(dataSourceName, "reserved_concurrent_executions", resourceName, "reserved_concurrent_executions"),
+	)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_reservedConcurrentExecutions(rName),
+				Check:  checkFunc,
+			},
+			{
+				Config: testAccFunctionDataSourceConfig_reservedConcurrentExecutionsUnset(rName),
+				Check:  checkFunc,
+			},
+		},
+	})
+}
+
 func testAccImageLatestPreCheck(t *testing.T) {
 	if os.Getenv("AWS_LAMBDA_IMAGE_LATEST_ID") == "" {
 		t.Skip("AWS_LAMBDA_IMAGE_LATEST_ID env var must be set for Lambda Function Data Source Image Support acceptance tests.")
@@ -802,4 +828,39 @@ data "aws_lambda_function" "test" {
   function_name = aws_lambda_function.test.function_name
 }
 `, rName, rName+"_custom"))
+}
+
+func testAccFunctionDataSourceConfig_reservedConcurrentExecutions(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename                       = "test-fixtures/lambdatest.zip"
+  function_name                  = %[1]q
+  handler                        = "exports.example"
+  publish                        = true
+  role                           = aws_iam_role.lambda.arn
+  runtime                        = "nodejs16.x"
+  reserved_concurrent_executions = 2
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+}
+`, rName))
+}
+
+func testAccFunctionDataSourceConfig_reservedConcurrentExecutionsUnset(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  publish       = true
+  role          = aws_iam_role.lambda.arn
+  runtime       = "nodejs16.x"
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+}
+`, rName))
 }
