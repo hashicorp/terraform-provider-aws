@@ -26,25 +26,42 @@ const (
 )
 
 var (
-	createTags               = flag.Bool("CreateTags", false, "whether to generate CreateTags")
-	getTag                   = flag.Bool("GetTag", false, "whether to generate GetTag")
-	listTags                 = flag.Bool("ListTags", false, "whether to generate ListTags")
-	serviceTagsMap           = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
-	serviceTagsSlice         = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
-	untagInNeedTagType       = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
-	updateTags               = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
-	updateTagsNoIgnoreSystem = flag.Bool("UpdateTagsNoIgnoreSystem", false, "whether to not ignore system tags in UpdateTags")
-	waitForPropagation       = flag.Bool("Wait", false, "whether to generate WaitTagsPropagated")
+	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
 
-	createTagsFunc             = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
-	getTagFunc                 = flag.String("GetTagFunc", "findTag", "getTagFunc")
-	getTagsInFunc              = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
-	keyValueTagsFunc           = flag.String("KeyValueTagsFunc", "KeyValueTags", "keyValueTagsFunc")
-	listTagsFunc               = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
+	createTags     = flag.Bool("CreateTags", false, "whether to generate CreateTags")
+	createTagsFunc = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
+	getTag         = flag.Bool("GetTag", false, "whether to generate GetTag")
+	getTagFunc     = flag.String("GetTagFunc", "findTag", "getTagFunc")
+	listTags       = flag.Bool("ListTags", false, "whether to generate ListTags")
+	listTagsFunc   = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
+	updateTags     = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
+	updateTagsFunc = flag.String("UpdateTagsFunc", defaultUpdateTagsFunc, "updateTagsFunc")
+
+	serviceTagsMap   = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
+	kvtValues        = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
+	emptyMap         = flag.Bool("EmptyMap", false, "Whether KVT string map should be empty for no tags")
+	serviceTagsSlice = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
+
+	keyValueTagsFunc = flag.String("KeyValueTagsFunc", "KeyValueTags", "keyValueTagsFunc")
+	tagsFunc         = flag.String("TagsFunc", "Tags", "tagsFunc")
+	getTagsInFunc    = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
+	setTagsOutFunc   = flag.String("SetTagsOutFunc", "setTagsOut", "setTagsOutFunc")
+
+	waitForPropagation      = flag.Bool("Wait", false, "whether to generate WaitTagsPropagated")
+	waitTagsPropagatedFunc  = flag.String("WaitFunc", defaultWaitTagsPropagatedFunc, "waitFunc")
+	waitContinuousOccurence = flag.Int("WaitContinuousOccurence", 0, "ContinuousTargetOccurence for Wait function")
+	waitFuncComparator      = flag.String("WaitFuncComparator", "Equal", "waitFuncComparator")
+	waitDelay               = flag.Duration("WaitDelay", 0, "Delay for Wait function")
+	waitMinTimeout          = flag.Duration("WaitMinTimeout", 0, `"MinTimeout" (minimum poll interval) for Wait function`)
+	waitPollInterval        = flag.Duration("WaitPollInterval", 0, "PollInterval for Wait function")
+	waitTimeout             = flag.Duration("WaitTimeout", 0, "Timeout for Wait function")
+
+	untagInNeedTagType       = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
+	updateTagsNoIgnoreSystem = flag.Bool("UpdateTagsNoIgnoreSystem", false, "whether to not ignore system tags in UpdateTags")
+
 	listTagsInFiltIDName       = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
 	listTagsInIDElem           = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
-	listTagsInIDNeedSlice      = flag.String("ListTagsInIDNeedSlice", "", "listTagsInIDNeedSlice")
-	listTagsInIDNeedValueSlice = flag.String("ListTagsInIDNeedValueSlice", "", "listTagsInIDNeedSlice")
+	listTagsInIDNeedValueSlice = flag.Bool("ListTagsInIDNeedValueSlice", false, "listTagsInIDNeedSlice")
 	listTagsOp                 = flag.String("ListTagsOp", "ListTagsForResource", "listTagsOp")
 	listTagsOpPaginated        = flag.Bool("ListTagsOpPaginated", false, "whether ListTagsOp is paginated")
 	listTagsOutTagsElem        = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
@@ -52,7 +69,6 @@ var (
 	retryTagsErrorCodes        = flag.String("RetryTagsErrorCodes", "", "comma-separated list of error codes to retry, must be used with RetryTagsListTagsType and same length as RetryTagsErrorMessages")
 	retryTagsErrorMessages     = flag.String("RetryTagsErrorMessages", "", "comma-separated list of error messages to retry, must be used with RetryTagsListTagsType and same length as RetryTagsErrorCodes")
 	retryTagsTimeout           = flag.Duration("RetryTagsTimeout", 1*time.Minute, "Timeout for retrying tag operations")
-	setTagsOutFunc             = flag.String("SetTagsOutFunc", "setTagsOut", "setTagsOutFunc")
 	tagInCustomVal             = flag.String("TagInCustomVal", "", "tagInCustomVal")
 	tagInIDElem                = flag.String("TagInIDElem", "ResourceArn", "tagInIDElem")
 	tagInIDNeedSlice           = flag.String("TagInIDNeedSlice", "", "tagInIDNeedSlice")
@@ -69,26 +85,13 @@ var (
 	tagTypeIDElem              = flag.String("TagTypeIDElem", "", "tagTypeIDElem")
 	tagTypeKeyElem             = flag.String("TagTypeKeyElem", "Key", "tagTypeKeyElem")
 	tagTypeValElem             = flag.String("TagTypeValElem", "Value", "tagTypeValElem")
-	tagsFunc                   = flag.String("TagsFunc", "Tags", "tagsFunc")
 	untagInCustomVal           = flag.String("UntagInCustomVal", "", "untagInCustomVal")
 	untagInNeedTagKeyType      = flag.String("UntagInNeedTagKeyType", "", "untagInNeedTagKeyType")
 	untagInTagsElem            = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
 	untagOp                    = flag.String("UntagOp", "UntagResource", "untagOp")
-	updateTagsFunc             = flag.String("UpdateTagsFunc", defaultUpdateTagsFunc, "updateTagsFunc")
-	waitTagsPropagatedFunc     = flag.String("WaitFunc", defaultWaitTagsPropagatedFunc, "waitFunc")
-	waitContinuousOccurence    = flag.Int("WaitContinuousOccurence", 0, "ContinuousTargetOccurence for Wait function")
-	waitFuncComparator         = flag.String("WaitFuncComparator", "Equal", "waitFuncComparator")
-	waitDelay                  = flag.Duration("WaitDelay", 0, "Delay for Wait function")
-	waitMinTimeout             = flag.Duration("WaitMinTimeout", 0, `"MinTimeout" (minimum poll interval) for Wait function`)
-	waitPollInterval           = flag.Duration("WaitPollInterval", 0, "PollInterval for Wait function")
-	waitTimeout                = flag.Duration("WaitTimeout", 0, "Timeout for Wait function")
 
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
-
-	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
-	kvtValues         = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
-	emptyMap          = flag.Bool("EmptyMap", false, "Whether KVT string map should be empty for no tags")
 )
 
 func usage() {
@@ -146,7 +149,7 @@ type TemplateData struct {
 	ListTagsInFiltIDName       string
 	ListTagsInIDElem           string
 	ListTagsInIDNeedSlice      string
-	ListTagsInIDNeedValueSlice string
+	ListTagsInIDNeedValueSlice bool
 	ListTagsOp                 string
 	ListTagsOpPaginated        bool
 	ListTagsOutTagsElem        string
@@ -274,7 +277,6 @@ func main() {
 		ListTagsFunc:               *listTagsFunc,
 		ListTagsInFiltIDName:       *listTagsInFiltIDName,
 		ListTagsInIDElem:           *listTagsInIDElem,
-		ListTagsInIDNeedSlice:      *listTagsInIDNeedSlice,
 		ListTagsInIDNeedValueSlice: *listTagsInIDNeedValueSlice,
 		ListTagsOp:                 *listTagsOp,
 		ListTagsOpPaginated:        *listTagsOpPaginated,

@@ -11,9 +11,7 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 			},
 		},
 		{{- else }}
-		{{- if .ListTagsInIDNeedSlice }}
-		{{ .ListTagsInIDElem }}: aws.StringSlice([]string{identifier}),
-		{{- else if .ListTagsInIDNeedValueSlice }}
+		{{- if .ListTagsInIDNeedValueSlice }}
 		{{ .ListTagsInIDElem }}: []string{identifier},
 		{{- else }}
 		{{ .ListTagsInIDElem }}: aws.String(identifier),
