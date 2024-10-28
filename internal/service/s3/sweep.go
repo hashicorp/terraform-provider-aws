@@ -134,12 +134,14 @@ type objectSweeper struct {
 
 func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	// Delete everything including locked objects.
-	log.Printf("[INFO] Emptying S3 Bucket (%s)", os.bucket)
+	tflog.Info(ctx, "Emptying S3 General Purpose Bucket")
 	n, err := emptyBucket(ctx, os.conn, os.bucket, os.locked)
 	if err != nil {
 		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", os.bucket, err)
 	}
-	log.Printf("[INFO] Deleted %d S3 Objects from S3 Bucket (%s)", n, os.bucket)
+	tflog.Info(ctx, "Deleted Objects from S3 General Purpose Bucket", map[string]any{
+		"object_count": n,
+	})
 	return nil
 }
 
@@ -149,12 +151,14 @@ type directoryBucketObjectSweeper struct {
 }
 
 func (os directoryBucketObjectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	log.Printf("[INFO] Emptying S3 Directory Bucket (%s)", os.bucket)
+	tflog.Info(ctx, "Emptying S3 Directory Bucket")
 	n, err := emptyDirectoryBucket(ctx, os.conn, os.bucket)
 	if err != nil {
 		return fmt.Errorf("deleting S3 Directory Bucket (%s) objects: %w", os.bucket, err)
 	}
-	log.Printf("[INFO] Deleted %d S3 Objects from S3 Directory Bucket (%s)", n, os.bucket)
+	tflog.Info(ctx, "Deleted Objects from S3 Directory Bucket", map[string]any{
+		"object_count": n,
+	})
 	return nil
 }
 
