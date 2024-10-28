@@ -89,10 +89,6 @@ var (
 	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
 	kvtValues         = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
 	emptyMap          = flag.Bool("EmptyMap", false, "Whether KVT string map should be empty for no tags")
-	skipAWSImp        = flag.Bool("SkipAWSImp", false, "Whether to skip importing the AWS Go SDK aws package") // nosemgrep:ci.aws-in-var-name
-	skipNamesImp      = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
-	skipServiceImp    = flag.Bool("SkipAWSServiceImp", false, "Whether to skip importing the AWS service package")
-	skipTypesImp      = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
 )
 
 func usage() {
@@ -269,20 +265,6 @@ func main() {
 		ClientType:        clientType,
 		ProviderNameUpper: providerNameUpper,
 		ServicePackage:    servicePackage,
-
-		ConnsPkg:          (*listTags && *listTagsFunc == defaultListTagsFunc) || (*updateTags && *updateTagsFunc == defaultUpdateTagsFunc),
-		FmtPkg:            *updateTags,
-		HelperSchemaPkg:   awsPkg == "autoscaling",
-		InternalOptionPkg: (*listTags && *listTagsFunc == defaultListTagsFunc) || *serviceTagsMap || *serviceTagsSlice,
-		LoggingPkg:        *updateTags,
-		NamesPkg:          *updateTags && !*skipNamesImp,
-		SkipAWSImp:        *skipAWSImp,
-		SkipServiceImp:    *skipServiceImp,
-		SkipTypesImp:      *skipTypesImp,
-		TfLogPkg:          *updateTags,
-		TfResourcePkg:     *getTag || *waitForPropagation || *retryTagsListTagsType != "",
-		TfSlicesPkg:       *serviceTagsSlice && *tagTypeIDElem != "" && *tagTypeAddBoolElem != "",
-		TimePkg:           *waitForPropagation || *retryTagsListTagsType != "",
 
 		CreateTagsFunc:             createTagsFunc,
 		EmptyMap:                   *emptyMap,
