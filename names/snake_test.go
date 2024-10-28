@@ -45,6 +45,21 @@ func TestToSnakeCase(t *testing.T) {
 			input:    "S3Bucket",
 			expected: "s3_bucket",
 		},
+		{
+			name:     "ARN",
+			input:    "ARN",
+			expected: "arn",
+		},
+		{
+			name:     "ResourceArn",
+			input:    "ResourceArn",
+			expected: "resource_arn",
+		},
+		{
+			name:     "ResourceARN",
+			input:    "ResourceARN",
+			expected: "resource_arn",
+		},
 	}
 
 	for _, testCase := range testCases {

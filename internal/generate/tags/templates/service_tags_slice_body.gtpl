@@ -13,7 +13,7 @@ func listOfMap(tags tftags.KeyValueTags) []any {
 			names.AttrKey:                   key,
 			names.AttrValue:                 aws.ToString(tags.KeyValue(key)),
 			{{- if .TagTypeAddBoolElem }}
-			"{{ .TagTypeAddBoolElemSnake }}": aws.ToBool(tags.KeyAdditionalBoolValue(key, "{{ .TagTypeAddBoolElem }}")),
+			"{{ .TagTypeAddBoolElem | Snake }}": aws.ToBool(tags.KeyAdditionalBoolValue(key, "{{ .TagTypeAddBoolElem }}")),
 			{{ end }}
 		}
 	})
@@ -183,7 +183,7 @@ func {{ .KeyValueTagsFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }
 			{{ if .TagTypeAddBoolElem }}
 			tagData.AdditionalBoolFields = make(map[string]*bool)
 			{{- if .TagTypeAddBoolElem }}
-			if v, ok := tfMap["{{ .TagTypeAddBoolElemSnake }}"].(bool); ok {
+			if v, ok := tfMap["{{ .TagTypeAddBoolElem | Snake }}"].(bool); ok {
 				tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElem }}"] = &v
 			}
 			{{- end }}
