@@ -20,10 +20,6 @@ import (
 )
 
 const (
-	sdkV2 = 2
-)
-
-const (
 	defaultListTagsFunc           = "listTags"
 	defaultUpdateTagsFunc         = "updateTags"
 	defaultWaitTagsPropagatedFunc = "waitTagsPropagated"
@@ -91,7 +87,6 @@ var (
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
 
 	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
-	sdkVersion        = flag.Int("AWSSDKVersion", sdkV2, "Version of the AWS Go SDK to use i.e. 1 or 2")
 	kvtValues         = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
 	emptyMap          = flag.Bool("EmptyMap", false, "Whether KVT string map should be empty for no tags")
 	skipAWSImp        = flag.Bool("SkipAWSImp", false, "Whether to skip importing the AWS Go SDK aws package") // nosemgrep:ci.aws-in-var-name
@@ -117,31 +112,26 @@ type TemplateBody struct {
 	waitTagsPropagated string
 }
 
-func newTemplateBody(version int, kvtValues bool) *TemplateBody {
-	switch version {
-	case sdkV2:
-		if kvtValues {
-			return &TemplateBody{
-				getTag:             "\n" + v2.GetTagBody,
-				header:             v2.HeaderBody,
-				listTags:           "\n" + v2.ListTagsBody,
-				serviceTagsMap:     "\n" + v2.ServiceTagsValueMapBody,
-				serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
-				updateTags:         "\n" + v2.UpdateTagsBody,
-				waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
-			}
-		}
+func newTemplateBody(kvtValues bool) *TemplateBody {
+	if kvtValues {
 		return &TemplateBody{
 			getTag:             "\n" + v2.GetTagBody,
 			header:             v2.HeaderBody,
 			listTags:           "\n" + v2.ListTagsBody,
-			serviceTagsMap:     "\n" + v2.ServiceTagsMapBody,
+			serviceTagsMap:     "\n" + v2.ServiceTagsValueMapBody,
 			serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
 			updateTags:         "\n" + v2.UpdateTagsBody,
 			waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
 		}
-	default:
-		return nil
+	}
+	return &TemplateBody{
+		getTag:             "\n" + v2.GetTagBody,
+		header:             v2.HeaderBody,
+		listTags:           "\n" + v2.ListTagsBody,
+		serviceTagsMap:     "\n" + v2.ServiceTagsMapBody,
+		serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
+		updateTags:         "\n" + v2.UpdateTagsBody,
+		waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
 	}
 }
 
@@ -238,10 +228,6 @@ func main() {
 
 	g := common.NewGenerator()
 
-	if *sdkVersion != sdkV2 {
-		g.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
-	}
-
 	servicePackage := os.Getenv("GOPACKAGE")
 	if *sdkServicePackage == "" {
 		sdkServicePackage = &servicePackage
@@ -264,8 +250,7 @@ func main() {
 		createTagsFunc = ""
 	}
 
-	clientTypeName := service.ClientTypeName(*sdkVersion)
-	clientType := fmt.Sprintf("*%s.%s", awsPkg, clientTypeName)
+	clientType := fmt.Sprintf("*%s.Client", awsPkg)
 	tagPackage := awsPkg
 
 	var cleanRetryErrorCodes []string
@@ -359,7 +344,7 @@ func main() {
 		IsDefaultUpdateTags: *updateTagsFunc == defaultUpdateTagsFunc,
 	}
 
-	templateBody := newTemplateBody(*sdkVersion, *kvtValues)
+	templateBody := newTemplateBody(*kvtValues)
 	d := g.NewGoFileDestination(filename)
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
