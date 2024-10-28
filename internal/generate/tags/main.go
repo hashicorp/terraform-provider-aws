@@ -15,13 +15,11 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	v1 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v1"
 	v2 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v2"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 const (
-	sdkV1 = 1
 	sdkV2 = 2
 )
 
@@ -121,16 +119,6 @@ type TemplateBody struct {
 
 func newTemplateBody(version int, kvtValues bool) *TemplateBody {
 	switch version {
-	case sdkV1:
-		return &TemplateBody{
-			getTag:             "\n" + v1.GetTagBody,
-			header:             v1.HeaderBody,
-			listTags:           "\n" + v1.ListTagsBody,
-			serviceTagsMap:     "\n" + v1.ServiceTagsMapBody,
-			serviceTagsSlice:   "\n" + v1.ServiceTagsSliceBody,
-			updateTags:         "\n" + v1.UpdateTagsBody,
-			waitTagsPropagated: "\n" + v1.WaitTagsPropagatedBody,
-		}
 	case sdkV2:
 		if kvtValues {
 			return &TemplateBody{
@@ -158,11 +146,10 @@ func newTemplateBody(version int, kvtValues bool) *TemplateBody {
 }
 
 type TemplateData struct {
-	AWSService             string
-	AWSServiceIfacePackage string
-	ClientType             string
-	ProviderNameUpper      string
-	ServicePackage         string
+	AWSService        string
+	ClientType        string
+	ProviderNameUpper string
+	ServicePackage    string
 
 	CreateTagsFunc             string
 	EmptyMap                   bool
@@ -251,7 +238,7 @@ func main() {
 
 	g := common.NewGenerator()
 
-	if *sdkVersion != sdkV1 && *sdkVersion != sdkV2 {
+	if *sdkVersion != sdkV2 {
 		g.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
 	}
 
@@ -269,11 +256,6 @@ func main() {
 
 	awsPkg := service.GoPackageName()
 
-	var awsIntfPkg string
-	if *sdkVersion == sdkV1 && (*getTag || *listTags || *updateTags) {
-		awsIntfPkg = fmt.Sprintf("%[1]s/%[1]siface", awsPkg)
-	}
-
 	createTagsFunc := *createTagsFunc
 	if *createTags && !*updateTags {
 		g.Infof("CreateTags only valid with UpdateTags")
@@ -283,13 +265,7 @@ func main() {
 	}
 
 	clientTypeName := service.ClientTypeName(*sdkVersion)
-	var clientType string
-	if *sdkVersion == sdkV1 {
-		clientType = fmt.Sprintf("%siface.%sAPI", awsPkg, clientTypeName)
-	} else {
-		clientType = fmt.Sprintf("*%s.%s", awsPkg, clientTypeName)
-	}
-
+	clientType := fmt.Sprintf("*%s.%s", awsPkg, clientTypeName)
 	tagPackage := awsPkg
 
 	var cleanRetryErrorCodes []string
@@ -304,11 +280,10 @@ func main() {
 	providerNameUpper := service.ProviderNameUpper()
 
 	templateData := TemplateData{
-		AWSService:             awsPkg,
-		AWSServiceIfacePackage: awsIntfPkg,
-		ClientType:             clientType,
-		ProviderNameUpper:      providerNameUpper,
-		ServicePackage:         servicePackage,
+		AWSService:        awsPkg,
+		ClientType:        clientType,
+		ProviderNameUpper: providerNameUpper,
+		ServicePackage:    servicePackage,
 
 		ConnsPkg:          (*listTags && *listTagsFunc == defaultListTagsFunc) || (*updateTags && *updateTagsFunc == defaultUpdateTagsFunc),
 		FmtPkg:            *updateTags,
