@@ -15,12 +15,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,16 +37,12 @@ func RegisterSweepers() {
 		},
 	})
 
-	resource.AddTestSweepers("aws_s3_bucket", &resource.Sweeper{
-		Name: "aws_s3_bucket",
-		F:    sweepBuckets,
-		Dependencies: []string{
-			"aws_s3_access_point",
-			"aws_s3_object",
-			"aws_s3control_access_grants_instance",
-			"aws_s3control_multi_region_access_point",
-		},
-	})
+	awsv2.Register("aws_s3_bucket", sweepBuckets,
+		"aws_s3_access_point",
+		"aws_s3_object",
+		"aws_s3control_access_grants_instance",
+		"aws_s3control_multi_region_access_point",
+	)
 
 	resource.AddTestSweepers("aws_s3_directory_bucket", &resource.Sweeper{
 		Name: "aws_s3_directory_bucket",
@@ -75,7 +74,9 @@ func sweepObjects(region string) error {
 	}
 
 	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle(ctx)))
-	buckets = tfslices.Filter(buckets, bucketNameFilter)
+	buckets = tfslices.Filter(buckets, func(v types.Bucket) bool {
+		return bucketNameFilter(ctx, v)
+	})
 	sweepables := make([]sweep.Sweepable, 0)
 
 	for _, bucket := range buckets {
@@ -115,7 +116,7 @@ func sweepObjects(region string) error {
 		}
 
 		for _, v := range page.Buckets {
-			if !bucketNameFilter(v) {
+			if !bucketNameFilter(ctx, v) {
 				continue
 			}
 
@@ -167,52 +168,34 @@ func (os directoryBucketObjectSweeper) Delete(ctx context.Context, timeout time.
 	return nil
 }
 
-func sweepBuckets(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
-	}
+func sweepBuckets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.S3Client(ctx)
-	input := &s3.ListBucketsInput{}
 
-	output, err := conn.ListBuckets(ctx, input)
+	var sweepResources []sweep.Sweepable
+	r := resourceBucket()
 
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping S3 Buckets sweep for %s: %s", region, err)
-		return nil
+	input := s3.ListBucketsInput{
+		BucketRegion: aws.String(client.Region),
+	}
+	pages := s3.NewListBucketsPaginator(conn, &input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, bucket := range page.Buckets {
+			tflog.SetField(ctx, "bucket_name", aws.ToString(bucket.Name))
+			if bucketNameFilter(ctx, bucket) {
+				d := r.Data(nil)
+				d.SetId(aws.ToString(bucket.Name))
+
+				sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
+			}
+		}
 	}
 
-	if err != nil {
-		return fmt.Errorf("listing S3 Buckets: %w", err)
-	}
-
-	if len(output.Buckets) == 0 {
-		log.Print("[DEBUG] No S3 Buckets to sweep")
-		return nil
-	}
-
-	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle(ctx)))
-	buckets = tfslices.Filter(buckets, bucketNameFilter)
-	sweepables := make([]sweep.Sweepable, 0)
-
-	for _, bucket := range buckets {
-		name := aws.ToString(bucket.Name)
-
-		r := resourceBucket()
-		d := r.Data(nil)
-		d.SetId(name)
-
-		sweepables = append(sweepables, sweep.NewSweepResource(r, d, client))
-	}
-
-	err = sweep.SweepOrchestrator(ctx, sweepables)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping S3 Buckets (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func bucketRegion(ctx context.Context, conn *s3.Client, bucket string, s3UsePathStyle bool) (string, error) {
@@ -231,7 +214,7 @@ func bucketRegion(ctx context.Context, conn *s3.Client, bucket string, s3UsePath
 	return region, nil
 }
 
-func bucketNameFilter(bucket types.Bucket) bool {
+func bucketNameFilter(ctx context.Context, bucket types.Bucket) bool {
 	name := aws.ToString(bucket.Name)
 
 	prefixes := []string{
@@ -249,17 +232,16 @@ func bucketNameFilter(bucket types.Bucket) bool {
 		}
 	}
 
+	defaultNameRegexp := regexache.MustCompile(fmt.Sprintf(`^%s\d+$`, id.UniqueIdPrefix))
 	if defaultNameRegexp.MatchString(name) {
 		return true
 	}
 
-	log.Printf("[INFO] Skipping S3 Bucket (%s): not in prefix list", name)
+	tflog.Info(ctx, "Skipping resource", map[string]any{
+		"skip_reason": "no match on prefix list",
+	})
 	return false
 }
-
-var (
-	defaultNameRegexp = regexache.MustCompile(fmt.Sprintf(`^%s\d+$`, id.UniqueIdPrefix))
-)
 
 func bucketRegionFilter(ctx context.Context, conn *s3.Client, region string, s3UsePathStyle bool) tfslices.Predicate[types.Bucket] {
 	return func(bucket types.Bucket) bool {
@@ -305,7 +287,7 @@ func sweepDirectoryBuckets(region string) error {
 		}
 
 		for _, v := range page.Buckets {
-			if !bucketNameFilter(v) {
+			if !bucketNameFilter(ctx, v) {
 				continue
 			}
 
