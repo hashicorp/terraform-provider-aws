@@ -60,7 +60,7 @@ func TestAccVPCDefaultRouteTable_basic(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCID),
 				ImportStateVerify: true,
 			},
 		},
@@ -125,7 +125,7 @@ func TestAccVPCDefaultRouteTable_Route_mode(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCID),
 				ImportStateVerify: true,
 			},
 			{
@@ -196,7 +196,7 @@ func TestAccVPCDefaultRouteTable_swap(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCID),
 				ImportStateVerify: true,
 			},
 
@@ -262,7 +262,7 @@ func TestAccVPCDefaultRouteTable_ipv4ToTransitGateway(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCID),
 				ImportStateVerify: true,
 			},
 		},
@@ -299,7 +299,7 @@ func TestAccVPCDefaultRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCID),
 				ImportStateVerify: true,
 			},
 			// Default route tables do not currently have a method to remove routes during deletion.
@@ -341,7 +341,7 @@ func TestAccVPCDefaultRouteTable_vpcEndpointAssociation(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCID),
 				ImportStateVerify: true,
 			},
 		},
@@ -421,7 +421,7 @@ func TestAccVPCDefaultRouteTable_conditionalCIDRBlock(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCID),
 				ImportStateVerify: true,
 			},
 		},
@@ -454,7 +454,7 @@ func TestAccVPCDefaultRouteTable_prefixListToInternetGateway(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrVPCID),
 				ImportStateVerify: true,
 			},
 			// Default route tables do not currently have a method to remove routes during deletion.
@@ -555,17 +555,6 @@ func testAccCheckDefaultRouteTableDestroy(ctx context.Context) resource.TestChec
 		}
 
 		return nil
-	}
-}
-
-func testAccDefaultRouteTableImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrVPCID], nil
 	}
 }
 

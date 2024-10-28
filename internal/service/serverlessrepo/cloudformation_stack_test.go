@@ -71,7 +71,7 @@ func TestAccServerlessRepoCloudFormationStack_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccCloudFormationStackNameNoPrefixImportStateIdFunc(resourceName),
+				ImportStateIdFunc: acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -310,17 +310,6 @@ func testAccCloudFormationStackNameImportStateIdFunc(resourceName string) resour
 		}
 
 		return fmt.Sprintf("%s%s", tfserverlessrepo.CloudFormationStackNamePrefix, rs.Primary.Attributes[names.AttrName]), nil
-	}
-}
-
-func testAccCloudFormationStackNameNoPrefixImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrName], nil
 	}
 }
 

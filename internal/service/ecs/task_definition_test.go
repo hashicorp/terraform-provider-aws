@@ -125,7 +125,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -183,7 +183,7 @@ func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -214,7 +214,7 @@ func TestAccECSTaskDefinition_configuredAtLaunch(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -257,7 +257,7 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -292,7 +292,7 @@ func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -326,7 +326,7 @@ func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -360,7 +360,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -393,7 +393,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -428,7 +428,7 @@ func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -464,7 +464,7 @@ func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -502,7 +502,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionMinimal(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -540,7 +540,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -577,7 +577,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionDisabled(t *testing.T) 
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -618,7 +618,7 @@ func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -666,7 +666,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -729,7 +729,7 @@ func TestAccECSTaskDefinition_service(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -758,7 +758,7 @@ func TestAccECSTaskDefinition_taskRoleARN(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -788,7 +788,7 @@ func TestAccECSTaskDefinition_networkMode(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -818,7 +818,7 @@ func TestAccECSTaskDefinition_ipcMode(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -848,7 +848,7 @@ func TestAccECSTaskDefinition_pidMode(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -879,7 +879,7 @@ func TestAccECSTaskDefinition_constraint(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -915,7 +915,7 @@ func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -945,7 +945,7 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -977,7 +977,7 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -1016,7 +1016,7 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -1045,7 +1045,7 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -1076,7 +1076,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -1132,7 +1132,7 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -1162,7 +1162,7 @@ func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -1212,7 +1212,7 @@ func TestAccECSTaskDefinition_trackLatest(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrSkipDestroy, "track_latest"},
 			},
@@ -3105,17 +3105,6 @@ TASK_DEFINITION
   ]
 }
 `, rName))
-}
-
-func testAccTaskDefinitionImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrARN], nil
-	}
 }
 
 func testAccFSxWindowsFileSystemBaseConfig(rName, domain string) string {

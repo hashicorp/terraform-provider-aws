@@ -54,7 +54,7 @@ func TestAccIAMGroupPoliciesExclusive_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGroupPoliciesExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrGroupName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrGroupName,
 			},
@@ -131,7 +131,7 @@ func TestAccIAMGroupPoliciesExclusive_multiple(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGroupPoliciesExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrGroupName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrGroupName,
 			},
@@ -305,17 +305,6 @@ func testAccCheckGroupPoliciesExclusiveExists(ctx context.Context, name string) 
 		}
 
 		return nil
-	}
-}
-
-func testAccGroupPoliciesExclusiveImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrGroupName], nil
 	}
 }
 

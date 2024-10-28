@@ -48,7 +48,7 @@ func TestAccPinpointEmailTemplate_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "template_name"),
 				ImportStateVerifyIdentifierAttribute: "template_name",
 				ImportStateVerify:                    true,
 			},
@@ -83,7 +83,7 @@ func TestAccPinpointEmailTemplate_update(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "template_name"),
 				ImportStateVerifyIdentifierAttribute: "template_name",
 			},
 			{
@@ -126,7 +126,7 @@ func TestAccPinpointEmailTemplate_tags(t *testing.T) {
 				ResourceName:                         resourceName,
 				ImportState:                          true,
 				ImportStateVerify:                    true,
-				ImportStateIdFunc:                    testAccEmailtemplateImportStateIDFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "template_name"),
 				ImportStateVerifyIdentifierAttribute: "template_name",
 			},
 		},
@@ -174,17 +174,6 @@ func testAccCheckEmailTemplateDestroy(ctx context.Context) resource.TestCheckFun
 		}
 
 		return nil
-	}
-}
-
-func testAccEmailtemplateImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["template_name"], nil
 	}
 }
 

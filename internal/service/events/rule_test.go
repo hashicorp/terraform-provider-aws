@@ -233,7 +233,7 @@ func TestAccEventsRule_basic(t *testing.T) {
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
-				ImportStateIdFunc:       testAccRuleNoBusNameImportStateIdFunc(resourceName),
+				ImportStateIdFunc:       acctest.AttrImportStateIdFunc(resourceName, names.AttrName),
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
 			},
@@ -1003,17 +1003,6 @@ func testAccCheckRuleNotRecreated(i, j *eventbridge.DescribeRuleOutput) resource
 			return fmt.Errorf("EventBridge rule recreated, but expected it to not be")
 		}
 		return nil
-	}
-}
-
-func testAccRuleNoBusNameImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrName], nil
 	}
 }
 

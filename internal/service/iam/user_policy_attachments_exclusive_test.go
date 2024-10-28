@@ -52,7 +52,7 @@ func TestAccIAMUserPolicyAttachmentsExclusive_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccUserPolicyAttachmentsExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrUserName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrUserName,
 			},
@@ -159,7 +159,7 @@ func TestAccIAMUserPolicyAttachmentsExclusive_multiple(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccUserPolicyAttachmentsExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrUserName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrUserName,
 			},
@@ -336,17 +336,6 @@ func testAccCheckUserPolicyAttachmentsExclusiveExists(ctx context.Context, name 
 		}
 
 		return nil
-	}
-}
-
-func testAccUserPolicyAttachmentsExclusiveImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrUserName], nil
 	}
 }
 
