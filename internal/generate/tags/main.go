@@ -15,7 +15,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	v2 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -115,23 +115,23 @@ type TemplateBody struct {
 func newTemplateBody(kvtValues bool) *TemplateBody {
 	if kvtValues {
 		return &TemplateBody{
-			getTag:             "\n" + v2.GetTagBody,
-			header:             v2.HeaderBody,
-			listTags:           "\n" + v2.ListTagsBody,
-			serviceTagsMap:     "\n" + v2.ServiceTagsValueMapBody,
-			serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
-			updateTags:         "\n" + v2.UpdateTagsBody,
-			waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
+			getTag:             "\n" + templates.GetTagBody,
+			header:             templates.HeaderBody,
+			listTags:           "\n" + templates.ListTagsBody,
+			serviceTagsMap:     "\n" + templates.ServiceTagsValueMapBody,
+			serviceTagsSlice:   "\n" + templates.ServiceTagsSliceBody,
+			updateTags:         "\n" + templates.UpdateTagsBody,
+			waitTagsPropagated: "\n" + templates.WaitTagsPropagatedBody,
 		}
 	}
 	return &TemplateBody{
-		getTag:             "\n" + v2.GetTagBody,
-		header:             v2.HeaderBody,
-		listTags:           "\n" + v2.ListTagsBody,
-		serviceTagsMap:     "\n" + v2.ServiceTagsMapBody,
-		serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
-		updateTags:         "\n" + v2.UpdateTagsBody,
-		waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
+		getTag:             "\n" + templates.GetTagBody,
+		header:             templates.HeaderBody,
+		listTags:           "\n" + templates.ListTagsBody,
+		serviceTagsMap:     "\n" + templates.ServiceTagsMapBody,
+		serviceTagsSlice:   "\n" + templates.ServiceTagsSliceBody,
+		updateTags:         "\n" + templates.UpdateTagsBody,
+		waitTagsPropagated: "\n" + templates.WaitTagsPropagatedBody,
 	}
 }
 
