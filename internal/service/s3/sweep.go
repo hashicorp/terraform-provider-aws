@@ -27,14 +27,6 @@ import (
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_s3_object", &resource.Sweeper{
-		Name: "aws_s3_object",
-		F:    sweepObjects,
-		Dependencies: []string{
-			"aws_m2_application",
-		},
-	})
-
 	awsv2.Register("aws_s3_bucket", sweepBuckets,
 		"aws_s3_access_point",
 		"aws_s3_object",
@@ -49,46 +41,19 @@ func RegisterSweepers() {
 			"aws_s3_object",
 		},
 	})
+
+	awsv2.Register("aws_s3_object", sweepObjects)
+
+	awsv2.Register("aws_s3_object_directory_bucket", sweepDirectoryBucketObjects)
+
+	awsv2.Register("aws_s3_object_gp_bucket", sweepGeneralPurposeBucketObjects,
+		"aws_m2_application",
+	)
 }
 
-func sweepObjects(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("getting client: %s", err)
-	}
-
-	sweepables, err := sweepGeneralPurposeBucketObjects(ctx, client)
-	if awsv2.SkipSweepError(err) {
-		tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-			"error": err.Error(),
-		})
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error listing General Purpose S3 Buckets (%s): %w", region, err)
-	}
-
-	// Directory buckets.
-	dbSweepables, err := sweepDirectoryBucketObjects(ctx, client)
-	if awsv2.SkipSweepError(err) {
-		tflog.Warn(ctx, "Skipping sweeper", map[string]any{
-			"error": err.Error(),
-		})
-		// Allow objects in general purpose buckets to be deleted.
-	}
-	if err != nil {
-		return fmt.Errorf("error listing S3 Directory Buckets (%s): %w", region, err)
-	}
-	sweepables = append(sweepables, dbSweepables...)
-
-	err = sweep.SweepOrchestrator(ctx, sweepables)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping S3 Objects (%s): %w", region, err)
-	}
-
-	return nil
+func sweepObjects(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	tflog.Info(ctx, "Noop sweeper")
+	return nil, nil
 }
 
 func sweepGeneralPurposeBucketObjects(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
