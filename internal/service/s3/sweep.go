@@ -29,7 +29,7 @@ import (
 func RegisterSweepers() {
 	awsv2.Register("aws_s3_bucket", sweepBuckets,
 		"aws_s3_access_point",
-		"aws_s3_object",
+		"aws_s3_object_gp_bucket",
 		"aws_s3control_access_grants_instance",
 		"aws_s3control_multi_region_access_point",
 	)
@@ -38,7 +38,7 @@ func RegisterSweepers() {
 		Name: "aws_s3_directory_bucket",
 		F:    sweepDirectoryBuckets,
 		Dependencies: []string{
-			"aws_s3_object",
+			"aws_s3_object_directory_bucket",
 		},
 	})
 
