@@ -890,7 +890,7 @@ func ThirdRegion() string {
 }
 
 func Partition() string {
-	return names.PartitionForRegion(Region())
+	return names.PartitionForRegion(Region()).ID()
 }
 
 func PartitionRegions() []string {
@@ -898,7 +898,7 @@ func PartitionRegions() []string {
 }
 
 func PartitionDNSSuffix() string {
-	return names.DNSSuffixForPartition(Partition())
+	return names.PartitionForRegion(Region()).DNSSuffix()
 }
 
 func PartitionReverseDNSPrefix() string {
@@ -906,11 +906,11 @@ func PartitionReverseDNSPrefix() string {
 }
 
 func alternateRegionPartition() string {
-	return names.PartitionForRegion(AlternateRegion())
+	return names.PartitionForRegion(AlternateRegion()).ID()
 }
 
 func thirdRegionPartition() string {
-	return names.PartitionForRegion(ThirdRegion())
+	return names.PartitionForRegion(ThirdRegion()).ID()
 }
 
 func PreCheckAlternateAccount(t *testing.T) {
@@ -959,7 +959,7 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 	}
 
 	if regions >= 3 {
-		if thirdRegionPartition() == names.USGovCloudPartitionID || Partition() == names.USGovCloudPartitionID {
+		if thirdRegionPartition() == endpoints.AwsUsGovPartitionID || Partition() == endpoints.AwsUsGovPartitionID {
 			t.Skipf("wanted %d regions, partition (%s) only has 2 regions", regions, Partition())
 		}
 
@@ -1340,9 +1340,9 @@ func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	switch Partition() {
-	case names.StandardPartitionID:
+	case endpoints.AwsPartitionID:
 		PreCheckRegion(t, names.USEast1RegionID)
-	case names.ChinaPartitionID:
+	case endpoints.AwsCnPartitionID:
 		PreCheckRegion(t, names.CNNorthwest1RegionID)
 	}
 
@@ -2202,7 +2202,7 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 	t.Helper()
 
-	if Partition() != names.StandardPartitionID {
+	if Partition() != endpoints.AwsPartitionID {
 		t.Skipf("skipping test; Endpoint Configuration type EDGE is not supported in this partition (%s)", Partition())
 	}
 }

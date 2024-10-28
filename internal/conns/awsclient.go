@@ -13,6 +13,7 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
@@ -28,18 +29,17 @@ type AWSClient struct {
 	AccountID         string
 	defaultTagsConfig *tftags.DefaultConfig
 	ignoreTagsConfig  *tftags.IgnoreConfig
-	Partition         string
 	Region            string
 	ServicePackages   map[string]ServicePackage
 
 	awsConfig                 *aws.Config
 	clients                   map[string]any
 	conns                     map[string]any
-	dnsSuffix                 string
 	endpoints                 map[string]string // From provider configuration.
 	httpClient                *http.Client
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
+	partition                 endpoints.Partition
 	session                   *session_sdkv1.Session
 	s3ExpressClient           *s3.Client
 	s3UsePathStyle            bool   // From provider configuration.
@@ -76,11 +76,37 @@ func (c *AWSClient) Endpoints(context.Context) map[string]string {
 	return maps.Clone(c.endpoints)
 }
 
+// Partition returns the ID of the configured AWS partition.
+func (c *AWSClient) Partition(context.Context) string {
+	return c.partition.ID()
+}
+
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com
 // The prefix should not contain a trailing period.
 func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string {
 	return fmt.Sprintf("%s.%s", prefix, c.DNSSuffix(ctx))
+}
+
+// RegionalARN returns a regional ARN for the specified service namespace and resource.
+func (c *AWSClient) RegionalARN(ctx context.Context, service, resource string) string {
+	return arn.ARN{
+		Partition: c.Partition(ctx),
+		Service:   service,
+		Region:    c.Region,
+		AccountID: c.AccountID,
+		Resource:  resource,
+	}.String()
+}
+
+// RegionalARNNoAccount returns a regional ARN for the specified service namespace and resource without AWS account ID.
+func (c *AWSClient) RegionalARNNoAccount(ctx context.Context, service, resource string) string {
+	return arn.ARN{
+		Partition: c.Partition(ctx),
+		Service:   service,
+		Region:    c.Region,
+		Resource:  resource,
+	}.String()
 }
 
 // RegionalHostname returns a hostname with the provider domain suffix for the region and partition
@@ -158,15 +184,15 @@ func (c *AWSClient) APIGatewayV2InvokeURL(ctx context.Context, protocolType apig
 
 // CloudFrontDistributionHostedZoneID returns the Route 53 hosted zone ID
 // for Amazon CloudFront distributions in the configured AWS partition.
-func (c *AWSClient) CloudFrontDistributionHostedZoneID(context.Context) string {
-	if c.Partition == endpoints.AwsCnPartitionID {
+func (c *AWSClient) CloudFrontDistributionHostedZoneID(ctx context.Context) string {
+	if c.Partition(ctx) == endpoints.AwsCnPartitionID {
 		return "Z3RFFRIM2A3IF5" // See https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
 	}
 	return "Z2FDTNDATAQYW2" // See https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html#Route53-Type-AliasTarget-HostedZoneId
 }
 
 // DefaultKMSKeyPolicy returns the default policy for KMS keys in the configured AWS partition.
-func (c *AWSClient) DefaultKMSKeyPolicy(context.Context) string {
+func (c *AWSClient) DefaultKMSKeyPolicy(ctx context.Context) string {
 	return fmt.Sprintf(`
 {
 	"Id": "default",
@@ -183,7 +209,7 @@ func (c *AWSClient) DefaultKMSKeyPolicy(context.Context) string {
 		}
 	]
 }	
-`, c.Partition, c.AccountID)
+`, c.Partition(ctx), c.AccountID)
 }
 
 // GlobalAcceleratorHostedZoneID returns the Route 53 hosted zone ID
@@ -194,7 +220,12 @@ func (c *AWSClient) GlobalAcceleratorHostedZoneID(context.Context) string {
 
 // DNSSuffix returns the domain suffix for the configured AWS partition.
 func (c *AWSClient) DNSSuffix(context.Context) string {
-	return c.dnsSuffix
+	dnsSuffix := c.partition.DNSSuffix()
+	if dnsSuffix == "" {
+		dnsSuffix = "amazonaws.com"
+	}
+
+	return dnsSuffix
 }
 
 // ReverseDNSPrefix returns the reverse DNS prefix for the configured AWS partition.
@@ -248,11 +279,11 @@ func convertIPToDashIP(ip string) string {
 }
 
 // apiClientConfig returns the AWS API client configuration parameters for the specified service.
-func (c *AWSClient) apiClientConfig(_ context.Context, servicePackageName string) map[string]any {
+func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName string) map[string]any {
 	m := map[string]any{
 		"aws_sdkv2_config": c.awsConfig,
 		"endpoint":         c.endpoints[servicePackageName],
-		"partition":        c.Partition,
+		"partition":        c.Partition(ctx),
 	}
 	switch servicePackageName {
 	case names.S3:

@@ -173,7 +173,7 @@ func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData
 	udf := out.UserDefinedFunction
 
 	udfArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,

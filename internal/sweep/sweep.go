@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -121,14 +120,6 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 	}
 
 	return g.Wait().ErrorOrNil()
-}
-
-func Partition(region string) string {
-	return names.PartitionForRegion(region)
-}
-
-func PartitionDNSSuffix(region string) string {
-	return names.DNSSuffixForPartition(Partition(region))
 }
 
 type SweeperFn func(ctx context.Context, client *conns.AWSClient) ([]Sweepable, error)

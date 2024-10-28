@@ -575,7 +575,7 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	groupName := aws.ToString(group.DeploymentGroupName)
 	d.Set("app_name", appName)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codedeploy",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
