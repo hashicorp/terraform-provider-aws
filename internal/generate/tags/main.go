@@ -56,39 +56,41 @@ var (
 	waitPollInterval        = flag.Duration("WaitPollInterval", 0, "PollInterval for Wait function")
 	waitTimeout             = flag.Duration("WaitTimeout", 0, "Timeout for Wait function")
 
-	untagInNeedTagType       = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
-	updateTagsNoIgnoreSystem = flag.Bool("UpdateTagsNoIgnoreSystem", false, "whether to not ignore system tags in UpdateTags")
-
 	listTagsInFiltIDName       = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
 	listTagsInIDElem           = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
 	listTagsInIDNeedValueSlice = flag.Bool("ListTagsInIDNeedValueSlice", false, "listTagsInIDNeedSlice")
 	listTagsOp                 = flag.String("ListTagsOp", "ListTagsForResource", "listTagsOp")
 	listTagsOpPaginated        = flag.Bool("ListTagsOpPaginated", false, "whether ListTagsOp is paginated")
 	listTagsOutTagsElem        = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
-	retryTagsListTagsType      = flag.String("RetryTagsListTagsType", "", "type of the first ListTagsOp return value such as TagListMessage")
-	retryTagsErrorCodes        = flag.String("RetryTagsErrorCodes", "", "comma-separated list of error codes to retry, must be used with RetryTagsListTagsType and same length as RetryTagsErrorMessages")
-	retryTagsErrorMessages     = flag.String("RetryTagsErrorMessages", "", "comma-separated list of error messages to retry, must be used with RetryTagsListTagsType and same length as RetryTagsErrorCodes")
-	retryTagsTimeout           = flag.Duration("RetryTagsTimeout", 1*time.Minute, "Timeout for retrying tag operations")
-	tagInCustomVal             = flag.String("TagInCustomVal", "", "tagInCustomVal")
-	tagInIDElem                = flag.String("TagInIDElem", "ResourceArn", "tagInIDElem")
-	tagInIDNeedSlice           = flag.String("TagInIDNeedSlice", "", "tagInIDNeedSlice")
-	tagInIDNeedValueSlice      = flag.String("TagInIDNeedValueSlice", "", "tagInIDNeedValueSlice")
-	tagInTagsElem              = flag.String("TagInTagsElem", "Tags", "tagInTagsElem")
-	tagKeyType                 = flag.String("TagKeyType", "", "tagKeyType")
-	tagOp                      = flag.String("TagOp", "TagResource", "tagOp")
-	tagOpBatchSize             = flag.String("TagOpBatchSize", "", "tagOpBatchSize")
-	tagResTypeElem             = flag.String("TagResTypeElem", "", "tagResTypeElem")
-	tagResTypeElemType         = flag.String("TagResTypeElemType", "", "tagResTypeElemType")
-	tagType                    = flag.String("TagType", "Tag", "tagType")
-	tagType2                   = flag.String("TagType2", "", "tagType")
-	tagTypeAddBoolElem         = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
-	tagTypeIDElem              = flag.String("TagTypeIDElem", "", "tagTypeIDElem")
-	tagTypeKeyElem             = flag.String("TagTypeKeyElem", "Key", "tagTypeKeyElem")
-	tagTypeValElem             = flag.String("TagTypeValElem", "Value", "tagTypeValElem")
-	untagInCustomVal           = flag.String("UntagInCustomVal", "", "untagInCustomVal")
-	untagInNeedTagKeyType      = flag.String("UntagInNeedTagKeyType", "", "untagInNeedTagKeyType")
-	untagInTagsElem            = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
-	untagOp                    = flag.String("UntagOp", "UntagResource", "untagOp")
+
+	tagInCustomVal        = flag.String("TagInCustomVal", "", "tagInCustomVal")
+	tagInIDElem           = flag.String("TagInIDElem", "ResourceArn", "tagInIDElem")
+	tagInIDNeedValueSlice = flag.Bool("TagInIDNeedValueSlice", false, "tagInIDNeedValueSlice")
+	tagInTagsElem         = flag.String("TagInTagsElem", "Tags", "tagInTagsElem")
+	tagKeyType            = flag.String("TagKeyType", "", "tagKeyType")
+	tagOp                 = flag.String("TagOp", "TagResource", "tagOp")
+	tagOpBatchSize        = flag.Int("TagOpBatchSize", 0, "tagOpBatchSize")
+	tagResTypeElem        = flag.String("TagResTypeElem", "", "tagResTypeElem")
+	tagResTypeElemType    = flag.String("TagResTypeElemType", "", "tagResTypeElemType")
+	tagType               = flag.String("TagType", "Tag", "tagType")
+	tagType2              = flag.String("TagType2", "", "tagType")
+	tagTypeAddBoolElem    = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
+	tagTypeIDElem         = flag.String("TagTypeIDElem", "", "tagTypeIDElem")
+	tagTypeKeyElem        = flag.String("TagTypeKeyElem", "Key", "tagTypeKeyElem")
+	tagTypeValElem        = flag.String("TagTypeValElem", "Value", "tagTypeValElem")
+
+	untagInNeedTagType       = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
+	updateTagsNoIgnoreSystem = flag.Bool("UpdateTagsNoIgnoreSystem", false, "whether to not ignore system tags in UpdateTags")
+
+	retryTagsListTagsType  = flag.String("RetryTagsListTagsType", "", "type of the first ListTagsOp return value such as TagListMessage")
+	retryTagsErrorCodes    = flag.String("RetryTagsErrorCodes", "", "comma-separated list of error codes to retry, must be used with RetryTagsListTagsType and same length as RetryTagsErrorMessages")
+	retryTagsErrorMessages = flag.String("RetryTagsErrorMessages", "", "comma-separated list of error messages to retry, must be used with RetryTagsListTagsType and same length as RetryTagsErrorCodes")
+	retryTagsTimeout       = flag.Duration("RetryTagsTimeout", 1*time.Minute, "Timeout for retrying tag operations")
+
+	untagInCustomVal      = flag.String("UntagInCustomVal", "", "untagInCustomVal")
+	untagInNeedTagKeyType = flag.String("UntagInNeedTagKeyType", "", "untagInNeedTagKeyType")
+	untagInTagsElem       = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
+	untagOp               = flag.String("UntagOp", "UntagResource", "untagOp")
 
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
@@ -163,12 +165,11 @@ type TemplateData struct {
 	SetTagsOutFunc             string
 	TagInCustomVal             string
 	TagInIDElem                string
-	TagInIDNeedSlice           string
-	TagInIDNeedValueSlice      string
+	TagInIDNeedValueSlice      bool
 	TagInTagsElem              string
 	TagKeyType                 string
 	TagOp                      string
-	TagOpBatchSize             string
+	TagOpBatchSize             int
 	TagPackage                 string
 	TagResTypeElem             string
 	TagResTypeElemType         string
@@ -291,7 +292,6 @@ func main() {
 		SetTagsOutFunc:             *setTagsOutFunc,
 		TagInCustomVal:             *tagInCustomVal,
 		TagInIDElem:                *tagInIDElem,
-		TagInIDNeedSlice:           *tagInIDNeedSlice,
 		TagInIDNeedValueSlice:      *tagInIDNeedValueSlice,
 		TagInTagsElem:              *tagInTagsElem,
 		TagKeyType:                 *tagKeyType,
