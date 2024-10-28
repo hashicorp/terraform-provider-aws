@@ -12,7 +12,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-cty/cty"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -927,16 +926,6 @@ func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, default
 	}
 
 	return New(ctx, result).IgnoreConfig(ignoreConfig)
-}
-
-// ToSnakeCase converts a string to snake case.
-//
-// For example, AWS Go SDK field names are in PascalCase,
-// while Terraform schema attribute names are in snake_case.
-func ToSnakeCase(str string) string {
-	result := regexache.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
-	result = regexache.MustCompile("([0-9a-z])([A-Z])").ReplaceAllString(result, "${1}_${2}")
-	return strings.ToLower(result)
 }
 
 func normalizeTagsFromRaw(m map[string]cty.Value, incoming map[string]configTag, source tagSource) {

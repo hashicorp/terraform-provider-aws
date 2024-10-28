@@ -2,11 +2,11 @@
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 {{if  .TagTypeAddBoolElem -}}
-func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTagsSet, newTagsSet any) error {
+func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTagsSet, newTagsSet any, optFns ...func(*{{ .AWSService }}.Options)) error {
 	oldTags := {{ .KeyValueTagsFunc }}(ctx, oldTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 	newTags := {{ .KeyValueTagsFunc }}(ctx, newTagsSet, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 {{- else -}}
-func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTagsMap, newTagsMap any) error {
+func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTagsMap, newTagsMap any, optFns ...func(*{{ .AWSService }}.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 {{- end }}
@@ -29,17 +29,19 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		return nil
 	}
 
-	input := &{{ .TagPackage }}.{{ .TagOp }}Input{
+	input := &{{ .AWSService }}.{{ .TagOp }}Input{
 		{{- if not ( .TagTypeIDElem ) }}
-		{{- if .TagInIDNeedSlice }}
-		{{ .TagInIDElem }}:   aws.StringSlice([]string{identifier}),
-		{{- else if .TagInIDNeedValueSlice }}
-		{{ .TagInIDElem }}:   []string{identifier},
+		{{- if .TagInIDNeedValueSlice }}
+		{{ .TagInIDElem }}: []string{identifier},
 		{{- else }}
 		{{ .TagInIDElem }}:   aws.String(identifier),
 		{{- end }}
 		{{- if .TagResTypeElem }}
+		{{- if .TagResTypeElemType }}
+		{{ .TagResTypeElem }}:      awstypes.{{ .TagResTypeElemType }}(resourceType),
+		{{- else }}
 		{{ .TagResTypeElem }}:      aws.String(resourceType),
+		{{- end }}
 		{{- end }}
 		{{- end }}
 	}
@@ -56,29 +58,11 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- else if .UntagInCustomVal }}
 		input.{{ .UntagInTagsElem }} = {{ .UntagInCustomVal }}
 		{{- else }}
-		input.{{ .UntagInTagsElem }} = aws.StringSlice(removedTags.Keys())
+		input.{{ .UntagInTagsElem }} = removedTags.Keys()
 		{{- end }}
 	}
 
-	{{ if .RetryTagsListTagsType }}
-	_, err := tfresource.RetryWhenMessageContains(ctx, {{ .RetryTagsTimeout }},
-		func() (any, error) {
-			return conn.{{ .TagOp }}WithContext(ctx, input)
-		},
-		[]string{
-			{{- range .RetryTagsErrorCodes }}
-			{{ . }},
-			{{- end }}
-		},
-		[]string{
-			{{- range .RetryTagsErrorMessages }}
-			"{{ . }}",
-			{{- end }}
-		},
-	)
-	{{ else }}
-	_, err := conn.{{ .TagOp }}WithContext(ctx, input)
-	{{- end }}
+	_, err := conn.{{ .TagOp }}(ctx, input, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -96,15 +80,17 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- end }}
 		input := &{{ .TagPackage }}.{{ .UntagOp }}Input{
 			{{- if not ( .TagTypeIDElem ) }}
-			{{- if .TagInIDNeedSlice }}
-			{{ .TagInIDElem }}:   aws.StringSlice([]string{identifier}),
-			{{- else if .TagInIDNeedValueSlice }}
-			{{ .TagInIDElem }}:   []string{identifier},
+			{{- if .TagInIDNeedValueSlice }}
+			{{ .TagInIDElem }}: []string{identifier},
 			{{- else }}
 			{{ .TagInIDElem }}:   aws.String(identifier),
 			{{- end }}
 			{{- if .TagResTypeElem }}
+		    {{- if .TagResTypeElemType }}
+			{{ .TagResTypeElem }}: awstypes.{{ .TagResTypeElemType }}(resourceType),
+		    {{- else }}
 			{{ .TagResTypeElem }}: aws.String(resourceType),
+			{{- end }}
 			{{- end }}
 			{{- end }}
 			{{- if .UntagInNeedTagType }}
@@ -114,29 +100,11 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- else if .UntagInCustomVal }}
 			{{ .UntagInTagsElem }}:       {{ .UntagInCustomVal }},
 			{{- else }}
-			{{ .UntagInTagsElem }}:       aws.StringSlice(removedTags.Keys()),
+			{{ .UntagInTagsElem }}:       removedTags.Keys(),
 			{{- end }}
 		}
 
-		{{ if .RetryTagsListTagsType }}
-		_, err := tfresource.RetryWhenMessageContains(ctx, {{ .RetryTagsTimeout }},
-			func() (any, error) {
-				return conn.{{ .UntagOp }}WithContext(ctx, input)
-			},
-			[]string{
-				{{- range .RetryTagsErrorCodes }}
-				{{ . }},
-				{{- end }}
-			},
-			[]string{
-				{{- range .RetryTagsErrorMessages }}
-				"{{ . }}",
-				{{- end }}
-			},
-		)
-		{{ else }}
-		_, err := conn.{{ .UntagOp }}WithContext(ctx, input)
-		{{- end }}
+		_, err := conn.{{ .UntagOp }}(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -156,15 +124,17 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		{{- end }}
 		input := &{{ .TagPackage }}.{{ .TagOp }}Input{
 			{{- if not ( .TagTypeIDElem ) }}
-			{{- if .TagInIDNeedSlice }}
-			{{ .TagInIDElem }}: aws.StringSlice([]string{identifier}),
-			{{- else if .TagInIDNeedValueSlice }}
+			{{- if .TagInIDNeedValueSlice }}
 			{{ .TagInIDElem }}: []string{identifier},
 			{{- else }}
 			{{ .TagInIDElem }}: aws.String(identifier),
 			{{- end }}
 			{{- if .TagResTypeElem }}
+		    {{- if .TagResTypeElemType }}
+			{{ .TagResTypeElem }}:    awstypes.{{ .TagResTypeElemType }}(resourceType),
+		    {{- else }}
 			{{ .TagResTypeElem }}:    aws.String(resourceType),
+			{{- end }}
 			{{- end }}
 			{{- end }}
 			{{- if .TagInCustomVal }}
@@ -174,25 +144,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 			{{- end }}
 		}
 
-		{{ if .RetryTagsListTagsType }}
-		_, err := tfresource.RetryWhenMessageContains(ctx, {{ .RetryTagsTimeout }},
-			func() (any, error) {
-				return conn.{{ .TagOp }}WithContext(ctx, input)
-			},
-			[]string{
-				{{- range .RetryTagsErrorCodes }}
-				{{ . }},
-				{{- end }}
-			},
-			[]string{
-				{{- range .RetryTagsErrorMessages }}
-				"{{ . }}",
-				{{- end }}
-			},
-		)
-		{{ else }}
-		_, err := conn.{{ .TagOp }}WithContext(ctx, input)
-		{{- end }}
+		_, err := conn.{{ .TagOp }}(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -206,7 +158,7 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 
 	{{ if .WaitForPropagation }}
 	if len(removedTags) > 0 || len(updatedTags) > 0 {
-		if err := {{ .WaitTagsPropagatedFunc }}(ctx, conn, identifier, newTags); err != nil {
+		if err := {{ .WaitTagsPropagatedFunc }}(ctx, conn, identifier, newTags, optFns...); err != nil {
 			return fmt.Errorf("waiting for resource (%s) tag propagation: %w", identifier, err)
 		}
 	}
@@ -219,6 +171,6 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 // {{ .UpdateTagsFunc | Title }} updates {{ .ServicePackage }} service tags.
 // It is called from outside this package.
 func (p *servicePackage) {{ .UpdateTagsFunc | Title }}(ctx context.Context, meta any, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, oldTags, newTags any) error {
-	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Conn(ctx), identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
+	return  {{ .UpdateTagsFunc }}(ctx, meta.(*conns.AWSClient).{{ .ProviderNameUpper }}Client(ctx), identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, oldTags, newTags)
 }
 {{- end }}

@@ -12,7 +12,7 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
+	namevaluesfilters "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -43,12 +43,12 @@ func main() {
 		SliceServiceNames: sliceServiceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"FilterPackage":         namevaluesfiltersv2.ServiceFilterPackage,
-		"FilterPackagePrefix":   namevaluesfiltersv2.ServiceFilterPackagePrefix,
-		"FilterType":            namevaluesfiltersv2.ServiceFilterType,
-		"FilterTypeNameField":   namevaluesfiltersv2.ServiceFilterTypeNameField,
-		"FilterTypeNameFunc":    namevaluesfiltersv2.ServiceFilterTypeNameFunc,
-		"FilterTypeValuesField": namevaluesfiltersv2.ServiceFilterTypeValuesField,
+		"FilterPackage":         namevaluesfilters.ServiceFilterPackage,
+		"FilterPackagePrefix":   namevaluesfilters.ServiceFilterPackagePrefix,
+		"FilterType":            namevaluesfilters.ServiceFilterType,
+		"FilterTypeNameField":   namevaluesfilters.ServiceFilterTypeNameField,
+		"FilterTypeNameFunc":    namevaluesfilters.ServiceFilterTypeNameFunc,
+		"FilterTypeValuesField": namevaluesfilters.ServiceFilterTypeValuesField,
 		"ProviderNameUpper":     names.ProviderNameUpper,
 	}
 

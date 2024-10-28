@@ -1,14 +1,11 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package v2
+package templates
 
 import (
 	_ "embed"
 )
-
-// Package v2 contains the template bodies for tag methods
-// using the AWS SDK Go V2.
 
 //go:embed header_body.gtpl
 var HeaderBody string
