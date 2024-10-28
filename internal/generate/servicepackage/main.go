@@ -7,6 +7,7 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
 	"errors"
 	"fmt"
@@ -15,7 +16,6 @@ import (
 	"go/token"
 	"os"
 	"slices"
-	"sort"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -82,11 +82,11 @@ func main() {
 			SDKResources:         v.sdkResources,
 		}
 
-		sort.SliceStable(s.FrameworkDataSources, func(i, j int) bool {
-			return s.FrameworkDataSources[i].FactoryName < s.FrameworkDataSources[j].FactoryName
+		slices.SortStableFunc(s.FrameworkDataSources, func(a, b ResourceDatum) int {
+			return cmp.Compare(a.FactoryName, b.FactoryName)
 		})
-		sort.SliceStable(s.FrameworkResources, func(i, j int) bool {
-			return s.FrameworkResources[i].FactoryName < s.FrameworkResources[j].FactoryName
+		slices.SortStableFunc(s.FrameworkResources, func(a, b ResourceDatum) int {
+			return cmp.Compare(a.FactoryName, b.FactoryName)
 		})
 
 		d := g.NewGoFileDestination(filename)

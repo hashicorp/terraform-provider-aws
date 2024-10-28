@@ -6,7 +6,7 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -118,13 +118,14 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		filteredImages = images[:]
 	}
 
-	sort.Slice(filteredImages, func(i, j int) bool {
-		itime, _ := time.Parse(time.RFC3339, aws.ToString(filteredImages[i].CreationDate))
-		jtime, _ := time.Parse(time.RFC3339, aws.ToString(filteredImages[j].CreationDate))
+	slices.SortFunc(filteredImages, func(a, b awstypes.Image) int {
+		atime, _ := time.Parse(time.RFC3339, aws.ToString(a.CreationDate))
+		btime, _ := time.Parse(time.RFC3339, aws.ToString(b.CreationDate))
+		compare := atime.Compare(btime)
 		if d.Get("sort_ascending").(bool) {
-			return itime.Unix() < jtime.Unix()
+			return -compare
 		}
-		return itime.Unix() > jtime.Unix()
+		return compare
 	})
 	for _, image := range filteredImages {
 		imageIDs = append(imageIDs, aws.ToString(image.ImageId))

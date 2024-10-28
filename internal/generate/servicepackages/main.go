@@ -7,11 +7,12 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
 	"flag"
 	"fmt"
 	"os"
-	"sort"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -59,8 +60,8 @@ func main() {
 		td.Services = append(td.Services, s)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderPackage < td.Services[j].ProviderPackage
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.ProviderPackage, b.ProviderPackage)
 	})
 
 	d := g.NewGoFileDestination(filename)
