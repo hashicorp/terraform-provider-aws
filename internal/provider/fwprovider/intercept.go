@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -252,7 +254,104 @@ type tagsDataSourceInterceptor struct {
 }
 
 func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-	// TODO
+	if r.tags == nil {
+		return ctx, diags
+	}
+
+	inContext, ok := conns.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
+	if !ok {
+		return ctx, diags
+	}
+
+	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+	if err != nil {
+		serviceName = "<service>"
+	}
+
+	resourceName := inContext.ResourceName
+	if resourceName == "" {
+		resourceName = "<thing>"
+	}
+
+	tagsInContext, ok := tftags.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	switch when {
+	case Before:
+		var configTags tftags.Map
+		diags.Append(request.Config.GetAttribute(ctx, path.Root(names.AttrTags), &configTags)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		tags := tftags.New(ctx, configTags)
+
+		tagsInContext.TagsIn = option.Some(tags)
+
+	case After:
+		// If the R handler didn't set tags, try and read them from the service API.
+		if tagsInContext.TagsOut.IsNone() {
+			if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+				var identifier string
+				diags.Append(response.State.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)...)
+				if diags.HasError() {
+					return ctx, diags
+				}
+
+				// If the service package has a generic resource list tags methods, call it.
+				var err error
+				if v, ok := sp.(interface {
+					ListTags(context.Context, any, string) error
+				}); ok {
+					err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+				} else if v, ok := sp.(interface {
+					ListTags(context.Context, any, string, string) error
+				}); ok && r.tags.ResourceType != "" {
+					err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+				} else {
+					tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+						"ServicePackage": sp.ServicePackageName(),
+						"ResourceType":   r.tags.ResourceType,
+					})
+				}
+
+				// ISO partitions may not support tagging, giving error.
+				if errs.IsUnsupportedOperationInPartitionError(meta.Partition(ctx), err) {
+					return ctx, diags
+				}
+
+				if inContext.ServicePackageName == names.DynamoDB && err != nil {
+					// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
+					if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+						err = nil
+					}
+				}
+
+				if err != nil {
+					diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
+					return ctx, diags
+				}
+			}
+		}
+
+		tags := tagsInContext.TagsOut.UnwrapOrDefault()
+
+		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
+		stateTags := flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), tftags.NewMapFromMapValue(stateTags))...)
+
+		if diags.HasError() {
+			return ctx, diags
+		}
+	}
+
 	return ctx, diags
 }
 

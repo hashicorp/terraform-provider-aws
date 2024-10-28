@@ -35,8 +35,10 @@ const (
 	ResNameRotation = "Rotation"
 )
 
-// @FrameworkResource(name="Rotation")
+// @FrameworkResource("aws_ssmcontacts_rotation", name="Rotation")
 // @Tags(identifierAttribute="arn")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(serialize=true)
 func newResourceRotation(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceRotation{}
 

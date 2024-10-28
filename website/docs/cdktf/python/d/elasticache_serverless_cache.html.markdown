@@ -44,7 +44,7 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - The Amazon Resource Name (ARN) of the serverless cache.
 * `cache_usage_limits` - The cache usage limits for storage and ElastiCache Processing Units for the cache. See [`cache_usage_limits` Block](#cache_usage_limits-block) for details.
 * `create_time` - Timestamp of when the serverless cache was created.
-* `daily_snapshot_time` - The daily time that snapshots will be created from the new serverless cache. Only available for engine type `"redis"`.
+* `daily_snapshot_time` - The daily time that snapshots will be created from the new serverless cache. Only available for engine types `"redis"` and `"valkey"`.
 * `description` - Description of the serverless cache.
 * `endpoint` - Represents the information required for client programs to connect to the cache. See [`endpoint` Block](#endpoint-block) for details.
 * `engine` – Name of the cache engine.
@@ -94,4 +94,4 @@ The `reader_endpoint` block exports the following attributes:
 * `address` - The DNS hostname of the cache node.
 * `port` - The port number that the cache engine is listening on. Set as integer.
 
-<!-- cache-key: cdktf-0.20.8 input-99589d80b7665c494d09cff80a173b45dc31fc47d5cda81717cdcfaf99723938 -->
+<!-- cache-key: cdktf-0.20.8 input-d2aefac0ebbbe62167539f079f29f724c5f6b79e6dc1f34257d5078b71badbe1 -->

@@ -84,7 +84,7 @@ class MyConvertedCode extends TerraformStack {
     DatazoneUserProfile.generateConfigForImport(
       this,
       "example",
-      "arn:aws:iam::012345678901:user/example,dzd_54nakfrg9k6sri,IAM"
+      "arn:aws:iam::123456789012:user/example,dzd_54nakfrg9k6sri,IAM"
     );
   }
 }
@@ -94,7 +94,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import DataZone User Profile using the `user_identifier,domain_identifier,type`. For example:
 
 ```console
-% terraform import aws_datazone_user_profile.example arn:aws:iam::012345678901:user/example,dzd_54nakfrg9k6suo,IAM
+% terraform import aws_datazone_user_profile.example arn:aws:iam::123456789012:user/example,dzd_54nakfrg9k6suo,IAM
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-ed42392dcc7abcb1a522b0ab89cc797c63cbf2c82f67a3fc37ba7b6ab824ec35 -->
+<!-- cache-key: cdktf-0.20.8 input-e72d7d0cc8d30dcddbba68e2a00a2793052fb1928a083fc96d222a2c604c9948 -->

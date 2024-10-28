@@ -21,8 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ssmcontacts_contact", name="Context")
-// @Tags(identifierAttribute="id")
+// @SDKResource("aws_ssmcontacts_contact", name="Contact")
+// @Tags(identifierAttribute="arn")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(serialize=true)
 func ResourceContact() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceContactCreate,
