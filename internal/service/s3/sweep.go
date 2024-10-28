@@ -70,31 +70,17 @@ func sweepObjects(region string) error {
 	}
 
 	// Directory buckets.
-	s3ExpressConn := client.S3ExpressClient(ctx)
-	pages := s3.NewListDirectoryBucketsPaginator(s3ExpressConn, &s3.ListDirectoryBucketsInput{})
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping S3 Objects sweep for %s: %s", region, err)
-			break // Allow objects in general purpose buckets to be deleted.
-		}
-
-		if err != nil {
-			return fmt.Errorf("error listing S3 Directory Buckets (%s): %w", region, err)
-		}
-
-		for _, v := range page.Buckets {
-			if !bucketNameFilter(ctx, v) {
-				continue
-			}
-
-			sweepables = append(sweepables, directoryBucketObjectSweeper{
-				conn:   s3ExpressConn,
-				bucket: aws.ToString(v.Name),
-			})
-		}
+	dbSweepables, err := sweepDirectoryBucketObjects(ctx, client)
+	if awsv2.SkipSweepError(err) {
+		tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+			"error": err.Error(),
+		})
+		// Allow objects in general purpose buckets to be deleted.
 	}
+	if err != nil {
+		return fmt.Errorf("error listing S3 Directory Buckets (%s): %w", region, err)
+	}
+	sweepables = append(sweepables, dbSweepables...)
 
 	err = sweep.SweepOrchestrator(ctx, sweepables)
 
@@ -140,6 +126,33 @@ func sweepGeneralPurposeBucketObjects(ctx context.Context, client *conns.AWSClie
 					conn:   conn,
 					bucket: bucketName,
 					locked: objectLockEnabled,
+				})
+			}
+		}
+	}
+
+	return sweepables, nil
+}
+
+func sweepDirectoryBucketObjects(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
+	conn := client.S3ExpressClient(ctx)
+
+	var sweepables []sweep.Sweepable
+
+	pages := s3.NewListDirectoryBucketsPaginator(conn, &s3.ListDirectoryBucketsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, bucket := range page.Buckets {
+			bucketName := aws.ToString(bucket.Name)
+			tflog.SetField(ctx, "bucket_name", bucketName)
+			if bucketNameFilter(ctx, bucket) {
+				sweepables = append(sweepables, directoryBucketObjectSweeper{
+					conn:   conn,
+					bucket: bucketName,
 				})
 			}
 		}
