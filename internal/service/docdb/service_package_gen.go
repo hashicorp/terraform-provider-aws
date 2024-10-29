@@ -78,7 +78,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_docdb_global_cluster",
 		},
 		{
-			Factory:  ResourceSubnetGroup,
+			Factory:  resourceSubnetGroup,
 			TypeName: "aws_docdb_subnet_group",
 			Name:     "Subnet Group",
 			Tags: &types.ServicePackageResourceTags{

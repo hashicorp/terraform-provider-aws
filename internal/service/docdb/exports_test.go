@@ -10,6 +10,7 @@ var (
 	ResourceClusterParameterGroup = resourceClusterParameterGroup
 	ResourceEventSubscription     = resourceEventSubscription
 	ResourceGlobalCluster         = resourceGlobalCluster
+	ResourceSubnetGroup           = resourceSubnetGroup
 
 	FindDBClusterByID                 = findDBClusterByID
 	FindDBClusterParameterGroupByName = findDBClusterParameterGroupByName
