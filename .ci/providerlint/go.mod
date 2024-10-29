@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	github.com/bflad/tfproviderlint v0.30.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.58
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.59
 	github.com/hashicorp/terraform-plugin-sdk/v2 v2.34.0
 	golang.org/x/tools v0.26.0
 )
