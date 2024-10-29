@@ -340,8 +340,8 @@ github.com/aws/aws-sdk-go-v2/service/lightsail v1.42.3 h1:lcsqV11EaB74iNKr/PaXV0
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.42.3/go.mod h1:IyYNP3fIP5/BvFKqQFj7wwQnKuH0wndcv6j4DyG9pRk=
 github.com/aws/aws-sdk-go-v2/service/location v1.42.3 h1:ZS+5yiAlb18s6rzADqskEiYV7CF2CxNnpwrorx7QeZ4=
 github.com/aws/aws-sdk-go-v2/service/location v1.42.3/go.mod h1:c2qXPEKEnYTeLKrmjiegSCGxc0oViGErLmXAU1OXGaU=
-github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.31.2 h1:xq/m847nPu/qjcGWfT5AMmLfmb0Z8RzYmsiPQCnqWRg=
-github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.31.2/go.mod h1:sWTm2Cszymy7WYqCuLvw/Zvzy1t08ceZP6Brpo7COY0=
+github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.31.3 h1:HpwLBVICwBES1mok9Tj2AKWa7T+KVbtZAobpSTJ0bZg=
+github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.31.3/go.mod h1:yDvPtgGbvy00b2ZtEsFTu6OYtTExBGvy7f++UJUBfRs=
 github.com/aws/aws-sdk-go-v2/service/m2 v1.18.0 h1:4yncbqHQ5TmL+AElqjSIppgEvCiNgboMDk0FcQ5qSW8=
 github.com/aws/aws-sdk-go-v2/service/m2 v1.18.0/go.mod h1:HWB51wlVsdbT1BrpH4BYrgpxhc012ja8je2TTwjzr/0=
 github.com/aws/aws-sdk-go-v2/service/macie2 v1.43.2 h1:MbR0vRNd7am1So5hcYho+N11dxzhZbB4qdsi+cmcBp0=
