@@ -46,8 +46,8 @@ github.com/google/go-cmp v0.3.1/go.mod h1:8QqcDgzrUqlUb/G2PQTWiueGozuR1884gddMyw
 github.com/google/go-cmp v0.5.5/go.mod h1:v8dTdLbMG2kIc/vJvl+f65V22dbkXbowE6jgT/gNBxE=
 github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsU5ulbFiLKl/XBFqE1GSq7atu8tAmTRI=
 github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeNGIjoY=
-github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.58 h1:lf6PxLIHge0UL5LJgt/Szs0K3PYS27yqDEkaOa0P+ZU=
-github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.58/go.mod h1:9DB57cKw/ZNu1UQJX1YNmaJ7A2/+xCpCUUwbGZy4Qx0=
+github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.59 h1:j5ZrYJbLfZLJ9X5Bnp43z+ygN7kf6rbLCGIBGCIWWEA=
+github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.59/go.mod h1:jZEzCETkIzEinF749zPXsqpPmsA9P0fbMqRyoBh5UNo=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
 github.com/hashicorp/errwrap v1.1.0 h1:OxrOeh75EUXMY8TBjag2fzXGZ40LB6IKw45YeGUDY2I=
 github.com/hashicorp/errwrap v1.1.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
