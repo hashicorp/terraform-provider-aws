@@ -4811,7 +4811,7 @@ resource "aws_iam_role" "vpc_lattice_infrastructure" {
       "Sid": "AllowAccessToECSForInfrastructureManagement",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ecs-service-principal.ecs.aws.internal"
+        "Service": "ecs.amazonaws.com"
       },
       "Action": "sts:AssumeRole"
     }
