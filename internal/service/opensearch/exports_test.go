@@ -5,17 +5,19 @@ package opensearch
 
 // Exports for use in tests only.
 var (
-	ResourceDomainSAMLOptions         = resourceDomainSAMLOptions
-	ResourceInboundConnectionAccepter = resourceInboundConnectionAccepter
-	ResourceOutboundConnection        = resourceOutboundConnection
-	ResourcePackage                   = resourcePackage
-	ResourcePackageAssociation        = resourcePackageAssociation
-	ResourceVPCEndpoint               = resourceVPCEndpoint
+	ResourceDomainSAMLOptions          = resourceDomainSAMLOptions
+	ResourceInboundConnectionAccepter  = resourceInboundConnectionAccepter
+	ResourceOutboundConnection         = resourceOutboundConnection
+	ResourcePackage                    = resourcePackage
+	ResourcePackageAssociation         = resourcePackageAssociation
+	ResourceVPCEndpoint                = resourceVPCEndpoint
+	ResourceAuthorizeVPCEndpointAccess = newResourceAuthorizeVPCEndpointAccess
 
-	FindDomainByName                   = findDomainByName
-	FindPackageByID                    = findPackageByID
-	FindPackageAssociationByTwoPartKey = findPackageAssociationByTwoPartKey
-	FindVPCEndpointByID                = findVPCEndpointByID
+	FindDomainByName                     = findDomainByName
+	FindPackageByID                      = findPackageByID
+	FindPackageAssociationByTwoPartKey   = findPackageAssociationByTwoPartKey
+	FindVPCEndpointByID                  = findVPCEndpointByID
+	FindAuthorizeVPCEndpointAccessByName = findAuthorizeVPCEndpointAccessByName
 
 	EBSVolumeTypePermitsIopsInput       = ebsVolumeTypePermitsIopsInput
 	EBSVolumeTypePermitsThroughputInput = ebsVolumeTypePermitsThroughputInput
