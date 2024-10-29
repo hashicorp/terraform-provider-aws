@@ -338,12 +338,14 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				Value: aws.String(d.Get("deployment_id").(string)),
 			})
 
-			if _, ok := d.GetOk("canary_settings"); ok {
-				operations = append(operations, types.PatchOperation{
-					Op:    types.OpReplace,
-					Path:  aws.String("/canarySettings/deploymentId"),
-					Value: aws.String(d.Get("deployment_id").(string)),
-				})
+			if v, ok := d.GetOk("canary_settings"); ok && v.([]any)[0] != nil {
+				if id, ok := v.([]any)[0].(map[string]any)["deployment_id"].(string); ok && id == "" { // only set if deployment_id is not present on canary_settings
+					operations = append(operations, types.PatchOperation{
+						Op:    types.OpReplace,
+						Path:  aws.String("/canarySettings/deploymentId"),
+						Value: aws.String(d.Get("deployment_id").(string)),
+					})
+				}
 			}
 		}
 		if d.HasChange(names.AttrDescription) {
@@ -658,6 +660,14 @@ func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldC
 		})
 	}
 
+	oldDeploymentID, newDeploymentID := oldSettings["deployment_id"].(string), newSettings["deployment_id"].(string)
+	if oldDeploymentID != newDeploymentID {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/canarySettings/deploymentId"),
+			Value: aws.String(newDeploymentID),
+		})
+	}
 	return operations
 }
 
