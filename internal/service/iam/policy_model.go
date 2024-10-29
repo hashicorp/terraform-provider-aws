@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"slices"
-	"sort"
 	"strconv"
 
 	"github.com/YakDriver/regexache"
@@ -86,7 +85,7 @@ func (s *IAMPolicyDoc) Merge(newDoc *IAMPolicyDoc) {
 func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 	raw := map[string]interface{}{}
 
-	// Although IAM documentation says, that "*" and {"AWS": "*"} are equivalent
+	// Although IAM documentation says that "*" and {"AWS": "*"} are equivalent
 	// (https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html),
 	// in practice they are not for IAM roles. IAM will return an error if trust
 	// policy have "*" or {"*": "*"} as principal, but will accept {"AWS": "*"}.
@@ -115,7 +114,8 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 				raw[p.Type] = make([]string, 0, len(i)+1)
 				raw[p.Type] = append(raw[p.Type].([]string), v)
 			}
-			sort.Sort(sort.Reverse(sort.StringSlice(i)))
+			slices.Sort(i)
+			slices.Reverse(i)
 			raw[p.Type] = append(raw[p.Type].([]string), i...)
 		case string:
 			switch v := raw[p.Type].(type) {
@@ -243,7 +243,8 @@ func policyDecodeConfigStringList(lI []interface{}) interface{} {
 	for i, vI := range lI {
 		ret[i] = vI.(string)
 	}
-	sort.Sort(sort.Reverse(sort.StringSlice(ret)))
+	slices.Sort(ret)
+	slices.Reverse(ret)
 	return ret
 }
 
