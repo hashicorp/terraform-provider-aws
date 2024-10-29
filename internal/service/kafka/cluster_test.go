@@ -6,7 +6,7 @@ package kafka_test
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -1203,7 +1203,7 @@ func testAccCheckResourceAttrIsSortedCSV(resourceName, attributeName string) res
 		}
 
 		splitV := strings.Split(v, ",")
-		if !sort.StringsAreSorted(splitV) {
+		if !slices.IsSorted(splitV) {
 			return fmt.Errorf("%s: Expected attribute %q to be sorted, got %q", resourceName, attributeName, v)
 		}
 

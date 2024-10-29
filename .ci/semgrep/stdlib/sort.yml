@@ -10,3 +10,31 @@ rules:
     message: Prefer slices.SortStableFunc to sort.SliceStable
     pattern: sort.SliceStable(...)
     severity: WARNING
+
+  - id: prefer-slices-sort
+    languages: [go]
+    message: Prefer slices.Sort to sort.$FUNC
+    patterns:
+      - pattern: sort.$FUNC($X)
+      - metavariable-pattern:
+          metavariable: $FUNC
+          pattern-either:
+            - pattern: Ints
+            - pattern: Float64s
+            - pattern: Strings
+    fix: slices.Sort($X)
+    severity: WARNING
+
+  - id: prefer-slices-issorted
+    languages: [go]
+    message: Prefer slices.IsSorted to sort.$FUNC
+    patterns:
+      - pattern: sort.$FUNC($X)
+      - metavariable-pattern:
+          metavariable: $FUNC
+          pattern-either:
+            - pattern: IntsAreSorted
+            - pattern: Float64sAreSorted
+            - pattern: StringsAreSorted
+    fix: slices.IsSorted($X)
+    severity: WARNING

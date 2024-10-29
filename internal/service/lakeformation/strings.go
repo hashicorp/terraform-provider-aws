@@ -5,7 +5,7 @@ package lakeformation
 
 import (
 	"reflect"
-	"sort"
+	"slices"
 )
 
 func StringSlicesEqualIgnoreOrder(s1, s2 []string) bool {
@@ -16,8 +16,8 @@ func StringSlicesEqualIgnoreOrder(s1, s2 []string) bool {
 	v1 := s1
 	v2 := s2
 
-	sort.Strings(v1)
-	sort.Strings(v2)
+	slices.Sort(v1)
+	slices.Sort(v2)
 
 	return reflect.DeepEqual(v1, v2)
 }

@@ -6,6 +6,7 @@ package iam
 import (
 	"encoding/json"
 	"fmt"
+	"slices"
 	"sort"
 	"strconv"
 
@@ -157,7 +158,7 @@ func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 				for _, v := range value.([]interface{}) {
 					values = append(values, v.(string))
 				}
-				sort.Strings(values)
+				slices.Sort(values)
 				out = append(out, IAMPolicyStatementPrincipal{Type: key, Identifiers: values})
 			default:
 				return fmt.Errorf("Unsupported data type %T for IAMPolicyStatementPrincipalSet.Identifiers", vt)
