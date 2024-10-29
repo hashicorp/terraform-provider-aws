@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -1097,9 +1098,13 @@ func resourceService() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 						"port_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 64),
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 64),
+								validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase letters, numbers, underscores and hyphens"),
+								validation.StringDoesNotMatch(regexache.MustCompile(`^-`), "cannot begin with a hyphen"),
+							),
 						},
 					},
 				},
