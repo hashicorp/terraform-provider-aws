@@ -1,0 +1,6 @@
+```release-note:new-resource
+aws_iam_role_policy_attachments_exclusive
+```
+```release-note:note
+resource/aws_iam_role: The `managed_policy_arns` argument is deprecated. Use the `aws_iam_role_policy_attachments_exclusive` resource instead.
+```

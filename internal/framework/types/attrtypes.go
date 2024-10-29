@@ -17,7 +17,6 @@ import (
 // T must be a struct and reflection is used to find exported fields of T with the `tfsdk` tag.
 func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diagnostics) {
 	var diags diag.Diagnostics
-
 	var t T
 	val := reflect.ValueOf(t)
 	typ := val.Type()
@@ -57,4 +56,9 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 
 func AttributeTypesMust[T any](ctx context.Context) map[string]attr.Type {
 	return fwdiag.Must(AttributeTypes[T](ctx))
+}
+
+func newAttrTypeOf[T attr.Value](ctx context.Context) attr.Type {
+	var zero T
+	return zero.Type(ctx)
 }

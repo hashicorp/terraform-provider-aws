@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/emr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/emr/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccEMRInstanceGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emr.InstanceGroup
+	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -33,11 +33,12 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "autoscaling_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "1"),
 				),
 			},
 			{
@@ -45,7 +46,7 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 		},
 	})
@@ -53,7 +54,7 @@ func TestAccEMRInstanceGroup_basic(t *testing.T) {
 
 func TestAccEMRInstanceGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emr.InstanceGroup
+	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -79,8 +80,8 @@ func TestAccEMRInstanceGroup_disappears(t *testing.T) {
 // Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1355
 func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster emr.Cluster
-	var ig emr.InstanceGroup
+	var cluster awstypes.Cluster
+	var ig awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 	emrClusterResourceName := "aws_emr_cluster.test"
@@ -106,7 +107,7 @@ func TestAccEMRInstanceGroup_Disappears_emrCluster(t *testing.T) {
 
 func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 emr.InstanceGroup
+	var v1, v2 awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -128,7 +129,7 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccInstanceGroupConfig_bidPrice(rName),
@@ -143,7 +144,7 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
 				Config: testAccInstanceGroupConfig_basic(rName),
@@ -159,7 +160,7 @@ func TestAccEMRInstanceGroup_bidPrice(t *testing.T) {
 
 func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emr.InstanceGroup
+	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -177,11 +178,14 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configurations_json",
+					names.AttrStatus,
+				},
 			},
 			{
 				Config: testAccInstanceGroupConfig_configurationsJSON(rName, "partitionName2"),
@@ -191,11 +195,14 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"configurations_json",
+					names.AttrStatus,
+				},
 			},
 		},
 	})
@@ -203,7 +210,7 @@ func TestAccEMRInstanceGroup_sJSON(t *testing.T) {
 
 func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emr.InstanceGroup
+	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -221,11 +228,14 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrInstanceCount,
+					names.AttrStatus,
+				},
 			},
 			{
 				Config: testAccInstanceGroupConfig_autoScalingPolicy(rName, 2, 3),
@@ -235,21 +245,24 @@ func TestAccEMRInstanceGroup_autoScalingPolicy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrInstanceCount,
+					names.AttrStatus,
+				},
 			},
 		},
 	})
 }
 
 // Confirm we can scale down the instance count.
-// Regression test for https://github.com/hashicorp/terraform-provider-aws/issues/1264
-func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
+// See https://github.com/hashicorp/terraform-provider-aws/issues/1264.
+func TestAccEMRInstanceGroup_instanceCountDecrease(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emr.InstanceGroup
+	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -260,19 +273,57 @@ func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceGroupConfig_basic(rName),
-				Check:  testAccCheckInstanceGroupExists(ctx, resourceName, &v),
+				Config: testAccInstanceGroupConfig_instanceCount(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "2"),
+				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 			{
-				Config: testAccInstanceGroupConfig_zeroCount(rName),
-				Check:  testAccCheckInstanceGroupExists(ctx, resourceName, &v),
+				Config: testAccInstanceGroupConfig_instanceCount(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "0"),
+				),
+			},
+		},
+	})
+}
+
+// Confirm we can create with a 0 instance count.
+// See https://github.com/hashicorp/terraform-provider-aws/issues/38837.
+func TestAccEMRInstanceGroup_instanceCountCreateZero(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.InstanceGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_emr_instance_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceGroupConfig_instanceCount(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceCount, "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrStatus},
 			},
 		},
 	})
@@ -280,7 +331,7 @@ func TestAccEMRInstanceGroup_instanceCount(t *testing.T) {
 
 func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v emr.InstanceGroup
+	var v awstypes.InstanceGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_emr_instance_group.test"
 
@@ -295,50 +346,47 @@ func TestAccEMRInstanceGroup_EBS_ebsOptimized(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtTrue),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccInstanceGroupResourceImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"status"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccInstanceGroupResourceImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"ebs_config.0.iops",
+					names.AttrStatus,
+				},
 			},
 			{
 				Config: testAccInstanceGroupConfig_ebs(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ebs_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckInstanceGroupExists(ctx context.Context, name string, ig *emr.InstanceGroup) resource.TestCheckFunc {
+func testAccCheckInstanceGroupExists(ctx context.Context, n string, v *awstypes.InstanceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No task group id set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRClient(ctx)
 
-		meta := acctest.Provider.Meta()
-		conn := meta.(*conns.AWSClient).EMRConn(ctx)
-		group, err := tfemr.FetchInstanceGroup(ctx, conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
+		output, err := tfemr.FindInstanceGroupByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_id"], rs.Primary.ID)
+
 		if err != nil {
-			return fmt.Errorf("EMR error: %v", err)
+			return err
 		}
 
-		if group == nil {
-			return fmt.Errorf("No match found for (%s)", name)
-		}
-		*ig = *group
+		*v = *output
 
 		return nil
 	}
@@ -355,10 +403,10 @@ func testAccInstanceGroupResourceImportStateIdFunc(resourceName string) resource
 	}
 }
 
-func testAccInstanceGroupRecreated(t *testing.T, before, after *emr.InstanceGroup) resource.TestCheckFunc {
+func testAccInstanceGroupRecreated(t *testing.T, before, after *awstypes.InstanceGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(before.Id) == aws.StringValue(after.Id) {
-			t.Fatalf("Expected change of Instance Group Ids, but both were %v", aws.StringValue(before.Id))
+		if aws.ToString(before.Id) == aws.ToString(after.Id) {
+			t.Fatalf("Expected change of Instance Group Ids, but both were %v", aws.ToString(before.Id))
 		}
 
 		return nil
@@ -509,12 +557,12 @@ resource "aws_emr_instance_group" "test" {
 `, o))
 }
 
-func testAccInstanceGroupConfig_zeroCount(rName string) string {
-	return acctest.ConfigCompose(testAccInstanceGroupConfig_base(rName), `
+func testAccInstanceGroupConfig_instanceCount(rName string, count int) string {
+	return acctest.ConfigCompose(testAccInstanceGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_emr_instance_group" "test" {
   cluster_id     = aws_emr_cluster.test.id
-  instance_count = 0
+  instance_count = %[1]d
   instance_type  = "c4.large"
 }
-`)
+`, count))
 }

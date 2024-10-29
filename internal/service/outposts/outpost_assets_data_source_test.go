@@ -31,7 +31,7 @@ func TestAccOutpostsAssetsDataSource_id(t *testing.T) {
 			{
 				Config: testAccOutpostAssetsDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "outposts", regexache.MustCompile(`outpost/.+`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "outposts", regexache.MustCompile(`outpost/.+`)),
 				),
 			},
 		},

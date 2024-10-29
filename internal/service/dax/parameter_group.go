@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_dax_parameter_group")
@@ -30,27 +31,27 @@ func ResourceParameterGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
@@ -66,20 +67,20 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
 	input := &dax.CreateParameterGroupInput{
-		ParameterGroupName: aws.String(d.Get("name").(string)),
+		ParameterGroupName: aws.String(d.Get(names.AttrName).(string)),
 	}
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
 	_, err := conn.CreateParameterGroup(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating DAX Parameter Group (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating DAX Parameter Group (%s): %s", d.Get(names.AttrName).(string), err)
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(d.Get(names.AttrName).(string))
 
-	if len(d.Get("parameters").(*schema.Set).List()) > 0 {
+	if len(d.Get(names.AttrParameters).(*schema.Set).List()) > 0 {
 		return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 	}
 	return append(diags, resourceParameterGroupRead(ctx, d, meta)...)
@@ -125,14 +126,14 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading DAX Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", pg.ParameterGroupName)
+	d.Set(names.AttrName, pg.ParameterGroupName)
 	desc := pg.Description
 	// default description is " "
 	if desc != nil && aws.ToString(desc) == " " {
 		*desc = ""
 	}
-	d.Set("description", desc)
-	d.Set("parameters", flattenParameterGroupParameters(paramresp.Parameters))
+	d.Set(names.AttrDescription, desc)
+	d.Set(names.AttrParameters, flattenParameterGroupParameters(paramresp.Parameters))
 	return diags
 }
 
@@ -144,9 +145,9 @@ func resourceParameterGroupUpdate(ctx context.Context, d *schema.ResourceData, m
 		ParameterGroupName: aws.String(d.Id()),
 	}
 
-	if d.HasChange("parameters") {
+	if d.HasChange(names.AttrParameters) {
 		input.ParameterNameValues = expandParameterGroupParameterNameValue(
-			d.Get("parameters").(*schema.Set).List(),
+			d.Get(names.AttrParameters).(*schema.Set).List(),
 		)
 	}
 

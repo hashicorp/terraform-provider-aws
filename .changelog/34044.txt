@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster: Use the configured `copy_tags_to_snapshot` value when `restore_to_point_in_time` is set
+```

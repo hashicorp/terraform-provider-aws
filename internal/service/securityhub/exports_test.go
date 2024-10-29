@@ -5,7 +5,37 @@ package securityhub
 
 // Exports for use in tests only.
 var (
-	ResourceAutomationRule = newAutomationRuleResource
+	ResourceAccount                        = resourceAccount
+	ResourceActionTarget                   = resourceActionTarget
+	ResourceAutomationRule                 = newAutomationRuleResource
+	ResourceConfigurationPolicy            = resourceConfigurationPolicy
+	ResourceConfigurationPolicyAssociation = resourceConfigurationPolicyAssociation
+	ResourceFindingAggregator              = resourceFindingAggregator
+	ResourceInsight                        = resourceInsight
+	ResourceInviteAccepter                 = resourceInviteAccepter
+	ResourceMember                         = resourceMember
+	ResourceOrganizationAdminAccount       = resourceOrganizationAdminAccount
+	ResourceOrganizationConfiguration      = resourceOrganizationConfiguration
+	ResourceProductSubscription            = resourceProductSubscription
+	ResourceStandardsControl               = resourceStandardsControl
+	ResourceStandardsControlAssociation    = newStandardsControlAssociationResource
+	ResourceStandardsSubscription          = resourceStandardsSubscription
 
-	FindAutomationRuleByARN = findAutomationRuleByARN
+	AccountHubARN                                 = accountHubARN
+	FindActionTargetByARN                         = findActionTargetByARN
+	FindAdminAccountByID                          = findAdminAccountByID
+	FindAutomationRuleByARN                       = findAutomationRuleByARN
+	FindConfigurationPolicyAssociationByID        = findConfigurationPolicyAssociationByID
+	FindConfigurationPolicyByID                   = findConfigurationPolicyByID
+	FindFindingAggregatorByARN                    = findFindingAggregatorByARN
+	FindHubByARN                                  = findHubByARN
+	FindInsightByARN                              = findInsightByARN
+	FindMasterAccount                             = findMasterAccount
+	FindMemberByAccountID                         = findMemberByAccountID
+	FindOrganizationConfiguration                 = findOrganizationConfiguration
+	FindProductSubscriptionByARN                  = findProductSubscriptionByARN
+	FindStandardsControlAssociationByTwoPartKey   = findStandardsControlAssociationByTwoPartKey
+	FindStandardsControlByTwoPartKey              = findStandardsControlByTwoPartKey
+	FindStandardsSubscriptionByARN                = findStandardsSubscriptionByARN
+	StandardsControlARNToStandardsSubscriptionARN = standardsControlARNToStandardsSubscriptionARN
 )

@@ -15,7 +15,7 @@
 
 1. Make the changes you would like to include in the provider, add new tests as required, and make sure that all relevant existing tests are passing.
 
-1. [Create a pull request](https://help.github.com/en/articles/creating-a-pull-request-from-a-fork). Please ensure (if possible)   the 'Allow edits from maintainers' checkbox is checked. This will allow the maintainers to make changes and merge the PR without requiring action from the contributor.
+1. [Create a pull request](https://help.github.com/en/articles/creating-a-pull-request-from-a-fork). Please ensure (if possible) that the 'Allow edits from maintainers' checkbox is checked. This will allow the maintainers to make changes and merge the PR without requiring action from the contributor.
    You are welcome to submit your pull request for commentary or review before
    it is fully completed by creating a [draft pull request](https://help.github.com/en/articles/about-pull-requests#draft-pull-requests).
    Please include specific questions or items you'd like feedback on.
@@ -31,7 +31,7 @@
 
 1. One of Terraform's provider team members will look over your contribution and
    either approve it or provide comments letting you know if there is anything
-   left to do. We'll try give you the opportunity to make the required changes yourself, but in some cases we may perform the changes ourselves if it makes sense to (minor changes, or for urgent issues).  We do our best to keep up with the volume of PRs waiting for review, but it may take some time depending on the complexity of the work.
+   left to do. We'll try to give you the opportunity to make the required changes yourself, but in some cases, we may perform the changes ourselves if it makes sense to (minor changes, or for urgent issues).  We do our best to keep up with the volume of PRs waiting for review, but it may take some time depending on the complexity of the work.
 
 1. Once all outstanding comments and checklist items have been addressed, your
    contribution will be merged! Merged PRs will be included in the next
@@ -75,7 +75,7 @@ make fmt
 
 The import statement in a Go file follows these rules (see [#15903](https://github.com/hashicorp/terraform-provider-aws/issues/15903)):
 
-1. Import declarations are grouped into a maximum of three groups with the following order:
+1. Import declarations are grouped into a maximum of three groups in the following order:
     - Standard packages (also called short import path or built-in packages)
     - Third-party packages (also called long import path packages)
     - Local packages
@@ -85,7 +85,7 @@ The import statement in a Go file follows these rules (see [#15903](https://gith
 Check your imports:
 
 ```console
-make importlint
+make import-lint
 ```
 
 For greater detail, the following Go language resources provide common coding preferences that may be referenced during review, if not automatically handled by the project's linting tools.
@@ -162,8 +162,8 @@ The below are style-based items that _may_ be noted during review and are recomm
 
   When the `arn` attribute is synthesized this way, add the resource to the [list](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id) of those affected by the provider's `skip_requesting_account_id` attribute.
 
-- __Implements Warning Logging With Resource State Removal__: If a resource is removed outside of Terraform (e.g., via different tool, API, or web UI), `d.SetId("")` and `return nil` can be used in the resource `Read` function to trigger resource recreation. When this occurs, a warning log message should be printed beforehand: `log.Printf("[WARN] {SERVICE} {THING} (%s) not found, removing from state", d.Id())`
-- __Uses American English for Attribute Naming__: For any ambiguity with attribute naming, prefer American English over British English. e.g., `color` instead of `colour`.
+- __Implements Warning Logging With Resource State Removal__: If a resource is removed outside of Terraform (e.g., via a different tool, API, or web UI), `d.SetId("")` and `return nil` can be used in the resource `Read` function to trigger resource recreation. When this occurs, a warning log message should be printed beforehand: `log.Printf("[WARN] {SERVICE} {THING} (%s) not found, removing from state", d.Id())`
+- __Uses American English for Attribute Naming__: For any ambiguity with attribute naming, prefer American English over British English. e.g., `color` without the British `u`.
 - __Skips Timestamp Attributes__: Generally, creation and modification dates from the API should be omitted from the schema.
 - __Uses Paginated AWS Go SDK Functions When Iterating Over a Collection of Objects__: When the API for listing a collection of objects provides a paginated function, use it instead of looping until the next page token is not set. For example, with the EC2 API, [`DescribeInstancesPages`](https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstancesPages) should be used instead of [`DescribeInstances`](https://docs.aws.amazon.com/sdk-for-go/api/service/ec2/#EC2.DescribeInstances) when more than one result is expected.
 - __Adds Paginated Functions Missing from the AWS Go SDK to Internal Service Package__: If the AWS Go SDK does not define a paginated equivalent for a function to list a collection of objects, it should be added to a per-service internal package using the [`listpages` generator](https://github.com/hashicorp/terraform-provider-aws/blob/main/internal/generate/listpages/README.md). A support case should also be opened with AWS to have the paginated functions added to the AWS Go SDK.

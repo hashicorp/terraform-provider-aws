@@ -14,17 +14,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
-// setNestedObjectTypeOf is the attribute type of a SetNestedObjectValueOf.
-type setNestedObjectTypeOf[T any] struct {
-	basetypes.SetType
-}
-
 var (
 	_ basetypes.SetTypable        = (*setNestedObjectTypeOf[struct{}])(nil)
 	_ NestedObjectCollectionType  = (*setNestedObjectTypeOf[struct{}])(nil)
 	_ basetypes.SetValuable       = (*SetNestedObjectValueOf[struct{}])(nil)
 	_ NestedObjectCollectionValue = (*SetNestedObjectValueOf[struct{}])(nil)
 )
+
+// setNestedObjectTypeOf is the attribute type of a SetNestedObjectValueOf.
+type setNestedObjectTypeOf[T any] struct {
+	basetypes.SetType
+}
 
 func NewSetNestedObjectTypeOf[T any](ctx context.Context) setNestedObjectTypeOf[T] {
 	return setNestedObjectTypeOf[T]{basetypes.SetType{ElemType: NewObjectTypeOf[T](ctx)}}

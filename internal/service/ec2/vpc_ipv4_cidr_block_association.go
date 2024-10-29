@@ -8,19 +8,20 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_ipv4_cidr_block_association")
-func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
+// @SDKResource("aws_vpc_ipv4_cidr_block_association", name="VPC IPV4 CIDR Block Association")
+func resourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCIPv4CIDRBlockAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCIPv4CIDRBlockAssociationRead,
@@ -32,23 +33,23 @@ func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 
 		CustomizeDiff: func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 			// cidr_block can be set by a value returned from IPAM or explicitly in config.
-			if diff.Id() != "" && diff.HasChange("cidr_block") {
+			if diff.Id() != "" && diff.HasChange(names.AttrCIDRBlock) {
 				// If netmask is set then cidr_block is derived from IPAM, ignore changes.
 				if diff.Get("ipv4_netmask_length") != 0 {
-					return diff.Clear("cidr_block")
+					return diff.Clear(names.AttrCIDRBlock)
 				}
-				return diff.ForceNew("cidr_block")
+				return diff.ForceNew(names.AttrCIDRBlock)
 			}
 			return nil
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cidr_block": {
+			names.AttrCIDRBlock: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IsCIDRNetwork(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+				ValidateFunc: validation.IsCIDRNetwork(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
 			},
 			"ipv4_ipam_pool_id": {
 				Type:     schema.TypeString,
@@ -59,9 +60,9 @@ func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(VPCCIDRMinIPv4, VPCCIDRMaxIPv4),
+				ValidateFunc: validation.IntBetween(vpcCIDRMinIPv4Netmask, vpcCIDRMaxIPv4Netmask),
 			},
-			"vpc_id": {
+			names.AttrVPCID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -77,14 +78,14 @@ func ResourceVPCIPv4CIDRBlockAssociation() *schema.Resource {
 
 func resourceVPCIPv4CIDRBlockAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpcID := d.Get("vpc_id").(string)
+	vpcID := d.Get(names.AttrVPCID).(string)
 	input := &ec2.AssociateVpcCidrBlockInput{
 		VpcId: aws.String(vpcID),
 	}
 
-	if v, ok := d.GetOk("cidr_block"); ok {
+	if v, ok := d.GetOk(names.AttrCIDRBlock); ok {
 		input.CidrBlock = aws.String(v.(string))
 	}
 
@@ -93,21 +94,18 @@ func resourceVPCIPv4CIDRBlockAssociationCreate(ctx context.Context, d *schema.Re
 	}
 
 	if v, ok := d.GetOk("ipv4_netmask_length"); ok {
-		input.Ipv4NetmaskLength = aws.Int64(int64(v.(int)))
+		input.Ipv4NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPC IPv4 CIDR Block Association: %s", input)
-	output, err := conn.AssociateVpcCidrBlockWithContext(ctx, input)
+	output, err := conn.AssociateVpcCidrBlock(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 VPC (%s) IPv4 CIDR Block Association: %s", vpcID, err)
 	}
 
-	d.SetId(aws.StringValue(output.CidrBlockAssociation.AssociationId))
+	d.SetId(aws.ToString(output.CidrBlockAssociation.AssociationId))
 
-	_, err = WaitVPCCIDRBlockAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
-
-	if err != nil {
+	if _, err := waitVPCCIDRBlockAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC (%s) IPv4 CIDR block (%s) to become associated: %s", vpcID, d.Id(), err)
 	}
 
@@ -116,9 +114,9 @@ func resourceVPCIPv4CIDRBlockAssociationCreate(ctx context.Context, d *schema.Re
 
 func resourceVPCIPv4CIDRBlockAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	vpcCidrBlockAssociation, vpc, err := FindVPCCIDRBlockAssociationByID(ctx, conn, d.Id())
+	vpcCidrBlockAssociation, vpc, err := findVPCCIDRBlockAssociationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 VPC IPv4 CIDR Block Association %s not found, removing from state", d.Id())
@@ -130,18 +128,18 @@ func resourceVPCIPv4CIDRBlockAssociationRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC IPv4 CIDR Block Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cidr_block", vpcCidrBlockAssociation.CidrBlock)
-	d.Set("vpc_id", vpc.VpcId)
+	d.Set(names.AttrCIDRBlock, vpcCidrBlockAssociation.CidrBlock)
+	d.Set(names.AttrVPCID, vpc.VpcId)
 
 	return diags
 }
 
 func resourceVPCIPv4CIDRBlockAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 VPC IPv4 CIDR Block Association: %s", d.Id())
-	_, err := conn.DisassociateVpcCidrBlockWithContext(ctx, &ec2.DisassociateVpcCidrBlockInput{
+	_, err := conn.DisassociateVpcCidrBlock(ctx, &ec2.DisassociateVpcCidrBlockInput{
 		AssociationId: aws.String(d.Id()),
 	})
 
@@ -153,9 +151,7 @@ func resourceVPCIPv4CIDRBlockAssociationDelete(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPC IPv4 CIDR Block Association (%s): %s", d.Id(), err)
 	}
 
-	_, err = WaitVPCCIDRBlockAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
+	if _, err := waitVPCCIDRBlockAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPC IPv4 CIDR block (%s) to become disassociated: %s", d.Id(), err)
 	}
 

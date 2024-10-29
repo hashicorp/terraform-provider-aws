@@ -25,10 +25,10 @@ func TestAccOutpostsSiteDataSource_id(t *testing.T) {
 			{
 				Config: testAccSiteDataSourceConfig_id(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrAccountID(dataSourceName, "account_id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "description"),
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`^os-.+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "name", regexache.MustCompile(`^.+$`)),
+					acctest.CheckResourceAttrAccountID(dataSourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrDescription),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrID, regexache.MustCompile(`^os-.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrName, regexache.MustCompile(`^.+$`)),
 				),
 			},
 		},
@@ -49,10 +49,10 @@ func TestAccOutpostsSiteDataSource_name(t *testing.T) {
 			{
 				Config: testAccSiteDataSourceConfig_name(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "account_id", sourceDataSourceName, "account_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "description", sourceDataSourceName, "description"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", sourceDataSourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", sourceDataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrAccountID, sourceDataSourceName, names.AttrAccountID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrDescription, sourceDataSourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, sourceDataSourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, sourceDataSourceName, names.AttrName),
 				),
 			},
 		},

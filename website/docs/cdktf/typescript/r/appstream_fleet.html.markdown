@@ -68,17 +68,21 @@ The following arguments are optional:
 * `enableDefaultInternetAccess` - (Optional) Enables or disables default internet access for the fleet.
 * `fleetType` - (Optional) Fleet type. Valid values are: `ON_DEMAND`, `ALWAYS_ON`
 * `iamRoleArn` - (Optional) ARN of the IAM role to apply to the fleet.
-* `idleDisconnectTimeoutInSeconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnectTimeoutInSeconds` time interval begins. Defaults to 60 seconds.
+* `idleDisconnectTimeoutInSeconds` - (Optional) Amount of time that users can be idle (inactive) before they are disconnected from their streaming session and the `disconnectTimeoutInSeconds` time interval begins. Defaults to `0`. Valid value is between `60` and `3600 `seconds.
 * `imageName` - (Optional) Name of the image used to create the fleet.
 * `imageArn` - (Optional) ARN of the public, private, or shared image to use.
 * `streamView` - (Optional) AppStream 2.0 view that is displayed to your users when they stream from the fleet. When `APP` is specified, only the windows of applications opened by users display. When `DESKTOP` is specified, the standard desktop that is provided by the operating system displays. If not specified, defaults to `APP`.
+* `maxSessionsPerInstance` - (Optional) The maximum number of user sessions on an instance. This only applies to multi-session fleets.
 * `maxUserDurationInSeconds` - (Optional) Maximum amount of time that a streaming session can remain active, in seconds.
 * `vpcConfig` - (Optional) Configuration block for the VPC configuration for the image builder. See below.
 * `tags` - (Optional) Map of tags to attach to AppStream instances.
 
 ### `computeCapacity`
 
-* `desiredInstances` - (Required) Desired number of streaming instances.
+Exactly one of `desiredInstances` or `desiredSessions` must be set, based on the type of fleet being created.
+
+* `desiredInstances` - (Optional) Desired number of streaming instances.
+* `desiredSessions` - (Optional) Desired number of user sessions for a multi-session fleet. This is not allowed for single-session fleets.
 
 ### `domainJoinInfo`
 
@@ -134,4 +138,4 @@ Using `terraform import`, import `aws_appstream_fleet` using the id. For example
 % terraform import aws_appstream_fleet.example fleetNameExample
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-42d97accec28bb319d6c242d7d35c629d75555f762b737225bd5f377db1b4063 -->
+<!-- cache-key: cdktf-0.20.8 input-44ac02a14cdcce689c53a619341188c26474b5fb6875cc762f2efa3d3721360c -->

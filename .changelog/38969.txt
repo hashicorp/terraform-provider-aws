@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudformation_stack_set_instance: Fix crash during construction of the `id` attribute when `deployment_targets` does not include organizational unit IDs.
+```

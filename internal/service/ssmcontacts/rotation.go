@@ -6,9 +6,9 @@ package ssmcontacts
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -35,8 +35,10 @@ const (
 	ResNameRotation = "Rotation"
 )
 
-// @FrameworkResource(name="Rotation")
+// @FrameworkResource("aws_ssmcontacts_rotation", name="Rotation")
 // @Tags(identifierAttribute="arn")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(serialize=true)
 func newResourceRotation(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceRotation{}
 
@@ -55,17 +57,17 @@ func (r *resourceRotation) Metadata(_ context.Context, request resource.Metadata
 func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"contact_ids": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
 				ElementType: types.StringType,
 				Required:    true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"start_time": schema.StringAttribute{
+			names.AttrStartTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Optional:   true,
 			},
@@ -109,11 +111,11 @@ func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRe
 						"shift_coverages": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[shiftCoveragesData](ctx),
 							PlanModifiers: []planmodifier.List{
-								ShiftCoveragesPlanModifier(),
+								shiftCoveragesPlanModifier(),
 								listplanmodifier.UseStateForUnknown(),
 							},
 							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
+								Attributes: map[string]schema.Attribute{ // nosemgrep:ci.semgrep.framework.map_block_key-meaningful-names
 									"map_block_key": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DayOfWeek](),
 										Required:   true,
@@ -420,7 +422,7 @@ func (r *resourceRotation) Delete(ctx context.Context, request resource.DeleteRe
 	}
 
 	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
-		"id": state.ID.ValueString(),
+		names.AttrID: state.ID.ValueString(),
 	})
 
 	_, err := conn.DeleteRotation(ctx, &ssmcontacts.DeleteRotationInput{
@@ -451,8 +453,8 @@ type resourceRotationData struct {
 	Recurrence fwtypes.ListNestedObjectValueOf[recurrenceData] `tfsdk:"recurrence"`
 	Name       types.String                                    `tfsdk:"name"`
 	StartTime  timetypes.RFC3339                               `tfsdk:"start_time"`
-	Tags       types.Map                                       `tfsdk:"tags"`
-	TagsAll    types.Map                                       `tfsdk:"tags_all"`
+	Tags       tftags.Map                                      `tfsdk:"tags"`
+	TagsAll    tftags.Map                                      `tfsdk:"tags_all"`
 	TimeZoneID types.String                                    `tfsdk:"time_zone_id"`
 }
 

@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_prometheus_rule_group_namespace", name="Rule Group Namespace")
@@ -41,7 +42,7 @@ func resourceRuleGroupNamespace() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -60,7 +61,7 @@ func resourceRuleGroupNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).AMPClient(ctx)
 
 	workspaceID := d.Get("workspace_id").(string)
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &amp.CreateRuleGroupsNamespaceInput{
 		Data:        []byte(d.Get("data").(string)),
 		Name:        aws.String(name),
@@ -99,7 +100,7 @@ func resourceRuleGroupNamespaceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set("data", string(rgn.Data))
-	d.Set("name", rgn.Name)
+	d.Set(names.AttrName, rgn.Name)
 	_, workspaceID, err := nameAndWorkspaceIDFromRuleGroupNamespaceARN(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -115,7 +116,7 @@ func resourceRuleGroupNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 
 	input := &amp.PutRuleGroupsNamespaceInput{
 		Data:        []byte(d.Get("data").(string)),
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
 	}
 
@@ -138,7 +139,7 @@ func resourceRuleGroupNamespaceDelete(ctx context.Context, d *schema.ResourceDat
 
 	log.Printf("[DEBUG] Deleting Prometheus Rule Group Namespace: (%s)", d.Id())
 	_, err := conn.DeleteRuleGroupsNamespace(ctx, &amp.DeleteRuleGroupsNamespaceInput{
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
 		WorkspaceId: aws.String(d.Get("workspace_id").(string)),
 	})
 

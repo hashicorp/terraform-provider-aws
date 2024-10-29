@@ -1,0 +1,8 @@
+rules:
+  - id: model-tag-types
+    languages: [go]
+    message: Use type `tags.Map` for $1
+    patterns:
+      - pattern-regex: (\w+)\s+types\.Map\s+`tfsdk:"tags(_all)?"`
+      - pattern-inside: type $TYPE struct { ... }
+    severity: ERROR

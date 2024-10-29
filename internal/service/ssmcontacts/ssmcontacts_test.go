@@ -15,55 +15,57 @@ func TestAccSSMContacts_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
-		"Contact Resource Tests": {
-			"basic":             testContact_basic,
-			"disappears":        testContact_disappears,
-			"updateAlias":       testContact_updateAlias,
-			"updateDisplayName": testContact_updateDisplayName,
-			"updateTags":        testContact_updateTags,
-			"updateType":        testContact_updateType,
+		"ContactResource": {
+			acctest.CtBasic:      testAccContact_basic,
+			acctest.CtDisappears: testAccContact_disappears,
+			"updateAlias":        testAccContact_updateAlias,
+			"updateDisplayName":  testAccContact_updateDisplayName,
+			"tags":               testAccSSMContactsContact_tagsSerial,
+			"updateType":         testAccContact_updateType,
 		},
-		"Contact Data Source Tests": {
-			"basic": testContactDataSource_basic,
+		"ContactDataSource": {
+			acctest.CtBasic: testAccContactDataSource_basic,
+			"tags":          testAccSSMContactsContactDataSource_tagsSerial,
 		},
-		"Contact Channel Resource Tests": {
-			"basic":           testContactChannel_basic,
-			"contactId":       testContactChannel_contactID,
-			"deliveryAddress": testContactChannel_deliveryAddress,
-			"disappears":      testContactChannel_disappears,
-			"name":            testContactChannel_name,
-			"type":            testContactChannel_type,
+		"ContactChannelResource": {
+			acctest.CtBasic:      testAccContactChannel_basic,
+			"contactId":          testAccContactChannel_contactID,
+			"deliveryAddress":    testAccContactChannel_deliveryAddress,
+			acctest.CtDisappears: testAccContactChannel_disappears,
+			acctest.CtName:       testAccContactChannel_name,
+			"type":               testAccContactChannel_type,
 		},
-		"Contact Channel Data Source Tests": {
-			"basic": testContactChannelDataSource_basic,
+		"ContactChannelDataSource": {
+			acctest.CtBasic: testAccContactChannelDataSource_basic,
 		},
-		"Plan Resource Tests": {
-			"basic":                   testPlan_basic,
-			"disappears":              testPlan_disappears,
-			"updateChannelTargetInfo": testPlan_updateChannelTargetInfo,
-			"updateContactId":         testPlan_updateContactId,
-			"updateContactTargetInfo": testPlan_updateContactTargetInfo,
-			"updateDurationInMinutes": testPlan_updateDurationInMinutes,
-			"updateStages":            testPlan_updateStages,
-			"updateTargets":           testPlan_updateTargets,
+		"PlanResource": {
+			acctest.CtBasic:           testAccPlan_basic,
+			acctest.CtDisappears:      testAccPlan_disappears,
+			"updateChannelTargetInfo": testAccPlan_updateChannelTargetInfo,
+			"updateContactId":         testAccPlan_updateContactId,
+			"updateContactTargetInfo": testAccPlan_updateContactTargetInfo,
+			"updateDurationInMinutes": testAccPlan_updateDurationInMinutes,
+			"updateStages":            testAccPlan_updateStages,
+			"updateTargets":           testAccPlan_updateTargets,
 		},
-		"Plan Data Source Tests": {
-			"basic":             testPlanDataSource_basic,
-			"channelTargetInfo": testPlanDataSource_channelTargetInfo,
+		"PlanDataSource": {
+			acctest.CtBasic:     testAccPlanDataSource_basic,
+			"channelTargetInfo": testAccPlanDataSource_channelTargetInfo,
 		},
 		"RotationResource": {
-			"basic":      testRotation_basic,
-			"disappears": testRotation_disappears,
-			"update":     testRotation_updateRequiredFields,
-			"startTime":  testRotation_startTime,
-			"contactIds": testRotation_contactIds,
-			"recurrence": testRotation_recurrence,
-			"tags":       testRotation_tags,
+			acctest.CtBasic:      testAccRotation_basic,
+			acctest.CtDisappears: testAccRotation_disappears,
+			"update":             testAccRotation_updateRequiredFields,
+			"startTime":          testAccRotation_startTime,
+			"contactIds":         testAccRotation_contactIds,
+			"recurrence":         testAccRotation_recurrence,
+			"tags":               testAccSSMContactsRotation_tagsSerial,
 		},
 		"RotationDataSource": {
-			"basic":           testRotationDataSource_basic,
-			"dailySettings":   testRotationDataSource_dailySettings,
-			"monthlySettings": testRotationDataSource_monthlySettings,
+			acctest.CtBasic:   testAccRotationDataSource_basic,
+			"dailySettings":   testAccRotationDataSource_dailySettings,
+			"monthlySettings": testAccRotationDataSource_monthlySettings,
+			"tags":            testAccSSMContactsRotationDataSource_tagsSerial,
 		},
 	}
 

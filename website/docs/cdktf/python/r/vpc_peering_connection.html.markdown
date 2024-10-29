@@ -148,7 +148,7 @@ can be done using the [`auto_accept`](vpc_peering_connection.html#auto_accept) a
 Connection has to be made active manually using other means. See [notes](vpc_peering_connection.html#notes) below for
 more information.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `peer_owner_id` - (Optional) The AWS account ID of the target peer VPC.
    Defaults to the account ID the [AWS provider][1] is currently connected to, so must be managed if connecting cross-account.
@@ -220,4 +220,4 @@ Using `terraform import`, import VPC Peering resources using the VPC peering `id
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.20.1 input-2e41dd272754871d6f0b4cfe6ce7afba78a124ca8bb6137b2eea4b2673421e2d -->
+<!-- cache-key: cdktf-0.20.8 input-81146d4d65b74a0127fbac7a0b412052b1f13331dcc243c687067a6fe2c7a258 -->

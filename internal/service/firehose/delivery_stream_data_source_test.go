@@ -28,8 +28,8 @@ func TestAccFirehoseDeliveryStreamDataSource_basic(t *testing.T) {
 			{
 				Config: testAccDeliveryStreamDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 				),
 			},
 		},

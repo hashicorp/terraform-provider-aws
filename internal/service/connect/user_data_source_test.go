@@ -33,15 +33,15 @@ func testAccUserDataSource_userID(t *testing.T) {
 			{
 				Config: testAccUserDataSourceConfig_id(rName, rName2, rName3, rName4, rName5, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "directory_user_id", resourceName, "directory_user_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_group_id", resourceName, "hierarchy_group_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.#", resourceName, "identity_info.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.email", resourceName, "identity_info.0.email"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.first_name", resourceName, "identity_info.0.first_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.last_name", resourceName, "identity_info.0.last_name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "phone_config.#", resourceName, "phone_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "phone_config.0.after_contact_work_time_limit", resourceName, "phone_config.0.after_contact_work_time_limit"),
 					resource.TestCheckResourceAttrPair(datasourceName, "phone_config.0.auto_accept", resourceName, "phone_config.0.auto_accept"),
@@ -52,7 +52,7 @@ func testAccUserDataSource_userID(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "security_profile_ids.*", resourceName, "security_profile_ids.0"),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "security_profile_ids.*", resourceName, "security_profile_ids.1"),
 					resource.TestCheckResourceAttrPair(datasourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key1", resourceName, "tags.Key1"),
 				),
 			},
@@ -80,15 +80,15 @@ func testAccUserDataSource_name(t *testing.T) {
 			{
 				Config: testAccUserDataSourceConfig_name(rName, rName2, rName3, rName4, rName5, email),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(datasourceName, "directory_user_id", resourceName, "directory_user_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "hierarchy_group_id", resourceName, "hierarchy_group_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.#", resourceName, "identity_info.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.email", resourceName, "identity_info.0.email"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.first_name", resourceName, "identity_info.0.first_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_info.0.last_name", resourceName, "identity_info.0.last_name"),
-					resource.TestCheckResourceAttrPair(datasourceName, "instance_id", resourceName, "instance_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrInstanceID, resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(datasourceName, "phone_config.#", resourceName, "phone_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "phone_config.0.after_contact_work_time_limit", resourceName, "phone_config.0.after_contact_work_time_limit"),
 					resource.TestCheckResourceAttrPair(datasourceName, "phone_config.0.auto_accept", resourceName, "phone_config.0.auto_accept"),
@@ -99,7 +99,7 @@ func testAccUserDataSource_name(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "security_profile_ids.*", resourceName, "security_profile_ids.0"),
 					resource.TestCheckTypeSetElemAttrPair(datasourceName, "security_profile_ids.*", resourceName, "security_profile_ids.1"),
 					resource.TestCheckResourceAttrPair(datasourceName, "user_id", resourceName, "user_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Key1", resourceName, "tags.Key1"),
 				),
 			},
@@ -107,7 +107,7 @@ func testAccUserDataSource_name(t *testing.T) {
 	})
 }
 
-func testAccUserBaseDataSourceConfig(rName, rName2, rName3, rName4, rName5, email string) string {
+func testAccUserDataSourceConfig_base(rName, rName2, rName3, rName4, rName5, email string) string {
 	return acctest.ConfigCompose(
 		testAccUserConfig_base(rName, rName2, rName3, rName4),
 		fmt.Sprintf(`
@@ -132,7 +132,7 @@ resource "aws_connect_user" "test" {
   phone_config {
     after_contact_work_time_limit = 0
     auto_accept                   = true
-    desk_phone_number             = "+112345678913"
+    desk_phone_number             = "+12345678913"
     phone_type                    = "DESK_PHONE"
   }
 
@@ -145,7 +145,7 @@ resource "aws_connect_user" "test" {
 
 func testAccUserDataSourceConfig_id(rName, rName2, rName3, rName4, rName5, email string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseDataSourceConfig(rName, rName2, rName3, rName4, rName5, email),
+		testAccUserDataSourceConfig_base(rName, rName2, rName3, rName4, rName5, email),
 		`
 data "aws_connect_user" "test" {
   instance_id = aws_connect_instance.test.id
@@ -156,7 +156,7 @@ data "aws_connect_user" "test" {
 
 func testAccUserDataSourceConfig_name(rName, rName2, rName3, rName4, rName5, email string) string {
 	return acctest.ConfigCompose(
-		testAccUserBaseDataSourceConfig(rName, rName2, rName3, rName4, rName5, email),
+		testAccUserDataSourceConfig_base(rName, rName2, rName3, rName4, rName5, email),
 		`
 data "aws_connect_user" "test" {
   instance_id = aws_connect_instance.test.id

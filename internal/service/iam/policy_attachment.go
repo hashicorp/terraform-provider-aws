@@ -7,20 +7,23 @@ import (
 	"context"
 	"errors"
 	"log"
+	"reflect"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_policy_attachment", name="Policy Attachment")
@@ -38,7 +41,7 @@ func resourcePolicyAttachment() *schema.Resource {
 				Elem:         &schema.Schema{Type: schema.TypeString},
 				AtLeastOneOf: []string{"groups", "roles", "users"},
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -68,7 +71,7 @@ func resourcePolicyAttachment() *schema.Resource {
 
 func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	policyARN := d.Get("policy_arn").(string)
 	var groups, roles, users []string
@@ -90,14 +93,14 @@ func resourcePolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(d.Get(names.AttrName).(string))
 
 	return append(diags, resourcePolicyAttachmentRead(ctx, d, meta)...)
 }
 
 func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	policyARN := d.Get("policy_arn").(string)
 	groups, roles, users, err := findEntitiesForPolicyByARN(ctx, conn, policyARN)
@@ -121,7 +124,7 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChange("groups") {
 		diags = sdkdiag.AppendFromErr(diags, updateGroups(ctx, conn, d))
@@ -142,7 +145,7 @@ func resourcePolicyAttachmentUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	policyARN := d.Get("policy_arn").(string)
 	var groups, roles, users []string
@@ -163,7 +166,7 @@ func resourcePolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func attachPolicyToGroups(ctx context.Context, conn *iam.IAM, groups []string, policyARN string) error {
+func attachPolicyToGroups(ctx context.Context, conn *iam.Client, groups []string, policyARN string) error {
 	var errs []error
 
 	for _, group := range groups {
@@ -173,7 +176,7 @@ func attachPolicyToGroups(ctx context.Context, conn *iam.IAM, groups []string, p
 	return errors.Join(errs...)
 }
 
-func attachPolicyToRoles(ctx context.Context, conn *iam.IAM, roles []string, policyARN string) error {
+func attachPolicyToRoles(ctx context.Context, conn *iam.Client, roles []string, policyARN string) error {
 	var errs []error
 
 	for _, role := range roles {
@@ -183,7 +186,7 @@ func attachPolicyToRoles(ctx context.Context, conn *iam.IAM, roles []string, pol
 	return errors.Join(errs...)
 }
 
-func attachPolicyToUsers(ctx context.Context, conn *iam.IAM, users []string, policyARN string) error {
+func attachPolicyToUsers(ctx context.Context, conn *iam.Client, users []string, policyARN string) error {
 	var errs []error
 
 	for _, user := range users {
@@ -193,7 +196,7 @@ func attachPolicyToUsers(ctx context.Context, conn *iam.IAM, users []string, pol
 	return errors.Join(errs...)
 }
 
-func updateGroups(ctx context.Context, conn *iam.IAM, d *schema.ResourceData) error {
+func updateGroups(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
 	policyARN := d.Get("policy_arn").(string)
 	o, n := d.GetChange("groups")
 	os, ns := o.(*schema.Set), n.(*schema.Set)
@@ -209,7 +212,7 @@ func updateGroups(ctx context.Context, conn *iam.IAM, d *schema.ResourceData) er
 	return nil
 }
 
-func updateRoles(ctx context.Context, conn *iam.IAM, d *schema.ResourceData) error {
+func updateRoles(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
 	policyARN := d.Get("policy_arn").(string)
 	o, n := d.GetChange("roles")
 	os, ns := o.(*schema.Set), n.(*schema.Set)
@@ -225,7 +228,7 @@ func updateRoles(ctx context.Context, conn *iam.IAM, d *schema.ResourceData) err
 	return nil
 }
 
-func updateUsers(ctx context.Context, conn *iam.IAM, d *schema.ResourceData) error {
+func updateUsers(ctx context.Context, conn *iam.Client, d *schema.ResourceData) error {
 	policyARN := d.Get("policy_arn").(string)
 	o, n := d.GetChange("users")
 	os, ns := o.(*schema.Set), n.(*schema.Set)
@@ -241,7 +244,7 @@ func updateUsers(ctx context.Context, conn *iam.IAM, d *schema.ResourceData) err
 	return nil
 }
 
-func detachPolicyFromGroups(ctx context.Context, conn *iam.IAM, groups []string, policyARN string) error {
+func detachPolicyFromGroups(ctx context.Context, conn *iam.Client, groups []string, policyARN string) error {
 	var errs []error
 
 	for _, group := range groups {
@@ -251,7 +254,7 @@ func detachPolicyFromGroups(ctx context.Context, conn *iam.IAM, groups []string,
 	return errors.Join(errs...)
 }
 
-func detachPolicyFromRoles(ctx context.Context, conn *iam.IAM, roles []string, policyARN string) error {
+func detachPolicyFromRoles(ctx context.Context, conn *iam.Client, roles []string, policyARN string) error {
 	var errs []error
 
 	for _, role := range roles {
@@ -261,7 +264,7 @@ func detachPolicyFromRoles(ctx context.Context, conn *iam.IAM, roles []string, p
 	return errors.Join(errs...)
 }
 
-func detachPolicyFromUsers(ctx context.Context, conn *iam.IAM, users []string, policyARN string) error {
+func detachPolicyFromUsers(ctx context.Context, conn *iam.Client, users []string, policyARN string) error {
 	var errs []error
 
 	for _, user := range users {
@@ -271,7 +274,7 @@ func detachPolicyFromUsers(ctx context.Context, conn *iam.IAM, users []string, p
 	return errors.Join(errs...)
 }
 
-func findEntitiesForPolicyByARN(ctx context.Context, conn *iam.IAM, arn string) ([]string, []string, []string, error) {
+func findEntitiesForPolicyByARN(ctx context.Context, conn *iam.Client, arn string) ([]string, []string, []string, error) {
 	input := &iam.ListEntitiesForPolicyInput{
 		PolicyArn: aws.String(arn),
 	}
@@ -285,51 +288,48 @@ func findEntitiesForPolicyByARN(ctx context.Context, conn *iam.IAM, arn string) 
 		return nil, nil, nil, tfresource.NewEmptyResultError(input)
 	}
 
-	groupName := tfslices.ApplyToAll(groups, func(v *iam.PolicyGroup) string { return aws.StringValue(v.GroupName) })
-	roleNames := tfslices.ApplyToAll(roles, func(v *iam.PolicyRole) string { return aws.StringValue(v.RoleName) })
-	userNames := tfslices.ApplyToAll(users, func(v *iam.PolicyUser) string { return aws.StringValue(v.UserName) })
+	groupName := tfslices.ApplyToAll(groups, func(v awstypes.PolicyGroup) string { return aws.ToString(v.GroupName) })
+	roleNames := tfslices.ApplyToAll(roles, func(v awstypes.PolicyRole) string { return aws.ToString(v.RoleName) })
+	userNames := tfslices.ApplyToAll(users, func(v awstypes.PolicyUser) string { return aws.ToString(v.UserName) })
 
 	return groupName, roleNames, userNames, nil
 }
 
-func findEntitiesForPolicy(ctx context.Context, conn *iam.IAM, input *iam.ListEntitiesForPolicyInput) ([]*iam.PolicyGroup, []*iam.PolicyRole, []*iam.PolicyUser, error) {
-	var groups []*iam.PolicyGroup
-	var roles []*iam.PolicyRole
-	var users []*iam.PolicyUser
+func findEntitiesForPolicy(ctx context.Context, conn *iam.Client, input *iam.ListEntitiesForPolicyInput) ([]awstypes.PolicyGroup, []awstypes.PolicyRole, []awstypes.PolicyUser, error) {
+	var groups []awstypes.PolicyGroup
+	var roles []awstypes.PolicyRole
+	var users []awstypes.PolicyUser
 
-	err := conn.ListEntitiesForPolicyPagesWithContext(ctx, input, func(page *iam.ListEntitiesForPolicyOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iam.NewListEntitiesForPolicyPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			return nil, nil, nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, nil, nil, err
 		}
 
 		for _, v := range page.PolicyGroups {
-			if v != nil {
+			if !reflect.ValueOf(v).IsZero() {
 				groups = append(groups, v)
 			}
 		}
 		for _, v := range page.PolicyRoles {
-			if v != nil {
+			if !reflect.ValueOf(v).IsZero() {
 				roles = append(roles, v)
 			}
 		}
 		for _, v := range page.PolicyUsers {
-			if v != nil {
+			if !reflect.ValueOf(v).IsZero() {
 				users = append(users, v)
 			}
 		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, nil, nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, nil, nil, err
 	}
 
 	return groups, roles, users, nil

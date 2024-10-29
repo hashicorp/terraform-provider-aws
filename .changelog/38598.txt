@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_pipes_pipe: Don't reset `target_parameters` if the configured value has not changed
+```
