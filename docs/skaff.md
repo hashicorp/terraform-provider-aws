@@ -106,7 +106,6 @@ Flags:
   -n, --name string        name of the entity
   -p, --plugin-sdkv2       generate for Terraform Plugin SDK V2
   -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
-  -o, --v1                 generate for AWS Go SDK v1 (some existing services)
 ```
 
 ### Function
@@ -154,5 +153,4 @@ Flags:
   -n, --name string        name of the entity
   -p, --plugin-sdkv2       generate for Terraform Plugin SDK V2
   -s, --snakename string   if skaff doesn't get it right, explicitly give name in snake case (e.g., db_vpc_instance)
-  -o, --v1                 generate for AWS Go SDK v1 (some existing services)
 ```
