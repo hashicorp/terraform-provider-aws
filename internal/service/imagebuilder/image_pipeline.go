@@ -382,18 +382,7 @@ func resourceImagePipelineUpdate(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	if d.HasChanges(
-		names.AttrDescription,
-		"distribution_configuration_arn",
-		"enhanced_image_metadata_enabled",
-		"execution_role",
-		"image_scanning_configuration",
-		"image_tests_configuration",
-		"infrastructure_configuration_arn",
-		names.AttrSchedule,
-		names.AttrStatus,
-		"workflow",
-	) {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &imagebuilder.UpdateImagePipelineInput{
 			ClientToken:                  aws.String(id.UniqueId()),
 			EnhancedImageMetadataEnabled: aws.Bool(d.Get("enhanced_image_metadata_enabled").(bool)),
