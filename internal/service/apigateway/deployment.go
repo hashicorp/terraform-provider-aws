@@ -238,6 +238,22 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		RestApiId:    aws.String(restAPIID),
 	})
 
+	if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Active stages with canary settings pointing to this deployment must be moved or deleted") {
+		_, err = conn.DeleteStage(ctx, &apigateway.DeleteStageInput{
+			StageName: aws.String(stageName),
+			RestApiId: aws.String(restAPIID),
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting API Gateway Stage (%s): %s", stageName, err)
+		}
+
+		_, err = conn.DeleteDeployment(ctx, &apigateway.DeleteDeploymentInput{
+			DeploymentId: aws.String(d.Id()),
+			RestApiId:    aws.String(restAPIID),
+		})
+	}
+
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}

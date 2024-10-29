@@ -612,10 +612,28 @@ resource "aws_lambda_function" "test" {
 
 func testAccStageConfig_deploymentCanarySettings(rName, url string) string {
 	return acctest.ConfigCompose(testAccDeploymentConfig_base(rName, url), `
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.test_main.id
+
+  lifecycle {
+    ignore_changes = [variables, canary_settings]
+  }
+}
+
+resource "aws_api_gateway_deployment" "test_main" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  description = "test-api-gateway"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+}
+
 resource "aws_api_gateway_deployment" "test" {
   depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id = aws_api_gateway_rest_api.test.id
+  stage_name  = aws_api_gateway_stage.test.stage_name
   canary_settings {
     percent_traffic = "33.33"
     stage_variable_overrides = {
