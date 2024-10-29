@@ -232,11 +232,11 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"role_name": {
+									"disk_image_format": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"disk_image_format": {
+									"role_name": {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
