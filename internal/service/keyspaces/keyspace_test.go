@@ -242,7 +242,7 @@ func testAccKeyspaceConfig_replicationSpecification(rName, rSpecification string
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
 
-  replication_specification  {
+  replication_specification {
     replication_strategy = %[2]q
   }
 }
