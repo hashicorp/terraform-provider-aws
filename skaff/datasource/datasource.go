@@ -14,6 +14,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
@@ -42,13 +43,12 @@ type TemplateData struct {
 	Service              string
 	ServiceLower         string
 	AWSServiceName       string
-	AWSGoSDKV2           bool
 	PluginFramework      bool
 	HumanDataSourceName  string
 	ProviderResourceName string
 }
 
-func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
+func Create(dsName, snakeName string, comments, force, pluginFramework, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -68,7 +68,9 @@ func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	snakeName = convert.ToSnakeCase(dsName, snakeName)
+	if snakeName == "" {
+		snakeName = names.ToSnakeCase(dsName)
+	}
 
 	service, err := data.LookupService(servicePackage)
 	if err != nil {
@@ -87,7 +89,6 @@ func Create(dsName, snakeName string, comments, force, v2, pluginFramework, tags
 		Service:              service.ProviderNameUpper(),
 		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),
 		AWSServiceName:       service.FullHumanFriendly(),
-		AWSGoSDKV2:           v2,
 		PluginFramework:      pluginFramework,
 		HumanDataSourceName:  convert.ToHumanResName(dsName),
 		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
