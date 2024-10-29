@@ -1179,7 +1179,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.BoolValue(v)
+            tfMap["nested_attribute_name"] = aws.ToBool(v)
         }
     
         // ...
@@ -1238,7 +1238,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.Float64Value(v)
+            tfMap["nested_attribute_name"] = aws.ToFloat64(v)
         }
     
         // ...
@@ -1297,7 +1297,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.Int64Value(v)
+            tfMap["nested_attribute_name"] = aws.ToInt64(v)
         }
     
         // ...
@@ -1712,7 +1712,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.StringValue(v)
+            tfMap["nested_attribute_name"] = aws.ToString(v)
         }
     
         // ...
@@ -1788,7 +1788,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         // ...
     
         if v := apiObject.NestedAttributeName; v != nil {
-            tfMap["nested_attribute_name"] = aws.TimeValue(v).Format(time.RFC3339)
+            tfMap["nested_attribute_name"] = aws.ToTime(v).Format(time.RFC3339)
         }
     
         // ...
