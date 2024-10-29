@@ -227,6 +227,30 @@ func dataSourceDistributionConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"s3_export_configuration": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"disk_image_format": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"role_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									names.AttrS3Bucket: {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"s3_prefix": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
