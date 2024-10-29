@@ -388,8 +388,8 @@ github.com/aws/aws-sdk-go-v2/service/osis v1.14.3 h1:tQ22tX9cFs4C5YETKCBsRnnG5Uo
 github.com/aws/aws-sdk-go-v2/service/osis v1.14.3/go.mod h1:NnRWAfZjO+9sL49dpQHdvmaOn2TKEXrFHooPslz/zqw=
 github.com/aws/aws-sdk-go-v2/service/outposts v1.45.1 h1:ASOQW/npPFiYY41u4814G2hKOvYz1f4xQLeTPDFsG4k=
 github.com/aws/aws-sdk-go-v2/service/outposts v1.45.1/go.mod h1:57o96t6p5S8Qh/ueQjHYhah+PF9D4GDuVu3ygkl4Ptw=
-github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.15.0 h1:2iQ9dQHGWvRZxU1rVzS+VuqF/Nag2pOP9YtbB2CLobU=
-github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.15.0/go.mod h1:K/eMWk8jk8kx8v4XMKXeKRibUZRivpsWmpnRRShhRuA=
+github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.15.1 h1:iz84FIa12p8m9CE6r66AbjMwy5ezI+2iBN3wjFLcns0=
+github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.15.1/go.mod h1:lb2VrzAhq1IVfg02oC8Dwf6W0bm6Pq82pxNDso9RNVM=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.9.2 h1:1Qv2I+AX1FfkdeydiUtCT7+zgNSgfW/tjdKBizJf7q0=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.9.2/go.mod h1:0zH+HgyCsijlDbFTdj3A0fC65SfIABFfnknynk42snE=
 github.com/aws/aws-sdk-go-v2/service/pcs v1.2.3 h1:VEd3FQkjPpqwImJN+1JluGNJe1RwrWAFcfGA6m+ByzE=
