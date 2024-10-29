@@ -49,6 +49,7 @@ func resourceDeployment() *schema.Resource {
 			"canary_settings": {
 				Type:     schema.TypeList,
 				Optional: true,
+				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -120,6 +121,10 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Variables:        flex.ExpandStringValueMap(d.Get("variables").(map[string]interface{})),
 	}
 
+	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.CanarySettings = expandDeploymentCanarySettings(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	deployment, err := conn.CreateDeployment(ctx, input)
 
 	if err != nil {
@@ -127,9 +132,6 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(deployment.Id))
-	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CanarySettings = expandDeploymentCanarySettings(v.([]interface{})[0].(map[string]interface{}))
-	}
 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
