@@ -4,11 +4,12 @@
 package elasticache
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -944,9 +945,9 @@ func getCacheNodesToRemove(oldNumberOfNodes int, cacheNodesToRemove int) []strin
 }
 
 func setCacheNodeData(d *schema.ResourceData, c *awstypes.CacheCluster) error {
-	sortedCacheNodes := make([]awstypes.CacheNode, len(c.CacheNodes))
-	copy(sortedCacheNodes, c.CacheNodes)
-	sort.Sort(byCacheNodeId(sortedCacheNodes))
+	sortedCacheNodes := slices.SortedFunc(slices.Values(c.CacheNodes), func(a, b awstypes.CacheNode) int {
+		return cmp.Compare(aws.ToString(a.CacheNodeId), aws.ToString(b.CacheNodeId))
+	})
 
 	cacheNodeData := make([]map[string]interface{}, 0, len(sortedCacheNodes))
 
@@ -964,15 +965,6 @@ func setCacheNodeData(d *schema.ResourceData, c *awstypes.CacheCluster) error {
 	}
 
 	return d.Set("cache_nodes", cacheNodeData)
-}
-
-type byCacheNodeId []awstypes.CacheNode
-
-func (b byCacheNodeId) Len() int      { return len(b) }
-func (b byCacheNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
-func (b byCacheNodeId) Less(i, j int) bool {
-	return b[i].CacheNodeId != nil && b[j].CacheNodeId != nil &&
-		aws.ToString(b[i].CacheNodeId) < aws.ToString(b[j].CacheNodeId)
 }
 
 func setFromCacheCluster(d *schema.ResourceData, c *awstypes.CacheCluster) error {
