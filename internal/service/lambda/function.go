@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -676,7 +677,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if output.Code != nil {
 		d.Set("image_uri", output.Code.ImageUri)
 	}
-	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), functionARN))
+	d.Set("invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), functionARN))
 	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
@@ -721,7 +722,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if hasQualifier {
 		d.Set("qualified_arn", functionARN)
-		d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), functionARN))
+		d.Set("qualified_invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), functionARN))
 		d.Set(names.AttrVersion, function.Version)
 	} else {
 		latest, err := findLatestFunctionVersionByName(ctx, conn, d.Id())
@@ -732,7 +733,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 		qualifiedARN := aws.ToString(latest.FunctionArn)
 		d.Set("qualified_arn", qualifiedARN)
-		d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), qualifiedARN))
+		d.Set("qualified_invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), qualifiedARN))
 		d.Set(names.AttrVersion, latest.Version)
 
 		setTagsOut(ctx, output.Tags)
@@ -743,7 +744,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
 	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
 	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
-	if partition, region := meta.(*conns.AWSClient).Partition, meta.(*conns.AWSClient).Region; partition == names.StandardPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region; partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		// Code Signing is only supported on zip packaged lambda functions.
@@ -1383,9 +1384,9 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 }
 
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.
-func invokeARN(c *conns.AWSClient, functionOrAliasARN string) string {
+func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
 	return arn.ARN{
-		Partition: c.Partition,
+		Partition: c.Partition(ctx),
 		Service:   "apigateway",
 		Region:    c.Region,
 		AccountID: "lambda",

@@ -85,11 +85,11 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/felixjaehn",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/kidnap",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/tinlicker"
+          "arn:aws:iam::123456789012:role/felixjaehn",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/kidnap",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/tinlicker"
         ]
       },
       "Action": [
@@ -115,11 +115,11 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/tinlicker",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/kidnap",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/felixjaehn"
+          "arn:aws:iam::123456789012:role/tinlicker",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/kidnap",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/felixjaehn"
         ]
       },
       "Action": [
@@ -145,11 +145,11 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/felixjaehn",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/kidnap",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/tinlicker"
+          "arn:aws:iam::123456789012:role/felixjaehn",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/kidnap",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/tinlicker"
         ]
       },
       "Action": [
@@ -178,11 +178,11 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/felixjaehn",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/kidnap",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/tinlicker"
+          "arn:aws:iam::123456789012:role/felixjaehn",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/kidnap",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/tinlicker"
         ]
       },
       "Action": [
@@ -208,10 +208,10 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/tinlicker",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/felixjaehn"
+          "arn:aws:iam::123456789012:role/tinlicker",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/felixjaehn"
         ]
       },
       "Action": [
@@ -237,10 +237,10 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/tinlicker",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/felixjaehn"
+          "arn:aws:iam::123456789012:role/tinlicker",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/felixjaehn"
         ]
       },
       "Action": [
@@ -270,10 +270,10 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/tinlicker",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/felixjaehn"
+          "arn:aws:iam::123456789012:role/tinlicker",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/felixjaehn"
         ]
       },
       "Action": [
@@ -299,10 +299,10 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/tinlicker",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/felixjaehn"
+          "arn:aws:iam::123456789012:role/tinlicker",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/felixjaehn"
         ]
       },
       "Action": [
@@ -331,10 +331,10 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/tinlicker",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/felixjaehn"
+          "arn:aws:iam::123456789012:role/tinlicker",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/felixjaehn"
         ]
       },
       "Action": [
@@ -353,6 +353,48 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
 }`,
 			newPolicy: "",
 			want:      "",
+		},
+		{
+			name: "malformed old",
+			oldPolicy: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Condition" : {
+        "StringLike" : ["demo-prefix/"]
+      },
+      "Resource": "*"
+    }
+  ]
+}`,
+			newPolicy: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "*"
+    }
+  ]
+}`,
+			want: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "*"
+    }
+  ]
+}`,
 		},
 	}
 
@@ -746,11 +788,11 @@ func TestLegacyPolicyNormalize(t *testing.T) {
     "Effect": "Allow",
     "Principal": {
       "AWS": [
-        "arn:aws:iam::012345678901:role/felixjaehn",
-        "arn:aws:iam::012345678901:role/garethemery",
-        "arn:aws:iam::012345678901:role/kidnap",
-        "arn:aws:iam::012345678901:role/paulvandyk",
-        "arn:aws:iam::012345678901:role/tinlicker"
+        "arn:aws:iam::123456789012:role/felixjaehn",
+        "arn:aws:iam::123456789012:role/garethemery",
+        "arn:aws:iam::123456789012:role/kidnap",
+        "arn:aws:iam::123456789012:role/paulvandyk",
+        "arn:aws:iam::123456789012:role/tinlicker"
       ]
     },
     "Action": [
@@ -767,7 +809,7 @@ func TestLegacyPolicyNormalize(t *testing.T) {
   }
 ]
 }`,
-			Expected: `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Action":["kms:Describe*","kms:Get*","kms:List*","kms:CreateKey","kms:DescribeKey","kms:ScheduleKeyDeletion","kms:TagResource","kms:UntagResource"],"Effect":"Allow","Principal":{"AWS":["arn:aws:iam::012345678901:role/felixjaehn","arn:aws:iam::012345678901:role/garethemery","arn:aws:iam::012345678901:role/kidnap","arn:aws:iam::012345678901:role/paulvandyk","arn:aws:iam::012345678901:role/tinlicker"]},"Resource":"*","Sid":"Enable IAM User Permissions"}]}`,
+			Expected: `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Action":["kms:Describe*","kms:Get*","kms:List*","kms:CreateKey","kms:DescribeKey","kms:ScheduleKeyDeletion","kms:TagResource","kms:UntagResource"],"Effect":"Allow","Principal":{"AWS":["arn:aws:iam::123456789012:role/felixjaehn","arn:aws:iam::123456789012:role/garethemery","arn:aws:iam::123456789012:role/kidnap","arn:aws:iam::123456789012:role/paulvandyk","arn:aws:iam::123456789012:role/tinlicker"]},"Resource":"*","Sid":"Enable IAM User Permissions"}]}`,
 			Error:    false,
 		},
 		{

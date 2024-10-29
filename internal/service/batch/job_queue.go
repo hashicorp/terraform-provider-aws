@@ -4,10 +4,11 @@
 package batch
 
 import (
+	"cmp"
 	"context"
 	"errors"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -548,8 +549,8 @@ type jobQueueResourceModel struct {
 	Priority                 types.Int64                                                   `tfsdk:"priority"`
 	SchedulingPolicyARN      fwtypes.ARN                                                   `tfsdk:"scheduling_policy_arn"`
 	State                    types.String                                                  `tfsdk:"state"`
-	Tags                     types.Map                                                     `tfsdk:"tags"`
-	TagsAll                  types.Map                                                     `tfsdk:"tags_all"`
+	Tags                     tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                 timeouts.Value                                                `tfsdk:"timeouts"`
 }
 
@@ -589,8 +590,8 @@ func expandComputeEnvironments(ctx context.Context, tfList types.List) []awstype
 }
 
 func flattenComputeEnvironments(ctx context.Context, apiObjects []awstypes.ComputeEnvironmentOrder) types.List {
-	sort.Slice(apiObjects, func(i, j int) bool {
-		return aws.ToInt32(apiObjects[i].Order) < aws.ToInt32(apiObjects[j].Order)
+	slices.SortFunc(apiObjects, func(a, b awstypes.ComputeEnvironmentOrder) int {
+		return cmp.Compare(aws.ToInt32(a.Order), aws.ToInt32(b.Order))
 	})
 
 	return fwflex.FlattenFrameworkStringListLegacy(ctx, tfslices.ApplyToAll(apiObjects, func(v awstypes.ComputeEnvironmentOrder) *string {

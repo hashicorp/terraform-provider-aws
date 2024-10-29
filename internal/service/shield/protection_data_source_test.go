@@ -37,7 +37,7 @@ func TestAccShieldProtectionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, protectionResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "protection_id", protectionResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceARN, protectionResourceName, names.AttrResourceARN),
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, "protection_arn", "shield", regexache.MustCompile(`protection/+.`)),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, "protection_arn", "shield", regexache.MustCompile(`protection/.+$`)),
 				),
 			},
 			{
@@ -46,7 +46,7 @@ func TestAccShieldProtectionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, protectionResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "protection_id", protectionResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrResourceARN, protectionResourceName, names.AttrResourceARN),
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, "protection_arn", "shield", regexache.MustCompile(`protection/+.`)),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, "protection_arn", "shield", regexache.MustCompile(`protection/.+$`)),
 				),
 			},
 		},

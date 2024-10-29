@@ -30,7 +30,8 @@ import (
 )
 
 // @FrameworkDataSource("aws_batch_job_definition", name="Job Definition")
-// @Testing(tagsTest=true)
+// @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func newJobDefinitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &jobDefinitionDataSource{}, nil
 }
@@ -198,7 +199,8 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 
 	arnPrefix := strings.TrimSuffix(aws.ToString(jd.JobDefinitionArn), fmt.Sprintf(":%d", aws.ToInt32(jd.Revision)))
 	data.ARNPrefix = types.StringValue(arnPrefix)
-	data.Tags = fwflex.FlattenFrameworkStringValueMap(ctx, jd.Tags)
+
+	setTagsOut(ctx, jd.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -224,7 +226,7 @@ type jobDefinitionDataSourceModel struct {
 	Revision                   types.Int64                                          `tfsdk:"revision"`
 	SchedulingPriority         types.Int64                                          `tfsdk:"scheduling_priority"`
 	Status                     types.String                                         `tfsdk:"status"`
-	Tags                       types.Map                                            `tfsdk:"tags"`
+	Tags                       tftags.Map                                           `tfsdk:"tags"`
 	Timeout                    fwtypes.ListNestedObjectValueOf[jobTimeoutModel]     `tfsdk:"timeout"`
 	Type                       types.String                                         `tfsdk:"type"`
 }

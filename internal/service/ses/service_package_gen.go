@@ -5,8 +5,8 @@ package ses
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	ses_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,16 +25,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceActiveReceiptRuleSet,
+			Factory:  dataSourceActiveReceiptRuleSet,
 			TypeName: "aws_ses_active_receipt_rule_set",
+			Name:     "Active Receipt Rule Set",
 		},
 		{
-			Factory:  DataSourceDomainIdentity,
+			Factory:  dataSourceDomainIdentity,
 			TypeName: "aws_ses_domain_identity",
+			Name:     "Domain Identity",
 		},
 		{
-			Factory:  DataSourceEmailIdentity,
+			Factory:  dataSourceEmailIdentity,
 			TypeName: "aws_ses_email_identity",
+			Name:     "Email Identity",
 		},
 	}
 }
@@ -42,60 +45,74 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceActiveReceiptRuleSet,
+			Factory:  resourceActiveReceiptRuleSet,
 			TypeName: "aws_ses_active_receipt_rule_set",
+			Name:     "Active Receipt Rule Set",
 		},
 		{
-			Factory:  ResourceConfigurationSet,
+			Factory:  resourceConfigurationSet,
 			TypeName: "aws_ses_configuration_set",
+			Name:     "Configuration Set",
 		},
 		{
-			Factory:  ResourceDomainDKIM,
+			Factory:  resourceDomainDKIM,
 			TypeName: "aws_ses_domain_dkim",
+			Name:     "Domain DKIM",
 		},
 		{
-			Factory:  ResourceDomainIdentity,
+			Factory:  resourceDomainIdentity,
 			TypeName: "aws_ses_domain_identity",
+			Name:     "Domain Identity",
 		},
 		{
-			Factory:  ResourceDomainIdentityVerification,
+			Factory:  resourceDomainIdentityVerification,
 			TypeName: "aws_ses_domain_identity_verification",
+			Name:     "Domain Identity Verification",
 		},
 		{
-			Factory:  ResourceDomainMailFrom,
+			Factory:  resourceDomainMailFrom,
 			TypeName: "aws_ses_domain_mail_from",
+			Name:     "MAIL FROM Domain",
 		},
 		{
-			Factory:  ResourceEmailIdentity,
+			Factory:  resourceEmailIdentity,
 			TypeName: "aws_ses_email_identity",
+			Name:     "Email Identity",
 		},
 		{
-			Factory:  ResourceEventDestination,
+			Factory:  resourceEventDestination,
 			TypeName: "aws_ses_event_destination",
+			Name:     "Configuration Set Event Destination",
 		},
 		{
-			Factory:  ResourceIdentityNotificationTopic,
+			Factory:  resourceIdentityNotificationTopic,
 			TypeName: "aws_ses_identity_notification_topic",
+			Name:     "Identity Notification Topic",
 		},
 		{
-			Factory:  ResourceIdentityPolicy,
+			Factory:  resourceIdentityPolicy,
 			TypeName: "aws_ses_identity_policy",
+			Name:     "Identity Policy",
 		},
 		{
-			Factory:  ResourceReceiptFilter,
+			Factory:  resourceReceiptFilter,
 			TypeName: "aws_ses_receipt_filter",
+			Name:     "Receipt Filter",
 		},
 		{
-			Factory:  ResourceReceiptRule,
+			Factory:  resourceReceiptRule,
 			TypeName: "aws_ses_receipt_rule",
+			Name:     "Receipt Rule",
 		},
 		{
-			Factory:  ResourceReceiptRuleSet,
+			Factory:  resourceReceiptRuleSet,
 			TypeName: "aws_ses_receipt_rule_set",
+			Name:     "Receipt Rule Set",
 		},
 		{
-			Factory:  ResourceTemplate,
+			Factory:  resourceTemplate,
 			TypeName: "aws_ses_template",
+			Name:     "Template",
 		},
 	}
 }
@@ -105,11 +122,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ses_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ses.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return ses_sdkv2.NewFromConfig(cfg,
-		ses_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return ses.NewFromConfig(cfg,
+		ses.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

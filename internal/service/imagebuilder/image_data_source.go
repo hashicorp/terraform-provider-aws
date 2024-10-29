@@ -6,8 +6,7 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_imagebuilder_image")
-func DataSourceImage() *schema.Resource {
+// @SDKDataSource("aws_imagebuilder_image", name="Image")
+// @Tags
+func dataSourceImage() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceImageRead,
 
@@ -179,80 +179,64 @@ func DataSourceImage() *schema.Resource {
 
 func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetImageInput{}
-
-	if v, ok := d.GetOk(names.AttrARN); ok {
-		input.ImageBuildVersionArn = aws.String(v.(string))
-	}
-
-	output, err := conn.GetImageWithContext(ctx, input)
+	arn := d.Get(names.AttrARN).(string)
+	image, err := findImageByARN(ctx, conn, arn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image (%s): %s", arn, err)
 	}
 
-	if output == nil || output.Image == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image: empty response")
-	}
-
-	image := output.Image
-
-	d.SetId(aws.StringValue(image.Arn))
-
+	d.SetId(aws.ToString(image.Arn))
 	// To prevent Terraform errors, only reset arn if not configured.
 	// The configured ARN may contain x.x.x wildcards while the API returns
 	// the full build version #.#.#/# suffix.
 	if _, ok := d.GetOk(names.AttrARN); !ok {
 		d.Set(names.AttrARN, image.Arn)
 	}
-
 	d.Set("build_version_arn", image.Arn)
-	d.Set("date_created", image.DateCreated)
-
 	if image.ContainerRecipe != nil {
 		d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
 	}
-
+	d.Set("date_created", image.DateCreated)
 	if image.DistributionConfiguration != nil {
 		d.Set("distribution_configuration_arn", image.DistributionConfiguration.Arn)
 	}
-
 	d.Set("enhanced_image_metadata_enabled", image.EnhancedImageMetadataEnabled)
-
 	if image.ImageRecipe != nil {
 		d.Set("image_recipe_arn", image.ImageRecipe.Arn)
 	}
-
 	if image.ImageScanningConfiguration != nil {
-		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(image.ImageScanningConfiguration)})
+		if err := d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(image.ImageScanningConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting image_scanning_configuration: %s", err)
+		}
 	} else {
 		d.Set("image_scanning_configuration", nil)
 	}
-
 	if image.ImageTestsConfiguration != nil {
-		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(image.ImageTestsConfiguration)})
+		if err := d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(image.ImageTestsConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting image_tests_configuration: %s", err)
+		}
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
-
 	if image.InfrastructureConfiguration != nil {
 		d.Set("infrastructure_configuration_arn", image.InfrastructureConfiguration.Arn)
 	}
-
 	d.Set(names.AttrName, image.Name)
 	d.Set("platform", image.Platform)
 	d.Set("os_version", image.OsVersion)
-
 	if image.OutputResources != nil {
-		d.Set("output_resources", []interface{}{flattenOutputResources(image.OutputResources)})
+		if err := d.Set("output_resources", []interface{}{flattenOutputResources(image.OutputResources)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting output_resources: %s", err)
+		}
 	} else {
 		d.Set("output_resources", nil)
 	}
-
-	d.Set(names.AttrTags, KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 	d.Set(names.AttrVersion, image.Version)
+
+	setTagsOut(ctx, image.Tags)
 
 	return diags
 }

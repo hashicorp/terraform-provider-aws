@@ -235,9 +235,9 @@ func (r *continuousDeploymentPolicyResource) Update(ctx context.Context, request
 			return
 		}
 
-		input.Id = aws.String(new.ID.ValueString())
+		input.Id = new.ID.ValueStringPointer()
 		// Use state ETag value. The planned value will be unknown.
-		input.IfMatch = aws.String(old.ETag.ValueString())
+		input.IfMatch = old.ETag.ValueStringPointer()
 
 		output, err := conn.UpdateContinuousDeploymentPolicy(ctx, input)
 

@@ -5,7 +5,6 @@ package elbv2
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -23,7 +22,7 @@ import (
 
 // @SDKDataSource("aws_alb_target_group", name="Target Group")
 // @SDKDataSource("aws_lb_target_group", name="Target Group")
-// @Testing(tagsTest=true)
+// @Tags(identifierAttribute="arn")
 func dataSourceTargetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTargetGroupRead,
@@ -185,8 +184,7 @@ func dataSourceTargetGroup() *schema.Resource {
 func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
-	partition := meta.(*conns.AWSClient).Partition
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	input := &elasticloadbalancingv2.DescribeTargetGroupsInput{}
@@ -270,21 +268,6 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	targetGroupAttributes.flatten(d, targetType, attributes)
-
-	tags, err := listTags(ctx, conn, d.Id())
-
-	if errs.IsUnsupportedOperationInPartitionError(partition, err) {
-		log.Printf("[WARN] Unable to list tags for ELBv2 Target Group %s: %s", d.Id(), err)
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ELBv2 Target Group (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

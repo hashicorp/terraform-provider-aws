@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/appstream"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -67,7 +67,7 @@ func sweepDirectoryConfigs(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AppStream Directory Config sweep for %s: %s", region, err)
 		return nil
 	}
@@ -115,7 +115,7 @@ func sweepFleets(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AppStream Fleet sweep for %s: %s", region, err)
 		return nil
 	}
@@ -163,7 +163,7 @@ func sweepImageBuilders(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AppStream Image Builder sweep for %s: %s", region, err)
 		return nil
 	}
@@ -211,7 +211,7 @@ func sweepStacks(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping AppStream Stack sweep for %s: %s", region, err)
 		return nil
 	}

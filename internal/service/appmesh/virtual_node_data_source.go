@@ -20,6 +20,7 @@ import (
 // @SDKDataSource("aws_appmesh_virtual_node", name="Virtual Node")
 // @Tags
 // @Testing(serialize=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceVirtualNode() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVirtualNodeRead,

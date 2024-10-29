@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Instance Storage Config.
 
 ```terraform
 data "aws_connect_instance_storage_config" "example" {
-  association_id = "1234567890123456789012345678901234567890123456789012345678901234"
+  association_id = "1234567891234567890122345678912345678901223456789123456789012234"
   instance_id    = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   resource_type  = "CONTACT_TRACE_RECORDS"
 }

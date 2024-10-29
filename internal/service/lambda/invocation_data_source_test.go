@@ -137,7 +137,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   environment {
     variables = {
@@ -168,7 +168,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   publish       = true
 
   environment {
@@ -201,7 +201,7 @@ resource "aws_lambda_function" "lambda" {
   function_name = "%s"
   role          = aws_iam_role.lambda_role.arn
   handler       = "lambda_invocation.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
   publish       = true
 
   environment {

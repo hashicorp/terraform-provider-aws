@@ -38,6 +38,7 @@ func TestAccEC2EBSSnapshotDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "volume_id", resourceName, "volume_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrVolumeSize, resourceName, names.AttrVolumeSize),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStartTime),
 				),
 			},
 		},

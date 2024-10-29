@@ -203,7 +203,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.SetId(id)
 
-	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition(ctx), bucket, key)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}

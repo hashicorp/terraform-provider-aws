@@ -103,7 +103,7 @@ func resourceCarrierGatewayRead(ctx context.Context, d *schema.ResourceData, met
 
 	ownerID := aws.ToString(carrierGateway.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,

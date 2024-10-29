@@ -186,7 +186,7 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "cognito-identity",
 		AccountID: meta.(*conns.AWSClient).AccountID,

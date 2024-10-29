@@ -278,8 +278,8 @@ resource "aws_datazone_glossary_term" "test" {
   short_description   = "short_desc"
   status              = "ENABLED"
   term_relations {
-    classifies = ["${aws_datazone_glossary_term.second.id}"]
-    is_a       = ["${aws_datazone_glossary_term.second.id}"]
+    classifies = [aws_datazone_glossary_term.second.id]
+    is_a       = [aws_datazone_glossary_term.second.id]
   }
 }
 `, rName, gName))

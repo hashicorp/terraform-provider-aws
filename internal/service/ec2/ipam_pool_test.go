@@ -39,7 +39,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_default_netmask_length"),
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_max_netmask_length"),
 					resource.TestCheckNoResourceAttr(resourceName, "allocation_min_netmask_length"),
-					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "aws_service", ""),
@@ -48,7 +48,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "locale", "None"),
 					resource.TestCheckResourceAttrSet(resourceName, "pool_depth"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "create-complete"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -64,8 +64,8 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allocation_default_netmask_length", "32"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_max_netmask_length", "32"),
 					resource.TestCheckResourceAttr(resourceName, "allocation_min_netmask_length", "32"),
-					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.test", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "allocation_resource_tags.test", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_import", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "aws_service", ""),
@@ -74,7 +74,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "locale", "None"),
 					resource.TestCheckResourceAttrSet(resourceName, "pool_depth"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "modify-complete"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -204,7 +204,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 				Config: testAccIPAMPoolConfig_tags(acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -217,7 +217,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 				Config: testAccIPAMPoolConfig_tags2(acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -226,8 +226,29 @@ func TestAccIPAMPool_tags(t *testing.T) {
 				Config: testAccIPAMPoolConfig_tags(acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIPAMPool_ipv6PrivateScope(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.IpamPool
+	resourceName := "aws_vpc_ipam_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolConfig_ipv6PrivateScope,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
 				),
 			},
 		},
@@ -282,6 +303,19 @@ func testAccCheckIPAMPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, ipampool *awstypes.IpamPool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		_, err := conn.ProvisionIpamPoolCidr(ctx, &ec2.ProvisionIpamPoolCidrInput{
+			IpamPoolId: ipampool.IpamPoolId,
+			Cidr:       aws.String("10.0.0.0/16"),
+		})
+
+		return err
 	}
 }
 
@@ -345,19 +379,6 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `)
 
-func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, ipampool *awstypes.IpamPool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-
-		_, err := conn.ProvisionIpamPoolCidr(ctx, &ec2.ProvisionIpamPoolCidrInput{
-			IpamPoolId: ipampool.IpamPoolId,
-			Cidr:       aws.String("10.0.0.0/16"),
-		})
-
-		return err
-	}
-}
-
 func testAccIPAMPoolConfig_tags(tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccIPAMPoolConfig_base, fmt.Sprintf(`
 resource "aws_vpc_ipam_pool" "test" {
@@ -384,3 +405,15 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }
+
+var testAccIPAMPoolConfig_ipv6PrivateScope = acctest.ConfigCompose(testAccIPAMScopeConfig_base, `
+resource "aws_vpc_ipam_scope" "test" {
+  ipam_id = aws_vpc_ipam.test.id
+}
+
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv6"
+  ipam_scope_id  = aws_vpc_ipam_scope.test.id
+  locale         = data.aws_region.current.name
+}
+`)

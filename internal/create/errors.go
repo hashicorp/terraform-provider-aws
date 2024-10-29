@@ -73,25 +73,11 @@ func AppendDiagError(diags diag.Diagnostics, service, action, resource, id strin
 	)
 }
 
-// DiagError returns a 1-length diag.Diagnostics with a diag.Error-level diag.Diagnostic
-// with a standardized error message
-func DiagError(service, action, resource, id string, gotError error) diag.Diagnostics {
-	return diag.Diagnostics{
-		diagError(service, action, resource, id, gotError),
-	}
-}
-
 func diagError(service, action, resource, id string, gotError error) diag.Diagnostic {
 	return diag.Diagnostic{
 		Severity: diag.Error,
 		Summary:  ProblemStandardMessage(service, action, resource, id, gotError),
 	}
-}
-
-func AppendDiagErrorMessage(diags diag.Diagnostics, service, action, resource, id, message string) diag.Diagnostics {
-	return append(diags,
-		diagError(service, action, resource, id, errors.New(message)),
-	)
 }
 
 func AppendDiagSettingError(diags diag.Diagnostics, service, resource, id, argument string, gotError error) diag.Diagnostics {
@@ -116,11 +102,4 @@ func WarnLog(service, action, resource, id string, gotError error) {
 
 func LogNotFoundRemoveState(service, action, resource, id string) {
 	WarnLog(service, action, resource, id, errors.New("not found, removing from state"))
-}
-
-func DiagErrorFramework(service, action, resource, id string, gotError error) fwdiag.Diagnostic {
-	return fwdiag.NewErrorDiagnostic(
-		ProblemStandardMessage(service, action, resource, id, nil),
-		gotError.Error(),
-	)
 }

@@ -262,8 +262,8 @@ type capacityBlockReservationReservationModel struct {
 	PlacementGroupARN       types.String                                                     `tfsdk:"placement_group_arn"`
 	ReservationType         fwtypes.StringEnum[awstypes.CapacityReservationType]             `tfsdk:"reservation_type"`
 	StartDate               timetypes.RFC3339                                                `tfsdk:"start_date"`
-	Tags                    types.Map                                                        `tfsdk:"tags"`
-	TagsAll                 types.Map                                                        `tfsdk:"tags_all"`
+	Tags                    tftags.Map                                                       `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                       `tfsdk:"tags_all"`
 	Tenancy                 types.String                                                     `tfsdk:"tenancy"`
 	Timeouts                timeouts.Value                                                   `tfsdk:"timeouts"`
 }

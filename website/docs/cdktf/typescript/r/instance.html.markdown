@@ -87,6 +87,7 @@ class MyConvertedCode extends TerraformStack {
     const awsInstanceThis = new Instance(this, "this_1", {
       ami: Token.asString(thisVar.id),
       instanceMarketOptions: {
+        marketType: "spot",
         spotOptions: {
           maxPrice: Token.asString(0.0031),
         },
@@ -244,7 +245,7 @@ class MyConvertedCode extends TerraformStack {
     new Instance(this, "this", {
       ami: "ami-0dcc1e21636832c5d",
       hostResourceGroupArn:
-        "arn:aws:resource-groups:us-west-2:012345678901:group/win-testhost",
+        "arn:aws:resource-groups:us-west-2:123456789012:group/win-testhost",
       instanceType: "m5.large",
       tenancy: "host",
     });
@@ -561,4 +562,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3985aca46bf8090d5c3b195b1827ddbc47234b8d84b5ceda5eeb1e979f701d25 -->
+<!-- cache-key: cdktf-0.20.8 input-7b6a89ea829e6a5d90c76307d6ed973e7a0d5914864e3754b9ca0132f204aa60 -->

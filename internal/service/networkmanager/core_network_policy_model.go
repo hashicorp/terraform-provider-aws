@@ -70,8 +70,8 @@ type coreNetworkPolicySegmentActionVia struct {
 	WithEdgeOverrides     []*coreNetworkPolicySegmentActionViaEdgeOverride `json:"with-edge-overrides,omitempty"`
 }
 type coreNetworkPolicySegmentActionViaEdgeOverride struct {
-	EdgeSets interface{} `json:"edge-sets,omitempty"`
-	UseEdge  string      `json:"use-edge,omitempty"`
+	EdgeSets        [][]string `json:"edge-sets,omitempty"`
+	UseEdgeLocation string     `json:"use-edge-location,omitempty"`
 }
 
 type coreNetworkPolicyAttachmentPolicy struct {

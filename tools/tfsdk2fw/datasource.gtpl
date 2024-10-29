@@ -13,7 +13,7 @@ import (
 	{{if .ImportProviderFrameworkTypes }}fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"{{- end}}
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource("{{ .TFTypeName }}")
 func newDataSource{{ .Name }}(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSource{{ .Name }}{}, nil
 }

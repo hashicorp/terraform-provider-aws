@@ -37,9 +37,9 @@ func TestAccS3BucketNotification_eventbridge(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "0"),
 				),
 			},
 			{
@@ -68,12 +68,12 @@ func TestAccS3BucketNotification_lambdaFunction(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_prefix", "tf-acc-test/"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_suffix", ".png"),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "0"),
 				),
 			},
 			{
@@ -102,12 +102,12 @@ func TestAccS3BucketNotification_LambdaFunctionLambdaFunctionARN_alias(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.events.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "lambda_function.0.filter_suffix", ""),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "0"),
 				),
 			},
 			{
@@ -136,12 +136,12 @@ func TestAccS3BucketNotification_queue(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "queue.0.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "queue.0.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "queue.0.filter_prefix", "tf-acc-test/"),
 					resource.TestCheckResourceAttr(resourceName, "queue.0.filter_suffix", ".mp4"),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "0"),
 				),
 			},
 			{
@@ -170,10 +170,10 @@ func TestAccS3BucketNotification_topic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "topic.0.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "topic.0.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.filter_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.filter_suffix", ""),
 				),
@@ -204,13 +204,13 @@ func TestAccS3BucketNotification_Topic_multiple(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketNotificationExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "eventbridge", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "queue.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "topic.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "topic.0.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "lambda_function.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "queue.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "topic.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "topic.0.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.filter_prefix", "tf-acc-test/"),
 					resource.TestCheckResourceAttr(resourceName, "topic.0.filter_suffix", ".txt"),
-					resource.TestCheckResourceAttr(resourceName, "topic.1.events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "topic.1.events.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "topic.1.filter_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "topic.1.filter_suffix", ".log"),
 				),
@@ -560,7 +560,7 @@ resource "aws_lambda_permission" "test" {
   statement_id  = "AllowExecutionFromS3Bucket"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.test.arn
-  principal     = "${data.aws_service_principal.current.name}"
+  principal     = data.aws_service_principal.current.name
   source_arn    = aws_s3_bucket.test.arn
 }
 
@@ -569,7 +569,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "exports.example"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_s3_bucket" "test" {
@@ -655,7 +655,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.test.arn
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_alias" "test" {
@@ -667,7 +667,7 @@ resource "aws_lambda_alias" "test" {
 resource "aws_lambda_permission" "test" {
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.test.arn
-  principal     = "${data.aws_service_principal.current.name}"
+  principal     = data.aws_service_principal.current.name
   qualifier     = aws_lambda_alias.test.name
   source_arn    = aws_s3_bucket.test.arn
   statement_id  = "AllowExecutionFromS3Bucket"

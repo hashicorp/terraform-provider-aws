@@ -72,6 +72,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newTransitGatewayDefaultRouteTableAssociationResource,
+			Name:    "Transit Gateway Default Route Table Association",
+		},
+		{
+			Factory: newTransitGatewayDefaultRouteTablePropagationResource,
+			Name:    "Transit Gateway Default Route Table Propagation",
+		},
+		{
 			Factory: newVPCEndpointPrivateDNSResource,
 			Name:    "VPC Endpoint Private DNS",
 		},
@@ -460,6 +468,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceSubnet,
 			TypeName: "aws_subnet",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
 		},
 		{
 			Factory:  dataSourceSubnets,

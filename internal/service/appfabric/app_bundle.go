@@ -27,8 +27,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="App Bundle")
+// @FrameworkResource("aws_appfabric_app_bundle", name="App Bundle")
 // @Tags(identifierAttribute="id")
+// @Testing(serialize=true)
+// @Testing(generator=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.AppBundle")
 func newAppBundleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &appBundleResource{}
 
@@ -72,8 +75,13 @@ func (r *appBundleResource) Create(ctx context.Context, request resource.CreateR
 
 	conn := r.Meta().AppFabricClient(ctx)
 
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		response.Diagnostics.AddError("creating AppFabric App Bundle", err.Error())
+	}
+
 	input := &appfabric.CreateAppBundleInput{
-		ClientToken:                  aws.String(errs.Must(uuid.GenerateUUID())),
+		ClientToken:                  aws.String(uuid),
 		CustomerManagedKeyIdentifier: fwflex.StringFromFramework(ctx, data.CustomerManagedKeyARN),
 		Tags:                         getTagsIn(ctx),
 	}
@@ -140,7 +148,7 @@ func (r *appBundleResource) Delete(ctx context.Context, request resource.DeleteR
 	conn := r.Meta().AppFabricClient(ctx)
 
 	_, err := conn.DeleteAppBundle(ctx, &appfabric.DeleteAppBundleInput{
-		AppBundleIdentifier: aws.String(data.ID.ValueString()),
+		AppBundleIdentifier: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -187,8 +195,8 @@ type appBundleResourceModel struct {
 	ARN                   types.String `tfsdk:"arn"`
 	CustomerManagedKeyARN fwtypes.ARN  `tfsdk:"customer_managed_key_arn"`
 	ID                    types.String `tfsdk:"id"`
-	Tags                  types.Map    `tfsdk:"tags"`
-	TagsAll               types.Map    `tfsdk:"tags_all"`
+	Tags                  tftags.Map   `tfsdk:"tags"`
+	TagsAll               tftags.Map   `tfsdk:"tags_all"`
 }
 
 func (data *appBundleResourceModel) InitFromID() error {

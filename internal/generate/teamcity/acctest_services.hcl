@@ -22,6 +22,10 @@ service "appfabric" {
   region = "us-east-1"
 }
 
+service "appintegrations" {
+  parallelism = 10
+}
+
 service "appstream" {
   vpc_lock    = true
   parallelism = 10
@@ -33,6 +37,10 @@ service "autoscaling" {
 
 service "batch" {
   vpc_lock = true
+}
+
+service "bcmdataexports" {
+  parallelism = 5
 }
 
 service "cloudformation" {
@@ -209,6 +217,10 @@ service "rds" {
 
 service "redshift" {
   vpc_lock = true
+}
+
+service "resiliencehub" {
+  parallelism = 10
 }
 
 service "route53" {

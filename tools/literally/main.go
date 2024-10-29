@@ -326,7 +326,7 @@ func (v *visitor) orderLiterals(scores map[string][]float64) []string {
 	}
 
 	// Sort the keys based on the scores
-	sort.Slice(keys, func(i, j int) bool {
+	sort.Slice(keys, func(i, j int) bool { // nosemgrep:ci.semgrep.stdlib.prefer-slices-sortfunc
 		if scores[keys[i]][0] != scores[keys[j]][0] {
 			return scores[keys[i]][0] > scores[keys[j]][0]
 		}

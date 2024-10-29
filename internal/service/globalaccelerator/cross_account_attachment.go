@@ -312,8 +312,8 @@ type crossAccountAttachmentResourceModel struct {
 	Name             types.String                                  `tfsdk:"name"`
 	Principals       fwtypes.SetValueOf[types.String]              `tfsdk:"principals"`
 	Resources        fwtypes.SetNestedObjectValueOf[resourceModel] `tfsdk:"resource"`
-	Tags             types.Map                                     `tfsdk:"tags"`
-	TagsAll          types.Map                                     `tfsdk:"tags_all"`
+	Tags             tftags.Map                                    `tfsdk:"tags"`
+	TagsAll          tftags.Map                                    `tfsdk:"tags_all"`
 }
 
 func (m *crossAccountAttachmentResourceModel) InitFromID() error {

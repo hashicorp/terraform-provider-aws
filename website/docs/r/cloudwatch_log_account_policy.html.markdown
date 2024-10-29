@@ -54,7 +54,7 @@ resource "aws_cloudwatch_log_account_policy" "subscription_filter" {
   policy_type = "SUBSCRIPTION_FILTER_POLICY"
   policy_document = jsonencode(
     {
-      DestinationArn = "${aws_lambda_function.test.arn}"
+      DestinationArn = aws_lambda_function.test.arn
       FilterPattern  = "test"
     }
   )
