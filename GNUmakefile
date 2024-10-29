@@ -101,21 +101,6 @@ default: build ## build
 
 acctest-lint: testacc-lint testacc-tflint ## [CI] Run all CI acceptance test checks
 
-awssdkpatch: prereq-go ## Install awssdkpatch
-	cd tools/awssdkpatch && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/awssdkpatch
-
-awssdkpatch-apply: awssdkpatch-gen ## Apply a patch generated with awssdkpatch
-	@echo "Applying patch for $(PKG)..."
-	@gopatch --skip-generated -p awssdk.patch ./$(PKG_NAME)/...
-
-awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
-	@if [ "$(PKG)" = "" ]; then \
-		echo "PKG must be set. Try again like:" ; \
-		echo "PKG=foo make awssdkpatch-gen" ; \
-		exit 1 ; \
-	fi
-	@awssdkpatch $(AWSSDKPATCH_OPTS) -service $(PKG)
-
 build: prereq-go fmt-check ## Build provider
 	@echo "make: Building provider..."
 	@$(GO_VER) install
@@ -170,7 +155,6 @@ clean-tidy: prereq-go ## Clean up tidy
 		echo "make: if you get an error, see https://go.dev/doc/manage-install to locally install various Go versions" ; \
 	fi ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
-	cd tools/awssdkpatch && $$gover mod tidy && cd ../.. ; \
 	cd tools/tfsdk2fw && $$gover mod tidy && cd ../.. ; \
 	cd .ci/tools && $$gover mod tidy && cd ../.. ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
@@ -830,9 +814,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 # Please keep targets in alphabetical order
 .PHONY: \
 	acctest-lint \
-	awssdkpatch-apply \
-	awssdkpatch-gen \
-	awssdkpatch \
 	build \
 	changelog-misspell \
 	ci-quick \
