@@ -44,3 +44,9 @@ rules:
             - pattern: StringsAreSorted
     fix: slices.IsSorted($X)
     severity: WARNING
+
+  - id: prefer-slices-issortedfunc
+    languages: [go]
+    message: Prefer slices.IsSortedFunc to sort.IsSorted
+    pattern: sort.IsSorted($X)
+    severity: WARNING
