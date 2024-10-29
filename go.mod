@@ -136,7 +136,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.32.3
-	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.19.2
+	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.19.3
 	github.com/aws/aws-sdk-go-v2/service/iot v1.59.2
 	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/iotevents v1.27.2
