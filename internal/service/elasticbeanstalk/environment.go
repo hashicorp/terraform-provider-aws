@@ -10,7 +10,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"fmt"
 	"log"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -776,7 +775,7 @@ func hashSettingsValue(v interface{}) int {
 		str.WriteString(value)
 	} else {
 		values := strings.Split(value, ",")
-		sort.Strings(values)
+		slices.Sort(values)
 		str.WriteString(strings.Join(values, ","))
 	}
 
@@ -836,7 +835,7 @@ func flattenConfigurationOptionSettings(ctx context.Context, meta interface{}, a
 				tfMap[names.AttrValue] = dropGeneratedSecurityGroup(ctx, meta.(*conns.AWSClient).EC2Client(ctx), value)
 			case "Subnets", "ELBSubnets":
 				values := strings.Split(value, ",")
-				sort.Strings(values)
+				slices.Sort(values)
 				tfMap[names.AttrValue] = strings.Join(values, ",")
 			default:
 				tfMap[names.AttrValue] = value
@@ -867,7 +866,7 @@ func dropGeneratedSecurityGroup(ctx context.Context, conn *ec2.Client, settingVa
 		}
 	}
 
-	sort.Strings(legitGroups)
+	slices.Sort(legitGroups)
 
 	return strings.Join(legitGroups, ",")
 }

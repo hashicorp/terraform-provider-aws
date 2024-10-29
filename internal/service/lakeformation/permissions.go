@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"sort"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
@@ -1291,7 +1291,7 @@ func flattenResourcePermissions(apiObjects []awstypes.PrincipalResourcePermissio
 		}
 	}
 
-	sort.Strings(tfList)
+	slices.Sort(tfList)
 
 	return tfList
 }
@@ -1309,7 +1309,7 @@ func flattenGrantPermissions(apiObjects []awstypes.PrincipalResourcePermissions)
 		}
 	}
 
-	sort.Strings(tfList)
+	slices.Sort(tfList)
 
 	return tfList
 }

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -1645,7 +1645,7 @@ func testAccCheckDeploymentGroupTriggerEvents(group *types.DeploymentGroupInfo, 
 				for _, event := range actual.TriggerEvents {
 					actualEvents = append(actualEvents, string(event))
 				}
-				sort.Strings(actualEvents)
+				slices.Sort(actualEvents)
 
 				if !reflect.DeepEqual(actualEvents, expectedEvents) {
 					return fmt.Errorf("Trigger events do not match.\nExpected: %v\nGot: %v\n",

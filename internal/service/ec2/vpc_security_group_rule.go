@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -711,7 +712,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		for i, r := range ip.IpRanges {
 			s[i] = aws.ToString(r.CidrIp)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))
@@ -723,7 +724,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		for i, r := range ip.Ipv6Ranges {
 			s[i] = aws.ToString(r.CidrIpv6)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))
@@ -735,7 +736,7 @@ func securityGroupRuleCreateID(securityGroupID, ruleType string, ip *awstypes.Ip
 		for i, pl := range ip.PrefixListIds {
 			s[i] = aws.ToString(pl.PrefixListId)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))

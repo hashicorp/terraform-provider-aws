@@ -17,3 +17,10 @@ rules:
     pattern: sort.Ints($X)
     fix: slices.Sort($X)
     severity: WARNING
+
+  - id: sort-Strings
+    languages: [go]
+    message: Prefer slices.Sort to sort.Strings
+    pattern: sort.Strings($X)
+    fix: slices.Sort($X)
+    severity: WARNING

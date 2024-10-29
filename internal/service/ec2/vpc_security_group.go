@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -599,7 +599,7 @@ func securityGroupRuleHash(v interface{}) int {
 		for i, raw := range vs {
 			s[i] = raw.(string)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))
@@ -611,7 +611,7 @@ func securityGroupRuleHash(v interface{}) int {
 		for i, raw := range vs {
 			s[i] = raw.(string)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))
@@ -623,7 +623,7 @@ func securityGroupRuleHash(v interface{}) int {
 		for i, raw := range vs {
 			s[i] = raw.(string)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))
@@ -635,7 +635,7 @@ func securityGroupRuleHash(v interface{}) int {
 		for i, raw := range vs {
 			s[i] = raw.(string)
 		}
-		sort.Strings(s)
+		slices.Sort(s)
 
 		for _, v := range s {
 			buf.WriteString(fmt.Sprintf("%s-", v))

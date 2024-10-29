@@ -6,7 +6,7 @@ package ec2_test
 import (
 	"fmt"
 	"reflect"
-	"sort"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -145,7 +145,7 @@ func testAccCheckAvailabilityZonesMeta(n string) resource.TestCheckFunc {
 		}
 
 		expected := actual
-		sort.Strings(expected)
+		slices.Sort(expected)
 		if !reflect.DeepEqual(expected, actual) {
 			return fmt.Errorf("AZs not sorted - expected %v, got %v", expected, actual)
 		}

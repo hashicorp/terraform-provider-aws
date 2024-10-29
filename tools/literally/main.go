@@ -14,6 +14,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -382,7 +383,7 @@ func (v *visitor) output() {
 			packageKeys = append(packageKeys, k)
 		}
 
-		sort.Strings(packageKeys)
+		slices.Sort(packageKeys)
 
 		if !opts.IncludePkgs {
 			fmt.Fprintf(out, "%s,%d,%d,%d,%.2f\n", k, v.count, v.testCount, len(v.packages), scores[k][0])

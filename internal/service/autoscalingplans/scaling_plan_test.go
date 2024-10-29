@@ -6,7 +6,7 @@ package autoscalingplans_test
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -436,8 +436,8 @@ func testAccCheckApplicationSourceTags(scalingPlan *awstypes.ScalingPlan, expect
 				return fmt.Errorf("Scaling plan application source tag filter key %q not expected", key)
 			}
 
-			sort.Strings(values)
-			sort.Strings(expectedValues)
+			slices.Sort(values)
+			slices.Sort(expectedValues)
 			if !cmp.Equal(values, expectedValues) {
 				return fmt.Errorf("Scaling plan application source tag filter values %q, expected %q", values, expectedValues)
 			}
