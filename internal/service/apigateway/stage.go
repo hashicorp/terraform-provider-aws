@@ -91,6 +91,11 @@ func resourceStage() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"deployment_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+						},
 						"percent_traffic": {
 							Type:     schema.TypeFloat,
 							Optional: true,
@@ -570,6 +575,10 @@ func expandCanarySettings(tfMap map[string]interface{}, deploymentId string) *ty
 		DeploymentId: aws.String(deploymentId),
 	}
 
+	if v, ok := (tfMap["deployment_id"]).(string); ok && v != "" {
+		apiObject.DeploymentId = aws.String(v)
+	}
+
 	if v, ok := tfMap["percent_traffic"].(float64); ok {
 		apiObject.PercentTraffic = v
 	}
@@ -600,6 +609,7 @@ func flattenCanarySettings(canarySettings *types.CanarySettings) []interface{} {
 
 	settings["percent_traffic"] = canarySettings.PercentTraffic
 	settings["use_stage_cache"] = canarySettings.UseStageCache
+	settings["deployment_id"] = canarySettings.DeploymentId
 
 	return []interface{}{settings}
 }
