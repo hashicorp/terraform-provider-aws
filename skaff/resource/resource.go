@@ -42,13 +42,12 @@ type TemplateData struct {
 	Service              string
 	ServiceLower         string
 	AWSServiceName       string
-	AWSGoSDKV2           bool
 	PluginFramework      bool
 	HumanResourceName    string
 	ProviderResourceName string
 }
 
-func Create(resName, snakeName string, comments, force, v2, pluginFramework, tags bool) error {
+func Create(resName, snakeName string, comments, force, pluginFramework, tags bool) error {
 	wd, err := os.Getwd() // os.Getenv("GOPACKAGE") not available since this is not run with go generate
 	if err != nil {
 		return fmt.Errorf("error reading working directory: %s", err)
@@ -87,7 +86,6 @@ func Create(resName, snakeName string, comments, force, v2, pluginFramework, tag
 		Service:              service.ProviderNameUpper(),
 		ServiceLower:         strings.ToLower(service.ProviderNameUpper()),
 		AWSServiceName:       service.FullHumanFriendly(),
-		AWSGoSDKV2:           v2,
 		PluginFramework:      pluginFramework,
 		HumanResourceName:    convert.ToHumanResName(resName),
 		ProviderResourceName: convert.ToProviderResourceName(servicePackage, snakeName),
