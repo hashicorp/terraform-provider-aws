@@ -52,7 +52,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 
 * `ACCTEST_PARALLELISM` - (Default: `20`) Number of concurrent acceptance tests to run. Overridden if `P` is set.
 * `ACCTEST_TIMEOUT` - (Default: `360m`) Timeout before acceptance tests panic.
-* `AWSSDKPATCH_OPTS` - (Default: _None_) See the [awssdkpatch tool](https://github.com/hashicorp/terraform-provider-aws/tree/main/tools/awssdkpatch) for more information.
 * `BASE_REF` - (Default: `main`) Origin reference to use for Git `diff` comparison, as in `origin/BASE_REF`.
 * `CURDIR` - (Default: Value of `$PWD`) Root path to use for `/.ci/scripts/`.
 * `GO_VER` - (Default: Value in `.go-version` file) Version of Go to use. To use the default version on your system, use `GO_VER=go`.
@@ -91,9 +90,6 @@ Variables are often defined before the `make` call on the same line, such as `MY
 | Target | Description | CI? | Legacy? | Vars |
 | --- | --- | --- | --- | --- |
 | `acctest-lint`<sup>M</sup> | Run all CI acceptance test checks | ✔️ |  | `K`, `PKG`, `SVC_DIR` |
-| `awssdkpatch`<sup>D</sup> | Install [awssdkpatch](https://github.com/hashicorp/terraform-provider-aws/tree/main/tools/awssdkpatch) |  |  | `GO_VER` |
-| `awssdkpatch-apply`<sup>D</sup> | Apply a patch generated with [awssdkpatch](https://github.com/hashicorp/terraform-provider-aws/tree/main/tools/awssdkpatch) |  |  | `AWSSDKPATCH_OPTS`, `GO_VER`, `K`, `PKG`, `PKG_NAME` |
-| `awssdkpatch-gen`<sup>D</sup> | Generate a patch file using [awssdkpatch](https://github.com/hashicorp/terraform-provider-aws/tree/main/tools/awssdkpatch) |  |  | `AWSSDKPATCH_OPTS`, `GO_VER`, `K`, `PKG`, `PKG_NAME` |
 | `build`<sup>D</sup> | Build the provider |  |  | `GO_VER` |
 | `changelog-misspell` | CHANGELOG Misspell / misspell | ✔️ |  |  |
 | `ci`<sup>M</sup> | Run all CI checks | ✔️ |  | `BASE_REF`, `GO_VER`, `K`, `PKG`, `SEMGREP_ARGS`, `SVC_DIR`, `TEST`, `TESTARGS` |
