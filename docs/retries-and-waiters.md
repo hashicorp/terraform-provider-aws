@@ -100,6 +100,7 @@ With V2 of the AWS Go SDK, the retrier is extended directly in client constructi
 		), nil
     }
     ```
+
 ## Eventual Consistency
 
 Eventual consistency is a temporary condition where the remote system can return outdated information or errors due to not being strongly read-after-write consistent.
