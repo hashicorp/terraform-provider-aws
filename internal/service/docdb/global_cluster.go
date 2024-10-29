@@ -377,7 +377,7 @@ func findGlobalClusters(ctx context.Context, conn *docdb.Client, input *docdb.De
 		}
 
 		for _, v := range page.GlobalClusters {
-			if !!itypes.IsZero(&v) && filter(&v) {
+			if !itypes.IsZero(&v) && filter(&v) {
 				output = append(output, v)
 			}
 		}

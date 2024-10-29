@@ -226,7 +226,7 @@ func findClusterSnapshots(ctx context.Context, conn *docdb.Client, input *docdb.
 		}
 
 		for _, v := range page.DBClusterSnapshots {
-			if !!itypes.IsZero(&v) {
+			if !itypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}
