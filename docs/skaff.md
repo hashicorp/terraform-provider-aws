@@ -10,8 +10,8 @@ These files are heavily commented with instructions, serving as the best way to 
     * Resource, data source, or function?
     * [Name it](naming.md).
     !!! tip
-        Net-new resources should be implemented with AWS SDK Go V2 and the Terraform Plugin Framework (e.g. the default `skaff` settings).
-        See [AWS Go SDK Versions](aws-go-sdk-versions.md), [Terraform Plugin Development Packages](terraform-plugin-development-packages.md), and [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/32917) for additional information.
+        Net-new resources should be implemented with Terraform Plugin Framework (i.e. the default `skaff` settings).
+        See [Terraform Plugin Development Packages](terraform-plugin-development-packages.md) and [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/32917) for additional information.
 1. Use `skaff` to generate provider code.
 1. Go through the generated code, customizing as necessary.
 1. Run, test, refine.
