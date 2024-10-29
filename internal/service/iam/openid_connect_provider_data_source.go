@@ -24,6 +24,7 @@ import (
 
 // @SDKDataSource("aws_iam_openid_connect_provider", name="OIDC Provider")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn", tagsResourceType="OIDCProvider")
 func dataSourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOpenIDConnectProviderRead,

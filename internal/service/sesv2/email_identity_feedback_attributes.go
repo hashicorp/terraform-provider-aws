@@ -15,12 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_sesv2_email_identity_feedback_attributes")
-func ResourceEmailIdentityFeedbackAttributes() *schema.Resource {
+// @SDKResource("aws_sesv2_email_identity_feedback_attributes", name="Email Identity Feedback Attributes")
+func resourceEmailIdentityFeedbackAttributes() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailIdentityFeedbackAttributesCreate,
 		ReadWithoutTimeout:   resourceEmailIdentityFeedbackAttributesRead,
@@ -47,7 +48,7 @@ func ResourceEmailIdentityFeedbackAttributes() *schema.Resource {
 }
 
 const (
-	ResNameEmailIdentityFeedbackAttributes = "Email Identity Feedback Attributes"
+	resNameEmailIdentityFeedbackAttributes = "Email Identity Feedback Attributes"
 )
 
 func resourceEmailIdentityFeedbackAttributesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -61,11 +62,11 @@ func resourceEmailIdentityFeedbackAttributesCreate(ctx context.Context, d *schem
 
 	out, err := conn.PutEmailIdentityFeedbackAttributes(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameEmailIdentityFeedbackAttributes, d.Get("email_identity").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameEmailIdentityFeedbackAttributes, d.Get("email_identity").(string), err)
 	}
 
 	if out == nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, ResNameEmailIdentityFeedbackAttributes, d.Get("email_identity").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameEmailIdentityFeedbackAttributes, d.Get("email_identity").(string), errors.New("empty output"))
 	}
 
 	d.SetId(d.Get("email_identity").(string))
@@ -77,7 +78,7 @@ func resourceEmailIdentityFeedbackAttributesRead(ctx context.Context, d *schema.
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	out, err := FindEmailIdentityByID(ctx, conn, d.Id())
+	out, err := findEmailIdentityByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 EmailIdentityFeedbackAttributes (%s) not found, removing from state", d.Id())
@@ -86,7 +87,7 @@ func resourceEmailIdentityFeedbackAttributesRead(ctx context.Context, d *schema.
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, ResNameEmailIdentityFeedbackAttributes, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameEmailIdentityFeedbackAttributes, d.Id(), err)
 	}
 
 	d.Set("email_identity", d.Id())
@@ -117,7 +118,7 @@ func resourceEmailIdentityFeedbackAttributesUpdate(ctx context.Context, d *schem
 	log.Printf("[DEBUG] Updating SESV2 EmailIdentityFeedbackAttributes (%s): %#v", d.Id(), in)
 	_, err := conn.PutEmailIdentityFeedbackAttributes(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, ResNameEmailIdentityFeedbackAttributes, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameEmailIdentityFeedbackAttributes, d.Id(), err)
 	}
 
 	return append(diags, resourceEmailIdentityFeedbackAttributesRead(ctx, d, meta)...)
@@ -133,13 +134,16 @@ func resourceEmailIdentityFeedbackAttributesDelete(ctx context.Context, d *schem
 		EmailIdentity: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, ResNameEmailIdentityFeedbackAttributes, d.Id(), err)
+	if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Must be a verified email address or domain") {
+		return diags
+	}
+
+	if err != nil {
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, resNameEmailIdentityFeedbackAttributes, d.Id(), err)
 	}
 
 	return diags

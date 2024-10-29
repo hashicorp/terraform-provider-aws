@@ -154,7 +154,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set(names.AttrApplicationID, app.ApplicationId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codedeploy",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,

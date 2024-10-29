@@ -15,11 +15,9 @@ import (
 	"strings"
 	"testing"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
+	"github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -290,32 +288,18 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	t.Run("v1", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, providerRegion, testcase, callServiceV1)
-			})
-		}
-	})
-
-	t.Run("v2", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, providerRegion, testcase, callServiceV2)
-			})
-		}
-	})
+	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+		t.Run(name, func(t *testing.T) {
+			testEndpointCase(t, providerRegion, testcase, callService)
+		})
+	}
 }
 
 func defaultEndpoint(region string) (url.URL, error) {
-	r := directoryservice_sdkv2.NewDefaultEndpointResolverV2()
+	r := directoryservice.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), directoryservice_sdkv2.EndpointParameters{
-		Region: aws_sdkv2.String(region),
+	ep, err := r.ResolveEndpoint(context.Background(), directoryservice.EndpointParameters{
+		Region: aws.String(region),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -329,11 +313,11 @@ func defaultEndpoint(region string) (url.URL, error) {
 }
 
 func defaultFIPSEndpoint(region string) (url.URL, error) {
-	r := directoryservice_sdkv2.NewDefaultEndpointResolverV2()
+	r := directoryservice.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), directoryservice_sdkv2.EndpointParameters{
-		Region:  aws_sdkv2.String(region),
-		UseFIPS: aws_sdkv2.Bool(true),
+	ep, err := r.ResolveEndpoint(context.Background(), directoryservice.EndpointParameters{
+		Region:  aws.String(region),
+		UseFIPS: aws.Bool(true),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -346,15 +330,15 @@ func defaultFIPSEndpoint(region string) (url.URL, error) {
 	return ep.URI, nil
 }
 
-func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
 	client := meta.DSClient(ctx)
 
 	var result apiCallParams
 
-	_, err := client.DescribeDirectories(ctx, &directoryservice_sdkv2.DescribeDirectoriesInput{},
-		func(opts *directoryservice_sdkv2.Options) {
+	_, err := client.DescribeDirectories(ctx, &directoryservice.DescribeDirectoriesInput{},
+		func(opts *directoryservice.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
 				addRetrieveRegionMiddleware(&result.region),
@@ -369,21 +353,6 @@ func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) api
 	}
 
 	return result
-}
-
-func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
-	t.Helper()
-
-	client := meta.DSConn(ctx)
-
-	req, _ := client.DescribeDirectoriesRequest(&directoryservice_sdkv1.DescribeDirectoriesInput{})
-
-	req.HTTPRequest.URL.Path = "/"
-
-	return apiCallParams{
-		endpoint: req.HTTPRequest.URL.String(),
-		region:   aws_sdkv1.StringValue(client.Config.Region),
-	}
 }
 
 func withNoConfig(_ *caseSetup) {

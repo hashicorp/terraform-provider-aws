@@ -112,16 +112,6 @@ For more details on flags for generating tag updating functions, see the
 When creating a resource, some AWS APIs support passing tags in the Create call while others require setting the tags after the initial creation.
 If the API does not support tagging on creation, pass the `-CreateTags` flag to generate a `createTags` function that can be called from the resource Create handler function.
 
-### Specifying the AWS SDK for Go version
-
-The majority of the Terraform AWS Provider is implemented using [version 1 of the AWS SDK for Go](https://github.com/aws/aws-sdk-go).
-For new services, however, [version 2 of the SDK](https://github.com/aws/aws-sdk-go-v2) is required.
-
-By default, the generated code uses the AWS SDK for Go v1.
-To generate code using the AWS SDK for Go v2, pass the flag `-AwsSdkVersion=2`.
-
-For more information, see the [documentation on AWS SDK versions](./aws-go-sdk-versions.md).
-
 ### Running Code generation
 
 Run the command `make gen` to run the code generators for the project.
@@ -219,8 +209,12 @@ Most services can use a facility we call _transparent_ (or _implicit_) _tagging_
     }
     ```
 
-The `identifierAttribute` argument to the `@Tags` annotation identifies the attribute in the resource's schema whose value is used in tag listing and updating API calls. Common values are `"arn"` and "`id`".
-Once the annotation has been added to the resource's code, run `make gen` to register the resource for transparent tagging. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+The `identifierAttribute` argument to the `@Tags` annotation identifies the attribute in the resource type's schema whose value is used in tag listing and updating API calls.
+Common values are `"arn"` and `"id"`.
+If the resource type does not need separate `createTags`, `listTags`, or `updateTags` functions, do not specify an `identifierAttribute`.
+
+Once the annotation has been added to the resource's code, run `make gen` to register the resource for transparent tagging.
+This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
 #### Resource Create Operation
 
@@ -335,7 +329,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &eks.CreateClusterInput{
@@ -349,7 +343,7 @@ If the service API does not allow passing an empty list, the logic can be adjust
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &eks.CreateClusterInput{
@@ -367,7 +361,7 @@ implement the logic to convert the configuration tags into the service API call 
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     /* ... creation steps ... */
@@ -386,7 +380,7 @@ This example shows using `TagSpecifications`:
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &ec2.CreateFleetInput{
@@ -402,8 +396,8 @@ In the resource `Read` operation, implement the logic to convert the service tag
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
+    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
     /* ... other d.Set(...) logic ... */
 
@@ -424,8 +418,8 @@ use the generated `listTags` function, e.g., with Athena Workgroups:
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
+    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
     /* ... other d.Set(...) logic ... */
 
@@ -539,8 +533,10 @@ In that case, add the annotations `@Testing(existsTakesT=true)` and `@Testing(de
 The generated acceptance tests use `ImportState` steps.
 In most cases, these will work as-is.
 To ignore the values of certain parameters when importing, set the annotation `@Testing(importIgnore="...")` to a list of the parameter names separated by semi-colons (`;`).
-To override the import ID, use the annotation `@Testing(importStateId=<var name>)` if it can be retrieved from an existing variable,
-or use `@Testing(importStateIdFunc=<func name>)` to reference a function that returns a `resource.ImportStateIdFunc`.
+There are multiple methods for overriding the import ID, if needed.
+To use the value of an existing variable, use the annotation `@Testing(importStateId=<var name>)`.
+If the identifier can be retrieved from a specific resource attribute, use the annotation `@Testing(importStateIdAttribute=<attribute name>)`.
+If the identifier can be retrieved from a `resource.ImportStateIdFunc`, use the annotation `@Testing(importStateIdFunc=<func name>)`.
 If the resource type does not support importing, use the annotation `@Testing(noImport=true)`.
 
 If the tests need to be serialized, use the annotion `@Testing(serialize=true)`.
@@ -550,11 +546,21 @@ For example, 3 minutes and 30 seconds is `3m30s`.
 Some services do not support tags with an empty string value.
 In that case, use the annotation `@Testing(skipEmptyTags=true)`.
 
+Some services do not support tags with an null string value.
+In that case, use the annotation `@Testing(skipNullTags=true)`.
+
 Some resource types use the no-op `CheckDestroy` function `acctest.CheckDestroyNoop`.
 Use the annotation `@Testing(checkDestroyNoop=true)`.
 
 For some resource types, tags cannot be modified without recreating the resource.
 Use the annotation `@Testing(tagsUpdateForceNew=true)`.
+
+Resource types which pass the result of `getTagsIn` directly onto their Update Input may have an error where ignored tags are not correctly excluded from the update.
+Use the annotation `@Testing(tagsUpdateGetTagsIn=true)`.
+
+Some tests read the tag values directly from the AWS API.
+If the resource type does not specify `identifierAttribute` in its `@Tags` annotation, specify a `@Testing(tagsIdentifierAttribute=<attribute name>)` annotation to identify which attribute value should be used by the `listTags` function.
+If a resource type is also needed for the `listTags` function, also specify the `tagsResourceType` annotation.
 
 At least one resource type, the Service Catalog Provisioned Product, does not support removing tags.
 This is likely an error on the AWS side.

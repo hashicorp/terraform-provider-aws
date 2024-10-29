@@ -73,6 +73,7 @@ plugins:
 
 markdown_extensions:
   - admonition
+  - footnotes
   - pymdownx.highlight
   - pymdownx.superfences
   - pymdownx.tabbed:

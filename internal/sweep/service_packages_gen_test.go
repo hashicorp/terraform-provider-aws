@@ -55,6 +55,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecatalyst"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/codeconnections"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codeguruprofiler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
@@ -71,6 +72,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/costoptimizationhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/databrew"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
@@ -175,7 +177,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/paymentcryptography"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pcaconnectorad"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pcs"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpointsmsvoicev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/polly"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pricing"
@@ -189,6 +193,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rekognition"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/resiliencehub"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
@@ -225,6 +230,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmquicksetup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmsap"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sso"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
@@ -298,6 +304,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		codebuild.ServicePackage(ctx),
 		codecatalyst.ServicePackage(ctx),
 		codecommit.ServicePackage(ctx),
+		codeconnections.ServicePackage(ctx),
 		codeguruprofiler.ServicePackage(ctx),
 		codegurureviewer.ServicePackage(ctx),
 		codepipeline.ServicePackage(ctx),
@@ -314,6 +321,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		costoptimizationhub.ServicePackage(ctx),
 		cur.ServicePackage(ctx),
 		customerprofiles.ServicePackage(ctx),
+		databrew.ServicePackage(ctx),
 		dataexchange.ServicePackage(ctx),
 		datapipeline.ServicePackage(ctx),
 		datasync.ServicePackage(ctx),
@@ -418,7 +426,9 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		outposts.ServicePackage(ctx),
 		paymentcryptography.ServicePackage(ctx),
 		pcaconnectorad.ServicePackage(ctx),
+		pcs.ServicePackage(ctx),
 		pinpoint.ServicePackage(ctx),
+		pinpointsmsvoicev2.ServicePackage(ctx),
 		pipes.ServicePackage(ctx),
 		polly.ServicePackage(ctx),
 		pricing.ServicePackage(ctx),
@@ -432,6 +442,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		redshiftdata.ServicePackage(ctx),
 		redshiftserverless.ServicePackage(ctx),
 		rekognition.ServicePackage(ctx),
+		resiliencehub.ServicePackage(ctx),
 		resourceexplorer2.ServicePackage(ctx),
 		resourcegroups.ServicePackage(ctx),
 		resourcegroupstaggingapi.ServicePackage(ctx),
@@ -468,6 +479,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		ssm.ServicePackage(ctx),
 		ssmcontacts.ServicePackage(ctx),
 		ssmincidents.ServicePackage(ctx),
+		ssmquicksetup.ServicePackage(ctx),
 		ssmsap.ServicePackage(ctx),
 		sso.ServicePackage(ctx),
 		ssoadmin.ServicePackage(ctx),

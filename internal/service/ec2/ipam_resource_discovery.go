@@ -110,7 +110,7 @@ func resourceIPAMResourceDiscoveryCreate(ctx context.Context, d *schema.Resource
 	input := &ec2.CreateIpamResourceDiscoveryInput{
 		ClientToken:       aws.String(id.UniqueId()),
 		OperatingRegions:  expandIPAMOperatingRegions(d.Get("operating_regions").(*schema.Set).List()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeIpamResourceDiscovery),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpamResourceDiscovery),
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -157,7 +157,7 @@ func resourceIPAMResourceDiscoveryRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set(names.AttrOwnerID, rd.OwnerId)
 
-	setTagsOutV2(ctx, rd.Tags)
+	setTagsOut(ctx, rd.Tags)
 
 	return diags
 }
@@ -209,7 +209,7 @@ func resourceIPAMResourceDiscoveryUpdate(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	return diags
+	return append(diags, resourceIPAMResourceDiscoveryRead(ctx, d, meta)...)
 }
 
 func resourceIPAMResourceDiscoveryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

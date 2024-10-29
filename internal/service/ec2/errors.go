@@ -7,11 +7,8 @@ import (
 	"errors"
 	"fmt"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
@@ -66,6 +63,8 @@ const (
 	errCodeInvalidLaunchTemplateIdNotFound                         = "InvalidLaunchTemplateId.NotFound"
 	errCodeInvalidLaunchTemplateIdVersionNotFound                  = "InvalidLaunchTemplateId.VersionNotFound"
 	errCodeInvalidLaunchTemplateNameNotFoundException              = "InvalidLaunchTemplateName.NotFoundException"
+	errCodeInvalidLocalGatewayRouteTableIDNotFound                 = "InvalidLocalGatewayRouteTableID.NotFound"
+	errCodeInvalidLocalGatewayRouteTableVPCAssociationIDNotFound   = "InvalidLocalGatewayRouteTableVpcAssociationID.NotFound"
 	errCodeInvalidNetworkACLEntryNotFound                          = "InvalidNetworkAclEntry.NotFound"
 	errCodeInvalidNetworkACLIDNotFound                             = "InvalidNetworkAclID.NotFound"
 	errCodeInvalidNetworkInsightsAnalysisIdNotFound                = "InvalidNetworkInsightsAnalysisId.NotFound"
@@ -81,6 +80,7 @@ const (
 	errCodeInvalidPoolIDNotFound                                   = "InvalidPoolID.NotFound"
 	errCodeInvalidPrefixListIDNotFound                             = "InvalidPrefixListID.NotFound"
 	errCodeInvalidPrefixListIdNotFound                             = "InvalidPrefixListId.NotFound"
+	errCodeInvalidPrefixListModification                           = "InvalidPrefixListModification"
 	errCodeInvalidPublicIpv4PoolIDNotFound                         = "InvalidPublicIpv4PoolID.NotFound" // nosemgrep:ci.caps5-in-const-name,ci.caps5-in-var-name
 	errCodeInvalidReservationNotFound                              = "InvalidReservationID.NotFound"
 	errCodeInvalidRouteNotFound                                    = "InvalidRoute.NotFound"
@@ -145,7 +145,7 @@ func cancelSpotFleetRequestError(apiObject *awstypes.CancelSpotFleetRequestsErro
 		return nil
 	}
 
-	return errs.APIError(apiObject.Code, aws_sdkv2.ToString(apiObject.Message))
+	return errs.APIError(apiObject.Code, aws.ToString(apiObject.Message))
 }
 
 func cancelSpotFleetRequestsError(apiObjects []awstypes.CancelSpotFleetRequestsErrorItem) error {
@@ -153,7 +153,7 @@ func cancelSpotFleetRequestsError(apiObjects []awstypes.CancelSpotFleetRequestsE
 
 	for _, apiObject := range apiObjects {
 		if err := cancelSpotFleetRequestError(apiObject.Error); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.SpotFleetRequestId), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.SpotFleetRequestId), err))
 		}
 	}
 
@@ -165,7 +165,7 @@ func deleteFleetError(apiObject *awstypes.DeleteFleetError) error {
 		return nil
 	}
 
-	return errs.APIError(apiObject.Code, aws_sdkv2.ToString(apiObject.Message))
+	return errs.APIError(apiObject.Code, aws.ToString(apiObject.Message))
 }
 
 func deleteFleetsError(apiObjects []awstypes.DeleteFleetErrorItem) error {
@@ -173,51 +173,27 @@ func deleteFleetsError(apiObjects []awstypes.DeleteFleetErrorItem) error {
 
 	for _, apiObject := range apiObjects {
 		if err := deleteFleetError(apiObject.Error); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.FleetId), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.FleetId), err))
 		}
 	}
 
 	return errors.Join(errs...)
 }
 
-func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
+func unsuccessfulItemError(apiObject *awstypes.UnsuccessfulItemError) error {
 	if apiObject == nil {
 		return nil
 	}
 
-	return awserr.New(aws.StringValue(apiObject.Code), aws.StringValue(apiObject.Message), nil)
+	return errs.APIError(aws.ToString(apiObject.Code), aws.ToString(apiObject.Message))
 }
 
-func UnsuccessfulItemsError(apiObjects []*ec2.UnsuccessfulItem) error {
+func unsuccessfulItemsError(apiObjects []awstypes.UnsuccessfulItem) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		if err := UnsuccessfulItemError(apiObject.Error); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.ResourceId), err))
-		}
-	}
-
-	return errors.Join(errs...)
-}
-
-func unsuccessfulItemErrorV2(apiObject *awstypes.UnsuccessfulItemError) error {
-	if apiObject == nil {
-		return nil
-	}
-
-	return errs.APIError(aws_sdkv2.ToString(apiObject.Code), aws_sdkv2.ToString(apiObject.Message))
-}
-
-func unsuccessfulItemsErrorV2(apiObjects []awstypes.UnsuccessfulItem) error {
-	var errs []error
-
-	for _, apiObject := range apiObjects {
-		if err := unsuccessfulItemErrorV2(apiObject.Error); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.ResourceId), err))
+		if err := unsuccessfulItemError(apiObject.Error); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceId), err))
 		}
 	}
 
@@ -229,7 +205,7 @@ func enableFastSnapshotRestoreStateItemError(apiObject *awstypes.EnableFastSnaps
 		return nil
 	}
 
-	return errs.APIError(aws_sdkv2.ToString(apiObject.Code), aws_sdkv2.ToString(apiObject.Message))
+	return errs.APIError(aws.ToString(apiObject.Code), aws.ToString(apiObject.Message))
 }
 
 func enableFastSnapshotRestoreStateItemsError(apiObjects []awstypes.EnableFastSnapshotRestoreStateErrorItem) error {
@@ -237,7 +213,7 @@ func enableFastSnapshotRestoreStateItemsError(apiObjects []awstypes.EnableFastSn
 
 	for _, apiObject := range apiObjects {
 		if err := enableFastSnapshotRestoreStateItemError(apiObject.Error); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.AvailabilityZone), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.AvailabilityZone), err))
 		}
 	}
 
@@ -249,7 +225,7 @@ func enableFastSnapshotRestoreItemsError(apiObjects []awstypes.EnableFastSnapsho
 
 	for _, apiObject := range apiObjects {
 		if err := enableFastSnapshotRestoreStateItemsError(apiObject.FastSnapshotRestoreStateErrors); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.SnapshotId), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.SnapshotId), err))
 		}
 	}
 
@@ -257,7 +233,7 @@ func enableFastSnapshotRestoreItemsError(apiObjects []awstypes.EnableFastSnapsho
 }
 
 func networkACLEntryAlreadyExistsError(naclID string, egress bool, ruleNumber int) error {
-	return awserr.New(errCodeNetworkACLEntryAlreadyExists, fmt.Sprintf("EC2 Network ACL (%s) Rule (egress: %t)(%d) already exists", naclID, egress, ruleNumber), nil)
+	return errs.APIError(errCodeNetworkACLEntryAlreadyExists, fmt.Sprintf("EC2 Network ACL (%s) Rule (egress: %t)(%d) already exists", naclID, egress, ruleNumber))
 }
 
 func routeAlreadyExistsError(routeTableID, destination string) error {

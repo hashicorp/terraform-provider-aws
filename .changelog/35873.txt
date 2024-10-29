@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_sagemaker_model: Add `primary_container.model_data_source.s3_data_source.model_access_config`, `primary_container.multi_model_config`, `container.model_data_source.s3_data_source.model_access_config`, and ``container.multi_model_config` configuration blocks
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_model: Add `primary_container.inference_specification_name` and `container.inference_specification_name` arguments
+```

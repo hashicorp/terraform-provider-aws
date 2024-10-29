@@ -193,7 +193,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	zoneID := cleanZoneID(aws.ToString(output.HostedZone.Id))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "route53",
 		Resource:  "hostedzone/" + zoneID,
 	}.String()
@@ -383,8 +383,7 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 	const (
 		chunkSize = 100
 	)
-	chunks := tfslices.Chunks(resourceRecordSets, chunkSize)
-	for _, chunk := range chunks {
+	for chunk := range slices.Chunk(resourceRecordSets, chunkSize) {
 		changes := tfslices.ApplyToAll(chunk, func(v awstypes.ResourceRecordSet) awstypes.Change {
 			return awstypes.Change{
 				Action:            awstypes.ChangeActionDelete,

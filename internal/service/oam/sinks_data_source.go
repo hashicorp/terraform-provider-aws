@@ -6,8 +6,8 @@ package oam
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/oam"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -50,7 +50,7 @@ func dataSourceSinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		for _, listSinksItem := range page.Items {
-			arns = append(arns, aws.StringValue(listSinksItem.Arn))
+			arns = append(arns, aws.ToString(listSinksItem.Arn))
 		}
 	}
 

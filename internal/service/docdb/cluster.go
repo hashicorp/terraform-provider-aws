@@ -371,6 +371,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("master_password"); ok {
+			inputM.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
+		}
+
 		if v, ok := d.GetOk(names.AttrPort); ok {
 			input.Port = aws.Int32(int32(v.(int)))
 		}
@@ -391,11 +396,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v := d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set); v.Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v)
-		}
-
-		if v, ok := d.GetOk("master_password"); ok {
-			inputM.MasterUserPassword = aws.String(v.(string))
-			requiresModifyDbCluster = true
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {

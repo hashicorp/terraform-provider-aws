@@ -22,7 +22,7 @@ import (
 )
 
 // @SDKResource("aws_vpc_endpoint_connection_notification", name="VPC Endpoint Connection Notification")
-func ResourceVPCEndpointConnectionNotification() *schema.Resource {
+func resourceVPCEndpointConnectionNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointConnectionNotificationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointConnectionNotificationRead,
