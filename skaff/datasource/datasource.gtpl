@@ -36,6 +36,7 @@ import (
 	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// types.<Type Name>.
+{{- end }}
 	"context"
 	"errors"
 	"fmt"
