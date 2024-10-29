@@ -44,7 +44,7 @@ func Create(name, snakeName, description string, comments, force bool) error {
 		return fmt.Errorf("snake name should be all lower case with underscores, if needed (e.g., arn_build)")
 	}
 
-	if snakeName != "" {
+	if snakeName == "" {
 		snakeName = names.ToSnakeCase(name)
 	}
 

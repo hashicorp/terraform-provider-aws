@@ -68,7 +68,7 @@ func Create(dsName, snakeName string, comments, force, pluginFramework, tags boo
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	if snakeName != "" {
+	if snakeName == "" {
 		snakeName = names.ToSnakeCase(dsName)
 	}
 
