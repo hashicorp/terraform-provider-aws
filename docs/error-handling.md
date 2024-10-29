@@ -33,12 +33,12 @@ if err != nil {
 // all good!
 ```
 
-This is in preference of some other styles of error checking, such as `switch` conditionals without a condition.
+This is in preference to some other styles of error checking, such as `switch` conditionals without a condition.
 
 ### Wrap Errors
 
 Go implements error wrapping, which means that a deeply nested function call can return a particular error type, while each function up the stack can provide additional error message context without losing the ability to determine the original error.
-Additional information about this concept can be found on the [Go blog entry titled Working with Errors in Go 1.13](https://blog.golang.org/go1.13-errors).
+Additional information about this concept can be found in the [Go blog entry titled Working with Errors in Go 1.13](https://blog.golang.org/go1.13-errors).
 
 For most use cases in this codebase, this means if code is receiving an error and needs to return it, it should implement [`fmt.Errorf()`](https://pkg.go.dev/fmt#Errorf) and the `%w` verb, e.g.
 
@@ -59,7 +59,7 @@ The sections below contain documentation for both SDKs. See [AWS Go SDK Versions
 === "AWS Go SDK V2 (Preferred)"
     The [AWS SDK for Go v2 documentation](https://aws.github.io/aws-sdk-go-v2/docs/) includes a [section on handling errors](https://aws.github.io/aws-sdk-go-v2/docs/handling-errors/), which is recommended reading.
 
-    For the purposes of this documentation, the most important concepts with handling these errors are:
+    For the purposes of this documentation, the most important concepts in handling these errors are:
 
     - The SDK wraps all errors returned by service clients with the [`smithy.OperationError`](https://pkg.go.dev/github.com/aws/smithy-go/#OperationError) type.
     - [`errors.As`](https://golang.org/pkg/errors#As) should be used to unwrap errors when inspecting for a specific error type (e.g, a `BucketAlreadyExists` error from the S3 API).
@@ -67,7 +67,7 @@ The sections below contain documentation for both SDKs. See [AWS Go SDK Versions
 === "AWS Go SDK V1"
     The [AWS SDK for Go v1 documentation](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/welcome.html) includes a [section on handling errors](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/handling-errors.html), which is recommended reading.
 
-    For the purposes of this documentation, the most important concepts with handling these errors are:
+    For the purposes of this documentation, the most important concepts in handling these errors are:
 
     - Each response error (which eventually implements `awserr.Error`) has a `string` error code (`Code`) and `string` error message (`Message`). When printed as a string, they format as: `Code: Message`, e.g., `InvalidParameterValueException: IAM Role arn:aws:iam::123456789012:role/XXX cannot be assumed by AWS Backup`.
     - Error handling is almost exclusively done via those `string` fields and not other response information, such as HTTP Status Codes.
@@ -166,7 +166,7 @@ For Terraform Plugin SDK V2 based resources, creation is implemented on the `Cre
 #### Creation Error Message Context
 
 === "Terraform Plugin Framework (Preferred)"
-    Errors enountered during creation should include additional messaging about the location or cause of the error for operators and code maintainers.
+    Errors encountered during creation should include additional messaging about the location or cause of the error for operators and code maintainers.
     Plugin Framework based resources will append error [diagnostics](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics) to the `resource.CreateResponse` `Diagnostics` field.
     The `create.ProblemStandardMessage` helper function can be used for constructing the appropriate context to accompany the error.
 
@@ -207,7 +207,7 @@ For Terraform Plugin SDK V2 based resources, creation is implemented on the `Cre
     ```
 
 === "Terraform Plugin SDK V2"
-    Errors enountered during creation should include additional messaging about the location or cause of the error for operators and code maintainers.
+    Errors encountered during creation should include additional messaging about the location or cause of the error for operators and code maintainers.
     The `create.AppendDiagError` helper function can be used to convert a native error into a [diagnostic](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics), which is the method for surfacing warnings and errors in Terraform providers.
 
     ```go
@@ -296,7 +296,7 @@ For Terraform Plugin SDK V2 based resources, read is implemented on the `ReadWit
 #### Read Error Message Context
 
 === "Terraform Plugin Framework (Preferred)"
-    Errors enountered during read should include the resource identifier (for managed resources) and additional messaging about the location or cause of the error for operators and code maintainers.
+    Errors encountered during read should include the resource identifier (for managed resources) and additional messaging about the location or cause of the error for operators and code maintainers.
     Plugin Framework based resources will append error [diagnostics](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics) to the `resource.ReadResponse` `Diagnostics` field.
     The `create.ProblemStandardMessage` helper function can be used for constructing the appropriate context to accompany the error.
 
@@ -323,7 +323,7 @@ For Terraform Plugin SDK V2 based resources, read is implemented on the `ReadWit
     ```
 
 === "Terraform Plugin SDK V2"
-    Errors enountered during read should include the resource identifier (for managed resources) and additional messaging about the location or cause of the error for operators and code maintainers.
+    Errors encountered during read should include the resource identifier (for managed resources) and additional messaging about the location or cause of the error for operators and code maintainers.
     The `create.AppendDiagError` helper function can be used to convert a native error into a [diagnostic](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics), which is the method for surfacing warnings and errors in Terraform providers.
 
     ```go
@@ -350,7 +350,7 @@ In addition to remote operation and data handling errors, errors should also be 
 - Multiple results are found.
 
 For remote operations that are designed to return an error when the remote resource is not found, this error is typically just passed through similar to other remote operation errors.
-For remote operations that are designed to return a successful result whether there is zero, one, or multiple multiple results the error must be generated.
+For remote operations that are designed to return a successful result whether there are zero, one, or multiple results, the error must be generated.
 
 For example in pseudo-code:
 
@@ -372,7 +372,7 @@ if len(output.Results) > 1 {
 
 #### Plural Data Source Errors
 
-An emergent concept is a data source that returns multiple results, acting similar to listing functionality from the remote system.
+An emergent concept is a data source that returns multiple results, acting similarly to listing functionality from the remote system.
 These types of data sources should return _not_ return errors if:
 
 - Zero results are found.
@@ -388,7 +388,7 @@ For Terraform Plugin SDK V2 based resources, update is implemented on the `Updat
 #### Update Error Message Context
 
 === "Terraform Plugin Framework (Preferred)"
-    Errors enountered during update should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
+    Errors ecnountered during update should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
     Plugin Framework based resources will append error [diagnostics](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics) to the `resource.UpdateResponse` `Diagnostics` field.
     The `create.ProblemStandardMessage` helper function can be used for constructing the appropriate context to accompany the error.
 
@@ -429,7 +429,7 @@ For Terraform Plugin SDK V2 based resources, update is implemented on the `Updat
     ```
 
 === "Terraform Plugin SDK V2"
-    Errors enountered during update should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
+    Errors encountered during update should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
     The `create.AppendDiagError` helper function can be used to convert a native error into a [diagnostic](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics), which is the method for surfacing warnings and errors in Terraform providers.
 
     ```go
@@ -462,7 +462,7 @@ For Terraform Plugin SDK V2 based resources, deletion is implemented on the `Del
 #### Deletion Error Message Context
 
 === "Terraform Plugin Framework (Preferred)"
-    Errors enountered during deletion should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
+    Errors encountered during deletion should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
     Plugin Framework based resources will append error [diagnostics](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics) to the `resource.DeleteResponse` `Diagnostics` field.
     The `create.ProblemStandardMessage` helper function can be used for constructing the appropriate context to accompany the error.
 
@@ -503,7 +503,7 @@ For Terraform Plugin SDK V2 based resources, deletion is implemented on the `Del
     ```
 
 === "Terraform Plugin SDK V2"
-    Errors enountered during deletion should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
+    Errors encountered during deletion should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
     The `create.AppendDiagError` helper function can be used to convert a native error into a [diagnostic](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics), which is the method for surfacing warnings and errors in Terraform providers.
 
     ```go

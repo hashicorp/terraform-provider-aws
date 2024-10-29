@@ -123,8 +123,8 @@ resource "aws_s3_bucket_acl" "example" {
 
 This resource supports the following arguments:
 
-* `acl` - (Optional, Conflicts with `access_control_policy`) Canned ACL to apply to the bucket.
-* `access_control_policy` - (Optional, Conflicts with `acl`) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
+* `acl` - (Optional, One of `acl` or `access_control_policy` is required) Canned ACL to apply to the bucket.
+* `access_control_policy` - (Optional, One of `access_control_policy` or `acl` is required) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
 * `bucket` - (Required, Forces new resource) Bucket to which to apply the ACL.
 * `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 

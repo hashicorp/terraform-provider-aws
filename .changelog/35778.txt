@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_datasync_task: Prevent ValidationErrors when empty values are sent with `report_override` arguments
+```
+```release-note:bug
+resource/aws_datasync_task: Fix crash when reading empty `report_override` values
+```

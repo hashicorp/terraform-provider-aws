@@ -4,17 +4,19 @@
 package kafka
 
 import (
+	"cmp"
 	"context"
-	"sort"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
-	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_msk_broker_nodes", name="Broker Nodes")
@@ -49,7 +51,7 @@ func dataSourceBrokerNodes() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"endpoints": {
+						names.AttrEndpoints: {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -73,7 +75,7 @@ func dataSourceBrokerNodesRead(ctx context.Context, d *schema.ResourceData, meta
 	input := &kafka.ListNodesInput{
 		ClusterArn: aws.String(clusterARN),
 	}
-	var nodeInfos []types.NodeInfo
+	var nodeInfos []awstypes.NodeInfo
 
 	pages := kafka.NewListNodesPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -83,29 +85,30 @@ func dataSourceBrokerNodesRead(ctx context.Context, d *schema.ResourceData, meta
 			return sdkdiag.AppendErrorf(diags, "listing MSK Cluster (%s) Broker Nodes: %s", clusterARN, err)
 		}
 
-		nodeInfos = append(nodeInfos, page.NodeInfoList...)
+		for _, nodeInfo := range page.NodeInfoList {
+			if nodeInfo.BrokerNodeInfo != nil {
+				nodeInfos = append(nodeInfos, nodeInfo)
+			}
+		}
 	}
 
-	// node list is returned unsorted sort on broker id
-	sort.Slice(nodeInfos, func(i, j int) bool {
-		iBrokerId := aws.ToFloat64(nodeInfos[i].BrokerNodeInfo.BrokerId)
-		jBrokerId := aws.ToFloat64(nodeInfos[j].BrokerNodeInfo.BrokerId)
-		return iBrokerId < jBrokerId
+	// node list is returned unsorted, sort on broker id
+	slices.SortFunc(nodeInfos, func(a, b awstypes.NodeInfo) int {
+		return cmp.Compare(aws.ToFloat64(a.BrokerNodeInfo.BrokerId), aws.ToFloat64(b.BrokerNodeInfo.BrokerId))
 	})
 
 	tfList := []interface{}{}
 	for _, apiObject := range nodeInfos {
-		if brokerNodeInfo := apiObject.BrokerNodeInfo; brokerNodeInfo != nil {
-			tfMap := map[string]interface{}{
-				"attached_eni_id":       aws.ToString(brokerNodeInfo.AttachedENIId),
-				"broker_id":             aws.ToFloat64(brokerNodeInfo.BrokerId),
-				"client_subnet":         aws.ToString(brokerNodeInfo.ClientSubnet),
-				"client_vpc_ip_address": aws.ToString(brokerNodeInfo.ClientVpcIpAddress),
-				"endpoints":             brokerNodeInfo.Endpoints,
-				"node_arn":              aws.ToString(apiObject.NodeARN),
-			}
-			tfList = append(tfList, tfMap)
+		brokerNodeInfo := apiObject.BrokerNodeInfo
+		tfMap := map[string]interface{}{
+			"attached_eni_id":       aws.ToString(brokerNodeInfo.AttachedENIId),
+			"broker_id":             aws.ToFloat64(brokerNodeInfo.BrokerId),
+			"client_subnet":         aws.ToString(brokerNodeInfo.ClientSubnet),
+			"client_vpc_ip_address": aws.ToString(brokerNodeInfo.ClientVpcIpAddress),
+			names.AttrEndpoints:     brokerNodeInfo.Endpoints,
+			"node_arn":              aws.ToString(apiObject.NodeARN),
 		}
+		tfList = append(tfList, tfMap)
 	}
 
 	d.SetId(clusterARN)

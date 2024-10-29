@@ -5,19 +5,18 @@ package autoscalingplans
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscalingplans"
-	"github.com/aws/aws-sdk-go/service/autoscalingplans/autoscalingplansiface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
 )
 
-func describeScalingPlansPages(ctx context.Context, conn autoscalingplansiface.AutoScalingPlansAPI, input *autoscalingplans.DescribeScalingPlansInput, fn func(*autoscalingplans.DescribeScalingPlansOutput, bool) bool) error {
+func describeScalingPlansPages(ctx context.Context, conn *autoscalingplans.Client, input *autoscalingplans.DescribeScalingPlansInput, fn func(*autoscalingplans.DescribeScalingPlansOutput, bool) bool) error {
 	for {
-		output, err := conn.DescribeScalingPlansWithContext(ctx, input)
+		output, err := conn.DescribeScalingPlans(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.NextToken) == ""
+		lastPage := aws.ToString(output.NextToken) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}

@@ -24,7 +24,7 @@ func DataSourcePlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"stage": {
+			names.AttrStage: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
@@ -33,7 +33,7 @@ func DataSourcePlan() *schema.Resource {
 							Type:     schema.TypeInt,
 							Computed: true,
 						},
-						"target": {
+						names.AttrTarget: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -85,20 +85,21 @@ const (
 )
 
 func dataSourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 
 	contactId := d.Get("contact_id").(string)
 
 	out, err := findContactByID(ctx, conn, contactId)
 	if err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionReading, DSNamePlan, contactId, err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionReading, DSNamePlan, contactId, err)
 	}
 
 	d.SetId(aws.ToString(out.ContactArn))
 
 	if err := setPlanResourceData(d, out); err != nil {
-		return create.DiagError(names.SSMContacts, create.ErrActionReading, DSNamePlan, contactId, err)
+		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionReading, DSNamePlan, contactId, err)
 	}
 
-	return nil
+	return diags
 }

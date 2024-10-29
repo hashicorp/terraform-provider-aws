@@ -84,22 +84,27 @@ This resource supports the following arguments:
 * `optionGroupDescription` - (Optional) Description of the option group. Defaults to "Managed by Terraform".
 * `engineName` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `majorEngineVersion` - (Required) Specifies the major version of the engine that this option group should be associated with.
-* `option` - (Optional) List of options to apply.
+* `option` - (Optional) The options to apply. See [`option` Block](#option-block) below for more details.
+* `skipDestroy` - (Optional) Set to true if you do not wish the option group to be deleted at destroy time, and instead just remove the option group from the Terraform state.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-`option` blocks support the following:
+### `option` Block
+
+The `option` blocks support the following arguments:
 
 * `optionName` - (Required) Name of the option (e.g., MEMCACHED).
-* `optionSettings` - (Optional) List of option settings to apply.
+* `optionSettings` - (Optional) The option settings to apply. See [`optionSettings` Block](#option_settings-block) below for more details.
 * `port` - (Optional) Port number when connecting to the option (e.g., 11211). Leaving out or removing `port` from your configuration does not remove or clear a port from the option in AWS. AWS may assign a default port. Not including `port` in your configuration means that the AWS provider will ignore a previously set value, a value set by AWS, and any port changes.
 * `version` - (Optional) Version of the option (e.g., 13.1.0.0). Leaving out or removing `version` from your configuration does not remove or clear a version from the option in AWS. AWS may assign a default version. Not including `version` in your configuration means that the AWS provider will ignore a previously set value, a value set by AWS, and any version changes.
 * `dbSecurityGroupMemberships` - (Optional) List of DB Security Groups for which the option is enabled.
 * `vpcSecurityGroupMemberships` - (Optional) List of VPC Security Groups for which the option is enabled.
 
-`optionSettings` blocks support the following:
+#### `optionSettings` Block
 
-* `name` - (Optional) Name of the setting.
-* `value` - (Optional) Value of the setting.
+The `optionSettings` blocks support the following arguments:
+
+* `name` - (Required) Name of the setting.
+* `value` - (Required) Value of the setting.
 
 ## Attribute Reference
 
@@ -147,4 +152,4 @@ Using `terraform import`, import DB option groups using the `name`. For example:
 % terraform import aws_db_option_group.example mysql-option-group
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-62a59e358d472f90cc96a8b627a9411731fa9d779529aff440ffd21e6234b0b2 -->
+<!-- cache-key: cdktf-0.20.8 input-7c21a061374a3e140a82a5f64d30f96ee7632e4b0fbeba886f3b84b15cf34bd8 -->

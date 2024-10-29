@@ -34,6 +34,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the Domain.
 * `owner` - The AWS account ID that owns the domain.
 * `repository_count` - The number of repositories in the domain.
+* `s3_bucket_arn` - The ARN of the Amazon S3 bucket that is used to store package assets in the domain.
 * `created_time` - A timestamp that represents the date and time the domain was created in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `asset_size_bytes` - The total size of all assets in the domain.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

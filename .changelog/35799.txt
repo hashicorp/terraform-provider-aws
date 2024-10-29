@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_lakeformation_resource: Properly handle configured `false` values for `use_service_linked_role`
+```
+```release-note:enhancement
+resource/aws_glue_catalog_database: Add `federated_database` argument
+```

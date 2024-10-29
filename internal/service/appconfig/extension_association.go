@@ -8,12 +8,14 @@ import (
 	"errors"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -36,7 +38,7 @@ func ResourceExtensionAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -45,12 +47,12 @@ func ResourceExtensionAssociation() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"resource_arn": {
+			names.AttrResourceARN: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -66,18 +68,18 @@ func ResourceExtensionAssociation() *schema.Resource {
 func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	in := appconfig.CreateExtensionAssociationInput{
 		ExtensionIdentifier: aws.String(d.Get("extension_arn").(string)),
-		ResourceIdentifier:  aws.String(d.Get("resource_arn").(string)),
+		ResourceIdentifier:  aws.String(d.Get(names.AttrResourceARN).(string)),
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
-		in.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+	if v, ok := d.GetOk(names.AttrParameters); ok {
+		in.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	out, err := conn.CreateExtensionAssociationWithContext(ctx, &in)
+	out, err := conn.CreateExtensionAssociation(ctx, &in)
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtensionAssociation, d.Get("extension_arn").(string), err)
@@ -87,7 +89,7 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtensionAssociation, d.Get("extension_arn").(string), errors.New("No Extension Association returned with create request."))
 	}
 
-	d.SetId(aws.StringValue(out.Id))
+	d.SetId(aws.ToString(out.Id))
 
 	return append(diags, resourceExtensionAssociationRead(ctx, d, meta)...)
 }
@@ -95,7 +97,7 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	out, err := FindExtensionAssociationById(ctx, conn, d.Id())
 
@@ -109,10 +111,10 @@ func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceDat
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, ResExtensionAssociation, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("extension_arn", out.ExtensionArn)
-	d.Set("parameters", out.Parameters)
-	d.Set("resource_arn", out.ResourceArn)
+	d.Set(names.AttrParameters, out.Parameters)
+	d.Set(names.AttrResourceARN, out.ResourceArn)
 	d.Set("extension_version", out.ExtensionVersionNumber)
 
 	return diags
@@ -121,20 +123,20 @@ func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceDat
 func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 	requestUpdate := false
 
 	in := &appconfig.UpdateExtensionAssociationInput{
 		ExtensionAssociationId: aws.String(d.Id()),
 	}
 
-	if d.HasChange("parameters") {
-		in.Parameters = flex.ExpandStringMap(d.Get("parameters").(map[string]interface{}))
+	if d.HasChange(names.AttrParameters) {
+		in.Parameters = flex.ExpandStringValueMap(d.Get(names.AttrParameters).(map[string]interface{}))
 		requestUpdate = true
 	}
 
 	if requestUpdate {
-		out, err := conn.UpdateExtensionAssociationWithContext(ctx, in)
+		out, err := conn.UpdateExtensionAssociation(ctx, in)
 
 		if err != nil {
 			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtensionAssociation, d.Id(), err)
@@ -151,12 +153,16 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	log.Printf("[INFO] Deleting AppConfig Hosted Extension Association: %s", d.Id())
-	_, err := conn.DeleteExtensionAssociationWithContext(ctx, &appconfig.DeleteExtensionAssociationInput{
+	_, err := conn.DeleteExtensionAssociation(ctx, &appconfig.DeleteExtensionAssociationInput{
 		ExtensionAssociationId: aws.String(d.Id()),
 	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionDeleting, ResExtensionAssociation, d.Id(), err)

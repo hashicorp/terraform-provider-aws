@@ -50,6 +50,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `master_account_arn` - ARN of the master account
 * `master_account_email` - Email address of the master account
 * `master_account_id` - Identifier of the master account
+* `master_account_name` - Name of the master account
 * `non_master_accounts` - List of organization accounts excluding the master account. For a list including the master account, see the `accounts` attribute. All elements have these attributes:
     * `arn` - ARN of the account
     * `email` - Email of the account

@@ -6,9 +6,13 @@ package rekognition
 // Exports for use in tests only.
 
 var (
-	ResourceProject = newResourceProject
+	ResourceProject         = newResourceProject
+	ResourceCollection      = newResourceCollection
+	ResourceStreamProcessor = newResourceStreamProcessor
 )
 
 var (
-	FindProjectByName = findProjectByName
+	FindCollectionByID        = findCollectionByID
+	FindProjectByName         = findProjectByName
+	FindStreamProcessorByName = findStreamProcessorByName
 )

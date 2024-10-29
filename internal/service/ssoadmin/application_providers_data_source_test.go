@@ -21,14 +21,14 @@ func TestAccSSOAdminApplicationProvidersDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SSOAdminEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccApplicationProvidersDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrID),
 					// Verify a known application provider is included in the output
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "application_providers.*", map[string]string{
 						"application_provider_arn": "arn:aws:sso::aws:applicationProvider/custom", //lintignore:AWSAT005

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_bedrockagent_agent : Add `skip_resource_in_use_check` argument
+```

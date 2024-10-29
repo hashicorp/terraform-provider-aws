@@ -9,6 +9,10 @@ description: |-
 
 Terraform resource for managing an AWS SSO Admin Application.
 
+~> The `CreateApplication` API only supports custom OAuth 2.0 applications.
+Creation of 3rd party SAML or OAuth 2.0 applications require setup to be done through the associated app service or AWS console.
+See [this issue](https://github.com/hashicorp/terraform-provider-aws/issues/34813#issuecomment-1910380297) for additional context.
+
 ## Example Usage
 
 ### Basic Usage
@@ -88,12 +92,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_ssoadmin_application.example
-  id = "arn:aws:sso::012345678901:application/id-12345678"
+  id = "arn:aws:sso::123456789012:application/id-12345678"
 }
 ```
 
 Using `terraform import`, import SSO Admin Application using the `id`. For example:
 
 ```console
-% terraform import aws_ssoadmin_application.example arn:aws:sso::012345678901:application/id-12345678
+% terraform import aws_ssoadmin_application.example arn:aws:sso::123456789012:application/id-12345678
 ```

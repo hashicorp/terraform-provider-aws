@@ -37,7 +37,7 @@ func isDirectoryBucket(bucket string) bool {
 	return bucketNameTypeFor(bucket) == bucketNameTypeDirectoryBucket
 }
 
-// @FrameworkResource(name="Directory Bucket")
+// @FrameworkResource("aws_s3_directory_bucket", name="Directory Bucket")
 func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directoryBucketResource{}
 
@@ -61,7 +61,7 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"bucket": schema.StringAttribute{
+			names.AttrBucket: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -79,13 +79,13 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"force_destroy": schema.BoolAttribute{
+			names.AttrForceDestroy: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
 			names.AttrID: framework.IDAttribute(),
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: bucketTypeType,
 				Optional:   true,
 				Computed:   true,
@@ -96,17 +96,17 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"location": schema.ListNestedBlock{
+			names.AttrLocation: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[locationInfoModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							CustomType: locationTypeType,
 							Optional:   true,
 							Computed:   true,
@@ -168,7 +168,7 @@ func (r *directoryBucketResource) Create(ctx context.Context, request resource.C
 	}
 
 	// Set values for unknowns.
-	data.ARN = types.StringValue(r.arn(data.Bucket.ValueString()))
+	data.ARN = types.StringValue(r.arn(ctx, data.Bucket.ValueString()))
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -207,12 +207,12 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 	}
 
 	// Set attributes for import.
-	data.ARN = types.StringValue(r.arn(data.Bucket.ValueString()))
+	data.ARN = types.StringValue(r.arn(ctx, data.Bucket.ValueString()))
 
 	// No API to return bucket type, location etc.
 	data.DataRedundancy = fwtypes.StringEnumValue(awstypes.DataRedundancySingleAvailabilityZone)
 	if matches := directoryBucketNameRegex.FindStringSubmatch(data.ID.ValueString()); len(matches) == 3 {
-		data.Location = fwtypes.NewListNestedObjectValueOfPtr(ctx, &locationInfoModel{
+		data.Location = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &locationInfoModel{
 			Name: flex.StringValueToFramework(ctx, matches[2]),
 			Type: fwtypes.StringEnumValue(awstypes.LocationTypeAvailabilityZone),
 		})
@@ -284,8 +284,8 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 }
 
 // arn returns the ARN of the specified bucket.
-func (r *directoryBucketResource) arn(bucket string) string {
-	return r.RegionalARN("s3express", fmt.Sprintf("bucket/%s", bucket))
+func (r *directoryBucketResource) arn(ctx context.Context, bucket string) string {
+	return r.Meta().RegionalARN(ctx, "s3express", fmt.Sprintf("bucket/%s", bucket))
 }
 
 type directoryBucketResourceModel struct {

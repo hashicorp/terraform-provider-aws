@@ -41,6 +41,21 @@ func DiagnosticString(d diag.Diagnostic) string {
 func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
 	return diag.NewWarningDiagnostic(
 		"AWS resource not found during refresh",
-		fmt.Sprintf("Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original error: %s", err.Error()),
+		"Automatically removing from Terraform State instead of returning the error, which may trigger resource recreation. Original error: "+err.Error(),
 	)
+}
+
+func AsError[T any](x T, diags diag.Diagnostics) (T, error) {
+	return x, DiagnosticsError(diags)
+}
+
+// DiagnosticsString formats a Diagnostics
+func DiagnosticsString(diags diag.Diagnostics) string {
+	var buf strings.Builder
+
+	for _, d := range diags {
+		fmt.Fprintln(&buf, DiagnosticString(d))
+	}
+
+	return buf.String()
 }

@@ -7,16 +7,18 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -25,7 +27,7 @@ import (
 
 // @SDKResource("aws_organizations_policy", name="Policy")
 // @Tags(identifierAttribute="id")
-func ResourcePolicy() *schema.Resource {
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
@@ -37,36 +39,37 @@ func ResourcePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"content": {
-				Type:             schema.TypeString,
-				Required:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				ValidateFunc:     validation.StringIsJSON,
+			names.AttrContent: {
+				Type:                  schema.TypeString,
+				Required:              true,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validation.StringIsJSON,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"skip_destroy": {
+			names.AttrSkipDestroy: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      organizations.PolicyTypeServiceControlPolicy,
-				ValidateFunc: validation.StringInSlice(organizations.PolicyType_Values(), false),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          awstypes.PolicyTypeServiceControlPolicy,
+				ValidateDiagFunc: enum.Validate[awstypes.PolicyType](),
 			},
 		},
 
@@ -75,32 +78,34 @@ func ResourcePolicy() *schema.Resource {
 }
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &organizations.CreatePolicyInput{
-		Content:     aws.String(d.Get("content").(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Content:     aws.String(d.Get(names.AttrContent).(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
 		Name:        aws.String(name),
-		Type:        aws.String(d.Get("type").(string)),
+		Type:        awstypes.PolicyType(d.Get(names.AttrType).(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 4*time.Minute, func() (interface{}, error) {
-		return conn.CreatePolicyWithContext(ctx, input)
-	}, organizations.ErrCodeFinalizingOrganizationException)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.FinalizingOrganizationException](ctx, organizationFinalizationTimeout, func() (interface{}, error) {
+		return conn.CreatePolicy(ctx, input)
+	})
 
 	if err != nil {
-		return diag.Errorf("creating Organizations Policy (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Organizations Policy (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*organizations.CreatePolicyOutput).Policy.PolicySummary.Id))
+	d.SetId(aws.ToString(outputRaw.(*organizations.CreatePolicyOutput).Policy.PolicySummary.Id))
 
-	return resourcePolicyRead(ctx, d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	policy, err := findPolicyByID(ctx, conn, d.Id())
 
@@ -111,17 +116,17 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Organizations Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Policy (%s): %s", d.Id(), err)
 	}
 
 	policySummary := policy.PolicySummary
-	d.Set("arn", policySummary.Arn)
-	d.Set("content", policy.Content)
-	d.Set("description", policySummary.Description)
-	d.Set("name", policySummary.Name)
-	d.Set("type", policySummary.Type)
+	d.Set(names.AttrARN, policySummary.Arn)
+	d.Set(names.AttrContent, policy.Content)
+	d.Set(names.AttrDescription, policySummary.Description)
+	d.Set(names.AttrName, policySummary.Name)
+	d.Set(names.AttrType, policySummary.Type)
 
-	if aws.BoolValue(policySummary.AwsManaged) {
+	if policySummary.AwsManaged {
 		return diag.Diagnostics{
 			diag.Diagnostic{
 				Severity: diag.Warning,
@@ -135,61 +140,63 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &organizations.UpdatePolicyInput{
 			PolicyId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("content") {
-			input.Content = aws.String(d.Get("content").(string))
+		if d.HasChange(names.AttrContent) {
+			input.Content = aws.String(d.Get(names.AttrContent).(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		_, err := conn.UpdatePolicyWithContext(ctx, input)
+		_, err := conn.UpdatePolicy(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Organizations policy (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Organizations Policy (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourcePolicyRead(ctx, d, meta)
+	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
 		log.Printf("[DEBUG] Retaining Organizations Policy: %s", d.Id())
 		return nil
 	}
 
 	log.Printf("[DEBUG] Deleting Organizations Policy: %s", d.Id())
-	_, err := conn.DeletePolicyWithContext(ctx, &organizations.DeletePolicyInput{
+	_, err := conn.DeletePolicy(ctx, &organizations.DeletePolicyInput{
 		PolicyId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
+	if errs.IsA[*awstypes.PolicyNotFoundException](err) {
 		return nil
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Organizations policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Organizations Policy (%s): %s", d.Id(), err)
 	}
 
 	return nil
 }
 
 func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).OrganizationsConn(ctx)
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
 	policy, err := findPolicyByID(ctx, conn, d.Id())
 
@@ -197,21 +204,21 @@ func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil, err
 	}
 
-	if aws.BoolValue(policy.PolicySummary.AwsManaged) {
-		return nil, fmt.Errorf("AWS-managed Organizations policy (%s) cannot be imported. Use the policy ID directly in your configuration.", d.Id())
+	if policy.PolicySummary.AwsManaged {
+		return nil, fmt.Errorf("AWS-managed Organizations policy (%s) cannot be imported. Use the policy ID directly in your configuration", d.Id())
 	}
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func findPolicyByID(ctx context.Context, conn *organizations.Organizations, id string) (*organizations.Policy, error) {
+func findPolicyByID(ctx context.Context, conn *organizations.Client, id string) (*awstypes.Policy, error) {
 	input := &organizations.DescribePolicyInput{
 		PolicyId: aws.String(id),
 	}
 
-	output, err := conn.DescribePolicyWithContext(ctx, input)
+	output, err := conn.DescribePolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException, organizations.ErrCodePolicyNotFoundException) {
+	if errs.IsA[*awstypes.AWSOrganizationsNotInUseException](err) || errs.IsA[*awstypes.PolicyNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

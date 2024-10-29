@@ -8,27 +8,31 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudsearch"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudsearch"
+	"github.com/aws/aws-sdk-go-v2/service/cloudsearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudsearch_domain_service_access_policy")
-func ResourceDomainServiceAccessPolicy() *schema.Resource {
+// @SDKResource("aws_cloudsearch_domain_service_access_policy", name="Domain Service Access Policy")
+func resourceDomainServiceAccessPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainServiceAccessPolicyPut,
 		ReadWithoutTimeout:   resourceDomainServiceAccessPolicyRead,
 		UpdateWithoutTimeout: resourceDomainServiceAccessPolicyPut,
 		DeleteWithoutTimeout: resourceDomainServiceAccessPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -50,7 +54,7 @@ func ResourceDomainServiceAccessPolicy() *schema.Resource {
 					return json
 				},
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -60,35 +64,32 @@ func ResourceDomainServiceAccessPolicy() *schema.Resource {
 
 func resourceDomainServiceAccessPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
-
-	domainName := d.Get("domain_name").(string)
-	input := &cloudsearch.UpdateServiceAccessPoliciesInput{
-		DomainName: aws.String(domainName),
-	}
+	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
 	accessPolicy := d.Get("access_policy").(string)
 	policy, err := structure.NormalizeJsonString(accessPolicy)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", accessPolicy, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input.AccessPolicies = aws.String(policy)
+	domainName := d.Get(names.AttrDomainName).(string)
+	input := &cloudsearch.UpdateServiceAccessPoliciesInput{
+		AccessPolicies: aws.String(policy),
+		DomainName:     aws.String(domainName),
+	}
 
-	log.Printf("[DEBUG] Updating CloudSearch Domain access policies: %s", input)
-	_, err = conn.UpdateServiceAccessPoliciesWithContext(ctx, input)
+	_, err = conn.UpdateServiceAccessPolicies(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating CloudSearch Domain Service Access Policy (%s): %s", domainName, err)
 	}
 
-	d.SetId(domainName)
+	if d.IsNewResource() {
+		d.SetId(domainName)
+	}
 
-	_, err = waitAccessPolicyActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for CloudSearch Domain Service Access Policy (%s) to become active: %s", d.Id(), err)
+	if _, err := waitAccessPolicyActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudSearch Domain Service Access Policy (%s) update: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceDomainServiceAccessPolicyRead(ctx, d, meta)...)
@@ -96,9 +97,9 @@ func resourceDomainServiceAccessPolicyPut(ctx context.Context, d *schema.Resourc
 
 func resourceDomainServiceAccessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
-	accessPolicy, err := FindAccessPolicyByName(ctx, conn, d.Id())
+	accessPolicy, err := findAccessPolicyByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudSearch Domain Service Access Policy (%s) not found, removing from state", d.Id())
@@ -117,24 +118,22 @@ func resourceDomainServiceAccessPolicyRead(ctx context.Context, d *schema.Resour
 	}
 
 	d.Set("access_policy", policyToSet)
-	d.Set("domain_name", d.Id())
+	d.Set(names.AttrDomainName, d.Id())
 
 	return diags
 }
 
 func resourceDomainServiceAccessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudSearchConn(ctx)
-
-	input := &cloudsearch.UpdateServiceAccessPoliciesInput{
-		AccessPolicies: aws.String(""),
-		DomainName:     aws.String(d.Id()),
-	}
+	conn := meta.(*conns.AWSClient).CloudSearchClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudSearch Domain Service Access Policy: %s", d.Id())
-	_, err := conn.UpdateServiceAccessPoliciesWithContext(ctx, input)
+	_, err := conn.UpdateServiceAccessPolicies(ctx, &cloudsearch.UpdateServiceAccessPoliciesInput{
+		AccessPolicies: aws.String(""),
+		DomainName:     aws.String(d.Id()),
+	})
 
-	if tfawserr.ErrCodeEquals(err, cloudsearch.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -142,23 +141,21 @@ func resourceDomainServiceAccessPolicyDelete(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "deleting CloudSearch Domain Service Access Policy (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitAccessPolicyActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for CloudSearch Domain Service Access Policy (%s) to delete: %s", d.Id(), err)
+	if _, err := waitAccessPolicyActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for CloudSearch Domain Service Access Policy (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func FindAccessPolicyByName(ctx context.Context, conn *cloudsearch.CloudSearch, name string) (string, error) {
+func findAccessPolicyByName(ctx context.Context, conn *cloudsearch.Client, name string) (string, error) {
 	output, err := findAccessPoliciesStatusByName(ctx, conn, name)
 
 	if err != nil {
 		return "", err
 	}
 
-	accessPolicy := aws.StringValue(output.Options)
+	accessPolicy := aws.ToString(output.Options)
 
 	if accessPolicy == "" {
 		return "", tfresource.NewEmptyResultError(name)
@@ -167,14 +164,14 @@ func FindAccessPolicyByName(ctx context.Context, conn *cloudsearch.CloudSearch, 
 	return accessPolicy, nil
 }
 
-func findAccessPoliciesStatusByName(ctx context.Context, conn *cloudsearch.CloudSearch, name string) (*cloudsearch.AccessPoliciesStatus, error) {
+func findAccessPoliciesStatusByName(ctx context.Context, conn *cloudsearch.Client, name string) (*types.AccessPoliciesStatus, error) {
 	input := &cloudsearch.DescribeServiceAccessPoliciesInput{
 		DomainName: aws.String(name),
 	}
 
-	output, err := conn.DescribeServiceAccessPoliciesWithContext(ctx, input)
+	output, err := conn.DescribeServiceAccessPolicies(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudsearch.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -192,7 +189,7 @@ func findAccessPoliciesStatusByName(ctx context.Context, conn *cloudsearch.Cloud
 	return output.AccessPolicies, nil
 }
 
-func statusAccessPolicyState(ctx context.Context, conn *cloudsearch.CloudSearch, name string) retry.StateRefreshFunc {
+func statusAccessPolicyState(ctx context.Context, conn *cloudsearch.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findAccessPoliciesStatusByName(ctx, conn, name)
 
@@ -204,21 +201,21 @@ func statusAccessPolicyState(ctx context.Context, conn *cloudsearch.CloudSearch,
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status.State), nil
+		return output, string(output.Status.State), nil
 	}
 }
 
-func waitAccessPolicyActive(ctx context.Context, conn *cloudsearch.CloudSearch, name string, timeout time.Duration) (*cloudsearch.AccessPoliciesStatus, error) { //nolint:unparam
+func waitAccessPolicyActive(ctx context.Context, conn *cloudsearch.Client, name string, timeout time.Duration) (*types.AccessPoliciesStatus, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{cloudsearch.OptionStateProcessing},
-		Target:  []string{cloudsearch.OptionStateActive},
+		Pending: enum.Slice(types.OptionStateProcessing),
+		Target:  enum.Slice(types.OptionStateActive),
 		Refresh: statusAccessPolicyState(ctx, conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudsearch.AccessPoliciesStatus); ok {
+	if output, ok := outputRaw.(*types.AccessPoliciesStatus); ok {
 		return output, err
 	}
 

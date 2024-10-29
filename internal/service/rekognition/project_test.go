@@ -33,10 +33,10 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Rekognition)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccProjectPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
 		Steps: []resource.TestStep{
@@ -44,9 +44,9 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 				Config: testAccProjectConfig_contentModeration(rProjectId, autoUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "id", rProjectId),
-					resource.TestCheckResourceAttr(resourceName, "name", rProjectId),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rProjectId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rProjectId),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", autoUpdate),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
 				),
@@ -70,19 +70,19 @@ func TestAccRekognitionProject_ContentModeration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Rekognition)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccProjectPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_contentModeration(rProjectId+"-1", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "id", rProjectId+"-1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rProjectId+"-1"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rProjectId+"-1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rProjectId+"-1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
 				),
@@ -91,9 +91,9 @@ func TestAccRekognitionProject_ContentModeration(t *testing.T) {
 				Config: testAccProjectConfig_contentModeration(rProjectId+"-2", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "id", rProjectId+"-2"),
-					resource.TestCheckResourceAttr(resourceName, "name", rProjectId+"-2"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rProjectId+"-2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rProjectId+"-2"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "auto_update", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
 				),
@@ -112,10 +112,10 @@ func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Rekognition)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccProjectPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
 		Steps: []resource.TestStep{
@@ -123,9 +123,9 @@ func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 				Config: testAccProjectConfig_customLabels(rProjectId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "id", rProjectId),
-					resource.TestCheckResourceAttr(resourceName, "name", rProjectId),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrID, rProjectId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rProjectId),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
 				),
 			},
@@ -149,10 +149,10 @@ func TestAccRekognitionProject_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Rekognition)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccProjectPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
 		Steps: []resource.TestStep{

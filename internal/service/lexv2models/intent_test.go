@@ -16,6 +16,7 @@ import (
 	"github.com/aws/smithy-go/middleware"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -82,7 +83,7 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	imageResponseCardTF := tflexv2models.ImageResponseCard{
 		Title:    types.StringValue(testString),
-		Button:   fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.Button](ctx, buttonsTF),
+		Button:   fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.Button](ctx, buttonsTF),
 		ImageURL: types.StringValue(testString),
 		Subtitle: types.StringValue(testString),
 	}
@@ -101,10 +102,10 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	messageTF := tflexv2models.Message{
-		CustomPayload:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &customPayloadTF),
-		ImageResponseCard: fwtypes.NewListNestedObjectValueOfPtr(ctx, &imageResponseCardTF),
-		PlainTextMessage:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &plainTextMessageTF),
-		SSMLMessage:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &ssmlMessageTF),
+		CustomPayload:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &customPayloadTF),
+		ImageResponseCard: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &imageResponseCardTF),
+		PlainTextMessage:  fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &plainTextMessageTF),
+		SSMLMessage:       fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ssmlMessageTF),
 	}
 	messageAWS := lextypes.Message{
 		CustomPayload:     &customPayloadAWS,
@@ -121,8 +122,8 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	messageGroupTF := tflexv2models.MessageGroup{
-		Message:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageTF),
-		Variation: fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.Message](ctx, messagesTF),
+		Message:   fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &messageTF),
+		Variation: fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.Message](ctx, messagesTF),
 	}
 	messageGroupAWS := []lextypes.MessageGroup{
 		{
@@ -132,7 +133,7 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	responseSpecificationTF := tflexv2models.ResponseSpecification{
-		MessageGroup:   fwtypes.NewListNestedObjectValueOfPtr[tflexv2models.MessageGroup](ctx, &messageGroupTF),
+		MessageGroup:   fwtypes.NewListNestedObjectValueOfPtrMust[tflexv2models.MessageGroup](ctx, &messageGroupTF),
 		AllowInterrupt: types.BoolValue(true),
 	}
 	responseSpecificationAWS := lextypes.ResponseSpecification{
@@ -168,7 +169,7 @@ func TestIntentAutoFlex(t *testing.T) {
 	slotValueOverrideMapTF := tflexv2models.SlotValueOverride{
 		MapBlockKey: types.StringValue(testString),
 		Shape:       fwtypes.StringEnumValue(lextypes.SlotShapeList),
-		Value:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValueTF),
+		Value:       fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &slotValueTF),
 		//Values: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []tflexv2models.SlotValueOverride{ // recursive so must be defined in line instead of in variable
 		//	{
 		//		Shape: types.StringValue(testString),
@@ -182,7 +183,7 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	intentOverrideTF := tflexv2models.IntentOverride{
 		Name: types.StringValue(testString),
-		Slot: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &slotValueOverrideMapTF),
+		Slot: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &slotValueOverrideMapTF),
 	}
 	intentOverrideAWS := lextypes.IntentOverride{
 		Name:  aws.String(testString),
@@ -201,8 +202,8 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	dialogStateTF := tflexv2models.DialogState{
-		DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogActionTF),
-		Intent:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentOverrideTF),
+		DialogAction: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogActionTF),
+		Intent:       fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentOverrideTF),
 		SessionAttributes: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 			testString: types.StringValue(testString2),
 		}),
@@ -220,20 +221,20 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	defaultConditionalBranchTF := tflexv2models.DefaultConditionalBranch{
-		NextStep: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		Response: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+		NextStep: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		Response: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
 	}
 
 	conditionalSpecificationTF := tflexv2models.ConditionalSpecification{
 		Active: types.BoolValue(true),
-		ConditionalBranch: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []tflexv2models.ConditionalBranch{{
-			Condition: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionTF),
+		ConditionalBranch: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tflexv2models.ConditionalBranch{{
+			Condition: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionTF),
 			Name:      types.StringValue(testString),
-			NextStep:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-			Response:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+			NextStep:  fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+			Response:  fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
 		}}),
 
-		DefaultBranch: fwtypes.NewListNestedObjectValueOfPtr(ctx, &defaultConditionalBranchTF),
+		DefaultBranch: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &defaultConditionalBranchTF),
 	}
 	conditionalSpecificationAWS := lextypes.ConditionalSpecification{
 		Active: aws.Bool(true),
@@ -253,9 +254,9 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	intentClosingSettingTF := tflexv2models.IntentClosingSetting{
 		Active:          types.BoolValue(true),
-		ClosingResponse: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		Conditional:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		NextStep:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+		ClosingResponse: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
+		Conditional:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		NextStep:        fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
 	}
 	intentClosingSettingAWS := lextypes.IntentClosingSetting{
 		Active:          aws.Bool(true),
@@ -297,8 +298,8 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	audioAndDTMFInputSpecificationTF := tflexv2models.AudioAndDTMFInputSpecification{
 		StartTimeoutMs:     types.Int64Value(1),
-		AudioSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioSpecificationTF),
-		DTMFSpecification:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dtmfSpecificationTF),
+		AudioSpecification: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &audioSpecificationTF),
+		DTMFSpecification:  fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dtmfSpecificationTF),
 	}
 	audioAndDTMFInputSpecificationAWS := lextypes.AudioAndDTMFInputSpecification{
 		StartTimeoutMs:     aws.Int32(1),
@@ -315,10 +316,10 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	promptAttemptSpecificationTF := tflexv2models.PromptAttemptsSpecification{
 		MapBlockKey:                    fwtypes.StringEnumValue(tflexv2models.PromptAttemptsTypeInitial),
-		AllowedInputTypes:              fwtypes.NewListNestedObjectValueOfPtr(ctx, &allowedInputTypesTF),
+		AllowedInputTypes:              fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &allowedInputTypesTF),
 		AllowInterrupt:                 types.BoolValue(true),
-		AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioAndDTMFInputSpecificationTF),
-		TextInputSpecification:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &textInputSpecificationTF),
+		AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &audioAndDTMFInputSpecificationTF),
+		TextInputSpecification:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &textInputSpecificationTF),
 	}
 	promptAttemptSpecificationAWS := lextypes.PromptAttemptSpecification{
 		AllowedInputTypes:              &allowedInputTypesAWS,
@@ -329,10 +330,10 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	promptSpecificationTF := tflexv2models.PromptSpecification{
 		MaxRetries:                  types.Int64Value(1),
-		MessageGroup:                fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
+		MessageGroup:                fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &messageGroupTF),
 		AllowInterrupt:              types.BoolValue(true),
 		MessageSelectionStrategy:    fwtypes.StringEnumValue(lextypes.MessageSelectionStrategyOrdered),
-		PromptAttemptsSpecification: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &promptAttemptSpecificationTF),
+		PromptAttemptsSpecification: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &promptAttemptSpecificationTF),
 	}
 	promptSpecificationAWS := lextypes.PromptSpecification{
 		MaxRetries:               aws.Int32(1),
@@ -345,15 +346,15 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	failureSuccessTimeoutTF := tflexv2models.FailureSuccessTimeout{
-		FailureConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		FailureNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		FailureResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		SuccessConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		SuccessNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		SuccessResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		TimeoutConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		TimeoutNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		TimeoutResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+		FailureConditional: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		FailureNextStep:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		FailureResponse:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
+		SuccessConditional: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		SuccessNextStep:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		SuccessResponse:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
+		TimeoutConditional: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		TimeoutNextStep:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		TimeoutResponse:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
 	}
 
 	postCodeHookSpecificationAWS := lextypes.PostDialogCodeHookInvocationSpecification{
@@ -383,7 +384,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		Active:                    types.BoolValue(true),
 		EnableCodeHookInvocation:  types.BoolValue(true),
 		InvocationLabel:           types.StringValue(testString),
-		PostCodeHookSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &failureSuccessTimeoutTF),
+		PostCodeHookSpecification: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &failureSuccessTimeoutTF),
 	}
 	dialogCodeHookInvocationSettingAWS := lextypes.DialogCodeHookInvocationSetting{
 		Active:                    aws.Bool(true),
@@ -402,19 +403,19 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	intentConfirmationSettingTF := tflexv2models.IntentConfirmationSetting{
-		PromptSpecification:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &promptSpecificationTF),
+		PromptSpecification:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &promptSpecificationTF),
 		Active:                  types.BoolValue(true),
-		CodeHook:                fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookInvocationSettingTF),
-		ConfirmationConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		ConfirmationNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		ConfirmationResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		DeclinationConditional:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		DeclinationNextStep:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		DeclinationResponse:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		ElicitationCodeHook:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &elicitationCodeHookTF),
-		FailureConditional:      fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		FailureNextStep:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		FailureResponse:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+		CodeHook:                fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogCodeHookInvocationSettingTF),
+		ConfirmationConditional: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		ConfirmationNextStep:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		ConfirmationResponse:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
+		DeclinationConditional:  fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		DeclinationNextStep:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		DeclinationResponse:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
+		ElicitationCodeHook:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &elicitationCodeHookTF),
+		FailureConditional:      fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		FailureNextStep:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		FailureResponse:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
 	}
 	intentConfirmationSettingAWS := lextypes.IntentConfirmationSetting{
 		PromptSpecification:     &promptSpecificationAWS,
@@ -441,7 +442,7 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	fulfillmentStartResponseSpecificationTF := tflexv2models.FulfillmentStartResponseSpecification{
 		DelayInSeconds: types.Int64Value(1),
-		MessageGroup:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
+		MessageGroup:   fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &messageGroupTF),
 		AllowInterrupt: types.BoolValue(true),
 	}
 	fulfillmentStartResponseSpecificationAWS := lextypes.FulfillmentStartResponseSpecification{
@@ -452,7 +453,7 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	fulfillmentUpdateResponseSpecificationTF := tflexv2models.FulfillmentUpdateResponseSpecification{
 		FrequencyInSeconds: types.Int64Value(1),
-		MessageGroup:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
+		MessageGroup:       fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &messageGroupTF),
 		AllowInterrupt:     types.BoolValue(true),
 	}
 	fulfillmentUpdateResponseSpecificationAWS := lextypes.FulfillmentUpdateResponseSpecification{
@@ -463,9 +464,9 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	fulfillmentUpdatesSpecificationTF := tflexv2models.FulfillmentUpdatesSpecification{
 		Active:           types.BoolValue(true),
-		StartResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentStartResponseSpecificationTF),
+		StartResponse:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentStartResponseSpecificationTF),
 		TimeoutInSeconds: types.Int64Value(1),
-		UpdateResponse:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentUpdateResponseSpecificationTF),
+		UpdateResponse:   fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentUpdateResponseSpecificationTF),
 	}
 	fulfillmentUpdatesSpecificationAWS := lextypes.FulfillmentUpdatesSpecification{
 		Active:           aws.Bool(true),
@@ -477,8 +478,8 @@ func TestIntentAutoFlex(t *testing.T) {
 	fulfillmentCodeHookSettingsTF := tflexv2models.FulfillmentCodeHookSettings{
 		Enabled:                            types.BoolValue(true),
 		Active:                             types.BoolValue(true),
-		FulfillmentUpdatesSpecification:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentUpdatesSpecificationTF),
-		PostFulfillmentStatusSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &failureSuccessTimeoutTF),
+		FulfillmentUpdatesSpecification:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentUpdatesSpecificationTF),
+		PostFulfillmentStatusSpecification: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &failureSuccessTimeoutTF),
 	}
 	fulfillmentCodeHookSettingsAWS := lextypes.FulfillmentCodeHookSettings{
 		Enabled:                            true,
@@ -488,10 +489,10 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	initialResponseSettingTF := tflexv2models.InitialResponseSetting{
-		CodeHook:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookInvocationSettingTF),
-		Conditional:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		InitialResponse: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		NextStep:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+		CodeHook:        fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogCodeHookInvocationSettingTF),
+		Conditional:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		InitialResponse: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
+		NextStep:        fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
 	}
 	initialResponseSettingAWS := lextypes.InitialResponseSetting{
 		CodeHook:        &dialogCodeHookInvocationSettingAWS,
@@ -579,16 +580,16 @@ func TestIntentAutoFlex(t *testing.T) {
 		Name:                   types.StringValue(testString),
 		LocaleID:               types.StringValue(testString),
 		Description:            types.StringValue(testString),
-		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookSettingsTF),
-		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentCodeHookSettingsTF),
-		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtr(ctx, &initialResponseSettingTF),
-		InputContext:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.InputContext](ctx, inputContextsTF),
-		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentClosingSettingTF),
-		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentConfirmationSettingTF),
-		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &kendraConfigurationTF),
-		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.OutputContext](ctx, outputContextsTF),
+		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogCodeHookSettingsTF),
+		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentCodeHookSettingsTF),
+		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &initialResponseSettingTF),
+		InputContext:           fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.InputContext](ctx, inputContextsTF),
+		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentClosingSettingTF),
+		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentConfirmationSettingTF),
+		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &kendraConfigurationTF),
+		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.OutputContext](ctx, outputContextsTF),
 		ParentIntentSignature:  types.StringValue(testString),
-		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
+		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
 	}
 	intentCreateAWS := lexmodelsv2.CreateIntentInput{
 		BotId:                     aws.String(testString),
@@ -614,17 +615,17 @@ func TestIntentAutoFlex(t *testing.T) {
 		Name:                   types.StringValue(testString),
 		LocaleID:               types.StringValue(testString),
 		Description:            types.StringValue(testString),
-		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookSettingsTF),
-		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentCodeHookSettingsTF),
-		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtr(ctx, &initialResponseSettingTF),
-		InputContext:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.InputContext](ctx, inputContextsTF),
-		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentClosingSettingTF),
-		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentConfirmationSettingTF),
-		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &kendraConfigurationTF),
-		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.OutputContext](ctx, outputContextsTF),
+		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogCodeHookSettingsTF),
+		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentCodeHookSettingsTF),
+		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &initialResponseSettingTF),
+		InputContext:           fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.InputContext](ctx, inputContextsTF),
+		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentClosingSettingTF),
+		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentConfirmationSettingTF),
+		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &kendraConfigurationTF),
+		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.OutputContext](ctx, outputContextsTF),
 		ParentIntentSignature:  types.StringValue(testString),
-		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
-		SlotPriority:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SlotPriority](ctx, slotPrioritiesTF),
+		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
+		SlotPriority:           fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.SlotPriority](ctx, slotPrioritiesTF),
 	}
 	intentModifyAWS := lexmodelsv2.UpdateIntentInput{
 		BotId:                     aws.String(testString),
@@ -646,28 +647,28 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	testTimeStr := "2023-12-08T09:34:01Z"
-	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
+	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr)) // nosemgrep: ci.avoid-errs-Must
 
 	intentDescribeTF := tflexv2models.ResourceIntentData{
 		BotID:                  types.StringValue(testString),
 		BotVersion:             types.StringValue(testString),
-		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentClosingSettingTF),
-		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentConfirmationSettingTF),
-		CreationDateTime:       fwtypes.TimestampValue(testTimeStr),
+		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentClosingSettingTF),
+		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentConfirmationSettingTF),
+		CreationDateTime:       timetypes.NewRFC3339ValueMust(testTimeStr),
 		Description:            types.StringValue(testString),
-		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookSettingsTF),
-		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentCodeHookSettingsTF),
+		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogCodeHookSettingsTF),
+		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentCodeHookSettingsTF),
 		IntentID:               types.StringValue(testString),
-		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtr(ctx, &initialResponseSettingTF),
-		InputContext:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.InputContext](ctx, inputContextsTF),
-		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &kendraConfigurationTF),
-		LastUpdatedDateTime:    fwtypes.TimestampValue(testTimeStr),
+		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &initialResponseSettingTF),
+		InputContext:           fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.InputContext](ctx, inputContextsTF),
+		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &kendraConfigurationTF),
+		LastUpdatedDateTime:    timetypes.NewRFC3339ValueMust(testTimeStr),
 		LocaleID:               types.StringValue(testString),
 		Name:                   types.StringValue(testString),
-		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.OutputContext](ctx, outputContextsTF),
+		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.OutputContext](ctx, outputContextsTF),
 		ParentIntentSignature:  types.StringValue(testString),
-		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
-		SlotPriority:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SlotPriority](ctx, slotPrioritiesTF),
+		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
+		SlotPriority:           fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.SlotPriority](ctx, slotPrioritiesTF),
 	}
 	intentDescribeAWS := lexmodelsv2.DescribeIntentOutput{
 		BotId:                     aws.String(testString),
@@ -700,7 +701,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		WantErr  bool
 	}{
 		{
-			TestName: "message",
+			TestName: names.AttrMessage,
 			TFFull:   &messageTF,
 			TFEmpty:  &tflexv2models.Message{},
 			AWSFull:  &messageAWS,
@@ -841,12 +842,10 @@ func TestIntentAutoFlex(t *testing.T) {
 	)
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(fmt.Sprintf("expand %s", testCase.TestName), func(t *testing.T) {
 			t.Parallel()
 
-			diags := flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, "Intent"), testCase.TFFull, testCase.AWSEmpty)
+			diags := flex.Expand(ctx, testCase.TFFull, testCase.AWSEmpty, tflexv2models.IntentFlexOpt)
 
 			gotErr := diags != nil
 
@@ -868,7 +867,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		t.Run(fmt.Sprintf("flatten %s", testCase.TestName), func(t *testing.T) {
 			t.Parallel()
 
-			diags := flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, "Intent"), testCase.AWSFull, testCase.TFEmpty)
+			diags := flex.Flatten(ctx, testCase.AWSFull, testCase.TFEmpty, tflexv2models.IntentFlexOpt)
 
 			gotErr := diags != nil
 
@@ -911,7 +910,7 @@ func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -919,7 +918,7 @@ func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 				Config: testAccIntentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -947,7 +946,7 @@ func TestAccLexV2ModelsIntent_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -977,7 +976,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -985,7 +984,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateConfirmationSetting(rName, 1, "test", 640, 640),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -994,7 +993,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 						"message_selection_strategy": "Ordered",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.message_group.*.message.*.plain_text_message.*", map[string]string{
-						"value": "test",
+						names.AttrValue: "test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.prompt_attempts_specification.*.audio_and_dtmf_input_specification.*.audio_specification.*", map[string]string{
 						"end_timeout_ms": "640",
@@ -1005,7 +1004,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateConfirmationSetting(rName, 1, "test", 650, 660),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1014,7 +1013,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 						"message_selection_strategy": "Ordered",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.message_group.*.message.*.plain_text_message.*", map[string]string{
-						"value": "test",
+						names.AttrValue: "test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.prompt_attempts_specification.*.audio_and_dtmf_input_specification.*.audio_specification.*", map[string]string{
 						"end_timeout_ms": "650",
@@ -1042,7 +1041,7 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1050,15 +1049,15 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateClosingSetting(rName, "test1", "test2", "test3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*", map[string]string{
-						"active": "true",
+						"active": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*.conditional.*.conditional_branch.*", map[string]string{
-						"name": rName,
+						names.AttrName: rName,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
 					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
@@ -1071,15 +1070,15 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateClosingSetting(rName, "Hvad", "er", "hygge"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*", map[string]string{
-						"active": "true",
+						"active": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*.conditional.*.conditional_branch.*", map[string]string{
-						"name": rName,
+						names.AttrName: rName,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
 					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
@@ -1106,7 +1105,7 @@ func TestAccLexV2ModelsIntent_updateInputContext(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1114,7 +1113,7 @@ func TestAccLexV2ModelsIntent_updateInputContext(t *testing.T) {
 				Config: testAccIntentConfig_updateInputContext(rName, "sammanhang1", "sammanhang2", "sammanhang3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1131,7 +1130,7 @@ func TestAccLexV2ModelsIntent_updateInputContext(t *testing.T) {
 				Config: testAccIntentConfig_updateInputContext(rName, "kropp", "utan", "blod"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1162,7 +1161,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1170,7 +1169,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateInitialResponseSetting(rName, "branch1", "tre", "slumpmässiga", "ord"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1178,14 +1177,14 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.enable_code_hook_invocation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.active", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.enable_code_hook_invocation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.invocation_label", "test"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.%", "9"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.condition.#", "1"),
@@ -1203,7 +1202,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1228,7 +1227,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1251,7 +1250,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.conditional.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.#", "1"),
@@ -1270,7 +1269,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateInitialResponseSetting(rName, "gren1", "några", "olika", "bokstäver"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1278,14 +1277,14 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.enable_code_hook_invocation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.active", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.enable_code_hook_invocation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.invocation_label", "test"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.%", "9"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.condition.#", "1"),
@@ -1303,7 +1302,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1328,7 +1327,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1351,7 +1350,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.conditional.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.#", "1"),
@@ -1384,7 +1383,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1392,20 +1391,20 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 				Config: testAccIntentConfig_updateFulfillmentCodeHook(rName, "meddelande", 10, "slumpmässiga", "gren1", "alfanumerisk", "olika"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.active", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.delay_in_seconds", "5"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.%", "2"),
@@ -1421,7 +1420,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.timeout_in_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.frequency_in_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.%", "2"),
@@ -1438,7 +1437,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.%", "9"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.condition.#", "1"),
@@ -1450,7 +1449,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.slot_to_elicit", "slot1"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.suppress_next_message", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.suppress_next_message", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.type", "CloseIntent"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.%", "2"),
@@ -1467,7 +1466,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot2", "roligt2"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1492,7 +1491,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1518,20 +1517,20 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 				Config: testAccIntentConfig_updateFulfillmentCodeHook(rName, "dagdröm", 10, "dansa", "dumbom", "gås", "mat"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.active", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.delay_in_seconds", "5"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.%", "2"),
@@ -1547,7 +1546,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.timeout_in_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.frequency_in_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.%", "2"),
@@ -1564,7 +1563,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.%", "9"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.condition.#", "1"),
@@ -1576,7 +1575,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.slot_to_elicit", "slot1"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.suppress_next_message", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.suppress_next_message", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.type", "CloseIntent"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.%", "2"),
@@ -1593,7 +1592,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot2", "roligt2"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1618,7 +1617,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1658,7 +1657,7 @@ func TestAccLexV2ModelsIntent_updateDialogCodeHook(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1666,26 +1665,26 @@ func TestAccLexV2ModelsIntent_updateDialogCodeHook(t *testing.T) {
 				Config: testAccIntentConfig_updateDialogCodeHook(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccIntentConfig_updateDialogCodeHook(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -1706,7 +1705,7 @@ func TestAccLexV2ModelsIntent_updateOutputContext(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1714,7 +1713,7 @@ func TestAccLexV2ModelsIntent_updateOutputContext(t *testing.T) {
 				Config: testAccIntentConfig_updateOutputContext(rName, "name1", "name2", "name3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1737,7 +1736,7 @@ func TestAccLexV2ModelsIntent_updateOutputContext(t *testing.T) {
 				Config: testAccIntentConfig_updateOutputContext(rName, "name2", "name3", "name4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1774,7 +1773,7 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1782,7 +1781,7 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 				Config: testAccIntentConfig_updateSampleUtterance(rName, "yttrande", "twocolors", "danny", "dansa"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1801,7 +1800,7 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 				Config: testAccIntentConfig_updateSampleUtterance(rName, "rustedroot", "sendme", "onmy", "way"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),

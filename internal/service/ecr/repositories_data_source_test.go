@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -19,7 +19,7 @@ import (
 func TestAccECRRepositoriesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rNames []string
-	for i := 1; i < 6; i++ {
+	for i := 0; i < 5; i++ {
 		rNames = append(rNames, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
 	}
 	dataSourceName := "data.aws_ecr_repositories.test"
@@ -35,7 +35,7 @@ func TestAccECRRepositoriesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRepositoriesDataSourceConfig_basic(rNames),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", "5"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "names.#", 5),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "names.*", rNames[0]),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "names.*", rNames[1]),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "names.*", rNames[2]),

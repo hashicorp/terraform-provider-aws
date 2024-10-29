@@ -4,12 +4,13 @@
 package fsx_test
 
 import (
+	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/fsx"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccFSxONTAPStorageVirtualMachineDataSource_Id(t *testing.T) {
@@ -25,19 +26,20 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Id(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPStorageVirtualMachineDataSourceConfig_Id(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_configuration.#", resourceName, "active_directory_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoints.#", resourceName, "endpoints.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_id", resourceName, "file_system_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subtype", resourceName, "subtype"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "uuid", resourceName, "uuid"),
 				),
 			},
@@ -58,19 +60,20 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccONTAPStorageVirtualMachineDataSourceConfig_Filter(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrARN, resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(dataSourceName, "active_directory_configuration.#", resourceName, "active_directory_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "endpoints.#", resourceName, "endpoints.#"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_id", resourceName, "file_system_id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrFileSystemID, resourceName, names.AttrFileSystemID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrID, resourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subtype", resourceName, "subtype"),
+					resource.TestCheckResourceAttrPair(dataSourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
 					resource.TestCheckResourceAttrPair(dataSourceName, "uuid", resourceName, "uuid"),
 				),
 			},
@@ -79,15 +82,33 @@ func TestAccFSxONTAPStorageVirtualMachineDataSource_Filter(t *testing.T) {
 }
 
 func testAccONTAPStorageVirtualMachineDataSourceConfig_Id(rName string) string {
-	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 data "aws_fsx_ontap_storage_virtual_machine" "test" {
   id = aws_fsx_ontap_storage_virtual_machine.test.id
 }
-`)
+`, rName))
 }
 
 func testAccONTAPStorageVirtualMachineDataSourceConfig_Filter(rName string) string {
-	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_basic(rName), `
+	return acctest.ConfigCompose(testAccONTAPStorageVirtualMachineConfig_base(rName), fmt.Sprintf(`
+resource "aws_fsx_ontap_storage_virtual_machine" "test" {
+  file_system_id = aws_fsx_ontap_file_system.test.id
+  name           = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 data "aws_fsx_ontap_storage_virtual_machine" "test" {
   filter {
     name   = "file-system-id"
@@ -96,5 +117,5 @@ data "aws_fsx_ontap_storage_virtual_machine" "test" {
 
   depends_on = [aws_fsx_ontap_storage_virtual_machine.test]
 }
-`)
+`, rName))
 }

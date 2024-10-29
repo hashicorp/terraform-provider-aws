@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kinesis"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesis/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -45,11 +46,11 @@ func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.Sc
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"policy": schema.StringAttribute{
+			names.AttrPolicy: schema.StringAttribute{
 				CustomType: fwtypes.IAMPolicyType,
 				Required:   true,
 			},
-			"resource_arn": schema.StringAttribute{
+			names.AttrResourceARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -106,7 +107,7 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 
 	conn := r.Meta().KinesisClient(ctx)
 
-	output, err := findResourcePolicyByResourceARN(ctx, conn, data.ResourceARN.ValueString())
+	output, err := findResourcePolicyByARN(ctx, conn, data.ResourceARN.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -186,7 +187,7 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 	}
 }
 
-func findResourcePolicyByResourceARN(ctx context.Context, conn *kinesis.Client, resourceARN string) (*kinesis.GetResourcePolicyOutput, error) {
+func findResourcePolicyByARN(ctx context.Context, conn *kinesis.Client, resourceARN string) (*kinesis.GetResourcePolicyOutput, error) {
 	input := &kinesis.GetResourcePolicyInput{
 		ResourceARN: aws.String(resourceARN),
 	}
@@ -218,6 +219,11 @@ type resourcePolicyResourceModel struct {
 }
 
 func (data *resourcePolicyResourceModel) InitFromID() error {
+	_, err := arn.Parse(data.ID.ValueString())
+	if err != nil {
+		return err
+	}
+
 	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
 
 	return nil
