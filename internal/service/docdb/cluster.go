@@ -243,7 +243,7 @@ func resourceCluster() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(RestoreType_Values(), false),
+							ValidateFunc: validation.StringInSlice(restoreType_Values(), false),
 						},
 						"source_cluster_identifier": {
 							Type:     schema.TypeString,
