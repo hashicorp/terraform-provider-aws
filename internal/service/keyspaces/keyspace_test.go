@@ -241,8 +241,9 @@ func testAccKeyspaceConfig_replicationSpecification(rName, rSpecification string
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
+
   replication_specification  {
-	replication_strategy = %[2]q
+    replication_strategy = %[2]q
   }
 }
 `, rName, rSpecification)
@@ -252,9 +253,10 @@ func testAccKeyspaceConfig_multiReplicationSpecification(rName, rSpecification, 
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
+
   replication_specification {
-	replication_strategy = %[2]q
-	region_list = [%[3]q, %[4]q]
+    replication_strategy = %[2]q
+    region_list          = [%[3]q, %[4]q]
   }
 }
 `, rName, rSpecification, region1, region2)
