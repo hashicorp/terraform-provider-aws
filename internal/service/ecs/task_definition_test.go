@@ -110,6 +110,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s:%s$`, rName, "1"))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s$`, rName))),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "track_latest", acctest.CtFalse),
 				),
@@ -120,6 +121,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s:%s$`, rName, "2"))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s$`, rName))),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
 				),
 			},
@@ -1484,6 +1486,54 @@ func TestAccECSTaskDefinition_containerDefinitionNullPortMapping(t *testing.T) {
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length([0].portMappings)", "0"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].image", "alpine"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_containerDefinitionVersionConsistency(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, "disabled"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "disabled"),
+				),
+			},
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency_NullUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "enabled"),
+				),
+			},
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, "enabled"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "enabled"),
+				),
+			},
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, "disabled"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "disabled"),
 				),
 			},
 		},
@@ -3470,4 +3520,42 @@ resource "aws_ecs_task_definition" "test" {
   ])
 }
 `, rName, image)
+}
+
+func testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, vc string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+  container_definitions = <<TASK_DEFINITION
+[
+	{
+		"cpu": 10,
+		"image": "jenkins",
+		"memory": 128,
+		"name": "jenkins",
+		"versionConsistency": %[2]q
+	}
+]
+TASK_DEFINITION
+}
+`, rName, vc)
+}
+
+func testAccTaskDefinitionConfig_containerDefinitionVersionConsistency_NullUpdate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+  container_definitions = <<TASK_DEFINITION
+[
+	{
+		"cpu": 10,
+		"image": "jenkins",
+		"essential": true,
+		"memory": 128,
+		"name": "jenkins"
+	}
+]
+TASK_DEFINITION
+}
+`, rName)
 }
