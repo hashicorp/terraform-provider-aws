@@ -5,7 +5,7 @@ package rds
 
 import (
 	"context"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -170,16 +170,16 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	var snapshot *types.DBSnapshot
-	if len(snapshots) > 1 {
-		if d.Get(names.AttrMostRecent).(bool) {
-			snapshot = mostRecentDBSnapshot(snapshots)
-		} else {
-			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
-		}
-	} else {
-		snapshot = &snapshots[0]
+	if len(snapshots) > 1 && !d.Get(names.AttrMostRecent).(bool) {
+		return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 	}
+
+	snapshot := slices.MaxFunc(snapshots, func(a, b types.DBSnapshot) int {
+		if a.SnapshotCreateTime == nil || b.SnapshotCreateTime == nil {
+			return 0
+		}
+		return a.SnapshotCreateTime.Compare(aws.ToTime(b.SnapshotCreateTime))
+	})
 
 	d.SetId(aws.ToString(snapshot.DBSnapshotIdentifier))
 	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
@@ -211,26 +211,4 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
-}
-
-type rdsSnapshotSort []types.DBSnapshot
-
-func (a rdsSnapshotSort) Len() int      { return len(a) }
-func (a rdsSnapshotSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a rdsSnapshotSort) Less(i, j int) bool {
-	// Snapshot creation can be in progress
-	if a[i].SnapshotCreateTime == nil {
-		return true
-	}
-	if a[j].SnapshotCreateTime == nil {
-		return false
-	}
-
-	return (aws.ToTime(a[i].SnapshotCreateTime)).Before(aws.ToTime(a[j].SnapshotCreateTime))
-}
-
-func mostRecentDBSnapshot(snapshots []types.DBSnapshot) *types.DBSnapshot {
-	sortedSnapshots := snapshots
-	sort.Sort(rdsSnapshotSort(sortedSnapshots))
-	return &sortedSnapshots[len(sortedSnapshots)-1]
 }
