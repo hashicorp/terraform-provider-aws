@@ -400,8 +400,8 @@ github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.16.1 h1:sXHa7vOYTjeHy
 github.com/aws/aws-sdk-go-v2/service/pinpointsmsvoicev2 v1.16.1/go.mod h1:qm85re7YZRSviYr63ohdbPQ0YaNbBk1/BJakhBR1/v8=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.18.1 h1:nH6fPgNGL/cQ5kwci7OZTxkWXROzYlgNyNY/3kWS1Dg=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.18.1/go.mod h1:q8KkpQba6QmNHyLxsYDvhFcerVLsfUBlVJvsi/e1CBs=
-github.com/aws/aws-sdk-go-v2/service/polly v1.45.2 h1:8SxFBXQz6ugH4+/91nQlYMHGpH4pdFDSOin+oQnMvJ8=
-github.com/aws/aws-sdk-go-v2/service/polly v1.45.2/go.mod h1:PAg+2IgPApH1b/uKkuf30SV6JTzew21vz0ztIFFas/M=
+github.com/aws/aws-sdk-go-v2/service/polly v1.45.3 h1:qeg1t3MoLlYIy9mOQF9WLqsQdMoXT1oiGwCI0hKUxuw=
+github.com/aws/aws-sdk-go-v2/service/polly v1.45.3/go.mod h1:fKhqqJPqU4rZeyh/oFOG8b2yNdbTS0yrVb+2IRGpxQs=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.32.2 h1:eBKzA9Te6JHD1TfVjuja7pa8iEdXVzW5z0QPcbrPhNs=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.32.2/go.mod h1:2Sg8KGFKp9zzUbY+XdUUEn7xjCzuRt8Zx4PHMwGzRvs=
 github.com/aws/aws-sdk-go-v2/service/qbusiness v1.15.0 h1:7I9FWcKlhEKTuk1XIzuo6VdBQORJqL/kFLfETbGrruI=
