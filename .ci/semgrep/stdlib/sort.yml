@@ -11,16 +11,16 @@ rules:
     pattern: sort.SliceStable(...)
     severity: WARNING
 
-  - id: sort-Ints
+  - id: prefer-slices-sort
     languages: [go]
-    message: Prefer slices.Sort to sort.Ints
-    pattern: sort.Ints($X)
-    fix: slices.Sort($X)
-    severity: WARNING
-
-  - id: sort-Strings
-    languages: [go]
-    message: Prefer slices.Sort to sort.Strings
-    pattern: sort.Strings($X)
+    message: Prefer slices.Sort to sort.$FUNC
+    patterns:
+      - pattern: sort.$FUNC($X)
+      - metavariable-pattern:
+          metavariable: $FUNC
+          pattern-either:
+            - pattern: Ints
+            - pattern: Float64s
+            - pattern: Strings
     fix: slices.Sort($X)
     severity: WARNING
