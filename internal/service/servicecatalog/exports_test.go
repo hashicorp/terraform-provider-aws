@@ -39,4 +39,6 @@ var (
 	WaitProvisionedProductReady             = waitProvisionedProductReady
 	WaitTagOptionResourceAssociationDeleted = waitTagOptionResourceAssociationDeleted
 	WaitTagOptionResourceAssociationReady   = waitTagOptionResourceAssociationReady
+
+	ValidSharePrincipal = validSharePrincipal
 )

@@ -97,7 +97,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterCreate(ctx context.Context, d 
 
 	d.SetId(vifID)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "directconnect",
 		AccountID: meta.(*conns.AWSClient).AccountID,
@@ -170,7 +170,7 @@ func resourceHostedPrivateVirtualInterfaceAccepterImport(ctx context.Context, d 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "directconnect",
 		AccountID: meta.(*conns.AWSClient).AccountID,

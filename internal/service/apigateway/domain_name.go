@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -253,7 +252,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, domainNameARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, domainNameARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrCertificateARN, domainName.CertificateArn)
 	d.Set("certificate_name", domainName.CertificateName)
 	if domainName.CertificateUploadDate != nil {
@@ -519,11 +518,6 @@ func flattenMutualTLSAuthentication(apiObject *types.MutualTlsAuthentication) []
 	return []interface{}{tfMap}
 }
 
-func domainNameARN(c *conns.AWSClient, domainName string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "apigateway",
-		Region:    c.Region,
-		Resource:  fmt.Sprintf("/domainnames/%s", domainName),
-	}.String()
+func domainNameARN(ctx context.Context, c *conns.AWSClient, domainName string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/domainnames/%s", domainName))
 }

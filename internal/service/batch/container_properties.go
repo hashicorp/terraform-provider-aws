@@ -4,7 +4,8 @@
 package batch
 
 import (
-	"sort"
+	"cmp"
+	"slices"
 	_ "unsafe" // Required for go:linkname
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -107,8 +108,8 @@ func (cp *containerProperties) reduce() {
 
 func (cp *containerProperties) sortEnvironment() {
 	// Deal with Environment objects which may be re-ordered in the API.
-	sort.Slice(cp.Environment, func(i, j int) bool {
-		return aws.ToString(cp.Environment[i].Name) < aws.ToString(cp.Environment[j].Name)
+	slices.SortFunc(cp.Environment, func(a, b awstypes.KeyValuePair) int {
+		return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
 	})
 }
 

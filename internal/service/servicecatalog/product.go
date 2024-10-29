@@ -6,7 +6,7 @@ package servicecatalog
 import (
 	"context"
 	"log"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -371,11 +371,9 @@ func resourceProductImport(ctx context.Context, d *schema.ResourceData, meta int
 
 	// import the last entry in the summary
 	if len(productData.ProvisioningArtifactSummaries) > 0 {
-		sort.Slice(productData.ProvisioningArtifactSummaries, func(i, j int) bool {
-			return aws.ToTime(productData.ProvisioningArtifactSummaries[i].CreatedTime).Before(aws.ToTime(productData.ProvisioningArtifactSummaries[j].CreatedTime))
+		provisioningArtifact := slices.MaxFunc(productData.ProvisioningArtifactSummaries, func(a, b awstypes.ProvisioningArtifactSummary) int {
+			return aws.ToTime(a.CreatedTime).Compare(aws.ToTime(b.CreatedTime))
 		})
-
-		provisioningArtifact := productData.ProvisioningArtifactSummaries[len(productData.ProvisioningArtifactSummaries)-1]
 		in := &servicecatalog.DescribeProvisioningArtifactInput{
 			ProductId:              aws.String(d.Id()),
 			ProvisioningArtifactId: provisioningArtifact.Id,

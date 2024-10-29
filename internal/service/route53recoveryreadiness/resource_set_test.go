@@ -25,7 +25,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
@@ -44,8 +44,8 @@ func TestAccRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`resource-set.+`)),
-					resource.TestCheckResourceAttr(resourceName, "resources.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -61,7 +61,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
@@ -92,7 +92,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
@@ -109,7 +109,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 				Config: testAccResourceSetConfig_tags1(rName, cwArn, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -122,7 +122,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 				Config: testAccResourceSetConfig_tags2(rName, cwArn, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -131,7 +131,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 				Config: testAccResourceSetConfig_tags1(rName, cwArn, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -144,7 +144,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
@@ -162,7 +162,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`resource-set.+`)),
-					resource.TestCheckResourceAttr(resourceName, "resources.0.readiness_scopes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "resources.0.readiness_scopes.#", "1"),
 				),
 			},
 			{
@@ -180,7 +180,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_basicDNSTargetResource(t *testin
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	domainName := "myTestDomain.test"
 	hzArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "hostedzone/zzzzzzzzz",
@@ -223,7 +223,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_dnsTargetResourceNLBTarget(t *te
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	hzArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "hostedzone/zzzzzzzzz",
@@ -261,7 +261,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_dnsTargetResourceR53Target(t *te
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_route53recoveryreadiness_resource_set.test"
 	hzArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "hostedzone/zzzzzzzzz",
@@ -301,7 +301,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cwArn := arn.ARN{
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
 		Region:    names.EUWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
@@ -320,8 +320,8 @@ func TestAccRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceSetExists(ctx, resourceName),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "route53-recovery-readiness", regexache.MustCompile(`resource-set.+`)),
-					resource.TestCheckResourceAttr(resourceName, "resources.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

@@ -413,8 +413,8 @@ func (r *securityGroupRuleResource) ConfigValidators(context.Context) []resource
 	}
 }
 
-func (r *securityGroupRuleResource) securityGroupRuleARN(_ context.Context, id string) types.String {
-	return types.StringValue(r.RegionalARN(names.EC2, fmt.Sprintf("security-group-rule/%s", id)))
+func (r *securityGroupRuleResource) securityGroupRuleARN(ctx context.Context, id string) types.String {
+	return types.StringValue(r.Meta().RegionalARN(ctx, names.EC2, fmt.Sprintf("security-group-rule/%s", id)))
 }
 
 func flattenReferencedSecurityGroup(ctx context.Context, apiObject *awstypes.ReferencedSecurityGroup, accountID string) types.String {

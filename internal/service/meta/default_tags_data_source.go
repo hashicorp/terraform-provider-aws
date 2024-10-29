@@ -53,7 +53,7 @@ func (d *defaultTagsDataSource) Read(ctx context.Context, request datasource.Rea
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 	tags := defaultTagsConfig.GetTags()
 
-	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition)
+	data.ID = fwflex.StringValueToFrameworkLegacy(ctx, d.Meta().Partition(ctx))
 	data.Tags = tftags.FlattenStringValueMap(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

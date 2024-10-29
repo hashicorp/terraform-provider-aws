@@ -130,6 +130,10 @@ func dataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"enable_zonal_shift": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"enforce_security_group_inbound_rules_on_private_link_traffic": {
 				Type:     schema.TypeString,
 				Computed: true,

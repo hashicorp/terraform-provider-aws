@@ -10,7 +10,6 @@ import (
 	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -252,13 +251,13 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("api_endpoint", output.ApiEndpoint)
 	d.Set("api_key_selection_expression", output.ApiKeySelectionExpression)
-	d.Set(names.AttrARN, apiARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	if err := d.Set("cors_configuration", flattenCORSConfiguration(output.CorsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
 	}
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("disable_execute_api_endpoint", output.DisableExecuteApiEndpoint)
-	d.Set("execution_arn", apiInvokeARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, output.Name)
 	d.Set("protocol_type", output.ProtocolType)
 	d.Set("route_selection_expression", output.RouteSelectionExpression)
@@ -494,21 +493,10 @@ func flattenCORSConfiguration(configuration *awstypes.Cors) []interface{} {
 	}}
 }
 
-func apiARN(c *conns.AWSClient, apiID string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "apigateway",
-		Region:    c.Region,
-		Resource:  "/apis/" + apiID,
-	}.String()
+func apiARN(ctx context.Context, c *conns.AWSClient, apiID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", "/apis/"+apiID)
 }
 
-func apiInvokeARN(c *conns.AWSClient, apiID string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "execute-api",
-		Region:    c.Region,
-		AccountID: c.AccountID,
-		Resource:  apiID,
-	}.String()
+func apiInvokeARN(ctx context.Context, c *conns.AWSClient, apiID string) string {
+	return c.RegionalARN(ctx, "execute-api", apiID)
 }

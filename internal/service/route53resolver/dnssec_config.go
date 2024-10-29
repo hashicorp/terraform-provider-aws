@@ -100,7 +100,7 @@ func resourceDNSSECConfigRead(ctx context.Context, d *schema.ResourceData, meta 
 	ownerID := aws.ToString(dnssecConfig.OwnerId)
 	resourceID := aws.ToString(dnssecConfig.ResourceId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "route53resolver",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,

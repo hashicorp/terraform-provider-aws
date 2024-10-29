@@ -9,16 +9,18 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53profiles"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53profiles/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -38,7 +40,7 @@ func newResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, 
 	r := &resourceAssociation{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(5 * time.Minute) // tags only
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
@@ -46,6 +48,11 @@ func newResourceAssociation(_ context.Context) (resource.ResourceWithConfigure, 
 
 const (
 	ResNameAssociation = "Association"
+)
+
+var (
+	// Converted from (?!^[0-9]+$)([a-zA-Z0-9\-_' ']+) because of the negative lookahead.
+	resourceAssociationNameRegex = regexache.MustCompile("(^[^0-9][a-zA-Z0-9\\-_' ']+$)")
 )
 
 type resourceAssociation struct {
@@ -66,6 +73,10 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 			names.AttrID:  framework.IDAttribute(),
 			names.AttrName: schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(resourceAssociationNameRegex, ""),
+					stringvalidator.LengthBetween(0, 64),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -107,7 +118,7 @@ func (r *resourceAssociation) Schema(ctx context.Context, req resource.SchemaReq
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Read:   true,
+				Update: true,
 				Delete: true,
 			}),
 		},
@@ -146,16 +157,8 @@ func (r *resourceAssociation) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	data.ID = flex.StringToFramework(ctx, out.ProfileAssociation.Id)
-
-	associationArn := arn.ARN{
-		Partition: r.Meta().Partition,
-		Service:   "route53profiles",
-		Region:    r.Meta().Region,
-		AccountID: r.Meta().AccountID,
-		Resource:  fmt.Sprintf("profile-association/%s", aws.ToString(out.ProfileAssociation.Id)),
-	}.String()
-
-	data.ARN = flex.StringValueToFramework(ctx, associationArn)
+	associationARN := r.Meta().RegionalARN(ctx, "route53profiles", fmt.Sprintf("profile-association/%s", aws.ToString(out.ProfileAssociation.Id)))
+	data.ARN = flex.StringValueToFramework(ctx, associationARN)
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
 	profileAssociation, err := waitAssociationCreated(ctx, conn, data.ID.ValueString(), createTimeout)
@@ -197,14 +200,8 @@ func (r *resourceAssociation) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	associationArn := arn.ARN{
-		Partition: r.Meta().Partition,
-		Service:   "route53profiles",
-		Region:    r.Meta().Region,
-		AccountID: r.Meta().AccountID,
-		Resource:  fmt.Sprintf("profile-association/%s", aws.ToString(out.Id)),
-	}.String()
-	state.ARN = flex.StringValueToFramework(ctx, associationArn)
+	associationARN := r.Meta().RegionalARN(ctx, "route53profiles", fmt.Sprintf("profile-association/%s", aws.ToString(out.Id)))
+	state.ARN = flex.StringValueToFramework(ctx, associationARN)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {

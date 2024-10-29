@@ -144,7 +144,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if eip.Domain == types.DomainTypeVpc {
 		allocationID := aws.ToString(eip.AllocationId)
 		d.SetId(allocationID)
-		d.Set(names.AttrARN, eipARN(meta.(*conns.AWSClient), allocationID))
+		d.Set(names.AttrARN, eipARN(ctx, meta.(*conns.AWSClient), allocationID))
 
 		addressAttr, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, d.Id())
 

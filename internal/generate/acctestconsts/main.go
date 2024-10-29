@@ -7,8 +7,9 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
@@ -23,14 +24,14 @@ var constOrQuoteTmpl string
 //go:embed semgrep.gtpl
 var semgrepTmpl string
 
-type ConstantDatum struct {
+type constantDatum struct {
 	Constant   string
 	Literal    string
 	AltLiteral string
 }
 
 type TemplateData struct {
-	Constants []ConstantDatum
+	Constants []constantDatum
 }
 
 func main() {
@@ -56,7 +57,7 @@ func main() {
 
 	d := g.NewGoFileDestination(constsFilename)
 
-	if err := d.WriteTemplate("constantlist", constsTmpl, td); err != nil {
+	if err := d.BufferTemplate("constantlist", constsTmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", constsFilename, err)
 	}
 
@@ -69,7 +70,7 @@ func main() {
 
 	d = g.NewGoFileDestination(constOrQuoteFilename)
 
-	if err := d.WriteTemplate("constsOrQuote", constOrQuoteTmpl, td); err != nil {
+	if err := d.BufferTemplate("constsOrQuote", constOrQuoteTmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", constOrQuoteFilename, err)
 	}
 
@@ -82,7 +83,7 @@ func main() {
 
 	d = g.NewUnformattedFileDestination(semgrepFilename)
 
-	if err := d.WriteTemplate("semgrep-constants", semgrepTmpl, td); err != nil {
+	if err := d.BufferTemplate("semgrep-constants", semgrepTmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", semgrepFilename, err)
 	}
 
@@ -91,21 +92,21 @@ func main() {
 	}
 }
 
-func readConstants(filename string) ([]ConstantDatum, error) {
+func readConstants(filename string) ([]constantDatum, error) {
 	constants, err := common.ReadAllCSVData(filename)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var constantList []ConstantDatum
+	var constantList []constantDatum
 
 	for _, row := range constants {
 		if row[0] == "" {
 			continue
 		}
 
-		cd := ConstantDatum{
+		cd := constantDatum{
 			Literal:  row[0],
 			Constant: row[1],
 		}
@@ -128,8 +129,8 @@ func readConstants(filename string) ([]ConstantDatum, error) {
 		constantList = append(constantList, cd)
 	}
 
-	sort.SliceStable(constantList, func(i, j int) bool {
-		return constantList[j].Constant > constantList[i].Constant
+	slices.SortStableFunc(constantList, func(a, b constantDatum) int {
+		return cmp.Compare(a.Constant, b.Constant)
 	})
 
 	return constantList, nil

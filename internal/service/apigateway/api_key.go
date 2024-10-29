@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -133,7 +132,7 @@ func resourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	setTagsOut(ctx, apiKey.Tags)
 
-	d.Set(names.AttrARN, apiKeyARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiKeyARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrCreatedDate, apiKey.CreatedDate.Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
 	d.Set(names.AttrDescription, apiKey.Description)
@@ -251,11 +250,6 @@ func findAPIKeyByID(ctx context.Context, conn *apigateway.Client, id string) (*a
 	return output, nil
 }
 
-func apiKeyARN(c *conns.AWSClient, id string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "apigateway",
-		Region:    c.Region,
-		Resource:  fmt.Sprintf("/apikeys/%s", id),
-	}.String()
+func apiKeyARN(ctx context.Context, c *conns.AWSClient, id string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/apikeys/%s", id))
 }

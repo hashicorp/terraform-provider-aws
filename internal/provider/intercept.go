@@ -279,7 +279,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 							}
 
 							// ISO partitions may not support tagging, giving error.
-							if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+							if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 								return ctx, diags
 							}
 
@@ -338,7 +338,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 						}
 
 						// ISO partitions may not support tagging, giving error.
-						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 							return ctx, diags
 						}
 
@@ -467,7 +467,7 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, d schemaResourceData
 						}
 
 						// ISO partitions may not support tagging, giving error.
-						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 							return ctx, diags
 						}
 

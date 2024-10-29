@@ -35,7 +35,7 @@ import (
 {{- if and .IncludeComments .AWSGoSDKV2 }}
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// types.<Type Name>.
 {{- end }}
@@ -49,11 +49,11 @@ import (
 	"time"
 {{ if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 {{- else }}
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
+	"github.com/aws/aws-sdk-go/service/{{ .SDKPackage }}"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 {{- end }}
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -236,7 +236,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a create input structure
 	{{- end }}
-	in := &{{ .ServicePackage }}.Create{{ .Resource }}Input{
+	in := &{{ .SDKPackage }}.Create{{ .Resource }}Input{
 		{{- if .IncludeComments }}
 		// TIP: Mandatory or fields that will always be present can be set when
 		// you create the Input structure. (Replace these with real fields.)

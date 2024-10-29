@@ -54,7 +54,7 @@ func TestAccIAMGroupPoliciesExclusive_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGroupPoliciesExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrGroupName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrGroupName,
 			},
@@ -131,7 +131,7 @@ func TestAccIAMGroupPoliciesExclusive_multiple(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccGroupPoliciesExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrGroupName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrGroupName,
 			},
@@ -171,7 +171,7 @@ func TestAccIAMGroupPoliciesExclusive_empty(t *testing.T) {
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "0"),
 				),
 				// The empty `policy_names` argument in the exclusive lock will remove the
 				// inline policy defined in this configuration, so a diff is expected
@@ -211,7 +211,7 @@ func TestAccIAMGroupPoliciesExclusive_outOfBandRemoval(t *testing.T) {
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 				),
 			},
 		},
@@ -249,7 +249,7 @@ func TestAccIAMGroupPoliciesExclusive_outOfBandAddition(t *testing.T) {
 					testAccCheckGroupExists(ctx, groupResourceName, &group),
 					testAccCheckGroupPoliciesExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrGroupName, groupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_names.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
 				),
 			},
 		},
@@ -305,17 +305,6 @@ func testAccCheckGroupPoliciesExclusiveExists(ctx context.Context, name string) 
 		}
 
 		return nil
-	}
-}
-
-func testAccGroupPoliciesExclusiveImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrGroupName], nil
 	}
 }
 

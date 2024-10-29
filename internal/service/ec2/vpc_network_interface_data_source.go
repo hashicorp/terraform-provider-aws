@@ -189,7 +189,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	d.SetId(aws.ToString(eni.NetworkInterfaceId))
 	ownerID := aws.ToString(eni.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,

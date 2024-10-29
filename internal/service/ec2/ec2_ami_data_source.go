@@ -6,7 +6,7 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -280,24 +280,21 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	if len(filteredImages) > 1 {
-		if !d.Get(names.AttrMostRecent).(bool) {
-			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
-				"specific search criteria, or set `most_recent` attribute to true.")
-		}
-		sort.Slice(filteredImages, func(i, j int) bool {
-			itime, _ := time.Parse(time.RFC3339, aws.ToString(filteredImages[i].CreationDate))
-			jtime, _ := time.Parse(time.RFC3339, aws.ToString(filteredImages[j].CreationDate))
-			return itime.Unix() > jtime.Unix()
-		})
+	if len(filteredImages) > 1 && !d.Get(names.AttrMostRecent).(bool) {
+		return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
+			"specific search criteria, or set `most_recent` attribute to true.")
 	}
 
-	image := filteredImages[0]
+	image := slices.MaxFunc(filteredImages, func(a, b awstypes.Image) int {
+		atime, _ := time.Parse(time.RFC3339, aws.ToString(a.CreationDate))
+		btime, _ := time.Parse(time.RFC3339, aws.ToString(b.CreationDate))
+		return atime.Compare(btime)
+	})
 
 	d.SetId(aws.ToString(image.ImageId))
 	d.Set("architecture", image.Architecture)
 	imageArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   names.EC2,
 		Resource:  fmt.Sprintf("image/%s", d.Id()),

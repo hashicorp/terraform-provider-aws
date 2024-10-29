@@ -46,8 +46,8 @@ func TestAccBackupVault_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "backup", fmt.Sprintf("backup-vault:%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrKMSKeyARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -129,7 +129,7 @@ func TestAccBackupVault_forceDestroyEmpty(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyEmpty(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
 				),
 			},
 			{
@@ -158,7 +158,7 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "0"),
 				),
 			},
 			{
@@ -172,7 +172,7 @@ func TestAccBackupVault_forceDestroyWithRecoveryPoint(t *testing.T) {
 				Config: testAccVaultConfig_forceDestroyWithDynamoDBTable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "recovery_points", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "recovery_points", "1"),
 				),
 			},
 		},
@@ -231,13 +231,13 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 		conn := client.BackupClient(ctx)
 
 		iamRoleARN := arn.ARN{
-			Partition: client.Partition,
+			Partition: client.Partition(ctx),
 			Service:   "iam",
 			AccountID: client.AccountID,
 			Resource:  "role/service-role/AWSBackupDefaultServiceRole",
 		}.String()
 		resourceARN := arn.ARN{
-			Partition: client.Partition,
+			Partition: client.Partition(ctx),
 			Service:   "dynamodb",
 			Region:    client.Region,
 			AccountID: client.AccountID,

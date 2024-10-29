@@ -47,7 +47,7 @@ const (
 
 type resourceEmailTemplate struct {
 	framework.ResourceWithConfigure
-	// framework.WithImportByID
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -147,11 +147,6 @@ func (r *resourceEmailTemplate) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	// resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
-
 	plan.Arn = flex.StringToFramework(ctx, out.CreateTemplateMessageBody.Arn)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -199,9 +194,8 @@ func (r *resourceEmailTemplate) Update(ctx context.Context, req resource.UpdateR
 	if !old.TemplateName.Equal(new.TemplateName) ||
 		!old.Arn.Equal(new.Arn) ||
 		!old.EmailTemplate.Equal(new.EmailTemplate) {
-		in := &pinpoint.UpdateEmailTemplateInput{
-			// TemplateName: aws.String(old.TemplateName.ValueString()),
-		}
+		in := &pinpoint.UpdateEmailTemplateInput{}
+
 		resp.Diagnostics.Append(flex.Expand(ctx, &old, in, flex.WithFieldNameSuffix("Request"))...)
 		if resp.Diagnostics.HasError() {
 			return

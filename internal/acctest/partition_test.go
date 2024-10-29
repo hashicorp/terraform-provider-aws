@@ -6,6 +6,7 @@ package acctest_test
 import (
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -18,31 +19,31 @@ func TestIsIsolatedPartition(t *testing.T) {
 		expected bool
 	}{
 		{
-			input:    names.StandardPartitionID,
+			input:    endpoints.AwsPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.ChinaPartitionID,
+			input:    endpoints.AwsCnPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.USGovCloudPartitionID,
+			input:    endpoints.AwsUsGovPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.ISOPartitionID,
+			input:    endpoints.AwsIsoPartitionID,
 			expected: true,
 		},
 		{
-			input:    names.ISOBPartitionID,
+			input:    endpoints.AwsIsoBPartitionID,
 			expected: true,
 		},
 		{
-			input:    names.ISOEPartitionID,
+			input:    endpoints.AwsIsoEPartitionID,
 			expected: true,
 		},
 		{
-			input:    names.ISOFPartitionID,
+			input:    endpoints.AwsIsoFPartitionID,
 			expected: true,
 		},
 	}
@@ -110,31 +111,31 @@ func TestIsStandardPartition(t *testing.T) {
 		expected bool
 	}{
 		{
-			input:    names.StandardPartitionID,
+			input:    endpoints.AwsPartitionID,
 			expected: true,
 		},
 		{
-			input:    names.ChinaPartitionID,
+			input:    endpoints.AwsCnPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.USGovCloudPartitionID,
+			input:    endpoints.AwsUsGovPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.ISOPartitionID,
+			input:    endpoints.AwsIsoPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.ISOBPartitionID,
+			input:    endpoints.AwsIsoBPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.ISOEPartitionID,
+			input:    endpoints.AwsIsoEPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.ISOFPartitionID,
+			input:    endpoints.AwsIsoFPartitionID,
 			expected: false,
 		},
 	}

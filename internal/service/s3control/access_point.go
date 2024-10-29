@@ -273,7 +273,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	} else {
 		// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3.html#amazons3-resources-for-iam-policies.
 		accessPointARN := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
+			Partition: meta.(*conns.AWSClient).Partition(ctx),
 			Service:   "s3",
 			Region:    meta.(*conns.AWSClient).Region,
 			AccountID: accountID,

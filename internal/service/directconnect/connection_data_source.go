@@ -85,7 +85,7 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(connection.ConnectionId))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    aws.ToString(connection.Region),
 		Service:   "directconnect",
 		AccountID: aws.ToString(connection.OwnerAccount),

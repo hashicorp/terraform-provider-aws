@@ -145,7 +145,7 @@ func resourceTrafficMirrorSessionRead(ctx context.Context, d *schema.ResourceDat
 
 	ownerID := aws.ToString(session.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,
