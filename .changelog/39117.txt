@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_imagebuilder_image_pipeline: Allow `container_recipe_arn` and `image_recipe_arn` to be updated in-place
+```
