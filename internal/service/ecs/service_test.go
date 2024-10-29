@@ -103,6 +103,7 @@ func TestAccECSService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_lattice_configuration.#", "0"),
 				),
 			},
 
@@ -113,6 +114,7 @@ func TestAccECSService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "alarms.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scheduling_strategy", "REPLICA"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_lattice_configuration.#", "0"),
 				),
 			},
 		},
