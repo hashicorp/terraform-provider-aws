@@ -14,6 +14,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
@@ -67,7 +68,9 @@ func Create(resName, snakeName string, comments, force, pluginFramework, tags bo
 		return fmt.Errorf("error checking: snake name should be all lower case with underscores, if needed (e.g., db_instance)")
 	}
 
-	snakeName = convert.ToSnakeCase(resName, snakeName)
+	if snakeName != "" {
+		snakeName = names.ToSnakeCase(resName)
+	}
 
 	service, err := data.LookupService(servicePackage)
 	if err != nil {
