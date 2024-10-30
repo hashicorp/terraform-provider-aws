@@ -441,7 +441,7 @@ func testAccStage_canarySettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "33.33"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", "3"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment1, names.AttrID),
 				),
 			},
 			{
@@ -465,7 +465,7 @@ func testAccStage_canarySettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "66.66"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.four", "5"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtFalse),
-					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment1, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment1, names.AttrID),
 				),
 			},
 			{
@@ -476,7 +476,7 @@ func testAccStage_canarySettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "66.66"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.four", "5"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtFalse),
-					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment2, names.AttrID),
 				),
 			},
 			{
@@ -487,8 +487,8 @@ func testAccStage_canarySettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "66.66"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.four", "5"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtFalse),
-					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment2, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "deployment_id", deployment3, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment2, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "deployment_id", deployment3, names.AttrID),
 				),
 			},
 		},
