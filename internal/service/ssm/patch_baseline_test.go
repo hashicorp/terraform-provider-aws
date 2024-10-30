@@ -237,9 +237,9 @@ func TestAccSSMPatchBaseline_approveAfterDaysParam(t *testing.T) {
 				Config: testAccPatchBaselineConfig_approve_after_days(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "360"),
-					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
 				),
 			},
 		},

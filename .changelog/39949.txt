@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ssm_patch_baseline: Fix validation error when `approve_after_days` exceeds value of `100`.
+```
