@@ -124,7 +124,7 @@ func resourceReplicationGroup() *schema.Resource {
 			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      engineRedis,
+				Computed:     true,
 				ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
 			},
 			names.AttrEngineVersion: {
@@ -416,6 +416,22 @@ func resourceReplicationGroup() *schema.Resource {
 				// For Redis engine versions < 7.0.5, transit_encryption_enabled can only
 				// be configured during creation of the cluster.
 				return semver.LessThan(d.Get("engine_version_actual").(string), "7.0.5")
+			}),
+			customdiff.ForceNewIf(names.AttrEngine, func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				// If this is part of a global replication group, engine should match global group
+				if _, ok := d.GetOk("global_replication_group_id"); ok {
+					// Engine is determined by global replication group
+					return false
+				}
+				// For standalone replication groups, only allow Redis -> Valkey without replacement
+				if !d.HasChange(names.AttrEngine) {
+					return false
+				}
+				// If engine is changing, check if it is changing from Redis to Valkey
+				if old, new := d.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
+					return false
+				}
+				return true
 			}),
 			replicationGroupValidateAutomaticFailoverNumCacheClusters,
 			verify.SetTagsDiff,
