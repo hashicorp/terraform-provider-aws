@@ -425,6 +425,7 @@ func testAccStage_canarySettings(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	deployment1 := "aws_api_gateway_deployment.test"
 	deployment2 := "aws_api_gateway_deployment.test2"
+	deployment3 := "aws_api_gateway_deployment.test3"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -476,6 +477,18 @@ func testAccStage_canarySettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.four", "5"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment2, "id"),
+				),
+			},
+			{
+				Config: testAccStageConfig_canarySettingsNewDeploymentUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStageExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "variables.one", "1"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "66.66"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.four", "5"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment2, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "deployment_id", deployment3, "id"),
 				),
 			},
 		},
@@ -794,6 +807,53 @@ resource "aws_api_gateway_stage" "test" {
   rest_api_id   = aws_api_gateway_rest_api.test.id
   stage_name    = "prod"
   deployment_id = aws_api_gateway_deployment.test.id
+
+  canary_settings {
+    percent_traffic = "66.66"
+    stage_variable_overrides = {
+      four = "5"
+    }
+    use_stage_cache = "false"
+	deployment_id   = aws_api_gateway_deployment.test2.id
+  }
+  variables = {
+    one = "1"
+    two = "2"
+  }
+}
+`)
+}
+
+func testAccStageConfig_canarySettingsNewDeploymentUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccStageConfig_base(rName), `
+resource "aws_api_gateway_deployment" "test2" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  stage_name  = "dev2"
+  description = "This is another dev env"
+
+  variables = {
+    "a" = "2"
+  }
+}
+
+resource "aws_api_gateway_deployment" "test3" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  stage_name  = "dev2"
+  description = "This is another dev env"
+
+  variables = {
+    "a" = "2"
+  }
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.test3.id
 
   canary_settings {
     percent_traffic = "66.66"
