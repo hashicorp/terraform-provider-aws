@@ -814,7 +814,7 @@ resource "aws_api_gateway_stage" "test" {
       four = "5"
     }
     use_stage_cache = "false"
-	deployment_id   = aws_api_gateway_deployment.test2.id
+    deployment_id   = aws_api_gateway_deployment.test2.id
   }
   variables = {
     one = "1"
@@ -861,7 +861,7 @@ resource "aws_api_gateway_stage" "test" {
       four = "5"
     }
     use_stage_cache = "false"
-	deployment_id   = aws_api_gateway_deployment.test2.id
+    deployment_id   = aws_api_gateway_deployment.test2.id
   }
   variables = {
     one = "1"
