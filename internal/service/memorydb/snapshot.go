@@ -57,6 +57,10 @@ func resourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						names.AttrEngine: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrEngineVersion: {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -248,6 +252,7 @@ func flattenClusterConfiguration(v *awstypes.ClusterConfiguration) []interface{}
 
 	m := map[string]interface{}{
 		names.AttrDescription:        aws.ToString(v.Description),
+		names.AttrEngine:             aws.ToString(v.Engine),
 		names.AttrEngineVersion:      aws.ToString(v.EngineVersion),
 		"maintenance_window":         aws.ToString(v.MaintenanceWindow),
 		names.AttrName:               aws.ToString(v.Name),

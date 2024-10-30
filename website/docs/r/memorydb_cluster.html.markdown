@@ -19,6 +19,7 @@ resource "aws_memorydb_cluster" "example" {
   acl_name                 = "open-access"
   name                     = "my-cluster"
   node_type                = "db.t4g.small"
+  engine                   = "redis"
   num_shards               = 2
   security_group_ids       = [aws_security_group.example.id]
   snapshot_retention_limit = 7
@@ -31,6 +32,7 @@ resource "aws_memorydb_cluster" "example" {
 The following arguments are required:
 
 * `acl_name` - (Required) The name of the Access Control List to associate with the cluster.
+* `engine` - (Required) The engine that will run on your nodes. Supported values are `redis` and `valkey`.
 * `node_type` - (Required) The compute and memory capacity of the nodes in the cluster. See AWS documentation on [supported node types](https://docs.aws.amazon.com/memorydb/latest/devguide/nodes.supportedtypes.html) as well as [vertical scaling](https://docs.aws.amazon.com/memorydb/latest/devguide/cluster-vertical-scaling.html).
 
 The following arguments are optional:

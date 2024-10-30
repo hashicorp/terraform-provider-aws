@@ -80,6 +80,14 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrEngine: {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"redis",
+					"valkey",
+				}, false),
+			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -282,6 +290,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ACLName:                 aws.String(d.Get("acl_name").(string)),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		ClusterName:             aws.String(name),
+		Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
 		NodeType:                aws.String(d.Get("node_type").(string)),
 		NumReplicasPerShard:     aws.Int32(int32(d.Get("num_replicas_per_shard").(int))),
 		NumShards:               aws.Int32(int32(d.Get("num_shards").(int))),
@@ -375,6 +384,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		input := &memorydb.UpdateClusterInput{
 			ClusterName: aws.String(d.Id()),
+			Engine:      aws.String(d.Get(names.AttrEngine).(string)),
 		}
 
 		if d.HasChange("acl_name") {
@@ -513,6 +523,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set(names.AttrDescription, cluster.Description)
 	d.Set("engine_patch_version", cluster.EnginePatchVersion)
+	d.Set(names.AttrEngine, cluster.Engine)
 	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
 	d.Set(names.AttrKMSKeyARN, cluster.KmsKeyId) // KmsKeyId is actually an ARN here.
 	d.Set("maintenance_window", cluster.MaintenanceWindow)
