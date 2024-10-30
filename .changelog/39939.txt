@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/memorydb_cluster: Add `engine` attribute.
+```
+
+```release-note:enhancement
+resource/memorydb_snapshot: Add `engine` attribute in `cluster_configuration` attribute.
+```
+
+```release-note:enhancement
+data-source/memorydb_cluster: Add `engine` attribute.
+```
