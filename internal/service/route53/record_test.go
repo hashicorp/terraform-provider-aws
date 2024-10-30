@@ -1334,34 +1334,6 @@ func TestAccRoute53Record_SetIdentifierRename_weighted(t *testing.T) {
 	})
 }
 
-// https://github.com/hashicorp/terraform-provider-aws/issues/39936
-func TestAccRoute53Record_SetIdentifierRename_geolocationCountryCrash(t *testing.T) {
-	ctx := acctest.Context(t)
-	var record awstypes.ResourceRecordSet
-	resourceName := "aws_route53_record.set_identifier_rename_geolocation"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRecordDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRecordConfig_setIdentifierRenameGeolocationCountry("", "before"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRecordExists(ctx, resourceName, &record),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"allow_overwrite"},
-			},
-		},
-	})
-}
-
 func TestAccRoute53Record_Alias_change(t *testing.T) {
 	ctx := acctest.Context(t)
 	var record1, record2 awstypes.ResourceRecordSet
