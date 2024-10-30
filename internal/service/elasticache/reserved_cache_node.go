@@ -68,11 +68,11 @@ func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource
 				},
 			},
 			"cache_node_type": schema.StringAttribute{
-				CustomType: fwtypes.RFC3339DurationType,
-				Computed:   true,
+				Computed: true,
 			},
 			names.AttrDuration: schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.RFC3339DurationType,
+				Computed:   true,
 			},
 			"fixed_price": schema.Float64Attribute{
 				Computed: true,
@@ -183,7 +183,7 @@ func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.R
 
 	conn := r.Meta().ElastiCacheClient(ctx)
 
-	reservation, err := findReservedCacheNodeByID(ctx, conn, data.ID.ValueString())
+	reservation, err := findReservedCacheNodeByID(ctx, conn, data.ReservedCacheNodeId.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -192,7 +192,7 @@ func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.R
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading ElastiCache Reserved Cache Node (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading ElastiCache Reserved Cache Node (%s)", data.ReservedCacheNodeId.ValueString()), err.Error())
 		return
 	}
 
@@ -222,12 +222,12 @@ func (r *resourceReservedCacheNode) flexOpts() []flex.AutoFlexOptionsFunc {
 }
 
 type resourceReservedCacheNodeModel struct {
-	ARN                          types.String                                          `tfsdk:"arn"`
+	ReservationARN               types.String                                          `tfsdk:"arn"`
 	CacheNodeCount               types.Int32                                           `tfsdk:"cache_node_count"`
 	CacheNodeType                types.String                                          `tfsdk:"cache_node_type"`
 	Duration                     fwtypes.RFC3339Duration                               `tfsdk:"duration" autoflex:",noflatten"`
 	FixedPrice                   types.Float64                                         `tfsdk:"fixed_price"`
-	ID                           types.String                                          `tfsdk:"id"`
+	ReservedCacheNodeId          types.String                                          `tfsdk:"id"`
 	ReservedCacheNodesOfferingID types.String                                          `tfsdk:"reserved_cache_nodes_offering_id"`
 	OfferingType                 types.String                                          `tfsdk:"offering_type"`
 	ProductDescription           types.String                                          `tfsdk:"product_description"`
