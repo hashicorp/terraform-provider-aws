@@ -4,6 +4,7 @@ FEATURES:
 
 * **New Data Source:** `aws_lb_listener_rule` ([#39865](https://github.com/hashicorp/terraform-provider-aws/issues/39865))
 * **New Resource:** `aws_opensearch_authorize_vpc_endpoint_access` ([#39846](https://github.com/hashicorp/terraform-provider-aws/issues/39846))
+* **New Resource:** `aws_ssmquicksetup_configuration_manager` ([#39931](https://github.com/hashicorp/terraform-provider-aws/issues/39931))
 
 ENHANCEMENTS:
 
