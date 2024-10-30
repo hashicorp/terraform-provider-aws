@@ -633,6 +633,7 @@ func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldC
 			"percent_traffic":          0.0,
 			"stage_variable_overrides": make(map[string]interface{}),
 			"use_stage_cache":          false,
+			"deployment_id":            "",
 		}
 	}
 
