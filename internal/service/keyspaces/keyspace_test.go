@@ -70,8 +70,8 @@ func TestAccKeyspacesKeyspace_replicationSpecificationMulti(t *testing.T) {
 				Config: testAccKeyspaceConfig_replicationSpecification(rName, string(types.RsSingleRegion)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyspaceExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cassandra", "/keyspace/"+acctest.CtName+"/"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, acctest.CtName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cassandra", "/keyspace/"+rName+"/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "replication_specification.0.replication_strategy", string(types.RsSingleRegion)),
 				),
@@ -80,8 +80,8 @@ func TestAccKeyspacesKeyspace_replicationSpecificationMulti(t *testing.T) {
 				Config: testAccKeyspaceConfig_multiReplicationSpecification(rName, string(types.RsMultiRegion), region1, region2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyspaceExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cassandra", "/keyspace/"+acctest.CtName+"/"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, acctest.CtName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cassandra", "/keyspace/"+rName+"/"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "replication_specification.0.replication_strategy", string(types.RsMultiRegion)),
 					resource.TestCheckResourceAttr(resourceName, "replication_specification.0.region_list.#", "2"),
