@@ -38,6 +38,7 @@ This data source exports the following attributes in addition to the arguments a
 * `data_tiering` - True when data tiering is enabled.
 * `description` - Description for the cluster.
 * `engine_patch_version` - Patch version number of the Redis engine used by the cluster.
+* `engine` - The engine that will run on cluster nodes.
 * `engine_version` - Version number of the Redis engine used by the cluster.
 * `final_snapshot_name` - Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
 * `kms_key_arn` - ARN of the KMS key used to encrypt the cluster at rest.

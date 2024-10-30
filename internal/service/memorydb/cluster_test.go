@@ -31,7 +31,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rName),
+				Config: testAccClusterConfig_basic(rName, "redis"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", names.AttrID),
@@ -42,6 +42,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "data_tiering", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
@@ -143,7 +144,7 @@ func TestAccMemoryDBCluster_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rName),
+				Config: testAccClusterConfig_basic(rName, "redis"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceCluster(), resourceName),
@@ -459,6 +460,46 @@ func TestAccMemoryDBCluster_Update_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBCluster_Update_engine(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName, "redis"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccClusterConfig_basic(rName, "valkey"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
 				),
 			},
 			{
@@ -1060,6 +1101,69 @@ func TestAccMemoryDBCluster_Update_tags(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBCluster_valkey(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rName, "valkey"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", names.AttrID),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
+					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexache.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
+					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "data_tiering", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_patch_version"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
+					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "db.t4g.small"),
+					resource.TestCheckResourceAttr(resourceName, "num_replicas_per_shard", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", acctest.Ct2),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrParameterGroupName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "6379"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", acctest.Ct1),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_group_ids.*", "aws_security_group.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "shards.#", acctest.Ct2),
+					resource.TestMatchResourceAttr(resourceName, "shards.0.name", regexache.MustCompile(`^000[12]$`)),
+					resource.TestCheckResourceAttr(resourceName, "shards.0.num_nodes", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "shards.0.slots", "0-8191"),
+					resource.TestCheckResourceAttr(resourceName, "shards.0.nodes.#", acctest.Ct2),
+					resource.TestCheckResourceAttrSet(resourceName, "shards.0.nodes.0.availability_zone"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "shards.0.nodes.0.create_time"),
+					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.name", regexache.MustCompile(`^`+rName+`-000[12]-00[12]$`)),
+					resource.TestMatchResourceAttr(resourceName, "shards.0.nodes.0.endpoint.0.address", regexache.MustCompile(`^`+rName+`-000[12]-00[12]\..*?\.amazonaws\.com$`)),
+					resource.TestCheckResourceAttr(resourceName, "shards.0.nodes.0.endpoint.0.port", "6379"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_retention_limit", "7"),
+					resource.TestCheckResourceAttrSet(resourceName, "snapshot_window"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSNSTopicARN, ""),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_group_name", "aws_memorydb_subnet_group.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
@@ -1149,7 +1253,7 @@ resource "aws_memorydb_acl" "test" {
 `, rName)
 }
 
-func testAccClusterConfig_basic(rName string) string {
+func testAccClusterConfig_basic(rName, engine string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseNetwork(rName),
 		testAccClusterConfigBaseUserAndACL(rName),
@@ -1164,6 +1268,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name                   = aws_memorydb_acl.test.id
   auto_minor_version_upgrade = false
   name                       = %[1]q
+  engine                     = %[2]q
   node_type                  = "db.t4g.small"
   num_shards                 = 2
   security_group_ids         = [aws_security_group.test.id]
@@ -1174,7 +1279,7 @@ resource "aws_memorydb_cluster" "test" {
     Test = "test"
   }
 }
-`, rName),
+`, rName, engine),
 	)
 }
 
@@ -1184,6 +1289,7 @@ func testAccClusterConfig_defaults(rName string) string {
 resource "aws_memorydb_cluster" "test" {
   acl_name  = "open-access"
   name      = %[1]q
+  engine    = "redis"
   node_type = "db.t4g.small"
 }
 `, rName),
@@ -1197,6 +1303,7 @@ func testAccClusterConfig_noName(rName string) string {
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   node_type              = "db.t4g.small"
+  engine                 = "redis"
   num_replicas_per_shard = 0
   num_shards             = 1
   subnet_group_name      = aws_memorydb_subnet_group.test.id
@@ -1212,6 +1319,7 @@ func testAccClusterConfig_namePrefix(rName, prefix string) string {
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name_prefix            = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1228,6 +1336,7 @@ func testAccClusterConfig_noTLS(rName string) string {
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1247,6 +1356,7 @@ resource "aws_memorydb_cluster" "test" {
   depends_on             = [aws_memorydb_acl.test]
   acl_name               = %[2]q
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1264,6 +1374,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name          = "open-access"
   data_tiering      = true
   name              = %[1]q
+  engine            = "redis"
   node_type         = "db.r6gd.xlarge"
   subnet_group_name = aws_memorydb_subnet_group.test.id
 }
@@ -1279,6 +1390,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name          = "open-access"
   description       = %[2]q
   name              = %[1]q
+  engine            = "redis"
   node_type         = "db.t4g.small"
   subnet_group_name = aws_memorydb_subnet_group.test.id
 }
@@ -1293,6 +1405,7 @@ func testAccClusterConfig_engineVersionNull(rName string) string {
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1310,6 +1423,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   engine_version         = %[2]q
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1327,6 +1441,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   final_snapshot_name    = %[2]q
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1346,6 +1461,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   kms_key_arn            = aws_kms_key.test.arn
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1363,6 +1479,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   maintenance_window     = %[2]q
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1380,6 +1497,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
   node_type              = %[2]q
+  engine                 = "redis"
   num_replicas_per_shard = 0
   num_shards             = 1
   subnet_group_name      = aws_memorydb_subnet_group.test.id
@@ -1395,6 +1513,7 @@ func testAccClusterConfig_numReplicasPerShard(rName string, numReplicasPerShard 
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = %[2]d
   subnet_group_name      = aws_memorydb_subnet_group.test.id
@@ -1410,6 +1529,7 @@ func testAccClusterConfig_numShards(rName string, numShards int) string {
 resource "aws_memorydb_cluster" "test" {
   acl_name          = "open-access"
   name              = %[1]q
+  engine            = "redis"
   node_type         = "db.t4g.small"
   num_shards        = %[2]d
   subnet_group_name = aws_memorydb_subnet_group.test.id
@@ -1441,6 +1561,7 @@ resource "aws_memorydb_cluster" "test" {
   depends_on             = [aws_memorydb_parameter_group.test]
   acl_name               = "open-access"
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1458,6 +1579,7 @@ func testAccClusterConfig_port(rName string, port int) string {
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1480,6 +1602,7 @@ resource "aws_security_group" "test" {
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1497,6 +1620,7 @@ func testAccClusterConfig_snapshotRetentionLimit(rName string, retentionLimit in
 resource "aws_memorydb_cluster" "test" {
   acl_name                 = "open-access"
   name                     = %[1]q
+  engine                   = "redis"
   node_type                = "db.t4g.small"
   num_replicas_per_shard   = 0
   num_shards               = 1
@@ -1514,6 +1638,7 @@ func testAccClusterConfig_snapshotFrom(rName1, rName2 string) string {
 resource "aws_memorydb_cluster" "test1" {
   acl_name               = "open-access"
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1527,6 +1652,7 @@ resource "aws_memorydb_snapshot" "test" {
 resource "aws_memorydb_cluster" "test2" {
   acl_name               = "open-access"
   name                   = %[2]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1544,6 +1670,7 @@ func testAccClusterConfig_snapshotWindow(rName, snapshotWindow string) string {
 resource "aws_memorydb_cluster" "test" {
   acl_name                 = "open-access"
   name                     = %[1]q
+  engine                   = "redis"
   node_type                = "db.t4g.small"
   num_replicas_per_shard   = 0
   num_shards               = 1
@@ -1567,6 +1694,7 @@ resource "aws_memorydb_cluster" "test" {
   depends_on               = [aws_sns_topic.test]
   acl_name                 = "open-access"
   name                     = %[1]q
+  engine                   = "redis"
   node_type                = "db.t4g.small"
   num_replicas_per_shard   = 0
   num_shards               = 1
@@ -1589,6 +1717,7 @@ resource "aws_memorydb_cluster" "test" {
   depends_on               = [aws_sns_topic.test]
   acl_name                 = "open-access"
   name                     = %[1]q
+  engine                   = "redis"
   node_type                = "db.t4g.small"
   num_replicas_per_shard   = 0
   num_shards               = 1
@@ -1607,6 +1736,7 @@ func testAccClusterConfig_tags0(rName string) string {
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1623,6 +1753,7 @@ func testAccClusterConfig_tags1(rName, tag1Key, tag1Value string) string {
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1643,6 +1774,7 @@ func testAccClusterConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value st
 resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
+  engine                 = "redis"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1

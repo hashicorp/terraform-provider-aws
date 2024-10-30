@@ -35,6 +35,7 @@ func TestAccMemoryDBSnapshot_basic(t *testing.T) {
 					testAccCheckSnapshotExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "snapshot/"+rName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.description", "aws_memorydb_cluster.test", names.AttrDescription),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.engine", "aws_memorydb_cluster.test", names.AttrEngine),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.engine_version", "aws_memorydb_cluster.test", names.AttrEngineVersion),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.maintenance_window", "aws_memorydb_cluster.test", "maintenance_window"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "cluster_configuration.0.name", "aws_memorydb_cluster.test", names.AttrName),
@@ -295,6 +296,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name                 = "open-access"
   name                     = %[1]q
   node_type                = "db.t4g.small"
+  engine                   = "redis"
   num_replicas_per_shard   = 0
   num_shards               = 1
   security_group_ids       = [aws_security_group.test.id]
