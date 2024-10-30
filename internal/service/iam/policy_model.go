@@ -115,7 +115,6 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 				raw[p.Type] = make([]string, 0, len(i)+1)
 				raw[p.Type] = append(raw[p.Type].([]string), v)
 			}
-			sort.Sort(sort.Reverse(sort.StringSlice(i)))
 			raw[p.Type] = append(raw[p.Type].([]string), i...)
 		case string:
 			switch v := raw[p.Type].(type) {
@@ -134,6 +133,13 @@ func (ps IAMPolicyStatementPrincipalSet) MarshalJSON() ([]byte, error) {
 		}
 	}
 
+	// Do a sort on the combined principals set
+	for k, v := range raw {
+		if av, ok := v.([]string); ok {
+			sort.Strings(av)
+			raw[k] = av
+		}
+	}
 	return json.Marshal(&raw)
 }
 
@@ -243,7 +249,7 @@ func policyDecodeConfigStringList(lI []interface{}) interface{} {
 	for i, vI := range lI {
 		ret[i] = vI.(string)
 	}
-	sort.Sort(sort.Reverse(sort.StringSlice(ret)))
+	sort.Strings(ret)
 	return ret
 }
 

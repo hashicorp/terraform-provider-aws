@@ -451,8 +451,8 @@ data "aws_iam_policy_document" "test" {
   statement {
     sid = "1"
     actions = [
-      "s3:ListAllMyBuckets",
       "s3:GetBucketLocation",
+      "s3:ListAllMyBuckets",
     ]
     resources = [
       "arn:${data.aws_partition.current.partition}:s3:::*",
@@ -539,8 +539,8 @@ func testAccPolicyDocumentExpectedJSON() string {
       "Sid": "1",
       "Effect": "Allow",
       "Action": [
-        "s3:ListAllMyBuckets",
-        "s3:GetBucketLocation"
+        "s3:GetBucketLocation",
+        "s3:ListAllMyBuckets"
       ],
       "Resource": "arn:%[1]s:s3:::*"
     },
@@ -565,8 +565,8 @@ func testAccPolicyDocumentExpectedJSON() string {
       "Effect": "Allow",
       "Action": "s3:*",
       "Resource": [
-        "arn:%[1]s:s3:::foo/home/${aws:username}/*",
-        "arn:%[1]s:s3:::foo/home/${aws:username}"
+        "arn:%[1]s:s3:::foo/home/${aws:username}",
+        "arn:%[1]s:s3:::foo/home/${aws:username}/*"
       ],
       "Principal": {
         "AWS": "arn:blahblah:example"
@@ -594,7 +594,7 @@ func testAccPolicyDocumentExpectedJSON() string {
 }
 
 func testAccPolicyDocumentExpectedJSONMinified() string {
-	return fmt.Sprintf(`{"Version":"2012-10-17","Id":"policy_id","Statement":[{"Sid":"1","Effect":"Allow","Action":["s3:ListAllMyBuckets","s3:GetBucketLocation"],"Resource":"arn:%[1]s:s3:::*"},{"Effect":"Allow","Action":"s3:ListBucket","Resource":"arn:%[1]s:s3:::foo","NotPrincipal":{"AWS":"arn:blahblah:example"},"Condition":{"StringLike":{"s3:prefix":["home/","","home/${aws:username}/"]}}},{"Effect":"Allow","Action":"s3:*","Resource":["arn:%[1]s:s3:::foo/home/${aws:username}/*","arn:%[1]s:s3:::foo/home/${aws:username}"],"Principal":{"AWS":"arn:blahblah:example"}},{"Effect":"Deny","NotAction":"s3:*","NotResource":"arn:%[1]s:s3:::*"},{"Effect":"Allow","Action":"kinesis:*","Principal":{"AWS":"*"}},{"Effect":"Allow","Action":"firehose:*","Principal":"*"}]}`, acctest.Partition())
+	return fmt.Sprintf(`{"Version":"2012-10-17","Id":"policy_id","Statement":[{"Sid":"1","Effect":"Allow","Action":["s3:GetBucketLocation","s3:ListAllMyBuckets"],"Resource":"arn:%[1]s:s3:::*"},{"Effect":"Allow","Action":"s3:ListBucket","Resource":"arn:%[1]s:s3:::foo","NotPrincipal":{"AWS":"arn:blahblah:example"},"Condition":{"StringLike":{"s3:prefix":["home/","","home/${aws:username}/"]}}},{"Effect":"Allow","Action":"s3:*","Resource":["arn:%[1]s:s3:::foo/home/${aws:username}","arn:%[1]s:s3:::foo/home/${aws:username}/*"],"Principal":{"AWS":"arn:blahblah:example"}},{"Effect":"Deny","NotAction":"s3:*","NotResource":"arn:%[1]s:s3:::*"},{"Effect":"Allow","Action":"kinesis:*","Principal":{"AWS":"*"}},{"Effect":"Allow","Action":"firehose:*","Principal":"*"}]}`, acctest.Partition())
 }
 
 const testAccPolicyDocumentDataSourceConfig_singleConditionValue = `
@@ -851,8 +851,8 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       "Sid": "1",
       "Effect": "Allow",
       "Action": [
-        "s3:ListAllMyBuckets",
-        "s3:GetBucketLocation"
+        "s3:GetBucketLocation",
+        "s3:ListAllMyBuckets"
       ],
       "Resource": "arn:%[1]s:s3:::*"
     },
@@ -876,13 +876,13 @@ func testAccPolicyDocumentSourceExpectedJSON() string {
       "Effect": "Allow",
       "Action": "s3:*",
       "Resource": [
-        "arn:%[1]s:s3:::foo/home/${aws:username}/*",
-        "arn:%[1]s:s3:::foo/home/${aws:username}"
+        "arn:%[1]s:s3:::foo/home/${aws:username}",
+        "arn:%[1]s:s3:::foo/home/${aws:username}/*"
       ],
       "Principal": {
         "AWS": [
-          "arn:blahblahblah:example",
-          "arn:blahblah:example"
+          "arn:blahblah:example",
+          "arn:blahblahblah:example"
         ]
       }
     },
@@ -1510,8 +1510,8 @@ func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersStringAndSlic
       "Principal": {
         "AWS": [
           "arn:%[1]s:iam::111111111111:root",
-          "arn:%[1]s:iam::333333333333:root",
-          "arn:%[1]s:iam::222222222222:root"
+          "arn:%[1]s:iam::222222222222:root",
+          "arn:%[1]s:iam::333333333333:root"
         ]
       }
     }
@@ -1580,10 +1580,10 @@ func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrinc
       "Resource": "*",
       "Principal": {
         "AWS": [
-          "arn:%[1]s:iam::333333333333:root",
-          "arn:%[1]s:iam::444444444444:root",
+          "arn:%[1]s:iam::111111111111:root",
           "arn:%[1]s:iam::222222222222:root",
-          "arn:%[1]s:iam::111111111111:root"
+          "arn:%[1]s:iam::333333333333:root",
+          "arn:%[1]s:iam::444444444444:root"
         ]
       }
     }
@@ -1602,9 +1602,9 @@ func testAccPolicyDocumentExpectedJSONStatementPrincipalIdentifiersMultiplePrinc
       "Resource": "*",
       "Principal": {
         "AWS": [
-          "arn:%[1]s:iam::333333333333:root",
-          "arn:%[1]s:iam::222222222222:root",
           "arn:%[1]s:iam::111111111111:root",
+          "arn:%[1]s:iam::222222222222:root",
+          "arn:%[1]s:iam::333333333333:root",
           "arn:%[1]s:iam::444444444444:root"
         ]
       }
