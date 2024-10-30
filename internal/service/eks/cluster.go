@@ -347,7 +347,7 @@ func resourceCluster() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -1134,7 +1134,7 @@ func expandZonalShiftConfig(tfList []interface{}) *types.ZonalShiftConfigRequest
 
 	ZonalShiftConfigRequest := &types.ZonalShiftConfigRequest{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		ZonalShiftConfigRequest.Enabled = aws.Bool(v)
 	}
 
@@ -1320,7 +1320,7 @@ func flattenZonalShiftConfig(apiObject *types.ZonalShiftConfigResponse) []interf
 	}
 
 	tfMap := map[string]interface{}{
-		"enabled": apiObject.Enabled,
+		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	return []interface{}{tfMap}
