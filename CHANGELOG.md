@@ -82,6 +82,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+
 * data-source/aws_imagebuilder_distribution_configuration: Add `distribution.s3_export_configuration` attribute ([#35492](https://github.com/hashicorp/terraform-provider-aws/issues/35492))
 * data-source/aws_imagebuilder_image_recipe: Fix `block_device_mapping.0.ebs.0.delete_on_termination: '' expected type 'bool', got unconvertible type 'string'` errors ([#39928](https://github.com/hashicorp/terraform-provider-aws/issues/39928))
 * resource/aws_codedeploy_deployment_group: Add `termination_hook_enabled` argument ([#35482](https://github.com/hashicorp/terraform-provider-aws/issues/35482))
