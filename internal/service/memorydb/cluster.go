@@ -90,8 +90,7 @@ func resourceCluster() *schema.Resource {
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Required: true,
 			},
 			"final_snapshot_name": {
 				Type:         schema.TypeString,
@@ -458,7 +457,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				input.SnsTopicStatus = aws.String(ClusterSNSTopicStatusActive)
 			}
 		}
-
 		log.Printf("[DEBUG] Updating MemoryDB Cluster (%s)", d.Id())
 
 		_, err := conn.UpdateCluster(ctx, input)
