@@ -1,4 +1,4 @@
-```release-note:enhancement
+```release-note:breaking-change
 resource/aws_api_gateway_stage: Add `canary_settings.deployment_id` attribute
 ```
 
