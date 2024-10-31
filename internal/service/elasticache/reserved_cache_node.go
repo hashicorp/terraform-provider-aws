@@ -183,7 +183,7 @@ func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.R
 
 	conn := r.Meta().ElastiCacheClient(ctx)
 
-	reservation, err := findReservedCacheNodeByID(ctx, conn, data.ReservedCacheNodeId.ValueString())
+	reservation, err := findReservedCacheNodeByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -192,7 +192,7 @@ func (r *resourceReservedCacheNode) Read(ctx context.Context, request resource.R
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading ElastiCache Reserved Cache Node (%s)", data.ReservedCacheNodeId.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading ElastiCache Reserved Cache Node (%s)", data.ID.ValueString()), err.Error())
 		return
 	}
 
@@ -227,7 +227,7 @@ type resourceReservedCacheNodeModel struct {
 	CacheNodeType                types.String                                          `tfsdk:"cache_node_type"`
 	Duration                     fwtypes.RFC3339Duration                               `tfsdk:"duration" autoflex:",noflatten"`
 	FixedPrice                   types.Float64                                         `tfsdk:"fixed_price"`
-	ReservedCacheNodeId          types.String                                          `tfsdk:"id"`
+	ID                           types.String                                          `tfsdk:"id"`
 	ReservedCacheNodesOfferingID types.String                                          `tfsdk:"reserved_cache_nodes_offering_id"`
 	OfferingType                 types.String                                          `tfsdk:"offering_type"`
 	ProductDescription           types.String                                          `tfsdk:"product_description"`
