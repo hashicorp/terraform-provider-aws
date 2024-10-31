@@ -221,6 +221,31 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 	})
 }
 
+func TestAccSSMPatchBaseline_approveAfterDays(t *testing.T) {
+	ctx := acctest.Context(t)
+	var baseline ssm.GetPatchBaselineOutput
+	name := sdkacctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPatchBaselineConfig_approveAfterDays(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &baseline),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "360"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSSMPatchBaseline_sources(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before, after ssm.GetPatchBaselineOutput
@@ -598,6 +623,32 @@ resource "aws_ssm_patch_baseline" "test" {
 
   approval_rule {
     approve_until_date  = "2020-02-02"
+    enable_non_security = true
+    compliance_level    = "CRITICAL"
+
+    patch_filter {
+      key    = "PRODUCT"
+      values = ["AmazonLinux2016.03", "AmazonLinux2016.09", "AmazonLinux2017.03", "AmazonLinux2017.09"]
+    }
+
+    patch_filter {
+      key    = "SEVERITY"
+      values = ["Critical", "Important"]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccPatchBaselineConfig_approveAfterDays(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name             = %[1]q
+  operating_system = "AMAZON_LINUX"
+  description      = "Baseline containing all updates approved for production systems"
+
+  approval_rule {
+    approve_after_days  = 360
     enable_non_security = true
     compliance_level    = "CRITICAL"
 

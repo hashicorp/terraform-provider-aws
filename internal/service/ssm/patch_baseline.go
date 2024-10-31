@@ -54,7 +54,7 @@ func resourcePatchBaseline() *schema.Resource {
 						"approve_after_days": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 100),
+							ValidateFunc: validation.IntBetween(0, 360),
 						},
 						"approve_until_date": {
 							Type:         schema.TypeString,

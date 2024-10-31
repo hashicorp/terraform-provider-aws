@@ -4,12 +4,13 @@
 package ec2
 
 import (
+	"cmp"
 	"context"
 	"encoding/xml"
 	"fmt"
 	"log"
 	"net"
-	"sort"
+	"slices"
 	"strconv"
 	"time"
 
@@ -1565,18 +1566,6 @@ type tunnelInfo struct {
 	Tunnel2VgwInsideAddress string
 }
 
-func (slice xmlVpnConnectionConfig) Len() int {
-	return len(slice.Tunnels)
-}
-
-func (slice xmlVpnConnectionConfig) Less(i, j int) bool {
-	return slice.Tunnels[i].OutsideAddress < slice.Tunnels[j].OutsideAddress
-}
-
-func (slice xmlVpnConnectionConfig) Swap(i, j int) {
-	slice.Tunnels[i], slice.Tunnels[j] = slice.Tunnels[j], slice.Tunnels[i]
-}
-
 // customerGatewayConfigurationToTunnelInfo converts the configuration information for the
 // VPN connection's customer gateway (in the native XML format) to a tunnelInfo structure.
 // The tunnel1 parameters are optionally used to correctly order tunnel configurations.
@@ -1616,7 +1605,9 @@ func customerGatewayConfigurationToTunnelInfo(xmlConfig string, tunnel1PreShared
 			}
 		}
 	} else {
-		sort.Sort(vpnConfig)
+		slices.SortFunc(vpnConfig.Tunnels, func(a, b xmlIpsecTunnel) int {
+			return cmp.Compare(a.OutsideAddress, b.OutsideAddress)
+		})
 	}
 
 	tunnelInfo := &tunnelInfo{
