@@ -610,27 +610,6 @@ resource "aws_lambda_function" "test" {
 `, rName))
 }
 
-//func testAccDeploymentConfig_canarySettings(rName, url string) string {
-//	return acctest.ConfigCompose(testAccDeploymentConfig_base(rName, url), `
-//resource "aws_api_gateway_deployment" "test" {
-//  depends_on = [aws_api_gateway_integration.test]
-//
-//  rest_api_id = aws_api_gateway_rest_api.test.id
-//  canary_settings {
-//    percent_traffic = "33.33"
-//    stage_variable_overrides = {
-//      one = "3"
-//    }
-//    use_stage_cache = "true"
-//  }
-//  variables = {
-//    one = "1"
-//    two = "2"
-//  }
-//}
-//`)
-//}
-
 func testAccDeploymentConfig_canarySettings(rName, url string) string {
 	return acctest.ConfigCompose(testAccDeploymentConfig_base(rName, url), `
 resource "aws_api_gateway_stage" "test" {

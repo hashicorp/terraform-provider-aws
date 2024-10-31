@@ -93,8 +93,7 @@ func resourceStage() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"deployment_id": {
 							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Required: true,
 						},
 						"percent_traffic": {
 							Type:     schema.TypeFloat,
@@ -194,7 +193,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CanarySettings = expandCanarySettings(v.([]interface{})[0].(map[string]interface{}), deploymentID)
+		input.CanarySettings = expandCanarySettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -337,16 +336,6 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				Path:  aws.String("/deploymentId"),
 				Value: aws.String(d.Get("deployment_id").(string)),
 			})
-
-			if v, ok := d.GetOk("canary_settings"); ok && v.([]any)[0] != nil {
-				if id, ok := v.([]any)[0].(map[string]any)["deployment_id"].(string); ok && id == "" { // only set if deployment_id is not present on canary_settings
-					operations = append(operations, types.PatchOperation{
-						Op:    types.OpReplace,
-						Path:  aws.String("/canarySettings/deploymentId"),
-						Value: aws.String(d.Get("deployment_id").(string)),
-					})
-				}
-			}
 		}
 		if d.HasChange(names.AttrDescription) {
 			operations = append(operations, types.PatchOperation{
@@ -568,17 +557,13 @@ func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[
 	return result
 }
 
-func expandCanarySettings(tfMap map[string]interface{}, deploymentId string) *types.CanarySettings {
+func expandCanarySettings(tfMap map[string]interface{}) *types.CanarySettings {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.CanarySettings{
-		DeploymentId: aws.String(deploymentId),
-	}
-
-	if v, ok := (tfMap["deployment_id"]).(string); ok && v != "" {
-		apiObject.DeploymentId = aws.String(v)
+		DeploymentId: aws.String(tfMap["deployment_id"].(string)),
 	}
 
 	if v, ok := tfMap["percent_traffic"].(float64); ok {
