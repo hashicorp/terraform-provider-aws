@@ -6,6 +6,7 @@ package gamelift_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -76,13 +77,13 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_event_data", "Custom Event Data"),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.0.maximum_individual_player_latency_milliseconds",
-						fmt.Sprintf("%d", *playerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds)),
+						strconv.Itoa(int(*playerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds))),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.0.policy_duration_seconds",
-						fmt.Sprintf("%d", *playerLatencyPolicies[0].PolicyDurationSeconds)),
+						strconv.Itoa(int(*playerLatencyPolicies[0].PolicyDurationSeconds))),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.1.maximum_individual_player_latency_milliseconds",
-						fmt.Sprintf("%d", *playerLatencyPolicies[1].MaximumIndividualPlayerLatencyMilliseconds)),
+						strconv.Itoa(int(*playerLatencyPolicies[1].MaximumIndividualPlayerLatencyMilliseconds))),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.1.policy_duration_seconds", "0"),
-					resource.TestCheckResourceAttr(resourceName, "timeout_in_seconds", fmt.Sprintf("%d", timeoutInSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "timeout_in_seconds", strconv.Itoa(int(timeoutInSeconds))),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -97,13 +98,13 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "custom_event_data", "Custom Event Data"),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.0.maximum_individual_player_latency_milliseconds",
-						fmt.Sprintf("%d", *uPlayerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds)),
+						strconv.Itoa(int(*uPlayerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds))),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.0.policy_duration_seconds",
-						fmt.Sprintf("%d", *uPlayerLatencyPolicies[0].PolicyDurationSeconds)),
+						strconv.Itoa(int(*uPlayerLatencyPolicies[0].PolicyDurationSeconds))),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.1.maximum_individual_player_latency_milliseconds",
-						fmt.Sprintf("%d", *uPlayerLatencyPolicies[1].MaximumIndividualPlayerLatencyMilliseconds)),
+						strconv.Itoa(int(*uPlayerLatencyPolicies[1].MaximumIndividualPlayerLatencyMilliseconds))),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.1.policy_duration_seconds", "0"),
-					resource.TestCheckResourceAttr(resourceName, "timeout_in_seconds", fmt.Sprintf("%d", uTimeoutInSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "timeout_in_seconds", strconv.Itoa(int(uTimeoutInSeconds))),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},

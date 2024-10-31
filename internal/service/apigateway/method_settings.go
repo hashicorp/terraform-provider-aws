@@ -197,7 +197,7 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "throttling/burstLimit"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("settings.0.throttling_burst_limit").(int))),
+			Value: aws.String(strconv.Itoa(d.Get("settings.0.throttling_burst_limit").(int))),
 		})
 	}
 	if d.HasChange("settings.0.throttling_rate_limit") {
@@ -218,7 +218,7 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		ops = append(ops, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String(prefix + "caching/ttlInSeconds"),
-			Value: aws.String(fmt.Sprintf("%d", v.(int))),
+			Value: aws.String(strconv.Itoa(v.(int))),
 		})
 	}
 	if d.HasChange("settings.0.cache_data_encrypted") {
