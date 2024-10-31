@@ -221,9 +221,9 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 	})
 }
 
-func TestAccSSMPatchBaseline_approveAfterDaysParam(t *testing.T) {
+func TestAccSSMPatchBaseline_approveAfterDays(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before ssm.GetPatchBaselineOutput
+	var baseline ssm.GetPatchBaselineOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_ssm_patch_baseline.test"
 
@@ -234,9 +234,9 @@ func TestAccSSMPatchBaseline_approveAfterDaysParam(t *testing.T) {
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPatchBaselineConfig_approve_after_days(name),
+				Config: testAccPatchBaselineConfig_approveAfterDays(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
+					testAccCheckPatchBaselineExists(ctx, resourceName, &baseline),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "360"),
 					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
@@ -640,16 +640,12 @@ resource "aws_ssm_patch_baseline" "test" {
 `, rName)
 }
 
-func testAccPatchBaselineConfig_approve_after_days(rName string) string {
+func testAccPatchBaselineConfig_approveAfterDays(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
-  name             = "patch-baseline-%[1]s"
+  name             = %[1]q
   operating_system = "AMAZON_LINUX"
   description      = "Baseline containing all updates approved for production systems"
-
-  tags = {
-    Name = "My Patch Baseline"
-  }
 
   approval_rule {
     approve_after_days  = 360
