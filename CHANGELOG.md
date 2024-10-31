@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * data-source/aws_imagebuilder_distribution_configuration: Add `distribution.s3_export_configuration` attribute ([#35492](https://github.com/hashicorp/terraform-provider-aws/issues/35492))
 * data-source/aws_imagebuilder_image_recipe: Fix `block_device_mapping.0.ebs.0.delete_on_termination: '' expected type 'bool', got unconvertible type 'string'` errors ([#39928](https://github.com/hashicorp/terraform-provider-aws/issues/39928))
 * resource/aws_codedeploy_deployment_group: Add `termination_hook_enabled` argument ([#35482](https://github.com/hashicorp/terraform-provider-aws/issues/35482))
+* resource/aws_eks_cluster: Add `zonal_shift_config` argument ([#39852](https://github.com/hashicorp/terraform-provider-aws/issues/39852))
 * resource/aws_imagebuilder_distribution_configuration: Add `distribution.s3_export_configuration` argument ([#35492](https://github.com/hashicorp/terraform-provider-aws/issues/35492))
 * resource/aws_imagebuilder_image_pipeline: Allow `container_recipe_arn` and `image_recipe_arn` to be updated in-place ([#39117](https://github.com/hashicorp/terraform-provider-aws/issues/39117))
 * resource/aws_keyspaces_keyspace: Add `replication_specification` argument ([#36331](https://github.com/hashicorp/terraform-provider-aws/issues/36331))
