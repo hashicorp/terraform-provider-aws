@@ -297,7 +297,7 @@ The `upgrade_policy` configuration block supports the following arguments:
 
 The `zonal_shift_config` configuration block supports the following arguments:
 
-* `enabled` - (Optional) Whether zonal shift is enabled for the cluster. Default is `false`.
+* `enabled` - (Optional) Whether zonal shift is enabled for the cluster.
 
 ## Attribute Reference
 
