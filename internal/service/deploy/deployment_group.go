@@ -74,7 +74,6 @@ func resourceDeploymentGroup() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"alarms": {
 							Type:     schema.TypeSet,
-							MaxItems: 10,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
