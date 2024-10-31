@@ -6,6 +6,7 @@ package cloudtrail_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -834,7 +835,7 @@ func testAccCheckLogValidationEnabled(n string, desired bool, trail *types.Trail
 			return fmt.Errorf("No enable_log_file_validation attribute defined for %s, expected %t",
 				n, desired)
 		}
-		desiredInString := fmt.Sprintf("%t", desired)
+		desiredInString := strconv.FormatBool(desired)
 		if enabled != desiredInString {
 			return fmt.Errorf("Expected log validation status %s, saved %s", desiredInString, enabled)
 		}
