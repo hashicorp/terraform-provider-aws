@@ -31,7 +31,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rName, "redis"),
+				Config: testAccClusterConfig_basic(rName, "redis", "7.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", names.AttrID),
@@ -144,7 +144,7 @@ func TestAccMemoryDBCluster_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rName, "redis"),
+				Config: testAccClusterConfig_basic(rName, "redis", "7.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceCluster(), resourceName),
@@ -484,7 +484,7 @@ func TestAccMemoryDBCluster_Update_engine(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rName, "redis"),
+				Config: testAccClusterConfig_basic(rName, "redis", "7.1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
@@ -496,55 +496,10 @@ func TestAccMemoryDBCluster_Update_engine(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccClusterConfig_basic(rName, "valkey"),
+				Config: testAccClusterConfig_basic(rName, "valkey", "7.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-// As of writing, 6.2 is the one and only MemoryDB engine version available,
-// so we cannot check upgrade behaviour.
-//
-// The API should allow upgrades with some unknown waiting time, and disallow
-// downgrades.
-func TestAccMemoryDBCluster_Update_engineVersion(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_memorydb_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_engineVersionNull(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccClusterConfig_engineVersion(rName, "7.1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.1"),
 				),
 			},
 			{
@@ -1113,7 +1068,7 @@ func TestAccMemoryDBCluster_valkey(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_basic(rName, "valkey"),
+				Config: testAccClusterConfig_basic(rName, "valkey", "7.2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", names.AttrID),
@@ -1253,7 +1208,7 @@ resource "aws_memorydb_acl" "test" {
 `, rName)
 }
 
-func testAccClusterConfig_basic(rName, engine string) string {
+func testAccClusterConfig_basic(rName, engine, engine_version string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseNetwork(rName),
 		testAccClusterConfigBaseUserAndACL(rName),
@@ -1269,6 +1224,7 @@ resource "aws_memorydb_cluster" "test" {
   auto_minor_version_upgrade = false
   name                       = %[1]q
   engine                     = %[2]q
+  engine_version             = %[3]q
   node_type                  = "db.t4g.small"
   num_shards                 = 2
   security_group_ids         = [aws_security_group.test.id]
@@ -1279,7 +1235,7 @@ resource "aws_memorydb_cluster" "test" {
     Test = "test"
   }
 }
-`, rName, engine),
+`, rName, engine, engine_version),
 	)
 }
 
@@ -1287,10 +1243,11 @@ func testAccClusterConfig_defaults(rName string) string {
 	return acctest.ConfigCompose(
 		fmt.Sprintf(`
 resource "aws_memorydb_cluster" "test" {
-  acl_name  = "open-access"
-  name      = %[1]q
-  engine    = "redis"
-  node_type = "db.t4g.small"
+  acl_name       = "open-access"
+  name           = %[1]q
+  engine         = "redis"
+  engine_version = "7.1"
+  node_type      = "db.t4g.small"
 }
 `, rName),
 	)
@@ -1304,6 +1261,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   node_type              = "db.t4g.small"
   engine                 = "redis"
+  engine_version         = "7.1"
   num_replicas_per_shard = 0
   num_shards             = 1
   subnet_group_name      = aws_memorydb_subnet_group.test.id
@@ -1320,6 +1278,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name_prefix            = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1337,6 +1296,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1357,6 +1317,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = %[2]q
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1375,6 +1336,7 @@ resource "aws_memorydb_cluster" "test" {
   data_tiering      = true
   name              = %[1]q
   engine            = "redis"
+  engine_version    = "7.1"
   node_type         = "db.r6gd.xlarge"
   subnet_group_name = aws_memorydb_subnet_group.test.id
 }
@@ -1391,45 +1353,11 @@ resource "aws_memorydb_cluster" "test" {
   description       = %[2]q
   name              = %[1]q
   engine            = "redis"
+  engine_version    = "7.1"
   node_type         = "db.t4g.small"
   subnet_group_name = aws_memorydb_subnet_group.test.id
 }
 `, rName, description),
-	)
-}
-
-func testAccClusterConfig_engineVersionNull(rName string) string {
-	return acctest.ConfigCompose(
-		testAccClusterConfig_baseNetwork(rName),
-		fmt.Sprintf(`
-resource "aws_memorydb_cluster" "test" {
-  acl_name               = "open-access"
-  name                   = %[1]q
-  engine                 = "redis"
-  node_type              = "db.t4g.small"
-  num_replicas_per_shard = 0
-  num_shards             = 1
-  subnet_group_name      = aws_memorydb_subnet_group.test.id
-}
-`, rName),
-	)
-}
-
-func testAccClusterConfig_engineVersion(rName, engineVersion string) string {
-	return acctest.ConfigCompose(
-		testAccClusterConfig_baseNetwork(rName),
-		fmt.Sprintf(`
-resource "aws_memorydb_cluster" "test" {
-  acl_name               = "open-access"
-  engine_version         = %[2]q
-  name                   = %[1]q
-  engine                 = "redis"
-  node_type              = "db.t4g.small"
-  num_replicas_per_shard = 0
-  num_shards             = 1
-  subnet_group_name      = aws_memorydb_subnet_group.test.id
-}
-`, rName, engineVersion),
 	)
 }
 
@@ -1442,6 +1370,7 @@ resource "aws_memorydb_cluster" "test" {
   final_snapshot_name    = %[2]q
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1462,6 +1391,7 @@ resource "aws_memorydb_cluster" "test" {
   kms_key_arn            = aws_kms_key.test.arn
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1480,6 +1410,7 @@ resource "aws_memorydb_cluster" "test" {
   maintenance_window     = %[2]q
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1498,6 +1429,7 @@ resource "aws_memorydb_cluster" "test" {
   name                   = %[1]q
   node_type              = %[2]q
   engine                 = "redis"
+  engine_version         = "7.1"
   num_replicas_per_shard = 0
   num_shards             = 1
   subnet_group_name      = aws_memorydb_subnet_group.test.id
@@ -1514,6 +1446,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = %[2]d
   subnet_group_name      = aws_memorydb_subnet_group.test.id
@@ -1530,6 +1463,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name          = "open-access"
   name              = %[1]q
   engine            = "redis"
+  engine_version    = "7.1"
   node_type         = "db.t4g.small"
   num_shards        = %[2]d
   subnet_group_name = aws_memorydb_subnet_group.test.id
@@ -1562,6 +1496,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1580,6 +1515,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1603,6 +1539,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1621,6 +1558,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name                 = "open-access"
   name                     = %[1]q
   engine                   = "redis"
+  engine_version           = "7.1"
   node_type                = "db.t4g.small"
   num_replicas_per_shard   = 0
   num_shards               = 1
@@ -1639,6 +1577,7 @@ resource "aws_memorydb_cluster" "test1" {
   acl_name               = "open-access"
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1653,6 +1592,7 @@ resource "aws_memorydb_cluster" "test2" {
   acl_name               = "open-access"
   name                   = %[2]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1671,6 +1611,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name                 = "open-access"
   name                     = %[1]q
   engine                   = "redis"
+  engine_version           = "7.1"
   node_type                = "db.t4g.small"
   num_replicas_per_shard   = 0
   num_shards               = 1
@@ -1695,6 +1636,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name                 = "open-access"
   name                     = %[1]q
   engine                   = "redis"
+  engine_version           = "7.1"
   node_type                = "db.t4g.small"
   num_replicas_per_shard   = 0
   num_shards               = 1
@@ -1718,6 +1660,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name                 = "open-access"
   name                     = %[1]q
   engine                   = "redis"
+  engine_version           = "7.1"
   node_type                = "db.t4g.small"
   num_replicas_per_shard   = 0
   num_shards               = 1
@@ -1737,6 +1680,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1754,6 +1698,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
@@ -1775,6 +1720,7 @@ resource "aws_memorydb_cluster" "test" {
   acl_name               = "open-access"
   name                   = %[1]q
   engine                 = "redis"
+  engine_version         = "7.1"
   node_type              = "db.t4g.small"
   num_replicas_per_shard = 0
   num_shards             = 1
