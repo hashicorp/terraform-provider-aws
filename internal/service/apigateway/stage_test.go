@@ -761,7 +761,7 @@ resource "aws_api_gateway_stage" "test" {
   deployment_id = aws_api_gateway_deployment.test.id
 
   canary_settings {
-    deployment_id = aws_api_gateway_deployment.test2.id
+    deployment_id   = aws_api_gateway_deployment.test2.id
     percent_traffic = "33.33"
     stage_variable_overrides = {
       one = "3"
@@ -821,7 +821,7 @@ resource "aws_api_gateway_stage" "test" {
   deployment_id = aws_api_gateway_deployment.test.id
 
   canary_settings {
-    deployment_id = aws_api_gateway_deployment.test2.id
+    deployment_id   = aws_api_gateway_deployment.test2.id
     percent_traffic = "66.66"
     stage_variable_overrides = {
       one = "5"
