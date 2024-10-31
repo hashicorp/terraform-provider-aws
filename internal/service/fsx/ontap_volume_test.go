@@ -524,7 +524,7 @@ func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", fmt.Sprint(policy1)),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", policy1),
 				),
 			},
 			{
@@ -543,7 +543,7 @@ func TestAccFSxONTAPVolume_snapshotPolicy(t *testing.T) {
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeNotRecreated(&volume1, &volume2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", fmt.Sprint(policy2)),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_policy", policy2),
 				),
 			},
 		},
