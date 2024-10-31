@@ -1,0 +1,3 @@
+```release-note:bug
+resource/deployment_group: Remove max alarm limit from the CodeDeploy Deployment group
+```
