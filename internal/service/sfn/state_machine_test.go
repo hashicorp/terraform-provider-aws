@@ -452,8 +452,8 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKMSKey(t *test
 	kmsKeyResource2 := "aws_kms_key.kms_key_for_sfn_2"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var reusePeriodSeconds1 int32 = 900
-	var reusePeriodSeconds2 int32 = 900
+	reusePeriodSeconds1 := 900
+	reusePeriodSeconds2 := 450
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -544,7 +544,7 @@ func TestAccSFNStateMachine_encryptionConfigurationServiceOwnedKey(t *testing.T)
 	resourceName := "aws_sfn_state_machine.test"
 	kmsKeyResource1 := "aws_kms_key.kms_key_for_sfn_1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var reusePeriodSeconds int32 = 900
+	reusePeriodSeconds := 900
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
