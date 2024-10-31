@@ -24,7 +24,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -135,12 +134,18 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringvalidator.LengthBetween(40, 4000),
 				},
 			},
-			"memory_configuration": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[memoryConfigurationModel](ctx),
+			"memory_configuration": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[memoryConfigurationModel](ctx),
 				Optional:   true,
 				Computed:   true,
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.UseStateForUnknown(),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[memoryConfigurationModel](ctx),
 				},
 			},
 			"prompt_override_configuration": schema.ListAttribute{ // proto5 Optional+Computed nested block.
@@ -340,7 +345,9 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 				return
 			}
 
-			input.MemoryConfiguration = memoryConfiguration
+			if len(memoryConfiguration.EnabledMemoryTypes) > 0 {
+				input.MemoryConfiguration = memoryConfiguration
+			}
 		}
 
 		if !new.PromptOverrideConfiguration.IsNull() {
@@ -623,7 +630,7 @@ type agentResourceModel struct {
 	IdleSessionTTLInSeconds     types.Int64                                                       `tfsdk:"idle_session_ttl_in_seconds"`
 	Instruction                 types.String                                                      `tfsdk:"instruction"`
 	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
-	MemoryConfiguration         fwtypes.ObjectValueOf[memoryConfigurationModel]                   `tfsdk:"memory_configuration"`
+	MemoryConfiguration         fwtypes.ListNestedObjectValueOf[memoryConfigurationModel]         `tfsdk:"memory_configuration"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
 	SkipResourceInUseCheck      types.Bool                                                        `tfsdk:"skip_resource_in_use_check"`
 	Tags                        tftags.Map                                                        `tfsdk:"tags"`
@@ -647,8 +654,8 @@ type guardrailConfigurationModel struct {
 }
 
 type memoryConfigurationModel struct {
-	EnabledMemoryTypes fwtypes.StringEnum[memoryType] `tfsdk:"enabled_memory_types"`
-	StorageDays        types.Int32                    `tfsdk:"storage_days"`
+	EnabledMemoryTypes fwtypes.ListValueOf[fwtypes.StringEnum[awstypes.MemoryType]] `tfsdk:"enabled_memory_types"`
+	StorageDays        types.Int32                                                  `tfsdk:"storage_days"`
 }
 
 type promptOverrideConfigurationModel struct {
@@ -671,18 +678,6 @@ type inferenceConfigurationModel struct {
 	Temperature   types.Float64                     `tfsdk:"temperature"`
 	TopK          types.Int64                       `tfsdk:"top_k"`
 	TopP          types.Float64                     `tfsdk:"top_p"`
-}
-
-type memoryType string
-
-const (
-	memoryTypeDefault memoryType = "SESSION_SUMMARY"
-)
-
-func (memoryType) Values() []memoryType {
-	return []memoryType{
-		memoryTypeDefault,
-	}
 }
 
 type parserMode string
