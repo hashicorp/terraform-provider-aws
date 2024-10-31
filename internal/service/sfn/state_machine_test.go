@@ -6,6 +6,7 @@ package sfn_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -473,7 +474,7 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKMSKey(t *test
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", fmt.Sprint(reusePeriodSeconds1)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", strconv.Itoa(reusePeriodSeconds1)),
 					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource1, names.AttrARN),
 				),
@@ -496,7 +497,7 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKMSKey(t *test
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", fmt.Sprint(reusePeriodSeconds2)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", strconv.Itoa(reusePeriodSeconds2)),
 					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource1, names.AttrARN),
 				),
@@ -514,7 +515,7 @@ func TestAccSFNStateMachine_encryptionConfigurationCustomerManagedKMSKey(t *test
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", fmt.Sprint(reusePeriodSeconds2)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", strconv.Itoa(reusePeriodSeconds2)),
 					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource2, names.AttrARN),
 				),
@@ -584,7 +585,7 @@ func TestAccSFNStateMachine_encryptionConfigurationServiceOwnedKey(t *testing.T)
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrRoleARN),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", fmt.Sprint(reusePeriodSeconds)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", strconv.Itoa(reusePeriodSeconds)),
 					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "encryption_configuration.0.kms_key_id", kmsKeyResource1, names.AttrARN),
 				),
@@ -1119,7 +1120,7 @@ EOF
 `, rName))
 }
 
-func testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName string, rType string, reusePeriodSeconds int32) string {
+func testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_1(rName string, rType string, reusePeriodSeconds int) string {
 	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -1162,7 +1163,7 @@ EOF
 `, rName, rType, reusePeriodSeconds))
 }
 
-func testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_2(rName string, rType string, reusePeriodSeconds int32) string {
+func testAccStateMachineConfig_encryptionConfigurationCustomerManagedKMSKey_2(rName string, rType string, reusePeriodSeconds int) string {
 	return acctest.ConfigCompose(testAccStateMachineConfig_base(rName), fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
