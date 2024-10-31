@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -300,7 +301,7 @@ func testAccCheckGroupPoliciesExclusiveExists(ctx context.Context, name string) 
 		}
 
 		policyCount := rs.Primary.Attributes["policy_names.#"]
-		if policyCount != fmt.Sprint(len(out)) {
+		if policyCount != strconv.Itoa(len(out)) {
 			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameGroupPoliciesExclusive, groupName, errors.New("unexpected policy_names count"))
 		}
 

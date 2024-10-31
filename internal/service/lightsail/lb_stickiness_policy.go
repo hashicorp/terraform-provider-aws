@@ -5,7 +5,6 @@ package lightsail
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"github.com/YakDriver/regexache"
@@ -74,7 +73,7 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 
 		if v == "cookie_duration" {
 			in.AttributeName = types.LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds
-			in.AttributeValue = aws.String(fmt.Sprint(d.Get("cookie_duration").(int)))
+			in.AttributeValue = aws.String(strconv.Itoa(d.Get("cookie_duration").(int)))
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
@@ -158,7 +157,7 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 			AttributeName:    types.LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds,
-			AttributeValue:   aws.String(fmt.Sprint(d.Get("cookie_duration").(int))),
+			AttributeValue:   aws.String(strconv.Itoa(d.Get("cookie_duration").(int))),
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
