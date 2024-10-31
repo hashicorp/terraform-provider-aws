@@ -69,7 +69,7 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 
 		if v == names.AttrEnabled {
 			in.AttributeName = types.LoadBalancerAttributeNameSessionStickinessEnabled
-			in.AttributeValue = aws.String(fmt.Sprint(d.Get(names.AttrEnabled).(bool)))
+			in.AttributeValue = aws.String(strconv.FormatBool(d.Get(names.AttrEnabled).(bool)))
 		}
 
 		if v == "cookie_duration" {
@@ -138,7 +138,7 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 			AttributeName:    types.LoadBalancerAttributeNameSessionStickinessEnabled,
-			AttributeValue:   aws.String(fmt.Sprint(d.Get(names.AttrEnabled).(bool))),
+			AttributeValue:   aws.String(strconv.FormatBool(d.Get(names.AttrEnabled).(bool))),
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
