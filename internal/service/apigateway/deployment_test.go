@@ -337,6 +337,8 @@ func TestAccAPIGatewayDeployment_deploymentCanarySettings(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	url := "https://example.com"
 	resourceName := "aws_api_gateway_deployment.test"
+	resourceNameDeploymentMain := "aws_api_gateway_deployment.test_main"
+	resourceNameStage := "aws_api_gateway_stage.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
@@ -348,10 +350,21 @@ func TestAccAPIGatewayDeployment_deploymentCanarySettings(t *testing.T) {
 				Config: testAccDeploymentConfig_canarySettings(rName, url),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					resource.TestCheckResourceAttrPair(resourceNameStage, "deployment_id", resourceNameDeploymentMain, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "variables.one", "1"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "33.33"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", "3"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtTrue),
+				),
+			},
+			{
+				RefreshState: true,
+				Check: resource.ComposeTestCheckFunc(
+					// check that canary settings on the deployment match what is on the stage
+					resource.TestCheckResourceAttrPair(resourceNameStage, "deployment_id", resourceNameDeploymentMain, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.percent_traffic", resourceNameStage, "canary_settings.0.percent_traffic"),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.stage_variable_overrides.one", resourceNameStage, "canary_settings.0.stage_variable_overrides.one"),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.use_stage_cache", resourceNameStage, "canary_settings.0.use_stage_cache"),
 				),
 			},
 		},
