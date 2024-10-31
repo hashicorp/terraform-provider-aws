@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -132,6 +133,14 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(40, 4000),
+				},
+			},
+			"memory_configuration": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[memoryConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Object{
+					objectplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"prompt_override_configuration": schema.ListAttribute{ // proto5 Optional+Computed nested block.
@@ -287,7 +296,6 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 	if response.Diagnostics.HasError() {
 		return
 	}
-
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	if !new.AgentName.Equal(old.AgentName) ||
@@ -297,6 +305,7 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		!new.Instruction.Equal(old.Instruction) ||
 		!new.IdleSessionTTLInSeconds.Equal(old.IdleSessionTTLInSeconds) ||
 		!new.FoundationModel.Equal(old.FoundationModel) ||
+		!new.MemoryConfiguration.Equal(old.MemoryConfiguration) ||
 		!new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) ||
 		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
 		input := &bedrockagent.UpdateAgentInput{
@@ -322,6 +331,16 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 			}
 
 			input.GuardrailConfiguration = guardrailConfiguration
+		}
+
+		if !new.MemoryConfiguration.Equal(old.MemoryConfiguration) {
+			memoryConfiguration := &awstypes.MemoryConfiguration{}
+			response.Diagnostics.Append(fwflex.Expand(ctx, new.MemoryConfiguration, memoryConfiguration)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			input.MemoryConfiguration = memoryConfiguration
 		}
 
 		if !new.PromptOverrideConfiguration.IsNull() {
@@ -604,6 +623,7 @@ type agentResourceModel struct {
 	IdleSessionTTLInSeconds     types.Int64                                                       `tfsdk:"idle_session_ttl_in_seconds"`
 	Instruction                 types.String                                                      `tfsdk:"instruction"`
 	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
+	MemoryConfiguration         fwtypes.ObjectValueOf[memoryConfigurationModel]                   `tfsdk:"memory_configuration"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
 	SkipResourceInUseCheck      types.Bool                                                        `tfsdk:"skip_resource_in_use_check"`
 	Tags                        tftags.Map                                                        `tfsdk:"tags"`
@@ -626,6 +646,11 @@ type guardrailConfigurationModel struct {
 	GuardrailVersion    types.String `tfsdk:"guardrail_version"`
 }
 
+type memoryConfigurationModel struct {
+	EnabledMemoryTypes fwtypes.StringEnum[memoryType] `tfsdk:"enabled_memory_types"`
+	StorageDays        types.Int32                    `tfsdk:"storage_days"`
+}
+
 type promptOverrideConfigurationModel struct {
 	OverrideLambda       fwtypes.ARN                                              `tfsdk:"override_lambda"`
 	PromptConfigurations fwtypes.SetNestedObjectValueOf[promptConfigurationModel] `tfsdk:"prompt_configurations"`
@@ -646,6 +671,18 @@ type inferenceConfigurationModel struct {
 	Temperature   types.Float64                     `tfsdk:"temperature"`
 	TopK          types.Int64                       `tfsdk:"top_k"`
 	TopP          types.Float64                     `tfsdk:"top_p"`
+}
+
+type memoryType string
+
+const (
+	memoryTypeDefault memoryType = "SESSION_SUMMARY"
+)
+
+func (memoryType) Values() []memoryType {
+	return []memoryType{
+		memoryTypeDefault,
+	}
 }
 
 type parserMode string
