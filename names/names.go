@@ -127,6 +127,7 @@ const (
 	ServiceCatalogEndpointID               = "servicecatalog"
 	SSMEndpointID                          = "ssm"
 	SSMIncidentsEndpointID                 = "ssm-incidents"
+	SSMQuickSetupEndpointID                = "ssm-quicksetup"
 	SSOAdminEndpointID                     = "sso"
 	STSEndpointID                          = "sts"
 	SchedulerEndpointID                    = "scheduler"

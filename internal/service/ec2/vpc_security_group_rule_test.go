@@ -108,7 +108,10 @@ func TestSecurityGroupRuleCreateID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := tfec2.SecurityGroupRuleCreateID("sg-12345", tc.Type, &tc.Input)
+		actual, err := tfec2.SecurityGroupRuleCreateID("sg-12345", tc.Type, &tc.Input)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err.Error())
+		}
 		if actual != tc.Output {
 			t.Errorf("input: %s - %#v\noutput: %s", tc.Type, tc.Input, actual)
 		}

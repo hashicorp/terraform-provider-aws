@@ -341,6 +341,19 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"zonal_shift_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -379,6 +392,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.Version = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("zonal_shift_config"); ok {
+		input.ZonalShiftConfig = expandZonalShiftConfig(v.([]interface{}))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
@@ -490,6 +507,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrVersion, cluster.Version)
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
+	}
+	if err := d.Set("zonal_shift_config", flattenZonalShiftConfig(cluster.ZonalShiftConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting zonal_shift_config: %s", err)
 	}
 
 	setTagsOut(ctx, cluster.Tags)
@@ -639,6 +659,25 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err := updateVPCConfig(ctx, conn, d.Id(), config, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("zonal_shift_config") {
+		input := &eks.UpdateClusterConfigInput{
+			Name:             aws.String(d.Id()),
+			ZonalShiftConfig: expandZonalShiftConfig(d.Get("zonal_shift_config").([]interface{})),
+		}
+
+		output, err := conn.UpdateClusterConfig(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) zonal shift config: %s", d.Id(), err)
+		}
+
+		updateID := aws.ToString(output.Update.Id)
+
+		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) zonal shift config update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -1083,6 +1122,25 @@ func expandUpgradePolicy(tfList []interface{}) *types.UpgradePolicyRequest {
 	return upgradePolicyRequest
 }
 
+func expandZonalShiftConfig(tfList []interface{}) *types.ZonalShiftConfigRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	ZonalShiftConfigRequest := &types.ZonalShiftConfigRequest{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		ZonalShiftConfigRequest.Enabled = aws.Bool(v)
+	}
+
+	return ZonalShiftConfigRequest
+}
+
 func flattenCertificate(certificate *types.Certificate) []map[string]interface{} {
 	if certificate == nil {
 		return []map[string]interface{}{}
@@ -1251,6 +1309,18 @@ func flattenUpgradePolicy(apiObject *types.UpgradePolicyResponse) []interface{} 
 
 	tfMap := map[string]interface{}{
 		"support_type": apiObject.SupportType,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenZonalShiftConfig(apiObject *types.ZonalShiftConfigResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		names.AttrEnabled: apiObject.Enabled,
 	}
 
 	return []interface{}{tfMap}

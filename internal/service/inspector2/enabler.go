@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -578,9 +577,9 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 }
 
 func enablerID(accountIDs []string, types []types.ResourceScanType) string {
-	sort.Strings(accountIDs)
+	slices.Sort(accountIDs)
 	t := enum.Slice(types...)
-	sort.Strings(t)
+	slices.Sort(t)
 	return fmt.Sprintf("%s-%s", strings.Join(accountIDs, ":"), strings.Join(t, ":"))
 }
 

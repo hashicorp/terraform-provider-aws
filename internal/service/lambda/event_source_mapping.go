@@ -8,7 +8,6 @@ import (
 	"errors"
 	"log"
 	"slices"
-	"sort"
 	"strings"
 	"time"
 
@@ -285,9 +284,9 @@ func resourceEventSourceMapping() *schema.Resource {
 								if k == "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS" {
 									// AWS returns the bootstrap brokers in sorted order.
 									olds := strings.Split(old, ",")
-									sort.Strings(olds)
+									slices.Sort(olds)
 									news := strings.Split(new, ",")
-									sort.Strings(news)
+									slices.Sort(news)
 
 									return slices.Equal(olds, news)
 								}
