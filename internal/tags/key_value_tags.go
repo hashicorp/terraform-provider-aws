@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -501,7 +501,7 @@ func (tags KeyValueTags) String() string {
 	var builder strings.Builder
 
 	keys := tags.Keys()
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	builder.WriteString("map[")
 	for i, k := range keys {
@@ -539,7 +539,7 @@ func (tags KeyValueTags) URLQueryString() string {
 		}
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	var buf strings.Builder
 	for _, k := range keys {

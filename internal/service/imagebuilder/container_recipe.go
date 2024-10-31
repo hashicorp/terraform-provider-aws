@@ -67,11 +67,13 @@ func resourceContainerRecipe() *schema.Resource {
 									names.AttrName: {
 										Type:         schema.TypeString,
 										Required:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 256),
 									},
 									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -264,11 +266,13 @@ func resourceContainerRecipe() *schema.Resource {
 						names.AttrRepositoryName: {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
 						"service": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice([]string{"ECR"}, false),
 						},
 					},

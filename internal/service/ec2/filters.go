@@ -5,7 +5,7 @@ package ec2
 
 import (
 	"context"
-	"sort"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -237,7 +237,7 @@ func newAttributeFilterList(m map[string]string) []awstypes.Filter {
 
 	// Sort the filters by name to make the output deterministic.
 	names := tfmaps.Keys(m)
-	sort.Strings(names)
+	slices.Sort(names)
 
 	for _, name := range names {
 		value := m[name]

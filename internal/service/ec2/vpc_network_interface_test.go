@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"sort"
+	"slices"
 	"strings"
 	"testing"
 
@@ -1102,8 +1102,8 @@ func stringSlicesEqualIgnoreOrder(s1, s2 []string) bool {
 		return false
 	}
 
-	sort.Strings(s1)
-	sort.Strings(s2)
+	slices.Sort(s1)
+	slices.Sort(s2)
 
 	return reflect.DeepEqual(s1, s2)
 }

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"sort"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -590,8 +590,8 @@ func testAccVerifyConfig(ctx context.Context, env *awstypes.EnvironmentDescripti
 			return nil
 		}
 
-		sort.Strings(testStrings)
-		sort.Strings(expected)
+		slices.Sort(testStrings)
+		slices.Sort(expected)
 		if !reflect.DeepEqual(testStrings, expected) {
 			return fmt.Errorf("error matching strings, expected:\n\n%#v\n\ngot:\n\n%#v", testStrings, foundEnvs)
 		}

@@ -30,8 +30,6 @@ import (
 	//
 	// The provider linter wants your imports to be in two groups: first,
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
-{{- end }}
-{{- if and .IncludeComments .AWSGoSDKV2 }}
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
 	// using the services/{{ .SDKPackage }}/types package. If so, you'll
@@ -39,14 +37,12 @@ import (
 	// awstypes.<Type Name>.
 {{- end }}
 	"context"
-{{ if .AWSGoSDKV2 }}
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
-{{- else }}
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/{{ .SDKPackage }}"
-{{- end }}
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -178,7 +174,7 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	{{- if .IncludeComments }}
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := d.Meta().{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+	conn := d.Meta().{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Fetch the config
 	{{- end }}

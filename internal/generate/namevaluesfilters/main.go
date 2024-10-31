@@ -8,7 +8,7 @@ package main
 
 import (
 	_ "embed"
-	"sort"
+	"slices"
 	"text/template"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
@@ -37,7 +37,7 @@ func main() {
 		"route53resolver",
 	}
 	// Always sort to reduce any potential generation churn
-	sort.Strings(sliceServiceNames)
+	slices.Sort(sliceServiceNames)
 
 	td := TemplateData{
 		SliceServiceNames: sliceServiceNames,

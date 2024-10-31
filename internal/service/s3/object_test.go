@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"sort"
+	"slices"
 	"testing"
 	"time"
 
@@ -2156,7 +2156,7 @@ func testAccCheckObjectACL(ctx context.Context, n string, want []string) resourc
 		for _, v := range output.Grants {
 			got = append(got, string(v.Permission))
 		}
-		sort.Strings(got)
+		slices.Sort(got)
 
 		if diff := cmp.Diff(got, want); diff != "" {
 			return fmt.Errorf("unexpected S3 Object ACL diff (+wanted, -got): %s", diff)
