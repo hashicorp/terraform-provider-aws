@@ -159,6 +159,85 @@ func TestAccIoTBillingGroup_properties(t *testing.T) {
 	})
 }
 
+func TestAccIoTBillingGroup_migrateFromPluginSDK(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_iot_billing_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IoTServiceID),
+		CheckDestroy: testAccCheckBillingGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.74.0", // always use most recently published version of the Provider
+					},
+				},
+				Config: testAccBillingGroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBillingGroupExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", regexache.MustCompile(fmt.Sprintf("billinggroup/%s$", rName))),
+					resource.TestCheckResourceAttr(resourceName, "metadata.#", acctest.Ct1),
+					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "properties.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBillingGroupConfig_basic(rName),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
+func TestAccIoTBillingGroup_migrateFromPluginSDK_properties(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_iot_billing_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IoTServiceID),
+		CheckDestroy: testAccCheckBillingGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.74.0", // always use most recently published version of the Provider
+					},
+				},
+				Config: testAccBillingGroupConfig_properties(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBillingGroupExists(ctx, resourceName),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBillingGroupConfig_properties(rName),
+				PlanOnly:                 true,
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccBillingGroupConfig_propertiesUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBillingGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "test description 2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBillingGroupExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
