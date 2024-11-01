@@ -246,75 +246,6 @@ func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.Co
 	w.inner.Configure(ctx, request, response)
 }
 
-type wrappedEphemeralResource struct {
-	// bootstrapContext is run on all wrapped methods before any interceptors.
-	bootstrapContext contextFunc
-	inner            ephemeral.EphemeralResourceWithConfigure
-	meta             *conns.AWSClient
-	interceptors     ephemeralResourceInterceptors
-}
-
-func (w *wrappedEphemeralResource) Metadata(ctx context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Metadata(ctx, request, response)
-}
-
-func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Schema(ctx, request, response)
-}
-
-func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Open(ctx, request, response)
-}
-
-func (w *wrappedEphemeralResource) Configure(ctx context.Context, request ephemeral.ConfigureRequest, response *ephemeral.ConfigureResponse) {
-	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
-		w.meta = v
-	}
-	ctx = w.bootstrapContext(ctx, w.meta)
-	w.inner.Configure(ctx, request, response)
-}
-
-func (w *wrappedEphemeralResource) Renew(ctx context.Context, request ephemeral.RenewRequest, response *ephemeral.RenewResponse) {
-	if v, ok := w.inner.(ephemeral.EphemeralResourceWithRenew); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
-		v.Renew(ctx, request, response)
-	}
-}
-
-func (w *wrappedEphemeralResource) Close(ctx context.Context, request ephemeral.CloseRequest, response *ephemeral.CloseResponse) {
-	if v, ok := w.inner.(ephemeral.EphemeralResourceWithClose); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
-		v.Close(ctx, request, response)
-	}
-}
-
-func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephemeral.ConfigValidator {
-	if v, ok := w.inner.(ephemeral.EphemeralResourceWithConfigValidators); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
-		return v.ConfigValidators(ctx)
-	}
-
-	return nil
-}
-
-func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request ephemeral.ValidateConfigRequest, response *ephemeral.ValidateConfigResponse) {
-	if v, ok := w.inner.(ephemeral.EphemeralResourceWithValidateConfig); ok {
-		ctx = w.bootstrapContext(ctx, w.meta)
-		v.ValidateConfig(ctx, request, response)
-	}
-}
-
-func newWrappedEphemeralResource(bootstrapContext contextFunc, inner ephemeral.EphemeralResourceWithConfigure, interceptors ephemeralResourceInterceptors) ephemeral.EphemeralResourceWithConfigure {
-	return &wrappedEphemeralResource{
-		bootstrapContext: bootstrapContext,
-		inner:            inner,
-		interceptors:     interceptors,
-	}
-}
-
 func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
 	if v, ok := w.inner.(datasource.DataSourceWithConfigValidators); ok {
 		ctx = w.bootstrapContext(ctx, w.meta)
@@ -429,6 +360,75 @@ func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.
 	}
 
 	return ctx, diags
+}
+
+type wrappedEphemeralResource struct {
+	// bootstrapContext is run on all wrapped methods before any interceptors.
+	bootstrapContext contextFunc
+	inner            ephemeral.EphemeralResourceWithConfigure
+	meta             *conns.AWSClient
+	interceptors     ephemeralResourceInterceptors
+}
+
+func (w *wrappedEphemeralResource) Metadata(ctx context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
+	w.inner.Metadata(ctx, request, response)
+}
+
+func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
+	w.inner.Schema(ctx, request, response)
+}
+
+func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
+	w.inner.Open(ctx, request, response)
+}
+
+func (w *wrappedEphemeralResource) Configure(ctx context.Context, request ephemeral.ConfigureRequest, response *ephemeral.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+	ctx = w.bootstrapContext(ctx, w.meta)
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedEphemeralResource) Renew(ctx context.Context, request ephemeral.RenewRequest, response *ephemeral.RenewResponse) {
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithRenew); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+		v.Renew(ctx, request, response)
+	}
+}
+
+func (w *wrappedEphemeralResource) Close(ctx context.Context, request ephemeral.CloseRequest, response *ephemeral.CloseResponse) {
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithClose); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+		v.Close(ctx, request, response)
+	}
+}
+
+func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephemeral.ConfigValidator {
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithConfigValidators); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+		return v.ConfigValidators(ctx)
+	}
+
+	return nil
+}
+
+func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request ephemeral.ValidateConfigRequest, response *ephemeral.ValidateConfigResponse) {
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithValidateConfig); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+		v.ValidateConfig(ctx, request, response)
+	}
+}
+
+func newWrappedEphemeralResource(bootstrapContext contextFunc, inner ephemeral.EphemeralResourceWithConfigure, interceptors ephemeralResourceInterceptors) ephemeral.EphemeralResourceWithConfigure {
+	return &wrappedEphemeralResource{
+		bootstrapContext: bootstrapContext,
+		inner:            inner,
+		interceptors:     interceptors,
+	}
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
