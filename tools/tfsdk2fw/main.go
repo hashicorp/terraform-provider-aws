@@ -122,7 +122,7 @@ func (m *migrator) migrate(outputFilename string) error {
 
 	d := m.Generator.NewGoFileDestination(outputFilename)
 
-	if err := d.WriteTemplate("schema", m.Template, templateData); err != nil {
+	if err := d.BufferTemplate("schema", m.Template, templateData); err != nil {
 		return err
 	}
 
@@ -270,7 +270,7 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 	for name := range schema {
 		names = append(names, name)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
 	emittedFieldName := false
 	for _, name := range names {
@@ -739,7 +739,7 @@ func (e *emitter) emitComputedOnlyBlock(path []string, schema map[string]*schema
 	for name := range schema {
 		names = append(names, name)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
 	fprintf(e.SchemaWriter, "types.ObjectType{\n")
 

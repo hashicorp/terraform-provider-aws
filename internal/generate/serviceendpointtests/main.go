@@ -42,6 +42,7 @@ func main() {
 			"paymentcryptography", // Resolver modifies URL
 			"route53profiles",     // Resolver modifies URL
 			"s3control",           // Resolver modifies URL
+			"simpledb",            // AWS SDK for Go v1
 			"timestreamwrite":     // Uses endpoint discovery
 			continue
 		}
@@ -59,7 +60,6 @@ func main() {
 		td := TemplateData{
 			HumanFriendly:     l.HumanFriendly(),
 			PackageName:       packageName,
-			SDKVersion:        l.SDKVersion(),
 			GoPackage:         l.GoPackageName(),
 			ProviderNameUpper: l.ProviderNameUpper(),
 			Region:            "us-west-2",
@@ -72,16 +72,8 @@ func main() {
 			Aliases:           l.Aliases(),
 			OverrideRegion:    l.EndpointOverrideRegion(),
 		}
-		if l.IsClientSDKV1() {
-			switch packageName {
-			case "imagebuilder":
-				td.V1NameResolverNeedsUnknownService = true
-			}
-		}
-		if l.IsClientSDKV2() {
-			if strings.Contains(td.APICallParams, "awstypes") {
-				td.ImportAwsTypes = true
-			}
+		if strings.Contains(td.APICallParams, "awstypes") {
+			td.ImportAwsTypes = true
 		}
 
 		if td.OverrideRegion == "us-west-2" {
@@ -107,7 +99,7 @@ func main() {
 
 		d := g.NewGoFileDestination(filepath.Join(relativePath, packageName, filename))
 
-		if err := d.WriteTemplate("serviceendpointtests", tmpl, td); err != nil {
+		if err := d.BufferTemplate("serviceendpointtests", tmpl, td); err != nil {
 			g.Fatalf("error generating service endpoint tests: %s", err)
 		}
 
@@ -120,7 +112,6 @@ func main() {
 type TemplateData struct {
 	HumanFriendly                     string
 	PackageName                       string
-	SDKVersion                        int
 	GoPackage                         string
 	ProviderNameUpper                 string
 	Region                            string

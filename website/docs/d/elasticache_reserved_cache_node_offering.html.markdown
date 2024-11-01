@@ -35,7 +35,7 @@ The following arguments are supported:
   For other current generation nodes (i.e. T2, M3, M4, R3, or R4) the only valid value is `Heavy Utilization`.
   For previous generation modes (i.e. T1, M1, M2, or C1) valid values are `Heavy Utilization`, `Medium Utilization`, and `Light Utilization`.
 * `product_description` - (Required) Engine type for the reserved cache node.
-  Valid values are `redis` and `memcached`.
+  Valid values are `redis`, `valkey` and `memcached`.
 
 ## Attribute Reference
 

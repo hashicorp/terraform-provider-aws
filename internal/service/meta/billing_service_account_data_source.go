@@ -55,7 +55,7 @@ func (d *billingServiceAccountDataSource) Read(ctx context.Context, request data
 	const billingAccountID = "386209384616"
 
 	arn := arn.ARN{
-		Partition: d.Meta().Partition,
+		Partition: d.Meta().Partition(ctx),
 		Service:   "iam",
 		AccountID: billingAccountID,
 		Resource:  "root",

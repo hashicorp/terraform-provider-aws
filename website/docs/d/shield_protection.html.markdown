@@ -24,7 +24,7 @@ data "aws_shield_protection" "example" {
 
 ```terraform
 data "aws_shield_protection" "example" {
-  resource_arn = "arn:aws:globalaccelerator::012345678901:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh"
+  resource_arn = "arn:aws:globalaccelerator::123456789012:accelerator/1234abcd-abcd-1234-abcd-1234abcdefgh"
 }
 ```
 

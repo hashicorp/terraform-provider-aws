@@ -51,10 +51,8 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are required:
 
-* `name` - (Required) Name of the Profile Association.
-
+* `name` - (Required) Name of the Profile Association. Must match a regex of `(?!^[0-9]+$)([a-zA-Z0-9\\-_' ']+)`.
 * `profile_id` - (Required) ID of the profile associated with the VPC.
-
 * `resource_id` - (Required) Resource ID of the VPC the profile to be associated with.
 
 ## Attribute Reference
@@ -62,8 +60,7 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the Profile Association.
-* `name` - Name of the Profile Association.
-* `status` - Status of the Profile Association. Valid values [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html)
+* `status` - Status of the Profile Association. See the [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html) for valid values.
 * `status_message` - Status message of the Profile Association.
 
 ## Timeouts
@@ -71,6 +68,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
+* `update` - (Default `5m`)
 * `delete` - (Default `30m`)
 
 ## Import
@@ -98,4 +96,4 @@ Using `terraform import`, import Route 53 Profiles Association using the `exampl
 % terraform import aws_route53profiles_association.example rpa-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-f2b872b51f3f958e88cf1b21c5204b283c792e646bb77e742d49c4e80e2139bf -->
+<!-- cache-key: cdktf-0.20.8 input-89a170c936fc2b05caed63eb9a258f6154bd81161307e28100d9b71c01d1750b -->

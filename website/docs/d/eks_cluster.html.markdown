@@ -77,3 +77,5 @@ This data source exports the following attributes in addition to the arguments a
     * `security_group_ids` – List of security group IDs
     * `subnet_ids` – List of subnet IDs
     * `vpc_id` – The VPC associated with your cluster.
+* `zonal_shift_config` - Contains Zonal Shift Configuration.
+    * `enabled` - Whether zonal shift is enabled.

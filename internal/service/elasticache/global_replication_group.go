@@ -94,10 +94,13 @@ func resourceGlobalReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrEngineVersion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validRedisVersionString,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.Any(
+					validRedisVersionString,
+					validValkeyVersionString,
+				),
 				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
 					if t, _ := regexp.MatchString(`[6-9]\.x`, new); t && old != "" {
 						oldVersion, err := gversion.NewVersion(old)
@@ -399,7 +402,13 @@ func resourceGlobalReplicationGroupRead(ctx context.Context, d *schema.ResourceD
 	d.Set("global_replication_group_id", globalReplicationGroup.GlobalReplicationGroupId)
 	d.Set("transit_encryption_enabled", globalReplicationGroup.TransitEncryptionEnabled)
 
-	if err := setEngineVersionRedis(d, globalReplicationGroup.EngineVersion); err != nil {
+	switch aws.ToString(globalReplicationGroup.Engine) {
+	case engineValkey:
+		err = setEngineVersionValkey(d, globalReplicationGroup.EngineVersion)
+	default:
+		err = setEngineVersionRedis(d, globalReplicationGroup.EngineVersion)
+	}
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): %s", d.Id(), err)
 	}
 

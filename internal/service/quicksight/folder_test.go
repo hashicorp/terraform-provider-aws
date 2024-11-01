@@ -101,7 +101,7 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 				Config: testAccFolderConfig_permissions(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
 						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
@@ -117,7 +117,7 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 				Config: testAccFolderConfig_permissionsUpdate(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "permissions.*", map[string]*regexp.Regexp{
 						names.AttrPrincipal: regexache.MustCompile(fmt.Sprintf(`user/default/%s`, rName)),
 					}),
@@ -140,7 +140,7 @@ func TestAccQuickSightFolder_permissions(t *testing.T) {
 				Config: testAccFolderConfig_basic(rId, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					resource.TestCheckResourceAttr(resourceName, "permission.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "permission.#", "0"),
 				),
 			},
 		},

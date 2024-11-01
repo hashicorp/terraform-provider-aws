@@ -18,9 +18,8 @@ package names
 import (
 	"fmt"
 	"log"
-	"slices"
-	"strings"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -128,6 +127,7 @@ const (
 	ServiceCatalogEndpointID               = "servicecatalog"
 	SSMEndpointID                          = "ssm"
 	SSMIncidentsEndpointID                 = "ssm-incidents"
+	SSMQuickSetupEndpointID                = "ssm-quicksetup"
 	SSOAdminEndpointID                     = "sso"
 	STSEndpointID                          = "sts"
 	SchedulerEndpointID                    = "scheduler"
@@ -143,18 +143,6 @@ const (
 	VerifiedPermissionsEndpointID          = "verifiedpermissions"
 	WAFEndpointID                          = "waf"
 	WAFRegionalEndpointID                  = "waf-regional"
-)
-
-// These should move to aws-sdk-go-base.
-// See https://github.com/hashicorp/aws-sdk-go-base/issues/649.
-const (
-	ChinaPartitionID      = "aws-cn"     // AWS China partition.
-	ISOPartitionID        = "aws-iso"    // AWS ISO (US) partition.
-	ISOBPartitionID       = "aws-iso-b"  // AWS ISOB (US) partition.
-	ISOEPartitionID       = "aws-iso-e"  // AWS ISOE (Europe) partition.
-	ISOFPartitionID       = "aws-iso-f"  // AWS ISOF partition.
-	StandardPartitionID   = "aws"        // AWS Standard partition.
-	USGovCloudPartitionID = "aws-us-gov" // AWS GovCloud (US) partition.
 )
 
 const (
@@ -211,160 +199,19 @@ const (
 	EUISOEWest1RegionID = "eu-isoe-west-1" // EU ISOE West.
 )
 
-var allRegionIDs = []string{
-	AFSouth1RegionID,
-	APEast1RegionID,
-	APNortheast1RegionID,
-	APNortheast2RegionID,
-	APNortheast3RegionID,
-	APSouth1RegionID,
-	APSouth2RegionID,
-	APSoutheast1RegionID,
-	APSoutheast2RegionID,
-	APSoutheast3RegionID,
-	APSoutheast4RegionID,
-	APSoutheast5RegionID,
-	CACentral1RegionID,
-	CAWest1RegionID,
-	EUCentral1RegionID,
-	EUCentral2RegionID,
-	EUNorth1RegionID,
-	EUSouth1RegionID,
-	EUSouth2RegionID,
-	EUWest1RegionID,
-	EUWest2RegionID,
-	EUWest3RegionID,
-	ILCentral1RegionID,
-	MECentral1RegionID,
-	MESouth1RegionID,
-	SAEast1RegionID,
-	USEast1RegionID,
-	USEast2RegionID,
-	USWest1RegionID,
-	USWest2RegionID,
-	CNNorth1RegionID,
-	CNNorthwest1RegionID,
-	USGovEast1RegionID,
-	USGovWest1RegionID,
-	USISOEast1RegionID,
-	USISOWest1RegionID,
-	USISOBEast1RegionID,
-	EUISOEWest1RegionID,
-}
-
-func Regions() []string {
-	return slices.Clone(allRegionIDs)
-}
-
-func DNSSuffixForPartition(partition string) string {
-	switch partition {
-	case "":
-		return ""
-	case ChinaPartitionID:
-		return "amazonaws.com.cn"
-	case ISOPartitionID:
-		return "c2s.ic.gov"
-	case ISOBPartitionID:
-		return "sc2s.sgov.gov"
-	case ISOEPartitionID:
-		return "cloud.adc-e.uk"
-	case ISOFPartitionID:
-		return "csp.hci.ic.gov"
-	default:
-		return "amazonaws.com"
-	}
-}
-
-func ServicePrincipalSuffixForPartition(partition string) string {
-	switch partition {
-	case ChinaPartitionID:
-		return "amazonaws.com.cn"
-	case ISOPartitionID:
-		return "c2s.ic.gov"
-	case ISOBPartitionID:
-		return "sc2s.sgov.gov"
-	default:
-		return "amazonaws.com"
-	}
-}
-
-// SPN region unique taken from
-// https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk-lib/region-info/lib/default.ts
-func ServicePrincipalNameForPartition(service string, partition string) string {
-	if service != "" && partition != StandardPartitionID {
-		switch partition {
-		case ISOPartitionID:
-			switch service {
-			case "cloudhsm",
-				"config",
-				"logs",
-				"workspaces":
-				return DNSSuffixForPartition(partition)
-			}
-		case ISOBPartitionID:
-			switch service {
-			case "dms",
-				"logs":
-				return DNSSuffixForPartition(partition)
-			}
-		case ChinaPartitionID:
-			switch service {
-			case "codedeploy",
-				"elasticmapreduce",
-				"logs":
-				return DNSSuffixForPartition(partition)
-			}
-		}
+// PartitionForRegion returns the partition for the given Region.
+// Returns the empty partition if the Region is empty.
+// Returns the standard partition if no known partition includes the Region.
+func PartitionForRegion(region string) endpoints.Partition {
+	if region == "" {
+		return endpoints.Partition{}
 	}
 
-	return "amazonaws.com"
-}
-
-func IsOptInRegion(region string) bool {
-	switch region {
-	case AFSouth1RegionID,
-		APEast1RegionID, APSouth2RegionID,
-		APSoutheast3RegionID, APSoutheast4RegionID, APSoutheast5RegionID,
-		CAWest1RegionID,
-		EUCentral2RegionID,
-		EUSouth1RegionID, EUSouth2RegionID,
-		ILCentral1RegionID,
-		MECentral1RegionID,
-		MESouth1RegionID:
-		return true
-	default:
-		return false
-	}
-}
-
-func PartitionForRegion(region string) string {
-	switch region {
-	case "":
-		return ""
-	case CNNorth1RegionID, CNNorthwest1RegionID:
-		return ChinaPartitionID
-	case USISOEast1RegionID, USISOWest1RegionID:
-		return ISOPartitionID
-	case USISOBEast1RegionID:
-		return ISOBPartitionID
-	case EUISOEWest1RegionID:
-		return ISOEPartitionID
-	case USGovEast1RegionID, USGovWest1RegionID:
-		return USGovCloudPartitionID
-	default:
-		return StandardPartitionID
-	}
-}
-
-// ReverseDNS switches a DNS hostname to reverse DNS and vice-versa.
-func ReverseDNS(hostname string) string {
-	parts := strings.Split(hostname, ".")
-
-	for i, j := 0, len(parts)-1; i < j; i, j = i+1, j-1 {
-		parts[i], parts[j] = parts[j], parts[i]
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
+		return partition
 	}
 
-	return strings.Join(parts, ".")
+	return PartitionForRegion(endpoints.UsEast1RegionID)
 }
 
 // Type ServiceDatum corresponds closely to attributes and blocks in `data/names_data.hcl` and are

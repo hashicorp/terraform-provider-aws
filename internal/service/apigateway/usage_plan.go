@@ -238,7 +238,7 @@ func resourceUsagePlanRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "apigateway",
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("/usageplans/%s", d.Id()),

@@ -128,7 +128,7 @@ func main() {
 				g.Fatalf("parsing base Go test template: %w", err)
 			}
 
-			if err := d.WriteTemplateSet(templates, resource); err != nil {
+			if err := d.BufferTemplateSet(templates, resource); err != nil {
 				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 			}
 
@@ -144,7 +144,7 @@ func main() {
 				g.Fatalf("parsing base Go test template: %w", err)
 			}
 
-			if err := d.WriteTemplateSet(templates, resource); err != nil {
+			if err := d.BufferTemplateSet(templates, resource); err != nil {
 				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 			}
 
@@ -286,7 +286,7 @@ func main() {
 			}),
 		}
 
-		if err := d.WriteTemplateSet(templates, datum); err != nil {
+		if err := d.BufferTemplateSet(templates, datum); err != nil {
 			g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 		}
 
@@ -371,6 +371,7 @@ type ResourceDatum struct {
 	Generator                        string
 	NoImport                         bool
 	ImportStateID                    string
+	importStateIDAttribute           string
 	ImportStateIDFunc                string
 	ImportIgnore                     []string
 	Implementation                   implementation
@@ -398,6 +399,14 @@ func (d ResourceDatum) AdditionalTfVars() map[string]string {
 	return tfmaps.ApplyToAllKeys(d.additionalTfVars, func(k string) string {
 		return acctestgen.ConstOrQuote(k)
 	})
+}
+
+func (d ResourceDatum) HasImportStateIDAttribute() bool {
+	return d.importStateIDAttribute != ""
+}
+
+func (d ResourceDatum) ImportStateIDAttribute() string {
+	return namesgen.ConstOrQuote(d.importStateIDAttribute)
 }
 
 func (d ResourceDatum) OverrideIdentifier() bool {
@@ -643,6 +652,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["importStateId"]; ok {
 					d.ImportStateID = attr
 				}
+				if attr, ok := args.Keyword["importStateIdAttribute"]; ok {
+					d.importStateIDAttribute = attr
+				}
 				if attr, ok := args.Keyword["importStateIdFunc"]; ok {
 					d.ImportStateIDFunc = attr
 				}
@@ -833,7 +845,7 @@ func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults 
 		ComputedTag:     (test == "tagsComputed"),
 		commonConfig:    common,
 	}
-	if err := tf.WriteTemplateSet(tfTemplates, configData); err != nil {
+	if err := tf.BufferTemplateSet(tfTemplates, configData); err != nil {
 		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)
 	}
 

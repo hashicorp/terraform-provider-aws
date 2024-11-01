@@ -68,11 +68,11 @@ func (r *resourceReservedCacheNode) Schema(ctx context.Context, request resource
 				},
 			},
 			"cache_node_type": schema.StringAttribute{
-				CustomType: fwtypes.RFC3339DurationType,
-				Computed:   true,
+				Computed: true,
 			},
 			names.AttrDuration: schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.RFC3339DurationType,
+				Computed:   true,
 			},
 			"fixed_price": schema.Float64Attribute{
 				Computed: true,
@@ -222,7 +222,7 @@ func (r *resourceReservedCacheNode) flexOpts() []flex.AutoFlexOptionsFunc {
 }
 
 type resourceReservedCacheNodeModel struct {
-	ARN                          types.String                                          `tfsdk:"arn"`
+	ReservationARN               types.String                                          `tfsdk:"arn"`
 	CacheNodeCount               types.Int32                                           `tfsdk:"cache_node_count"`
 	CacheNodeType                types.String                                          `tfsdk:"cache_node_type"`
 	Duration                     fwtypes.RFC3339Duration                               `tfsdk:"duration" autoflex:",noflatten"`

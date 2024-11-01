@@ -127,7 +127,7 @@ func resourceDataCatalogRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "athena",
 		AccountID: meta.(*conns.AWSClient).AccountID,

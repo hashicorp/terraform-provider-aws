@@ -5,12 +5,7 @@
 package acctest
 
 const (
-	Ct0                     = "0"
-	Ct1                     = "1"
-	Ct10                    = "10"
-	Ct2                     = "2"
-	Ct3                     = "3"
-	Ct4                     = "4"
+	Ct12Digit               = "123456789012"
 	CtBasic                 = "basic"
 	CtCertificatePEM        = "certificate_pem"
 	CtDisappears            = "disappears"

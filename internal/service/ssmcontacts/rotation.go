@@ -35,8 +35,10 @@ const (
 	ResNameRotation = "Rotation"
 )
 
-// @FrameworkResource(name="Rotation")
+// @FrameworkResource("aws_ssmcontacts_rotation", name="Rotation")
 // @Tags(identifierAttribute="arn")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
+// @Testing(serialize=true)
 func newResourceRotation(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceRotation{}
 
@@ -109,7 +111,7 @@ func (r *resourceRotation) Schema(ctx context.Context, request resource.SchemaRe
 						"shift_coverages": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[shiftCoveragesData](ctx),
 							PlanModifiers: []planmodifier.List{
-								ShiftCoveragesPlanModifier(),
+								shiftCoveragesPlanModifier(),
 								listplanmodifier.UseStateForUnknown(),
 							},
 							NestedObject: schema.NestedBlockObject{

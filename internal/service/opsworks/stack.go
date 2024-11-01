@@ -295,7 +295,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(aws.ToString(outputRaw.(*opsworks.CreateStackOutput).StackId))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.OpsWorks,
 		Region:    region,
 		AccountID: meta.(*conns.AWSClient).AccountID,

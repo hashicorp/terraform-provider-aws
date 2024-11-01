@@ -43,6 +43,7 @@ const (
 	monitoringScheduleScheduledTimeout = 2 * time.Minute
 	monitoringScheduleStoppedTimeout   = 2 * time.Minute
 	mlflowTrackingServerTimeout        = 30 * time.Minute
+	hubTimeout                         = 10 * time.Minute
 
 	notebookInstanceStatusNotFound = "NotFound"
 )
@@ -178,12 +179,20 @@ func waitImageCreated(ctx context.Context, conn *sagemaker.Client, name string) 
 		Timeout: imageCreatedTimeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
+		if status, reason := output.ImageStatus, aws.ToString(output.FailureReason); (status == awstypes.ImageStatusCreateFailed || status == awstypes.ImageStatusUpdateFailed) && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return err
+	}
 
 	return err
 }
 
-func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageOutput, error) {
+func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.ImageStatusDeleting),
 		Target:  []string{},
@@ -194,10 +203,14 @@ func waitImageDeleted(ctx context.Context, conn *sagemaker.Client, name string) 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageOutput); ok {
-		return output, err
+		if status, reason := output.ImageStatus, aws.ToString(output.FailureReason); status == awstypes.ImageStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func waitImageVersionCreated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeImageVersionOutput, error) {
@@ -211,6 +224,10 @@ func waitImageVersionCreated(ctx context.Context, conn *sagemaker.Client, name s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
+		if status, reason := output.ImageVersionStatus, aws.ToString(output.FailureReason); status == awstypes.ImageVersionStatusCreateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -228,6 +245,10 @@ func waitImageVersionDeleted(ctx context.Context, conn *sagemaker.Client, name s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeImageVersionOutput); ok {
+		if status, reason := output.ImageVersionStatus, aws.ToString(output.FailureReason); status == awstypes.ImageVersionStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 
@@ -310,6 +331,27 @@ func waitFeatureGroupDeleted(ctx context.Context, conn *sagemaker.Client, name s
 	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
 		if status, reason := output.FeatureGroupStatus, aws.ToString(output.FailureReason); status == awstypes.FeatureGroupStatusDeleteFailed && reason != "" {
 			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFeatureGroupUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeFeatureGroupOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.LastUpdateStatusValueInProgress),
+		Target:  enum.Slice(awstypes.LastUpdateStatusValueSuccessful),
+		Refresh: statusFeatureGroupUpdate(ctx, conn, name),
+		Timeout: featureGroupDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeFeatureGroupOutput); ok {
+		if v := output.LastUpdateStatus; v != nil && v.Status == awstypes.LastUpdateStatusValueFailed {
+			tfresource.SetLastError(err, errors.New(*v.FailureReason))
 		}
 
 		return output, err
@@ -636,6 +678,69 @@ func waitMlflowTrackingServerDeleted(ctx context.Context, conn *sagemaker.Client
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*sagemaker.DescribeMlflowTrackingServerOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubInService(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubStatusCreating),
+		Target:  enum.Slice(awstypes.HubStatusInService),
+		Refresh: statusHub(ctx, conn, name),
+		Timeout: hubTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
+		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusCreateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubDeleted(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubStatusDeleting),
+		Target:  []string{},
+		Refresh: statusHub(ctx, conn, name),
+		Timeout: hubTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
+		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusDeleteFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitHubUpdated(ctx context.Context, conn *sagemaker.Client, name string) (*sagemaker.DescribeHubOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.HubStatusUpdating),
+		Target:  enum.Slice(awstypes.HubStatusInService),
+		Refresh: statusHub(ctx, conn, name),
+		Timeout: hubTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*sagemaker.DescribeHubOutput); ok {
+		if status, reason := output.HubStatus, aws.ToString(output.FailureReason); status == awstypes.HubStatusUpdateFailed && reason != "" {
+			tfresource.SetLastError(err, errors.New(reason))
+		}
+
 		return output, err
 	}
 

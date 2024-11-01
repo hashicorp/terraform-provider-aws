@@ -52,7 +52,7 @@ func TestAccIAMUserPolicyAttachmentsExclusive_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccUserPolicyAttachmentsExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrUserName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrUserName,
 			},
@@ -159,7 +159,7 @@ func TestAccIAMUserPolicyAttachmentsExclusive_multiple(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccUserPolicyAttachmentsExclusiveImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrUserName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrUserName,
 			},
@@ -197,7 +197,7 @@ func TestAccIAMUserPolicyAttachmentsExclusive_empty(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, userResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "0"),
 				),
 				// The empty `policy_arns` argument in the exclusive lock will remove the
 				// managed policy defined in this configuration, so a diff is expected
@@ -242,7 +242,7 @@ func TestAccIAMUserPolicyAttachmentsExclusive_outOfBandRemoval(t *testing.T) {
 					testAccCheckUserPolicyAttachmentCount(ctx, rName, 1),
 					testAccCheckUserPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, userResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "1"),
 				),
 			},
 		},
@@ -280,7 +280,7 @@ func TestAccIAMUserPolicyAttachmentsExclusive_outOfBandAddition(t *testing.T) {
 					testAccCheckUserExists(ctx, userResourceName, &user),
 					testAccCheckUserPolicyAttachmentsExclusiveExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserName, userResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "policy_arns.#", "1"),
 				),
 			},
 		},
@@ -336,17 +336,6 @@ func testAccCheckUserPolicyAttachmentsExclusiveExists(ctx context.Context, name 
 		}
 
 		return nil
-	}
-}
-
-func testAccUserPolicyAttachmentsExclusiveImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes[names.AttrUserName], nil
 	}
 }
 

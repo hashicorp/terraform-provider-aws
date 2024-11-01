@@ -112,16 +112,6 @@ For more details on flags for generating tag updating functions, see the
 When creating a resource, some AWS APIs support passing tags in the Create call while others require setting the tags after the initial creation.
 If the API does not support tagging on creation, pass the `-CreateTags` flag to generate a `createTags` function that can be called from the resource Create handler function.
 
-### Specifying the AWS SDK for Go version
-
-The majority of the Terraform AWS Provider is implemented using [version 2 of the AWS SDK for Go](https://github.com/aws/aws-sdk-go-v2).
-Some services, however, are only present in [version 1 of the SDK](https://github.com/aws/aws-sdk-go).
-
-By default, the generated code uses the AWS SDK for Go v2.
-To generate code using the AWS SDK for Go v1, pass the flag `-AwsSdkVersion=1`.
-
-For more information, see the [documentation on AWS SDK versions](./aws-go-sdk-versions.md).
-
 ### Running Code generation
 
 Run the command `make gen` to run the code generators for the project.
@@ -543,8 +533,10 @@ In that case, add the annotations `@Testing(existsTakesT=true)` and `@Testing(de
 The generated acceptance tests use `ImportState` steps.
 In most cases, these will work as-is.
 To ignore the values of certain parameters when importing, set the annotation `@Testing(importIgnore="...")` to a list of the parameter names separated by semi-colons (`;`).
-To override the import ID, use the annotation `@Testing(importStateId=<var name>)` if it can be retrieved from an existing variable,
-or use `@Testing(importStateIdFunc=<func name>)` to reference a function that returns a `resource.ImportStateIdFunc`.
+There are multiple methods for overriding the import ID, if needed.
+To use the value of an existing variable, use the annotation `@Testing(importStateId=<var name>)`.
+If the identifier can be retrieved from a specific resource attribute, use the annotation `@Testing(importStateIdAttribute=<attribute name>)`.
+If the identifier can be retrieved from a `resource.ImportStateIdFunc`, use the annotation `@Testing(importStateIdFunc=<func name>)`.
 If the resource type does not support importing, use the annotation `@Testing(noImport=true)`.
 
 If the tests need to be serialized, use the annotion `@Testing(serialize=true)`.

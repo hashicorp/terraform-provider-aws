@@ -782,6 +782,7 @@ func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, me
 		jobDefinitionType := awstypes.JobDefinitionType(d.Get(names.AttrType).(string))
 		input := &batch.RegisterJobDefinitionInput{
 			JobDefinitionName: aws.String(name),
+			Tags:              getTagsIn(ctx),
 			Type:              jobDefinitionType,
 		}
 

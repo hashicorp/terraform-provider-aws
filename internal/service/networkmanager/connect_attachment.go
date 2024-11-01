@@ -214,7 +214,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 
 	a := connectAttachment.Attachment
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "networkmanager",
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("attachment/%s", d.Id()),

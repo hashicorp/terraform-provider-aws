@@ -155,7 +155,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	hostedZoneID := cleanZoneID(aws.ToString(hostedZone.Id))
 	d.SetId(hostedZoneID)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "route53",
 		Resource:  "hostedzone/" + d.Id(),
 	}.String()

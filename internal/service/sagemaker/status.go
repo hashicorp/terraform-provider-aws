@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -104,6 +105,26 @@ func statusFeatureGroup(ctx context.Context, conn *sagemaker.Client, name string
 		}
 
 		return output, string(output.FeatureGroupStatus), nil
+	}
+}
+
+func statusFeatureGroupUpdate(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findFeatureGroupByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.LastUpdateStatus == nil {
+			return output, string(awstypes.LastUpdateStatusValueSuccessful), nil
+		}
+
+		return output, string(output.LastUpdateStatus.Status), nil
 	}
 }
 
@@ -216,5 +237,21 @@ func statusMlflowTrackingServer(ctx context.Context, conn *sagemaker.Client, nam
 		}
 
 		return output, string(output.TrackingServerStatus), nil
+	}
+}
+
+func statusHub(ctx context.Context, conn *sagemaker.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findHubByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.HubStatus), nil
 	}
 }

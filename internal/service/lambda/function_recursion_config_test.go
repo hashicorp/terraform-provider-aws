@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,7 +37,7 @@ func TestAccLambdaFunctionRecursionConfig_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -53,7 +54,7 @@ func TestAccLambdaFunctionRecursionConfig_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccCheckFunctionRecursionConfigImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "function_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "function_name",
 			},
@@ -77,7 +78,7 @@ func TestAccLambdaFunctionRecursionConfig_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -94,7 +95,7 @@ func TestAccLambdaFunctionRecursionConfig_update(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccCheckFunctionRecursionConfigImportStateIdFunc(resourceName),
+				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, "function_name"),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: "function_name",
 			},
@@ -125,7 +126,7 @@ func TestAccLambdaFunctionRecursionConfig_disappears_Function(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -190,17 +191,6 @@ func testAccCheckFunctionRecursionConfigExists(ctx context.Context, name string,
 		recursionconfig = resp
 
 		return nil
-	}
-}
-
-func testAccCheckFunctionRecursionConfigImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return rs.Primary.Attributes["function_name"], nil
 	}
 }
 

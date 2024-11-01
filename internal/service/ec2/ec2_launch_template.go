@@ -771,7 +771,7 @@ func resourceLaunchTemplate() *schema.Resource {
 						"interface_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"efa", "interface"}, false),
+							ValidateFunc: validation.StringInSlice([]string{"efa", "efa-only", "interface"}, false),
 						},
 						"ipv4_address_count": {
 							Type:     schema.TypeInt,
@@ -1047,7 +1047,7 @@ func resourceLaunchTemplateRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,

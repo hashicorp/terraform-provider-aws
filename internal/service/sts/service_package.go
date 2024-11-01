@@ -17,7 +17,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return sts.NewFromConfig(cfg,
-		sts.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		sts.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *sts.Options) {
 			if stsRegion := config["sts_region"].(string); stsRegion != "" {

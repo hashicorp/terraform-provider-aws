@@ -16,6 +16,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -54,10 +55,10 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrFunctionARN, functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
@@ -125,7 +126,7 @@ func TestAccLambdaEventSourceMapping_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -135,7 +136,7 @@ func TestAccLambdaEventSourceMapping_tags(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -148,7 +149,7 @@ func TestAccLambdaEventSourceMapping_tags(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -157,7 +158,7 @@ func TestAccLambdaEventSourceMapping_tags(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -181,17 +182,17 @@ func TestAccLambdaEventSourceMapping_SQS_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSourceMappingConfig_sqsBatchSize(rName, acctest.Ct10),
+				Config: testAccEventSourceMappingConfig_sqsBatchSize(rName, "10"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "batch_size", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "batch_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrFunctionARN, functionResourceName, names.AttrARN),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "0"),
 				),
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
@@ -246,9 +247,9 @@ func TestAccLambdaEventSourceMapping_DynamoDB_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrStreamARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrFunctionARN, functionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", functionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
@@ -284,7 +285,7 @@ func TestAccLambdaEventSourceMapping_DynamoDB_functionResponseTypes(t *testing.T
 				Config: testAccEventSourceMappingConfig_dynamoDBFunctionResponseTypes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "function_response_types.*", "ReportBatchItemFailures"),
 				),
 			},
@@ -298,7 +299,7 @@ func TestAccLambdaEventSourceMapping_DynamoDB_functionResponseTypes(t *testing.T
 				Config: testAccEventSourceMappingConfig_dynamoDBNoFunctionResponseTypes(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),
 				),
 			},
 		},
@@ -831,8 +832,8 @@ func TestAccLambdaEventSourceMapping_Kinesis_destination(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_kinesisDestination(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination_arn", snsResourceName, names.AttrARN),
 				),
 			},
@@ -846,8 +847,8 @@ func TestAccLambdaEventSourceMapping_Kinesis_destination(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_kinesisDestination(rName, rName+"-update"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "destination_config.0.on_failure.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "destination_config.0.on_failure.0.destination_arn", snsResourceName, names.AttrARN),
 				),
 			},
@@ -879,8 +880,8 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "topics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
 			},
@@ -904,8 +905,8 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "9999"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "topics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
 			},
@@ -937,9 +938,9 @@ func TestAccLambdaEventSourceMapping_mskWithEventSourceConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.consumer_group_id", "amazon-managed-test-group-id"),
-					resource.TestCheckResourceAttr(resourceName, "topics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
 			},
@@ -971,12 +972,12 @@ func TestAccLambdaEventSourceMapping_selfManagedKafka(t *testing.T) {
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test1:9092,test2:9092"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "topics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
 			},
@@ -1016,13 +1017,13 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfig(t *te
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test1:9092,test2:9092"),
-					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
-					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "topics.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
 			},
@@ -1063,9 +1064,9 @@ func TestAccLambdaEventSourceMapping_activeMQ(t *testing.T) {
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "queues.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "queues.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "queues.*", "test"),
-					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "1"),
 				),
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
@@ -1106,9 +1107,9 @@ func TestAccLambdaEventSourceMapping_rabbitMQ(t *testing.T) {
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "queues.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "queues.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "queues.*", "test"),
-					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "2"),
 				),
 			},
 			// batch_size became optional.  Ensure that if the user supplies the default
@@ -1144,8 +1145,8 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_sqsFilterCriteria1(rName, pattern1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern1}),
 				),
 			},
@@ -1159,8 +1160,8 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_sqsFilterCriteria2(rName, pattern1, pattern2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern1}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern2}),
 				),
@@ -1175,7 +1176,7 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_sqsFilterCriteria3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "0"),
 				),
 			},
 			{
@@ -1188,8 +1189,8 @@ func TestAccLambdaEventSourceMapping_SQS_filterCriteria(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_sqsFilterCriteria1(rName, pattern1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter_criteria.0.filter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "filter_criteria.0.filter.*", map[string]string{"pattern": pattern1}),
 				),
 			},
@@ -1217,7 +1218,7 @@ func TestAccLambdaEventSourceMapping_SQS_scalingConfig(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_sqsScalingConfig1(rName, 10),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.maximum_concurrency", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.0.maximum_concurrency", "10"),
 				),
 			},
 			{
@@ -1243,7 +1244,7 @@ func TestAccLambdaEventSourceMapping_SQS_scalingConfig(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_sqsScalingConfig2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "scaling_config.#", "0"),
 				),
 			},
 			{
@@ -1273,12 +1274,12 @@ func TestAccLambdaEventSourceMapping_documentDB(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
-					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.0.collection_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.0.database_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "document_db_event_source_config.0.full_document", "Default"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "1"),
 				),
 			},
 			{

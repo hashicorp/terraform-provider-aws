@@ -35,7 +35,7 @@ func TestAccBackupVaultNotifications_basic(t *testing.T) {
 				Config: testAccVaultNotificationsConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultNotificationsExists(ctx, resourceName, &vault),
-					resource.TestCheckResourceAttr(resourceName, "backup_vault_events.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "backup_vault_events.#", "2"),
 				),
 			},
 			{

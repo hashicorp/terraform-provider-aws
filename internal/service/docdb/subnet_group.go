@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_docdb_subnet_group", name="Subnet Group")
 // @Tags(identifierAttribute="arn")
-func ResourceSubnetGroup() *schema.Resource {
+func resourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSubnetGroupCreate,
 		ReadWithoutTimeout:   resourceSubnetGroupRead,

@@ -69,7 +69,7 @@ func dataSourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceD
 	d.Set("cloudfront_access_identity_path", "origin-access-identity/cloudfront/"+d.Id())
 	d.Set(names.AttrComment, apiObject.Comment)
 	d.Set("etag", output.ETag)
-	d.Set("iam_arn", originAccessIdentityARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("iam_arn", originAccessIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("s3_canonical_user_id", output.CloudFrontOriginAccessIdentity.S3CanonicalUserId)
 
 	return diags

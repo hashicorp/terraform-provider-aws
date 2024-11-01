@@ -127,7 +127,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	workFlowArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,

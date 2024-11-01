@@ -124,15 +124,17 @@ func resourceReplicationGroup() *schema.Resource {
 			names.AttrEngine: {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				Default:      engineRedis,
-				ValidateFunc: validation.StringInSlice([]string{engineRedis}, true),
+				ValidateFunc: validation.StringInSlice([]string{engineRedis, engineValkey}, true),
 			},
 			names.AttrEngineVersion: {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validRedisVersionString,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.Any(
+					validRedisVersionString,
+					validValkeyVersionString,
+				),
 			},
 			"engine_version_actual": {
 				Type:     schema.TypeString,
@@ -396,6 +398,15 @@ func resourceReplicationGroup() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			replicationGroupValidateMultiAZAutomaticFailover,
 			customizeDiffEngineVersionForceNewOnDowngrade,
+			customdiff.ForceNewIf(names.AttrEngine, func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				if !diff.HasChange(names.AttrEngine) {
+					return false
+				}
+				if old, new := diff.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
+					return false
+				}
+				return true
+			}),
 			customdiff.ComputedIf("member_clusters", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("num_cache_clusters") ||
 					diff.HasChange("num_node_groups") ||
@@ -415,7 +426,7 @@ func resourceReplicationGroup() *schema.Resource {
 func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	replicationGroupID := d.Get("replication_group_id").(string)
 	input := &elasticache.CreateReplicationGroupInput{
@@ -464,6 +475,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.AutomaticFailoverEnabled = aws.Bool(d.Get("automatic_failover_enabled").(bool))
 		input.CacheNodeType = aws.String(nodeType)
 		input.Engine = aws.String(d.Get(names.AttrEngine).(string))
+		input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
 	}
 
 	if v, ok := d.GetOk("ip_discovery"); ok {
@@ -569,10 +581,6 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.SnapshotWindow = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("transit_encryption_enabled"); ok {
-		input.TransitEncryptionEnabled = aws.Bool(v.(bool))
-	}
-
 	if v, ok := d.GetOk("transit_encryption_mode"); ok {
 		input.TransitEncryptionMode = awstypes.TransitEncryptionMode(v.(string))
 	}
@@ -655,6 +663,8 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	if rgp.GlobalReplicationGroupInfo != nil && rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId != nil {
 		d.Set("global_replication_group_id", rgp.GlobalReplicationGroupInfo.GlobalReplicationGroupId)
 	}
+
+	d.Set(names.AttrEngine, rgp.Engine)
 
 	switch rgp.AutomaticFailover {
 	case awstypes.AutomaticFailoverStatusDisabled, awstypes.AutomaticFailoverStatusDisabling:
@@ -820,6 +830,14 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("cluster_mode") {
 			input.ClusterMode = awstypes.ClusterMode(d.Get("cluster_mode").(string))
+			requestUpdate = true
+		}
+
+		if old, new := d.GetChange(names.AttrEngine); old.(string) == engineRedis && new.(string) == engineValkey {
+			if !d.HasChange(names.AttrEngineVersion) {
+				return sdkdiag.AppendErrorf(diags, "must explicitly set '%s' attribute for Replication Group (%s) when updating engine to 'valkey'", names.AttrEngineVersion, d.Id())
+			}
+			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
 			requestUpdate = true
 		}
 

@@ -7,8 +7,9 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
@@ -72,13 +73,13 @@ func main() {
 		td.Services = append(td.Services, sd)
 	}
 
-	sort.Slice(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderPackage < td.Services[j].ProviderPackage
+	slices.SortFunc(td.Services, func(a, b serviceDatum) int {
+		return cmp.Compare(a.ProviderPackage, b.ProviderPackage)
 	})
 
 	d := g.NewUnformattedFileDestination(filename)
 
-	if err := d.WriteTemplate("website", header+tmpl+footer, td); err != nil {
+	if err := d.BufferTemplate("website", header+tmpl+footer, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
