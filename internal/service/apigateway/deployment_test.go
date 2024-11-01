@@ -340,7 +340,7 @@ func TestAccAPIGatewayDeployment_deploymentCanarySettings(t *testing.T) {
 	resourceNameDeploymentMain := "aws_api_gateway_deployment.test_main"
 	resourceNameStage := "aws_api_gateway_stage.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

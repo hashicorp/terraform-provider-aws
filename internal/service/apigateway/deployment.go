@@ -47,10 +47,11 @@ func resourceDeployment() *schema.Resource {
 				Optional: true,
 			},
 			"canary_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				MaxItems:     1,
+				RequiredWith: []string{"stage_name"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"percent_traffic": {
@@ -84,9 +85,10 @@ func resourceDeployment() *schema.Resource {
 				ForceNew: true,
 			},
 			"stage_description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"stage_name"},
 			},
 			"stage_name": {
 				Type:     schema.TypeString,
