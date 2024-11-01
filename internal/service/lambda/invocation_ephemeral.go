@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -40,8 +42,15 @@ func (e *ephemeralInvocation) Metadata(_ context.Context, _ ephemeral.MetadataRe
 func (e *ephemeralInvocation) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"client_context": schema.StringAttribute{
+				Optional: true,
+			},
 			"function_name": schema.StringAttribute{
 				Required: true,
+			},
+			"log_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.LogType](),
+				Optional:   true,
 			},
 			"payload": schema.StringAttribute{
 				Required: true,
@@ -74,6 +83,8 @@ func (e *ephemeralInvocation) Open(ctx context.Context, req ephemeral.OpenReques
 		return
 	}
 
+	// todo: base64 encode client context
+
 	output, err := conn.Invoke(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -96,8 +107,10 @@ func (e *ephemeralInvocation) Open(ctx context.Context, req ephemeral.OpenReques
 }
 
 type epInvocationData struct {
-	FunctionName types.String `tfsdk:"function_name"`
-	Payload      types.String `tfsdk:"input"`
-	Qualifier    types.String `tfsdk:"qualifier"`
-	Result       types.String `tfsdk:"result"`
+	ClientContext types.String                         `tfsdk:"client_context"`
+	FunctionName  types.String                         `tfsdk:"function_name"`
+	LogType       fwtypes.StringEnum[awstypes.LogType] `tfsdk:"log_type"`
+	Payload       types.String                         `tfsdk:"input"`
+	Qualifier     types.String                         `tfsdk:"qualifier"`
+	Result        types.String                         `tfsdk:"result"`
 }
