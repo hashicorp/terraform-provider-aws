@@ -124,7 +124,7 @@ resource "aws_iam_role" "example" {
 
 ### Example of Exclusive Managed Policies
 
-~> The `managed_policy_arns` argument is deprecated. Use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource instead.
+~> The `managed_policy_arns` argument is deprecated. Use the [`aws_iam_role_policy_attachment`](./iam_role_policy_attachment.html.markdown) resource instead. If Terraform should exclusively manage all managed policy attachments (the current behavior of this argument), use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource as well.
 
 This example creates an IAM role and attaches two managed IAM policies. If someone attaches another managed policy out-of-band, on the next apply, Terraform will detach that policy. If someone detaches these policies out-of-band, Terraform will attach them again.
 
@@ -168,7 +168,7 @@ resource "aws_iam_policy" "policy_two" {
 
 ### Example of Removing Managed Policies
 
-~> The `managed_policy_arns` argument is deprecated. Use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource instead.
+~> The `managed_policy_arns` argument is deprecated. Use the [`aws_iam_role_policy_attachment`](./iam_role_policy_attachment.html.markdown) resource instead. If Terraform should exclusively manage all managed policy attachments (the current behavior of this argument), use the [`aws_iam_role_policy_attachments_exclusive`](./iam_role_policy_attachments_exclusive.html.markdown) resource as well.
 
 This example creates an IAM role with an empty `managed_policy_arns` argument. If someone attaches a policy out-of-band, on the next apply, Terraform will detach that policy.
 
