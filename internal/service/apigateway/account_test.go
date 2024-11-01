@@ -4,12 +4,16 @@
 package apigateway_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -22,7 +26,7 @@ func testAccAccount_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_role0(rName),
@@ -54,6 +58,32 @@ func testAccAccount_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_api_gateway_stage" {
+				continue
+			}
+
+			account, err := tfapigateway.FindAccount(ctx, conn)
+			if err != nil {
+				return err
+			}
+
+			if account.CloudwatchRoleArn == nil {
+				// Settings have been reset
+				continue
+			}
+
+			return fmt.Errorf("API Gateway Stage %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
 
 const testAccAccountConfig_empty = `

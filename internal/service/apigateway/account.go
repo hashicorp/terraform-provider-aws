@@ -25,7 +25,7 @@ func resourceAccount() *schema.Resource {
 		CreateWithoutTimeout: resourceAccountUpdate,
 		ReadWithoutTimeout:   resourceAccountRead,
 		UpdateWithoutTimeout: resourceAccountUpdate,
-		DeleteWithoutTimeout: schema.NoopContext,
+		DeleteWithoutTimeout: resourceAccountDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -66,7 +66,7 @@ func resourceAccount() *schema.Resource {
 	}
 }
 
-func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -82,12 +82,12 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.PatchOperations = []types.PatchOperation{{
 			Op:    types.OpReplace,
 			Path:  aws.String("/cloudwatchRoleArn"),
-			Value: aws.String(""),
+			Value: nil,
 		}}
 	}
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
-		func() (interface{}, error) {
+		func() (any, error) {
 			return conn.UpdateAccount(ctx, input)
 		},
 		func(err error) (bool, error) {
@@ -114,7 +114,7 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }
 
-func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -137,6 +137,25 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting throttle_settings: %s", err)
 	}
 
+	return diags
+}
+
+func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+
+	input := &apigateway.UpdateAccountInput{}
+
+	input.PatchOperations = []types.PatchOperation{{
+		Op:    types.OpReplace,
+		Path:  aws.String("/cloudwatchRoleArn"),
+		Value: nil,
+	}}
+
+	_, err := conn.UpdateAccount(ctx, input)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "resetting API Gateway Account: %s", err)
+	}
 	return diags
 }
 

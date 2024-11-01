@@ -31,6 +31,7 @@ var (
 	ResourceVPCLink              = resourceVPCLink
 
 	DefaultAuthorizerTTL                 = defaultAuthorizerTTL
+	FindAccount                          = findAccount
 	FindAPIKeyByID                       = findAPIKeyByID
 	FindAuthorizerByTwoPartKey           = findAuthorizerByTwoPartKey
 	FindBasePathMappingByTwoPartKey      = findBasePathMappingByTwoPartKey
