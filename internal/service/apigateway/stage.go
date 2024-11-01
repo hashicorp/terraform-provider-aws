@@ -91,6 +91,10 @@ func resourceStage() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"deployment_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"percent_traffic": {
 							Type:     schema.TypeFloat,
 							Optional: true,
@@ -189,7 +193,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CanarySettings = expandCanarySettings(v.([]interface{})[0].(map[string]interface{}), deploymentID)
+		input.CanarySettings = expandCanarySettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -332,14 +336,6 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				Path:  aws.String("/deploymentId"),
 				Value: aws.String(d.Get("deployment_id").(string)),
 			})
-
-			if _, ok := d.GetOk("canary_settings"); ok {
-				operations = append(operations, types.PatchOperation{
-					Op:    types.OpReplace,
-					Path:  aws.String("/canarySettings/deploymentId"),
-					Value: aws.String(d.Get("deployment_id").(string)),
-				})
-			}
 		}
 		if d.HasChange(names.AttrDescription) {
 			operations = append(operations, types.PatchOperation{
@@ -561,13 +557,13 @@ func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[
 	return result
 }
 
-func expandCanarySettings(tfMap map[string]interface{}, deploymentId string) *types.CanarySettings {
+func expandCanarySettings(tfMap map[string]interface{}) *types.CanarySettings {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.CanarySettings{
-		DeploymentId: aws.String(deploymentId),
+		DeploymentId: aws.String(tfMap["deployment_id"].(string)),
 	}
 
 	if v, ok := tfMap["percent_traffic"].(float64); ok {
@@ -600,6 +596,7 @@ func flattenCanarySettings(canarySettings *types.CanarySettings) []interface{} {
 
 	settings["percent_traffic"] = canarySettings.PercentTraffic
 	settings["use_stage_cache"] = canarySettings.UseStageCache
+	settings["deployment_id"] = canarySettings.DeploymentId
 
 	return []interface{}{settings}
 }
@@ -621,6 +618,7 @@ func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldC
 			"percent_traffic":          0.0,
 			"stage_variable_overrides": make(map[string]interface{}),
 			"use_stage_cache":          false,
+			"deployment_id":            "",
 		}
 	}
 
@@ -648,6 +646,14 @@ func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldC
 		})
 	}
 
+	oldDeploymentID, newDeploymentID := oldSettings["deployment_id"].(string), newSettings["deployment_id"].(string)
+	if oldDeploymentID != newDeploymentID {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/canarySettings/deploymentId"),
+			Value: aws.String(newDeploymentID),
+		})
+	}
 	return operations
 }
 
