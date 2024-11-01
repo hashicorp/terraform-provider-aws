@@ -1,7 +1,16 @@
 ## 5.75.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_api_gateway_stage: Add `canary_settings.deployment_id` attribute as `required` ([#39929](https://github.com/hashicorp/terraform-provider-aws/issues/39929))
+
+NOTES:
+
+* resource/aws_api_gateway_stage: `deployment_id` was added to `canary_settings` as a `required` attribute. This breaking change was necessary to make `canary_settings` functional. Without this change all canary traffic was routed to the main deployment ([#39929](https://github.com/hashicorp/terraform-provider-aws/issues/39929))
+
 BUG FIXES:
 
+* resource/aws_api_gateway_deployment: Fix destroy error when canary stage still exists on resource ([#39929](https://github.com/hashicorp/terraform-provider-aws/issues/39929))
 * resource/aws_elasticache_reserved_cache_node: Fix `Value Conversion Error` during resource creation ([#39945](https://github.com/hashicorp/terraform-provider-aws/issues/39945))
 
 ## 5.74.0 (October 31, 2024)
