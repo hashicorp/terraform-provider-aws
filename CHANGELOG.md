@@ -1,4 +1,9 @@
 ## 5.75.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_elasticache_reserved_cache_node: Fix `Value Conversion Error` during resource creation ([#39945](https://github.com/hashicorp/terraform-provider-aws/issues/39945))
+
 ## 5.74.0 (October 31, 2024)
 
 FEATURES:
