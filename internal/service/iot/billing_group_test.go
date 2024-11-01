@@ -180,12 +180,12 @@ func TestAccIoTBillingGroup_migrateFromPluginSDK(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "iot", regexache.MustCompile(fmt.Sprintf("billinggroup/%s$", rName))),
-					resource.TestCheckResourceAttr(resourceName, "metadata.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "metadata.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "metadata.0.creation_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "properties.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "properties.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{
@@ -229,9 +229,9 @@ func TestAccIoTBillingGroup_migrateFromPluginSDK_properties(t *testing.T) {
 				Config:                   testAccBillingGroupConfig_propertiesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "properties.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "properties.0.description", "test description 2"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 				),
 			},
 		},

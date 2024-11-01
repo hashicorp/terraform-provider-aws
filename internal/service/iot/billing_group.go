@@ -54,8 +54,8 @@ func (r *resourceBillingGroup) Metadata(_ context.Context, request resource.Meta
 func (r *resourceBillingGroup) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"id":  framework.IDAttribute(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
 			"metadata": schema.ListAttribute{
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[metadataModel](ctx),
 				ElementType: fwtypes.NewObjectTypeOf[metadataModel](ctx),
@@ -64,7 +64,7 @@ func (r *resourceBillingGroup) Schema(ctx context.Context, request resource.Sche
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -73,18 +73,18 @@ func (r *resourceBillingGroup) Schema(ctx context.Context, request resource.Sche
 					stringvalidator.LengthBetween(1, 128),
 				},
 			},
-			"tags":     tftags.TagsAttribute(),
-			"tags_all": tftags.TagsAttributeComputedOnly(),
-			"version": schema.Int64Attribute{
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			names.AttrVersion: schema.Int64Attribute{
 				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"properties": schema.ListNestedBlock{
+			names.AttrProperties: schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[propertiesModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"description": schema.StringAttribute{
+						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 						},
 					},
@@ -257,7 +257,7 @@ func (r *resourceBillingGroup) Delete(ctx context.Context, request resource.Dele
 }
 
 func (r *resourceBillingGroup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 func (r *resourceBillingGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
