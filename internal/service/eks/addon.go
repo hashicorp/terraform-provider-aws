@@ -353,6 +353,10 @@ func resourceAddonDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Deleting EKS Add-On: %s", d.Id())
 	_, err = conn.DeleteAddon(ctx, input)
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EKS Add-On (%s): %s", d.Id(), err)
 	}
