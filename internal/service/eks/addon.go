@@ -404,7 +404,7 @@ func flattenAddonPodIdentityAssociations(ctx context.Context, associations []str
 		//
 		// Ex. "arn:aws:eks:<region>:<account-id>:podidentityassociation/<cluster-name>/a-1v95i5dqqiylbo3ud"
 		parts := strings.Split(associationArn, "/")
-		if len(parts) != 2 {
+		if len(parts) != 3 {
 			return nil, fmt.Errorf(`unable to extract association ID from ARN "%s"`, associationArn)
 		}
 
