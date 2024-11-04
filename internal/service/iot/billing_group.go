@@ -196,6 +196,10 @@ func (r *resourceBillingGroup) Update(ctx context.Context, request resource.Upda
 		return
 	}
 
+	// For tag-only updates the version value needs to be copied
+	// from state into the proposed plan. This will be overwritten
+	// by flex.Flatten below if the properties argument changed.
+	new.Version = old.Version
 	if !old.Properties.Equal(new.Properties) {
 		input := &iot.UpdateBillingGroupInput{}
 		response.Diagnostics.Append(flex.Expand(ctx, new, input, flex.WithFieldNamePrefix("BillingGroup"))...)
@@ -215,8 +219,6 @@ func (r *resourceBillingGroup) Update(ctx context.Context, request resource.Upda
 		}
 
 		response.Diagnostics.Append(flex.Flatten(ctx, out, &new)...)
-	} else {
-		new.Version = old.Version
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
