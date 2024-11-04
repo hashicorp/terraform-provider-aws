@@ -18,6 +18,21 @@ import (
 
 type servicePackage struct {}
 
+{{- if .EphemeralResources }}
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
+	return []*types.ServicePackageEphemeralResource {
+{{- range .EphemeralResources }}
+		{
+			Factory: {{ .FactoryName }},
+			{{- if ne .Name "" }}
+			Name:    "{{ .Name }}",
+			{{- end }}
+		},
+{{- end }}
+	}
+}
+{{- end }}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource {
 {{- range .FrameworkDataSources }}
