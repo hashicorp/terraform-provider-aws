@@ -211,7 +211,7 @@ This resource supports the following arguments:
 
 You can configure a deployment to stop when a **CloudWatch** alarm detects that a metric has fallen below or exceeded a defined threshold. `alarm_configuration` supports the following:
 
-* `alarms` - (Optional) A list of alarms configured for the deployment group. _A maximum of 10 alarms can be added to a deployment group_.
+* `alarms` - (Optional) A list of alarms configured for the deployment group.
 * `enabled` - (Optional) Indicates whether the alarm configuration is enabled. This option is useful when you want to temporarily deactivate alarm monitoring for a deployment group without having to add the same alarms again later.
 * `ignore_poll_alarm_failure` - (Optional) Indicates whether a deployment should continue if information about the current state of alarms cannot be retrieved from CloudWatch. The default value is `false`.
     * `true`: The deployment will proceed even if alarm status information can't be retrieved.
