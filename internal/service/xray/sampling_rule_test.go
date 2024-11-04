@@ -6,6 +6,7 @@ package xray_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
@@ -96,8 +97,8 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, fmt.Sprintf("%d", updatedPriority)),
-					resource.TestCheckResourceAttr(resourceName, "reservoir_size", fmt.Sprintf("%d", updatedReservoirSize)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, strconv.Itoa(updatedPriority)),
+					resource.TestCheckResourceAttr(resourceName, "reservoir_size", strconv.Itoa(updatedReservoirSize)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "url_path", "*"),
 					resource.TestCheckResourceAttr(resourceName, "host", "*"),

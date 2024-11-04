@@ -447,7 +447,7 @@ func resourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "0" && new == fmt.Sprintf("%d", d.Get(names.AttrAllocatedStorage).(int)) {
+					if old == "0" && new == strconv.Itoa(d.Get(names.AttrAllocatedStorage).(int)) {
 						return true
 					}
 					return false

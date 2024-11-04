@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -304,7 +305,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
 				Path:  aws.String("/cacheClusterEnabled"),
-				Value: aws.String(fmt.Sprintf("%t", d.Get("cache_cluster_enabled").(bool))),
+				Value: aws.String(strconv.FormatBool(d.Get("cache_cluster_enabled").(bool))),
 			})
 			waitForCache = true
 		}
@@ -348,7 +349,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
 				Path:  aws.String("/tracingEnabled"),
-				Value: aws.String(fmt.Sprintf("%t", d.Get("xray_tracing_enabled").(bool))),
+				Value: aws.String(strconv.FormatBool(d.Get("xray_tracing_enabled").(bool))),
 			})
 		}
 		if d.HasChange("documentation_version") {
@@ -642,7 +643,7 @@ func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldC
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/canarySettings/useStageCache"),
-			Value: aws.String(fmt.Sprintf("%t", newUseStageCache)),
+			Value: aws.String(strconv.FormatBool(newUseStageCache)),
 		})
 	}
 
