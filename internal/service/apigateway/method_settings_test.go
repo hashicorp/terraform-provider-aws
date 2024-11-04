@@ -31,7 +31,7 @@ func testAccMethodSettings_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", "INFO"),
@@ -60,7 +60,7 @@ func testAccMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_cacheDataEncrypted(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_data_encrypted", acctest.CtTrue),
@@ -68,7 +68,7 @@ func testAccMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 			},
 			{
 				Config: testAccMethodSettingsConfig_cacheDataEncrypted(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_data_encrypted", acctest.CtFalse),
@@ -97,7 +97,7 @@ func testAccMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_cacheTTLInSeconds(rName, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", "0"),
@@ -105,7 +105,7 @@ func testAccMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 			},
 			{
 				Config: testAccMethodSettingsConfig_cacheTTLInSeconds(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", "1"),
@@ -113,7 +113,7 @@ func testAccMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 			},
 			{
 				Config: testAccMethodSettingsConfig_cacheTTLInSeconds(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", "2"),
@@ -142,7 +142,7 @@ func testAccMethodSettings_Settings_cachingEnabled(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_cachingEnabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.caching_enabled", acctest.CtTrue),
@@ -150,7 +150,7 @@ func testAccMethodSettings_Settings_cachingEnabled(t *testing.T) {
 			},
 			{
 				Config: testAccMethodSettingsConfig_cachingEnabled(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.caching_enabled", acctest.CtFalse),
@@ -179,7 +179,7 @@ func testAccMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_dataTraceEnabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.data_trace_enabled", acctest.CtTrue),
@@ -187,7 +187,7 @@ func testAccMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 			},
 			{
 				Config: testAccMethodSettingsConfig_dataTraceEnabled(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.data_trace_enabled", acctest.CtFalse),
@@ -216,7 +216,7 @@ func testAccMethodSettings_Settings_loggingLevel(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", "INFO"),
@@ -224,7 +224,7 @@ func testAccMethodSettings_Settings_loggingLevel(t *testing.T) {
 			},
 			{
 				Config: testAccMethodSettingsConfig_loggingLevel(rName, "OFF"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", "OFF"),
@@ -253,7 +253,7 @@ func testAccMethodSettings_Settings_metricsEnabled(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_metricsEnabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtTrue),
@@ -261,7 +261,7 @@ func testAccMethodSettings_Settings_metricsEnabled(t *testing.T) {
 			},
 			{
 				Config: testAccMethodSettingsConfig_metricsEnabled(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtFalse),
@@ -290,7 +290,7 @@ func testAccMethodSettings_Settings_multiple(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_multiple(rName, "INFO", true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtTrue),
@@ -299,7 +299,7 @@ func testAccMethodSettings_Settings_multiple(t *testing.T) {
 			},
 			{
 				Config: testAccMethodSettingsConfig_multiple(rName, "OFF", false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", "OFF"),
@@ -328,7 +328,7 @@ func testAccMethodSettings_Settings_requireAuthorizationForCacheControl(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_requireAuthorizationForCacheControl(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.require_authorization_for_cache_control", acctest.CtTrue),
@@ -336,7 +336,7 @@ func testAccMethodSettings_Settings_requireAuthorizationForCacheControl(t *testi
 			},
 			{
 				Config: testAccMethodSettingsConfig_requireAuthorizationForCacheControl(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.require_authorization_for_cache_control", acctest.CtFalse),
@@ -365,7 +365,7 @@ func testAccMethodSettings_Settings_throttlingBurstLimit(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_throttlingBurstLimit(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", "1"),
@@ -373,7 +373,7 @@ func testAccMethodSettings_Settings_throttlingBurstLimit(t *testing.T) {
 			},
 			{
 				Config: testAccMethodSettingsConfig_throttlingBurstLimit(rName, 2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", "2"),
@@ -403,7 +403,7 @@ func testAccMethodSettings_Settings_throttlingBurstLimitDisabledByDefault(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", "-1"),
@@ -417,7 +417,7 @@ func testAccMethodSettings_Settings_throttlingBurstLimitDisabledByDefault(t *tes
 			},
 			{
 				Config: testAccMethodSettingsConfig_throttlingBurstLimit(rName, 1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", "1"),
@@ -440,7 +440,7 @@ func testAccMethodSettings_Settings_throttlingRateLimit(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_throttlingRateLimit(rName, 1.1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_rate_limit", "1.1"),
@@ -448,7 +448,7 @@ func testAccMethodSettings_Settings_throttlingRateLimit(t *testing.T) {
 			},
 			{
 				Config: testAccMethodSettingsConfig_throttlingRateLimit(rName, 2.2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_rate_limit", "2.2"),
@@ -478,7 +478,7 @@ func testAccMethodSettings_Settings_throttlingRateLimitDisabledByDefault(t *test
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_rate_limit", "-1"),
@@ -492,7 +492,7 @@ func testAccMethodSettings_Settings_throttlingRateLimitDisabledByDefault(t *test
 			},
 			{
 				Config: testAccMethodSettingsConfig_throttlingRateLimit(rName, 1.1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_rate_limit", "1.1"),
@@ -515,7 +515,7 @@ func testAccMethodSettings_Settings_unauthorizedCacheControlHeaderStrategy(t *te
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_unauthorizedCacheControlHeaderStrategy(rName, "SUCCEED_WITH_RESPONSE_HEADER"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.unauthorized_cache_control_header_strategy", "SUCCEED_WITH_RESPONSE_HEADER"),
@@ -523,7 +523,7 @@ func testAccMethodSettings_Settings_unauthorizedCacheControlHeaderStrategy(t *te
 			},
 			{
 				Config: testAccMethodSettingsConfig_unauthorizedCacheControlHeaderStrategy(rName, "SUCCEED_WITHOUT_RESPONSE_HEADER"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "settings.0.unauthorized_cache_control_header_strategy", "SUCCEED_WITHOUT_RESPONSE_HEADER"),
@@ -552,7 +552,7 @@ func testAccMethodSettings_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceMethodSettings(), resourceName),
 				),
