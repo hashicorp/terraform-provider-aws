@@ -11,6 +11,7 @@ NOTES:
 BUG FIXES:
 
 * resource/aws_api_gateway_deployment: Fix destroy error when canary stage still exists on resource ([#39929](https://github.com/hashicorp/terraform-provider-aws/issues/39929))
+* resource/aws_codedeploy_deployment_group: Remove maximum items limit on the `alarm_configuration.alarms` argument ([#39971](https://github.com/hashicorp/terraform-provider-aws/issues/39971))
 * resource/aws_elasticache_reserved_cache_node: Fix `Value Conversion Error` during resource creation ([#39945](https://github.com/hashicorp/terraform-provider-aws/issues/39945))
 
 ## 5.74.0 (October 31, 2024)
