@@ -86,6 +86,6 @@ Concepts](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html)
 
 ## Attribute Reference
 
-This ephemeral resource exports the following attributes in addition to the arguments above:
+This resource exports the following attributes in addition to the arguments above:
 
 * `plaintext` - Map containing each `secret` `name` as the key with its decrypted plaintext value

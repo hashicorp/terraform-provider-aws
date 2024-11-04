@@ -49,7 +49,7 @@ output "example" {
 
 ## Attribute Reference
 
-This ephemeral resource exports the following attributes in addition to the arguments above:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the secret.
 * `created_date` - Created date of the secret in UTC.
