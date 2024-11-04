@@ -67,7 +67,6 @@ func TestAccIoTBillingGroup_disappears(t *testing.T) {
 				Config: testAccBillingGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBillingGroupExists(ctx, resourceName),
-					// acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiot.ResourceBillingGroup(), resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfiot.NewResourceBillingGroup, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -173,7 +172,7 @@ func TestAccIoTBillingGroup_migrateFromPluginSDK(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.74.0", // always use most recently published version of the Provider
+						VersionConstraint: "5.74.0",
 					},
 				},
 				Config: testAccBillingGroupConfig_basic(rName),
@@ -211,7 +210,7 @@ func TestAccIoTBillingGroup_migrateFromPluginSDK_properties(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.74.0", // always use most recently published version of the Provider
+						VersionConstraint: "5.74.0",
 					},
 				},
 				Config: testAccBillingGroupConfig_properties(rName),
