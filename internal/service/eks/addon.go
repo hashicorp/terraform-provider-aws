@@ -370,21 +370,17 @@ func expandAddonPodIdentityAssociations(tfList []interface{}) []types.AddonPodId
 	}
 
 	var addonPodIdentityAssociations []types.AddonPodIdentityAssociations
-
 	for _, raw := range tfList {
-		t, ok := raw.(map[string]interface{})
-
+		tfMap, ok := raw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
 		pia := types.AddonPodIdentityAssociations{}
-
-		if roleArn, ok := t[names.AttrRoleARN].(string); ok {
+		if roleArn, ok := tfMap[names.AttrRoleARN].(string); ok {
 			pia.RoleArn = aws.String(roleArn)
 		}
-
-		if service_account, ok := t["service_account"].(string); ok {
+		if service_account, ok := tfMap["service_account"].(string); ok {
 			pia.ServiceAccount = aws.String(service_account)
 		}
 
@@ -404,9 +400,14 @@ func flattenAddonPodIdentityAssociations(ctx context.Context, associations []str
 
 	for _, associationArn := range associations {
 		// CreateAddon returns the associationARN. The associationId is extracted from the end of the ARN,
-		// which is used in the DescribeAddon call to get the RoleARN and ServiceAccount
-		// "arn:aws:eks:<region>:<account-id>:podidentityassociation/<cluster-name>/a-1v95i5dqqiylbo3ud"
+		// which is used in the DescribePodIdentityAssociation call to get the RoleARN and ServiceAccount
+		//
+		// Ex. "arn:aws:eks:<region>:<account-id>:podidentityassociation/<cluster-name>/a-1v95i5dqqiylbo3ud"
 		parts := strings.Split(associationArn, "/")
+		if len(parts) != 2 {
+			return nil, fmt.Errorf(`unable to extract association ID from ARN "%s"`, associationArn)
+		}
+
 		associationId := parts[2]
 		pia, err := findPodIdentityAssociationByTwoPartKey(ctx, conn, associationId, clusterName)
 		if err != nil {
