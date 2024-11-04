@@ -32,7 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_iot_billing_group")
+// @FrameworkResource("aws_iot_billing_group", name="Billing Group")
 // @Tags(identifierAttribute="arn")
 func newResourceBillingGroup(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceBillingGroup{}
