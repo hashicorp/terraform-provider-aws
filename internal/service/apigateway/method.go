@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -249,7 +250,7 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/apiKeyRequired"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("api_key_required").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("api_key_required").(bool))),
 		})
 	}
 

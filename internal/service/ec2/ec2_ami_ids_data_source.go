@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -131,7 +132,7 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		imageIDs = append(imageIDs, aws.ToString(image.ImageId))
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(fmt.Sprintf("%#v", input))))
+	d.SetId(strconv.Itoa(create.StringHashcode(fmt.Sprintf("%#v", input))))
 	d.Set(names.AttrIDs, imageIDs)
 
 	return diags

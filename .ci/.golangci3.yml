@@ -128,6 +128,7 @@ linters:
     - nolintlint
     - nosprintfhostport
     - paralleltest
+    - perfsprint
     - predeclared
     - revive
     - staticcheck
@@ -154,6 +155,12 @@ linters-settings:
       - paralleltest
       - tparallel
       - unparam
+  perfsprint:
+    int-conversion: true
+    err-error: false
+    errorf: false
+    sprintf1: true
+    strconcat: false
   predeclared:
     ignore: cap,close,copy,delete,len,new,min,max
   revive:
