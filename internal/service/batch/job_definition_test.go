@@ -1852,7 +1852,7 @@ resource "aws_batch_job_definition" "test" {
     pod_properties {
       host_network = true
       containers {
-	    name  = "container1"
+        name  = "container1"
         image = "public.ecr.aws/amazonlinux/amazonlinux:1"
         command = [
           "sleep",
@@ -1865,8 +1865,8 @@ resource "aws_batch_job_definition" "test" {
           }
         }
       }
-	  containers {
-	    name  = "container2"
+      containers {
+        name  = "container2"
         image = "public.ecr.aws/amazonlinux/amazonlinux:1"
         command = [
           "sleep",

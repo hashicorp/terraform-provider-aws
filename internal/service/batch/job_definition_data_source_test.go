@@ -128,7 +128,7 @@ func TestAccBatchJobDefinitionDataSource_basicARN_EKSProperties(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.init_containers.0.image", "public.ecr.aws/amazonlinux/amazonlinux:1"),
 					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.containers.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.containers.0.image", "public.ecr.aws/amazonlinux/amazonlinux:1"),
-					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.share_process_namespace", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.share_process_namespace", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, "container"),
 				),
 			},
