@@ -628,9 +628,7 @@ func testAccMethodSettingsImportStateIdFunc(resourceName string) resource.Import
 }
 
 func testAccMethodSettingsConfig_base(rName string) string {
-	return acctest.ConfigCompose(
-		testAccAccountConfig_resetOnDelete(rName, true),
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 }
@@ -677,7 +675,7 @@ resource "aws_api_gateway_deployment" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   stage_name  = "dev"
 }
-`, rName))
+`, rName)
 }
 
 func testAccMethodSettingsConfig_basic(rName string) string {
@@ -749,7 +747,10 @@ resource "aws_api_gateway_method_settings" "test" {
 }
 
 func testAccMethodSettingsConfig_loggingLevel(rName, loggingLevel string) string {
-	return acctest.ConfigCompose(testAccMethodSettingsConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccMethodSettingsConfig_base(rName),
+		testAccAccountConfig_role0(rName),
+		fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
   rest_api_id = aws_api_gateway_rest_api.test.id
@@ -779,7 +780,10 @@ resource "aws_api_gateway_method_settings" "test" {
 }
 
 func testAccMethodSettingsConfig_multiple(rName, loggingLevel string, metricsEnabled bool) string {
-	return acctest.ConfigCompose(testAccMethodSettingsConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccMethodSettingsConfig_base(rName),
+		testAccAccountConfig_role0(rName),
+		fmt.Sprintf(`
 resource "aws_api_gateway_method_settings" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   stage_name  = aws_api_gateway_deployment.test.stage_name
