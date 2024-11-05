@@ -2748,48 +2748,6 @@ func TestTagDataString(t *testing.T) {
 	}
 }
 
-func TestToSnakeCase(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		Input    string
-		Expected string
-	}{
-		{
-			Input:    "ARN",
-			Expected: "arn",
-		},
-		{
-			Input:    "PropagateAtLaunch",
-			Expected: "propagate_at_launch",
-		},
-		{
-			Input:    "ResourceId",
-			Expected: "resource_id",
-		},
-		{
-			Input:    "ResourceArn",
-			Expected: "resource_arn",
-		},
-		{
-			Input:    "ResourceARN",
-			Expected: "resource_arn",
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.Input, func(t *testing.T) {
-			t.Parallel()
-
-			got := ToSnakeCase(testCase.Input)
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
 func TestKeyValueTagsString(t *testing.T) {
 	t.Parallel()
 

@@ -547,12 +547,12 @@ func resourceCluster() *schema.Resource {
 						names.AttrMaxCapacity: {
 							Type:         schema.TypeFloat,
 							Required:     true,
-							ValidateFunc: validation.FloatBetween(0.5, 128),
+							ValidateFunc: validation.FloatBetween(0.5, 256),
 						},
 						"min_capacity": {
 							Type:         schema.TypeFloat,
 							Required:     true,
-							ValidateFunc: validation.FloatBetween(0.5, 128),
+							ValidateFunc: validation.FloatBetween(0.5, 256),
 						},
 					},
 				},

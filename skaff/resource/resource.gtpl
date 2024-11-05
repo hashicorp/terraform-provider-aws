@@ -31,11 +31,9 @@ import (
 	//
 	// The provider linter wants your imports to be in two groups: first,
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
-{{- end }}
-{{- if and .IncludeComments .AWSGoSDKV2 }}
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/{{ .ServicePackage }}/types package. If so, you'll
+	// using the services/{{ .SDKPackage }}/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// types.<Type Name>.
 {{- end }}
@@ -47,15 +45,10 @@ import (
 	"regexp"
 	"strings"
 	"time"
-{{ if .AWSGoSDKV2 }}
+
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
-	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
-{{- else }}
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/{{ .ServicePackage }}"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-{{- end }}
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .SDKPackage }}/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -232,11 +225,11 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+	conn := meta.(*conns.AWSClient).{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a create input structure
 	{{- end }}
-	in := &{{ .ServicePackage }}.Create{{ .Resource }}Input{
+	in := &{{ .SDKPackage }}.Create{{ .Resource }}Input{
 		{{- if .IncludeComments }}
 		// TIP: Mandatory or fields that will always be present can be set when
 		// you create the Input structure. (Replace these with real fields.)
@@ -272,11 +265,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Call the AWS create function
 	{{- end }}
-	{{- if .AWSGoSDKV2 }}
 	out, err := conn.Create{{ .Resource }}(ctx, in)
-	{{- else }}
-	out, err := conn.Create{{ .Resource }}WithContext(ctx, in)
-	{{- end }}
 	if err != nil {
 		{{- if .IncludeComments }}
 		// TIP: Since d.SetId() has not been called yet, you cannot use d.Id()
@@ -292,7 +281,7 @@ func resource{{ .Resource }}Create(ctx context.Context, d *schema.ResourceData, 
 	// TIP: -- 4. Set the minimum arguments and/or attributes for the Read function to
 	// work.
 	{{- end }}
-	d.SetId({{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.{{ .Resource }}.{{ .Resource }}ID))
+	d.SetId(aws.ToString(out.{{ .Resource }}.{{ .Resource }}ID))
 	{{ if .IncludeComments }}
 	// TIP: -- 5. Use a waiter to wait for create to complete
 	{{- end }}
@@ -323,7 +312,7 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+	conn := meta.(*conns.AWSClient).{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
@@ -371,7 +360,7 @@ func resource{{ .Resource }}Read(ctx context.Context, d *schema.ResourceData, me
 	{{ if .IncludeComments }}
 	// TIP: Setting a JSON string to avoid errorneous diffs.
 	{{- end }}
-	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.Policy))
+	p, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.Policy))
 	if err != nil {
 		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionSetting, ResName{{ .Resource }}, d.Id(), err)
 	}
@@ -416,7 +405,7 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+	conn := meta.(*conns.AWSClient).{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a modify input structure and check for changes
 	//
@@ -447,18 +436,14 @@ func resource{{ .Resource }}Update(ctx context.Context, d *schema.ResourceData, 
 	// TIP: -- 3. Call the AWS modify/update function
 	{{- end }}
 	log.Printf("[DEBUG] Updating {{ .Service }} {{ .Resource }} (%s): %#v", d.Id(), in)
-	{{- if .AWSGoSDKV2 }}
 	out, err := conn.Update{{ .Resource }}(ctx, in)
-	{{- else }}
-	out, err := conn.Update{{ .Resource }}WithContext(ctx, in)
-	{{- end }}
 	if err != nil {
 		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionUpdating, ResName{{ .Resource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Use a waiter to wait for update to complete
 	{{- end }}
-	if _, err := wait{{ .Resource }}Updated(ctx, conn, {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if _, err := wait{{ .Resource }}Updated(ctx, conn, aws.ToString(out.OperationId), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionWaitingForUpdate, ResName{{ .Resource }}, d.Id(), err)
 	}
 	{{ if .IncludeComments }}
@@ -490,7 +475,7 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	{{- end }}
-	conn := meta.(*conns.AWSClient).{{ .Service }}{{ if .AWSGoSDKV2 }}Client(ctx){{ else }}Conn(ctx){{ end }}
+	conn := meta.(*conns.AWSClient).{{ .Service }}Client(ctx)
 	{{ if .IncludeComments }}
 	// TIP: -- 2. Populate a delete input structure
 	{{- end }}
@@ -498,34 +483,19 @@ func resource{{ .Resource }}Delete(ctx context.Context, d *schema.ResourceData, 
 	{{ if .IncludeComments }}
 	// TIP: -- 3. Call the AWS delete function
 	{{- end }}
-	{{- if .AWSGoSDKV2 }}
 	_, err := conn.Delete{{ .Resource }}(ctx, &{{ .ServiceLower }}.Delete{{ .Resource }}Input{
 		Id: aws.String(d.Id()),
 	})
-	{{- else }}
-	_, err := conn.Delete{{ .Resource }}WithContext(ctx, &{{ .ServiceLower }}.Delete{{ .Resource }}Input{
-		Id: aws.String(d.Id()),
-	})
-	{{- end }}
 	{{ if .IncludeComments }}
 	// TIP: On rare occassions, the API returns a not found error after deleting a
 	// resource. If that happens, we don't want it to show up as an error.
 	{{- end }}
-	{{- if .AWSGoSDKV2 }}
 	if errs.IsA[*types.ResourceNotFoundException](err){
 		return diags
 	}
 	if err != nil {
 		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)
 	}
-	{{- else }}
-	if tfawserr.ErrCodeEquals(err, {{ .ServiceLower }}.ErrCodeResourceNotFoundException) {
-		return diags
-	}
-	if err != nil {
-		return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)
-	}
-	{{- end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 4. Use a waiter to wait for delete to complete
 	{{- end }}
@@ -564,11 +534,7 @@ const (
 //
 // You will need to adjust the parameters and names to fit the service.
 {{- end }}
-{{ if .AWSGoSDKV2 }}
 func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-{{- else }}
-func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-{{- end }}
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
@@ -591,11 +557,7 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.{
 // the update has been fully realized. Other times, you can check to see if a
 // key resource argument is updated to a new value or not.
 {{- end }}
-{{ if .AWSGoSDKV2 }}
 func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-{{- else }}
-func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-{{- end }}
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated},
@@ -616,11 +578,7 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.{
 // TIP: A deleted waiter is almost like a backwards created waiter. There may
 // be additional pending states, however.
 {{- end }}
-{{ if .AWSGoSDKV2 }}
 func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-{{- else }}
-func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-{{- end }}
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusDeleting, statusNormal},
 		Target:                    []string{},
@@ -644,11 +602,7 @@ func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.{
 // Waiters consume the values returned by status functions. Design status so
 // that it can be reused by a create, update, and delete waiter, if possible.
 {{- end }}
-{{ if .AWSGoSDKV2 }}
 func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) retry.StateRefreshFunc {
-{{- else }}
-func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string) retry.StateRefreshFunc {
-{{- end }}
 	return func() (interface{}, string, error) {
 		out, err := find{{ .Resource }}ByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -659,7 +613,7 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Se
 			return nil, "", err
 		}
 
-		return out, {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(out.Status), nil
+		return out, aws.ToString(out.Status), nil
 	}
 }
 {{ if .IncludeComments }}
@@ -669,16 +623,11 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Se
 // comes in handy in other places besides the status function. As a result, it
 // is good practice to define it separately.
 {{- end }}
-{{ if .AWSGoSDKV2 }}
 func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-{{- else }}
-func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
-{{- end }}
 	in := &{{ .ServiceLower }}.Get{{ .Resource }}Input{
 		Id: aws.String(id),
 	}
 
-	{{- if .AWSGoSDKV2 }}
 	out, err := conn.Get{{ .Resource }}(ctx, in)
 	if errs.IsA[*types.ResourceNotFoundException](err){
 		return nil, &retry.NotFoundError{
@@ -689,18 +638,6 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 	if err != nil {
 		return nil, err
 	}
-	{{- else }}
-	out, err := conn.Get{{ .Resource }}WithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, {{ .ServiceLower }}.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-	{{- end }}
 
 	if out == nil || out.{{ .Resource }} == nil {
 		return nil, tfresource.NewEmptyResultError(in)
@@ -729,11 +666,11 @@ func flattenComplexArgument(apiObject *{{ .ServiceLower }}.ComplexArgument) map[
 	m := map[string]interface{}{}
 
 	if v := apiObject.SubFieldOne; v != nil {
-		m["sub_field_one"] = {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(v)
+		m["sub_field_one"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SubFieldTwo; v != nil {
-		m["sub_field_two"] = {{ if .AWSGoSDKV2 }}aws.ToString{{ else }}aws.StringValue{{ end }}(v)
+		m["sub_field_two"] = aws.ToString(v)
 	}
 
 	return m

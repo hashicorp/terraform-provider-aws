@@ -38,6 +38,7 @@ import (
 
 // @FrameworkResource("aws_backup_logically_air_gapped_vault", name="Logically Air Gapped Vault")
 // @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
 func newLogicallyAirGappedVaultResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &logicallyAirGappedVaultResource{}
 
@@ -212,7 +213,17 @@ type logicallyAirGappedVaultResourceModel struct {
 }
 
 func findLogicallyAirGappedBackupVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) { // nosemgrep:ci.backup-in-func-name
-	return findVaultByNameAndType(ctx, conn, name, awstypes.VaultTypeLogicallyAirGappedBackupVault)
+	output, err := findVaultByName(ctx, conn, name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.VaultType != awstypes.VaultTypeLogicallyAirGappedBackupVault {
+		return nil, tfresource.NewEmptyResultError(name)
+	}
+
+	return output, nil
 }
 
 func statusLogicallyAirGappedVault(ctx context.Context, conn *backup.Client, name string) retry.StateRefreshFunc {

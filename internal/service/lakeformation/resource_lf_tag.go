@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -347,7 +348,7 @@ func (r *resourceResourceLFTag) Create(ctx context.Context, req resource.CreateR
 
 	state := plan
 
-	id := fmt.Sprintf("%d", create.StringHashcode(prettify(in)))
+	id := strconv.Itoa(create.StringHashcode(prettify(in)))
 	state.ID = fwflex.StringValueToFramework(ctx, id)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)

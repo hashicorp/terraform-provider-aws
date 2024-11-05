@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Account Suppression Attributes")
+// @FrameworkResource("aws_sesv2_account_suppression_attributes", name="Account Suppression Attributes")
 func newAccountSuppressionAttributesResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &accountSuppressionAttributesResource{}
 

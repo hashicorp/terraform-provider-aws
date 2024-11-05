@@ -4,8 +4,9 @@
 package ecs
 
 import (
+	"cmp"
 	"fmt"
-	"sort"
+	"slices"
 	_ "unsafe" // Required for go:linkname
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -145,8 +146,8 @@ func (cd containerDefinitions) reduce(isAWSVPC bool) {
 
 func (cd containerDefinitions) orderEnvironmentVariables() {
 	for i, def := range cd {
-		sort.Slice(def.Environment, func(i, j int) bool {
-			return aws.ToString(def.Environment[i].Name) < aws.ToString(def.Environment[j].Name)
+		slices.SortFunc(def.Environment, func(a, b awstypes.KeyValuePair) int {
+			return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
 		})
 		cd[i].Environment = def.Environment
 	}
@@ -154,16 +155,16 @@ func (cd containerDefinitions) orderEnvironmentVariables() {
 
 func (cd containerDefinitions) orderSecrets() {
 	for i, def := range cd {
-		sort.Slice(def.Secrets, func(i, j int) bool {
-			return aws.ToString(def.Secrets[i].Name) < aws.ToString(def.Secrets[j].Name)
+		slices.SortFunc(def.Secrets, func(a, b awstypes.Secret) int {
+			return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
 		})
 		cd[i].Secrets = def.Secrets
 	}
 }
 
 func (cd containerDefinitions) orderContainers() {
-	sort.Slice(cd, func(i, j int) bool {
-		return aws.ToString(cd[i].Name) < aws.ToString(cd[j].Name)
+	slices.SortFunc(cd, func(a, b awstypes.ContainerDefinition) int {
+		return cmp.Compare(aws.ToString(a.Name), aws.ToString(b.Name))
 	})
 }
 

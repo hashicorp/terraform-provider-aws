@@ -4,18 +4,17 @@
 package schema
 
 import (
-	"github.com/YakDriver/regexache"
+	"sync"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func analysisDefaultSchema() *schema.Schema {
+var analysisDefaultSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		MaxItems: 1,
@@ -31,14 +30,14 @@ func analysisDefaultSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"interactive_layout_configuration": interactiveLayoutConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultInteractiveLayoutConfiguration.html
 							"paginated_layout_configuration":   paginatedLayoutConfigurationSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultPaginatedLayoutConfiguration.html,
-							"sheet_content_type":               stringSchema(false, enum.Validate[awstypes.SheetContentType]()),
+							"sheet_content_type":               stringEnumSchema[awstypes.SheetContentType](attrOptional),
 						},
 					},
 				},
 			},
 		},
 	}
-}
+})
 
 func interactiveLayoutConfigurationSchema() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DefaultInteractiveLayoutConfiguration.html
@@ -107,7 +106,7 @@ func interactiveLayoutConfigurationSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"resize_option": stringSchema(true, enum.Validate[awstypes.ResizeOption]()),
+													"resize_option": stringEnumSchema[awstypes.ResizeOption](attrRequired),
 												},
 											},
 										},
@@ -156,7 +155,7 @@ func paginatedLayoutConfigurationSchema() *schema.Schema {
 	}
 }
 
-func paperCanvasSizeOptionsSchema() *schema.Schema {
+var paperCanvasSizeOptionsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
@@ -165,14 +164,14 @@ func paperCanvasSizeOptionsSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"paper_margin":      spacingSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Spacing.html
-				"paper_orientation": stringSchema(false, enum.Validate[awstypes.PaperOrientation]()),
-				"paper_size":        stringSchema(false, enum.Validate[awstypes.PaperSize]()),
+				"paper_orientation": stringEnumSchema[awstypes.PaperOrientation](attrOptional),
+				"paper_size":        stringEnumSchema[awstypes.PaperSize](attrOptional),
 			},
 		},
 	}
-}
+})
 
-func sheetControlLayoutsSchema() *schema.Schema {
+var sheetControlLayoutsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 		Type:     schema.TypeList,
 		MinItems: 0,
@@ -194,9 +193,9 @@ func sheetControlLayoutsSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func layoutSchema() *schema.Schema {
+var layoutSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -288,7 +287,7 @@ func layoutSchema() *schema.Schema {
 																	MaxItems: 1,
 																	Elem: &schema.Resource{
 																		Schema: map[string]*schema.Schema{
-																			names.AttrStatus: stringSchema(false, enum.Validate[awstypes.Status]()),
+																			names.AttrStatus: stringEnumSchema[awstypes.Status](attrOptional),
 																		},
 																	},
 																},
@@ -322,9 +321,9 @@ func layoutSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func gridLayoutConfigurationSchema() *schema.Schema {
+var gridLayoutConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GridLayoutConfiguration.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -340,18 +339,10 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 					MaxItems: 430,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column_span": {
-								Type:         schema.TypeInt,
-								Required:     true,
-								ValidateFunc: validation.IntBetween(1, 36),
-							},
+							"column_span":  intBetweenSchema(attrRequired, 1, 36),
 							"element_id":   idSchema(),
-							"element_type": stringSchema(true, enum.Validate[awstypes.LayoutElementType]()),
-							"row_span": {
-								Type:         schema.TypeInt,
-								Required:     true,
-								ValidateFunc: validation.IntBetween(1, 21),
-							},
+							"element_type": stringEnumSchema[awstypes.LayoutElementType](attrRequired),
+							"row_span":     intBetweenSchema(attrRequired, 1, 21),
 							"column_index": {
 								Type:         nullable.TypeNullableInt,
 								Optional:     true,
@@ -383,7 +374,7 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 											Type:     schema.TypeString,
 											Optional: true,
 										},
-										"resize_option": stringSchema(true, enum.Validate[awstypes.ResizeOption]()),
+										"resize_option": stringEnumSchema[awstypes.ResizeOption](attrRequired),
 									},
 								},
 							},
@@ -393,9 +384,9 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func headerFooterSectionConfigurationSchema() *schema.Schema {
+var headerFooterSectionConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_HeaderFooterSectionConfiguration.html
 		Type:     schema.TypeList,
 		Required: true,
@@ -409,9 +400,9 @@ func headerFooterSectionConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func sectionStyleSchema() *schema.Schema {
+var sectionStyleSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SectionStyle.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -427,9 +418,9 @@ func sectionStyleSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func freeFormLayoutElementsSchema() *schema.Schema {
+var freeFormLayoutElementsSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FreeFormLayoutElement.html
 		Type:     schema.TypeList,
 		Required: true,
@@ -438,7 +429,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"element_id":   idSchema(),
-				"element_type": stringSchema(true, enum.Validate[awstypes.LayoutElementType]()),
+				"element_type": stringEnumSchema[awstypes.LayoutElementType](attrRequired),
 				"height": {
 					Type:     schema.TypeString,
 					Required: true,
@@ -462,8 +453,8 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"color":      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
@@ -474,8 +465,8 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"color":      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
@@ -486,7 +477,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
@@ -504,11 +495,11 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+										"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 									},
 								},
 							},
-							names.AttrExpression: stringSchema(true, validation.StringLenBetween(1, 4096)),
+							names.AttrExpression: stringLenBetweenSchema(attrRequired, 1, 4096),
 						},
 					},
 				},
@@ -519,18 +510,18 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+							"color":      stringMatchSchema(attrOptional, `^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`, ""),
+							"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 						},
 					},
 				},
-				"visibility": stringSchema(false, enum.Validate[awstypes.Visibility]()),
+				"visibility": stringEnumSchema[awstypes.Visibility](attrOptional),
 			},
 		},
 	}
-}
+})
 
-func sectionLayoutConfigurationSchema() *schema.Schema {
+var sectionLayoutConfigurationSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SectionLayoutConfiguration.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -552,9 +543,9 @@ func sectionLayoutConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
-func spacingSchema() *schema.Schema {
+var spacingSchema = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Spacing.html
 		Type:     schema.TypeList,
 		Optional: true,
@@ -581,7 +572,7 @@ func spacingSchema() *schema.Schema {
 			},
 		},
 	}
-}
+})
 
 func expandAnalysisDefaults(tfList []interface{}) *awstypes.AnalysisDefaults {
 	if len(tfList) == 0 || tfList[0] == nil {

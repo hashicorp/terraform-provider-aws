@@ -163,6 +163,7 @@ class MyConvertedCode extends TerraformStack {
 |CodeBuild|`codebuild`|`AWS_ENDPOINT_URL_CODEBUILD`|`codebuild`|
 |CodeCatalyst|`codecatalyst`|`AWS_ENDPOINT_URL_CODECATALYST`|`codecatalyst`|
 |CodeCommit|`codecommit`|`AWS_ENDPOINT_URL_CODECOMMIT`|`codecommit`|
+|CodeConnections|`codeconnections`|`AWS_ENDPOINT_URL_CODECONNECTIONS`|`codeconnections`|
 |CodeGuru Profiler|`codeguruprofiler`|`AWS_ENDPOINT_URL_CODEGURUPROFILER`|`codeguruprofiler`|
 |CodeGuru Reviewer|`codegurureviewer`|`AWS_ENDPOINT_URL_CODEGURU_REVIEWER`|`codeguru_reviewer`|
 |CodePipeline|`codepipeline`|`AWS_ENDPOINT_URL_CODEPIPELINE`|`codepipeline`|
@@ -336,6 +337,7 @@ class MyConvertedCode extends TerraformStack {
 |SSM (Systems Manager)|`ssm`|`AWS_ENDPOINT_URL_SSM`|`ssm`|
 |SSM Contacts|`ssmcontacts`|`AWS_ENDPOINT_URL_SSM_CONTACTS`|`ssm_contacts`|
 |SSM Incident Manager Incidents|`ssmincidents`|`AWS_ENDPOINT_URL_SSM_INCIDENTS`|`ssm_incidents`|
+|SSM Quick Setup|`ssmquicksetup`|`AWS_ENDPOINT_URL_SSM_QUICKSETUP`|`ssm_quicksetup`|
 |Systems Manager for SAP|`ssmsap`|`AWS_ENDPOINT_URL_SSM_SAP`|`ssm_sap`|
 |SSO (Single Sign-On)|`sso`|`AWS_ENDPOINT_URL_SSO`|`sso`|
 |SSO Admin|`ssoadmin`|`AWS_ENDPOINT_URL_SSO_ADMIN`|`sso_admin`|
@@ -464,4 +466,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-fa8330db78ee15da27b4dd219dc074c05b13294b346a240e293e5481d81be477 -->
+<!-- cache-key: cdktf-0.20.8 input-d0a8223c41ffa69ec9860297a292de0f947723f1e74ea61de738b44154e87b43 -->

@@ -77,7 +77,7 @@ func dataSourceServiceAccountRead(ctx context.Context, d *schema.ResourceData, m
 	if accid, ok := ServiceAccountPerRegionMap[region]; ok {
 		d.SetId(accid)
 		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
+			Partition: meta.(*conns.AWSClient).Partition(ctx),
 			Service:   "iam",
 			AccountID: accid,
 			Resource:  "user/logs",

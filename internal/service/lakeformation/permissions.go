@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"sort"
+	"slices"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
@@ -506,7 +507,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating Lake Formation Permissions: empty response")
 	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(prettify(input))))
+	d.SetId(strconv.Itoa(create.StringHashcode(prettify(input))))
 
 	return append(diags, resourcePermissionsRead(ctx, d, meta)...)
 }
@@ -1291,7 +1292,7 @@ func flattenResourcePermissions(apiObjects []awstypes.PrincipalResourcePermissio
 		}
 	}
 
-	sort.Strings(tfList)
+	slices.Sort(tfList)
 
 	return tfList
 }
@@ -1309,7 +1310,7 @@ func flattenGrantPermissions(apiObjects []awstypes.PrincipalResourcePermissions)
 		}
 	}
 
-	sort.Strings(tfList)
+	slices.Sort(tfList)
 
 	return tfList
 }

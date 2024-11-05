@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
-	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -46,7 +45,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 	input := &secretsmanager.ListSecretsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).SecretsManagerFilters()
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).SecretsManagerFilters()
 	}
 
 	var results []types.SecretListEntry

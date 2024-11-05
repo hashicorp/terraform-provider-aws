@@ -7,18 +7,17 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
-	"sort"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type ServiceDatum struct {
-	SDKVersion         int
-	GoPackage          string
-	GoV1ClientTypeName string
-	ProviderNameUpper  string
+	GoPackage         string
+	ProviderNameUpper string
 }
 
 type TemplateData struct {
@@ -49,26 +48,25 @@ func main() {
 			continue
 		}
 
-		s := ServiceDatum{
-			ProviderNameUpper: l.ProviderNameUpper(),
-			SDKVersion:        l.SDKVersion(),
-			GoPackage:         l.GoPackageName(),
+		if l.IsClientSDKV1() {
+			continue
 		}
 
-		if l.IsClientSDKV1() {
-			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
+		s := ServiceDatum{
+			ProviderNameUpper: l.ProviderNameUpper(),
+			GoPackage:         l.GoPackageName(),
 		}
 
 		td.Services = append(td.Services, s)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.ProviderNameUpper, b.ProviderNameUpper)
 	})
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("awsclient", tmpl, td); err != nil {
+	if err := d.BufferTemplate("awsclient", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

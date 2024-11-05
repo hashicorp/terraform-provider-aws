@@ -212,7 +212,7 @@ func resourceVPCAttachmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	a := vpcAttachment.Attachment
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "networkmanager",
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("attachment/%s", d.Id()),

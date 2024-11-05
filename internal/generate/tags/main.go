@@ -11,18 +11,13 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"text/template"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	v1 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v1"
-	v2 "github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates/v2"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/tags/templates"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
-)
-
-const (
-	sdkV1 = 1
-	sdkV2 = 2
 )
 
 const (
@@ -32,74 +27,68 @@ const (
 )
 
 var (
-	createTags               = flag.Bool("CreateTags", false, "whether to generate CreateTags")
-	getTag                   = flag.Bool("GetTag", false, "whether to generate GetTag")
-	listTags                 = flag.Bool("ListTags", false, "whether to generate ListTags")
-	serviceTagsMap           = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
-	serviceTagsSlice         = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
-	untagInNeedTagType       = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
-	updateTags               = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
-	updateTagsNoIgnoreSystem = flag.Bool("UpdateTagsNoIgnoreSystem", false, "whether to not ignore system tags in UpdateTags")
-	waitForPropagation       = flag.Bool("Wait", false, "whether to generate WaitTagsPropagated")
+	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
 
-	createTagsFunc             = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
-	getTagFunc                 = flag.String("GetTagFunc", "findTag", "getTagFunc")
-	getTagsInFunc              = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
-	keyValueTagsFunc           = flag.String("KeyValueTagsFunc", "KeyValueTags", "keyValueTagsFunc")
-	listTagsFunc               = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
+	createTags               = flag.Bool("CreateTags", false, "whether to generate CreateTags")
+	createTagsFunc           = flag.String("CreateTagsFunc", "createTags", "createTagsFunc")
+	getTag                   = flag.Bool("GetTag", false, "whether to generate GetTag")
+	getTagFunc               = flag.String("GetTagFunc", "findTag", "getTagFunc")
+	listTags                 = flag.Bool("ListTags", false, "whether to generate ListTags")
+	listTagsFunc             = flag.String("ListTagsFunc", defaultListTagsFunc, "listTagsFunc")
+	updateTags               = flag.Bool("UpdateTags", false, "whether to generate UpdateTags")
+	updateTagsFunc           = flag.String("UpdateTagsFunc", defaultUpdateTagsFunc, "updateTagsFunc")
+	updateTagsNoIgnoreSystem = flag.Bool("UpdateTagsNoIgnoreSystem", false, "whether to not ignore system tags in UpdateTags")
+
+	serviceTagsMap   = flag.Bool("ServiceTagsMap", false, "whether to generate service tags for map")
+	kvtValues        = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
+	emptyMap         = flag.Bool("EmptyMap", false, "Whether KVT string map should be empty for no tags")
+	serviceTagsSlice = flag.Bool("ServiceTagsSlice", false, "whether to generate service tags for slice")
+
+	keyValueTagsFunc = flag.String("KeyValueTagsFunc", "KeyValueTags", "keyValueTagsFunc")
+	tagsFunc         = flag.String("TagsFunc", "Tags", "tagsFunc")
+	getTagsInFunc    = flag.String("GetTagsInFunc", "getTagsIn", "getTagsInFunc")
+	setTagsOutFunc   = flag.String("SetTagsOutFunc", "setTagsOut", "setTagsOutFunc")
+
+	waitForPropagation      = flag.Bool("Wait", false, "whether to generate WaitTagsPropagated")
+	waitTagsPropagatedFunc  = flag.String("WaitFunc", defaultWaitTagsPropagatedFunc, "waitFunc")
+	waitContinuousOccurence = flag.Int("WaitContinuousOccurence", 0, "ContinuousTargetOccurence for Wait function")
+	waitFuncComparator      = flag.String("WaitFuncComparator", "Equal", "waitFuncComparator")
+	waitDelay               = flag.Duration("WaitDelay", 0, "Delay for Wait function")
+	waitMinTimeout          = flag.Duration("WaitMinTimeout", 0, `"MinTimeout" (minimum poll interval) for Wait function`)
+	waitPollInterval        = flag.Duration("WaitPollInterval", 0, "PollInterval for Wait function")
+	waitTimeout             = flag.Duration("WaitTimeout", 0, "Timeout for Wait function")
+
 	listTagsInFiltIDName       = flag.String("ListTagsInFiltIDName", "", "listTagsInFiltIDName")
 	listTagsInIDElem           = flag.String("ListTagsInIDElem", "ResourceArn", "listTagsInIDElem")
-	listTagsInIDNeedSlice      = flag.String("ListTagsInIDNeedSlice", "", "listTagsInIDNeedSlice")
-	listTagsInIDNeedValueSlice = flag.String("ListTagsInIDNeedValueSlice", "", "listTagsInIDNeedSlice")
+	listTagsInIDNeedValueSlice = flag.Bool("ListTagsInIDNeedValueSlice", false, "listTagsInIDNeedSlice")
 	listTagsOp                 = flag.String("ListTagsOp", "ListTagsForResource", "listTagsOp")
 	listTagsOpPaginated        = flag.Bool("ListTagsOpPaginated", false, "whether ListTagsOp is paginated")
 	listTagsOutTagsElem        = flag.String("ListTagsOutTagsElem", "Tags", "listTagsOutTagsElem")
-	retryTagsListTagsType      = flag.String("RetryTagsListTagsType", "", "type of the first ListTagsOp return value such as TagListMessage")
-	retryTagsErrorCodes        = flag.String("RetryTagsErrorCodes", "", "comma-separated list of error codes to retry, must be used with RetryTagsListTagsType and same length as RetryTagsErrorMessages")
-	retryTagsErrorMessages     = flag.String("RetryTagsErrorMessages", "", "comma-separated list of error messages to retry, must be used with RetryTagsListTagsType and same length as RetryTagsErrorCodes")
-	retryTagsTimeout           = flag.Duration("RetryTagsTimeout", 1*time.Minute, "Timeout for retrying tag operations")
-	setTagsOutFunc             = flag.String("SetTagsOutFunc", "setTagsOut", "setTagsOutFunc")
-	tagInCustomVal             = flag.String("TagInCustomVal", "", "tagInCustomVal")
-	tagInIDElem                = flag.String("TagInIDElem", "ResourceArn", "tagInIDElem")
-	tagInIDNeedSlice           = flag.String("TagInIDNeedSlice", "", "tagInIDNeedSlice")
-	tagInIDNeedValueSlice      = flag.String("TagInIDNeedValueSlice", "", "tagInIDNeedValueSlice")
-	tagInTagsElem              = flag.String("TagInTagsElem", "Tags", "tagInTagsElem")
-	tagKeyType                 = flag.String("TagKeyType", "", "tagKeyType")
-	tagOp                      = flag.String("TagOp", "TagResource", "tagOp")
-	tagOpBatchSize             = flag.String("TagOpBatchSize", "", "tagOpBatchSize")
-	tagResTypeElem             = flag.String("TagResTypeElem", "", "tagResTypeElem")
-	tagResTypeElemType         = flag.String("TagResTypeElemType", "", "tagResTypeElemType")
-	tagType                    = flag.String("TagType", "Tag", "tagType")
-	tagType2                   = flag.String("TagType2", "", "tagType")
-	tagTypeAddBoolElem         = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
-	tagTypeIDElem              = flag.String("TagTypeIDElem", "", "tagTypeIDElem")
-	tagTypeKeyElem             = flag.String("TagTypeKeyElem", "Key", "tagTypeKeyElem")
-	tagTypeValElem             = flag.String("TagTypeValElem", "Value", "tagTypeValElem")
-	tagsFunc                   = flag.String("TagsFunc", "Tags", "tagsFunc")
-	untagInCustomVal           = flag.String("UntagInCustomVal", "", "untagInCustomVal")
-	untagInNeedTagKeyType      = flag.String("UntagInNeedTagKeyType", "", "untagInNeedTagKeyType")
-	untagInTagsElem            = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
-	untagOp                    = flag.String("UntagOp", "UntagResource", "untagOp")
-	updateTagsFunc             = flag.String("UpdateTagsFunc", defaultUpdateTagsFunc, "updateTagsFunc")
-	waitTagsPropagatedFunc     = flag.String("WaitFunc", defaultWaitTagsPropagatedFunc, "waitFunc")
-	waitContinuousOccurence    = flag.Int("WaitContinuousOccurence", 0, "ContinuousTargetOccurence for Wait function")
-	waitFuncComparator         = flag.String("WaitFuncComparator", "Equal", "waitFuncComparator")
-	waitDelay                  = flag.Duration("WaitDelay", 0, "Delay for Wait function")
-	waitMinTimeout             = flag.Duration("WaitMinTimeout", 0, `"MinTimeout" (minimum poll interval) for Wait function`)
-	waitPollInterval           = flag.Duration("WaitPollInterval", 0, "PollInterval for Wait function")
-	waitTimeout                = flag.Duration("WaitTimeout", 0, "Timeout for Wait function")
+
+	tagInCustomVal        = flag.String("TagInCustomVal", "", "tagInCustomVal")
+	tagInIDElem           = flag.String("TagInIDElem", "ResourceArn", "tagInIDElem")
+	tagInIDNeedValueSlice = flag.Bool("TagInIDNeedValueSlice", false, "tagInIDNeedValueSlice")
+	tagInTagsElem         = flag.String("TagInTagsElem", "Tags", "tagInTagsElem")
+	tagKeyType            = flag.String("TagKeyType", "", "tagKeyType")
+	tagOp                 = flag.String("TagOp", "TagResource", "tagOp")
+	tagOpBatchSize        = flag.Int("TagOpBatchSize", 0, "tagOpBatchSize")
+	tagResTypeElem        = flag.String("TagResTypeElem", "", "tagResTypeElem")
+	tagResTypeElemType    = flag.String("TagResTypeElemType", "", "tagResTypeElemType")
+	tagType               = flag.String("TagType", "Tag", "tagType")
+	tagType2              = flag.String("TagType2", "", "tagType")
+	tagTypeAddBoolElem    = flag.String("TagTypeAddBoolElem", "", "TagTypeAddBoolElem")
+	tagTypeIDElem         = flag.String("TagTypeIDElem", "", "tagTypeIDElem")
+	tagTypeKeyElem        = flag.String("TagTypeKeyElem", "Key", "tagTypeKeyElem")
+	tagTypeValElem        = flag.String("TagTypeValElem", "Value", "tagTypeValElem")
+
+	untagInCustomVal      = flag.String("UntagInCustomVal", "", "untagInCustomVal")
+	untagInNeedTagKeyType = flag.Bool("UntagInNeedTagKeyType", false, "untagInNeedTagKeyType")
+	untagInNeedTagType    = flag.Bool("UntagInNeedTagType", false, "whether Untag input needs tag type")
+	untagInTagsElem       = flag.String("UntagInTagsElem", "TagKeys", "untagInTagsElem")
+	untagOp               = flag.String("UntagOp", "UntagResource", "untagOp")
 
 	parentNotFoundErrCode = flag.String("ParentNotFoundErrCode", "", "Parent 'NotFound' Error Code")
 	parentNotFoundErrMsg  = flag.String("ParentNotFoundErrMsg", "", "Parent 'NotFound' Error Message")
-
-	sdkServicePackage = flag.String("AWSSDKServicePackage", "", "AWS Go SDK package to use. Defaults to the provider service package name.")
-	sdkVersion        = flag.Int("AWSSDKVersion", sdkV2, "Version of the AWS Go SDK to use i.e. 1 or 2")
-	kvtValues         = flag.Bool("KVTValues", false, "Whether KVT string map is of string pointers")
-	emptyMap          = flag.Bool("EmptyMap", false, "Whether KVT string map should be empty for no tags")
-	skipAWSImp        = flag.Bool("SkipAWSImp", false, "Whether to skip importing the AWS Go SDK aws package") // nosemgrep:ci.aws-in-var-name
-	skipNamesImp      = flag.Bool("SkipNamesImp", false, "Whether to skip importing names")
-	skipServiceImp    = flag.Bool("SkipAWSServiceImp", false, "Whether to skip importing the AWS service package")
-	skipTypesImp      = flag.Bool("SkipTypesImp", false, "Whether to skip importing types")
 )
 
 func usage() {
@@ -119,50 +108,34 @@ type TemplateBody struct {
 	waitTagsPropagated string
 }
 
-func newTemplateBody(version int, kvtValues bool) *TemplateBody {
-	switch version {
-	case sdkV1:
+func newTemplateBody(kvtValues bool) *TemplateBody {
+	if kvtValues {
 		return &TemplateBody{
-			getTag:             "\n" + v1.GetTagBody,
-			header:             v1.HeaderBody,
-			listTags:           "\n" + v1.ListTagsBody,
-			serviceTagsMap:     "\n" + v1.ServiceTagsMapBody,
-			serviceTagsSlice:   "\n" + v1.ServiceTagsSliceBody,
-			updateTags:         "\n" + v1.UpdateTagsBody,
-			waitTagsPropagated: "\n" + v1.WaitTagsPropagatedBody,
+			getTag:             "\n" + templates.GetTagBody,
+			header:             templates.HeaderBody,
+			listTags:           "\n" + templates.ListTagsBody,
+			serviceTagsMap:     "\n" + templates.ServiceTagsValueMapBody,
+			serviceTagsSlice:   "\n" + templates.ServiceTagsSliceBody,
+			updateTags:         "\n" + templates.UpdateTagsBody,
+			waitTagsPropagated: "\n" + templates.WaitTagsPropagatedBody,
 		}
-	case sdkV2:
-		if kvtValues {
-			return &TemplateBody{
-				getTag:             "\n" + v2.GetTagBody,
-				header:             v2.HeaderBody,
-				listTags:           "\n" + v2.ListTagsBody,
-				serviceTagsMap:     "\n" + v2.ServiceTagsValueMapBody,
-				serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
-				updateTags:         "\n" + v2.UpdateTagsBody,
-				waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
-			}
-		}
-		return &TemplateBody{
-			getTag:             "\n" + v2.GetTagBody,
-			header:             v2.HeaderBody,
-			listTags:           "\n" + v2.ListTagsBody,
-			serviceTagsMap:     "\n" + v2.ServiceTagsMapBody,
-			serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
-			updateTags:         "\n" + v2.UpdateTagsBody,
-			waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
-		}
-	default:
-		return nil
+	}
+	return &TemplateBody{
+		getTag:             "\n" + templates.GetTagBody,
+		header:             templates.HeaderBody,
+		listTags:           "\n" + templates.ListTagsBody,
+		serviceTagsMap:     "\n" + templates.ServiceTagsMapBody,
+		serviceTagsSlice:   "\n" + templates.ServiceTagsSliceBody,
+		updateTags:         "\n" + templates.UpdateTagsBody,
+		waitTagsPropagated: "\n" + templates.WaitTagsPropagatedBody,
 	}
 }
 
 type TemplateData struct {
-	AWSService             string
-	AWSServiceIfacePackage string
-	ClientType             string
-	ProviderNameUpper      string
-	ServicePackage         string
+	AWSService        string
+	ClientType        string
+	ProviderNameUpper string
+	ServicePackage    string
 
 	CreateTagsFunc             string
 	EmptyMap                   bool
@@ -173,39 +146,33 @@ type TemplateData struct {
 	ListTagsInFiltIDName       string
 	ListTagsInIDElem           string
 	ListTagsInIDNeedSlice      string
-	ListTagsInIDNeedValueSlice string
+	ListTagsInIDNeedValueSlice bool
 	ListTagsOp                 string
 	ListTagsOpPaginated        bool
 	ListTagsOutTagsElem        string
 	ParentNotFoundErrCode      string
 	ParentNotFoundErrMsg       string
-	RetryTagsListTagsType      string
-	RetryTagsErrorCodes        []string
-	RetryTagsErrorMessages     []string
-	RetryTagsTimeout           string
 	ServiceTagsMap             bool
 	SetTagsOutFunc             string
 	TagInCustomVal             string
 	TagInIDElem                string
-	TagInIDNeedSlice           string
-	TagInIDNeedValueSlice      string
+	TagInIDNeedValueSlice      bool
 	TagInTagsElem              string
 	TagKeyType                 string
 	TagOp                      string
-	TagOpBatchSize             string
+	TagOpBatchSize             int
 	TagPackage                 string
 	TagResTypeElem             string
 	TagResTypeElemType         string
 	TagType                    string
 	TagType2                   string
 	TagTypeAddBoolElem         string
-	TagTypeAddBoolElemSnake    string
 	TagTypeIDElem              string
 	TagTypeKeyElem             string
 	TagTypeValElem             string
 	TagsFunc                   string
 	UntagInCustomVal           string
-	UntagInNeedTagKeyType      string
+	UntagInNeedTagKeyType      bool
 	UntagInNeedTagType         bool
 	UntagInTagsElem            string
 	UntagOp                    string
@@ -219,22 +186,6 @@ type TemplateData struct {
 	WaitMinTimeout             string
 	WaitPollInterval           string
 	WaitTimeout                string
-
-	// The following are specific to writing import paths in the `headerBody`;
-	// to include the package, set the corresponding field's value to true
-	ConnsPkg          bool
-	FmtPkg            bool
-	HelperSchemaPkg   bool
-	InternalOptionPkg bool
-	LoggingPkg        bool
-	NamesPkg          bool
-	SkipAWSImp        bool
-	SkipServiceImp    bool
-	SkipTypesImp      bool
-	TfLogPkg          bool
-	TfResourcePkg     bool
-	TfSlicesPkg       bool
-	TimePkg           bool
 
 	IsDefaultListTags   bool
 	IsDefaultUpdateTags bool
@@ -251,10 +202,6 @@ func main() {
 
 	g := common.NewGenerator()
 
-	if *sdkVersion != sdkV1 && *sdkVersion != sdkV2 {
-		g.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
-	}
-
 	servicePackage := os.Getenv("GOPACKAGE")
 	if *sdkServicePackage == "" {
 		sdkServicePackage = &servicePackage
@@ -269,11 +216,6 @@ func main() {
 
 	awsPkg := service.GoPackageName()
 
-	var awsIntfPkg string
-	if *sdkVersion == sdkV1 && (*getTag || *listTags || *updateTags) {
-		awsIntfPkg = fmt.Sprintf("%[1]s/%[1]siface", awsPkg)
-	}
-
 	createTagsFunc := *createTagsFunc
 	if *createTags && !*updateTags {
 		g.Infof("CreateTags only valid with UpdateTags")
@@ -282,47 +224,14 @@ func main() {
 		createTagsFunc = ""
 	}
 
-	clientTypeName := service.ClientTypeName(*sdkVersion)
-	var clientType string
-	if *sdkVersion == sdkV1 {
-		clientType = fmt.Sprintf("%siface.%sAPI", awsPkg, clientTypeName)
-	} else {
-		clientType = fmt.Sprintf("*%s.%s", awsPkg, clientTypeName)
-	}
-
+	clientType := fmt.Sprintf("*%s.Client", awsPkg)
 	tagPackage := awsPkg
-
-	var cleanRetryErrorCodes []string
-	for _, c := range strings.Split(*retryTagsErrorCodes, ",") {
-		if strings.HasPrefix(c, fmt.Sprintf("%s.", servicePackage)) || strings.HasPrefix(c, "types.") {
-			cleanRetryErrorCodes = append(cleanRetryErrorCodes, c)
-		} else {
-			cleanRetryErrorCodes = append(cleanRetryErrorCodes, fmt.Sprintf(`"%s"`, c))
-		}
-	}
-
 	providerNameUpper := service.ProviderNameUpper()
-
 	templateData := TemplateData{
-		AWSService:             awsPkg,
-		AWSServiceIfacePackage: awsIntfPkg,
-		ClientType:             clientType,
-		ProviderNameUpper:      providerNameUpper,
-		ServicePackage:         servicePackage,
-
-		ConnsPkg:          (*listTags && *listTagsFunc == defaultListTagsFunc) || (*updateTags && *updateTagsFunc == defaultUpdateTagsFunc),
-		FmtPkg:            *updateTags,
-		HelperSchemaPkg:   awsPkg == "autoscaling",
-		InternalOptionPkg: (*listTags && *listTagsFunc == defaultListTagsFunc) || *serviceTagsMap || *serviceTagsSlice,
-		LoggingPkg:        *updateTags,
-		NamesPkg:          *updateTags && !*skipNamesImp,
-		SkipAWSImp:        *skipAWSImp,
-		SkipServiceImp:    *skipServiceImp,
-		SkipTypesImp:      *skipTypesImp,
-		TfLogPkg:          *updateTags,
-		TfResourcePkg:     *getTag || *waitForPropagation || *retryTagsListTagsType != "",
-		TfSlicesPkg:       *serviceTagsSlice && *tagTypeIDElem != "" && *tagTypeAddBoolElem != "",
-		TimePkg:           *waitForPropagation || *retryTagsListTagsType != "",
+		AWSService:        awsPkg,
+		ClientType:        clientType,
+		ProviderNameUpper: providerNameUpper,
+		ServicePackage:    servicePackage,
 
 		CreateTagsFunc:             createTagsFunc,
 		EmptyMap:                   *emptyMap,
@@ -332,22 +241,16 @@ func main() {
 		ListTagsFunc:               *listTagsFunc,
 		ListTagsInFiltIDName:       *listTagsInFiltIDName,
 		ListTagsInIDElem:           *listTagsInIDElem,
-		ListTagsInIDNeedSlice:      *listTagsInIDNeedSlice,
 		ListTagsInIDNeedValueSlice: *listTagsInIDNeedValueSlice,
 		ListTagsOp:                 *listTagsOp,
 		ListTagsOpPaginated:        *listTagsOpPaginated,
 		ListTagsOutTagsElem:        *listTagsOutTagsElem,
 		ParentNotFoundErrCode:      *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:       *parentNotFoundErrMsg,
-		RetryTagsListTagsType:      *retryTagsListTagsType,
-		RetryTagsErrorCodes:        cleanRetryErrorCodes,
-		RetryTagsErrorMessages:     strings.Split(*retryTagsErrorMessages, ","),
-		RetryTagsTimeout:           formatDuration(*retryTagsTimeout),
 		ServiceTagsMap:             *serviceTagsMap,
 		SetTagsOutFunc:             *setTagsOutFunc,
 		TagInCustomVal:             *tagInCustomVal,
 		TagInIDElem:                *tagInIDElem,
-		TagInIDNeedSlice:           *tagInIDNeedSlice,
 		TagInIDNeedValueSlice:      *tagInIDNeedValueSlice,
 		TagInTagsElem:              *tagInTagsElem,
 		TagKeyType:                 *tagKeyType,
@@ -359,7 +262,6 @@ func main() {
 		TagType:                    *tagType,
 		TagType2:                   *tagType2,
 		TagTypeAddBoolElem:         *tagTypeAddBoolElem,
-		TagTypeAddBoolElemSnake:    toSnakeCase(*tagTypeAddBoolElem),
 		TagTypeIDElem:              *tagTypeIDElem,
 		TagTypeKeyElem:             *tagTypeKeyElem,
 		TagTypeValElem:             *tagTypeValElem,
@@ -384,7 +286,10 @@ func main() {
 		IsDefaultUpdateTags: *updateTagsFunc == defaultUpdateTagsFunc,
 	}
 
-	templateBody := newTemplateBody(*sdkVersion, *kvtValues)
+	templateBody := newTemplateBody(*kvtValues)
+	templateFuncMap := template.FuncMap{
+		"Snake": names.ToSnakeCase,
+	}
 	d := g.NewGoFileDestination(filename)
 
 	if *getTag || *listTags || *serviceTagsMap || *serviceTagsSlice || *updateTags {
@@ -395,43 +300,43 @@ func main() {
 			templateData.TagPackage = ""
 		}
 
-		if err := d.WriteTemplate("header", templateBody.header, templateData); err != nil {
+		if err := d.BufferTemplate("header", templateBody.header, templateData, templateFuncMap); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
 	if *getTag {
-		if err := d.WriteTemplate("gettag", templateBody.getTag, templateData); err != nil {
+		if err := d.BufferTemplate("gettag", templateBody.getTag, templateData, templateFuncMap); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
 	if *listTags {
-		if err := d.WriteTemplate("listtags", templateBody.listTags, templateData); err != nil {
+		if err := d.BufferTemplate("listtags", templateBody.listTags, templateData, templateFuncMap); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
 	if *serviceTagsMap {
-		if err := d.WriteTemplate("servicetagsmap", templateBody.serviceTagsMap, templateData); err != nil {
+		if err := d.BufferTemplate("servicetagsmap", templateBody.serviceTagsMap, templateData, templateFuncMap); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
 	if *serviceTagsSlice {
-		if err := d.WriteTemplate("servicetagsslice", templateBody.serviceTagsSlice, templateData); err != nil {
+		if err := d.BufferTemplate("servicetagsslice", templateBody.serviceTagsSlice, templateData, templateFuncMap); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
 	if *updateTags {
-		if err := d.WriteTemplate("updatetags", templateBody.updateTags, templateData); err != nil {
+		if err := d.BufferTemplate("updatetags", templateBody.updateTags, templateData, templateFuncMap); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
 
 	if *waitForPropagation {
-		if err := d.WriteTemplate("waittagspropagated", templateBody.waitTagsPropagated, templateData); err != nil {
+		if err := d.BufferTemplate("waittagspropagated", templateBody.waitTagsPropagated, templateData, templateFuncMap); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
 	}
@@ -439,12 +344,6 @@ func main() {
 	if err := d.Write(); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
-}
-
-func toSnakeCase(str string) string {
-	result := regexache.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
-	result = regexache.MustCompile("([0-9a-z])([A-Z])").ReplaceAllString(result, "${1}_${2}")
-	return strings.ToLower(result)
 }
 
 func formatDuration(d time.Duration) string {

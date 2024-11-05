@@ -24,4 +24,10 @@ var (
 	FindQueryDefinitionByTwoPartKey    = findQueryDefinitionByTwoPartKey
 	FindResourcePolicyByName           = findResourcePolicyByName
 	FindSubscriptionFilterByTwoPartKey = findSubscriptionFilterByTwoPartKey
+
+	ValidLogGroupName                      = validLogGroupName
+	ValidLogGroupNamePrefix                = validLogGroupNamePrefix
+	ValidLogMetricFilterName               = validLogMetricFilterName
+	ValidLogMetricFilterTransformationName = validLogMetricFilterTransformationName
+	ValidStreamName                        = validStreamName
 )

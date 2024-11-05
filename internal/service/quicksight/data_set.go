@@ -30,6 +30,8 @@ import (
 
 // @SDKResource("aws_quicksight_data_set", name="Data Set")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/quicksight/types;awstypes;awstypes.DataSet")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func resourceDataSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataSetCreate,

@@ -17,8 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -59,6 +61,34 @@ func resourceKeyspace() *schema.Resource {
 					"The name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores.",
 				),
 			},
+			"replication_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"replication_strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.Rs](),
+						},
+						"region_list": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 6,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: verify.ValidRegionName,
+							},
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -67,13 +97,23 @@ func resourceKeyspace() *schema.Resource {
 
 func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &keyspaces.CreateKeyspaceInput{
 		KeyspaceName: aws.String(name),
 		Tags:         getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("replication_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		input.ReplicationSpecification = &types.ReplicationSpecification{
+			ReplicationStrategy: types.Rs(tfMap["replication_strategy"].(string)),
+		}
+
+		if v, ok := tfMap["region_list"].(*schema.Set); ok && v.Len() > 0 {
+			input.ReplicationSpecification.RegionList = flex.ExpandStringValueSet(v)
+		}
 	}
 
 	_, err := conn.CreateKeyspace(ctx, input)
@@ -97,7 +137,6 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	keyspace, err := findKeyspaceByName(ctx, conn, d.Id())
@@ -114,6 +153,10 @@ func resourceKeyspaceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set(names.AttrARN, keyspace.ResourceArn)
 	d.Set(names.AttrName, keyspace.KeyspaceName)
+	d.Set("replication_specification", []interface{}{map[string]interface{}{
+		"region_list":          keyspace.ReplicationRegions,
+		"replication_strategy": keyspace.ReplicationStrategy,
+	}})
 
 	return diags
 }
@@ -125,7 +168,6 @@ func resourceKeyspaceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceKeyspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).KeyspacesClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Keyspaces Keyspace: (%s)", d.Id())

@@ -77,7 +77,7 @@ func dataSourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceDat
 	d.Set(names.AttrKMSKeyID, out.KmsKeyId)
 	d.Set("update_time", aws.ToTime(out.UpdateTime).Format(time.RFC3339))
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.Location, create.ErrActionSetting, DSNameGeofenceCollection, d.Id(), err)

@@ -31,6 +31,8 @@ import (
 
 // @SDKResource("aws_backup_vault", name="Vault")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/backup;backup.DescribeBackupVaultOutput")
+// @Testing(importIgnore="force_destroy")
 func resourceVault() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVaultCreate,
@@ -202,10 +204,20 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func findBackupVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) { // nosemgrep:ci.backup-in-func-name
-	return findVaultByNameAndType(ctx, conn, name, awstypes.VaultTypeBackupVault)
+	output, err := findVaultByName(ctx, conn, name)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.VaultType != awstypes.VaultTypeBackupVault && output.VaultType != "" {
+		return nil, tfresource.NewEmptyResultError(name)
+	}
+
+	return output, nil
 }
 
-func findVaultByNameAndType(ctx context.Context, conn *backup.Client, name string, vaultType awstypes.VaultType) (*backup.DescribeBackupVaultOutput, error) {
+func findVaultByName(ctx context.Context, conn *backup.Client, name string) (*backup.DescribeBackupVaultOutput, error) {
 	input := &backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(name),
 	}
@@ -214,10 +226,6 @@ func findVaultByNameAndType(ctx context.Context, conn *backup.Client, name strin
 
 	if err != nil {
 		return nil, err
-	}
-
-	if output.VaultType != vaultType {
-		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil

@@ -226,7 +226,7 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         Instance(self, "this",
             ami="ami-0dcc1e21636832c5d",
-            host_resource_group_arn="arn:aws:resource-groups:us-west-2:012345678901:group/win-testhost",
+            host_resource_group_arn="arn:aws:resource-groups:us-west-2:123456789012:group/win-testhost",
             instance_type="m5.large",
             tenancy="host"
         )
@@ -537,4 +537,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-37244e9e9462c7af98d7a696acd02d926dea0967817de2ceb33442a3e9d4488d -->
+<!-- cache-key: cdktf-0.20.8 input-7b6a89ea829e6a5d90c76307d6ed973e7a0d5914864e3754b9ca0132f204aa60 -->

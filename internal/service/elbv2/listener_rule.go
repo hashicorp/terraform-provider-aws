@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -47,7 +46,7 @@ const (
 
 // @SDKResource("aws_alb_listener_rule", name="Listener Rule")
 // @SDKResource("aws_lb_listener_rule", name="Listener Rule")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types;awstypes;awstypes.Rule")
 // @Testing(importIgnore="action.0.forward")
 func resourceListenerRule() *schema.Resource {
@@ -513,7 +512,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := retryListenerRuleCreate(ctx, conn, d, input, listenerARN)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		output, err = retryListenerRuleCreate(ctx, conn, d, input, listenerARN)
@@ -530,7 +529,7 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 		}
 
@@ -578,9 +577,8 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	sort.Slice(rule.Actions, func(i, j int) bool {
-		return aws.ToInt32(rule.Actions[i].Order) < aws.ToInt32(rule.Actions[j].Order)
-	})
+	sortListenerActions(rule.Actions)
+
 	if err := d.Set(names.AttrAction, flattenListenerActions(d, names.AttrAction, rule.Actions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
@@ -765,9 +763,17 @@ func findListenerRule(ctx context.Context, conn *elasticloadbalancingv2.Client, 
 func findListenerRules(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeRulesInput, filter tfslices.Predicate[*awstypes.Rule]) ([]awstypes.Rule, error) {
 	var output []awstypes.Rule
 
-	err := describeRulesPages(ctx, conn, input, func(page *elasticloadbalancingv2.DescribeRulesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := elasticloadbalancingv2.NewDescribeRulesPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if errs.IsA[*awstypes.RuleNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+		if err != nil {
+			return nil, err
 		}
 
 		for _, v := range page.Rules {
@@ -775,19 +781,6 @@ func findListenerRules(ctx context.Context, conn *elasticloadbalancingv2.Client,
 				output = append(output, v)
 			}
 		}
-
-		return !lastPage
-	})
-
-	if errs.IsA[*awstypes.RuleNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil
@@ -799,6 +792,16 @@ func findListenerRuleByARN(ctx context.Context, conn *elasticloadbalancingv2.Cli
 	}
 
 	return findListenerRule(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Rule]())
+}
+
+func findListenerRuleByListenerAndPriority(ctx context.Context, conn *elasticloadbalancingv2.Client, listenerARN, priority string) (*awstypes.Rule, error) {
+	input := &elasticloadbalancingv2.DescribeRulesInput{
+		ListenerArn: aws.String(listenerARN),
+	}
+
+	return findListenerRule(ctx, conn, input, func(v *awstypes.Rule) bool {
+		return aws.ToString(v.Priority) == priority
+	})
 }
 
 func highestListenerRulePriority(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (int32, error) {
@@ -832,15 +835,15 @@ func validListenerRulePriority(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
-// from arn:
-// arn:aws:elasticloadbalancing:us-east-1:012345678912:listener-rule/app/name/0123456789abcdef/abcdef0123456789/456789abcedf1234
-// select submatches:
-// (arn:aws:elasticloadbalancing:us-east-1:012345678912:listener)-rule(/app/name/0123456789abcdef/abcdef0123456789)/456789abcedf1234
-// concat to become:
-// arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789
-var lbListenerARNFromRuleARNRegexp = regexache.MustCompile(`^(arn:.+:listener)-rule(/.+)/[^/]+$`)
-
 func listenerARNFromRuleARN(ruleARN string) string {
+	// from arn:
+	// arn:aws:elasticloadbalancing:us-east-1:012345678912:listener-rule/app/name/0123456789abcdef/abcdef0123456789/456789abcedf1234
+	// select submatches:
+	// (arn:aws:elasticloadbalancing:us-east-1:012345678912:listener)-rule(/app/name/0123456789abcdef/abcdef0123456789)/456789abcedf1234
+	// concat to become:
+	// arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789
+	var lbListenerARNFromRuleARNRegexp = regexache.MustCompile(`^(arn:.+:listener)-rule(/.+)/[^/]+$`)
+
 	if arnComponents := lbListenerARNFromRuleARNRegexp.FindStringSubmatch(ruleARN); len(arnComponents) > 1 {
 		return arnComponents[1] + arnComponents[2]
 	}

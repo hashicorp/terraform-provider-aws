@@ -122,7 +122,7 @@ func dataSourceMultiRegionAccessPointBlockRead(ctx context.Context, d *schema.Re
 
 	alias := aws.ToString(accessPoint.Alias)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "s3",
 		AccountID: accountID,
 		Resource:  fmt.Sprintf("accesspoint/%s", alias),

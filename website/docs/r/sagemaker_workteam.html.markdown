@@ -51,7 +51,7 @@ resource "aws_sagemaker_workteam" "example" {
 This resource supports the following arguments:
 
 * `description` - (Required) A description of the work team.
-* `workforce_name` - (Required) The name of the workforce.
+* `workforce_name` - (Optional) The name of the workforce.
 * `workteam_name` - (Required) The name of the Workteam (must be unique).
 * `member_definition` - (Required) A list of Member Definitions that contains objects that identify the workers that make up the work team. Workforces can be created using Amazon Cognito or your own OIDC Identity Provider (IdP). For private workforces created using Amazon Cognito use `cognito_member_definition`. For workforces created using your own OIDC identity provider (IdP) use `oidc_member_definition`. Do not provide input for both of these parameters in a single request. see [Member Definition](#member-definition) details below.
 * `notification_configuration` - (Optional) Configures notification of workers regarding available or expiring work items. see [Notification Configuration](#notification-configuration) details below.

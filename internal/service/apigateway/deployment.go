@@ -47,9 +47,11 @@ func resourceDeployment() *schema.Resource {
 				Optional: true,
 			},
 			"canary_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:         schema.TypeList,
+				Optional:     true,
+				ForceNew:     true,
+				MaxItems:     1,
+				RequiredWith: []string{"stage_name"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"percent_traffic": {
@@ -83,9 +85,10 @@ func resourceDeployment() *schema.Resource {
 				ForceNew: true,
 			},
 			"stage_description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"stage_name"},
 			},
 			"stage_name": {
 				Type:     schema.TypeString,
@@ -120,6 +123,10 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Variables:        flex.ExpandStringValueMap(d.Get("variables").(map[string]interface{})),
 	}
 
+	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.CanarySettings = expandDeploymentCanarySettings(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	deployment, err := conn.CreateDeployment(ctx, input)
 
 	if err != nil {
@@ -127,9 +134,6 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(aws.ToString(deployment.Id))
-	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CanarySettings = expandDeploymentCanarySettings(v.([]interface{})[0].(map[string]interface{}))
-	}
 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
@@ -155,7 +159,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrCreatedDate, deployment.CreatedDate.Format(time.RFC3339))
 	d.Set(names.AttrDescription, deployment.Description)
 	executionARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "execute-api",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
@@ -235,6 +239,22 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		DeploymentId: aws.String(d.Id()),
 		RestApiId:    aws.String(restAPIID),
 	})
+
+	if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Active stages with canary settings pointing to this deployment must be moved or deleted") {
+		_, err = conn.DeleteStage(ctx, &apigateway.DeleteStageInput{
+			StageName: aws.String(stageName),
+			RestApiId: aws.String(restAPIID),
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting API Gateway Stage (%s): %s", stageName, err)
+		}
+
+		_, err = conn.DeleteDeployment(ctx, &apigateway.DeleteDeploymentInput{
+			DeploymentId: aws.String(d.Id()),
+			RestApiId:    aws.String(restAPIID),
+		})
+	}
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags

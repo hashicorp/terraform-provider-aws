@@ -40,7 +40,7 @@ const (
 )
 
 // @SDKResource("aws_iam_role", name="Role")
-// @Tags(identifierAttribute="id", resourceType="Role")
+// @Tags(identifierAttribute="name", resourceType="Role")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
@@ -131,6 +131,11 @@ func resourceRole() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				Deprecated: "The managed_policy_arns argument is deprecated. " +
+					"Use the aws_iam_role_policy_attachment resource instead. If Terraform should" +
+					"exclusively manage all managed policy attachments (the current " +
+					"behavior of this argument), use the aws_iam_role_policy_attachments_exclusive " +
+					"resource as well.",
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
@@ -214,7 +219,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := retryCreateRole(ctx, conn, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 

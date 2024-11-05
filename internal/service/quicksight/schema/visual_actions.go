@@ -10,7 +10,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -45,7 +44,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 											Required: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"selected_field_option": stringSchema(false, enum.Validate[awstypes.SelectedFieldOptions]()),
+													"selected_field_option": stringEnumSchema[awstypes.SelectedFieldOptions](attrOptional),
 													"selected_fields": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -73,7 +72,7 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 														Optional: true,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"target_visual_option": stringSchema(false, enum.Validate[awstypes.TargetVisualOptions]()),
+																"target_visual_option": stringEnumSchema[awstypes.TargetVisualOptions](attrOptional),
 																"target_visuals": {
 																	Type:     schema.TypeSet,
 																	Optional: true,
@@ -194,8 +193,8 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 																		},
 																	},
 																},
-																"select_all_value_options": stringSchema(false, enum.Validate[awstypes.SelectAllValueOptions]()),
-																"source_field":             stringSchema(false, validation.StringLenBetween(1, 2048)),
+																"select_all_value_options": stringEnumSchema[awstypes.SelectAllValueOptions](attrOptional),
+																"source_field":             stringLenBetweenSchema(attrOptional, 1, 2048),
 																"source_parameter_name": {
 																	Type:     schema.TypeString,
 																	Optional: true,
@@ -216,8 +215,8 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"url_target":   stringSchema(true, enum.Validate[awstypes.URLTargetConfiguration]()),
-										"url_template": stringSchema(true, validation.StringLenBetween(1, 2048)),
+										"url_target":   stringEnumSchema[awstypes.URLTargetConfiguration](attrRequired),
+										"url_template": stringLenBetweenSchema(attrRequired, 1, 2048),
 									},
 								},
 							},
@@ -225,9 +224,9 @@ func visualCustomActionsSchema(maxItems int) *schema.Schema {
 					},
 				},
 				"custom_action_id": idSchema(),
-				names.AttrName:     stringSchema(true, validation.StringLenBetween(1, 256)),
-				"trigger":          stringSchema(true, enum.Validate[awstypes.VisualCustomActionTrigger]()),
-				names.AttrStatus:   stringSchema(true, enum.Validate[awstypes.Status]()),
+				names.AttrName:     stringLenBetweenSchema(attrRequired, 1, 256),
+				"trigger":          stringEnumSchema[awstypes.VisualCustomActionTrigger](attrRequired),
+				names.AttrStatus:   stringEnumSchema[awstypes.Status](attrRequired),
 			},
 		},
 	}

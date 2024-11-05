@@ -90,7 +90,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	}
 
 	conn := d.Meta().EC2Client(ctx)
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 
 	input := &ec2.DescribeSecurityGroupRulesInput{
 		Filters: newCustomFilterListFramework(ctx, data.Filters),
@@ -131,8 +131,8 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (d *securityGroupRuleDataSource) securityGroupRuleARN(_ context.Context, id string) types.String {
-	return types.StringValue(d.RegionalARN(names.EC2, fmt.Sprintf("security-group-rule/%s", id)))
+func (d *securityGroupRuleDataSource) securityGroupRuleARN(ctx context.Context, id string) types.String {
+	return types.StringValue(d.Meta().RegionalARN(ctx, names.EC2, fmt.Sprintf("security-group-rule/%s", id)))
 }
 
 type securityGroupRuleDataSourceModel struct {

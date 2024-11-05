@@ -591,11 +591,7 @@ func VPCConnectionPropertiesSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"vpc_connection_arn": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: verify.ValidARN,
-				},
+				"vpc_connection_arn": arnStringSchema(attrRequired),
 			},
 		},
 	}

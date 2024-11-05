@@ -39,7 +39,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Restore Testing Plan Selection")
+// @FrameworkResource("aws_backup_restore_testing_selection", name="Restore Testing Plan Selection")
 func newRestoreTestingSelectionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &restoreTestingSelectionResource{}
 

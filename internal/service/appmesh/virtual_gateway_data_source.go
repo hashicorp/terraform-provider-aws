@@ -20,6 +20,7 @@ import (
 // @SDKDataSource("aws_appmesh_virtual_gateway", name="Virtual Gateway")
 // @Tags
 // @Testing(serialize=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceVirtualGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVirtualGatewayRead,

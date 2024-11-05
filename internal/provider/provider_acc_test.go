@@ -13,8 +13,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/aws/smithy-go/middleware"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -520,7 +521,7 @@ func TestAccProvider_Region_c2s(t *testing.T) {
 				Config: testAccProviderConfig_region(names.USISOEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "c2s.ic.gov"),
-					testAccCheckPartition(ctx, t, &provider, names.ISOPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "gov.ic.c2s"),
 				),
 				PlanOnly: true,
@@ -543,7 +544,7 @@ func TestAccProvider_Region_china(t *testing.T) {
 				Config: testAccProviderConfig_region(names.CNNorthwest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com.cn"),
-					testAccCheckPartition(ctx, t, &provider, names.ChinaPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsCnPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "cn.com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -566,7 +567,7 @@ func TestAccProvider_Region_commercial(t *testing.T) {
 				Config: testAccProviderConfig_region(names.USWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
-					testAccCheckPartition(ctx, t, &provider, names.StandardPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -589,7 +590,7 @@ func TestAccProvider_Region_govCloud(t *testing.T) {
 				Config: testAccProviderConfig_region(names.USGovWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
-					testAccCheckPartition(ctx, t, &provider, names.USGovCloudPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsUsGovPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "com.amazonaws"),
 				),
 				PlanOnly: true,
@@ -612,7 +613,7 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 				Config: testAccProviderConfig_region(names.USISOBEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "sc2s.sgov.gov"),
-					testAccCheckPartition(ctx, t, &provider, names.ISOBPartitionID),
+					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoBPartitionID),
 					testAccCheckReverseDNSPrefix(ctx, t, &provider, "gov.sgov.sc2s"),
 				),
 				PlanOnly: true,
@@ -685,7 +686,7 @@ func testAccCheckPartition(ctx context.Context, t *testing.T, p **schema.Provide
 			return fmt.Errorf("provider not initialized")
 		}
 
-		providerPartition := (*p).Meta().(*conns.AWSClient).Partition
+		providerPartition := (*p).Meta().(*conns.AWSClient).Partition(ctx)
 
 		if providerPartition != expectedPartition {
 			return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedPartition, providerPartition)
@@ -734,8 +735,8 @@ func testAccCheckSTSRegion(ctx context.Context, t *testing.T, p **schema.Provide
 		var stsRegion string
 
 		stsClient := (*p).Meta().(*conns.AWSClient).STSClient(ctx)
-		_, err := stsClient.GetCallerIdentity(ctx, &sts_sdkv2.GetCallerIdentityInput{},
-			func(opts *sts_sdkv2.Options) {
+		_, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{},
+			func(opts *sts.Options) {
 				opts.APIOptions = append(opts.APIOptions,
 					addRegionRetrieverMiddleware(&stsRegion),
 					addCancelRequestMiddleware(),
@@ -817,7 +818,7 @@ func testAccCheckIgnoreTagsKeyPrefixes(ctx context.Context, t *testing.T, p **sc
 		}
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
-		ignoreTagsConfig := providerClient.IgnoreTagsConfig
+		ignoreTagsConfig := providerClient.IgnoreTagsConfig(ctx)
 
 		if ignoreTagsConfig == nil || ignoreTagsConfig.KeyPrefixes == nil {
 			if len(expectedKeyPrefixes) != 0 {
@@ -874,7 +875,7 @@ func testAccCheckIgnoreTagsKeys(ctx context.Context, t *testing.T, p **schema.Pr
 		}
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
-		ignoreTagsConfig := providerClient.IgnoreTagsConfig
+		ignoreTagsConfig := providerClient.IgnoreTagsConfig(ctx)
 
 		if ignoreTagsConfig == nil || ignoreTagsConfig.Keys == nil {
 			if len(expectedKeys) != 0 {
@@ -931,7 +932,7 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 		}
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
-		defaultTagsConfig := providerClient.DefaultTagsConfig
+		defaultTagsConfig := providerClient.DefaultTagsConfig(ctx)
 
 		if defaultTagsConfig == nil || len(defaultTagsConfig.Tags) == 0 {
 			if len(expectedTags) != 0 {

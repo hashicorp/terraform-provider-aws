@@ -5,7 +5,7 @@ package inspector
 
 import (
 	"context"
-	"sort"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/service/inspector"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -40,7 +40,7 @@ func dataSourceRulesPackagesRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Inspector Classic Rules Packages: %s", err)
 	}
 	arns := output
-	sort.Strings(arns)
+	slices.Sort(arns)
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set(names.AttrARNs, arns)

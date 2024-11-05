@@ -92,7 +92,7 @@ func (d *acceleratorDataSource) Read(ctx context.Context, request datasource.Rea
 	}
 
 	conn := d.Meta().GlobalAcceleratorClient(ctx)
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 
 	var results []awstypes.Accelerator
 	pages := globalaccelerator.NewListAcceleratorsPaginator(conn, &globalaccelerator.ListAcceleratorsInput{})

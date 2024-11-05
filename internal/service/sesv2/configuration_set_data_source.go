@@ -17,6 +17,7 @@ import (
 )
 
 // @SDKDataSource("aws_sesv2_configuration_set", name="Configuration Set")
+// @Tags(identifierAttribute="arn")
 func dataSourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceConfigurationSetRead,
@@ -156,7 +157,7 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(out.ConfigurationSetName))
 
-	d.Set(names.AttrARN, configurationSetNameToARN(meta, aws.ToString(out.ConfigurationSetName)))
+	d.Set(names.AttrARN, configurationSetARN(ctx, meta.(*conns.AWSClient), aws.ToString(out.ConfigurationSetName)))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 
 	if out.DeliveryOptions != nil {
@@ -205,17 +206,6 @@ func dataSourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData,
 		}
 	} else {
 		d.Set("vdm_options", nil)
-	}
-
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-	if err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, dsNameConfigurationSet, d.Id(), err)
-	}
-
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, dsNameConfigurationSet, d.Id(), err)
 	}
 
 	return diags

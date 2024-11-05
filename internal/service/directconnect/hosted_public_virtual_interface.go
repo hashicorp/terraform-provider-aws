@@ -184,7 +184,7 @@ func resourceHostedPublicVirtualInterfaceRead(ctx context.Context, d *schema.Res
 	d.Set("amazon_address", vif.AmazonAddress)
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.ToInt64(vif.AmazonSideAsn), 10))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "directconnect",
 		AccountID: meta.(*conns.AWSClient).AccountID,
