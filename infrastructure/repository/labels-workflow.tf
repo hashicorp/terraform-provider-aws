@@ -197,6 +197,10 @@ variable "workflow_labels" {
       color       = "d1ebff", # color:terraform accent
       description = "Addresses areas of the codebase that need refactoring or redesign."
     },
+    "terraform-plugin-migration" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Issues that are related to the providers migration to Terraform Plugin Framework."
+    },
     "tests" = {
       color       = "60dea9", # color:nomad
       description = "PRs: expanded test coverage. Issues: expanded coverage, enhancements to test infrastructure."
