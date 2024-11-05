@@ -8,9 +8,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
@@ -18,6 +22,40 @@ import (
 )
 
 func testAccAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_api_gateway_account.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountConfig_basic,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("api_key_version"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_role_arn"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("features"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrID), knownvalue.StringExact("api-gateway-account")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("throttle_settings"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"burst_limit": knownvalue.Int32Exact(5000),
+							"rate_limit":  knownvalue.Float64Exact(10000),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAccount_cloudwatchRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_account.test"
@@ -30,12 +68,13 @@ func testAccAccount_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccountConfig_role0(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_role_arn", "aws_iam_role.test.0", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "api_key_version"),
-					resource.TestCheckResourceAttrSet(resourceName, "features.#"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("cloudwatch_role_arn"),
+						"aws_iam_role.test[0]", tfjsonpath.New(names.AttrARN),
+						compare.ValuesSame(),
+					),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -44,17 +83,29 @@ func testAccAccount_basic(t *testing.T) {
 			},
 			{
 				Config: testAccAccountConfig_role1(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_role_arn", "aws_iam_role.test.1", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "1"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("cloudwatch_role_arn"),
+						"aws_iam_role.test[1]", tfjsonpath.New(names.AttrARN),
+						compare.ValuesSame(),
+					),
+				},
 			},
 			{
-				Config: testAccAccountConfig_empty,
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_role_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "throttle_settings.#", "1"),
-				),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAccountConfig_basic,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_role_arn"), knownvalue.StringExact("")),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -86,7 +137,7 @@ func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-const testAccAccountConfig_empty = `
+const testAccAccountConfig_basic = `
 resource "aws_api_gateway_account" "test" {}
 `
 
