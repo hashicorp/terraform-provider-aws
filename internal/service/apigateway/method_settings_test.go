@@ -30,11 +30,20 @@ func testAccMethodSettings_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
+				Config: testAccMethodSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", "INFO"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_data_encrypted", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.cache_ttl_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.caching_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.data_trace_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.logging_level", ""),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.metrics_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.require_authorization_for_cache_control", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_burst_limit", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.throttling_rate_limit", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "settings.0.unauthorized_cache_control_header_strategy", "SUCCEED_WITH_RESPONSE_HEADER"),
 				),
 			},
 			{
@@ -402,7 +411,7 @@ func testAccMethodSettings_Settings_throttlingBurstLimitDisabledByDefault(t *tes
 		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
+				Config: testAccMethodSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -477,7 +486,7 @@ func testAccMethodSettings_Settings_throttlingRateLimitDisabledByDefault(t *test
 		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
+				Config: testAccMethodSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "settings.#", "1"),
@@ -551,7 +560,7 @@ func testAccMethodSettings_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckMethodSettingsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMethodSettingsConfig_loggingLevel(rName, "INFO"),
+				Config: testAccMethodSettingsConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMethodSettingsExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceMethodSettings(), resourceName),
@@ -669,6 +678,18 @@ resource "aws_api_gateway_deployment" "test" {
   stage_name  = "dev"
 }
 `, rName))
+}
+
+func testAccMethodSettingsConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccMethodSettingsConfig_base(rName), `
+resource "aws_api_gateway_method_settings" "test" {
+  method_path = "${aws_api_gateway_resource.test.path_part}/${aws_api_gateway_method.test.http_method}"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  stage_name  = aws_api_gateway_deployment.test.stage_name
+
+  settings {}
+}
+`)
 }
 
 func testAccMethodSettingsConfig_cacheDataEncrypted(rName string, cacheDataEncrypted bool) string {
