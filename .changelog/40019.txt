@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_batch_job_definition: Adds `init_containers` and `share_process_namespace`. Increases containers limit to 10.
+```
+
+```release-note:enhancement
+datasource/aws_batch_job_definition: Adds `init_containers`, `share_process_namespace`, `image_pull_secrets`
+```
