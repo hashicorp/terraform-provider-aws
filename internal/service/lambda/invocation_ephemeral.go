@@ -73,7 +73,7 @@ func (e *ephemeralInvocation) Schema(ctx context.Context, _ ephemeral.SchemaRequ
 			"result": schema.StringAttribute{
 				Computed: true,
 			},
-			"status_code": schema.Int32Attribute{
+			names.AttrStatusCode: schema.Int32Attribute{
 				Computed: true,
 			},
 		},
