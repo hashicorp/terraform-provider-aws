@@ -11,6 +11,9 @@ NOTES:
 
 ENHANCEMENTS:
 
+* data-source/aws_batch_job_definition: Add `init_containers`, `share_process_namespace`, and `image_pull_secrets` attributes ([#40019](https://github.com/hashicorp/terraform-provider-aws/issues/40019))
+* resource/aws_batch_job_definition: Add `init_containers` and `share_process_namespace` arguments ([#40019](https://github.com/hashicorp/terraform-provider-aws/issues/40019))
+* resource/aws_batch_job_definition: Increase maximum number of `containers` arguments to 10 ([#40019](https://github.com/hashicorp/terraform-provider-aws/issues/40019))
 * resource/aws_eks_addon: Add `pod_identity_association` argument ([#38357](https://github.com/hashicorp/terraform-provider-aws/issues/38357))
 * resource/aws_iam_user_login_profile: Mark the `password` argument as sensitive ([#39991](https://github.com/hashicorp/terraform-provider-aws/issues/39991))
 
