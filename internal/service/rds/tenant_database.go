@@ -7,22 +7,25 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -35,8 +38,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_db_tenant_database", name="Tenant Database")
-// @Tags(identifierAttribute="arn")
 func newResourceTenantDatabase(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTenantDatabase{}
 
@@ -93,9 +94,18 @@ func (r *resourceTenantDatabase) Schema(ctx context.Context, req resource.Schema
 			},
 			"final_db_snapshot_identifier": schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must only contain alphanumeric characters and hyphens"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					stringvalidator.RegexMatches(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+				},
 			},
 			"master_username": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"master_user_password": schema.StringAttribute{
 				Optional: true,
@@ -110,6 +120,8 @@ func (r *resourceTenantDatabase) Schema(ctx context.Context, req resource.Schema
 			},
 			"skip_final_snapshot": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -156,6 +168,16 @@ func (r *resourceTenantDatabase) Create(ctx context.Context, req resource.Create
 			"Required field is not set",
 			"A value must be provided for this attribute when creating a Tenant Database",
 		)
+		return
+	}
+
+	if !plan.SkipFinalSnapshot.ValueBool() && plan.FinalDBSnapshotIdentifier.IsNull() {
+		resp.Diagnostics.AddAttributeError(
+			path.Root("final_snapshot_identifier"),
+			"Missing Attribute Configuration",
+			fmt.Sprintf("Tenant DB \"%s\": final_snapshot_identifier is required when skip_final_snapshot is false", plan.TenantDBName.ValueString()),
+		)
+		return
 	}
 
 	in := &rds.CreateTenantDatabaseInput{
@@ -171,6 +193,15 @@ func (r *resourceTenantDatabase) Create(ctx context.Context, req resource.Create
 	}
 	if !plan.NcharCharacterSetName.IsNull() && !plan.NcharCharacterSetName.IsUnknown() {
 		in.NcharCharacterSetName = aws.String(plan.NcharCharacterSetName.ValueString())
+	}
+
+	_, err := waitDBInstanceAvailableSDKv1(ctx, conn, plan.DBInstanceIdentifier.ValueString(), time.Duration(10*float64(time.Minute)))
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForCreation, "DB Instance", plan.DBInstanceIdentifier.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
 	out, err := conn.CreateTenantDatabase(in)
@@ -275,10 +306,6 @@ func (r *resourceTenantDatabase) Update(ctx context.Context, req resource.Update
 			in.NewTenantDBName = aws.String(plan.TenantDBName.ValueString())
 		}
 
-		log.Printf("[WARN] Master password: %s", plan.MasterUserPassword)
-		log.Printf("[WARN] %s", plan.MasterUserPassword.IsNull())
-		log.Printf("[WARN] %s", plan.MasterUserPassword.IsUnknown())
-
 		if !plan.MasterUserPassword.IsNull() {
 			in.MasterUserPassword = aws.String(plan.MasterUserPassword.ValueString())
 		}
@@ -303,8 +330,17 @@ func (r *resourceTenantDatabase) Update(ctx context.Context, req resource.Update
 		plan.TenantDBName = flex.StringToFramework(ctx, out.TenantDatabase.TenantDBName)
 	}
 
+	_, err := waitDBInstanceAvailableSDKv1(ctx, conn, plan.DBInstanceIdentifier.ValueString(), time.Duration(10*float64(time.Minute)))
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForCreation, "DB Instance", plan.DBInstanceIdentifier.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitTenantDatabaseUpdated(ctx, conn, plan.TenantDatabaseResourceId.ValueString(), updateTimeout)
+	_, err = waitTenantDatabaseUpdated(ctx, conn, plan.TenantDatabaseResourceId.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForUpdate, ResNameTenantDatabase, plan.TenantDBName.String(), err),
@@ -335,7 +371,16 @@ func (r *resourceTenantDatabase) Delete(ctx context.Context, req resource.Delete
 		SkipFinalSnapshot:         aws.Bool(state.SkipFinalSnapshot.ValueBool()),
 	}
 
-	_, err := conn.DeleteTenantDatabaseWithContext(ctx, in)
+	_, err := waitDBInstanceAvailableSDKv1(ctx, conn, state.DBInstanceIdentifier.ValueString(), time.Duration(10*float64(time.Minute)))
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForCreation, "DB Instance", state.DBInstanceIdentifier.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	_, err = conn.DeleteTenantDatabaseWithContext(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
