@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -45,8 +45,17 @@ func (e *ephemeralInvocation) Schema(ctx context.Context, _ ephemeral.SchemaRequ
 			"client_context": schema.StringAttribute{
 				Optional: true,
 			},
+			"executed_version": schema.StringAttribute{
+				Computed: true,
+			},
+			"function_error": schema.StringAttribute{
+				Computed: true,
+			},
 			"function_name": schema.StringAttribute{
 				Required: true,
+			},
+			"log_result": schema.StringAttribute{
+				Computed: true,
 			},
 			"log_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.LogType](),
@@ -64,31 +73,40 @@ func (e *ephemeralInvocation) Schema(ctx context.Context, _ ephemeral.SchemaRequ
 			"result": schema.StringAttribute{
 				Computed: true,
 			},
+			"status_code": schema.Int32Attribute{
+				Computed: true,
+			},
 		},
 	}
 }
 
 func (e *ephemeralInvocation) Open(ctx context.Context, req ephemeral.OpenRequest, resp *ephemeral.OpenResponse) {
 	conn := e.Meta().LambdaClient(ctx)
-	d := &epInvocationData{}
+	data := epInvocationData{}
 
-	resp.Diagnostics.Append(req.Config.Get(ctx, &d)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	input := &lambda.InvokeInput{}
-	resp.Diagnostics.Append(fwflex.Expand(ctx, d, &input)...)
+	input := &lambda.InvokeInput{
+		InvocationType: awstypes.InvocationTypeRequestResponse,
+	}
+	resp.Diagnostics.Append(flex.Expand(ctx, data, input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// todo: base64 encode client context
+	if input.FunctionName == nil {
+		data.Result = types.StringValue("")
+		resp.Diagnostics.Append(resp.Result.Set(ctx, &data)...)
+		return
+	}
 
 	output, err := conn.Invoke(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionCreating, ResNameInvocation, d.FunctionName.String(), err),
+			create.ProblemStandardMessage(names.Lambda, create.ErrActionOpening, ResNameInvocation, data.FunctionName.String(), err),
 			err.Error(),
 		)
 		return
@@ -96,21 +114,26 @@ func (e *ephemeralInvocation) Open(ctx context.Context, req ephemeral.OpenReques
 
 	if output.FunctionError != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Lambda, create.ErrActionCreating, ResNameInvocation, d.FunctionName.String(), errors.New(aws.ToString(output.FunctionError))),
+			create.ProblemStandardMessage(names.Lambda, create.ErrActionOpening, ResNameInvocation, data.FunctionName.String(), errors.New(aws.ToString(output.FunctionError))),
 			err.Error(),
 		)
 		return
 	}
 
-	d.Result = types.StringValue(string(output.Payload))
-	resp.Diagnostics.Append(resp.Result.Set(ctx, &d)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
+	data.Result = types.StringValue(string(output.Payload))
+	resp.Diagnostics.Append(resp.Result.Set(ctx, &data)...)
 }
 
 type epInvocationData struct {
-	ClientContext types.String                         `tfsdk:"client_context"`
-	FunctionName  types.String                         `tfsdk:"function_name"`
-	LogType       fwtypes.StringEnum[awstypes.LogType] `tfsdk:"log_type"`
-	Payload       types.String                         `tfsdk:"input"`
-	Qualifier     types.String                         `tfsdk:"qualifier"`
-	Result        types.String                         `tfsdk:"result"`
+	ClientContext   types.String                         `tfsdk:"client_context"`
+	ExecutedVersion types.String                         `tfsdk:"executed_version"`
+	FunctionError   types.String                         `tfsdk:"function_error"`
+	FunctionName    types.String                         `tfsdk:"function_name"`
+	LogResult       types.String                         `tfsdk:"log_result"`
+	LogType         fwtypes.StringEnum[awstypes.LogType] `tfsdk:"log_type"`
+	Payload         types.String                         `tfsdk:"payload"`
+	Qualifier       types.String                         `tfsdk:"qualifier"`
+	Result          types.String                         `tfsdk:"result"`
+	StatusCode      types.Int32                          `tfsdk:"status_code"`
 }
