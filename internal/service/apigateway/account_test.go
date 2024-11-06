@@ -55,7 +55,7 @@ func testAccAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccAccount_cloudwatchRoleARN(t *testing.T) {
+func testAccAccount_cloudwatchRoleARN_value(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_account.test"
@@ -106,6 +106,96 @@ func testAccAccount_cloudwatchRoleARN(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAccount_cloudwatchRoleARN_empty(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_api_gateway_account.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountConfig_empty,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_role_arn"), knownvalue.StringExact("")),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAccount_frameworkMigration_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_api_gateway_account.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		CheckDestroy: testAccCheckAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.74.0",
+					},
+				},
+				Config: testAccAccountConfig_basic,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("cloudwatch_role_arn"), knownvalue.StringExact("")),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccAccountConfig_basic,
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
+func testAccAccount_frameworkMigration_cloudwatchRoleARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_account.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		CheckDestroy: testAccCheckAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.74.0",
+					},
+				},
+				Config: testAccAccountConfig_role0(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(
+						resourceName, tfjsonpath.New("cloudwatch_role_arn"),
+						"aws_iam_role.test[0]", tfjsonpath.New(names.AttrARN),
+						compare.ValuesSame(),
+					),
+				},
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccAccountConfig_role0(rName),
+				PlanOnly:                 true,
 			},
 		},
 	})
@@ -181,3 +271,9 @@ resource "aws_api_gateway_account" "test" {
 }
 `)
 }
+
+const testAccAccountConfig_empty = `
+resource "aws_api_gateway_account" "test" {
+  cloudwatch_role_arn = ""
+}
+`

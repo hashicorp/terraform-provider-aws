@@ -684,6 +684,8 @@ func (flattener autoFlattener) struct_(ctx context.Context, sourcePath path.Path
 		return diags
 	}
 
+	tflog.SubsystemError(ctx, subsystemName, "Flattening incompatible types")
+
 	return diags
 }
 

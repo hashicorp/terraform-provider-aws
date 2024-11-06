@@ -25,8 +25,11 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 func TestAccAPIGateway_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Account": {
-			acctest.CtBasic:     testAccAccount_basic,
-			"CloudwatchRoleARN": testAccAccount_cloudwatchRoleARN,
+			acctest.CtBasic:                        testAccAccount_basic,
+			"CloudwatchRoleARN_Value":              testAccAccount_cloudwatchRoleARN_value,
+			"CloudwatchRoleARN_Empty":              testAccAccount_cloudwatchRoleARN_empty,
+			"FrameworkMigration_Basic":             testAccAccount_frameworkMigration_basic,
+			"FrameworkMigration_CloudwatchRoleARN": testAccAccount_frameworkMigration_cloudwatchRoleARN,
 		},
 		// Some aws_api_gateway_method_settings tests require the account-level CloudWatch Logs role ARN to be set.
 		// Serialize all this resource's acceptance tests.
