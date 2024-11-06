@@ -19,6 +19,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "Capacity Block Offering",
 		},
 		{
+			Factory: newDataSourceSpotDataFeedSubscription,
+			Name:    "Spot Data Feed Subscription Data Source",
+		},
+		{
 			Factory: newSecurityGroupRuleDataSource,
 			Name:    "Security Group Rule",
 		},
