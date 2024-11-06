@@ -109,12 +109,17 @@ jobs:
 
   on-version-failure:
     runs-on: ubuntu-latest
-    if: ${{ failure() && (needs.os-version-init.result == 'failure') }}
+    if: ${{ failure() && (needs.os-version-init.conclusion == 'failure') }}
     needs:
       [os-version-init]
     steps:
-      - uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
+      - name: Send Slack Notification On Failure
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
+        env:
+          ISSUE_TITLE: ${{ toJSON(github.event.issue.title || github.event.pull_request.title) }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         with:
+          channel-id: ${{ secrets.SLACK_CHANNEL }}
           payload: |
             {
               "blocks": [
