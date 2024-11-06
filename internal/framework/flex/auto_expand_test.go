@@ -28,6 +28,9 @@ func TestExpand(t *testing.T) {
 	testString := "test"
 	testStringResult := "a"
 
+	testByteSlice := []byte("test")
+	testByteSliceResult := []byte("a")
+
 	var (
 		typedNilSource *emptyStruct
 		typedNilTarget *emptyStruct
@@ -127,6 +130,15 @@ func TestExpand(t *testing.T) {
 				infoConverting(reflect.TypeFor[types.String](), reflect.TypeFor[string]()),
 			},
 		},
+		"types.String to byte slice": {
+			Source:     types.StringValue("a"),
+			Target:     &testByteSlice,
+			WantTarget: &testByteSliceResult,
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[types.String](), reflect.TypeFor[*[]byte]()),
+				infoConverting(reflect.TypeFor[types.String](), reflect.TypeFor[[]byte]()),
+			},
+		},
 		"empty struct Source and Target": {
 			Source:     emptyStruct{},
 			Target:     &emptyStruct{},
@@ -178,6 +190,17 @@ func TestExpand(t *testing.T) {
 				infoConverting(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleStringValue]()),
 				traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringField](), "Field1", reflect.TypeFor[*awsSingleStringValue]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[string]()),
+			},
+		},
+		"single string Source and byte slice Target": {
+			Source:     &tfSingleStringField{Field1: types.StringValue("a")},
+			Target:     &awsSingleByteSliceValue{},
+			WantTarget: &awsSingleByteSliceValue{Field1: []byte("a")},
+			expectedLogLines: []map[string]any{
+				infoExpanding(reflect.TypeFor[*tfSingleStringField](), reflect.TypeFor[*awsSingleByteSliceValue]()),
+				infoConverting(reflect.TypeFor[tfSingleStringField](), reflect.TypeFor[*awsSingleByteSliceValue]()),
+				traceMatchedFields("Field1", reflect.TypeFor[tfSingleStringField](), "Field1", reflect.TypeFor[*awsSingleByteSliceValue]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[types.String](), "Field1", reflect.TypeFor[[]byte]()),
 			},
 		},
 		"single string Source and single *string Target": {
