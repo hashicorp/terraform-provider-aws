@@ -393,7 +393,7 @@ func resourceListener() *schema.Resource {
 			"tcp_idle_timeout_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      350,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(60, 6000),
 				// Attribute only valid for TCP (NLB) and GENEVE (GWLB) listeners
 				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumGeneve, awstypes.ProtocolEnumTcp),
@@ -536,9 +536,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// Listener attributes like TCP idle timeout are not supported on create
-	var attributes []awstypes.ListenerAttribute
-
-	attributes = append(attributes, listenerAttributes.expand(d, listenerProtocolType, false)...)
+	attributes := listenerAttributes.expand(d, listenerProtocolType, false)
 
 	if len(attributes) > 0 {
 		if err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
@@ -750,12 +748,13 @@ func (m listenerAttributeMap) expand(d *schema.ResourceData, listenerType awstyp
 			continue
 		}
 
-		if attributeInfo.tfType == schema.TypeInt {
-			v := (d.Get(tfAttributeName)).(int)
-			attributes = append(attributes, awstypes.ListenerAttribute{
-				Key:   aws.String(attributeInfo.apiAttributeKey),
-				Value: flex.IntValueToString(v),
-			})
+		if v, ok := d.GetOk(tfAttributeName); ok {
+			if attributeInfo.tfType == schema.TypeInt {
+				attributes = append(attributes, awstypes.ListenerAttribute{
+					Key:   aws.String(attributeInfo.apiAttributeKey),
+					Value: flex.IntValueToString(v.(int)),
+				})
+			}
 		}
 	}
 

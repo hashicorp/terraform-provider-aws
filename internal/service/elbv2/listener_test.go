@@ -62,6 +62,7 @@ func TestAccELBV2Listener_Application_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "tcp_idle_timeout_seconds"),
 				),
 			},
 			{
@@ -114,6 +115,7 @@ func TestAccELBV2Listener_Network_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tcp_idle_timeout_seconds", "350"),
 				),
 			},
 			{
@@ -165,6 +167,7 @@ func TestAccELBV2Listener_Gateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tcp_idle_timeout_seconds", "350"),
 				),
 			},
 			{
