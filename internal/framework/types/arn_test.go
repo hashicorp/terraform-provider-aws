@@ -36,7 +36,7 @@ func TestARNTypeValueFromTerraform(t *testing.T) {
 		},
 		"invalid ARN": {
 			val:      tftypes.NewValue(tftypes.String, "not ok"),
-			expected: fwtypes.ARNUnknown(),
+			expected: fwtypes.ARNValue("not ok"),
 		},
 	}
 

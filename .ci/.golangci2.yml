@@ -99,6 +99,7 @@ linters-settings:
       - strconv.ParseFloat
       - strconv.ParseInt
       - strings.SplitN
+      # - big.Int.Text # Not sure how to specify a method
 
 run:
   timeout: 75m

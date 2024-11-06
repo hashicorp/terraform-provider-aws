@@ -1,7 +1,27 @@
 ## 5.75.0 (Unreleased)
 
+BREAKING CHANGES:
+
+* resource/aws_api_gateway_stage: Add `canary_settings.deployment_id` attribute as `required` ([#39929](https://github.com/hashicorp/terraform-provider-aws/issues/39929))
+
+NOTES:
+
+* provider: validation of arguments implementing the custom `ARNType` will properly surface validation errors ([#40008](https://github.com/hashicorp/terraform-provider-aws/issues/40008))
+* resource/aws_api_gateway_stage: `deployment_id` was added to `canary_settings` as a `required` attribute. This breaking change was necessary to make `canary_settings` functional. Without this change all canary traffic was routed to the main deployment ([#39929](https://github.com/hashicorp/terraform-provider-aws/issues/39929))
+
+ENHANCEMENTS:
+
+* data-source/aws_batch_job_definition: Add `init_containers`, `share_process_namespace`, and `image_pull_secrets` attributes ([#40019](https://github.com/hashicorp/terraform-provider-aws/issues/40019))
+* resource/aws_batch_job_definition: Add `init_containers` and `share_process_namespace` arguments ([#40019](https://github.com/hashicorp/terraform-provider-aws/issues/40019))
+* resource/aws_batch_job_definition: Increase maximum number of `containers` arguments to 10 ([#40019](https://github.com/hashicorp/terraform-provider-aws/issues/40019))
+* resource/aws_eks_addon: Add `pod_identity_association` argument ([#38357](https://github.com/hashicorp/terraform-provider-aws/issues/38357))
+* resource/aws_iam_user_login_profile: Mark the `password` argument as sensitive ([#39991](https://github.com/hashicorp/terraform-provider-aws/issues/39991))
+
 BUG FIXES:
 
+* resource/aws_api_gateway_deployment: Fix destroy error when canary stage still exists on resource ([#39929](https://github.com/hashicorp/terraform-provider-aws/issues/39929))
+* resource/aws_codedeploy_deployment_group: Remove maximum items limit on the `alarm_configuration.alarms` argument ([#39971](https://github.com/hashicorp/terraform-provider-aws/issues/39971))
+* resource/aws_eks_addon: Handle `ResourceNotFound` exceptions during resource destruction ([#38357](https://github.com/hashicorp/terraform-provider-aws/issues/38357))
 * resource/aws_elasticache_reserved_cache_node: Fix `Value Conversion Error` during resource creation ([#39945](https://github.com/hashicorp/terraform-provider-aws/issues/39945))
 
 ## 5.74.0 (October 31, 2024)

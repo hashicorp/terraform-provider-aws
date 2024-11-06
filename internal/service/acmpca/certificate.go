@@ -234,7 +234,7 @@ func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[INFO] Revoking ACM PCA Certificate: %s", d.Id())
 	_, err = conn.RevokeCertificate(ctx, &acmpca.RevokeCertificateInput{
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
-		CertificateSerial:       aws.String(fmt.Sprintf("%x", serial)),
+		CertificateSerial:       aws.String(serial.Text(16)), //nolint:mnd // Should be excluded, but not sure how to specify a method
 		RevocationReason:        types.RevocationReasonUnspecified,
 	})
 

@@ -1290,7 +1290,7 @@ func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 				Config: testAccInstance_ipv6AddressCount(rName, originalCount),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", fmt.Sprint(originalCount)),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", strconv.Itoa(originalCount)),
 				),
 			},
 			{
@@ -1298,7 +1298,7 @@ func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", fmt.Sprint(updatedCount)),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", strconv.Itoa(updatedCount)),
 				),
 			},
 			{
@@ -1306,7 +1306,7 @@ func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
-					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", fmt.Sprint(shrunkenCount)),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", strconv.Itoa(shrunkenCount)),
 				),
 			},
 		},

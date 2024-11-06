@@ -56,7 +56,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.47.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.22.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.25.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.26.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.8.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chime v1.34.3 // indirect
@@ -110,7 +110,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.28.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.39.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.13.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.14.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.36.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.187.0 // indirect
@@ -218,7 +218,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.51.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.31.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.24.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rekognition v1.45.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rekognition v1.45.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.27.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.15.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.27.3 // indirect

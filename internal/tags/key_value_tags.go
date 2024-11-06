@@ -689,7 +689,7 @@ func (td *TagData) String() string {
 			additionalBoolField := fmt.Sprintf("%s:", k)
 
 			if v != nil {
-				additionalBoolField += fmt.Sprintf("%t", *v)
+				additionalBoolField += strconv.FormatBool(*v)
 			}
 
 			additionalBoolFields = append(additionalBoolFields, additionalBoolField)
