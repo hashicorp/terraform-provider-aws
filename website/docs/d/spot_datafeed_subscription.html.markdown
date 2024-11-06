@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_spot_datafeed_subscription
 
--> **Note:** There is only a single subscription existing per account.
+~> There is only a single spot data feed subscription per account.
 
 Terraform data source for accessing an AWS EC2 (Elastic Compute Cloud) spot data feed subscription.
 
