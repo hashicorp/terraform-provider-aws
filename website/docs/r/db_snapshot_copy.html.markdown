@@ -47,6 +47,7 @@ This resource supports the following arguments:
 * `kms_key_id` - (Optional) KMS key ID.
 * `option_group_name`- (Optional) The name of an option group to associate with the copy of the snapshot.
 * `presigned_url` - (Optional) he URL that contains a Signature Version 4 signed request.
+* `shared_accounts` - (Optional) List of AWS Account IDs to share the snapshot with. Use `all` to make the snapshot public.
 * `source_db_snapshot_identifier` - (Required) Snapshot identifier of the source snapshot.
 * `target_custom_availability_zone` - (Optional) The external custom Availability Zone.
 * `target_db_snapshot_identifier` - (Required) The Identifier for the snapshot.
