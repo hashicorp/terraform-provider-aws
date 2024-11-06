@@ -460,6 +460,15 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 		vTo.SetString(v.ValueString())
 		return diags
 
+	case reflect.Slice:
+		if tTo.Elem().Kind() == reflect.Uint8 {
+			//
+			// types.String -> []byte (or []uint8).
+			//
+			vTo.Set(reflect.ValueOf([]byte(v.ValueString())))
+			return diags
+		}
+
 	case reflect.Struct:
 		//
 		// timetypes.RFC3339 --> time.Time
