@@ -7,53 +7,69 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_spot_datafeed_subscription", name="Spot Data Feed Subscription")
-func dataSourceSpotDataFeedSubscription() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceSpotDataFeedSubscriptionRead,
-
-		Schema: map[string]*schema.Schema{
-			names.AttrBucket: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrPrefix: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-		},
-	}
+// @FrameworkDataSource("aws_spot_datafeed_subscription", name="Spot Data Feed Subscription Data Source")
+func newDataSourceSpotDataFeedSubscription(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceSpotDataFeedSubscription{}, nil
 }
 
 const (
 	DSNameSpotDataFeedSubscription = "Spot Data Feed Subscription Data Source"
 )
 
-func dataSourceSpotDataFeedSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+type dataSourceSpotDataFeedSubscription struct {
+	framework.DataSourceWithConfigure
+}
 
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+func (d *dataSourceSpotDataFeedSubscription) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	resp.TypeName = "aws_spot_datafeed_subscription"
+}
 
-	name := meta.(*conns.AWSClient).AccountID
+func (d *dataSourceSpotDataFeedSubscription) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrBucket: schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrPrefix: schema.StringAttribute{
+				Computed: true,
+			},
+		},
+	}
+}
+
+func (d *dataSourceSpotDataFeedSubscription) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+	conn := d.Meta().EC2Client(ctx)
+	accountID := d.Meta().AccountID
+
+	var data dataSourceSpotDataFeedSubscriptionModel
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	out, err := conn.DescribeSpotDatafeedSubscription(ctx, &ec2.DescribeSpotDatafeedSubscriptionInput{})
 	if err != nil {
-		return create.AppendDiagError(diags, names.EC2, create.ErrActionReading, DSNameSpotDataFeedSubscription, name, err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.EC2, create.ErrActionReading, DSNameSpotDataFeedSubscription, accountID, err),
+			err.Error(),
+		)
+		return
 	}
 
-	d.SetId("spot-datafeed-subscription")
+	resp.Diagnostics.Append(flex.Flatten(ctx, out.SpotDatafeedSubscription, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+}
 
-	subscription := out.SpotDatafeedSubscription
-
-	d.Set(names.AttrBucket, subscription.Bucket)
-	d.Set(names.AttrPrefix, subscription.Prefix)
-
-	return diags
+type dataSourceSpotDataFeedSubscriptionModel struct {
+	Bucket types.String `tfsdk:"bucket"`
+	Prefix types.String `tfsdk:"prefix"`
 }

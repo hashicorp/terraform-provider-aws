@@ -19,6 +19,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "Capacity Block Offering",
 		},
 		{
+			Factory: newDataSourceSpotDataFeedSubscription,
+			Name:    "Spot Data Feed Subscription Data Source",
+		},
+		{
 			Factory: newSecurityGroupRuleDataSource,
 			Name:    "Security Group Rule",
 		},
@@ -464,11 +468,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceSecurityGroups,
 			TypeName: "aws_security_groups",
 			Name:     "Security Groups",
-		},
-		{
-			Factory:  dataSourceSpotDataFeedSubscription,
-			TypeName: "aws_spot_datafeed_subscription",
-			Name:     "Spot Data Feed Subscription",
 		},
 		{
 			Factory:  dataSourceSubnet,
