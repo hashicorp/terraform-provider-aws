@@ -86,8 +86,6 @@ ephemeral "aws_lambda_invocation" "test" {
       }
     }
   })
-
-  depends_on = [aws_lambda_function.test]
 }
 `, rName)
 }
