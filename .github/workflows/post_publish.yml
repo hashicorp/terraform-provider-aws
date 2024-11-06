@@ -52,51 +52,66 @@ jobs:
     steps:
       - run: echo 'The triggering workflow failed'
 
-
   registry-check:
-    # strategy:
-    #   matrix:
-    #     os: [ubuntu-latest, windows-latest, macOS-latest]
-    # runs-on: ${{ matrix.os }}
-    # runs-on: ubuntu-latest
-    runs:
-      using: "composite"
-      steps:
-        - using: composite
+    runs-on: ubuntu-latest
+    steps:
         - name: Registry Version Check
           id: registry_latest_ver
           shell: bash
           run: |
-            curl -s "https://registry.terraform.io/v2/providers/323/provider-versions/latest" | jq '.data.attributes.version' >> "$GITHUB_OUTPUT"
+            if [[ " ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}" != curl -s "https://registry.terraform.io/v2/providers/323/provider-versions/latest" | jq '.data.attributes.version' ]]; then
+              case "$OSTYPE" in
+                darwin*)  sleep 1h ;;
+                linux*)   sleep 1h ;;
+                msys*)    Start-Sleep -s (2*60)
+                *)        echo "unknown: $OSTYPE" ;;
+              esac
+            else
+              echo "Registry and Github Version matches"
 
-        - name: Check Version Values
-          if: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }} == steps.registry_latest_ver.outputs.current
-          shell: bash
-          run: |
-            echo "Latest AWS Terraform Provider version: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}"
-
-        - name: Create TF Configuration
-          shell: bash
-          run: |
-            echo "Setting provider version in Terraform configuration..."
-            cat <<EOF > main.tf
-            terraform {
-              required_providers {
-                aws = {
-                  source  = "${PROVIDER}"
-                  version = ${LATEST_VERSION}
-                }
+  os-version-init:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Run Terraform Init on the os-version-init
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
+        run: |
+          echo "Setting provider version in Terraform configuration..."
+          cat <<EOF > main.tf
+          terraform {
+            required_providers {
+              aws = {
+                source  = "${PROVIDER}"
+                version = ${LATEST_VERSION}
               }
             }
-            provider "aws" {
-              region = "us-east-1"  # Change this to your preferred region
+          }
+
+          provider "aws" {
+            region = "us-east-1"
+          }
+          EOF
+
+          if [ $? -ne 0 ]; then
+            echo "Terraform initialization failed."
+            exit 1
+          fi
+        with:
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format('ERROR; Registry Terraform Provider Initiation Failed')) }}
+                  }
+                }
+              ]
             }
-            EOF
 
-            echo "Terraform configuration file (main.tf) created with the latest version."
-
-            echo "Initializing Terraform and pulling the latest AWS provider..."
-            terraform init
 
 # Trigger slack notifications
 
