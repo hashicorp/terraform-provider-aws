@@ -68,6 +68,7 @@ jobs:
               esac
             else
               echo "Registry and Github Version matches"
+              #  || needs.failing-job.result == 'timed_out'
 
   os-version-init:
     strategy:
@@ -76,7 +77,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Run Terraform Init on the os-version-init
-        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
         run: |
           echo "Setting provider version in Terraform configuration..."
           cat <<EOF > main.tf
@@ -98,6 +98,14 @@ jobs:
             echo "Terraform initialization failed."
             exit 1
           fi
+
+  on-version-failure:
+    runs-on: ubuntu-latest
+    if: ${{ failure() && (needs.os-version-init.result == 'failure') }}
+    needs:
+      [os-version-init]
+    steps:
+      - uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
         with:
           payload: |
             {
