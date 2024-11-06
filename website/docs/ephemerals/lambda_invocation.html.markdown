@@ -36,15 +36,21 @@ output "result_entry" {
 
 The following arguments are required:
 
-* `function_name` - (Required) Name of the lambda function.
-* `payload` - (Required) JSON payload to the lambda function.
+* `function_name` - (Required) Name or ARN of the Lambda function, version, or alias. You can append a version number or alias. If you specify only the function name, it is limited to 64 characters in length.
+* `payload` - (Required) JSON that you want to provide to your Lambda function as input.
 
 The following arguments are optional:
 
-* `qualifier` - (Optional) Qualifier (i.e., version) of the lambda function. Defaults to `$LATEST`.
+* `client_context` - (Optional) Up to 3583 bytes of base64-encoded data about the invoking client to pass to the function in the context object.
+* `log_type` - (Optional) Set to `Tail` to include the execution log in the response. Valid values are `None` and `Tail`.
+* `qualifier` - (Optional) Version or alias to invoke a published version of the function. Defaults to `$LATEST`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `executed_version` - Version of the function that executed. When you invoke a function with an alias, the version the alias resolved to.
+* `function_error` - If present, indicates that an error occurred during function execution. Details about the error are included in `result`.
+* `log_result` - Last 4 KB of the execution log, which is base64-encoded.
 * `result` - String result of the lambda function invocation.
+* `status_code` - HTTP status code is in the 200 range for a successful request.
