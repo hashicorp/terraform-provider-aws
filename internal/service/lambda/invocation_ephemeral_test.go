@@ -7,8 +7,10 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/go-version"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -18,8 +20,11 @@ func TestAccLambdaInvocationEphemeral_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.LambdaServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.10.0"))),
+		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -60,22 +65,15 @@ resource "aws_iam_role_policy_attachment" "test" {
 resource "aws_lambda_function" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 
-  filename      = "test-fixtures/%[1]s.zip"
-  function_name = "lambda_invocation"
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = %[1]q
   role          = aws_iam_role.test.arn
-  handler       = "%[1]s.handler"
+  handler       = "lambda_invocation.handler"
   runtime       = "nodejs18.x"
-
-  environment {
-    variables = {
-      TEST_DATA = "value"
-    }
-  }
 }
 
 ephemeral "aws_lambda_invocation" "test" {
-  function_name = aws_lambda_function.test.function_name
-  qualifier     = aws_lambda_function.test.version
+  function_name = aws_lambda_function.test.arn
 
   payload = jsonencode({
     key1 = {
@@ -88,6 +86,8 @@ ephemeral "aws_lambda_invocation" "test" {
       }
     }
   })
+
+  depends_on = [aws_lambda_function.test]
 }
 `, rName)
 }
