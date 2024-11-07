@@ -1,4 +1,9 @@
 ## 5.76.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_api_gateway_account: Add attribute `reset_on_delete` to properly reset CloudWatch Role ARN on deletion. ([#40004](https://github.com/hashicorp/terraform-provider-aws/issues/40004))
+
 ## 5.75.0 (November  7, 2024)
 
 BREAKING CHANGES:
