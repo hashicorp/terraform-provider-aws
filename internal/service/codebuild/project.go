@@ -123,6 +123,11 @@ func resourceProject() *schema.Resource {
 					},
 				},
 			},
+			"auto_retry_limit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  0,
+			},
 			"badge_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -757,6 +762,10 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Artifacts = expandProjectArtifacts(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("auto_retry_limit"); ok {
+		input.AutoRetryLimit = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("badge_enabled"); ok {
 		input.BadgeEnabled = aws.Bool(v.(bool))
 	}
@@ -879,6 +888,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("artifacts", nil)
 	}
+	d.Set("auto_retry_limit", project.AutoRetryLimit)
 	if project.Badge != nil {
 		d.Set("badge_enabled", project.Badge.BadgeEnabled)
 		d.Set("badge_url", project.Badge.BadgeRequestUrl)
@@ -971,6 +981,10 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if v, ok := d.GetOk("artifacts"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.Artifacts = expandProjectArtifacts(v.([]interface{})[0].(map[string]interface{}))
 			}
+		}
+
+		if d.HasChange("auto_retry_limit") {
+			input.AutoRetryLimit = aws.Int32(int32(d.Get("auto_retry_limit").(int)))
 		}
 
 		if d.HasChange("badge_enabled") {
