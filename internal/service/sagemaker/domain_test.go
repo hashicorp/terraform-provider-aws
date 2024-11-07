@@ -730,6 +730,42 @@ func testAccDomain_rStudioServerProDomainSettings(t *testing.T) {
 	})
 }
 
+func testAccDomain_rStudioServerProDomainSettingsUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_rStudioServerProDomainSettingsUpdate(rName, "PublicInternetOnly", "https://connect.domain.com", "https://package.domain.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.0.r_studio_connect_url", "https://connect.domain.com"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.0.r_studio_package_manager_url", "https://package.domain.com"),
+				),
+			},
+			{
+				Config: testAccDomainConfig_rStudioServerProDomainSettingsUpdate(rName, "VpcOnly", "https://connect.domain.com", "https://package.domain.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.0.r_studio_connect_url", "https://connect.domain.com"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.r_studio_server_pro_domain_settings.0.r_studio_package_manager_url", "https://package.domain.com"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDomain_kernelGatewayAppSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
@@ -2485,6 +2521,47 @@ resource "aws_sagemaker_domain" "test" {
   }
 }
 `, rName, connectURL, packageURL))
+}
+
+func testAccDomainConfig_rStudioServerProDomainSettingsUpdate(rName, networkAccess, connectURL, packageURL string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_baseWithLicense(rName), fmt.Sprintf(`
+resource "aws_sagemaker_domain" "test" {
+  domain_name             = %[1]q
+  auth_mode               = "IAM"
+  vpc_id                  = aws_vpc.test.id
+  subnet_ids              = aws_subnet.test[*].id
+  app_network_access_type = %[2]q
+
+  domain_settings {
+
+    r_studio_server_pro_domain_settings {
+      r_studio_connect_url         = %[3]q
+      r_studio_package_manager_url = %[4]q
+      domain_execution_role_arn    = aws_iam_role.test.arn
+      default_resource_spec {
+        instance_type = "system"
+      }
+    }
+  }
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+
+  # ignoring default image
+  # it would be too hard to create the logic to find the default Rstudio image: https://docs.aws.amazon.com/sagemaker/latest/dg/rstudio-version.html
+  # it changes for every region
+  lifecycle {
+    ignore_changes = [
+      domain_settings[0].r_studio_server_pro_domain_settings[0].default_resource_spec[0]
+    ]
+  }
+}
+`, rName, networkAccess, connectURL, packageURL))
 }
 
 func testAccDomainConfig_baseWithLicense(rName string) string {
