@@ -216,6 +216,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.7
+	github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.0
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.168.1
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.12.7
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.28.8
@@ -325,7 +326,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.10.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.12.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.18.6 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.28.6 // indirect
 	github.com/bgentry/speakeasy v0.2.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
