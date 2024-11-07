@@ -110,7 +110,7 @@ func (r *resourceAccount) Create(ctx context.Context, request resource.CreateReq
 			{
 				Op:    awstypes.OpReplace,
 				Path:  aws.String("/cloudwatchRoleArn"),
-				Value: aws.String(data.CloudwatchRoleARN.ValueString()),
+				Value: data.CloudwatchRoleARN.ValueStringPointer(),
 			},
 		}
 	}
@@ -155,6 +155,10 @@ func (r *resourceAccount) Read(ctx context.Context, request resource.ReadRequest
 		response.State.RemoveResource(ctx)
 		return
 	}
+	if err != nil {
+		response.Diagnostics.AddError("reading API Gateway Account", err.Error())
+		return
+	}
 
 	response.Diagnostics.Append(flex.Flatten(ctx, account, &data)...)
 
@@ -197,7 +201,7 @@ func (r *resourceAccount) Update(ctx context.Context, request resource.UpdateReq
 				{
 					Op:    awstypes.OpReplace,
 					Path:  aws.String("/cloudwatchRoleArn"),
-					Value: aws.String(plan.CloudwatchRoleARN.ValueString()),
+					Value: plan.CloudwatchRoleARN.ValueStringPointer(),
 				},
 			}
 		}
@@ -264,7 +268,7 @@ func (r *resourceAccount) Delete(ctx context.Context, request resource.DeleteReq
 //
 // If setting an attribute with the import identifier, it is recommended to use the ImportStatePassthroughID() call in this method.
 func (r *resourceAccount) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
 type resourceAccountModel struct {
