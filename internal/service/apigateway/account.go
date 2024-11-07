@@ -263,10 +263,6 @@ func (r *resourceAccount) Delete(ctx context.Context, request resource.DeleteReq
 	}
 }
 
-// ImportState is called when the provider must import the state of a resource instance.
-// This method must return enough state so the Read method can properly refresh the full resource.
-//
-// If setting an attribute with the import identifier, it is recommended to use the ImportStatePassthroughID() call in this method.
 func (r *resourceAccount) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
