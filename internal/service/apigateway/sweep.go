@@ -59,7 +59,9 @@ func RegisterSweepers() {
 
 func sweepAccounts(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	return []sweep.Sweepable{
-		framework.NewSweepResource(newResourceAccount, client),
+		framework.NewSweepResource(newResourceAccount, client,
+			framework.NewAttribute("reset_on_delete", true),
+		),
 	}, nil
 }
 

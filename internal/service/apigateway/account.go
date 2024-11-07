@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -66,10 +67,17 @@ func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			names.AttrID: schema.StringAttribute{
 				Computed:           true,
-				DeprecationMessage: "This attribute will be removed in a future version.",
+				DeprecationMessage: "This attribute is unused and will be removed in a future version of the provider",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			"reset_on_delete": schema.BoolAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+				DeprecationMessage: "This attribute will be removed in a future version of the provider",
 			},
 			"throttle_settings": framework.DataSourceComputedListOfObjectAttribute[throttleSettingsModel](ctx),
 		},
@@ -226,19 +234,28 @@ func (r *resourceAccount) Delete(ctx context.Context, request resource.DeleteReq
 		return
 	}
 
-	conn := r.Meta().APIGatewayClient(ctx)
+	if data.ResetOnDelete.ValueBool() {
+		conn := r.Meta().APIGatewayClient(ctx)
 
-	input := &apigateway.UpdateAccountInput{}
+		input := &apigateway.UpdateAccountInput{}
 
-	input.PatchOperations = []awstypes.PatchOperation{{
-		Op:    awstypes.OpReplace,
-		Path:  aws.String("/cloudwatchRoleArn"),
-		Value: nil,
-	}}
+		input.PatchOperations = []awstypes.PatchOperation{{
+			Op:    awstypes.OpReplace,
+			Path:  aws.String("/cloudwatchRoleArn"),
+			Value: nil,
+		}}
 
-	_, err := conn.UpdateAccount(ctx, input)
-	if err != nil {
-		response.Diagnostics.AddError("resetting API Gateway Account", err.Error())
+		_, err := conn.UpdateAccount(ctx, input)
+		if err != nil {
+			response.Diagnostics.AddError("resetting API Gateway Account", err.Error())
+		}
+	} else {
+		response.Diagnostics.AddWarning(
+			"Resource Destruction",
+			"This resource has only been removed from Terraform state. "+
+				"Manually use the AWS Console to fully destroy this resource. "+
+				"Setting the attribute \"reset_on_delete\" will also fully destroy resources of this type.",
+		)
 	}
 }
 
@@ -255,6 +272,7 @@ type resourceAccountModel struct {
 	CloudwatchRoleARN types.String                                           `tfsdk:"cloudwatch_role_arn" autoflex:",legacy"`
 	Features          types.Set                                              `tfsdk:"features"`
 	ID                types.String                                           `tfsdk:"id"`
+	ResetOnDelete     types.Bool                                             `tfsdk:"reset_on_delete"`
 	ThrottleSettings  fwtypes.ListNestedObjectValueOf[throttleSettingsModel] `tfsdk:"throttle_settings"`
 }
 

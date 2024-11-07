@@ -10,6 +10,8 @@ description: |-
 
 Provides a settings of an API Gateway Account. Settings is applied region-wide per `provider` block.
 
+-> **Note:** By default, destroying this resource will keep your account settings intact. Set `reset_on_delete` to `true` to reset the account setttings to default. In a future version, destroying the resource will reset account settings.
+
 ## Example Usage
 
 ```terraform
@@ -64,6 +66,9 @@ resource "aws_iam_role_policy" "cloudwatch" {
 This resource supports the following arguments:
 
 * `cloudwatch_role_arn` - (Optional) ARN of an IAM role for CloudWatch (to allow logging & monitoring). See more [in AWS Docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-stage-settings.html#how-to-stage-settings-console). Logging & monitoring can be enabled/disabled and otherwise tuned on the API Gateway Stage level.
+* `reset_on_delete` - (Optional) If `true`, destroying the resource will reset account settings to default, otherwise account settings are not modified.
+  Defaults to `false`.
+  Will be removed in a future version.
 
 ## Attribute Reference
 
