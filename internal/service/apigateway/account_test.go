@@ -307,7 +307,6 @@ func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 		if account.CloudwatchRoleArn == nil {
 			// Settings have been reset
 			return nil
-
 		}
 
 		return errors.New("API Gateway Account still exists")
