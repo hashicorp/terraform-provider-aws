@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"golang.org/x/exp/slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkfirewall"
@@ -260,6 +261,7 @@ func expandLoggingConfigurations(tfList []interface{}) []*awstypes.LoggingConfig
 	apiObjects := make([]*awstypes.LoggingConfiguration, 0)
 
 	if v, ok := tfMap["log_destination_config"].(*schema.Set); ok && v.Len() > 0 {
+		loggingTypesTrack := make([]string,0)
 		for _, tfMapRaw := range v.List() {
 			tfMap, ok := tfMapRaw.(map[string]interface{})
 			if !ok {
@@ -274,8 +276,9 @@ func expandLoggingConfigurations(tfList []interface{}) []*awstypes.LoggingConfig
 			if v, ok := tfMap["log_destination_type"].(string); ok && v != "" {
 				logDestinationConfig.LogDestinationType = awstypes.LogDestinationType(v)
 			}
-			if v, ok := tfMap["log_type"].(string); ok && v != "" {
+			if v, ok := tfMap["log_type"].(string); ok && v != "" && !slices.Contains(loggingTypesTrack, string(v)) {
 				logDestinationConfig.LogType = awstypes.LogType(v)
+				loggingTypesTrack = append(loggingTypesTrack, string(v))
 			}
 
 			// Exclude empty LogDestinationConfig due to TypeMap in TypeSet behavior.
@@ -285,9 +288,18 @@ func expandLoggingConfigurations(tfList []interface{}) []*awstypes.LoggingConfig
 			}
 
 			apiObject := &awstypes.LoggingConfiguration{}
-			// Include all (max 2) "log_destination_config" i.e. prepend the already-expanded loggingConfig.
-			if len(apiObjects) == 1 && len(apiObjects[0].LogDestinationConfigs) == 1 {
-				apiObject.LogDestinationConfigs = append(apiObject.LogDestinationConfigs, apiObjects[0].LogDestinationConfigs[0])
+			// Include all (max 3) "log_destination_config" i.e. prepend the already-expanded loggingConfig.
+			if len(apiObjects) > 0 {
+				objectLogTypeTracking := make([]string,0)
+				for _, object := range apiObjects {
+					for _, logDestConfig := range object.LogDestinationConfigs {
+						if !slices.Contains(objectLogTypeTracking, string(logDestConfig.LogType)) {
+							apiObject.LogDestinationConfigs = append(apiObject.LogDestinationConfigs, logDestConfig)
+							objectLogTypeTracking = append(objectLogTypeTracking, string(logDestConfig.LogType))
+						}
+					}
+					
+				}
 			}
 			apiObject.LogDestinationConfigs = append(apiObject.LogDestinationConfigs, logDestinationConfig)
 
