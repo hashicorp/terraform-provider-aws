@@ -2998,6 +2998,52 @@ func TestAccCodeBuildProject_dockerServerWithVPC(t *testing.T) {
 	})
 }
 
+func TestAccCodeBuildProject_autoRetryLimit(t *testing.T) {
+	ctx := acctest.Context(t)
+	var project types.Project
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_autoRetryLimit(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "auto_retry_limit", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccProjectConfig_autoRetryLimit(rName, 4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "auto_retry_limit", "4"),
+				),
+			},
+			{
+				Config: testAccProjectConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "auto_retry_limit", "0"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckProjectExists(ctx context.Context, n string, v *types.Project) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
