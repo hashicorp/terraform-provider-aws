@@ -2640,5 +2640,5 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 
 	// !! Not a validation error for attribute_name to be set when enabled is false !!
 	// AWS *requires* attribute_name to be set when disabling TTL but does not return it, causing a diff.
-	// The diff is handled by DiffSuppressFunc of AttrEnabled.
+	// The diff is handled by DiffSuppressFunc of attribute_name.
 }
