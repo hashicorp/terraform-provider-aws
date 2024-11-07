@@ -281,6 +281,26 @@ type throttleSettingsModel struct {
 	RateLimit  types.Float64 `tfsdk:"rate_limit"`
 }
 
+func (r *resourceAccount) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	// If the entire plan is null, the resource is planned for destruction.
+	if request.Plan.Raw.IsNull() {
+		var resetOnDelete types.Bool
+		response.Diagnostics.Append(request.State.GetAttribute(ctx, path.Root("reset_on_delete"), &resetOnDelete)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if !resetOnDelete.ValueBool() {
+			response.Diagnostics.AddWarning(
+				"Resource Destruction",
+				"Applying this resource destruction will only remove the resource from Terraform state and will not reset account settings. "+
+					"Either manually use the AWS Console to fully destroy this resource or "+
+					"update the resource with \"reset_on_delete\" set to true.",
+			)
+		}
+	}
+}
+
 func findAccount(ctx context.Context, conn *apigateway.Client) (*apigateway.GetAccountOutput, error) {
 	input := &apigateway.GetAccountInput{}
 

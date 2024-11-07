@@ -314,7 +314,7 @@ func testAccCheckAccountNotDestroyed(ctx context.Context) resource.TestCheckFunc
 			return nil
 		}
 
-		return errors.New("API Gateway Account still exists")
+		return errors.New("API Gateway Account was reset")
 	}
 }
 
