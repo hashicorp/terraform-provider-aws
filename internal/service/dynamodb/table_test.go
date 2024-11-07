@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -1557,7 +1558,7 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 
 // TTL tests must be split since it can only be updated once per hour
 // ValidationException: Time to live has been modified multiple times within a fixed interval
-func TestAccDynamoDBTable_TTL_update(t *testing.T) {
+func TestAccDynamoDBTable_TTL_updateEnable(t *testing.T) {
 	ctx := acctest.Context(t)
 	var table awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
@@ -1598,6 +1599,81 @@ func TestAccDynamoDBTable_TTL_update(t *testing.T) {
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
 							"attribute_name":  knownvalue.StringExact(rName),
 							names.AttrEnabled: knownvalue.Bool(true),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
+// TestAccDynamoDBTable_TTL_updateDisable takes an hour because AWS does not allow disabling TTL
+// for an hour after it was enabled. Otherwise, it will return the following error:
+// ValidationException: Time to live has been modified multiple times within a fixed interval
+// https://github.com/hashicorp/terraform-provider-aws/issues/39195
+func TestAccDynamoDBTable_TTL_updateDisable(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var table awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_timeToLive(rName, rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &table),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(rName),
+							names.AttrEnabled: knownvalue.Bool(true),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				PreConfig: func() {
+					// 5 & 10 have failed
+					time.Sleep(60 * time.Minute)
+				},
+				Config: testAccTableConfig_timeToLive(rName, rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &table),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(""),
+							names.AttrEnabled: knownvalue.Bool(false),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_timeToLive(rName, rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &table),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(""),
+							names.AttrEnabled: knownvalue.Bool(false),
 						}),
 					})),
 				},
