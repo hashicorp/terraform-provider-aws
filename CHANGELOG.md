@@ -27,6 +27,9 @@ BUG FIXES:
 * resource/aws_codedeploy_deployment_group: Remove maximum items limit on the `alarm_configuration.alarms` argument ([#39971](https://github.com/hashicorp/terraform-provider-aws/issues/39971))
 * resource/aws_eks_addon: Handle `ResourceNotFound` exceptions during resource destruction ([#38357](https://github.com/hashicorp/terraform-provider-aws/issues/38357))
 * resource/aws_elasticache_reserved_cache_node: Fix `Value Conversion Error` during resource creation ([#39945](https://github.com/hashicorp/terraform-provider-aws/issues/39945))
+* resource/aws_lb_listener: Fix errors when updating the `tcp_idle_timeout_seconds` argument for gateway load balancers ([#40039](https://github.com/hashicorp/terraform-provider-aws/issues/40039))
+* resource/aws_lb_listener: Remove the default `tcp_idle_timeout_seconds` value, preventing `ModifyListenerAttributes` API calls when a value is not explicitly configured ([#40039](https://github.com/hashicorp/terraform-provider-aws/issues/40039))
+* resource/aws_vpc_ipam_pool: Fix bug when `public_ip_source = "amazon"`: `The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip.` ([#40042](https://github.com/hashicorp/terraform-provider-aws/issues/40042))
 
 ## 5.74.0 (October 31, 2024)
 
