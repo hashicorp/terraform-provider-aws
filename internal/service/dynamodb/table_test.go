@@ -1648,17 +1648,19 @@ func TestAccDynamoDBTable_TTL_updateDisable(t *testing.T) {
 			},
 			{
 				PreConfig: func() {
-					// 5 & 10 have failed
+					// AWS does not allow disabling TTL for an hour after it was enabled. Otherwise, it
+					// will return the following error: ValidationException: Time to live has been
+					// modified multiple times within a fixed interval
 					time.Sleep(60 * time.Minute)
 				},
-				Config: testAccTableConfig_timeToLive(rName, rName, false),
+				Config: testAccTableConfig_timeToLive(rName, rName, false), // can't disable without attribute_name (2nd arg)
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &table),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
 						knownvalue.ObjectExact(map[string]knownvalue.Check{
-							"attribute_name":  knownvalue.StringExact(""),
+							"attribute_name":  knownvalue.StringExact(""), // set attribute_name, but returned empty; diff suppressed
 							names.AttrEnabled: knownvalue.Bool(false),
 						}),
 					})),
