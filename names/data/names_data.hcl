@@ -7482,6 +7482,28 @@ service "s3control" {
   brand                    = "AWS"
 }
 
+service "s3tables" {
+  sdk {
+    id = "S3Tables"
+  }
+
+  names {
+    provider_name_upper = "S3Tables"
+    human_friendly      = "S3 Tables"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListTableBuckets"
+  }
+
+  resource_prefix {
+    correct = "aws_s3tables_"
+  }
+
+  doc_prefix               = ["s3tables_"]
+  brand                    = "Amazon"
+}
+
 service "glacier" {
   sdk {
     id = "Glacier"
