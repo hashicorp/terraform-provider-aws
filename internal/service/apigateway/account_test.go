@@ -27,11 +27,13 @@ import (
 
 func testAccAccount_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Cleanup(accountCleanup(ctx, t))
 	resourceName := "aws_api_gateway_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			t.Cleanup(accountCleanup(ctx, t))
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
@@ -63,12 +65,14 @@ func testAccAccount_basic(t *testing.T) {
 
 func testAccAccount_cloudwatchRoleARN_value(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Cleanup(accountCleanup(ctx, t))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			t.Cleanup(accountCleanup(ctx, t))
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
@@ -120,11 +124,13 @@ func testAccAccount_cloudwatchRoleARN_value(t *testing.T) {
 
 func testAccAccount_cloudwatchRoleARN_empty(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Cleanup(accountCleanup(ctx, t))
 	resourceName := "aws_api_gateway_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			t.Cleanup(accountCleanup(ctx, t))
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
@@ -146,12 +152,14 @@ func testAccAccount_cloudwatchRoleARN_empty(t *testing.T) {
 
 func testAccAccount_resetOnDelete_false(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Cleanup(accountCleanup(ctx, t))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			t.Cleanup(accountCleanup(ctx, t))
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountNotDestroyed(ctx),
@@ -181,12 +189,14 @@ func testAccAccount_resetOnDelete_false(t *testing.T) {
 
 func testAccAccount_resetOnDelete_true(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Cleanup(accountCleanup(ctx, t))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			t.Cleanup(accountCleanup(ctx, t))
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountDestroy(ctx),
@@ -216,11 +226,13 @@ func testAccAccount_resetOnDelete_true(t *testing.T) {
 
 func testAccAccount_frameworkMigration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Cleanup(accountCleanup(ctx, t))
 	resourceName := "aws_api_gateway_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			t.Cleanup(accountCleanup(ctx, t))
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -247,12 +259,14 @@ func testAccAccount_frameworkMigration_basic(t *testing.T) {
 
 func testAccAccount_frameworkMigration_cloudwatchRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	t.Cleanup(accountCleanup(ctx, t))
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_account.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			t.Cleanup(accountCleanup(ctx, t))
+		},
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckAccountNotDestroyed(ctx),
 		Steps: []resource.TestStep{
