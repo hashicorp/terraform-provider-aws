@@ -74,7 +74,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"rSessionAppSettings":                                     testAccDomain_rSessionAppSettings,
 			"rStudioServerProAppSettings":                             testAccDomain_rStudioServerProAppSettings,
 			"rStudioServerProDomainSettings":                          testAccDomain_rStudioServerProDomainSettings,
-			"rStudioServerProDomainSettingsUpdate":                    testAccDomain_rStudioServerProDomainSettingsUpdate,
+			"rStudioDomainDisabledNetworkUpdate":                      testAccDomain_rStudioDomainDisabledNetworkUpdate,
 			"spaceSettingsKernelGatewayAppSettings":                   testAccDomain_spaceSettingsKernelGatewayAppSettings,
 			"spaceSettingsJupyterLabAppSettings":                      testAccDomain_spaceSettingsJupyterLabAppSettings,
 			"spaceSettingsSpaceStorageSettings":                       testAccDomain_spaceSettingsSpaceStorageSettings,
