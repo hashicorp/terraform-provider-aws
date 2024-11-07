@@ -1,4 +1,5 @@
-## 5.75.0 (Unreleased)
+## 5.76.0 (Unreleased)
+## 5.75.0 (November  7, 2024)
 
 BREAKING CHANGES:
 
