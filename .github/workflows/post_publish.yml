@@ -55,28 +55,30 @@ jobs:
   registry-check:
     runs-on: ubuntu-latest
     needs: [on-success-or-workflow-dispatch]
+    outputs:
+      latest-version: ${{ steps.registry_latest_ver.outputs.current }}
     steps:
       - name: Registry Version Check
         id: registry_latest_ver
         shell: bash
         run: |
-          LATEST_VERSION=$(curl -s "https://registry.terraform.io/v2/providers/323/provider-versions/latest" | jq -r '.data.attributes.version')
-          if [[ " ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}" != ${LATEST_VERSION} ]]; then
-            case "$OSTYPE" in
-              darwin*) sleep 1h ;;
-              linux*) sleep 1h ;;
-              msys*) Start-Sleep -s 3600
-              *) echo "unknown: $OSTYPE" ;;
-            esac
-          else
-            echo "Registry and Github Version matches"
-          fi
+          for i in 1 2
+          do
+            LATEST_VERSION=$(curl -s "https://registry.terraform.io/v2/providers/323/provider-versions/latest" | jq -r '.data.attributes.version')
+            if [[ " ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}" != ${LATEST_VERSION} ]]; then
+              sleep 1h
+            else
+              echo "Registry and Github Version matches"
+                echo "current=$LATEST_VERSION >> "$GITHUB_OUTPUT"
+            fi
+          done
 
   os-version-init:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
+    needs: [registry-check]
     steps:
       - name: Run Terraform Init on the os-version-init
         run: |
@@ -85,8 +87,8 @@ jobs:
           terraform {
             required_providers {
               aws = {
-                source  = "${PROVIDER}"
-                version = ${LATEST_VERSION}
+                source  = "hashicorp/aws"
+                version = ${{ needs.registry-check.outputs.latest-version }}
               }
             }
           }
@@ -95,7 +97,6 @@ jobs:
             region = "us-east-1"
           }
           EOF
-
 
           echo "Terraform configuration file (main.tf) created with the latest version."
 
