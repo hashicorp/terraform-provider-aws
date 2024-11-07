@@ -404,7 +404,7 @@ resource "aws_vpc_ipam_pool" "test" {
   ipam_scope_id    = aws_vpc_ipam.test.public_default_scope_id
   locale           = data.aws_region.current.name
   public_ip_source = "amazon"
-  aws_service	   = "ec2"
+  aws_service      = "ec2"
 }
 `)
 
