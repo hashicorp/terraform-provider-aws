@@ -3003,19 +3003,25 @@ func TestAccCodeBuildProject_autoRetryLimit(t *testing.T) {
 	var project types.Project
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codebuild_project.test"
+	rBuildspec := `
+version: 0.2
+phases:
+  build:
+    commands:
+      - exit 1
+`
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			testAccPreCheckSourceCredentialsForServerType(ctx, t, types.ServerTypeGithub)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CodeBuildServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_autoRetryLimit(rName, 2),
+				Config: testAccProjectConfig_autoRetryLimit(rName, rBuildspec, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "auto_retry_limit", "2"),
@@ -3027,7 +3033,7 @@ func TestAccCodeBuildProject_autoRetryLimit(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_autoRetryLimit(rName, 4),
+				Config: testAccProjectConfig_autoRetryLimit(rName, rBuildspec, 4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "auto_retry_limit", "4"),
@@ -5786,3 +5792,27 @@ resource "aws_codebuild_project" "test" {
 }
 `, rName))
 }
+
+func testAccProjectConfig_autoRetryLimit(rName string, rBuildspec string, autoRetryLimit int) string {
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  auto_retry_limit = %[1]d
+  name          = %[2]q
+  service_role  = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    type      = "NO_SOURCE"
+	buildspec = %[3]q
+  }
+}
+`, autoRetryLimit, rName, rBuildspec))
