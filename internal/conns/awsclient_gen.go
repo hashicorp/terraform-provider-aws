@@ -233,6 +233,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/aws/aws-sdk-go-v2/service/swf"
 	"github.com/aws/aws-sdk-go-v2/service/synthetics"
+	"github.com/aws/aws-sdk-go-v2/service/taxsettings"
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
@@ -1165,6 +1166,10 @@ func (c *AWSClient) StorageGatewayClient(ctx context.Context) *storagegateway.Cl
 
 func (c *AWSClient) SyntheticsClient(ctx context.Context) *synthetics.Client {
 	return errs.Must(client[*synthetics.Client](ctx, c, names.Synthetics, make(map[string]any)))
+}
+
+func (c *AWSClient) TaxSettingsClient(ctx context.Context) *taxsettings.Client {
+	return errs.Must(client[*taxsettings.Client](ctx, c, names.TaxSettings, make(map[string]any)))
 }
 
 func (c *AWSClient) TimestreamInfluxDBClient(ctx context.Context) *timestreaminfluxdb.Client {

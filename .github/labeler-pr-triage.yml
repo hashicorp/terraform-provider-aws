@@ -2130,6 +2130,12 @@ service/synthetics:
           - any-glob-to-any-file:
               - 'internal/service/synthetics/**/*'
               - 'website/**/synthetics_*'
+service/taxsettings:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/taxsettings/**/*'
+              - 'website/**/taxsettings_*'
 service/textract:
   - any:
       - changed-files:

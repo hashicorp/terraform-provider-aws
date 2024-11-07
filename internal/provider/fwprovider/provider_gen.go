@@ -1855,6 +1855,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// taxsettings
+
+				"taxsettings": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// timestreaminfluxdb
 
 				"timestreaminfluxdb": schema.StringAttribute{

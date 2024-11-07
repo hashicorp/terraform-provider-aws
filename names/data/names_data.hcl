@@ -8577,6 +8577,29 @@ service "swf" {
   brand                    = "AWS"
 }
 
+service "taxsettings" {
+  sdk {
+    id = "TaxSettings"
+  }
+
+  names {
+    provider_name_upper = "TaxSettings"
+    human_friendly      = "Tax Settings"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListTaxRegistrations"
+  }
+
+  resource_prefix {
+    correct = "aws_taxsettings_"
+  }
+
+  provider_package_correct = "taxsettings"
+  doc_prefix               = ["taxsettings_"]
+  brand                    = "Amazon"
+}
+
 service "textract" {
   sdk {
     id = "Textract"
