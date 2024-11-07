@@ -67,7 +67,7 @@ func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaReq
 			},
 			names.AttrID: schema.StringAttribute{
 				Computed:           true,
-				DeprecationMessage: "This attribute is unused and will be removed in a future version of the provider",
+				DeprecationMessage: `The "id" attribute is unused and will be removed in a future version of the provider`,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -77,7 +77,7 @@ func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaReq
 				PlanModifiers: []planmodifier.Bool{
 					boolplanmodifier.UseStateForUnknown(),
 				},
-				DeprecationMessage: "This attribute will be removed in a future version of the provider",
+				DeprecationMessage: `The "reset_on_delete" attribute will be removed in a future version of the provider`,
 			},
 			"throttle_settings": framework.DataSourceComputedListOfObjectAttribute[throttleSettingsModel](ctx),
 		},
