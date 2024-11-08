@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-
 	"golang.org/x/exp/slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -299,7 +298,6 @@ func expandLoggingConfigurations(tfList []interface{}) []*awstypes.LoggingConfig
 							objectLogTypeTracking = append(objectLogTypeTracking, string(logDestConfig.LogType))
 						}
 					}
-
 				}
 			}
 			apiObject.LogDestinationConfigs = append(apiObject.LogDestinationConfigs, logDestinationConfig)
