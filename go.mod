@@ -298,6 +298,7 @@ require (
 	github.com/pquerna/otp v1.4.0
 	github.com/shopspring/decimal v1.4.0
 	golang.org/x/crypto v0.28.0
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 	golang.org/x/mod v0.21.0
 	golang.org/x/text v0.19.0
 	golang.org/x/tools v0.26.0
