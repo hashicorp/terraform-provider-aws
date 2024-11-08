@@ -132,9 +132,11 @@ This resource supports the following arguments:
 
 * `canary_settings` - (Optional, **Deprecated** Use an explicit [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead) Input configuration for the canary deployment when the deployment is a canary release deployment.
   See [`canary_settings](#canary_settings-argument-reference) below.
+  Has no effect when `stage_name` is not set.
 * `description` - (Optional) Description of the deployment
 * `rest_api_id` - (Required) REST API identifier.
 * `stage_description` - (Optional, **Deprecated** Use an explicit [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead) Description to set on the stage managed by the `stage_name` argument.
+  Has no effect when `stage_name` is not set.
 * `stage_name` - (Optional, **Deprecated** Use an explicit [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead) Name of the stage to create with this deployment.
   If the specified stage already exists, it will be updated to point to the new deployment.
   We recommend using the [`aws_api_gateway_stage` resource](api_gateway_stage.html) instead to manage stages.

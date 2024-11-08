@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -124,8 +125,23 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Variables:        flex.ExpandStringValueMap(d.Get("variables").(map[string]interface{})),
 	}
 
+	_, hasStageName := d.GetOk("stage_name")
+
+	if _, ok := d.GetOk("stage_description"); !hasStageName && ok {
+		diags = append(diags, noEffectWithoutWarningDiag(
+			cty.GetAttrPath("stage_description"),
+			cty.GetAttrPath("stage_name"),
+		))
+	}
+
 	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.CanarySettings = expandDeploymentCanarySettings(v.([]interface{})[0].(map[string]interface{}))
+		if !hasStageName {
+			diags = append(diags, noEffectWithoutWarningDiag(
+				cty.GetAttrPath("canary_settings"),
+				cty.GetAttrPath("stage_name"),
+			))
+		}
 	}
 
 	deployment, err := conn.CreateDeployment(ctx, input)
@@ -329,4 +345,15 @@ func expandDeploymentCanarySettings(tfMap map[string]interface{}) *types.Deploym
 	}
 
 	return apiObject
+}
+
+func noEffectWithoutWarningDiag(path, otherPath cty.Path) diag.Diagnostic {
+	return errs.NewAttributeWarningDiagnostic(
+		path,
+		"Invalid Attribute Combination",
+		fmt.Sprintf("Attribute %q has no effect when %q is not set.",
+			errs.PathString(path),
+			errs.PathString(otherPath),
+		),
+	)
 }
