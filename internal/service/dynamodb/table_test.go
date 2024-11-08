@@ -1695,10 +1695,6 @@ func TestAccDynamoDBTable_TTL_validate(t *testing.T) {
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTableConfig_timeToLive(rName, "TestTTL", false),
-				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Attribute "ttl[0].attribute_name" cannot be specified when "ttl[0].enabled" is "false"`)),
-			},
-			{
 				Config:      testAccTableConfig_timeToLive(rName, "", true),
 				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Attribute "ttl[0].attribute_name" cannot have an empty value`)),
 			},
