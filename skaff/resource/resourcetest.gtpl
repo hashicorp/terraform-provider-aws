@@ -252,18 +252,15 @@ func testAccCheck{{ .Resource }}Destroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			input := &{{ .SDKPackage }}.Describe{{ .Resource }}Input{
-				{{ .Resource }}Id: aws.String(rs.Primary.ID),
-			}
-
-			_, err := conn.Describe{{ .Resource }}(ctx, &{{ .SDKPackage }}.Describe{{ .Resource }}Input{
-				{{ .Resource }}Id: aws.String(rs.Primary.ID),
-			})
-
-			if errs.IsA[*types.ResourceNotFoundException](err){
+			{{ if .IncludeComments }}
+			// TIP: ==== FINDERS ====
+			// The find function should be exported. Since it won't be used outside of the package, it can be exported
+			// in the `exports_test.go` file.
+			{{- end }}
+			_, err := tf{{ .ServicePackage }}.Find{{ .Resource }}ByID(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
 				return nil
 			}
-
 			if err != nil {
 			        return create.Error(names.{{ .Service }}, create.ErrActionCheckingDestroyed, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
 			}
@@ -288,10 +285,7 @@ func testAccCheck{{ .Resource }}Exists(ctx context.Context, name string, {{ .Res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).{{ .Service }}Client(ctx)
 
-		resp, err := conn.Describe{{ .Resource }}(ctx, &{{ .SDKPackage }}.Describe{{ .Resource }}Input{
-			{{ .Resource }}Id: aws.String(rs.Primary.ID),
-		})
-
+		resp, err := tf{{ .ServicePackage }}.Find{{ .Resource }}ByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.{{ .Service }}, create.ErrActionCheckingExistence, tf{{ .ServicePackage }}.ResName{{ .Resource }}, rs.Primary.ID, err)
 		}
