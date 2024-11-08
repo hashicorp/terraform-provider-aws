@@ -2,7 +2,14 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudwatch_event_bus: Add `description` attribute ([#39980](https://github.com/hashicorp/terraform-provider-aws/issues/39980))
 * resource/aws_api_gateway_account: Add attribute `reset_on_delete` to properly reset CloudWatch Role ARN on deletion. ([#40004](https://github.com/hashicorp/terraform-provider-aws/issues/40004))
+* resource/aws_cloudwatch_event_bus: Add `description` argument ([#39980](https://github.com/hashicorp/terraform-provider-aws/issues/39980))
+
+BUG FIXES:
+
+* resource/aws_dynamodb_table: Allow table TTL to be disabled by allowing `ttl[0].attribute_name` to be set when `ttl[0].enabled` is false ([#40046](https://github.com/hashicorp/terraform-provider-aws/issues/40046))
+* resource/aws_sagemaker_domain: Fix issue causing a `ValidationException` on updates when RStudio is disabled on the domain ([#40049](https://github.com/hashicorp/terraform-provider-aws/issues/40049))
 
 ## 5.75.0 (November  7, 2024)
 
