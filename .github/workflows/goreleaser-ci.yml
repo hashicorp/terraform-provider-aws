@@ -48,7 +48,7 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: goreleaser check
-        uses: goreleaser/goreleaser-action@286f3b13b1b49da4ac219696163fb8c1c93e1200 # v6.0.0
+        uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf # v6.1.0
         with:
           args: check
 
@@ -68,6 +68,6 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: goreleaser build
-        uses: goreleaser/goreleaser-action@286f3b13b1b49da4ac219696163fb8c1c93e1200 # v6.0.0
+        uses: goreleaser/goreleaser-action@9ed2f89a662bf1735a48bc8557fd212fa902bebf # v6.1.0
         with:
           args: build --config .github/goreleaser-cross-compiler-test.yml --id 32-bit-arch --snapshot
