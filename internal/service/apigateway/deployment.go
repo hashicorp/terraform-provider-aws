@@ -47,11 +47,10 @@ func resourceDeployment() *schema.Resource {
 				Optional: true,
 			},
 			"canary_settings": {
-				Type:         schema.TypeList,
-				Optional:     true,
-				ForceNew:     true,
-				MaxItems:     1,
-				RequiredWith: []string{"stage_name"},
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"percent_traffic": {
@@ -70,6 +69,7 @@ func resourceDeployment() *schema.Resource {
 						},
 					},
 				},
+				Deprecated: `The attribute "canary_settings" will be removed in a future major version. Use an explicit "aws_api_gateway_stage" instead.`,
 			},
 			"execution_arn": {
 				Type:     schema.TypeString,
@@ -85,15 +85,16 @@ func resourceDeployment() *schema.Resource {
 				ForceNew: true,
 			},
 			"stage_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				RequiredWith: []string{"stage_name"},
+				Type:       schema.TypeString,
+				Optional:   true,
+				ForceNew:   true,
+				Deprecated: `The attribute "stage_description" will be removed in a future major version. Use an explicit "aws_api_gateway_stage" instead.`,
 			},
 			"stage_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:       schema.TypeString,
+				Optional:   true,
+				ForceNew:   true,
+				Deprecated: `The attribute "stage_name" will be removed in a future major version. Use an explicit "aws_api_gateway_stage" instead.`,
 			},
 			names.AttrTriggers: {
 				Type:     schema.TypeMap,
