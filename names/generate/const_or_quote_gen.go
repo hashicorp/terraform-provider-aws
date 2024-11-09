@@ -183,7 +183,6 @@ func ConstOrQuote(constant string) string {
 		"schema":                        "AttrSchema",
 		"scope":                         "AttrScope",
 		"secret_key":                    "AttrSecretKey",
-		"security_group_id":             "AttrSecurityGroupID",
 		"security_group_ids":            "AttrSecurityGroupIDs",
 		"security_groups":               "AttrSecurityGroups",
 		"service_name":                  "AttrServiceName",

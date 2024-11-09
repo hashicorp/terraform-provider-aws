@@ -88,15 +88,15 @@ func testAccCheckVPCSecurityGroupAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			_, err := tfec2.FindVPCSecurityGroupAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrSecurityGroupID], rs.Primary.Attributes[names.AttrVPCID])
+			_, err := tfec2.FindVPCSecurityGroupAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes[names.AttrVPCID])
 			if tfresource.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVPCSecurityGroupAssociation, rs.Primary.Attributes[names.AttrSecurityGroupID], err)
+				return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVPCSecurityGroupAssociation, rs.Primary.Attributes["security_group_id"], err)
 			}
 
-			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVPCSecurityGroupAssociation, rs.Primary.Attributes[names.AttrSecurityGroupID], errors.New("not destroyed"))
+			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVPCSecurityGroupAssociation, rs.Primary.Attributes["security_group_id"], errors.New("not destroyed"))
 		}
 
 		return nil
@@ -109,7 +109,7 @@ func testAccVPCSecurityGroupAssociationImportStateIDFunc(resourceName string) re
 		if !ok {
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
-		return fmt.Sprintf("%s:%s", rs.Primary.Attributes[names.AttrSecurityGroupID], rs.Primary.Attributes[names.AttrVPCID]), nil
+		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes[names.AttrVPCID]), nil
 	}
 }
 
@@ -120,15 +120,15 @@ func testAccCheckVPCSecurityGroupAssociationExists(ctx context.Context, name str
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCSecurityGroupAssociation, name, errors.New("not found"))
 		}
 
-		if rs.Primary.Attributes[names.AttrSecurityGroupID] == "" || rs.Primary.Attributes[names.AttrVPCID] == "" {
+		if rs.Primary.Attributes["security_group_id"] == "" || rs.Primary.Attributes[names.AttrVPCID] == "" {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCSecurityGroupAssociation, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		resp, err := tfec2.FindVPCSecurityGroupAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrSecurityGroupID], rs.Primary.Attributes[names.AttrVPCID])
+		resp, err := tfec2.FindVPCSecurityGroupAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes[names.AttrVPCID])
 		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCSecurityGroupAssociation, rs.Primary.Attributes[names.AttrSecurityGroupID], err)
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCSecurityGroupAssociation, rs.Primary.Attributes["security_group_id"], err)
 		}
 
 		*VPCSecurityGroupassociation = *resp

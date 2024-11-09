@@ -175,7 +175,6 @@ const (
 	AttrSchema                     = "schema"
 	AttrScope                      = "scope"
 	AttrSecretKey                  = "secret_key"
-	AttrSecurityGroupID            = "security_group_id"
 	AttrSecurityGroupIDs           = "security_group_ids"
 	AttrSecurityGroups             = "security_groups"
 	AttrServiceName                = "service_name"

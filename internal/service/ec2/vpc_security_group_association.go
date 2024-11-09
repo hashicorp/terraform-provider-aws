@@ -55,7 +55,7 @@ func (r *resourceVPCSecurityGroupAssociation) Metadata(_ context.Context, req re
 func (r *resourceVPCSecurityGroupAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrSecurityGroupID: schema.StringAttribute{
+			"security_group_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -197,7 +197,7 @@ func (r *resourceVPCSecurityGroupAssociation) ImportState(ctx context.Context, r
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrSecurityGroupID), idParts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("security_group_id"), idParts[0])...)
 	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrVPCID), idParts[1])...)
 }
 
