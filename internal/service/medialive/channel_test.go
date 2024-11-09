@@ -1653,14 +1653,14 @@ resource "aws_medialive_channel" "test" {
           afd_signaling = "FIXED"
           fixed_afd     = "AFD_0000"
 
-          gop_closed_cadence          = 1
-          gop_size                    = 1.92
-          gop_size_units              = "SECONDS"
-          min_i_interval              = 6
+          gop_closed_cadence         = 1
+          gop_size                   = 1.92
+          gop_size_units             = "SECONDS"
+          min_i_interval             = 6
           min_qp                     = 0
-          mv_over_picture_boundaries  = "ENABLED"
-          mv_temporal_predictor       = "ENABLED"
-          scan_type                   = "PROGRESSIVE"
+          mv_over_picture_boundaries = "ENABLED"
+          mv_temporal_predictor      = "ENABLED"
+          scan_type                  = "PROGRESSIVE"
 
           level                   = "H265_LEVEL_AUTO"
           look_ahead_rate_control = "HIGH"
@@ -1672,9 +1672,9 @@ resource "aws_medialive_channel" "test" {
           slices = 2
           tier   = "HIGH"
 
-          tile_height   = 64
-          tile_padding  = "PADDED"
-          tile_width    = 256
+          tile_height  = 64
+          tile_padding = "PADDED"
+          tile_width   = 256
 
 
           timecode_insertion = "DISABLED"
