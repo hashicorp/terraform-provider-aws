@@ -551,7 +551,9 @@ func testAccStageImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 }
 
 func testAccStageConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccAccountConfig_role0(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccAccountConfig_resetOnDelete(rName, true),
+		fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 }
@@ -672,6 +674,10 @@ resource "aws_api_gateway_stage" "test" {
     destination_arn = aws_cloudwatch_log_group.test.arn
     format          = %[2]q
   }
+
+  depends_on = [
+    aws_api_gateway_account.test
+  ]
 }
 `, rName, format))
 }
