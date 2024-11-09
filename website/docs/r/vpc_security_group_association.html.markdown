@@ -15,7 +15,7 @@ Manages Security Group association with additional VPCs.
 ```terraform
 resource "aws_vpc_security_group_association" "example" {
   security_group_id = "sg-05f1f54ab49bb39a3"
-  vpc_id = "vpc-01df9d105095412ba"
+  vpc_id            = "vpc-01df9d105095412ba"
 }
 ```
 
@@ -25,7 +25,6 @@ The following arguments are required:
 
 * `security_group_id` - (Required) The ID of the security group.
 * `vpc_id` - (Required) The ID of the VPC to make the association with.
-
 
 ## Attribute Reference
 
