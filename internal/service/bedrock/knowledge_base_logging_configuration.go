@@ -200,10 +200,10 @@ func findKnowledgeBaseLoggingConfiguration(ctx context.Context, conn *bedrock.Cl
 
 // Resource model for knowledge base logging configuration
 type knowledgeBaseLoggingConfigurationResourceModel struct {
-	ID              types.String                               `tfsdk:"id"`
-	KnowledgeBaseID types.String                               `tfsdk:"knowledge_base_id"`
-	LoggingConfig   fwtypes.ObjectValueOf[loggingConfigModel]  `tfsdk:"logging_config"`
-	Tags            types.Map                                  `tfsdk:"tags"`
+	ID              types.String                              `tfsdk:"id"`
+	KnowledgeBaseID types.String                              `tfsdk:"knowledge_base_id"`
+	LoggingConfig   fwtypes.ObjectValueOf[loggingConfigModel] `tfsdk:"logging_config"`
+	Tags            types.Map                                 `tfsdk:"tags"`
 }
 
 // Configuration model for logging settings
