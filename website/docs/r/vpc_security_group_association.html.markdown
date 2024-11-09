@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2 (Elastic Compute Cloud)"
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_security_group_association"
 description: |-
@@ -29,7 +29,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-This resource only exports the arguments above.
+This resource exports no additional attributes.
 
 ## Timeouts
 

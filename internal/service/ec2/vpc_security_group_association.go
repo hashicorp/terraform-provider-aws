@@ -71,6 +71,8 @@ func (r *resourceVPCSecurityGroupAssociation) Schema(ctx context.Context, req re
 	}
 }
 
+const changeOfStatusTimeout = 5 * time.Minute
+
 func (r *resourceVPCSecurityGroupAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
@@ -109,7 +111,7 @@ func (r *resourceVPCSecurityGroupAssociation) Create(ctx context.Context, req re
 		return
 	}
 
-	_, err = waitVPCSecurityGroupAssociationCreated(ctx, conn, plan.GroupId.ValueString(), plan.VpcId.ValueString(), time.Minute*5)
+	_, err = waitVPCSecurityGroupAssociationCreated(ctx, conn, plan.GroupId.ValueString(), plan.VpcId.ValueString(), changeOfStatusTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameVPCSecurityGroupAssociation, plan.GroupId.String(), err),
@@ -174,7 +176,7 @@ func (r *resourceVPCSecurityGroupAssociation) Delete(ctx context.Context, req re
 		)
 		return
 	}
-	_, err = waitVPCSecurityGroupAssociationDeleted(ctx, conn, state.GroupId.ValueString(), state.VpcId.ValueString(), time.Minute*5)
+	_, err = waitVPCSecurityGroupAssociationDeleted(ctx, conn, state.GroupId.ValueString(), state.VpcId.ValueString(), changeOfStatusTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForDeletion, ResNameVPCSecurityGroupAssociation, state.GroupId.String(), err),
@@ -281,7 +283,6 @@ func FindVPCSecurityGroupAssociationByTwoPartKey(ctx context.Context, conn *ec2.
 		}
 	}
 	return nil, tfresource.NewEmptyResultError(in)
-
 }
 
 type resourceVPCSecurityGroupAssociationModel struct {

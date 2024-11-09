@@ -16,10 +16,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestAccVPCSecurityGroupAssociation_basic(t *testing.T) {
@@ -167,7 +166,7 @@ resource "aws_security_group" "foo" {
 
 resource "aws_vpc_security_group_association" "test" {
   security_group_id = aws_security_group.foo.id
-  vpc_id  			= aws_vpc.bar.id
+  vpc_id            = aws_vpc.bar.id
 }
 `, rName)
 }
