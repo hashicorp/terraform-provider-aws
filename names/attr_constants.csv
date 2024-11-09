@@ -167,6 +167,7 @@ schedule_expression,ScheduleExpression
 schema,Schema
 scope,Scope
 secret_key,SecretKey
+security_group_id,SecurityGroupID
 security_group_ids,SecurityGroupIDs
 security_groups,SecurityGroups
 service_name,ServiceName
