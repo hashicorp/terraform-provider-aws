@@ -134,18 +134,6 @@ func testAccCheckTableBucketExists(ctx context.Context, name string, tablebucket
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
-
-	_, err := conn.ListTableBuckets(ctx, &s3tables.ListTableBucketsInput{})
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 func testAccTableBucketConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3tables_table_bucket" "test" {
