@@ -150,6 +150,7 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("key_name_prefix", create.NamePrefixFromName(aws.ToString(keyPair.KeyName)))
 	d.Set("key_pair_id", keyPair.KeyPairId)
 	d.Set("key_type", keyPair.KeyType)
+	d.Set(names.AttrPublicKey, keyPair.PublicKey)
 
 	setTagsOut(ctx, keyPair.Tags)
 
