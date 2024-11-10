@@ -10,7 +10,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -82,7 +82,7 @@ func TestAccEC2KeyPairDataSource_includePublicKey(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "key_name", resourceName, "key_name"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "key_pair_id", resourceName, "key_pair_id"),
 					resource.TestCheckResourceAttrWith(dataSource1Name, names.AttrPublicKey, func(v string) error {
-						if !tfec2.OpenSSHPublicKeysEqual(v, publicKey) {
+						if !verify.SuppressEquivalentOpenSSHPublicKeyDiffs("", v, publicKey, nil) {
 							return fmt.Errorf("Attribute 'public_key' expected %q, not equal to %q", publicKey, v)
 						}
 

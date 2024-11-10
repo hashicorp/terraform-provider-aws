@@ -4,7 +4,6 @@
 package ec2
 
 import (
-	"bytes"
 	"context"
 	"log"
 	"strings"
@@ -24,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/crypto/ssh"
 )
 
 // @SDKResource("aws_key_pair", name="Key Pair")
@@ -81,9 +79,10 @@ func resourceKeyPair() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrPublicKey: {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: verify.SuppressEquivalentOpenSSHPublicKeyDiffs,
 				StateFunc: func(v interface{}) string {
 					switch v := v.(type) {
 					case string:
@@ -179,22 +178,4 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
-}
-
-// OpenSSHPublicKeysEqual returns whether or not two OpenSSH public key format strings represent the same key.
-// Any key comment is ignored when comparing values.
-func openSSHPublicKeysEqual(v1, v2 string) bool {
-	key1, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v1))
-
-	if err != nil {
-		return false
-	}
-
-	key2, _, _, _, err := ssh.ParseAuthorizedKey([]byte(v2))
-
-	if err != nil {
-		return false
-	}
-
-	return key1.Type() == key2.Type() && bytes.Equal(key1.Marshal(), key2.Marshal())
 }
