@@ -67,6 +67,17 @@ func (r *resourceRolePolicyAttachmentsExclusive) Create(ctx context.Context, req
 		return
 	}
 
+	// Pre-validation for null values in policy_arns
+	for _, element := range plan.PolicyARNs.Elements() {
+		if element.IsNull() {
+			resp.Diagnostics.AddError(
+				"Null value found in list",
+				"Null values are not allowed for this attribute value.",
+			)
+			return
+		}
+	}
+
 	var policyARNs []string
 	resp.Diagnostics.Append(plan.PolicyARNs.ElementsAs(ctx, &policyARNs, false)...)
 	if resp.Diagnostics.HasError() {
