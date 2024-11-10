@@ -64,5 +64,3 @@ Using `terraform import`, import Key Pairs using the `key_name`. For example:
 ```console
 % terraform import aws_key_pair.deployer deployer-key
 ```
-
-~> **NOTE:** The AWS API does not include the public key in the response, so `terraform apply` will attempt to replace the key pair. There is currently no supported workaround for this limitation.
