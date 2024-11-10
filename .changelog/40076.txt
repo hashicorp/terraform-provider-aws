@@ -1,0 +1,3 @@
+```release-note:bug
+resource/role_policy_attachments_exclusive: Fix 'Value Conversion Error' errors
+```
