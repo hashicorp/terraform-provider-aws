@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_api_gateway_deployment: Rolls back validation of `canary_settings` and `stage_description` when `stage_name` not set. ([#40067](https://github.com/hashicorp/terraform-provider-aws/issues/40067))
 * resource/aws_dynamodb_table: Allow table TTL to be disabled by allowing `ttl[0].attribute_name` to be set when `ttl[0].enabled` is false ([#40046](https://github.com/hashicorp/terraform-provider-aws/issues/40046))
 * resource/aws_sagemaker_domain: Fix issue causing a `ValidationException` on updates when RStudio is disabled on the domain ([#40049](https://github.com/hashicorp/terraform-provider-aws/issues/40049))
 
