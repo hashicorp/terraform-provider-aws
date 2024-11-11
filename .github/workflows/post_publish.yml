@@ -65,7 +65,7 @@ jobs:
           for i in 1 2
           do
             LATEST_VERSION=$(curl -s "https://registry.terraform.io/v2/providers/323/provider-versions/latest" | jq -r '.data.attributes.version')
-            if [[ " ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}" != ${LATEST_VERSION} ]]; then
+            if [[ "${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}" != ${LATEST_VERSION} ]]; then
               sleep 1h
             else
               echo "Registry and Github Version matches"
@@ -74,15 +74,15 @@ jobs:
           done
 
   os-version-init:
+    name: Run terraform init On Supported Platforms
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
     needs: [registry-check]
     steps:
-      - name: Run Terraform Init on the os-version-init
+      - name: Specify Provider Version in TF Configuration
         run: |
-          echo "Setting provider version in Terraform configuration..."
           cat <<EOF > main.tf
           terraform {
             required_providers {
@@ -98,23 +98,11 @@ jobs:
           }
           EOF
 
-          echo "Terraform configuration file (main.tf) created with the latest version."
+      - name: Initialize the AWS Provider
+        run: terraform init -upgrade
 
-          echo "Initializing Terraform with the latest AWS provider..."
-          terraform init -upgrade
-
-          if [ $? -ne 0 ]; then
-            echo "Terraform initialization failed."
-            exit 1
-          fi
-
-  on-version-failure:
-    runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion }}
-    needs:
-      [os-version-init]
-    steps:
-      - name: Send Slack Notification On Failure
+      - name: Send Slack Notification Upon Failure
+        if:  ${{ failure() }}
         uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
         env:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
@@ -127,7 +115,7 @@ jobs:
                   "type": "section",
                   "text": {
                     "type": "mrkdwn",
-                    "text": "ERROR: Registry Provder Initiation Failure"
+                    "text": "ERROR: Registry Provder Initiation Failure on ${{ matrix.os }}"
                   }
                 }
               ]
