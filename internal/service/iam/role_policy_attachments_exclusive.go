@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -21,6 +22,7 @@ import (
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -55,6 +57,9 @@ func (r *resourceRolePolicyAttachmentsExclusive) Schema(ctx context.Context, req
 			"policy_arns": schema.SetAttribute{
 				ElementType: types.StringType,
 				Required:    true,
+				Validators: []validator.Set{
+					validators.NonNullValues(),
+				},
 			},
 		},
 	}
@@ -65,17 +70,6 @@ func (r *resourceRolePolicyAttachmentsExclusive) Create(ctx context.Context, req
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	// Pre-validation for null values in policy_arns
-	for _, element := range plan.PolicyARNs.Elements() {
-		if element.IsNull() {
-			resp.Diagnostics.AddError(
-				"Null value found in list",
-				"Null values are not allowed for this attribute value.",
-			)
-			return
-		}
 	}
 
 	var policyARNs []string
