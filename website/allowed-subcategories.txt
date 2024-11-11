@@ -230,6 +230,7 @@ Shield
 Signer
 Storage Gateway
 Systems Manager for SAP
+Tax Settings
 Timestream Write
 Timestream for InfluxDB
 Transcribe
