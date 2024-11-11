@@ -5,7 +5,6 @@ package validators
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -41,7 +40,7 @@ func (v nonNullValuesValidator) ValidateSet(_ context.Context, req validator.Set
 			resp.Diagnostics.AddAttributeError(
 				req.Path,
 				"Null Set Value",
-				fmt.Sprint("This attribute contains a null value."),
+				"This attribute contains a null value.",
 			)
 		}
 	}
@@ -65,7 +64,7 @@ func (v nonNullValuesValidator) ValidateParameterSet(ctx context.Context, req fu
 				resp.Error,
 				function.NewArgumentFuncError(
 					req.ArgumentPosition,
-					fmt.Sprint("Null Set Value: This attribute contains a null value."),
+					"Null Set Value: This attribute contains a null value.",
 				),
 			)
 		}

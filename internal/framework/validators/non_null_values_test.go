@@ -58,8 +58,6 @@ func TestNonNullValuesValidator(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
-
 		t.Run(fmt.Sprintf("ValidateSet - %s", name), func(t *testing.T) {
 			t.Parallel()
 			request := validator.SetRequest{
