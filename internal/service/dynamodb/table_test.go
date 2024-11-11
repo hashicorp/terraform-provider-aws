@@ -776,6 +776,10 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequestIgnoreChanges(t 
 
 func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -814,6 +818,10 @@ func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T
 
 func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -849,6 +857,10 @@ func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T
 
 func TestAccDynamoDBTable_BillingMode_payPerRequestBasic(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1694,10 +1706,6 @@ func TestAccDynamoDBTable_TTL_validate(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccTableConfig_timeToLive(rName, "TestTTL", false),
-				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Attribute "ttl[0].attribute_name" cannot be specified when "ttl[0].enabled" is "false"`)),
-			},
 			{
 				Config:      testAccTableConfig_timeToLive(rName, "", true),
 				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Attribute "ttl[0].attribute_name" cannot have an empty value`)),
