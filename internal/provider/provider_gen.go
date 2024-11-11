@@ -2141,6 +2141,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// taxsettings
+
+				"taxsettings": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// timestreaminfluxdb
 
 				"timestreaminfluxdb": {
