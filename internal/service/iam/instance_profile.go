@@ -362,7 +362,7 @@ func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) r
 
 		_, err = arn.Parse(aws.ToString(output.Arn))
 		if err != nil {
-			return nil, InstanceProfileInvalidARN, nil
+			return nil, InstanceProfileInvalidARN, nil // lint:ignore nilerr // this is usually a temporary state
 		}
 
 		return output, InstanceProfileFound, nil
@@ -382,11 +382,7 @@ func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, 
 
 	_, err := stateConf.WaitForStateContext(ctx)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func instanceProfileTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {

@@ -1222,11 +1222,7 @@ func waitLaunchTemplateReady(ctx context.Context, conn *ec2.Client, id string, i
 
 	_, err := stateConf.WaitForStateContext(ctx)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *schema.ResourceData) (*awstypes.RequestLaunchTemplateData, error) {
