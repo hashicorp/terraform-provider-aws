@@ -340,6 +340,14 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	log.Printf("[INFO] Deleting EC2 EIP: %s", d.Id())
 	_, err := conn.ReleaseAddress(ctx, input)
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 EIP (%s): %s", d.Id(), err)
+	}
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
+		return diags
+	}
+
 	// If the EIP's CIDR block was allocated from an IPAM pool, wait for the allocation to disappear.
 	if v, ok := d.GetOk("ipam_pool_id"); ok {
 		ipamPoolID := v.(string)
@@ -353,14 +361,6 @@ func resourceEIPDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 EIP (%s) IPAM Pool (%s) Allocation delete: %s", d.Id(), ipamPoolID, err)
 		}
-	}
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EC2 EIP (%s): %s", d.Id(), err)
 	}
 
 	return diags
