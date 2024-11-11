@@ -5685,8 +5685,8 @@ func testAccProjectConfig_autoRetryLimit(rName string, rBuildspec string, autoRe
 	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   auto_retry_limit = %[1]d
-  name          = %[2]q
-  service_role  = aws_iam_role.test.arn
+  name             = %[2]q
+  service_role     = aws_iam_role.test.arn
 
   artifacts {
     type = "NO_ARTIFACTS"
@@ -5700,7 +5700,7 @@ resource "aws_codebuild_project" "test" {
 
   source {
     type      = "NO_SOURCE"
-	buildspec = %[3]q
+    buildspec = %[3]q
   }
 }
 `, autoRetryLimit, rName, rBuildspec))
