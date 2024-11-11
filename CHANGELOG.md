@@ -1,4 +1,5 @@
-## 5.75.1 (Unreleased)
+## 5.76.0 (Unreleased)
+## 5.75.1 (November 11, 2024)
 
 ENHANCEMENTS:
 
