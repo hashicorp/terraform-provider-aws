@@ -3,14 +3,14 @@ module github.com/hashicorp/terraform-provider-aws/tools
 go 1.23.2
 
 require (
-	github.com/YakDriver/tfproviderdocs v0.16.5
+	github.com/YakDriver/tfproviderdocs v0.16.6
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.61.0
 	github.com/hashicorp/copywrite v0.19.0
 	github.com/hashicorp/go-changelog v0.0.0-20240318095659-4d68c58a6e7f
 	github.com/katbyte/terrafmt v0.5.4
 	github.com/pavius/impi v0.0.3
-	github.com/rhysd/actionlint v1.7.3
+	github.com/rhysd/actionlint v1.7.4
 	github.com/terraform-linters/tflint v0.53.0
 	github.com/uber-go/gopatch v0.4.0
 	mvdan.cc/gofumpt v0.7.0
@@ -21,7 +21,7 @@ require (
 	4d63.com/gochecknoglobals v0.2.1 // indirect
 	cel.dev/expr v0.18.0 // indirect
 	cloud.google.com/go v0.116.0 // indirect
-	cloud.google.com/go/auth v0.10.0 // indirect
+	cloud.google.com/go/auth v0.10.1 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.5 // indirect
 	cloud.google.com/go/compute/metadata v0.5.2 // indirect
 	cloud.google.com/go/iam v1.2.2 // indirect
@@ -46,7 +46,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/OpenPeeDeeP/depguard/v2 v2.2.0 // indirect
-	github.com/ProtonMail/go-crypto v1.1.0-beta.0-proton // indirect
+	github.com/ProtonMail/go-crypto v1.1.2 // indirect
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/alecthomas/go-check-sumtype v0.2.0 // indirect
 	github.com/alexkohler/nakedret/v2 v2.0.5 // indirect
@@ -209,7 +209,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.16 // indirect
 	github.com/mergestat/timediff v0.0.3 // indirect
-	github.com/mgechev/revive v1.4.0 // indirect
+	github.com/mgechev/revive v1.5.0 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/cli v1.1.5 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
@@ -224,7 +224,7 @@ require (
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/nishanths/exhaustive v0.12.0 // indirect
 	github.com/nishanths/predeclared v0.2.2 // indirect
-	github.com/nunnatsa/ginkgolinter v0.17.0 // indirect
+	github.com/nunnatsa/ginkgolinter v0.18.0 // indirect
 	github.com/oklog/run v1.1.0 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
@@ -281,7 +281,7 @@ require (
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/tdakkota/asciicheck v0.2.0 // indirect
 	github.com/terraform-linters/tflint-plugin-sdk v0.21.0 // indirect
-	github.com/terraform-linters/tflint-ruleset-terraform v0.9.1 // indirect
+	github.com/terraform-linters/tflint-ruleset-terraform v0.10.0 // indirect
 	github.com/tetafro/godot v1.4.18 // indirect
 	github.com/thanhpk/randstr v1.0.6 // indirect
 	github.com/thlib/go-timezone-local v0.0.3 // indirect
@@ -310,34 +310,34 @@ require (
 	go-simpler.org/sloglint v0.7.2 // indirect
 	go.mongodb.org/mongo-driver v1.17.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
-	go.opentelemetry.io/contrib/detectors/gcp v1.31.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.56.0 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.56.0 // indirect
-	go.opentelemetry.io/otel v1.31.0 // indirect
-	go.opentelemetry.io/otel/metric v1.31.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.31.0 // indirect
-	go.opentelemetry.io/otel/sdk/metric v1.31.0 // indirect
-	go.opentelemetry.io/otel/trace v1.31.0 // indirect
+	go.opentelemetry.io/contrib/detectors/gcp v1.32.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.57.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.57.0 // indirect
+	go.opentelemetry.io/otel v1.32.0 // indirect
+	go.opentelemetry.io/otel/metric v1.32.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.32.0 // indirect
+	go.opentelemetry.io/otel/sdk/metric v1.32.0 // indirect
+	go.opentelemetry.io/otel/trace v1.32.0 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
-	golang.org/x/crypto v0.28.0 // indirect
-	golang.org/x/exp v0.0.0-20241009180824-f66d83c29e7c // indirect
-	golang.org/x/exp/typeparams v0.0.0-20241009180824-f66d83c29e7c // indirect
-	golang.org/x/mod v0.21.0 // indirect
-	golang.org/x/net v0.30.0 // indirect
-	golang.org/x/oauth2 v0.23.0 // indirect
-	golang.org/x/sync v0.8.0 // indirect
-	golang.org/x/sys v0.26.0 // indirect
-	golang.org/x/term v0.25.0 // indirect
-	golang.org/x/text v0.19.0 // indirect
-	golang.org/x/time v0.7.0 // indirect
-	golang.org/x/tools v0.26.0 // indirect
-	google.golang.org/api v0.204.0 // indirect
-	google.golang.org/genproto v0.0.0-20241021214115-324edc3d5d38 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20241021214115-324edc3d5d38 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241021214115-324edc3d5d38 // indirect
-	google.golang.org/grpc v1.67.1 // indirect
+	golang.org/x/crypto v0.29.0 // indirect
+	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
+	golang.org/x/exp/typeparams v0.0.0-20241108190413-2d47ceb2692f // indirect
+	golang.org/x/mod v0.22.0 // indirect
+	golang.org/x/net v0.31.0 // indirect
+	golang.org/x/oauth2 v0.24.0 // indirect
+	golang.org/x/sync v0.9.0 // indirect
+	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/term v0.26.0 // indirect
+	golang.org/x/text v0.20.0 // indirect
+	golang.org/x/time v0.8.0 // indirect
+	golang.org/x/tools v0.27.0 // indirect
+	google.golang.org/api v0.205.0 // indirect
+	google.golang.org/genproto v0.0.0-20241104194629-dd2ea8efbc28 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20241104194629-dd2ea8efbc28 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241104194629-dd2ea8efbc28 // indirect
+	google.golang.org/grpc v1.68.0 // indirect
 	google.golang.org/grpc/stats/opentelemetry v0.0.0-20241028142157-ada6787961b3 // indirect
 	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
