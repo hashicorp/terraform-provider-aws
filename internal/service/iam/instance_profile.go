@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -149,6 +151,10 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
+	if _, err := waitInstanceProfileReady(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IAM Instance Profile (%s) to be ready: %s", name, err)
+	}
+
 	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
 }
 
@@ -227,6 +233,10 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
+	}
+
+	if _, err := waitInstanceProfileReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IAM Instance Profile (%s) to be ready: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
@@ -332,6 +342,51 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.Client, name strin
 	}
 
 	return output.InstanceProfile, nil
+}
+
+const (
+	InstanceProfileFound      = "Found"
+	InstanceProfileInvalidARN = "InvalidARN"
+)
+
+func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findInstanceProfileByName(ctx, conn, name)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		_, err = arn.Parse(aws.ToString(output.Arn))
+		if err != nil {
+			return nil, InstanceProfileInvalidARN, nil
+		}
+
+		return output, InstanceProfileFound, nil
+	}
+}
+
+func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, timeout time.Duration) (*awstypes.InstanceProfile, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{"", InstanceProfileInvalidARN},
+		Target:                    enum.Slice(InstanceProfileFound),
+		Refresh:                   statusInstanceProfile(ctx, conn, id),
+		Timeout:                   timeout,
+		Delay:                     5 * time.Second,
+		NotFoundChecks:            5,
+		ContinuousTargetOccurence: 3,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.InstanceProfile); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func instanceProfileTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
