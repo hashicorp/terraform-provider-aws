@@ -529,7 +529,7 @@ The following arguments are optional:
 * `level` - (Optional) H265 level.
 * `lookAheadRateControl` - (Optional) Amount of lookahead.
 * `maxBitrate` - (Optional) Set the maximum bitrate in order to accommodate expected spikes in the complexity of the video.
-* `min_i_interval` - (Optional) Min interval.
+* `min_interval` - (Optional) Min interval.
 * `parDenominator` - (Optional) Pixel Aspect Ratio denominator.
 * `parNumerator` - (Optional) Pixel Aspect Ratio numerator.
 * `profile` - (Optional) H265 profile.
