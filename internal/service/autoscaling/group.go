@@ -1481,7 +1481,11 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.VPCZoneIdentifier = expandVPCZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
 		}
 
-		_, err := conn.UpdateAutoScalingGroup(ctx, input)
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate),
+			func() (interface{}, error) {
+				return conn.UpdateAutoScalingGroup(ctx, input)
+			},
+			errCodeOperationError, errCodeUpdateAutoScalingGroup, errCodeValidationError)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Group (%s): %s", d.Id(), err)
