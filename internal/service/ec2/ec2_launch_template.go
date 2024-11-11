@@ -1019,7 +1019,7 @@ func resourceLaunchTemplateCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Launch Template (%s): %s", name, err)
 	}
 
-	if _, err := waitLaunchTemplateReady(ctx, conn, name, true, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitLaunchTemplateReady(ctx, conn, name, true, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Launch Template (%s) to be ready: %s", name, err)
 	}
 
@@ -1156,7 +1156,7 @@ func resourceLaunchTemplateUpdate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	if _, err := waitLaunchTemplateReady(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitLaunchTemplateReady(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Launch Template (%s) to be ready: %s", d.Id(), err)
 	}
 
@@ -1209,7 +1209,7 @@ func statusLaunchTemplate(ctx context.Context, conn *ec2.Client, id string, idIs
 	}
 }
 
-func waitLaunchTemplateReady(ctx context.Context, conn *ec2.Client, id string, idIsName bool, timeout time.Duration) (*awstypes.LaunchTemplate, error) {
+func waitLaunchTemplateReady(ctx context.Context, conn *ec2.Client, id string, idIsName bool, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{""},
 		Target:                    enum.Slice(LaunchTemplateFound),
@@ -1220,13 +1220,13 @@ func waitLaunchTemplateReady(ctx context.Context, conn *ec2.Client, id string, i
 		ContinuousTargetOccurence: 3,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.LaunchTemplate); ok {
-		return output, err
+	if err != nil {
+		return err
 	}
 
-	return nil, err
+	return nil
 }
 
 func expandRequestLaunchTemplateData(ctx context.Context, conn *ec2.Client, d *schema.ResourceData) (*awstypes.RequestLaunchTemplateData, error) {

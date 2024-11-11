@@ -151,7 +151,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if _, err := waitInstanceProfileReady(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitInstanceProfileReady(ctx, conn, name, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IAM Instance Profile (%s) to be ready: %s", name, err)
 	}
 
@@ -235,7 +235,7 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	if _, err := waitInstanceProfileReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitInstanceProfileReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for IAM Instance Profile (%s) to be ready: %s", d.Id(), err)
 	}
 
@@ -369,7 +369,7 @@ func statusInstanceProfile(ctx context.Context, conn *iam.Client, name string) r
 	}
 }
 
-func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, timeout time.Duration) (*awstypes.InstanceProfile, error) {
+func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{"", InstanceProfileInvalidARN},
 		Target:                    enum.Slice(InstanceProfileFound),
@@ -380,13 +380,13 @@ func waitInstanceProfileReady(ctx context.Context, conn *iam.Client, id string, 
 		ContinuousTargetOccurence: 3,
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	_, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.InstanceProfile); ok {
-		return output, err
+	if err != nil {
+		return err
 	}
 
-	return nil, err
+	return nil
 }
 
 func instanceProfileTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {

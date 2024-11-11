@@ -1485,7 +1485,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			func() (interface{}, error) {
 				return conn.UpdateAutoScalingGroup(ctx, input)
 			},
-			errCodeOperationError, errCodeUpdateAutoScalingGroup, errCodeValidationError)
+			errCodeOperationError, errCodeUpdateASG, errCodeValidationError)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Group (%s): %s", d.Id(), err)

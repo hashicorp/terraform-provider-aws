@@ -17,6 +17,6 @@ var (
 )
 
 const (
-	errCodeOperationError         = "operation error"
-	errCodeUpdateAutoScalingGroup = "UpdateAutoScalingGroup"
+	errCodeOperationError = "operation error"
+	errCodeUpdateASG      = "UpdateAutoScalingGroup"
 )
