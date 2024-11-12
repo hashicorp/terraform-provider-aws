@@ -106,7 +106,7 @@ The `semantic_chunking_configuration` block supports the following arguments:
 
 * `breakpoint_percentile_threshold` - (Required, Forces new resource) The dissimilarity threshold for splitting chunks.
 * `buffer_size` - (Required, Forces new resource) The buffer size.
-* `max_tokens` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
+* `max_token` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
 
 ### `custom_transformation_configuration` block
 
