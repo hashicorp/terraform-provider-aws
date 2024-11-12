@@ -200,7 +200,7 @@ func removeLoggingConfiguration(ctx context.Context, conn *networkfirewall.Clien
 	var errs []error
 
 	// Must delete destination configs one at a time.
-	for i, _ := range loggingConfig.LogDestinationConfigs {
+	for i := range loggingConfig.LogDestinationConfigs {
 		input := &networkfirewall.UpdateLoggingConfigurationInput{
 			FirewallArn: aws.String(arn),
 		}
