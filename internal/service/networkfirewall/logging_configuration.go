@@ -200,16 +200,16 @@ func removeLoggingConfiguration(ctx context.Context, conn *networkfirewall.Clien
 	var errs []error
 
 	// Must delete destination configs one at a time.
-	for i, logDestinationConfig := range loggingConfig.LogDestinationConfigs {
+	for i, _ := range loggingConfig.LogDestinationConfigs {
 		input := &networkfirewall.UpdateLoggingConfigurationInput{
 			FirewallArn: aws.String(arn),
 		}
 
-		if i == 0 && len(loggingConfig.LogDestinationConfigs) == 2 {
-			loggingConfig := &awstypes.LoggingConfiguration{
-				LogDestinationConfigs: []awstypes.LogDestinationConfig{logDestinationConfig},
+		if i != (len(loggingConfig.LogDestinationConfigs) - 1) {
+			loggingConfigExpand := &awstypes.LoggingConfiguration{
+				LogDestinationConfigs: append([]awstypes.LogDestinationConfig{}, loggingConfig.LogDestinationConfigs[i+1:]...),
 			}
-			input.LoggingConfiguration = loggingConfig
+			input.LoggingConfiguration = loggingConfigExpand
 		}
 
 		_, err := conn.UpdateLoggingConfiguration(ctx, input)
@@ -260,6 +260,7 @@ func expandLoggingConfigurations(tfList []interface{}) []*awstypes.LoggingConfig
 	apiObjects := make([]*awstypes.LoggingConfiguration, 0)
 
 	if v, ok := tfMap["log_destination_config"].(*schema.Set); ok && v.Len() > 0 {
+		loggingTypesTrack := make([]string, 0)
 		for _, tfMapRaw := range v.List() {
 			tfMap, ok := tfMapRaw.(map[string]interface{})
 			if !ok {
@@ -274,8 +275,9 @@ func expandLoggingConfigurations(tfList []interface{}) []*awstypes.LoggingConfig
 			if v, ok := tfMap["log_destination_type"].(string); ok && v != "" {
 				logDestinationConfig.LogDestinationType = awstypes.LogDestinationType(v)
 			}
-			if v, ok := tfMap["log_type"].(string); ok && v != "" {
+			if v, ok := tfMap["log_type"].(string); ok && v != "" && !sliceContains(loggingTypesTrack, string(v)) {
 				logDestinationConfig.LogType = awstypes.LogType(v)
+				loggingTypesTrack = append(loggingTypesTrack, string(v))
 			}
 
 			// Exclude empty LogDestinationConfig due to TypeMap in TypeSet behavior.
@@ -285,9 +287,17 @@ func expandLoggingConfigurations(tfList []interface{}) []*awstypes.LoggingConfig
 			}
 
 			apiObject := &awstypes.LoggingConfiguration{}
-			// Include all (max 2) "log_destination_config" i.e. prepend the already-expanded loggingConfig.
-			if len(apiObjects) == 1 && len(apiObjects[0].LogDestinationConfigs) == 1 {
-				apiObject.LogDestinationConfigs = append(apiObject.LogDestinationConfigs, apiObjects[0].LogDestinationConfigs[0])
+			// Include all (max 3) "log_destination_config" i.e. prepend the already-expanded loggingConfig.
+			if len(apiObjects) > 0 {
+				objectLogTypeTracking := make([]string, 0)
+				for _, object := range apiObjects {
+					for _, logDestConfig := range object.LogDestinationConfigs {
+						if !sliceContains(objectLogTypeTracking, string(logDestConfig.LogType)) {
+							apiObject.LogDestinationConfigs = append(apiObject.LogDestinationConfigs, logDestConfig)
+							objectLogTypeTracking = append(objectLogTypeTracking, string(logDestConfig.LogType))
+						}
+					}
+				}
 			}
 			apiObject.LogDestinationConfigs = append(apiObject.LogDestinationConfigs, logDestinationConfig)
 
@@ -373,4 +383,14 @@ func flattenLoggingConfigurationLogDestinationConfigs(apiObjects []awstypes.LogD
 	}
 
 	return tfList
+}
+
+func sliceContains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
 }
