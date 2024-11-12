@@ -5,3 +5,6 @@ resource/aws_networkfirewall_logging_configuration: Fix bug where anything more 
 ```release-note:bug
 resource/aws_networkfirewall_logging_configuration: Fix bug where more than 2 logging configurations couldn't be removed and would actually cause an error.
 ```
+```release-note:bug
+resource/aws_networkfirewall_logging_configuration: Changed documentation from /example to exmaple for s3 prefix since the AWS API will add a / to the end of the s3 bucket automaticly.
+```
