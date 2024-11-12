@@ -275,9 +275,9 @@ func expandLoggingConfigurations(tfList []interface{}) []*awstypes.LoggingConfig
 			if v, ok := tfMap["log_destination_type"].(string); ok && v != "" {
 				logDestinationConfig.LogDestinationType = awstypes.LogDestinationType(v)
 			}
-			if v, ok := tfMap["log_type"].(string); ok && v != "" && !sliceContains(loggingTypesTrack, string(v)) {
+			if v, ok := tfMap["log_type"].(string); ok && v != "" && !sliceContains(loggingTypesTrack, v) {
 				logDestinationConfig.LogType = awstypes.LogType(v)
-				loggingTypesTrack = append(loggingTypesTrack, string(v))
+				loggingTypesTrack = append(loggingTypesTrack, v)
 			}
 
 			// Exclude empty LogDestinationConfig due to TypeMap in TypeSet behavior.
