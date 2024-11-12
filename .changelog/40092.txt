@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_networkfirewall_logging_configuration: Fix bug where anything more than 2 logging configurations would only load 2 and the 3rd would be ignored.
+```
+
+```release-note:bug
+resource/aws_networkfirewall_logging_configuration: Fix bug where more than 2 logging configurations couldn't be removed and would actually cause an error.
+```
