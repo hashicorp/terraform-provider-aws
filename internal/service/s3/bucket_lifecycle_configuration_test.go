@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1053,6 +1052,7 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 func TestAccS3BucketLifecycleConfiguration_directoryBucket(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_s3_bucket_lifecycle_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1061,8 +1061,20 @@ func TestAccS3BucketLifecycleConfiguration_directoryBucket(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBucketLifecycleConfigurationConfig_directoryBucket(rName),
-				ExpectError: regexache.MustCompile(`MethodNotAllowed: The specified method is not allowed against this resource`),
+				Config: testAccBucketLifecycleConfigurationConfig_directoryBucket(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3_directory_bucket.test", names.AttrBucket),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.status", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rule.0.expiration.0.days", "365"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
