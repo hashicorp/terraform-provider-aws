@@ -326,6 +326,7 @@ variable "service_labels" {
     "support",
     "swf",
     "synthetics",
+    "taxsettings",
     "textract",
     "timestreaminfluxdb",
     "timestreamquery",

@@ -393,7 +393,7 @@ func resourceListener() *schema.Resource {
 			"tcp_idle_timeout_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      350,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(60, 6000),
 				// Attribute only valid for TCP (NLB) and GENEVE (GWLB) listeners
 				DiffSuppressFunc: suppressIfListenerProtocolNot(awstypes.ProtocolEnumGeneve, awstypes.ProtocolEnumTcp),
@@ -536,9 +536,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	// Listener attributes like TCP idle timeout are not supported on create
-	var attributes []awstypes.ListenerAttribute
-
-	attributes = append(attributes, listenerAttributes.expand(d, listenerProtocolType, false)...)
+	attributes := listenerAttributes.expand(d, listenerProtocolType, false)
 
 	if len(attributes) > 0 {
 		if err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
@@ -604,9 +602,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	var attributes []awstypes.ListenerAttribute
-
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "tcp_idle_timeout_seconds") {
 		input := &elasticloadbalancingv2.ModifyListenerInput{
 			ListenerArn: aws.String(d.Id()),
 		}
@@ -644,20 +640,29 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.SslPolicy = aws.String(v.(string))
 		}
 
-		attributes = append(attributes, listenerAttributes.expand(d, awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string)), true)...)
-
-		if len(attributes) > 0 {
-			if err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-		}
-
 		_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
 			return conn.ModifyListener(ctx, input)
 		})
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying ELBv2 Listener (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChanges("tcp_idle_timeout_seconds") {
+		lbARN := d.Get("load_balancer_arn").(string)
+		listenerProtocolType := awstypes.ProtocolEnum(d.Get(names.AttrProtocol).(string))
+		// Protocol does not need to be explicitly set with GWLB listeners, nor is it returned by the API
+		// If protocol is not set, use the load balancer ARN to determine if listener is gateway type and set protocol appropriately
+		if listenerProtocolType == awstypes.ProtocolEnum("") && strings.Contains(lbARN, "loadbalancer/gwy/") {
+			listenerProtocolType = awstypes.ProtocolEnumGeneve
+		}
+
+		attributes := listenerAttributes.expand(d, listenerProtocolType, true)
+		if len(attributes) > 0 {
+			if err := modifyListenerAttributes(ctx, conn, d.Id(), attributes); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
 		}
 	}
 
@@ -750,12 +755,13 @@ func (m listenerAttributeMap) expand(d *schema.ResourceData, listenerType awstyp
 			continue
 		}
 
-		if attributeInfo.tfType == schema.TypeInt {
-			v := (d.Get(tfAttributeName)).(int)
-			attributes = append(attributes, awstypes.ListenerAttribute{
-				Key:   aws.String(attributeInfo.apiAttributeKey),
-				Value: flex.IntValueToString(v),
-			})
+		if v, ok := d.GetOk(tfAttributeName); ok {
+			if attributeInfo.tfType == schema.TypeInt {
+				attributes = append(attributes, awstypes.ListenerAttribute{
+					Key:   aws.String(attributeInfo.apiAttributeKey),
+					Value: flex.IntValueToString(v.(int)),
+				})
+			}
 		}
 	}
 

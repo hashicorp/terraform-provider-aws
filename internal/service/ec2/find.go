@@ -711,6 +711,27 @@ func findLaunchTemplates(ctx context.Context, conn *ec2.Client, input *ec2.Descr
 	return output, nil
 }
 
+func findLaunchTemplateByName(ctx context.Context, conn *ec2.Client, name string) (*awstypes.LaunchTemplate, error) {
+	input := &ec2.DescribeLaunchTemplatesInput{
+		LaunchTemplateNames: []string{name},
+	}
+
+	output, err := findLaunchTemplate(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.LaunchTemplateName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func findLaunchTemplateByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.LaunchTemplate, error) {
 	input := &ec2.DescribeLaunchTemplatesInput{
 		LaunchTemplateIds: []string{id},

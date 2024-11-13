@@ -24,12 +24,17 @@ import (
 func TestAccEC2SpotDatafeedSubscription_serial(t *testing.T) {
 	t.Parallel()
 
-	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccSpotDatafeedSubscription_basic,
-		acctest.CtDisappears: testAccSpotDatafeedSubscription_disappears,
+	testCases := map[string]map[string]func(t *testing.T){
+		"SpotDatafeedSubscription": {
+			acctest.CtBasic:      testAccSpotDatafeedSubscription_basic,
+			acctest.CtDisappears: testAccSpotDatafeedSubscription_disappears,
+		},
+		"SpotDatafeedSubscriptionDataSource": {
+			acctest.CtBasic: testAccSpotDataFeedSubscriptionDataSource_basic,
+		},
 	}
 
-	acctest.RunSerialTests1Level(t, testCases, 0)
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccSpotDatafeedSubscription_basic(t *testing.T) {

@@ -619,7 +619,9 @@ func testAccMethodSettingsImportStateIdFunc(resourceName string) resource.Import
 }
 
 func testAccMethodSettingsConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccAccountConfig_role0(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccAccountConfig_resetOnDelete(rName, true),
+		fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 }
