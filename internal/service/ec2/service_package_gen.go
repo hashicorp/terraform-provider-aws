@@ -63,7 +63,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		},
 		{
 			Factory: newResourceVPCSecurityGroupAssociation,
-			Name:    "Security Group VPC Association",
+			Name:    "VPC Security Group Association",
 		},
 		{
 			Factory: newSecurityGroupEgressRuleResource,

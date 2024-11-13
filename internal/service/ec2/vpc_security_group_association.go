@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_vpc_security_group_association", name="Security Group VPC Association")
+// @FrameworkResource("aws_vpc_security_group_association", name="VPC Security Group Association")
 func newResourceVPCSecurityGroupAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceVPCSecurityGroupAssociation{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
@@ -39,7 +39,7 @@ func newResourceVPCSecurityGroupAssociation(_ context.Context) (resource.Resourc
 }
 
 const (
-	ResNameVPCSecurityGroupAssociation = "Security Group VPC Association"
+	ResNameVPCSecurityGroupAssociation = "VPC Security Group Association"
 )
 
 type resourceVPCSecurityGroupAssociation struct {
