@@ -40,8 +40,8 @@ func TestAccSecretsManagerSecretVersionEphemeral_basic(t *testing.T) {
 			{
 				Config: testAccSecretVersionEphemeralResourceConfig_basic(rName, secretString),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("arn"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("created_date"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey(names.AttrCreatedDate), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("secret_string"), knownvalue.StringExact(secretString)),
 				},
 			},
