@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package secretsmanager_test
+package kms_test
 
 import (
 	"fmt"
@@ -17,16 +17,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSecretsManagerSecretVersionEphemeral_basic(t *testing.T) {
+func TestAccKMSSecretsEphemeral_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	echoResourceName := "echo.test"
 	dataPath := tfjsonpath.New("data")
-	secretString := "super-secret"
+	plaintext := "my-plaintext-string"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck: acctest.ErrorCheck(t, names.SecretsManagerServiceID),
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.KMSServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
 			tfversion.SkipBelow(tfversion.Version1_10_0),
 		},
@@ -35,33 +35,42 @@ func TestAccSecretsManagerSecretVersionEphemeral_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSecretVersionEphemeralResourceConfig_basic(rName, secretString),
+				Config: testAccSecretsEphemeralResourceConfig_basic(rName, plaintext),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey(names.AttrARN), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey(names.AttrCreatedDate), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("secret_string"), knownvalue.StringExact(secretString)),
+					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("plaintext").AtMapKey(rName), knownvalue.StringExact(plaintext)),
 				},
 			},
 		},
 	})
 }
 
-func testAccSecretVersionEphemeralResourceConfig_basic(rName, secretString string) string {
+func testAccSecretsEphemeralResourceConfig_basic(rName, secretString string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigWithEchoProvider("ephemeral.aws_secretsmanager_secret_version.test"),
+		acctest.ConfigWithEchoProvider("ephemeral.aws_kms_secrets.test"),
 		fmt.Sprintf(`
-resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
+resource "aws_kms_key" "test" {
+  description = %[1]q
+  is_enabled  = true
 }
 
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = %[2]q
+resource "aws_kms_ciphertext" "test" {
+  key_id = aws_kms_key.test.key_id
+
+  context = {
+    foo = "bar"
+  }
+
+  plaintext = %[2]q
 }
 
-ephemeral "aws_secretsmanager_secret_version" "test" {
-  secret_id  = aws_secretsmanager_secret.test.id
-  version_id = aws_secretsmanager_secret_version.test.version_id
+ephemeral "aws_kms_secrets" "test" {
+  secret {
+    name    = %[1]q
+    payload = aws_kms_ciphertext.test.ciphertext_blob
+    context = aws_kms_ciphertext.test.context
+  }
+
+  depends_on = [aws_kms_key.test]
 }
 `, rName, secretString))
 }
