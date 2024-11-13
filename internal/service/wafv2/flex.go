@@ -39,7 +39,6 @@ func expandRule(m map[string]interface{}) awstypes.Rule {
 	rule := awstypes.Rule{
 		Action:           expandRuleAction(m[names.AttrAction].([]interface{})),
 		CaptchaConfig:    expandCaptchaConfig(m["captcha_config"].([]interface{})),
-		ChallengeConfig:  expandChallengeConfig(m["challenge_config"].([]interface{})),
 		Name:             aws.String(m[names.AttrName].(string)),
 		Priority:         int32(m[names.AttrPriority].(int)),
 		Statement:        expandRuleGroupRootStatement(m["statement"].([]interface{})),

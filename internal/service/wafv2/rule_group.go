@@ -118,8 +118,7 @@ func resourceRuleGroup() *schema.Resource {
 									},
 								},
 							},
-							"captcha_config":   outerCaptchaConfigSchema(),
-							"challenge_config": outerChallengeConfigSchema(),
+							"captcha_config": outerCaptchaConfigSchema(),
 							names.AttrName: {
 								Type:         schema.TypeString,
 								Required:     true,
