@@ -41,8 +41,8 @@ func TestAccVPCSecurityGroupVPCAssociation_basic(t *testing.T) {
 				Config: testAccVPCSecurityGroupVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
-					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "state", string(types.SecurityGroupVpcAssociationStateAssociated)),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, string(types.SecurityGroupVpcAssociationStateAssociated)),
 				),
 			},
 			{

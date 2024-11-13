@@ -42,7 +42,7 @@ func newResourceSecurityGroupVPCAssociation(_ context.Context) (resource.Resourc
 
 const (
 	ResNameSecurityGroupVPCAssociation = "Security Group VPC Association"
-	securityGroupVpcAssociationIDParts = 2
+	securityGroupVPCAssociationIDParts = 2
 )
 
 type resourceSecurityGroupVPCAssociation struct {
@@ -76,7 +76,7 @@ func (r *resourceSecurityGroupVPCAssociation) Schema(ctx context.Context, req re
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -195,7 +195,7 @@ func (r *resourceSecurityGroupVPCAssociation) Delete(ctx context.Context, req re
 }
 
 func (r *resourceSecurityGroupVPCAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts, err := intflex.ExpandResourceId(req.ID, securityGroupVpcAssociationIDParts, false)
+	parts, err := intflex.ExpandResourceId(req.ID, securityGroupVPCAssociationIDParts, false)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
