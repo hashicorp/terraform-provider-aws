@@ -39,17 +39,17 @@ The following arguments are required:
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Group VPC Association using the `security_group_id` and `vpc_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Security Group VPC Association using the `security_group_id` and `vpc_id` arguments, separated by a comma (`,`). For example:
 
 ```terraform
 import {
   to = aws_vpc_security_group_vpc_association.example
-  id = "security_group_id-12345678:vpc_id-233323"
+  id = "sg-12345,vpc-67890"
 }
 ```
 
-Using `terraform import`, import Security Group VPC Association using the `security_group_id` and `vpc_id`. For example:
+Using `terraform import`, import a Security Group VPC Association using the `security_group_id` and `vpc_id` arguments, separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_vpc_security_group_vpc_association.example security_group_id-12345678:vpc_id-233323
+% terraform import aws_vpc_security_group_vpc_association.example sg-12345,vpc-67890
 ```

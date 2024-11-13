@@ -24,7 +24,7 @@ import (
 func TestAccVPCSecurityGroupVPCAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var securityGroupVpcAssociation types.SecurityGroupVpcAssociation
+	var assoc types.SecurityGroupVpcAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 	sgResourceName := "aws_security_group.test"
@@ -40,7 +40,7 @@ func TestAccVPCSecurityGroupVPCAssociation_basic(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCSecurityGroupVPCAssociationExists(ctx, resourceName, &securityGroupVpcAssociation),
+					testAccCheckVPCSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "state", string(types.SecurityGroupVpcAssociationStateAssociated)),
 				),
@@ -58,7 +58,8 @@ func TestAccVPCSecurityGroupVPCAssociation_basic(t *testing.T) {
 
 func TestAccVPCSecurityGroupVPCAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var securityGroupVpcAssociation types.SecurityGroupVpcAssociation
+
+	var assoc types.SecurityGroupVpcAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_vpc_association.test"
 
@@ -73,7 +74,7 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears(t *testing.T) {
 			{
 				Config: testAccVPCSecurityGroupVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCSecurityGroupVPCAssociationExists(ctx, resourceName, &securityGroupVpcAssociation),
+					testAccCheckVPCSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -112,29 +113,31 @@ func testAccVPCSecurityGroupVPCAssociationImportStateIDFunc(resourceName string)
 		if !ok {
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
-		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes[names.AttrVPCID]), nil
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes[names.AttrVPCID]), nil
 	}
 }
 
-func testAccCheckVPCSecurityGroupVPCAssociationExists(ctx context.Context, name string, VPCSecurityGroupassociation *types.SecurityGroupVpcAssociation) resource.TestCheckFunc {
+func testAccCheckVPCSecurityGroupVPCAssociationExists(ctx context.Context, name string, assoc *types.SecurityGroupVpcAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameSecurityGroupVPCAssociation, name, errors.New("not found"))
 		}
 
-		if rs.Primary.Attributes["security_group_id"] == "" || rs.Primary.Attributes[names.AttrVPCID] == "" {
+		securityGroupID := rs.Primary.Attributes["security_group_id"]
+		vpcID := rs.Primary.Attributes[names.AttrVPCID]
+
+		if securityGroupID == "" || vpcID == "" {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameSecurityGroupVPCAssociation, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-
-		resp, err := tfec2.FindSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["security_group_id"], rs.Primary.Attributes[names.AttrVPCID])
+		resp, err := tfec2.FindSecurityGroupVPCAssociationByTwoPartKey(ctx, conn, securityGroupID, rs.Primary.Attributes[names.AttrVPCID])
 		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameSecurityGroupVPCAssociation, rs.Primary.Attributes["security_group_id"], err)
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameSecurityGroupVPCAssociation, securityGroupID, err)
 		}
 
-		*VPCSecurityGroupassociation = *resp
+		*assoc = *resp
 
 		return nil
 	}
@@ -142,20 +145,16 @@ func testAccCheckVPCSecurityGroupVPCAssociationExists(ctx context.Context, name 
 
 func testAccVPCSecurityGroupVPCAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "source" {
   cidr_block           = "10.6.0.0/16"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
 
   tags = {
     Name = %[1]q
   }
 }
 
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "target" {
   cidr_block           = "10.7.0.0/16"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
 
   tags = {
     Name = %[1]q
@@ -164,12 +163,12 @@ resource "aws_vpc" "bar" {
 
 resource "aws_security_group" "test" {
   name   = %[1]q
-  vpc_id = aws_vpc.foo.id
+  vpc_id = aws_vpc.source.id
 }
 
 resource "aws_vpc_security_group_vpc_association" "test" {
   security_group_id = aws_security_group.test.id
-  vpc_id            = aws_vpc.bar.id
+  vpc_id            = aws_vpc.target.id
 }
 `, rName)
 }

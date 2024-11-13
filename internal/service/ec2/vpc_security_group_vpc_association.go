@@ -6,7 +6,6 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -41,6 +41,7 @@ func newResourceSecurityGroupVPCAssociation(_ context.Context) (resource.Resourc
 
 const (
 	ResNameSecurityGroupVPCAssociation = "Security Group VPC Association"
+	securityGroupVpcAssociationIDParts = 2
 )
 
 type resourceSecurityGroupVPCAssociation struct {
@@ -189,18 +190,17 @@ func (r *resourceSecurityGroupVPCAssociation) Delete(ctx context.Context, req re
 }
 
 func (r *resourceSecurityGroupVPCAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	idParts := strings.Split(req.ID, ":")
-
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+	parts, err := intflex.ExpandResourceId(req.ID, securityGroupVpcAssociationIDParts, false)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: GroupId:VpcID. Got: %q", req.ID),
+			fmt.Sprintf("Expected import identifier with format: security_group_id,vpc_id. Got: %q", req.ID),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("security_group_id"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrVPCID), idParts[1])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("security_group_id"), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrVPCID), parts[1])...)
 }
 
 func waitSecurityGroupVPCAssociationCreated(ctx context.Context, conn *ec2.Client, groupId string, vpcId string, timeout time.Duration) (*awstypes.SecurityGroupVpcAssociation, error) {
