@@ -2,12 +2,33 @@
 
 ENHANCEMENTS:
 
+* resource/aws_medialive_channel: Add missing h265 codec settings ([#40071](https://github.com/hashicorp/terraform-provider-aws/issues/40071))
+
+BUG FIXES:
+
+* resource/aws_autoscaling_group: Handle eventual consistency issues that occur when using a `launch_template` that is updated causing `ValidationError: You must use a valid fully-formed launch template.` ([#40088](https://github.com/hashicorp/terraform-provider-aws/issues/40088))
+* resource/aws_eip: Properly surface errors during deletion when `ipam_pool_id` is set ([#40082](https://github.com/hashicorp/terraform-provider-aws/issues/40082))
+* resource/aws_elasticache_reserved_cache_node: Fix `Provider returned invalid result object after apply` errors ([#40090](https://github.com/hashicorp/terraform-provider-aws/issues/40090))
+* resource/aws_iam_group_policies_exclusive: Add validation to prevent null values in `policy_names` ([#40076](https://github.com/hashicorp/terraform-provider-aws/issues/40076))
+* resource/aws_iam_group_policy_attachments_exclusive: Add validation to prevent null values in `policy_arns` ([#40076](https://github.com/hashicorp/terraform-provider-aws/issues/40076))
+* resource/aws_iam_instance_profile: Handle eventual consistency issues that occur when this resource is updated and has dependents ([#40088](https://github.com/hashicorp/terraform-provider-aws/issues/40088))
+* resource/aws_iam_role_policies_exclusive: Add validation to prevent null values in `policy_names` ([#40076](https://github.com/hashicorp/terraform-provider-aws/issues/40076))
+* resource/aws_iam_role_policy_attachments_exclusive: Add validation to prevent null values in `policy_arns` ([#40076](https://github.com/hashicorp/terraform-provider-aws/issues/40076))
+* resource/aws_iam_user_policies_exclusive: Add validation to prevent null values in `policy_names` ([#40076](https://github.com/hashicorp/terraform-provider-aws/issues/40076))
+* resource/aws_iam_user_policy_attachments_exclusive: Add validation to prevent null values in `policy_arns` ([#40076](https://github.com/hashicorp/terraform-provider-aws/issues/40076))
+* resource/aws_launch_template: Handle eventual consistency issues that occur when this resource is updated and has dependents ([#40088](https://github.com/hashicorp/terraform-provider-aws/issues/40088))
+
+## 5.75.1 (November 11, 2024)
+
+ENHANCEMENTS:
+
 * data-source/aws_cloudwatch_event_bus: Add `description` attribute ([#39980](https://github.com/hashicorp/terraform-provider-aws/issues/39980))
 * resource/aws_api_gateway_account: Add attribute `reset_on_delete` to properly reset CloudWatch Role ARN on deletion. ([#40004](https://github.com/hashicorp/terraform-provider-aws/issues/40004))
 * resource/aws_cloudwatch_event_bus: Add `description` argument ([#39980](https://github.com/hashicorp/terraform-provider-aws/issues/39980))
 
 BUG FIXES:
 
+* resource/aws_api_gateway_deployment: Rolls back validation of `canary_settings` and `stage_description` when `stage_name` not set. ([#40067](https://github.com/hashicorp/terraform-provider-aws/issues/40067))
 * resource/aws_dynamodb_table: Allow table TTL to be disabled by allowing `ttl[0].attribute_name` to be set when `ttl[0].enabled` is false ([#40046](https://github.com/hashicorp/terraform-provider-aws/issues/40046))
 * resource/aws_sagemaker_domain: Fix issue causing a `ValidationException` on updates when RStudio is disabled on the domain ([#40049](https://github.com/hashicorp/terraform-provider-aws/issues/40049))
 
