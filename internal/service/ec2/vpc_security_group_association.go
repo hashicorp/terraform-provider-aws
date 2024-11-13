@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -31,9 +32,9 @@ import (
 // @FrameworkResource("aws_vpc_security_group_association", name="VPC Security Group Association")
 func newResourceVPCSecurityGroupAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceVPCSecurityGroupAssociation{}
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultDeleteTimeout(5 * time.Minute)
 
 	return r, nil
 }
@@ -44,7 +45,7 @@ const (
 
 type resourceVPCSecurityGroupAssociation struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate[resourceVPCSecurityGroupAssociationModel]
+	framework.WithNoUpdate
 	framework.WithTimeouts
 }
 
@@ -68,10 +69,14 @@ func (r *resourceVPCSecurityGroupAssociation) Schema(ctx context.Context, req re
 				},
 			},
 		},
+		Blocks: map[string]schema.Block{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+			}),
+		},
 	}
 }
-
-const changeOfStatusTimeout = 5 * time.Minute
 
 func (r *resourceVPCSecurityGroupAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().EC2Client(ctx)
@@ -83,14 +88,12 @@ func (r *resourceVPCSecurityGroupAssociation) Create(ctx context.Context, req re
 	}
 
 	var input ec2.AssociateSecurityGroupVpcInput
-
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := conn.AssociateSecurityGroupVpc(ctx, &input)
-
 	if out == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCSecurityGroupAssociation, plan.GroupId.String(), nil),
@@ -111,7 +114,8 @@ func (r *resourceVPCSecurityGroupAssociation) Create(ctx context.Context, req re
 		return
 	}
 
-	_, err = waitVPCSecurityGroupAssociationCreated(ctx, conn, plan.GroupId.ValueString(), plan.VpcId.ValueString(), changeOfStatusTimeout)
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	_, err = waitVPCSecurityGroupAssociationCreated(ctx, conn, plan.GroupId.ValueString(), plan.VpcId.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameVPCSecurityGroupAssociation, plan.GroupId.String(), err),
@@ -176,7 +180,9 @@ func (r *resourceVPCSecurityGroupAssociation) Delete(ctx context.Context, req re
 		)
 		return
 	}
-	_, err = waitVPCSecurityGroupAssociationDeleted(ctx, conn, state.GroupId.ValueString(), state.VpcId.ValueString(), changeOfStatusTimeout)
+
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err = waitVPCSecurityGroupAssociationDeleted(ctx, conn, state.GroupId.ValueString(), state.VpcId.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForDeletion, ResNameVPCSecurityGroupAssociation, state.GroupId.String(), err),
@@ -286,6 +292,7 @@ func FindVPCSecurityGroupAssociationByTwoPartKey(ctx context.Context, conn *ec2.
 }
 
 type resourceVPCSecurityGroupAssociationModel struct {
-	GroupId types.String `tfsdk:"security_group_id"`
-	VpcId   types.String `tfsdk:"vpc_id"`
+	GroupId  types.String   `tfsdk:"security_group_id"`
+	VpcId    types.String   `tfsdk:"vpc_id"`
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }

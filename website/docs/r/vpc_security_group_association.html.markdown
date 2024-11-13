@@ -3,12 +3,12 @@ subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_vpc_security_group_association"
 description: |-
-  Terraform resource for managing Security Group VPC Associations.
+  Terraform resource for managing VPC Security Group Associations.
 ---
 
 # Resource: aws_vpc_security_group_association
 
-Manages Security Group association with additional VPCs.
+Terraform resource for managing VPC Security Group Associations.
 
 ## Example Usage
 
@@ -34,9 +34,8 @@ This resource exports no additional attributes.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
