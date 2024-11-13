@@ -28,6 +28,8 @@ The following arguments are required:
 
 ## Attribute Reference
 
+This resource exports the following attributes in addition to the arguments above:
+
 * `state` - State of the VPC association. See the [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SecurityGroupVpcAssociation.html) for possible values.
 
 ## Timeouts
