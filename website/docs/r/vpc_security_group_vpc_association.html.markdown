@@ -1,19 +1,19 @@
 ---
 subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
-page_title: "AWS: aws_vpc_security_group_association"
+page_title: "AWS: aws_vpc_security_group_vpc_association"
 description: |-
-  Terraform resource for managing VPC Security Group Associations.
+  Terraform resource for managing Security Group VPC Associations.
 ---
 
-# Resource: aws_vpc_security_group_association
+# Resource: aws_vpc_security_group_vpc_association
 
-Terraform resource for managing VPC Security Group Associations.
+Terraform resource for managing Security Group VPC Associations.
 
 ## Example Usage
 
 ```terraform
-resource "aws_vpc_security_group_association" "example" {
+resource "aws_vpc_security_group_vpc_association" "example" {
   security_group_id = "sg-05f1f54ab49bb39a3"
   vpc_id            = "vpc-01df9d105095412ba"
 }
@@ -43,7 +43,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_vpc_security_group_association.example
+  to = aws_vpc_security_group_vpc_association.example
   id = "security_group_id-12345678:vpc_id-233323"
 }
 ```
@@ -51,5 +51,5 @@ import {
 Using `terraform import`, import Security Group VPC Association using the `security_group_id` and `vpc_id`. For example:
 
 ```console
-% terraform import aws_vpc_security_group_association.example security_group_id-12345678:vpc_id-233323
+% terraform import aws_vpc_security_group_vpc_association.example security_group_id-12345678:vpc_id-233323
 ```

@@ -62,8 +62,8 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
-			Factory: newResourceVPCSecurityGroupAssociation,
-			Name:    "VPC Security Group Association",
+			Factory: newResourceSecurityGroupVPCAssociation,
+			Name:    "Security Group VPC Association",
 		},
 		{
 			Factory: newSecurityGroupEgressRuleResource,
