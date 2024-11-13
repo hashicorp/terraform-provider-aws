@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -35,7 +36,8 @@ func (e *ephemeralSecrets) Schema(ctx context.Context, _ ephemeral.SchemaRequest
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrCreatedDate: schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			"secret_id": schema.StringAttribute{
 				Required: true,
@@ -100,7 +102,7 @@ func (e *ephemeralSecrets) Open(ctx context.Context, request ephemeral.OpenReque
 
 type epSecretVersionData struct {
 	ARN           types.String                      `tfsdk:"arn"`
-	CreatedDate   types.String                      `tfsdk:"created_date"`
+	CreatedDate   timetypes.RFC3339                 `tfsdk:"created_date"`
 	SecretID      types.String                      `tfsdk:"secret_id"`
 	SecretBinary  types.String                      `tfsdk:"secret_binary"`
 	SecretString  types.String                      `tfsdk:"secret_string"`
