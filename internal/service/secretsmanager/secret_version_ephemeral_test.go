@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
-	"github.com/hashicorp/terraform-plugin-testing/echoprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -33,9 +31,7 @@ func TestAccSecretsManagerSecretVersionEphemeral_basic(t *testing.T) {
 			tfversion.SkipBelow(tfversion.Version1_10_0),
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ProtoV6ProviderFactories: map[string]func() (tfprotov6.ProviderServer, error){
-			"echo": echoprovider.NewProviderServer(),
-		},
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories(ctx, "echo"),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionEphemeralResourceConfig_basic(rName, secretString),
@@ -50,6 +46,7 @@ func TestAccSecretsManagerSecretVersionEphemeral_basic(t *testing.T) {
 }
 
 func testAccSecretVersionEphemeralResourceConfig_basic(rName, secretString string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
