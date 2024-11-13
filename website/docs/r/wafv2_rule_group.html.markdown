@@ -694,12 +694,6 @@ The `captcha_config` block supports the following arguments:
 
 * `immunity_time_property` - (Optional) Defines custom immunity time. See [Immunity Time Property](#immunity-time-property) below for details.
 
-### Challenge Configuration
-
-The `challenge_config` block supports the following arguments:
-
-* `immunity_time_property` - (Optional) Defines custom immunity time. See [Immunity Time Property](#immunity-time-property) below for details.
-
 ### Immunity Time Property
 
 The `immunity_time_property` block supports the following arguments:

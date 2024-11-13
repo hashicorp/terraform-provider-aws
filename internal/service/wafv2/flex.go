@@ -1734,7 +1734,6 @@ func flattenRules(r []awstypes.Rule) interface{} {
 		m := make(map[string]interface{})
 		m[names.AttrAction] = flattenRuleAction(rule.Action)
 		m["captcha_config"] = flattenCaptchaConfig(rule.CaptchaConfig)
-		m["challenge_config"] = flattenChallengeConfig(rule.ChallengeConfig)
 		m[names.AttrName] = aws.ToString(rule.Name)
 		m[names.AttrPriority] = rule.Priority
 		m["rule_label"] = flattenRuleLabels(rule.RuleLabels)
