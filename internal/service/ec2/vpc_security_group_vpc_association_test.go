@@ -175,7 +175,7 @@ func testAccCheckVPCSecurityGroupVPCAssociationExists(ctx context.Context, name 
 func testAccVPCSecurityGroupVPCAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "source" {
-  cidr_block           = "10.6.0.0/16"
+  cidr_block = "10.6.0.0/16"
 
   tags = {
     Name = %[1]q
@@ -183,7 +183,7 @@ resource "aws_vpc" "source" {
 }
 
 resource "aws_vpc" "target" {
-  cidr_block           = "10.7.0.0/16"
+  cidr_block = "10.7.0.0/16"
 
   tags = {
     Name = %[1]q
