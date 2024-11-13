@@ -175,6 +175,9 @@ func (r *resourceSecurityGroupVPCAssociation) Delete(ctx context.Context, req re
 		if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
 			return
 		}
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCIDNotFound) {
+			return
+		}
 
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameSecurityGroupVPCAssociation, state.GroupId.String(), err),

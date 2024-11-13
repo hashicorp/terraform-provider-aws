@@ -112,6 +112,35 @@ func TestAccVPCSecurityGroupVPCAssociation_disappears_SecurityGroup(t *testing.T
 	})
 }
 
+func TestAccVPCSecurityGroupVPCAssociation_disappears_VPC(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var assoc types.SecurityGroupVpcAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_vpc_security_group_vpc_association.test"
+	vpcResourceName := "aws_vpc.target"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCSecurityGroupVPCAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCSecurityGroupVPCAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCSecurityGroupVPCAssociationExists(ctx, resourceName, &assoc),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceSecurityGroupVPCAssociation, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPC(), vpcResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckVPCSecurityGroupVPCAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
