@@ -16,7 +16,9 @@ import (
 )
 
 func RegisterSweepers() {
-	awsv2.Register("aws_resourcegroups_group", sweepGroups)
+	awsv2.Register("aws_resourcegroups_group", sweepGroups,
+		"aws_servicecatalogappregistry_application",
+	)
 }
 
 func sweepGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
