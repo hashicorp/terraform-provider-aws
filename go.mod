@@ -7,7 +7,7 @@ go 1.23.2
 godebug tlskyber=0
 
 require (
-	github.com/ProtonMail/go-crypto v1.1.0-beta.0-proton
+	github.com/ProtonMail/go-crypto v1.1.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.24.0
 	github.com/aws/aws-sdk-go v1.55.5
