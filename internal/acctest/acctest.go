@@ -86,6 +86,10 @@ const (
 	// Provider name for alternate account and same region configuration testing
 	ProviderNameAlternateAccountSameRegion = "awsalternateaccountsameregion"
 
+	// Provider name for echo provider
+	// used for testing ephemeral resources
+	ProviderNameEcho = "echo"
+
 	// Provider name for same account and alternate region configuration testing
 	ProviderNameSameAccountAlternateRegion = "awssameaccountalternateregion"
 
@@ -162,7 +166,7 @@ func ProtoV6ProviderFactories(_ context.Context, providerNames ...string) map[st
 	factories := make(map[string]func() (tfprotov6.ProviderServer, error))
 
 	for _, name := range providerNames {
-		if name == "echo" {
+		if name == ProviderNameEcho {
 			factories[name] = echoprovider.NewProviderServer()
 		}
 	}
@@ -1516,6 +1520,17 @@ provider "aws" {
   }
 }
 `, key1)
+}
+
+func ConfigWithEchoProvider(ephemeralResourceData string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "echo" {
+  data = %[1]s
+}
+
+resource "echo" "test" {}
+`, ephemeralResourceData)
 }
 
 // ConfigRegionalProvider creates a new provider configuration with a region.

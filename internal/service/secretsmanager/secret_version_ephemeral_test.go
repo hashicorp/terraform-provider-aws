@@ -31,7 +31,7 @@ func TestAccSecretsManagerSecretVersionEphemeral_basic(t *testing.T) {
 			tfversion.SkipBelow(tfversion.Version1_10_0),
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories(ctx, "echo"),
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories(ctx, acctest.ProviderNameEcho),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretVersionEphemeralResourceConfig_basic(rName, secretString),
@@ -46,8 +46,9 @@ func TestAccSecretsManagerSecretVersionEphemeral_basic(t *testing.T) {
 }
 
 func testAccSecretVersionEphemeralResourceConfig_basic(rName, secretString string) string {
-	//lintignore:AT004
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigWithEchoProvider("ephemeral.aws_secretsmanager_secret_version.test"),
+		fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
 }
@@ -61,11 +62,5 @@ ephemeral "aws_secretsmanager_secret_version" "test" {
   secret_id  = aws_secretsmanager_secret.test.id
   version_id = aws_secretsmanager_secret_version.test.version_id
 }
-
-provider "echo" {
-  data = ephemeral.aws_secretsmanager_secret_version.test
-}
-
-resource "echo" "test" {}
-`, rName, secretString)
+`, rName, secretString))
 }
