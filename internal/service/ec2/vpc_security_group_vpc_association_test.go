@@ -27,6 +27,7 @@ func TestAccVPCSecurityGroupVPCAssociation_basic(t *testing.T) {
 	var securityGroupVpcAssociation types.SecurityGroupVpcAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_vpc_security_group_vpc_association.test"
+	sgResourceName := "aws_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -40,6 +41,8 @@ func TestAccVPCSecurityGroupVPCAssociation_basic(t *testing.T) {
 				Config: testAccVPCSecurityGroupVPCAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCSecurityGroupVPCAssociationExists(ctx, resourceName, &securityGroupVpcAssociation),
+					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", sgResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.SecurityGroupVpcAssociationStateAssociated)),
 				),
 			},
 			{
@@ -159,13 +162,13 @@ resource "aws_vpc" "bar" {
   }
 }
 
-resource "aws_security_group" "foo" {
+resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.foo.id
 }
 
 resource "aws_vpc_security_group_vpc_association" "test" {
-  security_group_id = aws_security_group.foo.id
+  security_group_id = aws_security_group.test.id
   vpc_id            = aws_vpc.bar.id
 }
 `, rName)

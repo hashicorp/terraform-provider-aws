@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -25,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -62,6 +62,10 @@ func (r *resourceSecurityGroupVPCAssociation) Schema(ctx context.Context, req re
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrState: schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.SecurityGroupVpcAssociationState](),
+				Computed:   true,
+			},
 			names.AttrVPCID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -93,14 +97,7 @@ func (r *resourceSecurityGroupVPCAssociation) Create(ctx context.Context, req re
 		return
 	}
 
-	out, err := conn.AssociateSecurityGroupVpc(ctx, &input)
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameSecurityGroupVPCAssociation, plan.GroupId.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
+	_, err := conn.AssociateSecurityGroupVpc(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameSecurityGroupVPCAssociation, plan.GroupId.String(), err),
@@ -109,18 +106,18 @@ func (r *resourceSecurityGroupVPCAssociation) Create(ctx context.Context, req re
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitSecurityGroupVPCAssociationCreated(ctx, conn, plan.GroupId.ValueString(), plan.VpcId.ValueString(), createTimeout)
+	out, err := waitSecurityGroupVPCAssociationCreated(ctx, conn, plan.GroupId.ValueString(), plan.VpcId.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameSecurityGroupVPCAssociation, plan.GroupId.String(), err),
 			err.Error(),
 		)
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -291,7 +288,8 @@ func FindSecurityGroupVPCAssociationByTwoPartKey(ctx context.Context, conn *ec2.
 }
 
 type resourceSecurityGroupVPCAssociationModel struct {
-	GroupId  types.String   `tfsdk:"security_group_id"`
-	VpcId    types.String   `tfsdk:"vpc_id"`
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	GroupId  types.String                                                  `tfsdk:"security_group_id"`
+	State    fwtypes.StringEnum[awstypes.SecurityGroupVpcAssociationState] `tfsdk:"state"`
+	VpcId    types.String                                                  `tfsdk:"vpc_id"`
+	Timeouts timeouts.Value                                                `tfsdk:"timeouts"`
 }
