@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -171,6 +172,10 @@ func (r *resourceSecurityGroupVPCAssociation) Delete(ctx context.Context, req re
 
 	_, err := conn.DisassociateSecurityGroupVpc(ctx, &input)
 	if err != nil {
+		if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound) {
+			return
+		}
+
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameSecurityGroupVPCAssociation, state.GroupId.String(), err),
 			err.Error(),
