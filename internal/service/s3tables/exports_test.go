@@ -4,11 +4,13 @@
 package s3tables
 
 var (
-	NewResourceNamespace   = newResourceNamespace
-	NewResourceTableBucket = newResourceTableBucket
+	NewResourceNamespace         = newResourceNamespace
+	NewResourceTableBucket       = newResourceTableBucket
+	NewResourceTableBucketPolicy = newResourceTableBucketPolicy
 
-	FindNamespace   = findNamespace
-	FindTableBucket = findTableBucket
+	FindNamespace         = findNamespace
+	FindTableBucket       = findTableBucket
+	FindTableBucketPolicy = findTableBucketPolicy
 )
 
 const (
