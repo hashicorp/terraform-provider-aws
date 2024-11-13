@@ -45,8 +45,8 @@ func sweepGroups(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepabl
 
 			if slices.Contains(tags.Keys(), "aws:servicecatalog:applicationId") {
 				tflog.Warn(ctx, "Skipping resource", map[string]any{
-					"skip_reason": "managed by AppRegistry",
-					"group_name":  aws.ToString(v.GroupName),
+					"skip_reason":       "managed by AppRegistry",
+					names.AttrGroupName: aws.ToString(v.GroupName),
 				})
 				continue
 			}
