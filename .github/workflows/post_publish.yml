@@ -73,6 +73,9 @@ jobs:
             fi
           done
 
+          echo "Registry does not contain ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}"
+          exit 1
+
   os-version-init:
     name: Run terraform init On Supported Platforms
     strategy:
