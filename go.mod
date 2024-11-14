@@ -16,7 +16,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.44
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.19
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.37
-	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.34.5
+	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.21.5
 	github.com/aws/aws-sdk-go-v2/service/acm v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.37.6
@@ -30,7 +30,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.33.5
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.29.3
-	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.6.5
+	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.32.5
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.41.5
@@ -57,7 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.8.5
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.26.4
-	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.44.5
+	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.42.4
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.33.5
@@ -99,8 +99,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.14.2
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.5
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.36.5
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.187.1
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.188.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.5
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.49.2
@@ -125,7 +125,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.29.5
-	github.com/aws/aws-sdk-go-v2/service/glue v1.101.2
+	github.com/aws/aws-sdk-go-v2/service/glue v1.101.3
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.27.5
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.31.5
@@ -136,7 +136,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/imagebuilder v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/inspector v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.33.0
-	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.19.5
+	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/iot v1.59.5
 	github.com/aws/aws-sdk-go-v2/service/iotanalytics v1.26.5
 	github.com/aws/aws-sdk-go-v2/service/iotevents v1.27.5
@@ -163,7 +163,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.18.3
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.43.5
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.35.5
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.61.5
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.62.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.62.5
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.34.5
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.19.2
@@ -180,7 +180,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/opsworks v1.26.5
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.34.5
+	github.com/aws/aws-sdk-go-v2/service/organizations v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/osis v1.14.5
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.16.0
@@ -251,7 +251,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.53.3
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.20.1
-	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.12.5
+	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.12.6
 	github.com/aws/aws-sdk-go-v2/service/waf v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/wafregional v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.55.4
