@@ -746,10 +746,10 @@ resource "aws_route53_resolver_rule" "test" {
   resolver_endpoint_id = aws_route53_resolver_endpoint.test[0].id
 
   target_ip {
-    ip       			   = "192.0.2.6"
+    ip                     = "192.0.2.6"
     protocol               = "DoH"
-	port                   = 443
-	server_name_indication = %[3]q
+    port                   = 443
+    server_name_indication = %[3]q
   }
 }
 `, rName, domainName, sni))
