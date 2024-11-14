@@ -61,6 +61,10 @@ func resourceGlobalCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrEngine: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -127,10 +131,6 @@ func resourceGlobalCluster() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
-			},
-			"endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
