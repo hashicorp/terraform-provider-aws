@@ -1468,7 +1468,7 @@ func TestAccRDSInstance_ReplicateSourceDB_backupWindow(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName(t *testing.T) {
+func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1489,7 +1489,7 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName(t *testing.T) {
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName(rName),
+				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_crossRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
@@ -9203,7 +9203,7 @@ resource "aws_db_instance" "test" {
 `, rName, backupWindow, maintenanceWindow))
 }
 
-func testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName(rName string) string {
+func testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_crossRegion(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateRegionProvider(),
 		acctest.ConfigAvailableAZsNoOptIn(),
