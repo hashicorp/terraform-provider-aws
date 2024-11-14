@@ -686,6 +686,10 @@ tools: prereq-go ## Install tools
 
 ts: testacc-short ## Alias to testacc-short
 
+update: ## Update dependencies
+	@echo "make: Updating dependencies..."
+	$(GO_VER) get -u ./...
+
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
 website-link-check: ## Check website links (Legacy, use caution)
@@ -891,6 +895,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	tfsdk2fw \
 	tools \
 	ts \
+	update \
 	website-link-check-ghrc \
 	website-link-check-markdown \
 	website-link-check-md \
