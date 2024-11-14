@@ -73,7 +73,7 @@ func (e *MessageError) ErrorMessage() string {
 	return e.Error()
 }
 
-// NewErrorWithMessage returns a new MessageError
-func NewErrorWithMessage(err error) *MessageError {
+// NewMessageError returns a new MessageError
+func NewMessageError(err error) *MessageError {
 	return &MessageError{error: err}
 }
