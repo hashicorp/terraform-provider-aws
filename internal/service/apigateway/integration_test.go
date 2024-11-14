@@ -407,12 +407,6 @@ func TestAccAPIGatewayIntegration_Parameters_requestCacheKeyUpdate(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "HTTP_PROXY"),
 					resource.TestCheckResourceAttr(resourceName, "integration_http_method", "ANY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURI, "https://www.google.de"),
-					/*
-						          resource.TestCheckTypeSetElemNestedAttrs(resourceName, "request_parameters.*", map[string]string{
-												"access_tier": "DEEP_ARCHIVE_ACCESS",
-												"days":        "365",
-											}),
-					*/
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.header.Host", "'method.request.querystring.name'"),
 					resource.TestCheckResourceAttr(resourceName, "request_parameters.integration.request.path.proxy", "method.request.path.proxy"),
