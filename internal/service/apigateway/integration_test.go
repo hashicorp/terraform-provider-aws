@@ -1081,11 +1081,11 @@ resource "aws_api_gateway_method" "test" {
     "application/json" = "Error"
   }
 
-  request_parameters = {for param in var.utm_params : "method.request.querystring.${param}" => false}
+  request_parameters = { for param in var.utm_params : "method.request.querystring.${param}" => false }
 }
 
 variable "utm_params" {
-  type = list(string)
+  type    = list(string)
   default = ["%[2]s"]
 }
 
@@ -1098,7 +1098,7 @@ resource "aws_api_gateway_integration" "test" {
   type                    = "HTTP_PROXY"
   uri                     = "https://www.google.de"
 
-  request_parameters = {for param in var.utm_params : "integration.request.querystring.${param}" => "method.request.querystring.${param}"}
+  request_parameters = { for param in var.utm_params : "integration.request.querystring.${param}" => "method.request.querystring.${param}" }
 }
 `, rName, strings.Join(params, `", "`))
 }
@@ -1116,7 +1116,7 @@ resource "aws_api_gateway_resource" "test" {
 }
 
 variable "utm_params" {
-  type = list(string)
+  type    = list(string)
   default = ["%[2]s"]
 }
 
@@ -1130,7 +1130,7 @@ resource "aws_api_gateway_method" "test" {
     {
       "method.request.path.proxy" = true
     },
-    {for param in var.utm_params : "method.request.querystring.${param}" => false}
+    { for param in var.utm_params : "method.request.querystring.${param}" => false }
   )
 }
 
@@ -1146,8 +1146,8 @@ resource "aws_api_gateway_integration" "test" {
   request_parameters = merge({
     "integration.request.path.proxy"  = "method.request.path.proxy"
     "integration.request.header.Host" = "'method.request.querystring.name'"
-  },
-  {for param in var.utm_params : "integration.request.querystring.${param}" => "method.request.querystring.${param}"}
+    },
+    { for param in var.utm_params : "integration.request.querystring.${param}" => "method.request.querystring.${param}" }
   )
 
   cache_key_parameters = concat(

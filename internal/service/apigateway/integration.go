@@ -507,7 +507,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	// the #29991 attempt in *method* but it can likely be removed.
 
 	// No reasonable way to determine the first stage has fully propagated, so we wait a bit.
-	time.Sleep(3 * time.Second)
+	time.Sleep(pauseBetweenUpdateStages)
 
 	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string))
 	if err != nil {
@@ -617,6 +617,8 @@ const (
 	requestParameterType  = "requestParameters"
 	cacheKeyParameterType = "cacheKeyParameters"
 	requestTemplatesType  = "requestTemplates"
+
+	pauseBetweenUpdateStages = 3 * time.Second
 )
 
 // parameterizeParameter takes a parameter path and adds a prefix and escapes. For example:
