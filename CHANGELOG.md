@@ -1,4 +1,9 @@
 ## 5.77.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_rds_global_cluster: Add `endpoint` argument to point to the writer DB instance in the current primary cluster ([#39960](https://github.com/hashicorp/terraform-provider-aws/issues/39960))
+
 ## 5.76.0 (November 14, 2024)
 
 FEATURES:
