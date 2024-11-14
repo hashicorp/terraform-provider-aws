@@ -112,6 +112,11 @@ func resourceRule() *schema.Resource {
 							Default:          awstypes.ProtocolDo53,
 							ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
 						},
+						"server_name_indication": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 255),
+						},
 					},
 				},
 			},
@@ -391,6 +396,9 @@ func expandRuleTargetIPs(vTargetIps *schema.Set) []awstypes.TargetAddress {
 		if vProtocol, ok := mTargetIp[names.AttrProtocol].(string); ok && vProtocol != "" {
 			targetAddress.Protocol = awstypes.Protocol(vProtocol)
 		}
+		if vServerNameIndication, ok := mTargetIp["server_name_indication"].(string); ok && vServerNameIndication != "" {
+			targetAddress.ServerNameIndication = aws.String(vServerNameIndication)
+		}
 
 		targetAddresses = append(targetAddresses, targetAddress)
 	}
@@ -407,10 +415,11 @@ func flattenRuleTargetIPs(targetAddresses []awstypes.TargetAddress) []interface{
 
 	for _, targetAddress := range targetAddresses {
 		mTargetIp := map[string]interface{}{
-			"ip":               aws.ToString(targetAddress.Ip),
-			"ipv6":             aws.ToString(targetAddress.Ipv6),
-			names.AttrPort:     int(aws.ToInt32(targetAddress.Port)),
-			names.AttrProtocol: targetAddress.Protocol,
+			"ip":                     aws.ToString(targetAddress.Ip),
+			"ipv6":                   aws.ToString(targetAddress.Ipv6),
+			names.AttrPort:           int(aws.ToInt32(targetAddress.Port)),
+			names.AttrProtocol:       targetAddress.Protocol,
+			"server_name_indication": aws.ToString(targetAddress.ServerNameIndication),
 		}
 
 		vTargetIps = append(vTargetIps, mTargetIp)
