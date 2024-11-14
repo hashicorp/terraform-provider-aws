@@ -61,7 +61,7 @@ func resourceGlobalCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -214,6 +214,7 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set(names.AttrARN, globalCluster.GlobalClusterArn)
 	d.Set(names.AttrDatabaseName, globalCluster.DatabaseName)
 	d.Set(names.AttrDeletionProtection, globalCluster.DeletionProtection)
+	d.Set(names.AttrEndpoint, globalCluster.Endpoint)
 	d.Set(names.AttrEngine, globalCluster.Engine)
 	d.Set("engine_lifecycle_support", globalCluster.EngineLifecycleSupport)
 	d.Set("global_cluster_identifier", globalCluster.GlobalClusterIdentifier)
@@ -222,11 +223,6 @@ func resourceGlobalClusterRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 	d.Set("global_cluster_resource_id", globalCluster.GlobalClusterResourceId)
 	d.Set(names.AttrStorageEncrypted, globalCluster.StorageEncrypted)
-
-	// Set the endpoint attribute
-	if err := d.Set("endpoint", globalCluster.Endpoint); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
-	}
 
 	oldEngineVersion, newEngineVersion := d.Get(names.AttrEngineVersion).(string), aws.ToString(globalCluster.EngineVersion)
 
