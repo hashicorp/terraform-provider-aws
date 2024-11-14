@@ -10,6 +10,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_api_gateway_integration: Fix `BadRequestException: Invalid mapping expression specified` and `NotFoundException: Invalid parameter name specified` errors when making updates to `request_parameters` and/or `cache_key_parameters` ([#40124](https://github.com/hashicorp/terraform-provider-aws/issues/40124))
+* resource/aws_api_gateway_method: Fix `BadRequestException: Invalid mapping expression specified` and `NotFoundException: Invalid parameter name specified` errors when making updates to `request_parameters` ([#40124](https://github.com/hashicorp/terraform-provider-aws/issues/40124))
 * resource/aws_autoscaling_group: Handle eventual consistency issues that occur when using a `launch_template` that is updated causing `ValidationError: You must use a valid fully-formed launch template.` ([#40088](https://github.com/hashicorp/terraform-provider-aws/issues/40088))
 * resource/aws_eip: Properly surface errors during deletion when `ipam_pool_id` is set ([#40082](https://github.com/hashicorp/terraform-provider-aws/issues/40082))
 * resource/aws_elasticache_reserved_cache_node: Fix `Provider returned invalid result object after apply` errors ([#40090](https://github.com/hashicorp/terraform-provider-aws/issues/40090))
