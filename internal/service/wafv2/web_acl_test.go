@@ -2576,7 +2576,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 						"action.0.count.#":     "0",
 						"challenge_config.#":   "1",
 						"challenge_config.0.immunity_time_property.#":               "1",
-						"challenge_config.0.immunity_time_property.0.immunity_time": "360",
+						"challenge_config.0.immunity_time_property.0.immunity_time": "300",
 						names.AttrPriority: "1",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
@@ -3921,7 +3921,7 @@ resource "aws_wafv2_web_acl" "test" {
 
     challenge_config {
       immunity_time_property {
-        immunity_time = 360
+        immunity_time = 300
       }
     }
 
