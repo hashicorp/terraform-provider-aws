@@ -1,5 +1,9 @@
 ## 5.76.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_vpc_security_group_vpc_association` ([#40069](https://github.com/hashicorp/terraform-provider-aws/issues/40069))
+
 ENHANCEMENTS:
 
 * resource/aws_medialive_channel: Add missing h265 codec settings ([#40071](https://github.com/hashicorp/terraform-provider-aws/issues/40071))
