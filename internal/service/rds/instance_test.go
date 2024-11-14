@@ -1012,8 +1012,8 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 	var dbInstance, sourceDbInstance types.DBInstance
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	sourceResourceName := "aws_db_instance.source"
 	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_db_instance.source"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1507,8 +1507,9 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_crossRegion(t *testi
 
 	var dbInstance types.DBInstance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_db_instance.source"
+	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -1523,6 +1524,7 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_crossRegion(t *testi
 				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_crossRegion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
 				),
 			},
@@ -9254,7 +9256,7 @@ resource "aws_db_instance" "source" {
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
-  db_subnet_group_name = aws_db_subnet_group.source.name
+  db_subnet_group_name    = aws_db_subnet_group.source.name
   skip_final_snapshot     = true
 }
 
