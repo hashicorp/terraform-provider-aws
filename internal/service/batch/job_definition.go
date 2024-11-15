@@ -5,1041 +5,636 @@ package batch
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
-	"reflect"
+	"regexp"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
-	"github.com/hashicorp/go-cty/cty"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int32planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_batch_job_definition", name="Job Definition")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types;types.JobDefinition", importIgnore="deregister_on_new_revision")
-func resourceJobDefinition() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceJobDefinitionCreate,
-		ReadWithoutTimeout:   resourceJobDefinitionRead,
-		UpdateWithoutTimeout: resourceJobDefinitionUpdate,
-		DeleteWithoutTimeout: resourceJobDefinitionDelete,
+// @FrameworkResource("aws_batch_job_definition", name="Job Definition")
+func newResourceJobDefinition(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceJobDefinition{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	return r, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
+const (
+	ResNameJobDefinition = "Job Definition"
+)
+
+type resourceJobDefinition struct {
+	framework.ResourceWithConfigure
+}
+
+func (r *resourceJobDefinition) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_batch_job_definition"
+}
+
+func (r *resourceJobDefinition) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
+			"arn_prefix": schema.StringAttribute{
 				Computed: true,
-			},
-			"arn_prefix": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"container_properties": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"ecs_properties", "eks_properties", "node_properties"},
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalentContainerPropertiesJSON(old, new)
-					return equal
-				},
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validJobContainerProperties,
 			},
-			"deregister_on_new_revision": {
-				Type:     schema.TypeBool,
-				Default:  true,
+			"container_properties": schema.StringAttribute{
+				Optional:   true,
+				CustomType: jsontypes.NormalizedType{},
+				Validators: []validator.String{
+					containerPropertiesValidator{},
+					stringvalidator.ExactlyOneOf(
+						path.MatchRoot("container_properties"),
+						path.MatchRoot("ecs_properties"),
+						path.MatchRoot("eks_properties"),
+						path.MatchRoot("node_properties"),
+					),
+				},
+				PlanModifiers: []planmodifier.String{
+					ContainerPropertiesStringPlanModifier(),
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"deregister_on_new_revision": schema.BoolAttribute{
+				Default:  booldefault.StaticBool(false),
 				Optional: true,
+				Computed: true,
 			},
-			"ecs_properties": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"container_properties", "eks_properties", "node_properties"},
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+			"ecs_properties": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					ecsPropertiesValidator{},
 				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalentECSPropertiesJSON(old, new)
-					return equal
+				PlanModifiers: []planmodifier.String{
+					ECSStringPlanModifier(),
 				},
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validJobECSProperties,
 			},
-			"eks_properties": {
-				Type:          schema.TypeList,
-				MaxItems:      1,
-				Optional:      true,
-				ConflictsWith: []string{"ecs_properties", "container_properties", "node_properties"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"pod_properties": {
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"containers": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"args": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"command": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"env": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrName: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrValue: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-												"image": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"image_pull_policy": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(imagePullPolicy_Values(), false),
-												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrResources: {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"limits": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															"requests": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
-												},
-												"security_context": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"privileged": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"read_only_root_file_system": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"run_as_group": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"run_as_non_root": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"run_as_user": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"volume_mounts": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"mount_path": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrName: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"read_only": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"dns_policy": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(dnsPolicy_Values(), false),
-									},
-									"host_network": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  true,
-									},
-									"image_pull_secret": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-											},
-										},
-									},
-									"init_containers": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 10,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"args": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"command": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-												"env": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrName: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrValue: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-												"image": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"image_pull_policy": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(imagePullPolicy_Values(), false),
-												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												names.AttrResources: {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"limits": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-															"requests": {
-																Type:     schema.TypeMap,
-																Optional: true,
-																Elem:     &schema.Schema{Type: schema.TypeString},
-															},
-														},
-													},
-												},
-												"security_context": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"privileged": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"read_only_root_file_system": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"run_as_group": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"run_as_non_root": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"run_as_user": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"volume_mounts": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"mount_path": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															names.AttrName: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-															"read_only": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"metadata": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"labels": {
-													Type:     schema.TypeMap,
-													Optional: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-									"service_account_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"share_process_namespace": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"volumes": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"empty_dir": {
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"medium": {
-																Type:         schema.TypeString,
-																Optional:     true,
-																Default:      "",
-																ValidateFunc: validation.StringInSlice([]string{"", "Memory"}, true),
-															},
-															"size_limit": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-												"host_path": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															names.AttrPath: {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-												names.AttrName: {
-													Type:     schema.TypeString,
-													Optional: true,
-													Default:  "Default",
-												},
-												"secret": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"optional": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-															"secret_name": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
+			"eks_properties": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[eksResourcePropertiesModel](ctx),
+				Optional:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"pod_properties": fwtypes.NewListNestedObjectTypeOf[eksResourcePropertiesModel](ctx),
 					},
 				},
 			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validName,
-			},
-			"node_properties": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"container_properties", "ecs_properties", "eks_properties"},
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					equal, _ := equivalentNodePropertiesJSON(old, new)
-					return equal
-				},
-				DiffSuppressOnRefresh: true,
-				ValidateFunc:          validJobNodeProperties,
-			},
-			names.AttrParameters: {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"platform_capabilities": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.PlatformCapability](),
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexp.MustCompile(`^[0-9A-Za-z]{1}[0-9A-Za-z_-]{0,127}$`), `must be up to 128 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric`),
 				},
 			},
-			names.AttrPropagateTags: {
-				Type:     schema.TypeBool,
+			"node_properties": schema.StringAttribute{
 				Optional: true,
-				Default:  false,
+				Validators: []validator.String{
+					nodePropertiesValidator{},
+				},
+				PlanModifiers: []planmodifier.String{
+					NodePropertiesStringPlanModifier(),
+				},
 			},
-			"retry_strategy": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attempts": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(1, 10),
-						},
-						"evaluate_on_exit": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MinItems: 0,
-							MaxItems: 5,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									names.AttrAction: {
-										Type:             schema.TypeString,
-										Required:         true,
-										StateFunc:        sdkv2.ToLowerSchemaStateFunc,
-										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.RetryAction](),
-									},
-									"on_exit_code": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 512),
-											validation.StringMatch(regexache.MustCompile(`^[0-9]*\*?$`), "must contain only numbers, and can optionally end with an asterisk"),
-										),
-									},
-									"on_reason": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 512),
-											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
-										),
-									},
-									"on_status_reason": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 512),
-											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
-										),
-									},
-								},
-							},
-						},
+			names.AttrParameters: schema.MapAttribute{
+				Optional:    true,
+				ElementType: types.StringType,
+			},
+			"retry_strategy": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[retryStrategyModel](ctx),
+				Computed:   true,
+				Optional:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"attempts":         types.Int64Type,
+						"evaluate_on_exit": fwtypes.NewListNestedObjectTypeOf[evaluateOnExitModel](ctx),
 					},
 				},
 			},
-			"revision": {
-				Type:     schema.TypeInt,
+			"platform_capabilities": schema.SetAttribute{
+				Optional:    true,
+				ElementType: types.StringType,
+				Validators: []validator.Set{
+					setvalidator.ValueStringsAre(
+						enum.FrameworkValidate[awstypes.PlatformCapability](),
+					),
+				},
+			},
+			names.AttrPropagateTags: schema.BoolAttribute{
+				Optional: true,
 				Computed: true,
+				Default:  booldefault.StaticBool(false),
 			},
-			"scheduling_priority": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrTimeout: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"attempt_duration_seconds": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntAtLeast(60),
-						},
-					},
+
+			"revision": schema.Int32Attribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.Int32{
+					int32planmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrType: {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.JobDefinitionType](),
+			"scheduling_priority": schema.Int32Attribute{
+				Optional: true,
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+
+			names.AttrType: schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.JobDefinitionType](),
+				},
+			},
+			names.AttrTimeout: schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[jobTimeoutModel](ctx),
+				Optional:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"attempt_duration_seconds": types.Int64Type,
+					},
+				},
 			},
 		},
-
-		CustomizeDiff: customdiff.Sequence(
-			jobDefinitionCustomizeDiff,
-			verify.SetTagsDiff,
-		),
 	}
 }
 
-func jobDefinitionCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
-	if d.Id() != "" && needsJobDefUpdate(d) && d.Get(names.AttrARN).(string) != "" {
-		d.SetNewComputed(names.AttrARN)
-		d.SetNewComputed("revision")
-		d.SetNewComputed(names.AttrID)
+func (r *resourceJobDefinition) readJobDefinitionIntoState(ctx context.Context, jd *awstypes.JobDefinition, state *resourceJobDefinitionModel) (resp diag.Diagnostics) {
+	resp.Append(flex.Flatten(ctx, jd, state,
+		flex.WithIgnoredFieldNamesAppend("TagsAll"),
+		// Name and Arn are prefixed by JobDefinition
+		flex.WithFieldNamePrefix("JobDefinition"),
+	)...)
+	if resp.HasError() {
+		return
 	}
 
-	return nil
+	state.ID = types.StringPointerValue(jd.JobDefinitionArn)
+
+	if jd.Revision != nil {
+		arn, revision := aws.ToString(jd.JobDefinitionArn), aws.ToInt32(jd.Revision)
+		state.ArnPrefix = types.StringValue(strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
+	}
+
+	// Convert the complex arguments to string
+	// Future iterations will fully define the type
+	if jd.ContainerProperties != nil {
+		containerProps, err := flattenContainerProperties(jd.ContainerProperties)
+		if err != nil {
+			resp.AddError(
+				create.ProblemStandardMessage(names.Batch, create.ErrActionSetting, ResNameJobDefinition, state.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		state.ContainerProperties = jsontypes.NewNormalizedValue(string(containerProps))
+	}
+
+	if jd.EcsProperties != nil {
+		ecsProps, err := flattenECSProperties(jd.EcsProperties)
+		if err != nil {
+			resp.AddError(
+				create.ProblemStandardMessage(names.Batch, create.ErrActionSetting, ResNameJobDefinition, state.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		state.ECSProperties = types.StringValue(ecsProps)
+	}
+
+	if jd.NodeProperties != nil {
+		nodeProps, err := flattenNodeProperties(jd.NodeProperties)
+		if err != nil {
+			resp.AddError(
+				create.ProblemStandardMessage(names.Batch, create.ErrActionSetting, ResNameJobDefinition, state.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		state.NodeProperties = types.StringValue(string(nodeProps))
+	}
+
+	return resp
 }
 
-// needsJobDefUpdate determines if the Job Definition needs to be updated. This is the
-// cost of not forcing new when updates to one argument (eg, container_properties)
-// simultaneously impact a computed attribute (eg, arn). The real challenge here is that
-// we have to figure out if a change is **GOING** to cause a new revision to be created,
-// without the benefit of AWS just telling us. This is necessary because waiting until
-// after AWS tells us is too late, and practitioners will need to refresh or worse, get
-// an inconsistent plan. BUT, if we SetNewComputed **without** a change, we'll get a
-// testing error: "the non-refresh plan was not empty".
-func needsJobDefUpdate(d *schema.ResourceDiff) bool {
-	if d.HasChange("container_properties") {
-		o, n := d.GetChange("container_properties")
+func (r *resourceJobDefinition) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().BatchClient(ctx)
 
-		equivalent, err := equivalentContainerPropertiesJSON(o.(string), n.(string))
-		if err != nil {
-			return false
-		}
-
-		if !equivalent {
-			return true
-		}
+	var plan resourceJobDefinitionModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if d.HasChange("ecs_properties") {
-		o, n := d.GetChange("ecs_properties")
-
-		equivalent, err := equivalentECSPropertiesJSON(o.(string), n.(string))
-		if err != nil {
-			return false
-		}
-
-		if !equivalent {
-			return true
-		}
-	}
-
-	if d.HasChange("node_properties") {
-		o, n := d.GetChange("node_properties")
-
-		equivalent, err := equivalentNodePropertiesJSON(o.(string), n.(string))
-		if err != nil {
-			return false
-		}
-
-		if !equivalent {
-			return true
-		}
-	}
-
-	if d.HasChange("eks_properties") {
-		o, n := d.GetChange("eks_properties")
-		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
-			return false
-		}
-
-		if awstypes.JobDefinitionType(d.Get(names.AttrType).(string)) != awstypes.JobDefinitionTypeContainer {
-			return false
-		}
-
-		var oeks, neks *awstypes.EksPodProperties
-		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
-			oProps := o.([]interface{})[0].(map[string]interface{})
-			if opodProps, ok := oProps["pod_properties"].([]interface{}); ok && len(opodProps) > 0 {
-				oeks = expandEKSPodProperties(opodProps[0].(map[string]interface{}))
-			}
-		}
-
-		if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
-			nProps := n.([]interface{})[0].(map[string]interface{})
-			if npodProps, ok := nProps["pod_properties"].([]interface{}); ok && len(npodProps) > 0 {
-				neks = expandEKSPodProperties(npodProps[0].(map[string]interface{}))
-			}
-		}
-
-		return !reflect.DeepEqual(oeks, neks)
-	}
-
-	if d.HasChange("retry_strategy") {
-		o, n := d.GetChange("retry_strategy")
-		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
-			return false
-		}
-
-		var ors, nrs *awstypes.RetryStrategy
-		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
-			oProps := o.([]interface{})[0].(map[string]interface{})
-			ors = expandRetryStrategy(oProps)
-		}
-
-		if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
-			nProps := n.([]interface{})[0].(map[string]interface{})
-			nrs = expandRetryStrategy(nProps)
-		}
-
-		return !reflect.DeepEqual(ors, nrs)
-	}
-
-	if d.HasChange(names.AttrTimeout) {
-		o, n := d.GetChange(names.AttrTimeout)
-		if len(o.([]interface{})) == 0 && len(n.([]interface{})) == 0 {
-			return false
-		}
-
-		var ors, nrs *awstypes.JobTimeout
-		if len(o.([]interface{})) > 0 && o.([]interface{})[0] != nil {
-			oProps := o.([]interface{})[0].(map[string]interface{})
-			ors = expandJobTimeout(oProps)
-		}
-
-		if len(n.([]interface{})) > 0 && n.([]interface{})[0] != nil {
-			nProps := n.([]interface{})[0].(map[string]interface{})
-			nrs = expandJobTimeout(nProps)
-		}
-
-		return !reflect.DeepEqual(ors, nrs)
-	}
-
-	if d.HasChanges(
-		names.AttrPropagateTags,
-		names.AttrParameters,
-		"platform_capabilities",
-		"scheduling_priority",
-		names.AttrType,
-	) {
-		return true
-	}
-
-	return false
-}
-
-func resourceJobDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchClient(ctx)
-
-	name := d.Get(names.AttrName).(string)
-	jobDefinitionType := awstypes.JobDefinitionType(d.Get(names.AttrType).(string))
 	input := &batch.RegisterJobDefinitionInput{
-		JobDefinitionName: aws.String(name),
-		PropagateTags:     aws.Bool(d.Get(names.AttrPropagateTags).(bool)),
+		JobDefinitionName: plan.Name.ValueStringPointer(),
+		Type:              awstypes.JobDefinitionType(plan.Type.ValueString()),
 		Tags:              getTagsIn(ctx),
-		Type:              jobDefinitionType,
 	}
 
-	switch jobDefinitionType {
-	case awstypes.JobDefinitionTypeContainer:
-		if v, ok := d.GetOk("node_properties"); ok && v != nil {
-			return sdkdiag.AppendErrorf(diags, "No `node_properties` can be specified when `type` is %q", jobDefinitionType)
-		}
-
-		if v, ok := d.GetOk("container_properties"); ok {
-			props, err := expandContainerProperties(v.(string))
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-
-			diags = append(diags, removeEmptyEnvironmentVariables(props.Environment, cty.GetAttrPath("container_properties"))...)
-			input.ContainerProperties = props
-		}
-
-		if v, ok := d.GetOk("ecs_properties"); ok {
-			props, err := expandECSProperties(v.(string))
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-
-			for _, taskProps := range props.TaskProperties {
-				for _, container := range taskProps.Containers {
-					diags = append(diags, removeEmptyEnvironmentVariables(container.Environment, cty.GetAttrPath("ecs_properties"))...)
-				}
-			}
-			input.EcsProperties = props
-		}
-
-		if v, ok := d.GetOk("eks_properties"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			eksProps := v.([]interface{})[0].(map[string]interface{})
-			if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
-				props := expandEKSPodProperties(podProps[0].(map[string]interface{}))
-				input.EksProperties = &awstypes.EksProperties{
-					PodProperties: props,
-				}
-			}
-		}
-
-	case awstypes.JobDefinitionTypeMultinode:
-		if v, ok := d.GetOk("container_properties"); ok && v != nil {
-			return sdkdiag.AppendErrorf(diags, "No `container_properties` can be specified when `type` is %q", jobDefinitionType)
-		}
-		if v, ok := d.GetOk("ecs_properties"); ok && v != nil {
-			return sdkdiag.AppendErrorf(diags, "No `ecs_properties` can be specified when `type` is %q", jobDefinitionType)
-		}
-		if v, ok := d.GetOk("eks_properties"); ok && v != nil {
-			return sdkdiag.AppendErrorf(diags, "No `eks_properties` can be specified when `type` is %q", jobDefinitionType)
-		}
-
-		if v, ok := d.GetOk("node_properties"); ok {
-			props, err := expandJobNodeProperties(v.(string))
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-
-			for _, node := range props.NodeRangeProperties {
-				diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
-			}
-			input.NodeProperties = props
-		}
+	// flex.WithIgnoredFieldNamesAppend("ArnPrefix"),
+	// flex.WithIgnoredFieldNamesAppend("TagsAll"),
+	// flex.WithIgnoredFieldNamesAppend("Type"),
+	// // Name and Arn are prefixed by JobDefinition
+	// flex.WithFieldNamePrefix("JobDefinition"),
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, input,
+		flex.WithIgnoredFieldNamesAppend("Arn"),
+		flex.WithIgnoredFieldNamesAppend("Name"), // JobDefinitionName is a separate field
+		flex.WithIgnoredFieldNamesAppend("Revision"),
+	)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk(names.AttrParameters); ok {
-		input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	// Marshall from string to batch type
+	// Future iterations will fully define the type
+	if !plan.ContainerProperties.IsNull() {
+		var containerProps awstypes.ContainerProperties
+		err := json.Unmarshal([]byte(plan.ContainerProperties.ValueString()), &containerProps)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Batch, create.ErrActionCreating, ResNameJobDefinition, plan.Name.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		input.ContainerProperties = &containerProps
 	}
 
-	if v, ok := d.GetOk("platform_capabilities"); ok && v.(*schema.Set).Len() > 0 {
-		input.PlatformCapabilities = flex.ExpandStringyValueSet[awstypes.PlatformCapability](v.(*schema.Set))
+	if !plan.ECSProperties.IsNull() {
+		var ecsProps awstypes.EcsProperties
+		err := json.Unmarshal([]byte(plan.ECSProperties.ValueString()), &ecsProps)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Batch, create.ErrActionCreating, ResNameJobDefinition, plan.Name.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		input.EcsProperties = &ecsProps
 	}
 
-	if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
+	if !plan.NodeProperties.IsNull() {
+		var nodeProps awstypes.NodeProperties
+		err := json.Unmarshal([]byte(plan.NodeProperties.ValueString()), &nodeProps)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Batch, create.ErrActionCreating, ResNameJobDefinition, plan.Name.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		input.NodeProperties = &nodeProps
 	}
 
-	if v, ok := d.GetOk("scheduling_priority"); ok {
-		input.SchedulingPriority = aws.Int32(int32(v.(int)))
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk(names.AttrTimeout); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	output, err := conn.RegisterJobDefinition(ctx, input)
-
+	out, err := conn.RegisterJobDefinition(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Batch Job Definition (%s): %s", name, err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Batch, create.ErrActionCreating, ResNameJobDefinition, plan.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil || out.JobDefinitionArn == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Batch, create.ErrActionCreating, ResNameJobDefinition, plan.Name.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
 	}
 
-	d.SetId(aws.ToString(output.JobDefinitionArn))
+	jd, err := findJobDefinitionByARN(ctx, conn, *out.JobDefinitionArn)
+	if err != nil || jd == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Batch, create.ErrActionSetting, ResNameJobDefinition, plan.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
-	return append(diags, resourceJobDefinitionRead(ctx, d, meta)...)
+	resp.Diagnostics.Append(r.readJobDefinitionIntoState(ctx, jd, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchClient(ctx)
+func (r *resourceJobDefinition) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().BatchClient(ctx)
 
-	jobDefinition, err := findJobDefinitionByARN(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Batch Job Definition (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	var state resourceJobDefinitionModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Job Definition (%s): %s", d.Id(), err)
+	out, err := findJobDefinitionByARN(ctx, conn, state.ID.ValueString())
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil || out == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Batch, create.ErrActionReading, ResNameJobDefinition, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	resp.Diagnostics.Append(r.readJobDefinitionIntoState(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	arn, revision := aws.ToString(jobDefinition.JobDefinitionArn), aws.ToInt32(jobDefinition.Revision)
-	d.Set(names.AttrARN, arn)
-	d.Set("arn_prefix", strings.TrimSuffix(arn, fmt.Sprintf(":%d", revision)))
-	containerProperties, err := flattenContainerProperties(jobDefinition.ContainerProperties)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
-	d.Set("container_properties", containerProperties)
-	ecsProperties, err := flattenECSProperties(jobDefinition.EcsProperties)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	d.Set("ecs_properties", ecsProperties)
-	if err := d.Set("eks_properties", flattenEKSProperties(jobDefinition.EksProperties)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting eks_properties: %s", err)
-	}
-	d.Set(names.AttrName, jobDefinition.JobDefinitionName)
-	nodeProperties, err := flattenNodeProperties(jobDefinition.NodeProperties)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-	if err := d.Set("node_properties", nodeProperties); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting node_properties: %s", err)
-	}
-	d.Set(names.AttrParameters, jobDefinition.Parameters)
-	d.Set("platform_capabilities", jobDefinition.PlatformCapabilities)
-	d.Set(names.AttrPropagateTags, jobDefinition.PropagateTags)
-	if jobDefinition.RetryStrategy != nil {
-		if err := d.Set("retry_strategy", []interface{}{flattenRetryStrategy(jobDefinition.RetryStrategy)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting retry_strategy: %s", err)
-		}
-	} else {
-		d.Set("retry_strategy", nil)
-	}
-	d.Set("revision", revision)
-	d.Set("scheduling_priority", jobDefinition.SchedulingPriority)
-	if jobDefinition.Timeout != nil {
-		if err := d.Set(names.AttrTimeout, []interface{}{flattenJobTimeout(jobDefinition.Timeout)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting timeout: %s", err)
-		}
-	} else {
-		d.Set(names.AttrTimeout, nil)
-	}
-	d.Set(names.AttrType, jobDefinition.Type)
-
-	setTagsOut(ctx, jobDefinition.Tags)
-
-	return diags
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchClient(ctx)
+func (r *resourceJobDefinition) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().BatchClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		name := d.Get(names.AttrName).(string)
-		jobDefinitionType := awstypes.JobDefinitionType(d.Get(names.AttrType).(string))
-		input := &batch.RegisterJobDefinitionInput{
-			JobDefinitionName: aws.String(name),
-			Tags:              getTagsIn(ctx),
-			Type:              jobDefinitionType,
+	// TIP: -- 2. Fetch the plan
+	var plan, state resourceJobDefinitionModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	input := &batch.RegisterJobDefinitionInput{
+		JobDefinitionName: state.Name.ValueStringPointer(),
+		Tags:              getTagsIn(ctx),
+		Type:              awstypes.JobDefinitionType(plan.Type.ValueString()),
+	}
+
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// Marshall from string to batch type
+	// Future iterations will fully define the type
+	if !plan.ContainerProperties.IsNull() {
+		var containerProps awstypes.ContainerProperties
+		err := json.Unmarshal([]byte(plan.ContainerProperties.ValueString()), &containerProps)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Batch, create.ErrActionCreating, ResNameJobDefinition, plan.Name.String(), err),
+				err.Error(),
+			)
+			return
 		}
+		input.ContainerProperties = &containerProps
+	}
 
-		switch jobDefinitionType {
-		case awstypes.JobDefinitionTypeContainer:
-			if v, ok := d.GetOk("container_properties"); ok {
-				props, err := expandContainerProperties(v.(string))
-				if err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
-				}
-
-				diags = append(diags, removeEmptyEnvironmentVariables(props.Environment, cty.GetAttrPath("container_properties"))...)
-				input.ContainerProperties = props
-			}
-
-			if v, ok := d.GetOk("ecs_properties"); ok {
-				props, err := expandECSProperties(v.(string))
-				if err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
-				}
-
-				for _, taskProps := range props.TaskProperties {
-					for _, container := range taskProps.Containers {
-						diags = append(diags, removeEmptyEnvironmentVariables(container.Environment, cty.GetAttrPath("ecs_properties"))...)
-					}
-				}
-				input.EcsProperties = props
-			}
-
-			if v, ok := d.GetOk("eks_properties"); ok {
-				eksProps := v.([]interface{})[0].(map[string]interface{})
-				if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
-					props := expandEKSPodProperties(podProps[0].(map[string]interface{}))
-					input.EksProperties = &awstypes.EksProperties{
-						PodProperties: props,
-					}
-				}
-			}
-
-		case awstypes.JobDefinitionTypeMultinode:
-			if v, ok := d.GetOk("node_properties"); ok {
-				props, err := expandJobNodeProperties(v.(string))
-				if err != nil {
-					return sdkdiag.AppendFromErr(diags, err)
-				}
-
-				for _, node := range props.NodeRangeProperties {
-					diags = append(diags, removeEmptyEnvironmentVariables(node.Container.Environment, cty.GetAttrPath("node_properties"))...)
-				}
-				input.NodeProperties = props
-			}
+	if !plan.ECSProperties.IsNull() {
+		var ecsProps awstypes.EcsProperties
+		err := json.Unmarshal([]byte(plan.ECSProperties.ValueString()), &ecsProps)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Batch, create.ErrActionCreating, ResNameJobDefinition, plan.Name.String(), err),
+				err.Error(),
+			)
+			return
 		}
+		input.EcsProperties = &ecsProps
+	}
 
-		if v, ok := d.GetOk(names.AttrParameters); ok {
-			input.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
+	if !plan.NodeProperties.IsNull() {
+		var nodeProps awstypes.NodeProperties
+		err := json.Unmarshal([]byte(plan.NodeProperties.ValueString()), &nodeProps)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Batch, create.ErrActionCreating, ResNameJobDefinition, plan.Name.String(), err),
+				err.Error(),
+			)
+			return
 		}
+		input.NodeProperties = &nodeProps
+	}
 
-		if v, ok := d.GetOk("platform_capabilities"); ok && v.(*schema.Set).Len() > 0 {
-			input.PlatformCapabilities = flex.ExpandStringyValueSet[awstypes.PlatformCapability](v.(*schema.Set))
-		}
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-		if v, ok := d.GetOk(names.AttrPropagateTags); ok {
-			input.PropagateTags = aws.Bool(v.(bool))
-		}
+	out, err := conn.RegisterJobDefinition(ctx, input)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Batch, create.ErrActionCreating, ResNameJobDefinition, plan.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil || out.JobDefinitionArn == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Batch, create.ErrActionCreating, ResNameJobDefinition, plan.Name.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
+	}
 
-		if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
-		}
+	state.ID = types.StringPointerValue(out.JobDefinitionArn)
+	state.Revision = types.Int32PointerValue(out.Revision)
 
-		if v, ok := d.GetOk("scheduling_priority"); ok {
-			input.SchedulingPriority = aws.Int32(int32(v.(int)))
-		}
-
-		if v, ok := d.GetOk(names.AttrTimeout); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
-		}
-
-		jd, err := conn.RegisterJobDefinition(ctx, input)
+	if v := plan.DeregisterOnNewRevision.ValueBool(); v == true {
+		tflog.Debug(ctx, fmt.Sprintf("[DEBUG] Deleting previous Batch Job Definition: %s", *out.JobDefinitionArn))
+		_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
+			JobDefinition: out.JobDefinitionArn,
+		})
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
-		}
-
-		// arn contains revision which is used in the Read call
-		currentARN := d.Get(names.AttrARN).(string)
-		newARN := aws.ToString(jd.JobDefinitionArn)
-		d.SetId(newARN)
-		d.Set(names.AttrARN, newARN)
-		d.Set("revision", jd.Revision)
-
-		if v := d.Get("deregister_on_new_revision"); v == true {
-			log.Printf("[DEBUG] Deleting previous Batch Job Definition: %s", currentARN)
-			_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
-				JobDefinition: aws.String(currentARN),
-			})
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", currentARN, err)
-			}
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Batch, create.ErrActionDeleting, ResNameJobDefinition, aws.ToString(out.JobDefinitionArn), nil),
+				err.Error(),
+			)
+			return
 		}
 	}
 
-	return append(diags, resourceJobDefinitionRead(ctx, d, meta)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchClient(ctx)
+func (r *resourceJobDefinition) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().BatchClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
+	var state resourceJobDefinitionModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	input := &batch.DescribeJobDefinitionsInput{
-		JobDefinitionName: aws.String(name),
+		JobDefinitionName: state.Name.ValueStringPointer(),
 		Status:            aws.String(jobDefinitionStatusActive),
 	}
 
 	jds, err := findJobDefinitions(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Batch Job Definitions (%s): %s", name, err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Batch, create.ErrActionReading, ResNameJobDefinition, state.ID.String(), err),
+			err.Error(),
+		)
 	}
 
 	for i := range jds {
 		arn := aws.ToString(jds[i].JobDefinitionArn)
 
-		log.Printf("[DEBUG] Deregistering Batch Job Definition: %s", arn)
 		_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
 			JobDefinition: aws.String(arn),
 		})
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "deregistering Batch Job Definition (%s): %s", arn, err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Batch, create.ErrActionDeleting, ResNameJobDefinition, state.ID.String(), err),
+				err.Error(),
+			)
+			return
 		}
 	}
-
-	return diags
 }
 
+func (r *resourceJobDefinition) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *resourceJobDefinition) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
+type resourceJobDefinitionModel struct {
+	ARN                     types.String                                                `tfsdk:"arn"`
+	ArnPrefix               types.String                                                `tfsdk:"arn_prefix" autoflex:"-"`
+	ContainerProperties     jsontypes.Normalized                                        `tfsdk:"container_properties" autoflex:"-"`
+	DeregisterOnNewRevision types.Bool                                                  `tfsdk:"deregister_on_new_revision" autoflex:"-"`
+	ECSProperties           types.String                                                `tfsdk:"ecs_properties" autoflex:"-"`
+	EKSProperties           fwtypes.ListNestedObjectValueOf[eksResourcePropertiesModel] `tfsdk:"eks_properties"`
+	ID                      types.String                                                `tfsdk:"id" autoflex:"-"`
+	Name                    types.String                                                `tfsdk:"name"`
+	NodeProperties          types.String                                                `tfsdk:"node_properties" autoflex:"-"`
+	Parameters              types.Map                                                   `tfsdk:"parameters" autoflex:",legacy"`
+	PlatformCapabilities    types.Set                                                   `tfsdk:"platform_capabilities"`
+	PropagateTags           types.Bool                                                  `tfsdk:"propagate_tags" autoflex:",legacy"`
+	Revision                types.Int32                                                 `tfsdk:"revision"`
+	RetryStrategy           fwtypes.ListNestedObjectValueOf[retryStrategyModel]         `tfsdk:"retry_strategy"`
+	SchedulingPriority      types.Int32                                                 `tfsdk:"scheduling_priority"`
+	Tags                    tftags.Map                                                  `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                  `tfsdk:"tags_all"`
+	Timeout                 fwtypes.ListNestedObjectValueOf[jobTimeoutModel]            `tfsdk:"timeout"`
+	Type                    types.String                                                `tfsdk:"type"`
+}
+
+// The following custom validators are designed to ensure objects can marshal. Once converted away from string these can be removed
+// Custom validator for ECS Properties JSON
+type ecsPropertiesValidator struct{}
+
+func (v ecsPropertiesValidator) Description(ctx context.Context) string {
+	return "must be a valid ECS properties JSON document"
+}
+
+func (v ecsPropertiesValidator) MarkdownDescription(ctx context.Context) string {
+	return "must be a valid ECS properties JSON document"
+}
+
+func (v ecsPropertiesValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	if _, err := expandECSProperties(req.ConfigValue.ValueString()); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid ECS Properties",
+			fmt.Sprintf("Unable to parse ECS properties JSON: %s", err),
+		)
+	}
+}
+
+type containerPropertiesValidator struct{}
+
+func (v containerPropertiesValidator) Description(ctx context.Context) string {
+	return "must be a valid container properties JSON document"
+}
+
+func (v containerPropertiesValidator) MarkdownDescription(ctx context.Context) string {
+	return "must be a valid container properties JSON document"
+}
+
+func (v containerPropertiesValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	if _, err := expandContainerProperties(req.ConfigValue.ValueString()); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Container Properties",
+			fmt.Sprintf("Unable to parse container properties JSON: %s", err),
+		)
+	}
+}
+
+type nodePropertiesValidator struct{}
+
+func (v nodePropertiesValidator) Description(ctx context.Context) string {
+	return "must be a valid node properties JSON document"
+}
+func (v nodePropertiesValidator) MarkdownDescription(ctx context.Context) string {
+	return "must be a valid node properties JSON document"
+}
+func (v nodePropertiesValidator) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	if req.ConfigValue.IsNull() || req.ConfigValue.IsUnknown() {
+		return
+	}
+
+	if _, err := expandJobNodeProperties(req.ConfigValue.ValueString()); err != nil {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid Node Properties",
+			fmt.Sprintf("Unable to parse node properties JSON: %s", err),
+		)
+	}
+}
+
+// Helper Functions
 func findJobDefinitionByARN(ctx context.Context, conn *batch.Client, arn string) (*awstypes.JobDefinition, error) {
 	const (
 		jobDefinitionStatusInactive = "INACTIVE"
@@ -1091,656 +686,19 @@ func findJobDefinitions(ctx context.Context, conn *batch.Client, input *batch.De
 	return output, nil
 }
 
-func validJobContainerProperties(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	_, err := expandContainerProperties(value)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job container_properties is invalid: %s", err))
-	}
-	return
+type eksResourcePropertiesModel struct {
+	PodProperties fwtypes.ListNestedObjectValueOf[eksResourcePodPropertiesModel] `tfsdk:"pod_properties"`
 }
 
-func validJobECSProperties(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	_, err := expandECSProperties(value)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job ecs_properties is invalid: %s", err))
-	}
-	return
-}
-
-func validJobNodeProperties(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	_, err := expandJobNodeProperties(value)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("AWS Batch Job node_properties is invalid: %s", err))
-	}
-	return
-}
-
-func expandRetryStrategy(tfMap map[string]interface{}) *awstypes.RetryStrategy {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &awstypes.RetryStrategy{}
-
-	if v, ok := tfMap["attempts"].(int); ok && v != 0 {
-		apiObject.Attempts = aws.Int32(int32(v))
-	}
-
-	if v, ok := tfMap["evaluate_on_exit"].([]interface{}); ok && len(v) > 0 {
-		apiObject.EvaluateOnExit = expandEvaluateOnExits(v)
-	}
-
-	return apiObject
-}
-
-func expandEvaluateOnExit(tfMap map[string]interface{}) *awstypes.EvaluateOnExit {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &awstypes.EvaluateOnExit{}
-
-	if v, ok := tfMap[names.AttrAction].(string); ok && v != "" {
-		apiObject.Action = awstypes.RetryAction(strings.ToLower(v))
-	}
-
-	if v, ok := tfMap["on_exit_code"].(string); ok && v != "" {
-		apiObject.OnExitCode = aws.String(v)
-	}
-
-	if v, ok := tfMap["on_reason"].(string); ok && v != "" {
-		apiObject.OnReason = aws.String(v)
-	}
-
-	if v, ok := tfMap["on_status_reason"].(string); ok && v != "" {
-		apiObject.OnStatusReason = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func expandEvaluateOnExits(tfList []interface{}) []awstypes.EvaluateOnExit {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []awstypes.EvaluateOnExit
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		apiObject := expandEvaluateOnExit(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, *apiObject)
-	}
-
-	return apiObjects
-}
-
-func flattenRetryStrategy(apiObject *awstypes.RetryStrategy) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Attempts; v != nil {
-		tfMap["attempts"] = aws.ToInt32(v)
-	}
-
-	if v := apiObject.EvaluateOnExit; v != nil {
-		tfMap["evaluate_on_exit"] = flattenEvaluateOnExits(v)
-	}
-
-	return tfMap
-}
-
-func flattenEvaluateOnExit(apiObject *awstypes.EvaluateOnExit) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{
-		names.AttrAction: apiObject.Action,
-	}
-
-	if v := apiObject.OnExitCode; v != nil {
-		tfMap["on_exit_code"] = aws.ToString(v)
-	}
-
-	if v := apiObject.OnReason; v != nil {
-		tfMap["on_reason"] = aws.ToString(v)
-	}
-
-	if v := apiObject.OnStatusReason; v != nil {
-		tfMap["on_status_reason"] = aws.ToString(v)
-	}
-
-	return tfMap
-}
-
-func flattenEvaluateOnExits(apiObjects []awstypes.EvaluateOnExit) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenEvaluateOnExit(&apiObject))
-	}
-
-	return tfList
-}
-
-func expandJobTimeout(tfMap map[string]interface{}) *awstypes.JobTimeout {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &awstypes.JobTimeout{}
-
-	if v, ok := tfMap["attempt_duration_seconds"].(int); ok && v != 0 {
-		apiObject.AttemptDurationSeconds = aws.Int32(int32(v))
-	}
-
-	return apiObject
-}
-
-func flattenJobTimeout(apiObject *awstypes.JobTimeout) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.AttemptDurationSeconds; v != nil {
-		tfMap["attempt_duration_seconds"] = aws.ToInt32(v)
-	}
-
-	return tfMap
-}
-
-func removeEmptyEnvironmentVariables(environment []awstypes.KeyValuePair, attributePath cty.Path) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	for _, env := range environment {
-		if aws.ToString(env.Value) == "" {
-			diags = append(diags, errs.NewAttributeWarningDiagnostic(
-				attributePath,
-				"Ignoring environment variable",
-				fmt.Sprintf("The environment variable %q has an empty value, which is ignored by the Batch service", aws.ToString(env.Name))),
-			)
-		}
-	}
-
-	return diags
-}
-
-func expandEKSPodProperties(tfMap map[string]interface{}) *awstypes.EksPodProperties {
-	apiObject := &awstypes.EksPodProperties{}
-
-	if v, ok := tfMap["containers"]; ok {
-		apiObject.Containers = expandContainers(v.([]interface{}))
-	}
-
-	if v, ok := tfMap["dns_policy"].(string); ok && v != "" {
-		apiObject.DnsPolicy = aws.String(v)
-	}
-
-	if v, ok := tfMap["host_network"]; ok {
-		apiObject.HostNetwork = aws.Bool(v.(bool))
-	}
-
-	if v, ok := tfMap["image_pull_secret"]; ok {
-		apiObject.ImagePullSecrets = expandImagePullSecrets(v.([]interface{}))
-	}
-
-	if v, ok := tfMap["init_containers"]; ok {
-		apiObject.InitContainers = expandContainers(v.([]interface{}))
-	}
-
-	if v, ok := tfMap["metadata"].([]interface{}); ok && len(v) > 0 {
-		if v, ok := v[0].(map[string]interface{})["labels"]; ok {
-			apiObject.Metadata = &awstypes.EksMetadata{
-				Labels: flex.ExpandStringValueMap(v.(map[string]interface{})),
-			}
-		}
-	}
-
-	if v, ok := tfMap["service_account_name"].(string); ok && v != "" {
-		apiObject.ServiceAccountName = aws.String(v)
-	}
-
-	if v, ok := tfMap["share_process_namespace"]; ok {
-		apiObject.ShareProcessNamespace = aws.Bool(v.(bool))
-	}
-
-	if v, ok := tfMap["volumes"]; ok {
-		apiObject.Volumes = expandVolumes(v.([]interface{}))
-	}
-
-	return apiObject
-}
-
-func expandContainers(tfList []interface{}) []awstypes.EksContainer {
-	var apiObjects []awstypes.EksContainer
-
-	for _, tfMapRaw := range tfList {
-		tfMap := tfMapRaw.(map[string]interface{})
-		apiObject := awstypes.EksContainer{}
-
-		if v, ok := tfMap["args"]; ok {
-			apiObject.Args = flex.ExpandStringValueList(v.([]interface{}))
-		}
-
-		if v, ok := tfMap["command"]; ok {
-			apiObject.Command = flex.ExpandStringValueList(v.([]interface{}))
-		}
-
-		if v, ok := tfMap["env"].(*schema.Set); ok && v.Len() > 0 {
-			apiObjects := []awstypes.EksContainerEnvironmentVariable{}
-
-			for _, tfMapRaw := range v.List() {
-				apiObject := awstypes.EksContainerEnvironmentVariable{}
-				tfMap := tfMapRaw.(map[string]interface{})
-
-				if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
-					apiObject.Name = aws.String(v)
-				}
-
-				if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
-					apiObject.Value = aws.String(v)
-				}
-
-				apiObjects = append(apiObjects, apiObject)
-			}
-
-			apiObject.Env = apiObjects
-		}
-
-		if v, ok := tfMap["image"]; ok {
-			apiObject.Image = aws.String(v.(string))
-		}
-
-		if v, ok := tfMap["image_pull_policy"].(string); ok && v != "" {
-			apiObject.ImagePullPolicy = aws.String(v)
-		}
-
-		if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
-			apiObject.Name = aws.String(v)
-		}
-
-		if v, ok := tfMap[names.AttrResources].([]interface{}); ok && len(v) > 0 {
-			resources := &awstypes.EksContainerResourceRequirements{}
-			tfMap := v[0].(map[string]interface{})
-
-			if v, ok := tfMap["limits"]; ok {
-				resources.Limits = flex.ExpandStringValueMap(v.(map[string]interface{}))
-			}
-
-			if v, ok := tfMap["requests"]; ok {
-				resources.Requests = flex.ExpandStringValueMap(v.(map[string]interface{}))
-			}
-
-			apiObject.Resources = resources
-		}
-
-		if v, ok := tfMap["security_context"].([]interface{}); ok && len(v) > 0 {
-			securityContext := &awstypes.EksContainerSecurityContext{}
-			tfMap := v[0].(map[string]interface{})
-
-			if v, ok := tfMap["privileged"]; ok {
-				securityContext.Privileged = aws.Bool(v.(bool))
-			}
-
-			if v, ok := tfMap["read_only_root_file_system"]; ok {
-				securityContext.ReadOnlyRootFilesystem = aws.Bool(v.(bool))
-			}
-
-			if v, ok := tfMap["run_as_group"]; ok {
-				securityContext.RunAsGroup = aws.Int64(int64(v.(int)))
-			}
-
-			if v, ok := tfMap["run_as_non_root"]; ok {
-				securityContext.RunAsNonRoot = aws.Bool(v.(bool))
-			}
-
-			if v, ok := tfMap["run_as_user"]; ok {
-				securityContext.RunAsUser = aws.Int64(int64(v.(int)))
-			}
-
-			apiObject.SecurityContext = securityContext
-		}
-
-		if v, ok := tfMap["volume_mounts"]; ok {
-			apiObject.VolumeMounts = expandVolumeMounts(v.([]interface{}))
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func expandImagePullSecrets(tfList []interface{}) []awstypes.ImagePullSecret {
-	var apiObjects []awstypes.ImagePullSecret
-
-	for _, tfMapRaw := range tfList {
-		apiObject := awstypes.ImagePullSecret{}
-		tfMap := tfMapRaw.(map[string]interface{})
-
-		if v, ok := tfMap[names.AttrName].(string); ok {
-			apiObject.Name = aws.String(v)
-			apiObjects = append(apiObjects, apiObject) // move out of "if" when more fields are added
-		}
-	}
-
-	return apiObjects
-}
-
-func expandVolumes(tfList []interface{}) []awstypes.EksVolume {
-	var apiObjects []awstypes.EksVolume
-
-	for _, tfMapRaw := range tfList {
-		apiObject := awstypes.EksVolume{}
-		tfMap := tfMapRaw.(map[string]interface{})
-
-		if v, ok := tfMap["empty_dir"].([]interface{}); ok && len(v) > 0 {
-			if v, ok := v[0].(map[string]interface{}); ok {
-				apiObject.EmptyDir = &awstypes.EksEmptyDir{
-					Medium:    aws.String(v["medium"].(string)),
-					SizeLimit: aws.String(v["size_limit"].(string)),
-				}
-			}
-		}
-
-		if v, ok := tfMap[names.AttrName].(string); ok {
-			apiObject.Name = aws.String(v)
-		}
-
-		if v, ok := tfMap["host_path"].([]interface{}); ok && len(v) > 0 {
-			apiObject.HostPath = &awstypes.EksHostPath{}
-
-			if v, ok := v[0].(map[string]interface{}); ok {
-				if v, ok := v[names.AttrPath]; ok {
-					apiObject.HostPath.Path = aws.String(v.(string))
-				}
-			}
-		}
-
-		if v, ok := tfMap["secret"].([]interface{}); ok && len(v) > 0 {
-			apiObject.Secret = &awstypes.EksSecret{}
-
-			if v := v[0].(map[string]interface{}); ok {
-				if v, ok := v["optional"]; ok {
-					apiObject.Secret.Optional = aws.Bool(v.(bool))
-				}
-
-				if v, ok := v["secret_name"]; ok {
-					apiObject.Secret.SecretName = aws.String(v.(string))
-				}
-			}
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func expandVolumeMounts(tfList []interface{}) []awstypes.EksContainerVolumeMount {
-	var apiObjects []awstypes.EksContainerVolumeMount
-
-	for _, tfMapRaw := range tfList {
-		apiObject := awstypes.EksContainerVolumeMount{}
-		tfMap := tfMapRaw.(map[string]interface{})
-
-		if v, ok := tfMap["mount_path"]; ok {
-			apiObject.MountPath = aws.String(v.(string))
-		}
-
-		if v, ok := tfMap[names.AttrName]; ok {
-			apiObject.Name = aws.String(v.(string))
-		}
-
-		if v, ok := tfMap["read_only"]; ok {
-			apiObject.ReadOnly = aws.Bool(v.(bool))
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func flattenEKSProperties(apiObject *awstypes.EksProperties) []interface{} {
-	var tfList []interface{}
-
-	if apiObject == nil {
-		return tfList
-	}
-
-	if v := apiObject.PodProperties; v != nil {
-		tfList = append(tfList, map[string]interface{}{
-			"pod_properties": flattenEKSPodProperties(apiObject.PodProperties),
-		})
-	}
-
-	return tfList
-}
-
-func flattenEKSPodProperties(apiObject *awstypes.EksPodProperties) []interface{} {
-	var tfList []interface{}
-	tfMap := make(map[string]interface{}, 0)
-
-	if v := apiObject.Containers; v != nil {
-		tfMap["containers"] = flattenEKSContainers(v)
-	}
-
-	if v := apiObject.DnsPolicy; v != nil {
-		tfMap["dns_policy"] = aws.ToString(v)
-	}
-
-	if v := apiObject.HostNetwork; v != nil {
-		tfMap["host_network"] = aws.ToBool(v)
-	}
-
-	if v := apiObject.ImagePullSecrets; v != nil {
-		tfMap["image_pull_secret"] = flattenImagePullSecrets(v)
-	}
-
-	if v := apiObject.InitContainers; v != nil {
-		tfMap["init_containers"] = flattenEKSContainers(v)
-	}
-
-	if v := apiObject.Metadata; v != nil {
-		metadata := make([]map[string]interface{}, 0)
-
-		if v := v.Labels; v != nil {
-			metadata = append(metadata, map[string]interface{}{
-				"labels": v,
-			})
-		}
-
-		tfMap["metadata"] = metadata
-	}
-
-	if v := apiObject.ServiceAccountName; v != nil {
-		tfMap["service_account_name"] = aws.ToString(v)
-	}
-
-	if v := apiObject.ShareProcessNamespace; v != nil {
-		tfMap["share_process_namespace"] = aws.ToBool(v)
-	}
-
-	if v := apiObject.Volumes; v != nil {
-		tfMap["volumes"] = flattenEKSVolumes(v)
-	}
-
-	tfList = append(tfList, tfMap)
-
-	return tfList
-}
-
-func flattenImagePullSecrets(apiObjects []awstypes.ImagePullSecret) []interface{} {
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
-
-		if v := apiObject.Name; v != nil {
-			tfMap[names.AttrName] = aws.ToString(v)
-			tfList = append(tfList, tfMap) // move out of "if" when more fields are added
-		}
-	}
-
-	return tfList
-}
-
-func flattenEKSContainers(apiObjects []awstypes.EksContainer) []interface{} {
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
-
-		if v := apiObject.Args; v != nil {
-			tfMap["args"] = v
-		}
-
-		if v := apiObject.Command; v != nil {
-			tfMap["command"] = v
-		}
-
-		if v := apiObject.Env; v != nil {
-			tfMap["env"] = flattenEKSContainerEnvironmentVariables(v)
-		}
-
-		if v := apiObject.Image; v != nil {
-			tfMap["image"] = aws.ToString(v)
-		}
-
-		if v := apiObject.ImagePullPolicy; v != nil {
-			tfMap["image_pull_policy"] = aws.ToString(v)
-		}
-
-		if v := apiObject.Name; v != nil {
-			tfMap[names.AttrName] = aws.ToString(v)
-		}
-
-		if v := apiObject.Resources; v != nil {
-			tfMap[names.AttrResources] = []map[string]interface{}{{
-				"limits":   v.Limits,
-				"requests": v.Requests,
-			}}
-		}
-
-		if v := apiObject.SecurityContext; v != nil {
-			tfMap["security_context"] = []map[string]interface{}{{
-				"privileged":                 aws.ToBool(v.Privileged),
-				"read_only_root_file_system": aws.ToBool(v.ReadOnlyRootFilesystem),
-				"run_as_group":               aws.ToInt64(v.RunAsGroup),
-				"run_as_non_root":            aws.ToBool(v.RunAsNonRoot),
-				"run_as_user":                aws.ToInt64(v.RunAsUser),
-			}}
-		}
-
-		if v := apiObject.VolumeMounts; v != nil {
-			tfMap["volume_mounts"] = flattenEKSContainerVolumeMounts(v)
-		}
-
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
-}
-
-func flattenEKSContainerEnvironmentVariables(apiObjects []awstypes.EksContainerEnvironmentVariable) []interface{} {
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		tfMap := map[string]interface{}{}
-
-		if v := apiObject.Name; v != nil {
-			tfMap[names.AttrName] = aws.ToString(v)
-		}
-
-		if v := apiObject.Value; v != nil {
-			tfMap[names.AttrValue] = aws.ToString(v)
-		}
-
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
-}
-
-func flattenEKSContainerVolumeMounts(apiObjects []awstypes.EksContainerVolumeMount) []interface{} {
-	var tfList []interface{}
-
-	for _, v := range apiObjects {
-		tfMap := map[string]interface{}{}
-
-		if v := v.MountPath; v != nil {
-			tfMap["mount_path"] = aws.ToString(v)
-		}
-
-		if v := v.Name; v != nil {
-			tfMap[names.AttrName] = aws.ToString(v)
-		}
-
-		if v := v.ReadOnly; v != nil {
-			tfMap["read_only"] = aws.ToBool(v)
-		}
-
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
-}
-
-func flattenEKSVolumes(apiObjects []awstypes.EksVolume) []interface{} {
-	var tfList []interface{}
-
-	for _, v := range apiObjects {
-		tfMap := map[string]interface{}{}
-
-		if v := v.EmptyDir; v != nil {
-			tfMap["empty_dir"] = []map[string]interface{}{{
-				"medium":     aws.ToString(v.Medium),
-				"size_limit": aws.ToString(v.SizeLimit),
-			}}
-		}
-
-		if v := v.HostPath; v != nil {
-			tfMap["host_path"] = []map[string]interface{}{{
-				names.AttrPath: aws.ToString(v.Path),
-			}}
-		}
-
-		if v := v.Name; v != nil {
-			tfMap[names.AttrName] = aws.ToString(v)
-		}
-
-		if v := v.Secret; v != nil {
-			tfMap["secret"] = []map[string]interface{}{{
-				"optional":    aws.ToBool(v.Optional),
-				"secret_name": aws.ToString(v.SecretName),
-			}}
-		}
-
-		tfList = append(tfList, tfMap)
-	}
-
-	return tfList
+type eksResourcePodPropertiesModel struct {
+	Containers  fwtypes.ListNestedObjectValueOf[eksContainerModel] `tfsdk:"containers"`
+	DNSPolicy   types.String                                       `tfsdk:"dns_policy"`
+	HostNetwork types.Bool                                         `tfsdk:"host_network"`
+	// in the resource, its image_poll_secret but in the datasource its image_pull_secrets
+	ImagePullSecrets      fwtypes.ListNestedObjectValueOf[eksImagePullSecrets] `tfsdk:"image_pull_secret"`
+	InitContainers        fwtypes.ListNestedObjectValueOf[eksContainerModel]   `tfsdk:"init_containers"`
+	Metadata              fwtypes.ListNestedObjectValueOf[eksMetadataModel]    `tfsdk:"metadata"`
+	ServiceAccountName    types.String                                         `tfsdk:"service_account_name"`
+	ShareProcessNamespace types.Bool                                           `tfsdk:"share_process_namespace"`
+	Volumes               fwtypes.ListNestedObjectValueOf[eksVolumeModel]      `tfsdk:"volumes"`
 }

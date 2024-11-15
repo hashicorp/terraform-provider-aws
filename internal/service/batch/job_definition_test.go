@@ -192,7 +192,7 @@ func TestAccBatchJobDefinition_disappears(t *testing.T) {
 				Config: testAccJobDefinitionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceJobDefinition(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbatch.ResourceJobDefinition, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

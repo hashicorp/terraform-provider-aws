@@ -6,7 +6,7 @@ package batch
 // Exports for use in tests only.
 var (
 	ResourceComputeEnvironment = resourceComputeEnvironment
-	ResourceJobDefinition      = resourceJobDefinition
+	ResourceJobDefinition      = newResourceJobDefinition
 	ResourceJobQueue           = newJobQueueResource
 	ResourceSchedulingPolicy   = resourceSchedulingPolicy
 
