@@ -315,8 +315,29 @@ type resourceCatalogTableOptimizerData struct {
 }
 
 type configurationData struct {
-	Enabled types.Bool  `tfsdk:"enabled"`
-	RoleARN fwtypes.ARN `tfsdk:"role_arn"`
+	Enabled                         types.Bool                                                           `tfsdk:"enabled"`
+	RoleARN                         fwtypes.ARN                                                          `tfsdk:"role_arn"`
+	RetentionConfiguration          fwtypes.ListNestedObjectValueOf[retentionConfigurationData]          `tfsdk:"retention_configuration"`
+	OrphanFileDeletionConfiguration fwtypes.ListNestedObjectValueOf[orphanFileDeletionConfigurationData] `tfsdk:"orphan_file_deletion_configuration"`
+}
+
+type retentionConfigurationData struct {
+	IcebergConfiguration fwtypes.ListNestedObjectValueOf[icebergRetentionConfigurationData] `tfsdk:"iceberg_configuration"`
+}
+
+type icebergRetentionConfigurationData struct {
+	SnapshotRetentionPeriodInDays types.Int32 `tfsdk:"snapshot_retention_period_in_days"`
+	NumberOfSnapshotsToRetain     types.Int32 `tfsdk:"number_of_snapshots_to_retain"`
+	CleanExpiredFiles             types.Bool  `tfsdk:"clean_expired_files"`
+}
+
+type orphanFileDeletionConfigurationData struct {
+	IcebergConfiguration fwtypes.ListNestedObjectValueOf[icebergOrphanFileDeletionConfigurationData] `tfsdk:"iceberg_configuration"`
+}
+
+type icebergOrphanFileDeletionConfigurationData struct {
+	OrphanFileRetentionPeriodInDays types.Int32  `tfsdk:"orphan_file_retention_period_in_days"`
+	Location                        types.String `tfsdk:"location"`
 }
 
 func findCatalogTableOptimizer(ctx context.Context, conn *glue.Client, catalogID, dbName, tableName, optimizerType string) (*glue.GetTableOptimizerOutput, error) {
