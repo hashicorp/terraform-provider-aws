@@ -9,12 +9,12 @@ data "aws_batch_job_definition" "test" {
 resource "aws_batch_job_definition" "test" {
   name = var.rName
   type = "container"
-  container_properties = jsonencode({
+  container_properties {
     command = ["echo", "test"]
     image   = "busybox"
     memory  = 128
     vcpus   = 1
-  })
+  }
 
   tags = var.resource_tags
 }

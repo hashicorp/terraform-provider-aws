@@ -192,7 +192,6 @@ func TestAccBatchJobDefinitionDataSource_tags_IgnoreTags_Overlap_ResourceTag(t *
 						acctest.CtResourceKey1: knownvalue.StringExact(acctest.CtResourceValue1),
 					})),
 				},
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

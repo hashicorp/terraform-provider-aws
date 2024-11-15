@@ -2345,18 +2345,12 @@ resource "aws_batch_job_definition" "test" {
   name = "%[1]s"
   type = "container"
 
-  container_properties = <<CONTAINER_PROPERTIES
-{
-  "command": ["ls", "-la"],
-  "image": "busybox",
-  "memory": 512,
-  "vcpus": 1,
-  "volumes": [ ],
-  "environment": [ ],
-  "mountPoints": [ ],
-  "ulimits": [ ]
-}
-CONTAINER_PROPERTIES
+  container_properties {
+    command = ["ls", "-la"]
+    image   = "busybox"
+    memory  = 512
+    vcpus   = 1
+  }
 }
 `, rName)
 }
