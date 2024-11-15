@@ -12,6 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -109,7 +110,7 @@ func TestAccLambdaRuntimeManagementConfig_runtimeVersionARN(t *testing.T) {
 			// There is currently no API to retrieve this ARN, so we have to hard-code
 			// the value and restrict this test to us-west-2 in the standard commercial
 			// partition.
-			acctest.PreCheckPartition(t, names.StandardPartitionID)
+			acctest.PreCheckPartition(t, endpoints.AwsPartitionID)
 			acctest.PreCheckRegion(t, names.USWest2RegionID)
 			acctest.PreCheckPartitionHasService(t, names.LambdaEndpointID)
 		},

@@ -100,23 +100,6 @@ func Any[S ~[]E, E any](s S, f Predicate[E]) bool {
 	return false
 }
 
-// Chunks returns a slice of S, each of the specified size (or less).
-func Chunks[S ~[]E, E any](s S, size int) []S {
-	chunks := make([]S, 0)
-
-	for i := 0; i < len(s); i += size {
-		end := i + size
-
-		if end > len(s) {
-			end = len(s)
-		}
-
-		chunks = append(chunks, s[i:end])
-	}
-
-	return chunks
-}
-
 // AppendUnique appends unique (not already in the slice) values to a slice.
 func AppendUnique[S ~[]E, E comparable](s S, vs ...E) S {
 	for _, v := range vs {

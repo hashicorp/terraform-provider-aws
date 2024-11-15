@@ -347,7 +347,7 @@ func resourceClusterResourceV0() *schema.Resource {
 						"timeout_action": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  TimeoutActionRollbackCapacityChange,
+							Default:  timeoutActionRollbackCapacityChange,
 						},
 					},
 				},

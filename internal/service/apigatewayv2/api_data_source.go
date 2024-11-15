@@ -17,6 +17,7 @@ import (
 
 // @SDKDataSource("aws_apigatewayv2_api", name="API")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceAPI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIRead,
@@ -125,13 +126,13 @@ func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.SetId(apiID)
 	d.Set("api_endpoint", api.ApiEndpoint)
 	d.Set("api_key_selection_expression", api.ApiKeySelectionExpression)
-	d.Set(names.AttrARN, apiARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, apiARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	if err := d.Set("cors_configuration", flattenCORSConfiguration(api.CorsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
 	}
 	d.Set(names.AttrDescription, api.Description)
 	d.Set("disable_execute_api_endpoint", api.DisableExecuteApiEndpoint)
-	d.Set("execution_arn", apiInvokeARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set("execution_arn", apiInvokeARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, api.Name)
 	d.Set("protocol_type", api.ProtocolType)
 	d.Set("route_selection_expression", api.RouteSelectionExpression)

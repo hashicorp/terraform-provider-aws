@@ -240,7 +240,6 @@ pageLoop:
 		}
 
 		for _, v := range page.DestinationSummaries {
-			v := v
 			if aws.ToString(v.Arn) == arn {
 				destination = &v
 				break pageLoop

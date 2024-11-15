@@ -549,16 +549,20 @@ func waitStackDeleted(ctx context.Context, conn *cloudformation.Client, name, re
 		minTimeout = 5 * time.Second
 	)
 	stateConf := retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.StackStatusDeleteInProgress, awstypes.StackStatusRollbackInProgress),
-		Target:     enum.Slice(awstypes.StackStatusDeleteComplete, awstypes.StackStatusDeleteFailed),
-		Timeout:    timeout,
-		MinTimeout: minTimeout,
-		Delay:      10 * time.Second,
-		Refresh:    statusStack(ctx, conn, name),
+		Pending:        enum.Slice(awstypes.StackStatusDeleteInProgress, awstypes.StackStatusRollbackInProgress),
+		Target:         enum.Slice(awstypes.StackStatusDeleteComplete, awstypes.StackStatusDeleteFailed),
+		Timeout:        timeout,
+		MinTimeout:     minTimeout,
+		Delay:          10 * time.Second,
+		Refresh:        statusStack(ctx, conn, name),
+		NotFoundChecks: 1,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if err != nil {
+	switch {
+	case tfresource.NotFound(err):
+		return nil, nil
+	case err != nil:
 		return nil, err
 	}
 

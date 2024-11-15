@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"sort"
+	"slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -140,8 +140,8 @@ func testAccCheckPipeline_notifications(
 			return fmt.Errorf("ETC notifications didn't match:\n\texpected: %#v\n\tgot: %#v\n\n", notifications, notes)
 		}
 
-		sort.Strings(notes)
-		sort.Strings(notifications)
+		slices.Sort(notes)
+		slices.Sort(notifications)
 
 		if !reflect.DeepEqual(notes, notifications) {
 			return fmt.Errorf("ETC notifications were not equal:\n\texpected: %#v\n\tgot: %#v\n\n", notifications, notes)

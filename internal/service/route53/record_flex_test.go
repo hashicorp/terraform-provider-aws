@@ -111,7 +111,6 @@ func TestParseRecordID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		tc := tc
 		t.Run(tc.Input, func(t *testing.T) {
 			t.Parallel()
 

@@ -11,22 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 )
 
-// ToSnakeCase converts a camel cased string to snake case
-//
-// If the override argument is a non-empty string, its value is returned
-// unchanged.
-func ToSnakeCase(upper string, override string) string {
-	if override != "" {
-		return override
-	}
-
-	re := regexache.MustCompile(`([a-z])([A-Z]{2,})`)
-	upper = re.ReplaceAllString(upper, `${1}_${2}`)
-
-	re2 := regexache.MustCompile(`([A-Z][a-z])`)
-	return strings.TrimPrefix(strings.ToLower(re2.ReplaceAllString(upper, `_$1`)), "_")
-}
-
 // ToHumanResName converts a camel cased string to a human readable name
 func ToHumanResName(upper string) string {
 	re := regexache.MustCompile(`([a-z])([A-Z]{2,})`)

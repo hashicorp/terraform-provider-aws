@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -249,7 +250,7 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/apiKeyRequired"),
-			Value: aws.String(fmt.Sprintf("%t", d.Get("api_key_required").(bool))),
+			Value: aws.String(strconv.FormatBool(d.Get("api_key_required").(bool))),
 		})
 	}
 
@@ -291,12 +292,48 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	_, err := conn.UpdateMethod(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Method (%s): %s", d.Id(), err)
 	}
 
-	// Get current cacheKeyParameters from integration before any request parameters are updated on method.
+	if err := updateIntegration(ctx, d, conn, operations); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating API Gateway Integration (from Method): %s", err)
+	}
+
+	return append(diags, resourceMethodRead(ctx, d, meta)...)
+}
+
+func resourceMethodDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+
+	log.Printf("[DEBUG] Deleting API Gateway Method: %s", d.Id())
+	_, err := conn.DeleteMethod(ctx, &apigateway.DeleteMethodInput{
+		HttpMethod: aws.String(d.Get("http_method").(string)),
+		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
+		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
+	})
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Method (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+// updateIntegration updates the integration with cacheKeyParameters for replaced request parameters.
+// Get current cacheKeyParameters from integration before any request parameters are updated on method.
+//
+// NOTE 1: This is a concerning approach when one resource is updating data managed by another resource.
+// NOTE 2: This does not appear to do anything since len(integrationOperations) always seems to be 0.
+// NOTE 3: The problem this addresses has likely been fixed in the *integration* resource--see Update.
+// NOTE 4: We're leaving this in the codebase on remote chance it does handle an edge case.
+// NOTE 5: This should be removed when we're confident it's no longer needed.
+func updateIntegration(ctx context.Context, d *schema.ResourceData, conn *apigateway.Client, operations []types.PatchOperation) error {
 	replacedRequestParameters := []string{}
 	var currentCacheKeyParameters []string
 	if integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string)); err == nil {
@@ -324,6 +361,10 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
+		if len(integrationOperations) == 0 {
+			return nil
+		}
+
 		input := &apigateway.UpdateIntegrationInput{
 			HttpMethod:      aws.String(d.Get("http_method").(string)),
 			PatchOperations: integrationOperations,
@@ -334,33 +375,11 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		_, err = conn.UpdateIntegration(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating API Gateway Integration: %s", err)
+			return err
 		}
 	}
 
-	return append(diags, resourceMethodRead(ctx, d, meta)...)
-}
-
-func resourceMethodDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
-
-	log.Printf("[DEBUG] Deleting API Gateway Method: %s", d.Id())
-	_, err := conn.DeleteMethod(ctx, &apigateway.DeleteMethodInput{
-		HttpMethod: aws.String(d.Get("http_method").(string)),
-		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
-		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-	})
-
-	if errs.IsA[*types.NotFoundException](err) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Method (%s): %s", d.Id(), err)
-	}
-
-	return diags
+	return nil
 }
 
 func findMethodByThreePartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID string) (*apigateway.GetMethodOutput, error) {

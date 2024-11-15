@@ -34,14 +34,14 @@ resource "aws_datazone_project" "test" {
 
 The following arguments are required:
 
-* `domain_identifier` - (Required) Identifier of domain which the project is part of. Must follow the regex of ^dzd[-_][a-zA-Z0-9_-]{1,36}$.
-* `name` - (Required) Name of the project. Must follow the regex of ^[\w -]+$. and have a length of at most 64.
+* `domain_identifier` - (Required) Identifier of domain which the project is part of. Must follow the regex of `^dzd[-_][a-zA-Z0-9_-]{1,36}$`.
+* `name` - (Required) Name of the project. Must follow the regex of `^[\w -]+$`. and have a length of at most 64.
 
 The following arguments are optional:
 
 * `skip_deletion_check` - (Optional) Optional flag to delete all child entities within the project.
 * `description` - (Optional) Description of project.
-* `glossary_terms` - (Optional) List of glossary terms that can be used in the project. The list cannot be empty or include over 20 values. Each value must follow the regex of [a-zA-Z0-9_-]{1,36}$.
+* `glossary_terms` - (Optional) List of glossary terms that can be used in the project. The list cannot be empty or include over 20 values. Each value must follow the regex of `[a-zA-Z0-9_-]{1,36}$`.
 
 ## Attribute Reference
 
@@ -56,7 +56,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `failure_reasons` - List of error messages if operation cannot be completed.
 * `glossary_terms` - Business glossary terms that can be used in the project.
 * `last_updated_at` - Timestamp of when the project was last updated.
-* `project_status` -  Enum that conveys state of project. Can be ACTIVE, DELETING, or DELETE_FAILED.
+* `project_status` -  Enum that conveys state of project. Can be `ACTIVE`, `DELETING`, or `DELETE_FAILED`.
 
 ## Timeouts
 
@@ -67,17 +67,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Project using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataZone Project using a colon-delimited string combining `domain_id` and `id`. For example:
 
 ```terraform
 import {
   to = aws_datazone_project.example
-  id = "projectid123"
+  id = "domain-1234:project-1234"
 }
 ```
 
-Using `terraform import`, import DataZone Project using the `id`. For example:
+Using `terraform import`, import DataZone Project using a colon-delimited string combining `domain_id` and `id`. For example:
 
 ```console
-% terraform import aws_datazone_project.example projectid123
+% terraform import aws_datazone_project.example domain-1234:project-1234
 ```

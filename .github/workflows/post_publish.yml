@@ -37,18 +37,89 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Tidy Jira
-        uses: breathingdust/github-jira-tidy@cfe2e142858405dad815f5d1e015e625a17ea057 # v0.9.2
+        uses: breathingdust/github-jira-tidy@b503407f09af5564fd806924bdf4495510d848b6 # v0.10.0
         with:
           jira_host: 'hashicorp.atlassian.net'
           jira_username: 'sdavis@hashicorp.com'
           jira_password: ${{ secrets.jira_password }}
           jira_jql_filter: ${{ secrets.jira_jql_filter }}
-          jira_closed_id: '371'
           jira_github_url_field_id: 'cf[10089]'
           github_release_name: ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
   on-failure:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'failure' }}
     steps:
       - run: echo 'The triggering workflow failed'
+
+  registry-check:
+    runs-on: ubuntu-latest
+    needs: [on-success-or-workflow-dispatch]
+    outputs:
+      latest-version: ${{ steps.registry_latest_ver.outputs.current }}
+    steps:
+      - name: Registry Version Check
+        id: registry_latest_ver
+        shell: bash
+        run: |
+          for i in 1 2
+          do
+            LATEST_VERSION=$(curl -s "https://registry.terraform.io/v2/providers/323/provider-versions/latest" | jq -r '.data.attributes.version')
+            if [[ "${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}" != ${LATEST_VERSION} ]]; then
+              sleep 1h
+            else
+              echo "Registry and Github Version matches"
+                echo "current=$LATEST_VERSION >> "$GITHUB_OUTPUT"
+            fi
+          done
+
+          echo "Registry does not contain ${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}"
+          exit 1
+
+  os-version-init:
+    name: Run terraform init On Supported Platforms
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    runs-on: ${{ matrix.os }}
+    needs: [registry-check]
+    steps:
+      - name: Specify Provider Version in TF Configuration
+        run: |
+          cat <<EOF > main.tf
+          terraform {
+            required_providers {
+              aws = {
+                source  = "hashicorp/aws"
+                version = ${{ needs.registry-check.outputs.latest-version }}
+              }
+            }
+          }
+
+          provider "aws" {
+            region = "us-east-1"
+          }
+          EOF
+
+      - name: Initialize the AWS Provider
+        run: terraform init -upgrade
+
+      - name: Send Slack Notification Upon Failure
+        if: ${{ failure() }}
+        uses: slackapi/slack-github-action@37ebaef184d7626c5f204ab8d3baff4262dd30f0 # v1.27.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL }}
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "ERROR: Registry Provder Initiation Failure on ${{ matrix.os }}"
+                  }
+                }
+              ]
+            }

@@ -168,7 +168,7 @@ func (r *directoryBucketResource) Create(ctx context.Context, request resource.C
 	}
 
 	// Set values for unknowns.
-	data.ARN = types.StringValue(r.arn(data.Bucket.ValueString()))
+	data.ARN = types.StringValue(r.arn(ctx, data.Bucket.ValueString()))
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -207,7 +207,7 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 	}
 
 	// Set attributes for import.
-	data.ARN = types.StringValue(r.arn(data.Bucket.ValueString()))
+	data.ARN = types.StringValue(r.arn(ctx, data.Bucket.ValueString()))
 
 	// No API to return bucket type, location etc.
 	data.DataRedundancy = fwtypes.StringEnumValue(awstypes.DataRedundancySingleAvailabilityZone)
@@ -284,8 +284,8 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 }
 
 // arn returns the ARN of the specified bucket.
-func (r *directoryBucketResource) arn(bucket string) string {
-	return r.RegionalARN("s3express", fmt.Sprintf("bucket/%s", bucket))
+func (r *directoryBucketResource) arn(ctx context.Context, bucket string) string {
+	return r.Meta().RegionalARN(ctx, "s3express", fmt.Sprintf("bucket/%s", bucket))
 }
 
 type directoryBucketResourceModel struct {

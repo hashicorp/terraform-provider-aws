@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_emr_cluster: Fix panic when reading an instance fleet with an empty `launch_specifications` argument
+```

@@ -5,6 +5,7 @@ package sfn
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sfn/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,6 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -189,7 +193,11 @@ func resourceStateMachine() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			stateMachineDefinitionValidate,
+			stateMachineUpdateComputedAttributesOnPublish,
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -527,4 +535,60 @@ func flattenTracingConfiguration(apiObject *awstypes.TracingConfiguration) map[s
 	}
 
 	return tfMap
+}
+
+func stateMachineUpdateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	if publish := d.Get("publish").(bool); publish && stateMachineNeedsConfigUpdate(d) {
+		d.SetNewComputed("revision_id")
+		d.SetNewComputed("state_machine_version_arn")
+	}
+	return nil
+}
+
+func stateMachineNeedsConfigUpdate(d sdkv2.ResourceDiffer) bool {
+	for k, attr := range resourceStateMachine().Schema {
+		if attr.ForceNew {
+			continue
+		}
+		if attr.Computed && !attr.Optional {
+			continue
+		}
+
+		if d.HasChange(k) {
+			return true
+		}
+	}
+	return false
+}
+
+func stateMachineDefinitionValidate(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
+
+	if d.HasChange("definition") {
+		definition := d.Get("definition").(string)
+		if definition == "" {
+			return nil
+		}
+
+		input := &sfn.ValidateStateMachineDefinitionInput{
+			Definition: aws.String(definition),
+			Type:       awstypes.StateMachineType(d.Get(names.AttrType).(string)),
+		}
+
+		output, err := conn.ValidateStateMachineDefinition(ctx, input)
+
+		if err != nil {
+			return fmt.Errorf("validating Step Functions State Machine definition: %w", err)
+		}
+
+		if result := output.Result; result != awstypes.ValidateStateMachineDefinitionResultCodeOk {
+			errs := tfslices.ApplyToAll(output.Diagnostics, func(v awstypes.ValidateStateMachineDefinitionDiagnostic) error {
+				return fmt.Errorf("%s (%s): %s", v.Severity, aws.ToString(v.Code), aws.ToString(v.Message))
+			})
+
+			return fmt.Errorf("invalid Step Functions State Machine definition: %w", errors.Join(errs...))
+		}
+	}
+
+	return nil
 }

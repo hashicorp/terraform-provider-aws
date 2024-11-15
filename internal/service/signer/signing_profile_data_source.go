@@ -94,7 +94,7 @@ func DataSourceSigningProfile() *schema.Resource {
 func dataSourceSigningProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SignerClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	profileName := d.Get(names.AttrName).(string)
 	signingProfileOutput, err := conn.GetSigningProfile(ctx, &signer.GetSigningProfileInput{

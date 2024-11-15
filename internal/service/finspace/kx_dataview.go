@@ -249,7 +249,7 @@ func resourceKxDataviewRead(ctx context.Context, d *schema.ResourceData, meta in
 	//
 	// Ref: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonfinspace.html#amazonfinspace-resources-for-iam-policies
 	dataviewARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   names.FinSpace,
 		AccountID: meta.(*conns.AWSClient).AccountID,

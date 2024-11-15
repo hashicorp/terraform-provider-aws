@@ -247,6 +247,7 @@ func RegisterSweepers() {
 			"aws_eks_cluster",
 			"aws_elasticache_cluster",
 			"aws_elasticache_replication_group",
+			"aws_elasticache_serverless_cache",
 			"aws_elasticache_subnet_group",
 			"aws_elasticsearch_domain",
 			"aws_elb",

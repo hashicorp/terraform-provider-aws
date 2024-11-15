@@ -164,6 +164,10 @@ func expandServiceRegistries(tfList []interface{}) []awstypes.ServiceRegistry {
 	apiObjects := make([]awstypes.ServiceRegistry, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
+		if tfMapRaw == nil {
+			continue
+		}
+
 		tfMap := tfMapRaw.(map[string]interface{})
 		apiObject := awstypes.ServiceRegistry{
 			RegistryArn: aws.String(tfMap["registry_arn"].(string)),

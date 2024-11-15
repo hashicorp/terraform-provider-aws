@@ -15,7 +15,7 @@ Use this data source to retrieve information for an Amazon CloudFront origin acc
 The below example retrieves a CloudFront origin access control config.
 
 ```terraform
-data "aws_cloudfront_origin_access_identity" "example" {
+data "aws_cloudfront_origin_access_control" "example" {
   id = "E2T5VTFBZJ3BJB"
 }
 ```

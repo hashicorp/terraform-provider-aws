@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -338,7 +339,6 @@ func (r *resourceIdentitySource) Update(ctx context.Context, request resource.Up
 			return
 		}
 
-		// response.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
 		// Retrieve values not included in update response.
 		out, err := findIdentitySourceByIDAndPolicyStoreID(ctx, conn, state.ID.ValueString(), state.PolicyStoreID.ValueString())
 		if err != nil {
@@ -553,124 +553,119 @@ func findIdentitySourceByIDAndPolicyStoreID(ctx context.Context, conn *verifiedp
 }
 
 var (
-	_ flex.Expander = configuration{}
+	_ flex.TypedExpander = configuration{}
 )
 
-func (m configuration) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	operation := ctx.Value(operationType).(operationTypeCtxValue)
+func (m configuration) ExpandTo(ctx context.Context, targetType reflect.Type) (result any, diags diag.Diagnostics) {
+	switch targetType {
+	case reflect.TypeFor[awstypes.Configuration]():
+		return m.expandToConfiguration(ctx)
 
-	switch {
-	case !m.CognitoUserPoolConfiguration.IsNull():
-		cognitoUserPoolConfigurationData, d := m.CognitoUserPoolConfiguration.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		switch operation {
-		case readOperation:
-			var result awstypes.ConfigurationMemberCognitoUserPoolConfiguration
-			diags.Append(flex.Expand(ctx, cognitoUserPoolConfigurationData, &result.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			return &result, diags
-		case updateOperation:
-			var result awstypes.UpdateConfigurationMemberCognitoUserPoolConfiguration
-			diags.Append(flex.Expand(ctx, cognitoUserPoolConfigurationData, &result.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			return &result, diags
-		}
-		return nil, diags
-
-	case !m.OpenIDConnectConfiguration.IsNull():
-		openIDConnectConfigurationData, d := m.OpenIDConnectConfiguration.ToPtr(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-
-		switch operation {
-		case readOperation:
-			var result awstypes.ConfigurationMemberOpenIdConnectConfiguration
-			diags.Append(flex.Expand(ctx, openIDConnectConfigurationData, &result.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			return &result, diags
-		case updateOperation:
-			var result awstypes.UpdateConfigurationMemberOpenIdConnectConfiguration
-			diags.Append(flex.Expand(ctx, openIDConnectConfigurationData, &result.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			return &result, diags
-		}
+	case reflect.TypeFor[awstypes.UpdateConfiguration]():
+		return m.expandToUpdateConfiguration(ctx)
 	}
 	return nil, diags
 }
 
+func (m configuration) expandToConfiguration(ctx context.Context) (result awstypes.Configuration, diags diag.Diagnostics) {
+	switch {
+	case !m.CognitoUserPoolConfiguration.IsNull():
+		var result awstypes.ConfigurationMemberCognitoUserPoolConfiguration
+		diags.Append(flex.Expand(ctx, m.CognitoUserPoolConfiguration, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+
+	case !m.OpenIDConnectConfiguration.IsNull():
+		var result awstypes.ConfigurationMemberOpenIdConnectConfiguration
+		diags.Append(flex.Expand(ctx, m.OpenIDConnectConfiguration, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+	}
+
+	return nil, diags
+}
+
+func (m configuration) expandToUpdateConfiguration(ctx context.Context) (result awstypes.UpdateConfiguration, diags diag.Diagnostics) {
+	switch {
+	case !m.CognitoUserPoolConfiguration.IsNull():
+		var result awstypes.UpdateConfigurationMemberCognitoUserPoolConfiguration
+		diags.Append(flex.Expand(ctx, m.CognitoUserPoolConfiguration, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+
+	case !m.OpenIDConnectConfiguration.IsNull():
+		var result awstypes.UpdateConfigurationMemberOpenIdConnectConfiguration
+		diags.Append(flex.Expand(ctx, m.OpenIDConnectConfiguration, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+	}
+
+	return nil, diags
+}
+
 var (
-	_ flex.Expander = openIDConnectTokenSelection{}
+	_ flex.TypedExpander = openIDConnectTokenSelection{}
 )
 
-func (m openIDConnectTokenSelection) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
-	operation := ctx.Value(operationType).(operationTypeCtxValue)
+func (m openIDConnectTokenSelection) ExpandTo(ctx context.Context, targetType reflect.Type) (result any, diags diag.Diagnostics) {
+	switch targetType {
+	case reflect.TypeFor[awstypes.OpenIdConnectTokenSelection]():
+		return m.expandToOpenIDConnectTokenSelection(ctx)
 
+	case reflect.TypeFor[awstypes.UpdateOpenIdConnectTokenSelection]():
+		return m.expandToUpdateOpenIDConnectTokenSelection(ctx)
+	}
+	return nil, diags
+}
+
+func (m openIDConnectTokenSelection) expandToOpenIDConnectTokenSelection(ctx context.Context) (result awstypes.OpenIdConnectTokenSelection, diags diag.Diagnostics) {
 	switch {
 	case !m.AccessTokenOnly.IsNull():
-		openIDConnectAccessTokenConfigurationData, d := m.AccessTokenOnly.ToPtr(ctx)
-		diags.Append(d...)
+		var result awstypes.OpenIdConnectTokenSelectionMemberAccessTokenOnly
+		diags.Append(flex.Expand(ctx, m.AccessTokenOnly, &result.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
-
-		switch operation {
-		case readOperation:
-			var result awstypes.OpenIdConnectTokenSelectionMemberAccessTokenOnly
-			diags.Append(flex.Expand(ctx, openIDConnectAccessTokenConfigurationData, &result.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			return &result, diags
-
-		case updateOperation:
-			var result awstypes.UpdateOpenIdConnectTokenSelectionMemberAccessTokenOnly
-			diags.Append(flex.Expand(ctx, openIDConnectAccessTokenConfigurationData, &result.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			return &result, diags
-		}
-		return nil, diags
+		return &result, diags
 
 	case !m.IdentityTokenOnly.IsNull():
-		openIDConnectIdentityTokenConfigurationData, d := m.IdentityTokenOnly.ToPtr(ctx)
-		diags.Append(d...)
+		var result awstypes.OpenIdConnectTokenSelectionMemberIdentityTokenOnly
+		diags.Append(flex.Expand(ctx, m.IdentityTokenOnly, &result.Value)...)
 		if diags.HasError() {
 			return nil, diags
 		}
-
-		switch operation {
-		case readOperation:
-			var result awstypes.OpenIdConnectTokenSelectionMemberIdentityTokenOnly
-			diags.Append(flex.Expand(ctx, openIDConnectIdentityTokenConfigurationData, &result.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			return &result, diags
-
-		case updateOperation:
-			var result awstypes.UpdateOpenIdConnectTokenSelectionMemberIdentityTokenOnly
-			diags.Append(flex.Expand(ctx, openIDConnectIdentityTokenConfigurationData, &result.Value)...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			return &result, diags
-		}
-		return nil, diags
+		return &result, diags
 	}
+
+	return nil, diags
+}
+
+func (m openIDConnectTokenSelection) expandToUpdateOpenIDConnectTokenSelection(ctx context.Context) (result awstypes.UpdateOpenIdConnectTokenSelection, diags diag.Diagnostics) {
+	switch {
+	case !m.AccessTokenOnly.IsNull():
+		var result awstypes.UpdateOpenIdConnectTokenSelectionMemberAccessTokenOnly
+		diags.Append(flex.Expand(ctx, m.AccessTokenOnly, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+
+	case !m.IdentityTokenOnly.IsNull():
+		var result awstypes.UpdateOpenIdConnectTokenSelectionMemberIdentityTokenOnly
+		diags.Append(flex.Expand(ctx, m.IdentityTokenOnly, &result.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return &result, diags
+	}
+
 	return nil, diags
 }

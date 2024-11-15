@@ -40,7 +40,7 @@ const (
 )
 
 // @SDKResource("aws_iam_role", name="Role")
-// @Tags(identifierAttribute="id", resourceType="Role")
+// @Tags(identifierAttribute="name", resourceType="Role")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types;types.Role")
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
@@ -91,6 +91,11 @@ func resourceRole() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				Deprecated: "The inline_policy argument is deprecated. " +
+					"Use the aws_iam_role_policy resource instead. If Terraform should " +
+					"exclusively manage all inline policy associations (the current " +
+					"behavior of this argument), use the aws_iam_role_policies_exclusive " +
+					"resource as well.",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrName: {
@@ -126,6 +131,11 @@ func resourceRole() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				Deprecated: "The managed_policy_arns argument is deprecated. " +
+					"Use the aws_iam_role_policy_attachment resource instead. If Terraform should " +
+					"exclusively manage all managed policy attachments (the current " +
+					"behavior of this argument), use the aws_iam_role_policy_attachments_exclusive " +
+					"resource as well.",
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
@@ -209,7 +219,7 @@ func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := retryCreateRole(ctx, conn, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
@@ -517,24 +527,28 @@ func deleteRole(ctx context.Context, conn *iam.Client, roleName string, forceDet
 	if forceDetach || hasManaged {
 		policyARNs, err := findRoleAttachedPolicies(ctx, conn, roleName)
 
-		if err != nil {
+		switch {
+		case tfresource.NotFound(err):
+		case err != nil:
 			return fmt.Errorf("reading IAM Policies attached to Role (%s): %w", roleName, err)
-		}
-
-		if err := deleteRolePolicyAttachments(ctx, conn, roleName, policyARNs); err != nil {
-			return err
+		default:
+			if err := deleteRolePolicyAttachments(ctx, conn, roleName, policyARNs); err != nil {
+				return err
+			}
 		}
 	}
 
 	if forceDetach || hasInline {
 		inlinePolicies, err := findRolePolicyNames(ctx, conn, roleName)
 
-		if err != nil {
+		switch {
+		case tfresource.NotFound(err):
+		case err != nil:
 			return fmt.Errorf("reading IAM Role (%s) inline policies: %w", roleName, err)
-		}
-
-		if err := deleteRoleInlinePolicies(ctx, conn, roleName, inlinePolicies); err != nil {
-			return err
+		default:
+			if err := deleteRoleInlinePolicies(ctx, conn, roleName, inlinePolicies); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -594,6 +608,9 @@ func retryCreateRole(ctx context.Context, conn *iam.Client, input *iam.CreateRol
 		},
 		func(err error) (bool, error) {
 			if errs.IsAErrorMessageContains[*awstypes.MalformedPolicyDocumentException](err, "Invalid principal in policy") {
+				return true, err
+			}
+			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
 				return true, err
 			}
 

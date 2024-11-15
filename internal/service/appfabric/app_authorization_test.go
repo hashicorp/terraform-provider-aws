@@ -41,10 +41,10 @@ func testAccAppAuthorization_basic(t *testing.T) {
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
-					resource.TestCheckResourceAttr(resourceName, "credential.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.0.api_key", "ApiExampleKey"),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", "test"),
 				),
@@ -82,10 +82,10 @@ func testAccAppAuthorization_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfappfabric.ResourceAppAuthorization, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
-					resource.TestCheckResourceAttr(resourceName, "credential.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.0.api_key", "ApiExampleKey"),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", "test"),
 				),
@@ -117,10 +117,10 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
-					resource.TestCheckResourceAttr(resourceName, "credential.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.0.api_key", "ApiExampleKey"),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", "test"),
 				),
@@ -137,10 +137,10 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "TERRAFORMCLOUD"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "apiKey"),
-					resource.TestCheckResourceAttr(resourceName, "credential.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.api_key_credential.0.api_key", "updatedApiExampleKey"),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", "updated"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", "test"),
 				),
@@ -177,11 +177,11 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "DROPBOX"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "oauth2"),
-					resource.TestCheckResourceAttr(resourceName, "credential.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.0.client_id", "ClinentID"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.0.client_secret", "SecretforOath2"),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", "test"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", "test"),
 				),
@@ -198,69 +198,13 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 					resource.TestCheckResourceAttr(resourceName, "app", "DROPBOX"),
 					resource.TestCheckResourceAttr(resourceName, "auth_type", "oauth2"),
-					resource.TestCheckResourceAttr(resourceName, "credential.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "credential.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.0.client_id", "newClinentID"),
 					resource.TestCheckResourceAttr(resourceName, "credential.0.oauth2_credential.0.client_secret", "newSecretforOath2"),
-					resource.TestCheckResourceAttr(resourceName, "tenant.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "tenant.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_display_name", "updated"),
 					resource.TestCheckResourceAttr(resourceName, "tenant.0.tenant_identifier", "test"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"credential"},
-			},
-		},
-	})
-}
-
-func testAccAppAuthorization_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_appfabric_app_authorization.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var appauthorization types.AppAuthorization
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, names.APNortheast1RegionID, names.EUWest1RegionID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppAuthorizationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppAuthorizationConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1Updated),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"credential"},
-			},
-			{
-				Config: testAccAppAuthorizationConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"credential"},
-			},
-			{
-				Config: testAccAppAuthorizationConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppAuthorizationExists(ctx, resourceName, &appauthorization),
 				),
 			},
 			{
@@ -424,64 +368,4 @@ resource "aws_appfabric_app_authorization" "test" {
   }
 }
 `, rName)
-}
-
-func testAccAppAuthorizationConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_appfabric_app_bundle" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_arn = aws_appfabric_app_bundle.test.arn
-  app            = "TERRAFORMCLOUD"
-  auth_type      = "apiKey"
-
-  credential {
-    api_key_credential {
-      api_key = "apiexamplekeytest"
-    }
-  }
-  tenant {
-    tenant_display_name = "test"
-    tenant_identifier   = "test"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccAppAuthorizationConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_appfabric_app_bundle" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_appfabric_app_authorization" "test" {
-  app_bundle_arn = aws_appfabric_app_bundle.test.arn
-  app            = "TERRAFORMCLOUD"
-  auth_type      = "apiKey"
-
-  credential {
-    api_key_credential {
-      api_key = "apiexamplekeytest"
-    }
-  }
-  tenant {
-    tenant_display_name = "test"
-    tenant_identifier   = "test"
-  }
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

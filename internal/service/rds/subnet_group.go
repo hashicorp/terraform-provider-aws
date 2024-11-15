@@ -97,7 +97,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 		DBSubnetGroupDescription: aws.String(d.Get(names.AttrDescription).(string)),
 		DBSubnetGroupName:        aws.String(name),
 		SubnetIds:                flex.ExpandStringValueSet(d.Get(names.AttrSubnetIDs).(*schema.Set)),
-		Tags:                     getTagsInV2(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDBSubnetGroup(ctx, input)

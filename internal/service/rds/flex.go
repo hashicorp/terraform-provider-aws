@@ -11,6 +11,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+func flattenManagedMasterUserSecret(apiObject *types.MasterUserSecret) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.KmsKeyId; v != nil {
+		tfMap[names.AttrKMSKeyID] = aws.ToString(v)
+	}
+
+	if v := apiObject.SecretArn; v != nil {
+		tfMap["secret_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.SecretStatus; v != nil {
+		tfMap["secret_status"] = aws.ToString(v)
+	}
+
+	return tfMap
+}
+
 func expandParameters(tfList []interface{}) []types.Parameter {
 	var apiObjects []types.Parameter
 

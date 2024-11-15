@@ -161,7 +161,7 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 	targetDBSnapshotID := d.Get("target_db_snapshot_identifier").(string)
 	input := &rds.CopyDBSnapshotInput{
 		SourceDBSnapshotIdentifier: aws.String(d.Get("source_db_snapshot_identifier").(string)),
-		Tags:                       getTagsInV2(ctx),
+		Tags:                       getTagsIn(ctx),
 		TargetDBSnapshotIdentifier: aws.String(targetDBSnapshotID),
 	}
 

@@ -116,7 +116,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.ToString(host.HostId))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: aws.ToString(host.OwnerId),
