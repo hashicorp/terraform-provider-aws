@@ -1163,6 +1163,52 @@ func TestAccRDSInstance_ReplicateSourceDB_promoteEmptyString(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_ReplicateSourceDB_sourceARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance types.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_db_instance.source"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_sourceARN(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIdentifier, rName),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
+				),
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("replicate_source_db", rName+"-source"),
+				),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrPassword,
+					"replicate_source_db",
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_ReplicateSourceDB_upgradeStorageConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {

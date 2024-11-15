@@ -1993,7 +1993,25 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrPubliclyAccessible, v.PubliclyAccessible)
 	d.Set("replica_mode", v.ReplicaMode)
 	d.Set("replicas", v.ReadReplicaDBInstanceIdentifiers)
-	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
+
+	// The AWS API accepts either the identifier or ARN when setting up a replica in the same region. The AWS Console uses the ARN.
+	// However, if the replica is in the same region, it always returns the identifier.
+	// Store the ARN if the ARN was originally set.
+	var sourceDBIdentifier string
+	if v.ReadReplicaSourceDBInstanceIdentifier != nil {
+		sourceDBIdentifier = aws.ToString(v.ReadReplicaSourceDBInstanceIdentifier)
+		if original, ok := d.GetOk("replicate_source_db"); ok {
+			original := original.(string)
+			if arn.IsARN(original) {
+				if !arn.IsARN(sourceDBIdentifier) {
+					awsClient := meta.(*conns.AWSClient)
+					sourceDBIdentifier = newDBInstanceARNString(ctx, awsClient, sourceDBIdentifier)
+				}
+			}
+		}
+	}
+	d.Set("replicate_source_db", sourceDBIdentifier)
+
 	d.Set(names.AttrResourceID, v.DbiResourceId)
 	d.Set(names.AttrStatus, v.DBInstanceStatus)
 	d.Set(names.AttrStorageEncrypted, v.StorageEncrypted)
@@ -2669,6 +2687,10 @@ func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *types
 		pendingVersion = aws.ToString(c.PendingModifiedValues.EngineVersion)
 	}
 	compareActualEngineVersion(d, oldVersion, newVersion, pendingVersion)
+}
+
+func newDBInstanceARNString(ctx context.Context, client *conns.AWSClient, identifier string) string {
+	return client.RegionalARN(ctx, "rds", "db:"+identifier)
 }
 
 type dbInstanceARN struct {
