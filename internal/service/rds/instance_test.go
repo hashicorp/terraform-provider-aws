@@ -1053,6 +1053,10 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 					names.AttrPassword,
 				},
 			},
+			{
+				Config:   testAccInstanceConfig_ReplicateSourceDB_sourceARN(rName),
+				PlanOnly: true,
+			},
 		},
 	})
 }
@@ -1204,6 +1208,10 @@ func TestAccRDSInstance_ReplicateSourceDB_sourceARN(t *testing.T) {
 					names.AttrPassword,
 					"replicate_source_db",
 				},
+			},
+			{
+				Config:   testAccInstanceConfig_ReplicateSourceDB_basic(rName),
+				PlanOnly: true,
 			},
 		},
 	})

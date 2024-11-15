@@ -541,8 +541,10 @@ func resourceInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"replicate_source_db": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				DiffSuppressFunc:      instanceReplicateSourceDBSuppressDiff,
+				DiffSuppressOnRefresh: true,
 			},
 			names.AttrResourceID: {
 				Type:     schema.TypeString,
@@ -3153,4 +3155,26 @@ func stopInstance(ctx context.Context, conn *rds.Client, id string, timeout time
 	}
 
 	return nil
+}
+
+func instanceReplicateSourceDBSuppressDiff(_, old, new string, _ *schema.ResourceData) bool {
+	// Ideally, we'd be able to check the partition, region, and accountID, but that's not available in SDK
+	if arn.IsARN(old) {
+		if new != "" && !arn.IsARN(new) {
+			if oldARN, err := parseDBInstanceARN(old); err != nil {
+				return false
+			} else {
+				return oldARN.Identifier == new
+			}
+		}
+	} else if arn.IsARN(new) {
+		if old != "" && !arn.IsARN(old) {
+			if newARN, err := parseDBInstanceARN(new); err != nil {
+				return false
+			} else {
+				return newARN.Identifier == old
+			}
+		}
+	}
+	return false
 }
