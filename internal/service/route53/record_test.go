@@ -75,6 +75,36 @@ func TestAccRoute53Record_basic(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Record_Create_escaped_name(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+
+	zoneName := "0/24." + acctest.RandomDomain()
+	recordName := "0"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_basic(zoneName.String(), recordName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				//ImportStateVerifyIgnore: []string{names.AttrForceDestroy},
+			},
+		},
+	})
+}
+
 func TestAccRoute53Record_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.ResourceRecordSet
