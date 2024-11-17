@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_aws_cloudfront_distribution: Change the default value of `is_ipv6_enabled` from `false` to `true`
+```
