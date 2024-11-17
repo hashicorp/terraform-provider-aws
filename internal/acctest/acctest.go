@@ -34,6 +34,7 @@ import (
 	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
@@ -1100,6 +1101,27 @@ func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) *organizati
 	t.Helper()
 
 	return PreCheckOrganizationsEnabledWithProvider(ctx, t, func() *schema.Provider { return Provider })
+}
+
+func PreCheckOrganizationsAWSServiceAccess(ctx context.Context, t *testing.T, servicePrincipal string) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)
+
+	paginator := organizations.NewListAWSServiceAccessForOrganizationPaginator(conn, &organizations.ListAWSServiceAccessForOrganizationInput{})
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			t.Fatalf("Listing AWS Organization Service Access: %s", err)
+		}
+
+		for _, service := range page.EnabledServicePrincipals {
+			if aws.ToString(service.ServicePrincipal) == servicePrincipal {
+				return
+			}
+		}
+	}
+	t.Skipf("skipping tests; The AWS Organization service %s must be enabled on AWS Organization", servicePrincipal)
 }
 
 func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) *organizationstypes.Organization {

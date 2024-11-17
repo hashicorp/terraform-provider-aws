@@ -29,6 +29,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Group Policy Attachments Exclusive",
 		},
 		{
+			Factory: newResourceOrganizationFeatures,
+			Name:    "Organization Features",
+		},
+		{
 			Factory: newResourceRolePoliciesExclusive,
 			Name:    "Role Policies Exclusive",
 		},
