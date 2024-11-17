@@ -249,7 +249,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `default_cache_behavior` (Required) - [Default cache behavior](#default-cache-behavior-arguments) for this distribution (maximum one). Requires either `cache_policy_id` (preferred) or `forwarded_values` (deprecated) be set.
 * `default_root_object` (Optional) - Object that you want CloudFront to return (for example, index.html) when an end user requests the root URL.
 * `enabled` (Required) - Whether the distribution is enabled to accept end user requests for content.
-* `is_ipv6_enabled` (Optional) - Whether the IPv6 is enabled for the distribution.
+* `is_ipv6_enabled` (Optional) - Whether the IPv6 is enabled for the distribution. Default: `true`.
 * `http_version` (Optional) - Maximum HTTP version to support on the distribution. Allowed values are `http1.1`, `http2`, `http2and3` and `http3`. The default is `http2`.
 * `logging_config` (Optional) - The [logging configuration](#logging-config-arguments) that controls how logs are written to your distribution (maximum one).
 * `ordered_cache_behavior` (Optional) - Ordered list of [cache behaviors](#cache-behavior-arguments) resource for this distribution. List from top to bottom in order of precedence. The topmost cache behavior will have precedence 0.
