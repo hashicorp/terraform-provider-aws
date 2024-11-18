@@ -118,7 +118,10 @@ func (r *resourceJobDefinition) Schema(ctx context.Context, req resource.SchemaR
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[0-9A-Za-z]{1}[0-9A-Za-z_-]{0,127}$`), `must be up to 128 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric`),
+					stringvalidator.RegexMatches(
+						regexp.MustCompile(`^[0-9A-Za-z]{1}[0-9A-Za-z_-]{0,127}$`),
+						`must be up to 128 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric`,
+					),
 				},
 			},
 			"node_properties": schema.StringAttribute{
@@ -198,7 +201,7 @@ func (r *resourceJobDefinition) readJobDefinitionIntoState(ctx context.Context, 
 		flex.WithFieldNamePrefix("JobDefinition"),
 	)...)
 	if resp.HasError() {
-		return
+		return resp
 	}
 
 	state.ID = types.StringPointerValue(jd.JobDefinitionArn)
@@ -217,7 +220,7 @@ func (r *resourceJobDefinition) readJobDefinitionIntoState(ctx context.Context, 
 				create.ProblemStandardMessage(names.Batch, create.ErrActionSetting, ResNameJobDefinition, state.ID.String(), err),
 				err.Error(),
 			)
-			return
+			return resp
 		}
 		state.ContainerProperties = jsontypes.NewNormalizedValue(string(containerProps))
 	}
@@ -229,7 +232,7 @@ func (r *resourceJobDefinition) readJobDefinitionIntoState(ctx context.Context, 
 				create.ProblemStandardMessage(names.Batch, create.ErrActionSetting, ResNameJobDefinition, state.ID.String(), err),
 				err.Error(),
 			)
-			return
+			return resp
 		}
 		state.ECSProperties = types.StringValue(ecsProps)
 	}
@@ -241,7 +244,7 @@ func (r *resourceJobDefinition) readJobDefinitionIntoState(ctx context.Context, 
 				create.ProblemStandardMessage(names.Batch, create.ErrActionSetting, ResNameJobDefinition, state.ID.String(), err),
 				err.Error(),
 			)
-			return
+			return resp
 		}
 		state.NodeProperties = types.StringValue(string(nodeProps))
 	}
@@ -474,7 +477,7 @@ func (r *resourceJobDefinition) Update(ctx context.Context, req resource.UpdateR
 	state.ID = types.StringPointerValue(out.JobDefinitionArn)
 	state.Revision = types.Int32PointerValue(out.Revision)
 
-	if v := plan.DeregisterOnNewRevision.ValueBool(); v == true {
+	if plan.DeregisterOnNewRevision.ValueBool() {
 		tflog.Debug(ctx, fmt.Sprintf("[DEBUG] Deleting previous Batch Job Definition: %s", *out.JobDefinitionArn))
 		_, err := conn.DeregisterJobDefinition(ctx, &batch.DeregisterJobDefinitionInput{
 			JobDefinition: out.JobDefinitionArn,
@@ -533,7 +536,7 @@ func (r *resourceJobDefinition) Delete(ctx context.Context, req resource.DeleteR
 }
 
 func (r *resourceJobDefinition) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func (r *resourceJobDefinition) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {

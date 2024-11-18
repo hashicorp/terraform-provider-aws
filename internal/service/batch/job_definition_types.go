@@ -30,11 +30,11 @@ func (m *ecsStringPlanModifier) PlanModifyString(ctx context.Context, req planmo
 }
 
 func (m *ecsStringPlanModifier) Description(ctx context.Context) string {
-	return "Compares JSON strings by parsing and comparing their content"
+	return "compares ecs properties by parsing and comparing their content"
 }
 
 func (m *ecsStringPlanModifier) MarkdownDescription(ctx context.Context) string {
-	return "Compares JSON strings by parsing and comparing their content"
+	return m.Description(ctx)
 }
 
 func ECSStringPlanModifier() planmodifier.String {
@@ -57,11 +57,11 @@ func (m *containerPropertiesStringPlanModifier) PlanModifyString(ctx context.Con
 }
 
 func (m *containerPropertiesStringPlanModifier) Description(ctx context.Context) string {
-	return "Compares JSON strings by parsing and comparing their content"
+	return "compares container properties by parsing and comparing their content"
 }
 
 func (m *containerPropertiesStringPlanModifier) MarkdownDescription(ctx context.Context) string {
-	return "Compares JSON strings by parsing and comparing their content"
+	return m.Description(ctx)
 }
 
 func ContainerPropertiesStringPlanModifier() planmodifier.String {
@@ -84,11 +84,11 @@ func (m *nodePropertiesStringPlanModifier) PlanModifyString(ctx context.Context,
 }
 
 func (m *nodePropertiesStringPlanModifier) Description(ctx context.Context) string {
-	return "Compares JSON strings by parsing and comparing their content"
+	return "compares node properties by parsing and comparing their content"
 }
 
 func (m *nodePropertiesStringPlanModifier) MarkdownDescription(ctx context.Context) string {
-	return "Compares JSON strings by parsing and comparing their content"
+	return m.Description(ctx)
 }
 
 func NodePropertiesStringPlanModifier() planmodifier.String {

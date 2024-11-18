@@ -235,9 +235,26 @@ type eksPropertiesModel struct {
 	PodProperties fwtypes.ListNestedObjectValueOf[eksPodPropertiesModel] `tfsdk:"pod_properties"`
 }
 
+type DNSPolicy struct {
+	types.String
+}
+
+func (d DNSPolicy) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	for _, v := range dnsPolicy_Values() {
+		if strings.EqualFold(v, req.ConfigValue.ValueString()) {
+			return
+		}
+	}
+	resp.Diagnostics.AddAttributeError(
+		req.Path,
+		"Invalid DNS Policy",
+		fmt.Sprintf("must be one of %s", strings.Join(dnsPolicy_Values(), ", ")),
+	)
+}
+
 type eksPodPropertiesModel struct {
 	Containers            fwtypes.ListNestedObjectValueOf[eksContainerModel]   `tfsdk:"containers"`
-	DNSPolicy             types.String                                         `tfsdk:"dns_policy"`
+	DNSPolicy             DNSPolicy                                            `tfsdk:"dns_policy"`
 	HostNetwork           types.Bool                                           `tfsdk:"host_network"`
 	ImagePullSecrets      fwtypes.ListNestedObjectValueOf[eksImagePullSecrets] `tfsdk:"image_pull_secrets"`
 	InitContainers        fwtypes.ListNestedObjectValueOf[eksContainerModel]   `tfsdk:"init_containers"`
@@ -251,12 +268,29 @@ type eksImagePullSecrets struct {
 	Name types.String `tfsdk:"name"`
 }
 
+type ImagePullPolicy struct {
+	types.String
+}
+
+func (d ImagePullPolicy) ValidateString(ctx context.Context, req validator.StringRequest, resp *validator.StringResponse) {
+	for _, v := range imagePullPolicy_Values() {
+		if strings.EqualFold(v, req.ConfigValue.ValueString()) {
+			return
+		}
+	}
+	resp.Diagnostics.AddAttributeError(
+		req.Path,
+		"Invalid Image Pull Secret",
+		fmt.Sprintf("must be one of %s", strings.Join(imagePullPolicy_Values(), ", ")),
+	)
+}
+
 type eksContainerModel struct {
 	Args            fwtypes.ListValueOf[types.String]                                      `tfsdk:"args"`
 	Command         fwtypes.ListValueOf[types.String]                                      `tfsdk:"command"`
 	Env             fwtypes.ListNestedObjectValueOf[eksContainerEnvironmentVariableModel]  `tfsdk:"env"`
 	Image           types.String                                                           `tfsdk:"image"`
-	ImagePullPolicy types.String                                                           `tfsdk:"image_pull_policy"`
+	ImagePullPolicy ImagePullPolicy                                                        `tfsdk:"image_pull_policy"`
 	Name            types.String                                                           `tfsdk:"name"`
 	Resources       fwtypes.ListNestedObjectValueOf[eksContainerResourceRequirementsModel] `tfsdk:"resources"`
 	SecurityContext fwtypes.ListNestedObjectValueOf[eksContainerSecurityContextModel]      `tfsdk:"security_context"`
