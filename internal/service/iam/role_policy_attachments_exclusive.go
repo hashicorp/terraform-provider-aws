@@ -144,7 +144,7 @@ func (r *resourceRolePolicyAttachmentsExclusive) Update(ctx context.Context, req
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// syncAttachments handles keeping the configured managed IAM policies
+// syncAttachments handles keeping the configured managed IAM policy
 // attachments in sync with the remote resource.
 //
 // Managed IAM policies defined on this resource but not attached to
