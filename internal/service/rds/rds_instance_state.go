@@ -51,7 +51,7 @@ func (r *resourceRDSInstanceState) Metadata(_ context.Context, req resource.Meta
 func (r *resourceRDSInstanceState) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
+			"identifier": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -82,7 +82,7 @@ func (r *resourceRDSInstanceState) Create(ctx context.Context, req resource.Crea
 		return
 	}
 
-	instanceID := plan.ID.ValueString()
+	instanceID := plan.Identifier.ValueString()
 
 	instance, err := waitDBInstanceAvailable(ctx, conn, instanceID, r.CreateTimeout(ctx, plan.Timeouts))
 	if err != nil {
@@ -94,6 +94,8 @@ func (r *resourceRDSInstanceState) Create(ctx context.Context, req resource.Crea
 	if err := updateRDSInstanceState(ctx, conn, instanceID, aws.ToString(instance.DBInstanceStatus), plan.State.ValueString(), r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", instanceID), err.Error())
 	}
+
+	plan.State = flex.StringToFramework(ctx, instance.DBInstanceStatus)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -107,14 +109,14 @@ func (r *resourceRDSInstanceState) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	out, err := findDBInstanceByID(ctx, conn, state.ID.ValueString())
+	out, err := findDBInstanceByID(ctx, conn, state.Identifier.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionSetting, ResNameRDSInstanceState, state.ID.String(), err),
+			create.ProblemStandardMessage(names.RDS, create.ErrActionSetting, ResNameRDSInstanceState, state.Identifier.String(), err),
 			err.Error(),
 		)
 		return
@@ -135,15 +137,15 @@ func (r *resourceRDSInstanceState) Update(ctx context.Context, req resource.Upda
 		return
 	}
 
-	if _, err := waitDBInstanceAvailable(ctx, conn, state.ID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", state.ID.ValueString()), err.Error())
+	if _, err := waitDBInstanceAvailable(ctx, conn, state.Identifier.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+		resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", state.Identifier.ValueString()), err.Error())
 
 		return
 	}
 
 	if !plan.State.Equal(state.State) {
-		if err := updateRDSInstanceState(ctx, conn, state.ID.ValueString(), state.State.ValueString(), plan.State.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", state.ID.ValueString()), err.Error())
+		if err := updateRDSInstanceState(ctx, conn, state.Identifier.ValueString(), state.State.ValueString(), plan.State.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+			resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", state.Identifier.ValueString()), err.Error())
 		}
 	}
 
@@ -171,7 +173,7 @@ func updateRDSInstanceState(ctx context.Context, conn *rds.Client, id string, cu
 }
 
 type resourceRDSInstanceStateData struct {
-	ID       types.String   `tfsdk:"id"`
-	State    types.String   `tfsdk:"state"`
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	Identifier types.String   `tfsdk:"identifier"`
+	State      types.String   `tfsdk:"state"`
+	Timeouts   timeouts.Value `tfsdk:"timeouts"`
 }

@@ -22,15 +22,9 @@ import (
 
 func TestAccRDSRDSInstanceState_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_instance_state.test"
-	state := "stopped"
+	state := "available"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -43,11 +37,48 @@ func TestAccRDSRDSInstanceState_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRDSInstanceStateConfig_basic(rName, "stopped"),
+				Config: testAccRDSInstanceStateConfig_basic(rName, "available"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRDSInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, state),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSRDSInstanceState_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_instance_state.test"
+	stateAvailable := "available"
+	stateStopped := "stopped"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// acctest.PreCheckPartitionHasService(t, names.RDSEndpointID)
+			// testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRDSInstanceStateConfig_basic(rName, "available"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRDSInstanceStateExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrIdentifier),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateAvailable),
+				),
+			},
+			{
+				Config: testAccRDSInstanceStateConfig_basic(rName, "stopped"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRDSInstanceStateExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrIdentifier),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateStopped),
 				),
 			},
 		},
@@ -96,14 +127,14 @@ func testAccCheckRDSInstanceStateExists(ctx context.Context, name string) resour
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
-		out, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
+		out, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
 		if err != nil {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameRDSInstanceState, rs.Primary.ID, err)
+			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameRDSInstanceState, rs.Primary.Attributes[names.AttrIdentifier], err)
 		}
 
 		if out == nil {
-			return fmt.Errorf("Instance State %q does not exist", rs.Primary.ID)
+			return fmt.Errorf("Instance State %q does not exist", rs.Primary.Attributes[names.AttrIdentifier])
 		}
 
 		return nil
@@ -115,8 +146,8 @@ func testAccRDSInstanceStateConfig_basic(rName, state string) string {
 		testAccInstanceConfig_basic(rName),
 		fmt.Sprintf(`
 resource "aws_rds_instance_state" "test" {
-  id    = aws_db_instance.test.id
+  identifier    = aws_db_instance.test.identifier
   state = %[1]q
 }
-`, rName))
+`, state))
 }
