@@ -43,7 +43,7 @@ resource "aws_iam_user_policy_attachments_exclusive" "example" {
 The following arguments are required:
 
 * `user_name` - (Required) IAM user name.
-* `policy_arns` - (Required) A list of managed IAM policies ARNs to be attached to the user. Policies attached to this user but not configured in this argument will be removed.
+* `policy_arns` - (Required) A list of managed IAM policy ARNs to be attached to the user. Policies attached to this user but not configured in this argument will be removed.
 
 ## Attribute Reference
 

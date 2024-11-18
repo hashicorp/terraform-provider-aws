@@ -43,7 +43,7 @@ resource "aws_iam_role_policy_attachments_exclusive" "example" {
 The following arguments are required:
 
 * `role_name` - (Required) IAM role name.
-* `policy_arns` - (Required) A list of managed IAM policies ARNs to be attached to the role. Policies attached to this role but not configured in this argument will be removed.
+* `policy_arns` - (Required) A list of managed IAM policy ARNs to be attached to the role. Policies attached to this role but not configured in this argument will be removed.
 
 ## Attribute Reference
 

@@ -43,7 +43,7 @@ resource "aws_iam_group_policy_attachments_exclusive" "example" {
 The following arguments are required:
 
 * `group_name` - (Required) IAM group name.
-* `policy_arns` - (Required) A list of managed IAM policies ARNs to be attached to the group. Policies attached to this group but not configured in this argument will be removed.
+* `policy_arns` - (Required) A list of managed IAM policy ARNs to be attached to the group. Policies attached to this group but not configured in this argument will be removed.
 
 ## Attribute Reference
 
