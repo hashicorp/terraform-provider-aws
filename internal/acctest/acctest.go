@@ -1121,7 +1121,7 @@ func PreCheckOrganizationsTrustedServicePrincipalAccess(ctx context.Context, t *
 			}
 		}
 	}
-	t.Skipf("skipping tests; The AWS Organization service %s must be enabled on AWS Organization", servicePrincipal)
+	t.Skipf("skipping tests; The AWS Organization service principal trusted access for %s must be enabled.", servicePrincipal)
 }
 
 func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) *organizationstypes.Organization {

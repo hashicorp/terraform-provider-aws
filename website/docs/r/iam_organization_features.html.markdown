@@ -22,7 +22,7 @@ resource "aws_organizations_organization" "example" {
 
 resource "aws_iam_organization_features" "example" {
   features = [
-    "RootCredentialsManagement", 
+    "RootCredentialsManagement",
     "RootSessions"
   ]
 }
