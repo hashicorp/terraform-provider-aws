@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	_ "github.com/aws/aws-sdk-go-v2/service/batch" // Required for go:linkname
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
-	smithyjson "github.com/aws/smithy-go/encoding/json"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
@@ -132,35 +131,4 @@ func equivalentEKSPropertiesJSON(str1, str2 string) (bool, error) {
 	}
 
 	return tfjson.EqualBytes(b1, b2), nil
-}
-
-func expandEKSProperties(tfString string) (*awstypes.EksProperties, error) {
-	apiObject := &awstypes.EksProperties{}
-
-	if err := tfjson.DecodeFromString(tfString, apiObject); err != nil {
-		return nil, err
-	}
-
-	return apiObject, nil
-}
-
-// Dirty hack to avoid any backwards compatibility issues with the AWS SDK for Go v2 migration.
-// Reach down into the SDK and use the same serialization function that the SDK uses.
-//
-//go:linkname serializeEKSPProperties github.com/aws/aws-sdk-go-v2/service/batch.awsRestjson1_serializeDocumentEksProperties
-func serializeEKSPProperties(v *awstypes.EksProperties, value smithyjson.Value) error
-
-func flattenEKSroperties(apiObject *awstypes.EksProperties) (string, error) {
-	if apiObject == nil {
-		return "", nil
-	}
-
-	jsonEncoder := smithyjson.NewEncoder()
-	err := serializeEKSPProperties(apiObject, jsonEncoder.Value)
-
-	if err != nil {
-		return "", err
-	}
-
-	return jsonEncoder.String(), nil
 }
