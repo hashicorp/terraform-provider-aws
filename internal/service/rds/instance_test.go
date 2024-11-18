@@ -1639,6 +1639,83 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_basic(t *testing.T) 
 	})
 }
 
+func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_sameAsSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance types.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_db_instance.source"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_sameAsSource(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", sourceResourceName, "db_subnet_group_name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_sameVPC(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance types.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	sourceResourceName := "aws_db_instance.source"
+	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_sameVPC(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckDBInstanceExists(ctx, resourceName, &dbInstance),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, names.AttrName),
+				),
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateCheck: acctest.ComposeAggregateImportStateCheckFunc(
+					acctest.ImportCheckResourceAttr("replicate_source_db", rName+"-source"),
+				),
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					names.AttrApplyImmediately,
+					names.AttrPassword,
+					"replicate_source_db",
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -9446,6 +9523,75 @@ resource "aws_db_instance" "source" {
   username                = "tfacctest"
   db_subnet_group_name    = aws_db_subnet_group.source.name
   skip_final_snapshot     = true
+}
+
+resource "aws_db_subnet_group" "source" {
+  name       = "%[1]s-source"
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_sameAsSource(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  instance_class       = aws_db_instance.source.instance_class
+  replicate_source_db  = aws_db_instance.source.arn
+  db_subnet_group_name = aws_db_subnet_group.source.name
+  skip_final_snapshot  = true
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  db_subnet_group_name    = aws_db_subnet_group.source.name
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_subnet_group" "source" {
+  name       = "%[1]s-source"
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName_sameVPC(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier           = %[1]q
+  instance_class       = aws_db_instance.source.instance_class
+  replicate_source_db  = aws_db_instance.source.arn
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  skip_final_snapshot  = true
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  db_subnet_group_name    = aws_db_subnet_group.source.name
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_db_subnet_group" "source" {
