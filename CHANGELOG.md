@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_rds_global_cluster: Add `endpoint` argument to point to the writer DB instance in the current primary cluster ([#39960](https://github.com/hashicorp/terraform-provider-aws/issues/39960))
 
+BUG FIXES:
+
+* data-source/aws_subnet: Set `tags` from the `DescribeSubnets` response, removing the need for the `ec2:DescribeTags` IAM permission ([#40144](https://github.com/hashicorp/terraform-provider-aws/issues/40144))
+
 ## 5.76.0 (November 14, 2024)
 
 FEATURES:
