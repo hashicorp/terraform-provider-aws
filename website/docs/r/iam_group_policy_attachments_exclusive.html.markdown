@@ -29,7 +29,7 @@ resource "aws_iam_group_policy_attachments_exclusive" "example" {
 
 To automatically remove any configured managed IAM policies, set the `policy_arns` argument to an empty list.
 
-~> This will not **prevent** managed IAM policies from being assigned to a group via Terraform (or any other interface). This resource enables bringing managed IAM policies assignments into a configured state, however, this reconciliation happens only when `apply` is proactively run.
+~> This will not **prevent** managed IAM policies from being assigned to a group via Terraform (or any other interface). This resource enables bringing managed IAM policy assignments into a configured state, however, this reconciliation happens only when `apply` is proactively run.
 
 ```terraform
 resource "aws_iam_group_policy_attachments_exclusive" "example" {
@@ -42,8 +42,8 @@ resource "aws_iam_group_policy_attachments_exclusive" "example" {
 
 The following arguments are required:
 
-- `group_name` - (Required) IAM group name.
-- `policy_arns` - (Required) A list of managed IAM policies ARNs to be attached to the group. Policies attached to this group but not configured in this argument will be removed.
+* `group_name` - (Required) IAM group name.
+* `policy_arns` - (Required) A list of managed IAM policies ARNs to be attached to the group. Policies attached to this group but not configured in this argument will be removed.
 
 ## Attribute Reference
 
@@ -51,7 +51,7 @@ This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to exclusively manage managed IAM policies assignments using the `group_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to exclusively manage managed IAM policy assignments using the `group_name`. For example:
 
 ```terraform
 import {
@@ -60,7 +60,7 @@ import {
 }
 ```
 
-Using `terraform import`, import exclusive management of managed IAM policies assignments using the `group_name`. For example:
+Using `terraform import`, import exclusive management of managed IAM policy assignments using the `group_name`. For example:
 
 ```console
 % terraform import aws_iam_group_policy_attachments_exclusive.example MyGroup
