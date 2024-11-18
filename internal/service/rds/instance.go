@@ -3084,7 +3084,7 @@ func flattenEndpoint(apiObject *types.Endpoint) map[string]interface{} {
 	return tfMap
 }
 
-func startInstance(ctx context.Context, conn *rds.Client, id string, retry bool, timeout time.Duration) error {
+func startInstance(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) error {
 	var err error
 
 	tflog.Info(ctx, "Starting RDS Instance", map[string]any{
@@ -3105,10 +3105,9 @@ func startInstance(ctx context.Context, conn *rds.Client, id string, retry bool,
 	return nil
 }
 
-func stopInstance(ctx context.Context, conn *rds.Client, id string, force bool, timeout time.Duration) error {
+func stopInstance(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) error {
 	tflog.Info(ctx, "Stopping RDS Instance", map[string]any{
 		"rds_instance_id": id,
-		"force":           force,
 	})
 	_, err := conn.StopDBInstance(ctx, &rds.StopDBInstanceInput{
 		DBInstanceIdentifier: &id,
