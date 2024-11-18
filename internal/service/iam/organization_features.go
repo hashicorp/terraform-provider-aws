@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_iam_organization_features", name="Organization Features")
 func newResourceOrganizationFeatures(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceOrganizationFeatures{}
