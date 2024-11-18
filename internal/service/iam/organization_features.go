@@ -13,13 +13,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -142,7 +139,7 @@ func (r *resourceOrganizationFeatures) Update(ctx context.Context, req resource.
 		return
 	}
 
-	_, err := manageOrganizationFeatures(ctx, conn, planFeatures, stateFeatures)
+	out, err := manageOrganizationFeatures(ctx, conn, planFeatures, stateFeatures)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameOrganizationFeatures, plan.OrganizationId.String(), err),
@@ -150,6 +147,7 @@ func (r *resourceOrganizationFeatures) Update(ctx context.Context, req resource.
 		)
 		return
 	}
+	plan.OrganizationId = flex.StringToFramework(ctx, out.OrganizationId)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -175,11 +173,10 @@ func (r *resourceOrganizationFeatures) Delete(ctx context.Context, req resource.
 		)
 		return
 	}
-
 }
 
 func (r *resourceOrganizationFeatures) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 type resourceOrganizationFeaturesModel struct {
@@ -188,7 +185,6 @@ type resourceOrganizationFeaturesModel struct {
 }
 
 func manageOrganizationFeatures(ctx context.Context, conn *iam.Client, planFeatures, stateFeatures []string) (*iam.ListOrganizationsFeaturesOutput, error) {
-
 	var featuresToEnable, featuresToDisable []string
 	for _, feature := range planFeatures {
 		if !slices.Contains(stateFeatures, feature) {
@@ -200,7 +196,6 @@ func manageOrganizationFeatures(ctx context.Context, conn *iam.Client, planFeatu
 			featuresToDisable = append(featuresToDisable, feature)
 		}
 	}
-
 	if slices.Contains(featuresToEnable, string(awstypes.FeatureTypeRootCredentialsManagement)) {
 		var input iam.EnableOrganizationsRootCredentialsManagementInput
 		_, err := conn.EnableOrganizationsRootCredentialsManagement(ctx, &input)

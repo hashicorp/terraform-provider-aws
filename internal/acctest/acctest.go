@@ -1103,7 +1103,7 @@ func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) *organizati
 	return PreCheckOrganizationsEnabledWithProvider(ctx, t, func() *schema.Provider { return Provider })
 }
 
-func PreCheckOrganizationsAWSServiceAccess(ctx context.Context, t *testing.T, servicePrincipal string) {
+func PreCheckOrganizationsTrustedServicePrincipalAccess(ctx context.Context, t *testing.T, servicePrincipal string) {
 	t.Helper()
 
 	conn := Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx)

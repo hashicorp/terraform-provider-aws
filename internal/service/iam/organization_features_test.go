@@ -16,21 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 func TestAccIAMOrganizationFeatures_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var organizationfeatures iam.ListOrganizationsFeaturesOutput
@@ -40,7 +29,7 @@ func TestAccIAMOrganizationFeatures_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
-			acctest.PreCheckOrganizationsAWSServiceAccess(ctx, t, "iam.amazonaws.com")
+			acctest.PreCheckOrganizationsTrustedServicePrincipalAccess(ctx, t, "iam.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -57,35 +46,11 @@ func TestAccIAMOrganizationFeatures_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: false,
 			},
-		},
-	})
-}
-
-func TestAccIAMOrganizationFeatures_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var organizationfeatures iam.ListOrganizationsFeaturesOutput
-	resourceName := "aws_iam_organization_features.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(ctx, t)
-			acctest.PreCheckOrganizationsAWSServiceAccess(ctx, t, "iam.amazonaws.com")
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationFeaturesDestroy(ctx),
-		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationFeaturesConfig_basic([]string{"RootCredentialsManagement", "RootSessions"}),
+				Config: testAccOrganizationFeaturesConfig_basic([]string{"RootCredentialsManagement"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationFeaturesExists(ctx, resourceName, &organizationfeatures),
 				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
