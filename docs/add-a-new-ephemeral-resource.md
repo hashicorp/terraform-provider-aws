@@ -61,7 +61,7 @@ func (r *ephemeralExample) Metadata(_ context.Context, request ephemeral.Metadat
 
 ### Write Passing Acceptance Tests
 
-To adequately test the ephemeral resource we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the provider to read to state of the associated resource. See [Writing Acceptance Tests](running-and-writing-acceptance-tests.md) for a detailed guide on how to approach these.
+To properly test the ephemeral resource, write a complete set of acceptance tests. An AWS account is required, which allows the provider to communicate with the AWS API. For a detailed guide on how to write and run these tests, refer to [Writing Acceptance Tests](running-and-writing-acceptance-tests.md).
 
 You will need at a minimum:
 
