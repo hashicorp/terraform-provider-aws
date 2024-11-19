@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"regexp"
 	"slices"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -62,6 +63,7 @@ func TestAccELBV2Listener_Application_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "tcp_idle_timeout_seconds"),
 				),
 			},
 			{
@@ -114,6 +116,7 @@ func TestAccELBV2Listener_Network_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tcp_idle_timeout_seconds", "350"),
 				),
 			},
 			{
@@ -165,6 +168,7 @@ func TestAccELBV2Listener_Gateway_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tcp_idle_timeout_seconds", "350"),
 				),
 			},
 			{
@@ -1013,7 +1017,7 @@ func TestAccELBV2Listener_attributes_gwlb_TCPIdleTimeoutSeconds(t *testing.T) {
 	lbResourceName := "aws_lb.test"
 	resourceName := "aws_lb_listener.test"
 	tcpTimeout1 := 60
-	// tcpTimeout2 := 6000
+	tcpTimeout2 := 6000
 
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1032,8 +1036,7 @@ func TestAccELBV2Listener_attributes_gwlb_TCPIdleTimeoutSeconds(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", lbResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "0"),
-					resource.TestCheckResourceAttr(resourceName, "tcp_idle_timeout_seconds", "60"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tcp_idle_timeout_seconds", strconv.Itoa(tcpTimeout1)),
 				),
 			},
 			{
@@ -1043,6 +1046,16 @@ func TestAccELBV2Listener_attributes_gwlb_TCPIdleTimeoutSeconds(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"default_action.0.forward",
 				},
+			},
+			{
+				Config: testAccListenerConfig_attributes_gwlbTCPIdleTimeoutSeconds(rName, tcpTimeout2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", lbResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tcp_idle_timeout_seconds", strconv.Itoa(tcpTimeout2)),
+				),
 			},
 		},
 	})
@@ -1053,6 +1066,8 @@ func TestAccELBV2Listener_attributes_nlb_TCPIdleTimeoutSeconds(t *testing.T) {
 	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	tcpTimeout1 := 60
+	tcpTimeout2 := 6000
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -1061,31 +1076,13 @@ func TestAccELBV2Listener_attributes_nlb_TCPIdleTimeoutSeconds(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerConfig_attributes_nlbTCPIdleTimeoutSeconds(rName),
+				Config: testAccListenerConfig_attributes_nlbTCPIdleTimeoutSeconds(rName, tcpTimeout1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr("aws_lb.test", "load_balancer_type", "network"),
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
-					resource.TestCheckNoResourceAttr(resourceName, "alpn_policy"),
-					resource.TestCheckNoResourceAttr(resourceName, names.AttrCertificateARN),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_cognito.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_oidc.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
-					resource.TestCheckResourceAttr(resourceName, "ssl_policy", ""),
-					resource.TestCheckResourceAttr(resourceName, "tcp_idle_timeout_seconds", "60"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "tcp_idle_timeout_seconds", strconv.Itoa(tcpTimeout1)),
 				),
 			},
 			{
@@ -1095,6 +1092,16 @@ func TestAccELBV2Listener_attributes_nlb_TCPIdleTimeoutSeconds(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"default_action.0.forward",
 				},
+			},
+			{
+				Config: testAccListenerConfig_attributes_nlbTCPIdleTimeoutSeconds(rName, tcpTimeout2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "TCP"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "80"),
+					resource.TestCheckResourceAttr(resourceName, "tcp_idle_timeout_seconds", strconv.Itoa(tcpTimeout2)),
+				),
 			},
 		},
 	})
@@ -2964,7 +2971,7 @@ resource "aws_lb_listener" "test" {
 `, rName, seconds))
 }
 
-func testAccListenerConfig_attributes_nlbTCPIdleTimeoutSeconds(rName string) string {
+func testAccListenerConfig_attributes_nlbTCPIdleTimeoutSeconds(rName string, seconds int) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
@@ -2976,7 +2983,8 @@ resource "aws_lb_listener" "test" {
     target_group_arn = aws_lb_target_group.test.id
     type             = "forward"
   }
-  tcp_idle_timeout_seconds = 60
+
+  tcp_idle_timeout_seconds = %[2]d
 }
 
 resource "aws_lb" "test" {
@@ -3012,7 +3020,7 @@ resource "aws_lb_target_group" "test" {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, seconds))
 }
 
 func testAccListenerConfig_Forward_changeWeightedToBasic(rName, rName2 string) string {

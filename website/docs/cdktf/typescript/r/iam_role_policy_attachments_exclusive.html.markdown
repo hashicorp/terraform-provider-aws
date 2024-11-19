@@ -11,7 +11,9 @@ description: |-
 
 Terraform resource for maintaining exclusive management of customer managed policies assigned to an AWS IAM (Identity & Access Management) role.
 
-!> This resource takes exclusive ownership over customer managed policies assigned to a role. This includes removal of customer managed policies which are not explicitly configured. To prevent persistent drift, ensure any `aws_iam_role_policy_attachment` resources managed alongside this resource are included in the `policyArns` argument.
+!> This resource takes exclusive ownership over customer managed policies attached to a role. This includes removal of customer managed policies which are not explicitly configured. To prevent persistent drift, ensure any `aws_iam_role_policy_attachment` resources managed alongside this resource are included in the `policyArns` argument.
+
+~> Destruction of this resource means Terraform will no longer manage reconciliation of the configured policy attachments. It __will not__ detach the configured policies from the role.
 
 ## Example Usage
 
@@ -111,4 +113,4 @@ Using `terraform import`, import exclusive management of customer managed policy
 % terraform import aws_iam_role_policy_attachments_exclusive.example MyRole
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-20fa96ef2b1ed67597c98c6c0172b5f0e97e1712c24dac0bd3467388c04573d2 -->
+<!-- cache-key: cdktf-0.20.8 input-0de90380db2d868b6779517650d4ed2ea66aa1fa4ea7dc903b086a86e35c2a65 -->

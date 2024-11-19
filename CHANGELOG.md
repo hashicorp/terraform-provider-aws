@@ -1,4 +1,56 @@
-## 5.75.0 (Unreleased)
+## 5.77.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_rds_global_cluster: Add `endpoint` argument to point to the writer DB instance in the current primary cluster ([#39960](https://github.com/hashicorp/terraform-provider-aws/issues/39960))
+
+BUG FIXES:
+
+* data-source/aws_subnet: Set `tags` from the `DescribeSubnets` response, removing the need for the `ec2:DescribeTags` IAM permission ([#40144](https://github.com/hashicorp/terraform-provider-aws/issues/40144))
+* resource/aws_eks_addon: Fix crash when `pod_identity_association` is modified ([#40168](https://github.com/hashicorp/terraform-provider-aws/issues/40168))
+* resource/aws_eks_addon: Fix to prevent persistent differences when `pod_identity_association` is changed ([#40168](https://github.com/hashicorp/terraform-provider-aws/issues/40168))
+
+## 5.76.0 (November 14, 2024)
+
+FEATURES:
+
+* **New Resource:** `aws_vpc_security_group_vpc_association` ([#40069](https://github.com/hashicorp/terraform-provider-aws/issues/40069))
+
+ENHANCEMENTS:
+
+* resource/aws_medialive_channel: Add missing h265 codec settings ([#40071](https://github.com/hashicorp/terraform-provider-aws/issues/40071))
+
+BUG FIXES:
+
+* resource/aws_api_gateway_integration: Fix `BadRequestException: Invalid mapping expression specified` and `NotFoundException: Invalid parameter name specified` errors when making updates to `request_parameters` and/or `cache_key_parameters` ([#40124](https://github.com/hashicorp/terraform-provider-aws/issues/40124))
+* resource/aws_api_gateway_method: Fix `BadRequestException: Invalid mapping expression specified` and `NotFoundException: Invalid parameter name specified` errors when making updates to `request_parameters` ([#40124](https://github.com/hashicorp/terraform-provider-aws/issues/40124))
+* resource/aws_autoscaling_group: Handle eventual consistency issues that occur when using a `launch_template` that is updated causing `ValidationError: You must use a valid fully-formed launch template.` ([#40088](https://github.com/hashicorp/terraform-provider-aws/issues/40088))
+* resource/aws_eip: Properly surface errors during deletion when `ipam_pool_id` is set ([#40082](https://github.com/hashicorp/terraform-provider-aws/issues/40082))
+* resource/aws_elasticache_reserved_cache_node: Fix `Provider returned invalid result object after apply` errors ([#40090](https://github.com/hashicorp/terraform-provider-aws/issues/40090))
+* resource/aws_iam_group_policies_exclusive: Add validation to prevent null values in `policy_names` ([#40076](https://github.com/hashicorp/terraform-provider-aws/issues/40076))
+* resource/aws_iam_group_policy_attachments_exclusive: Add validation to prevent null values in `policy_arns` ([#40076](https://github.com/hashicorp/terraform-provider-aws/issues/40076))
+* resource/aws_iam_instance_profile: Handle eventual consistency issues that occur when this resource is updated and has dependents ([#40088](https://github.com/hashicorp/terraform-provider-aws/issues/40088))
+* resource/aws_iam_role_policies_exclusive: Add validation to prevent null values in `policy_names` ([#40076](https://github.com/hashicorp/terraform-provider-aws/issues/40076))
+* resource/aws_iam_role_policy_attachments_exclusive: Add validation to prevent null values in `policy_arns` ([#40076](https://github.com/hashicorp/terraform-provider-aws/issues/40076))
+* resource/aws_iam_user_policies_exclusive: Add validation to prevent null values in `policy_names` ([#40076](https://github.com/hashicorp/terraform-provider-aws/issues/40076))
+* resource/aws_iam_user_policy_attachments_exclusive: Add validation to prevent null values in `policy_arns` ([#40076](https://github.com/hashicorp/terraform-provider-aws/issues/40076))
+* resource/aws_launch_template: Handle eventual consistency issues that occur when this resource is updated and has dependents ([#40088](https://github.com/hashicorp/terraform-provider-aws/issues/40088))
+
+## 5.75.1 (November 11, 2024)
+
+ENHANCEMENTS:
+
+* data-source/aws_cloudwatch_event_bus: Add `description` attribute ([#39980](https://github.com/hashicorp/terraform-provider-aws/issues/39980))
+* resource/aws_api_gateway_account: Add attribute `reset_on_delete` to properly reset CloudWatch Role ARN on deletion. ([#40004](https://github.com/hashicorp/terraform-provider-aws/issues/40004))
+* resource/aws_cloudwatch_event_bus: Add `description` argument ([#39980](https://github.com/hashicorp/terraform-provider-aws/issues/39980))
+
+BUG FIXES:
+
+* resource/aws_api_gateway_deployment: Rolls back validation of `canary_settings` and `stage_description` when `stage_name` not set. ([#40067](https://github.com/hashicorp/terraform-provider-aws/issues/40067))
+* resource/aws_dynamodb_table: Allow table TTL to be disabled by allowing `ttl[0].attribute_name` to be set when `ttl[0].enabled` is false ([#40046](https://github.com/hashicorp/terraform-provider-aws/issues/40046))
+* resource/aws_sagemaker_domain: Fix issue causing a `ValidationException` on updates when RStudio is disabled on the domain ([#40049](https://github.com/hashicorp/terraform-provider-aws/issues/40049))
+
+## 5.75.0 (November  7, 2024)
 
 BREAKING CHANGES:
 
@@ -8,6 +60,10 @@ NOTES:
 
 * provider: validation of arguments implementing the custom `ARNType` will properly surface validation errors ([#40008](https://github.com/hashicorp/terraform-provider-aws/issues/40008))
 * resource/aws_api_gateway_stage: `deployment_id` was added to `canary_settings` as a `required` attribute. This breaking change was necessary to make `canary_settings` functional. Without this change all canary traffic was routed to the main deployment ([#39929](https://github.com/hashicorp/terraform-provider-aws/issues/39929))
+
+FEATURES:
+
+* **New Data Source:** `aws_spot_datafeed_subscription` ([#39647](https://github.com/hashicorp/terraform-provider-aws/issues/39647))
 
 ENHANCEMENTS:
 
@@ -23,6 +79,9 @@ BUG FIXES:
 * resource/aws_codedeploy_deployment_group: Remove maximum items limit on the `alarm_configuration.alarms` argument ([#39971](https://github.com/hashicorp/terraform-provider-aws/issues/39971))
 * resource/aws_eks_addon: Handle `ResourceNotFound` exceptions during resource destruction ([#38357](https://github.com/hashicorp/terraform-provider-aws/issues/38357))
 * resource/aws_elasticache_reserved_cache_node: Fix `Value Conversion Error` during resource creation ([#39945](https://github.com/hashicorp/terraform-provider-aws/issues/39945))
+* resource/aws_lb_listener: Fix errors when updating the `tcp_idle_timeout_seconds` argument for gateway load balancers ([#40039](https://github.com/hashicorp/terraform-provider-aws/issues/40039))
+* resource/aws_lb_listener: Remove the default `tcp_idle_timeout_seconds` value, preventing `ModifyListenerAttributes` API calls when a value is not explicitly configured ([#40039](https://github.com/hashicorp/terraform-provider-aws/issues/40039))
+* resource/aws_vpc_ipam_pool: Fix bug when `public_ip_source = "amazon"`: `The request can only contain PubliclyAdvertisable if the AddressFamily is IPv6 and PublicIpSource is byoip.` ([#40042](https://github.com/hashicorp/terraform-provider-aws/issues/40042))
 
 ## 5.74.0 (October 31, 2024)
 

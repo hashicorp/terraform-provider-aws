@@ -473,6 +473,14 @@ func resourceTable() *schema.Resource {
 						"attribute_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// AWS requires the attribute name to be set when disabling TTL but
+								// does not return it so it causes a diff.
+								if old == "" && new != "" && !d.Get("ttl.0.enabled").(bool) {
+									return true
+								}
+								return false
+							},
 						},
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
@@ -2628,13 +2636,9 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 				errs.PathString(ttlPath.GetAttr("attribute_name")),
 			))
 		}
-	} else {
-		if !(attribute.IsNull() || attribute.AsString() == "") {
-			*diags = append(*diags, errs.NewAttributeConflictsWhenError(
-				ttlPath.GetAttr("attribute_name"),
-				ttlPath.GetAttr(names.AttrEnabled),
-				"false",
-			))
-		}
 	}
+
+	// !! Not a validation error for attribute_name to be set when enabled is false !!
+	// AWS *requires* attribute_name to be set when disabling TTL but does not return it, causing a diff.
+	// The diff is handled by DiffSuppressFunc of attribute_name.
 }
