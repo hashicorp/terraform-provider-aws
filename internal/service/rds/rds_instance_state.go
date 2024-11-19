@@ -51,7 +51,7 @@ func (r *resourceRDSInstanceState) Metadata(_ context.Context, req resource.Meta
 func (r *resourceRDSInstanceState) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"identifier": schema.StringAttribute{
+			names.AttrIdentifier: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -62,7 +62,7 @@ func (r *resourceRDSInstanceState) Schema(ctx context.Context, req resource.Sche
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 			}),

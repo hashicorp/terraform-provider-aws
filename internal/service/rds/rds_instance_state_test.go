@@ -29,8 +29,6 @@ func TestAccRDSRDSInstanceState_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, names.RDSEndpointID)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -58,8 +56,6 @@ func TestAccRDSRDSInstanceState_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, names.RDSEndpointID)
-			// testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -142,8 +138,8 @@ func testAccRDSInstanceStateConfig_basic(rName, state string) string {
 		testAccInstanceConfig_basic(rName),
 		fmt.Sprintf(`
 resource "aws_rds_instance_state" "test" {
-  identifier    = aws_db_instance.test.identifier
-  state = %[1]q
+  identifier = aws_db_instance.test.identifier
+  state      = %[1]q
 }
 `, state))
 }
