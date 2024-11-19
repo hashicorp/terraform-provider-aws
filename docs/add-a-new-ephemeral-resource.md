@@ -29,7 +29,7 @@ Define attributes using `snake_case`, instead of the `CamelCase` format used by 
 
 ### Implement Open Handler
 
-These will map the AWS API response to the ephemeral resource schema. You will also need to handle different response types (including errors correctly). For complex attributes you will need to implement Flattener or Expander functions. The [Data Handling and Conversion Guide](data-handling-and-conversion.md) covers everything you need to know for mapping AWS API responses to Terraform State and vice-versa. The [Error Handling Guide](error-handling.md) covers everything you need to know about handling AWS API responses consistently.
+`Open` will map the AWS API response to the ephemeral resource schema. You’ll also need to handle different response types, including errors, correctly. You will typically use `Autoflex` for mapping AWS API responses to Terraform models and vice versa. The [Error Handling Guide](error-handling.md) covers best practices for handling AWS API responses consistently.
 
 ### Register Ephemeral Resource to the provider
 
