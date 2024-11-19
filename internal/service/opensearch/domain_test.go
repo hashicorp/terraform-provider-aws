@@ -2629,23 +2629,23 @@ resource "aws_opensearch_domain" "test" {
 
 func testAccDomainConfig_dedicatedCoordinator(rName string, enabled bool) string {
 	nodeOptions := `
-	node_options {
+    node_options {
       node_type = "coordinator"
-	  node_config {
+      node_config {
         enabled = false
-	  }
-  	}`
+      }
+    }`
 
 	if enabled {
 		nodeOptions = `
-	node_options {
+    node_options {
       node_type = "coordinator"
-	  node_config {
+      node_config {
         enabled = true
-		count   = 1
+        count   = 1
         type    = "m5.large.search"
-	  }
-  	}`
+      }
+    }`
 
 	}
 
@@ -2656,7 +2656,7 @@ resource "aws_opensearch_domain" "test" {
   cluster_config {
     instance_type            = "t2.small.search"
     instance_count           = "1"
-	dedicated_master_enabled = true
+    dedicated_master_enabled = true
     dedicated_master_count   = "3"
     dedicated_master_type    = "t2.small.search"
 
