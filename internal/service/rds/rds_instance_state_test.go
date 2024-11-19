@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccInstanceState_basic(t *testing.T) {
+func TestAccRDSInstanceState_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_instance_state.test"
@@ -45,7 +45,7 @@ func TestAccInstanceState_basic(t *testing.T) {
 	})
 }
 
-func TestAccInstanceState_update(t *testing.T) {
+func TestAccRDSInstanceState_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_instance_state.test"
@@ -106,7 +106,7 @@ func testAccCheckInstanceStateExists(ctx context.Context, name string) resource.
 	}
 }
 
-func TestAccInstanceState_disappears_Instance(t *testing.T) {
+func TestAccRDSInstanceState_disappears_Instance(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_instance_state.test"

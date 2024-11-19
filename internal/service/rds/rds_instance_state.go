@@ -88,7 +88,7 @@ func (r *resourceInstanceState) Create(ctx context.Context, req resource.CreateR
 		return
 	}
 
-	if err := updateRDSInstanceState(ctx, conn, instanceID, aws.ToString(instance.DBInstanceStatus), plan.State.ValueString(), r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
+	if err := updateInstanceState(ctx, conn, instanceID, aws.ToString(instance.DBInstanceStatus), plan.State.ValueString(), r.CreateTimeout(ctx, plan.Timeouts)); err != nil {
 		resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", instanceID), err.Error())
 	}
 
@@ -141,7 +141,7 @@ func (r *resourceInstanceState) Update(ctx context.Context, req resource.UpdateR
 	}
 
 	if !plan.State.Equal(state.State) {
-		if err := updateRDSInstanceState(ctx, conn, state.Identifier.ValueString(), state.State.ValueString(), plan.State.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+		if err := updateInstanceState(ctx, conn, state.Identifier.ValueString(), state.State.ValueString(), plan.State.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("waiting for RDS Instance (%s)", state.Identifier.ValueString()), err.Error())
 		}
 	}
@@ -153,7 +153,7 @@ func (r *resourceInstanceState) ImportState(ctx context.Context, req resource.Im
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrIdentifier), req, resp)
 }
 
-func updateRDSInstanceState(ctx context.Context, conn *rds.Client, id string, currentState string, configuredState string, timeout time.Duration) error {
+func updateInstanceState(ctx context.Context, conn *rds.Client, id string, currentState string, configuredState string, timeout time.Duration) error {
 	if currentState == configuredState {
 		return nil
 	}
