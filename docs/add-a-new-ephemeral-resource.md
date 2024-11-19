@@ -1,7 +1,7 @@
 <!-- markdownlint-configure-file { "code-block-style": false } -->
 # Adding a New Ephemeral Resource
 
-New ephemeral resources are required when AWS adds a new service, or adds new features within an existing service which would require a new ephemeral resource. Ephemeral resources produce ephemeral values and are never stored to state. Anything that produces a sensitive value can be an ephemeral resource, but some are more useful than others.
+New ephemeral resources are required when AWS introduces a new service or adds features to an existing service that necessitate a new ephemeral resource. Ephemeral resources produce ephemeral values and are never stored in the state. Any resource that produces a sensitive value can be an ephemeral resource, though some are more useful than others.
 
 Each ephemeral resource should be submitted for review in isolation, pull requests containing multiple ephemeral resources and/or resources are harder to review and the maintainers will normally ask for them to be broken apart.
 
