@@ -5,7 +5,7 @@ package lightsail
 
 import (
 	"context"
-	"fmt"
+	"strconv"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -60,7 +60,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyCreate(ctx context.Context, d *sc
 	in := lightsail.UpdateLoadBalancerAttributeInput{
 		LoadBalancerName: aws.String(lbName),
 		AttributeName:    types.LoadBalancerAttributeNameHttpsRedirectionEnabled,
-		AttributeValue:   aws.String(fmt.Sprint(d.Get(names.AttrEnabled).(bool))),
+		AttributeValue:   aws.String(strconv.FormatBool(d.Get(names.AttrEnabled).(bool))),
 	}
 
 	out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
@@ -112,7 +112,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *sc
 		in := lightsail.UpdateLoadBalancerAttributeInput{
 			LoadBalancerName: aws.String(lbName),
 			AttributeName:    types.LoadBalancerAttributeNameHttpsRedirectionEnabled,
-			AttributeValue:   aws.String(fmt.Sprint(d.Get(names.AttrEnabled).(bool))),
+			AttributeValue:   aws.String(strconv.FormatBool(d.Get(names.AttrEnabled).(bool))),
 		}
 
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)

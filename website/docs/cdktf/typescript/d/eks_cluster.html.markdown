@@ -78,6 +78,8 @@ This data source exports the following attributes in addition to the arguments a
 * `roleArn` - ARN of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
 * `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `tags` - Key-value map of resource tags.
+* `upgradePolicy` - (Optional) Configuration block for the support policy to use for the cluster.
+    * `supportType` - (Optional) Support type to use for the cluster.
 * `version` - Kubernetes server version for the cluster.
 * `vpcConfig` - Nested list containing VPC configuration for the cluster.
     * `clusterSecurityGroupId` - The cluster security group that was created by Amazon EKS for the cluster.
@@ -87,5 +89,7 @@ This data source exports the following attributes in addition to the arguments a
     * `securityGroupIds` – List of security group IDs
     * `subnetIds` – List of subnet IDs
     * `vpcId` – The VPC associated with your cluster.
+* `zonalShiftConfig` - Contains Zonal Shift Configuration.
+    * `enabled` - Whether zonal shift is enabled.
 
-<!-- cache-key: cdktf-0.20.1 input-4888860eee7c7c490a6c08ea3a2608a2fd3c3ab7658a28befaee5f292291650f -->
+<!-- cache-key: cdktf-0.20.8 input-4446da7d4115e4457260714a6c303018bd1a8df1878e005e6f362ec5fcb74168 -->

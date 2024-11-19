@@ -5,10 +5,8 @@ package datapipeline
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourcePipeline,
+			Factory:  dataSourcePipeline,
 			TypeName: "aws_datapipeline_pipeline",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourcePipelineDefinition,
@@ -40,11 +39,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourcePipeline,
+			Factory:  resourcePipeline,
 			TypeName: "aws_datapipeline_pipeline",
 			Name:     "Pipeline",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
+				ResourceType:        "Pipeline",
 			},
 		},
 		{
@@ -58,22 +58,14 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.DataPipeline
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*datapipeline_sdkv1.DataPipeline, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*datapipeline.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return datapipeline_sdkv1.New(sess.Copy(&cfg)), nil
+	return datapipeline.NewFromConfig(cfg,
+		datapipeline.WithEndpointResolverV2(newEndpointResolverV2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

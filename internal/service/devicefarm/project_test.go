@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -34,7 +33,7 @@ func TestAccDeviceFarmProject_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,7 +44,7 @@ func TestAccDeviceFarmProject_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`project:.+`)),
 				),
 			},
@@ -78,7 +77,7 @@ func TestAccDeviceFarmProject_timeout(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -89,7 +88,7 @@ func TestAccDeviceFarmProject_timeout(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "default_job_timeout_minutes", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "default_job_timeout_minutes", "10"),
 				),
 			},
 			{
@@ -121,7 +120,7 @@ func TestAccDeviceFarmProject_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -131,7 +130,7 @@ func TestAccDeviceFarmProject_tags(t *testing.T) {
 				Config: testAccProjectConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -144,7 +143,7 @@ func TestAccDeviceFarmProject_tags(t *testing.T) {
 				Config: testAccProjectConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -153,7 +152,7 @@ func TestAccDeviceFarmProject_tags(t *testing.T) {
 				Config: testAccProjectConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &proj),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -173,7 +172,7 @@ func TestAccDeviceFarmProject_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

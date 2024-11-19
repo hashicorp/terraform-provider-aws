@@ -1,12 +1,14 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package s3
+package s3_test
 
 import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
 func TestNewObjectARN_GeneralPurposeBucket(t *testing.T) {
@@ -18,7 +20,7 @@ func TestNewObjectARN_GeneralPurposeBucket(t *testing.T) {
 		Resource:  "test-bucket/test-key",
 	}
 
-	arn, err := newObjectARN("test-partition", "test-bucket", "test-key")
+	arn, err := tfs3.NewObjectARN("test-partition", "test-bucket", "test-key")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -35,7 +37,7 @@ func TestNewObjectARN_GeneralPurposeBucket_AccessPointInBucketName(t *testing.T)
 		Resource:  "test-accesspoint-bucket/test-key",
 	}
 
-	arn, err := newObjectARN("test-partition", "test-accesspoint-bucket", "test-key")
+	arn, err := tfs3.NewObjectARN("test-partition", "test-accesspoint-bucket", "test-key")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -50,7 +52,7 @@ func TestNewObjectARN_AccessPoint(t *testing.T) {
 		Partition: "test-partition",
 		Service:   "s3",
 		Region:    "us-west-2", //lintignore:AWSAT003
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Resource:  "accesspoint/test-accesspoint/test-key",
 	}
 
@@ -58,11 +60,11 @@ func TestNewObjectARN_AccessPoint(t *testing.T) {
 		Partition: "test-partition",
 		Service:   "s3",
 		Region:    "us-west-2", //lintignore:AWSAT003
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Resource:  "accesspoint/test-accesspoint",
 	}
 
-	arn, err := newObjectARN("ignored", apARN.String(), "test-key")
+	arn, err := tfs3.NewObjectARN("ignored", apARN.String(), "test-key")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -76,18 +78,18 @@ func TestNewObjectARN_MultiRegionAccessPoint(t *testing.T) {
 	expectedARN := arn.ARN{
 		Partition: "test-partition",
 		Service:   "s3",
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Resource:  "accesspoint/test-multi-region-accesspoint/test-key",
 	}
 
 	mrapARN := arn.ARN{
 		Partition: "test-partition",
 		Service:   "s3",
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Resource:  "accesspoint/test-multi-region-accesspoint",
 	}
 
-	arn, err := newObjectARN("ignored", mrapARN.String(), "test-key")
+	arn, err := tfs3.NewObjectARN("ignored", mrapARN.String(), "test-key")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -101,18 +103,18 @@ func TestNewObjectARN_ObjectLambdaAccessPoint(t *testing.T) {
 	expectedARN := arn.ARN{
 		Partition: "test-partition",
 		Service:   "s3-object-lambda",
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Resource:  "accesspoint/test-object-lambda-accesspoint/test-key",
 	}
 
 	olapARN := arn.ARN{
 		Partition: "test-partition",
 		Service:   "s3-object-lambda",
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Resource:  "accesspoint/test-object-lambda-accesspoint",
 	}
 
-	arn, err := newObjectARN("ignored", olapARN.String(), "test-key")
+	arn, err := tfs3.NewObjectARN("ignored", olapARN.String(), "test-key")
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -123,7 +125,7 @@ func TestNewObjectARN_ObjectLambdaAccessPoint(t *testing.T) {
 func TestParseObjectARN_GeneralPurposeBucket(t *testing.T) {
 	t.Parallel()
 
-	expectedObjectARN := objectARN{
+	expectedObjectARN := tfs3.ObjectARN{
 		ARN: arn.ARN{
 			Partition: "test-partition",
 			Service:   "s3",
@@ -133,9 +135,9 @@ func TestParseObjectARN_GeneralPurposeBucket(t *testing.T) {
 		Key:    "test-key",
 	}
 
-	oARN, _ := newObjectARN("test-partition", "test-bucket", "test-key")
+	oARN, _ := tfs3.NewObjectARN("test-partition", "test-bucket", "test-key")
 
-	parsed, err := parseObjectARN(oARN.String())
+	parsed, err := tfs3.ParseObjectARN(oARN.String())
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -146,7 +148,7 @@ func TestParseObjectARN_GeneralPurposeBucket(t *testing.T) {
 func TestParseObjectARN_GeneralPurposeBucket_AccessPointBucketName(t *testing.T) {
 	t.Parallel()
 
-	expectedObjectARN := objectARN{
+	expectedObjectARN := tfs3.ObjectARN{
 		ARN: arn.ARN{
 			Partition: "test-partition",
 			Service:   "s3",
@@ -156,9 +158,9 @@ func TestParseObjectARN_GeneralPurposeBucket_AccessPointBucketName(t *testing.T)
 		Key:    "test-key",
 	}
 
-	oARN, _ := newObjectARN("test-partition", "accesspoint", "test-key")
+	oARN, _ := tfs3.NewObjectARN("test-partition", "accesspoint", "test-key")
 
-	parsed, err := parseObjectARN(oARN.String())
+	parsed, err := tfs3.ParseObjectARN(oARN.String())
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -169,12 +171,12 @@ func TestParseObjectARN_GeneralPurposeBucket_AccessPointBucketName(t *testing.T)
 func TestParseObjectARN_AccessPoint(t *testing.T) {
 	t.Parallel()
 
-	expectedObjectARN := objectARN{
+	expectedObjectARN := tfs3.ObjectARN{
 		ARN: arn.ARN{
 			Partition: "test-partition",
 			Service:   "s3",
 			Region:    "us-west-2", //lintignore:AWSAT003
-			AccountID: "123456789012",
+			AccountID: acctest.Ct12Digit,
 			Resource:  "accesspoint/test-accesspoint/test-key",
 		},
 		Bucket: "arn:test-partition:s3:us-west-2:123456789012:accesspoint/test-accesspoint", //lintignore:AWSAT003
@@ -185,13 +187,13 @@ func TestParseObjectARN_AccessPoint(t *testing.T) {
 		Partition: "test-partition",
 		Service:   "s3",
 		Region:    "us-west-2", //lintignore:AWSAT003
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Resource:  "accesspoint/test-accesspoint",
 	}
 
-	oARN, _ := newObjectARN("ignored", apARN.String(), "test-key")
+	oARN, _ := tfs3.NewObjectARN("ignored", apARN.String(), "test-key")
 
-	parsed, err := parseObjectARN(oARN.String())
+	parsed, err := tfs3.ParseObjectARN(oARN.String())
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -202,11 +204,11 @@ func TestParseObjectARN_AccessPoint(t *testing.T) {
 func TestParseObjectARN_MultiRegionAccessPoint(t *testing.T) {
 	t.Parallel()
 
-	expectedObjectARN := objectARN{
+	expectedObjectARN := tfs3.ObjectARN{
 		ARN: arn.ARN{
 			Partition: "test-partition",
 			Service:   "s3",
-			AccountID: "123456789012",
+			AccountID: acctest.Ct12Digit,
 			Resource:  "accesspoint/test-multi-region-accesspoint/test-key",
 		},
 		Bucket: "arn:test-partition:s3::123456789012:accesspoint/test-multi-region-accesspoint",
@@ -216,13 +218,13 @@ func TestParseObjectARN_MultiRegionAccessPoint(t *testing.T) {
 	mrapARN := arn.ARN{
 		Partition: "test-partition",
 		Service:   "s3",
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Resource:  "accesspoint/test-multi-region-accesspoint",
 	}
 
-	oARN, _ := newObjectARN("ignored", mrapARN.String(), "test-key")
+	oARN, _ := tfs3.NewObjectARN("ignored", mrapARN.String(), "test-key")
 
-	parsed, err := parseObjectARN(oARN.String())
+	parsed, err := tfs3.ParseObjectARN(oARN.String())
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -233,11 +235,11 @@ func TestParseObjectARN_MultiRegionAccessPoint(t *testing.T) {
 func TestParseObjectARN_ObjectLambdaAccessPoint(t *testing.T) {
 	t.Parallel()
 
-	expectedObjectARN := objectARN{
+	expectedObjectARN := tfs3.ObjectARN{
 		ARN: arn.ARN{
 			Partition: "test-partition",
 			Service:   "s3-object-lambda",
-			AccountID: "123456789012",
+			AccountID: acctest.Ct12Digit,
 			Resource:  "accesspoint/test-object-lambda-accesspoint/test-key",
 		},
 		Bucket: "arn:test-partition:s3-object-lambda::123456789012:accesspoint/test-object-lambda-accesspoint",
@@ -247,13 +249,13 @@ func TestParseObjectARN_ObjectLambdaAccessPoint(t *testing.T) {
 	olapARN := arn.ARN{
 		Partition: "test-partition",
 		Service:   "s3-object-lambda",
-		AccountID: "123456789012",
+		AccountID: acctest.Ct12Digit,
 		Resource:  "accesspoint/test-object-lambda-accesspoint",
 	}
 
-	oARN, _ := newObjectARN("ignored", olapARN.String(), "test-key")
+	oARN, _ := tfs3.NewObjectARN("ignored", olapARN.String(), "test-key")
 
-	parsed, err := parseObjectARN(oARN.String())
+	parsed, err := tfs3.ParseObjectARN(oARN.String())
 	if err != nil {
 		t.Fatalf("unexpected error: %s", err)
 	}
@@ -281,7 +283,7 @@ func equalARN(t *testing.T, a, e arn.ARN) {
 	}
 }
 
-func equalObjectARN(t *testing.T, a, e objectARN) {
+func equalObjectARN(t *testing.T, a, e tfs3.ObjectARN) {
 	t.Helper()
 
 	equalARN(t, a.ARN, e.ARN)

@@ -188,7 +188,7 @@ func dataSourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	clusterName := d.Get(names.AttrClusterName).(string)
 	nodeGroupName := d.Get("node_group_name").(string)

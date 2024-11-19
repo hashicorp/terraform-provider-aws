@@ -42,7 +42,7 @@ func dataSourceInstanceTypesRead(ctx context.Context, d *schema.ResourceData, me
 	input := &ec2.DescribeInstanceTypesInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterListV2(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	output, err := findInstanceTypes(ctx, conn, input)

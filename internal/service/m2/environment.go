@@ -354,17 +354,6 @@ func (r *environmentResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	// AutoFlEx doesn't yet handle union types.
-	if output.StorageConfigurations != nil {
-		storageConfigurationsData, diags := flattenStorageConfigurations(ctx, output.StorageConfigurations)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		data.StorageConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, storageConfigurationsData)
-	}
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -446,7 +435,7 @@ func (r *environmentResource) Delete(ctx context.Context, request resource.Delet
 	conn := r.Meta().M2Client(ctx)
 
 	_, err := conn.DeleteEnvironment(ctx, &m2.DeleteEnvironmentInput{
-		EnvironmentId: aws.String(data.ID.ValueString()),
+		EnvironmentId: data.ID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -589,8 +578,8 @@ type environmentResourceModel struct {
 	SecurityGroupIDs             fwtypes.SetValueOf[types.String]                             `tfsdk:"security_group_ids"`
 	StorageConfigurations        fwtypes.ListNestedObjectValueOf[storageConfigurationModel]   `tfsdk:"storage_configuration"`
 	SubnetIDs                    fwtypes.SetValueOf[types.String]                             `tfsdk:"subnet_ids"`
-	Tags                         types.Map                                                    `tfsdk:"tags"`
-	TagsAll                      types.Map                                                    `tfsdk:"tags_all"`
+	Tags                         tftags.Map                                                   `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                                   `tfsdk:"tags_all"`
 	Timeouts                     timeouts.Value                                               `tfsdk:"timeouts"`
 }
 
@@ -608,6 +597,11 @@ type storageConfigurationModel struct {
 	EFS fwtypes.ListNestedObjectValueOf[efsStorageConfigurationModel] `tfsdk:"efs"`
 	FSX fwtypes.ListNestedObjectValueOf[fsxStorageConfigurationModel] `tfsdk:"fsx"`
 }
+
+var (
+	_ fwflex.Expander  = storageConfigurationModel{}
+	_ fwflex.Flattener = &storageConfigurationModel{}
+)
 
 func (m storageConfigurationModel) Expand(ctx context.Context) (result any, diags diag.Diagnostics) {
 	switch {
@@ -645,6 +639,37 @@ func (m storageConfigurationModel) Expand(ctx context.Context) (result any, diag
 	return nil, diags
 }
 
+func (m *storageConfigurationModel) Flatten(ctx context.Context, v any) (diags diag.Diagnostics) {
+	switch t := v.(type) {
+	case awstypes.StorageConfigurationMemberEfs:
+		var model efsStorageConfigurationModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.EFS = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	case awstypes.StorageConfigurationMemberFsx:
+		var model fsxStorageConfigurationModel
+		d := fwflex.Flatten(ctx, t.Value, &model)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		m.FSX = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &model)
+
+		return diags
+
+	default:
+		return diags
+	}
+}
+
 type efsStorageConfigurationModel struct {
 	FileSystemID types.String `tfsdk:"file_system_id"`
 	MountPoint   types.String `tfsdk:"mount_point"`
@@ -657,41 +682,4 @@ type fsxStorageConfigurationModel struct {
 
 type highAvailabilityConfigModel struct {
 	DesiredCapacity types.Int64 `tfsdk:"desired_capacity"`
-}
-
-func flattenStorageConfigurations(ctx context.Context, apiObjects []awstypes.StorageConfiguration) ([]*storageConfigurationModel, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	var storageConfigurationsData []*storageConfigurationModel
-
-	for _, apiObject := range apiObjects {
-		switch v := apiObject.(type) {
-		case *awstypes.StorageConfigurationMemberEfs:
-			var efsStorageConfigurationData efsStorageConfigurationModel
-			d := fwflex.Flatten(ctx, v.Value, &efsStorageConfigurationData)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			storageConfigurationsData = append(storageConfigurationsData, &storageConfigurationModel{
-				EFS: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &efsStorageConfigurationData),
-				FSX: fwtypes.NewListNestedObjectValueOfNull[fsxStorageConfigurationModel](ctx),
-			})
-
-		case *awstypes.StorageConfigurationMemberFsx:
-			var fsxStorageConfigurationData fsxStorageConfigurationModel
-			d := fwflex.Flatten(ctx, v.Value, &fsxStorageConfigurationData)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil, diags
-			}
-
-			storageConfigurationsData = append(storageConfigurationsData, &storageConfigurationModel{
-				EFS: fwtypes.NewListNestedObjectValueOfNull[efsStorageConfigurationModel](ctx),
-				FSX: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fsxStorageConfigurationData),
-			})
-		}
-	}
-
-	return storageConfigurationsData, diags
 }

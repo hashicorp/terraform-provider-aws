@@ -187,7 +187,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if loggingConfiguration := d.Get(names.AttrLoggingConfiguration).([]interface{}); len(loggingConfiguration) == 1 {
 		arn := arn.ARN{
-			Partition: meta.(*conns.AWSClient).Partition,
+			Partition: meta.(*conns.AWSClient).Partition(ctx),
 			Service:   "waf",
 			AccountID: meta.(*conns.AWSClient).AccountID,
 			Resource:  "webacl/" + d.Id(),

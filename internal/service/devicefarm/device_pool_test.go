@@ -10,7 +10,6 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -34,7 +33,7 @@ func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,8 +44,8 @@ func TestAccDeviceFarmDevicePool_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", names.AttrARN),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`devicepool:.+`)),
 				),
@@ -80,7 +79,7 @@ func TestAccDeviceFarmDevicePool_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -90,7 +89,7 @@ func TestAccDeviceFarmDevicePool_tags(t *testing.T) {
 				Config: testAccDevicePoolConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -103,7 +102,7 @@ func TestAccDeviceFarmDevicePool_tags(t *testing.T) {
 				Config: testAccDevicePoolConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -112,7 +111,7 @@ func TestAccDeviceFarmDevicePool_tags(t *testing.T) {
 				Config: testAccDevicePoolConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDevicePoolExists(ctx, resourceName, &pool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -132,7 +131,7 @@ func TestAccDeviceFarmDevicePool_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -163,7 +162,7 @@ func TestAccDeviceFarmDevicePool_disappears_project(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DeviceFarmEndpointID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.DeviceFarmServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -235,7 +234,7 @@ func testAccCheckDevicePoolDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccDevicePoolConfig_basic(rName string) string {
-	return testAccProjectConfig_basic(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_devicefarm_device_pool" "test" {
   name        = %[1]q
   project_arn = aws_devicefarm_project.test.arn
@@ -245,11 +244,11 @@ resource "aws_devicefarm_device_pool" "test" {
     value     = "\"AVAILABLE\""
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccDevicePoolConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccProjectConfig_basic(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_devicefarm_device_pool" "test" {
   name        = %[1]q
   project_arn = aws_devicefarm_project.test.arn
@@ -262,11 +261,11 @@ resource "aws_devicefarm_device_pool" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccDevicePoolConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccProjectConfig_basic(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_basic(rName), fmt.Sprintf(`
 resource "aws_devicefarm_device_pool" "test" {
   name        = %[1]q
   project_arn = aws_devicefarm_project.test.arn
@@ -280,5 +279,5 @@ resource "aws_devicefarm_device_pool" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

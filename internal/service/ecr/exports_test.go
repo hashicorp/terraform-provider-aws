@@ -11,13 +11,15 @@ var (
 	ResourceRegistryScanningConfiguration = resourceRegistryScanningConfiguration
 	ResourceReplicationConfiguration      = resourceReplicationConfiguration
 	ResourceRepository                    = resourceRepository
+	ResourceRepositoryCreationTemplate    = resourceRepositoryCreationTemplate
 	ResourceRepositoryPolicy              = resourceRepositoryPolicy
 
-	FindLifecyclePolicyByRepositoryName        = findLifecyclePolicyByRepositoryName
-	FindPullThroughCacheRuleByRepositoryPrefix = findPullThroughCacheRuleByRepositoryPrefix
-	FindRegistryPolicy                         = findRegistryPolicy
-	FindRegistryScanningConfiguration          = findRegistryScanningConfiguration
-	FindReplicationConfiguration               = findReplicationConfiguration
-	FindRepositoryByName                       = findRepositoryByName
-	FindRepositoryPolicyByRepositoryName       = findRepositoryPolicyByRepositoryName
+	FindLifecyclePolicyByRepositoryName              = findLifecyclePolicyByRepositoryName
+	FindPullThroughCacheRuleByRepositoryPrefix       = findPullThroughCacheRuleByRepositoryPrefix
+	FindRegistryPolicy                               = findRegistryPolicy
+	FindRegistryScanningConfiguration                = findRegistryScanningConfiguration
+	FindReplicationConfiguration                     = findReplicationConfiguration
+	FindRepositoryByName                             = findRepositoryByName
+	FindRepositoryCreationTemplateByRepositoryPrefix = findRepositoryCreationTemplateByRepositoryPrefix
+	FindRepositoryPolicyByRepositoryName             = findRepositoryPolicyByRepositoryName
 )

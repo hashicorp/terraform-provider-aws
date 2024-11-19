@@ -6,16 +6,24 @@ service "amp" {
   parallelism = 10
 }
 
-service "appautoscaling" {
-  vpc_lock = true
-}
-
 service "apigateway" {
   vpc_lock = true
 }
 
 service "apigatewayv2" {
   vpc_lock = true
+}
+
+service "appautoscaling" {
+  vpc_lock = true
+}
+
+service "appfabric" {
+  region = "us-east-1"
+}
+
+service "appintegrations" {
+  parallelism = 10
 }
 
 service "appstream" {
@@ -29,6 +37,10 @@ service "autoscaling" {
 
 service "batch" {
   vpc_lock = true
+}
+
+service "bcmdataexports" {
+  parallelism = 5
 }
 
 service "cloudformation" {
@@ -207,6 +219,10 @@ service "redshift" {
   vpc_lock = true
 }
 
+service "resiliencehub" {
+  parallelism = 10
+}
+
 service "route53" {
   vpc_lock = true
 }
@@ -233,6 +249,11 @@ service "storagegateway" {
 
 service "synthetics" {
   parallelism = 10
+}
+
+service "timestreaminfluxdb" {
+  vpc_lock    = true
+  parallelism = 3
 }
 
 service "transfer" {

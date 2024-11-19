@@ -26,6 +26,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceReportDefinition,
 			TypeName: "aws_cur_report_definition",
 			Name:     "Report Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "report_name",
+			},
 		},
 	}
 }
@@ -36,6 +39,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceReportDefinition,
 			TypeName: "aws_cur_report_definition",
 			Name:     "Report Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "report_name",
+			},
 		},
 	}
 }

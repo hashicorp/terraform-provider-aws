@@ -44,7 +44,7 @@ func resourceEBSVolume() *schema.Resource {
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -133,7 +133,7 @@ func resourceEBSVolumeCreate(ctx context.Context, d *schema.ResourceData, meta i
 	input := &ec2.CreateVolumeInput{
 		AvailabilityZone:  aws.String(d.Get(names.AttrAvailabilityZone).(string)),
 		ClientToken:       aws.String(id.UniqueId()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeVolume),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVolume),
 	}
 
 	if value, ok := d.GetOk(names.AttrEncrypted); ok {
@@ -204,7 +204,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
@@ -222,7 +222,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrThroughput, volume.Throughput)
 	d.Set(names.AttrType, volume.VolumeType)
 
-	setTagsOutV2(ctx, volume.Tags)
+	setTagsOut(ctx, volume.Tags)
 
 	return diags
 }

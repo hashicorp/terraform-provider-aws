@@ -5,8 +5,8 @@ package backup
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	backup_sdkv2 "github.com/aws/aws-sdk-go-v2/service/backup"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,38 +19,32 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newLogicallyAirGappedVaultResource,
+			Name:    "Logically Air Gapped Vault",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newRestoreTestingPlanResource,
+			Name:    "Restore Testing Plan",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory: newRestoreTestingSelectionResource,
+			Name:    "Restore Testing Plan Selection",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceFramework,
-			TypeName: "aws_backup_framework",
-		},
-		{
-			Factory:  DataSourcePlan,
-			TypeName: "aws_backup_plan",
-		},
-		{
-			Factory:  DataSourceReportPlan,
-			TypeName: "aws_backup_report_plan",
-		},
-		{
-			Factory:  DataSourceSelection,
-			TypeName: "aws_backup_selection",
-		},
-		{
-			Factory:  DataSourceVault,
-			TypeName: "aws_backup_vault",
-		},
-	}
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
-		{
-			Factory:  ResourceFramework,
+			Factory:  dataSourceFramework,
 			TypeName: "aws_backup_framework",
 			Name:     "Framework",
 			Tags: &types.ServicePackageResourceTags{
@@ -58,11 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceGlobalSettings,
-			TypeName: "aws_backup_global_settings",
-		},
-		{
-			Factory:  ResourcePlan,
+			Factory:  dataSourcePlan,
 			TypeName: "aws_backup_plan",
 			Name:     "Plan",
 			Tags: &types.ServicePackageResourceTags{
@@ -70,11 +60,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRegionSettings,
-			TypeName: "aws_backup_region_settings",
-		},
-		{
-			Factory:  ResourceReportPlan,
+			Factory:  dataSourceReportPlan,
 			TypeName: "aws_backup_report_plan",
 			Name:     "Report Plan",
 			Tags: &types.ServicePackageResourceTags{
@@ -82,11 +68,64 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSelection,
+			Factory:  dataSourceSelection,
 			TypeName: "aws_backup_selection",
+			Name:     "Selection",
 		},
 		{
-			Factory:  ResourceVault,
+			Factory:  dataSourceVault,
+			TypeName: "aws_backup_vault",
+			Name:     "Vault",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+	}
+}
+
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceFramework,
+			TypeName: "aws_backup_framework",
+			Name:     "Framework",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceGlobalSettings,
+			TypeName: "aws_backup_global_settings",
+			Name:     "Global Settings",
+		},
+		{
+			Factory:  resourcePlan,
+			TypeName: "aws_backup_plan",
+			Name:     "Plan",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceRegionSettings,
+			TypeName: "aws_backup_region_settings",
+			Name:     "Region Settings",
+		},
+		{
+			Factory:  resourceReportPlan,
+			TypeName: "aws_backup_report_plan",
+			Name:     "Report Plan",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceSelection,
+			TypeName: "aws_backup_selection",
+			Name:     "Selection",
+		},
+		{
+			Factory:  resourceVault,
 			TypeName: "aws_backup_vault",
 			Name:     "Vault",
 			Tags: &types.ServicePackageResourceTags{
@@ -94,16 +133,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVaultLockConfiguration,
+			Factory:  resourceVaultLockConfiguration,
 			TypeName: "aws_backup_vault_lock_configuration",
+			Name:     "Vault Lock Configuration",
 		},
 		{
-			Factory:  ResourceVaultNotifications,
+			Factory:  resourceVaultNotifications,
 			TypeName: "aws_backup_vault_notifications",
+			Name:     "Vault Notifications",
 		},
 		{
-			Factory:  ResourceVaultPolicy,
+			Factory:  resourceVaultPolicy,
 			TypeName: "aws_backup_vault_policy",
+			Name:     "Vault Policy",
 		},
 	}
 }
@@ -113,11 +155,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*backup_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*backup.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return backup_sdkv2.NewFromConfig(cfg,
-		backup_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return backup.NewFromConfig(cfg,
+		backup.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

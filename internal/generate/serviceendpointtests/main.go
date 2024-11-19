@@ -36,11 +36,13 @@ func main() {
 		switch packageName {
 		case "cloudfrontkeyvaluestore", // Endpoint includes account ID
 			"codecatalyst",        // Bearer auth token needs special handling
+			"location",            // Resolver modifies URL
 			"mwaa",                // Resolver modifies URL
 			"neptunegraph",        // EndpointParameters has an additional parameter, ApiType
 			"paymentcryptography", // Resolver modifies URL
 			"route53profiles",     // Resolver modifies URL
 			"s3control",           // Resolver modifies URL
+			"simpledb",            // AWS SDK for Go v1
 			"timestreamwrite":     // Uses endpoint discovery
 			continue
 		}
@@ -58,6 +60,7 @@ func main() {
 		td := TemplateData{
 			HumanFriendly:     l.HumanFriendly(),
 			PackageName:       packageName,
+			GoPackage:         l.GoPackageName(),
 			ProviderNameUpper: l.ProviderNameUpper(),
 			Region:            "us-west-2",
 			APICall:           l.EndpointAPICall(),
@@ -69,27 +72,8 @@ func main() {
 			Aliases:           l.Aliases(),
 			OverrideRegion:    l.EndpointOverrideRegion(),
 		}
-		if l.ClientSDKV1() {
-			td.GoV1Package = l.GoV1Package()
-
-			switch packageName {
-			case "imagebuilder",
-				"globalaccelerator",
-				"route53recoveryreadiness",
-				"worklink":
-				td.V1NameResolverNeedsUnknownService = true
-			}
-			switch packageName {
-			case "wafregional":
-				td.V1AlternateInputPackage = "waf"
-			}
-		}
-		if l.ClientSDKV2() {
-			td.GoV2Package = l.GoV2Package()
-
-			if strings.Contains(td.APICallParams, "awstypes") {
-				td.ImportAwsTypes = true
-			}
+		if strings.Contains(td.APICallParams, "awstypes") {
+			td.ImportAwsTypes = true
 		}
 
 		if td.OverrideRegion == "us-west-2" {
@@ -115,7 +99,7 @@ func main() {
 
 		d := g.NewGoFileDestination(filepath.Join(relativePath, packageName, filename))
 
-		if err := d.WriteTemplate("serviceendpointtests", tmpl, td); err != nil {
+		if err := d.BufferTemplate("serviceendpointtests", tmpl, td); err != nil {
 			g.Fatalf("error generating service endpoint tests: %s", err)
 		}
 
@@ -128,8 +112,7 @@ func main() {
 type TemplateData struct {
 	HumanFriendly                     string
 	PackageName                       string
-	GoV1Package                       string
-	GoV2Package                       string
+	GoPackage                         string
 	ProviderNameUpper                 string
 	Region                            string
 	APICall                           string
@@ -139,7 +122,6 @@ type TemplateData struct {
 	DeprecatedEnvVar                  string
 	TFAWSEnvVar                       string
 	V1NameResolverNeedsUnknownService bool
-	V1AlternateInputPackage           string
 	Aliases                           []string
 	ImportAwsTypes                    bool
 	OverrideRegion                    string

@@ -64,7 +64,7 @@ func resourceLocalGatewayRouteTableVPCAssociationCreate(ctx context.Context, d *
 
 	input := &ec2.CreateLocalGatewayRouteTableVpcAssociationInput{
 		LocalGatewayRouteTableId: aws.String(d.Get("local_gateway_route_table_id").(string)),
-		TagSpecifications:        getTagSpecificationsInV2(ctx, awstypes.ResourceTypeLocalGatewayRouteTableVpcAssociation),
+		TagSpecifications:        getTagSpecificationsIn(ctx, awstypes.ResourceTypeLocalGatewayRouteTableVpcAssociation),
 		VpcId:                    aws.String(d.Get(names.AttrVPCID).(string)),
 	}
 
@@ -103,7 +103,7 @@ func resourceLocalGatewayRouteTableVPCAssociationRead(ctx context.Context, d *sc
 	d.Set("local_gateway_route_table_id", association.LocalGatewayRouteTableId)
 	d.Set(names.AttrVPCID, association.VpcId)
 
-	setTagsOutV2(ctx, association.Tags)
+	setTagsOut(ctx, association.Tags)
 
 	return diags
 }

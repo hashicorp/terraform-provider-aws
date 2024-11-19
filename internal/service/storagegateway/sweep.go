@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -40,33 +40,29 @@ func sweepGateways(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.StorageGatewayConn(ctx)
+	conn := client.StorageGatewayClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListGatewaysPagesWithContext(ctx, &storagegateway.ListGatewaysInput{}, func(page *storagegateway.ListGatewaysOutput, lastPage bool) bool {
-		if len(page.Gateways) == 0 {
-			log.Print("[DEBUG] No Storage Gateway Gateways to sweep")
-			return true
+	pages := storagegateway.NewListGatewaysPaginator(conn, &storagegateway.ListGatewaysInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Storage Gateway Gateway sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Storage Gateway Gateways (%s): %w", region, err)
 		}
 
 		for _, gateway := range page.Gateways {
 			r := resourceGateway()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(gateway.GatewayARN))
+			d.SetId(aws.ToString(gateway.GatewayARN))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Storage Gateway Gateway sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Storage Gateway Gateways (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -84,33 +80,29 @@ func sweepTapePools(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.StorageGatewayConn(ctx)
+	conn := client.StorageGatewayClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListTapePoolsPagesWithContext(ctx, &storagegateway.ListTapePoolsInput{}, func(page *storagegateway.ListTapePoolsOutput, lastPage bool) bool {
-		if len(page.PoolInfos) == 0 {
-			log.Print("[DEBUG] No Storage Gateway Tape Pools to sweep")
-			return true
+	pages := storagegateway.NewListTapePoolsPaginator(conn, &storagegateway.ListTapePoolsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Storage Gateway Tape Pool sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Storage Gateway Tape Pools (%s): %w", region, err)
 		}
 
 		for _, pool := range page.PoolInfos {
 			r := resourceTapePool()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(pool.PoolARN))
+			d.SetId(aws.ToString(pool.PoolARN))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Storage Gateway Tape Pool sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Storage Gateway Tape Pools (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -128,33 +120,29 @@ func sweepFileSystemAssociations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.StorageGatewayConn(ctx)
+	conn := client.StorageGatewayClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListFileSystemAssociationsPagesWithContext(ctx, &storagegateway.ListFileSystemAssociationsInput{}, func(page *storagegateway.ListFileSystemAssociationsOutput, lastPage bool) bool {
-		if len(page.FileSystemAssociationSummaryList) == 0 {
-			log.Print("[DEBUG] No Storage Gateway File System Associations to sweep")
-			return true
+	pages := storagegateway.NewListFileSystemAssociationsPaginator(conn, &storagegateway.ListFileSystemAssociationsInput{})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Storage Gateway File System Association sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Storage Gateway File System Associations (%s): %w", region, err)
 		}
 
 		for _, assoc := range page.FileSystemAssociationSummaryList {
 			r := resourceFileSystemAssociation()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(assoc.FileSystemAssociationARN))
+			d.SetId(aws.ToString(assoc.FileSystemAssociationARN))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Storage Gateway File System Association sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Storage Gateway File System Associations (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

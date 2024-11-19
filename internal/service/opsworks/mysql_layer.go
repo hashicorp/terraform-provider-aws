@@ -4,25 +4,25 @@
 package opsworks
 
 import (
-	"github.com/aws/aws-sdk-go/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 // @SDKResource("aws_opsworks_mysql_layer", name="MySQL Layer")
 // @Tags(identifierAttribute="arn")
-func ResourceMySQLLayer() *schema.Resource {
+func resourceMySQLLayer() *schema.Resource {
 	layerType := &opsworksLayerType{
-		TypeName:         opsworks.LayerTypeDbMaster,
+		TypeName:         awstypes.LayerTypeDbMaster,
 		DefaultLayerName: "MySQL",
 
 		Attributes: map[string]*opsworksLayerTypeAttribute{
 			"root_password": {
-				AttrName:  opsworks.LayerAttributesKeysMysqlRootPassword,
+				AttrName:  awstypes.LayerAttributesKeysMysqlRootPassword,
 				Type:      schema.TypeString,
 				WriteOnly: true,
 			},
 			"root_password_on_all_instances": {
-				AttrName: opsworks.LayerAttributesKeysMysqlRootPasswordUbiquitous,
+				AttrName: awstypes.LayerAttributesKeysMysqlRootPasswordUbiquitous,
 				Type:     schema.TypeBool,
 				Default:  true,
 			},

@@ -39,12 +39,14 @@ func TestAccAppSync_serial(t *testing.T) {
 			acctest.CtDisappears:        testAccGraphQLAPI_disappears,
 			"tags":                      testAccGraphQLAPI_tags,
 			"schema":                    testAccGraphQLAPI_schema,
+			"apiType":                   testAccGraphQLAPI_apiType,
 			"authenticationType":        testAccGraphQLAPI_authenticationType,
 			"AuthenticationType_apiKey": testAccGraphQLAPI_AuthenticationType_apiKey,
 			"AuthenticationType_awsIAM": testAccGraphQLAPI_AuthenticationType_iam,
 			"AuthenticationType_amazonCognitoUserPools":           testAccGraphQLAPI_AuthenticationType_amazonCognitoUserPools,
 			"AuthenticationType_openIDConnect":                    testAccGraphQLAPI_AuthenticationType_openIDConnect,
 			"AuthenticationType_awsLambda":                        testAccGraphQLAPI_AuthenticationType_lambda,
+			"enhancedMetricsConfig":                               testAccGraphQLAPI_enhancedMetricsConfig,
 			"log":                                                 testAccGraphQLAPI_log,
 			"Log_fieldLogLevel":                                   testAccGraphQLAPI_Log_fieldLogLevel,
 			"Log_excludeVerboseContent":                           testAccGraphQLAPI_Log_excludeVerboseContent,
@@ -107,6 +109,11 @@ func TestAccAppSync_serial(t *testing.T) {
 		"DomainNameAssociation": {
 			acctest.CtBasic:      testAccDomainNameAPIAssociation_basic,
 			acctest.CtDisappears: testAccDomainNameAPIAssociation_disappears,
+		},
+		"SourceApiAssociation": {
+			acctest.CtBasic:      testAccAppSyncSourceAPIAssociation_basic,
+			acctest.CtDisappears: testAccAppSyncSourceAPIAssociation_disappears,
+			"update":             testAccAppSyncSourceAPIAssociation_update,
 		},
 	}
 

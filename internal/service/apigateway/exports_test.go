@@ -5,7 +5,6 @@ package apigateway
 
 // Exports for use in tests only.
 var (
-	ResourceAccount              = resourceAccount
 	ResourceAPIKey               = resourceAPIKey
 	ResourceAuthorizer           = resourceAuthorizer
 	ResourceBasePathMapping      = resourceBasePathMapping
@@ -31,6 +30,7 @@ var (
 	ResourceVPCLink              = resourceVPCLink
 
 	DefaultAuthorizerTTL                 = defaultAuthorizerTTL
+	FindAccount                          = findAccount
 	FindAPIKeyByID                       = findAPIKeyByID
 	FindAuthorizerByTwoPartKey           = findAuthorizerByTwoPartKey
 	FindBasePathMappingByTwoPartKey      = findBasePathMappingByTwoPartKey

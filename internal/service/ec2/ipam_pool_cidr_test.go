@@ -141,19 +141,9 @@ func testAccCheckIPAMPoolCIDRExists(ctx context.Context, n string, v *awstypes.I
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IPAM Pool CIDR ID is set")
-		}
-
-		cidrBlock, poolID, err := tfec2.IPAMPoolCIDRParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
+		output, err := tfec2.FindIPAMPoolCIDRByTwoPartKey(ctx, conn, rs.Primary.Attributes["cidr"], rs.Primary.Attributes["ipam_pool_id"])
 
 		if err != nil {
 			return err
@@ -174,13 +164,7 @@ func testAccCheckIPAMPoolCIDRDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			cidrBlock, poolID, err := tfec2.IPAMPoolCIDRParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindIPAMPoolCIDRByTwoPartKey(ctx, conn, cidrBlock, poolID)
+			_, err := tfec2.FindIPAMPoolCIDRByTwoPartKey(ctx, conn, rs.Primary.Attributes["cidr"], rs.Primary.Attributes["ipam_pool_id"])
 
 			if tfresource.NotFound(err) {
 				continue
