@@ -7,7 +7,7 @@ Each ephemeral resource should be submitted for review individually. Pull reques
 
 ## Prerequisites
 
-If this is the first addition of a ephemeral resource for a new service, please ensure the Service Client for the new service has been added and merged. See [Adding a new Service](add-a-new-service.md) for details.
+If an ephemeral resource is the first addition for a new service, ensure that the Service Client for the service has been created and merged first. Refer to [Adding a New Service](add-a-new-service.md) for detailed instructions.
 
 ## Steps to Add a Ephemeral Resource
 
