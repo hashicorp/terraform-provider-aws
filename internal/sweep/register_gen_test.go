@@ -139,6 +139,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalogappregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
@@ -305,6 +306,7 @@ func registerSweepers() {
 	schemas.RegisterSweepers()
 	secretsmanager.RegisterSweepers()
 	servicecatalog.RegisterSweepers()
+	servicecatalogappregistry.RegisterSweepers()
 	servicediscovery.RegisterSweepers()
 	ses.RegisterSweepers()
 	sesv2.RegisterSweepers()
