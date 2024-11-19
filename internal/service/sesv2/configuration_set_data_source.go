@@ -37,6 +37,10 @@ func dataSourceConfigurationSet() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"max_delivery_seconds": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 						"sending_pool_name": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -98,6 +102,10 @@ func dataSourceConfigurationSet() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"custom_redirect_domain": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"https_policy": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

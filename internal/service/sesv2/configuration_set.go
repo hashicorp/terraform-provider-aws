@@ -58,6 +58,11 @@ func resourceConfigurationSet() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"max_delivery_seconds": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(300, 50400),
+						},
 						"sending_pool_name": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -132,6 +137,11 @@ func resourceConfigurationSet() *schema.Resource {
 						"custom_redirect_domain": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+						"https_policy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.HttpsPolicy](),
 						},
 					},
 				},
@@ -322,6 +332,10 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 		if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
 
+			if v, ok := tfMap["max_delivery_seconds"].(int); ok {
+				in.MaxDeliverySeconds = aws.Int64(int64(v))
+			}
+
 			if v, ok := tfMap["sending_pool_name"].(string); ok && v != "" {
 				in.SendingPoolName = aws.String(v)
 			}
@@ -409,6 +423,10 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 			if v, ok := tfMap["custom_redirect_domain"].(string); ok && v != "" {
 				in.CustomRedirectDomain = aws.String(v)
 			}
+
+			if v, ok := tfMap["https_policy"].(string); ok && v != "" {
+				in.HttpsPolicy = types.HttpsPolicy(v)
+			}
 		}
 
 		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet TrackingOptions (%s): %#v", d.Id(), in)
@@ -493,6 +511,10 @@ func flattenDeliveryOptions(apiObject *types.DeliveryOptions) map[string]interfa
 
 	m := map[string]interface{}{}
 
+	if v := apiObject.MaxDeliverySeconds; v != nil {
+		m["max_delivery_seconds"] = aws.ToInt64(v)
+	}
+
 	if v := apiObject.SendingPoolName; v != nil {
 		m["sending_pool_name"] = aws.ToString(v)
 	}
@@ -565,6 +587,8 @@ func flattenTrackingOptions(apiObject *types.TrackingOptions) map[string]interfa
 		m["custom_redirect_domain"] = aws.ToString(v)
 	}
 
+	m["https_policy"] = string(apiObject.HttpsPolicy)
+
 	return m
 }
 
@@ -616,6 +640,10 @@ func expandDeliveryOptions(tfMap map[string]interface{}) *types.DeliveryOptions 
 	}
 
 	a := &types.DeliveryOptions{}
+
+	if v, ok := tfMap["max_delivery_seconds"].(int); ok {
+		a.MaxDeliverySeconds = aws.Int64(int64(v))
+	}
 
 	if v, ok := tfMap["sending_pool_name"].(string); ok && v != "" {
 		a.SendingPoolName = aws.String(v)
@@ -695,6 +723,10 @@ func expandTrackingOptions(tfMap map[string]interface{}) *types.TrackingOptions 
 
 	if v, ok := tfMap["custom_redirect_domain"].(string); ok && v != "" {
 		a.CustomRedirectDomain = aws.String(v)
+	}
+
+	if v, ok := tfMap["https_policy"].(string); ok && v != "" {
+		a.HttpsPolicy = types.HttpsPolicy(v)
 	}
 
 	return a
