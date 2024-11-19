@@ -10,7 +10,7 @@ import (
 
 var ephemeralCmd = &cobra.Command{
 	Use:   "ephemeral",
-	Short: "Create scaffolding for a ephemeral resource",
+	Short: "Create scaffolding for an ephemeral resource",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return ephemeral.Create(name, snakeName, !clearComments, force)
 	},
