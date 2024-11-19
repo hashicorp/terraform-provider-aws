@@ -13,7 +13,7 @@ If an ephemeral resource is the first addition for a new service, ensure that th
 
 ### Fork the Provider and Create a Feature Branch
 
-For a new ephemeral resource use a branch named `f-{datasource name}` for example: `f-ec2-vpc`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
+For a new ephemeral resource, use a branch name in the format `f-{ephemeral-resource-name}`, for example: `f-kms-secret`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
 
 ### Create and Name the Ephemeral Resource
 
