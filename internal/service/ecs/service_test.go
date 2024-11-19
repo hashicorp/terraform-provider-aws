@@ -4604,24 +4604,24 @@ resource "aws_ecs_service" "test" {
 func testAccService_vpcLatticeConfiguration_basic(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.test.name
-  task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
-  launch_type     = "FARGATE"
+  name                   = %[1]q
+  cluster                = aws_ecs_cluster.test.name
+  task_definition        = aws_ecs_task_definition.test.arn
+  desired_count          = 1
+  launch_type            = "FARGATE"
   enable_execute_command = true
   network_configuration {
     subnets          = [aws_subnet.test.id]
-    security_groups = [aws_security_group.test.id]
+    security_groups  = [aws_security_group.test.id]
     assign_public_ip = true
   }
- vpc_lattice_configurations {
+  vpc_lattice_configurations {
     role_arn         = aws_iam_role.vpc_lattice_infrastructure.arn
     target_group_arn = aws_vpclattice_target_group.test.arn
     port_name        = "testvpclattice"
   }
 
- vpc_lattice_configurations {
+  vpc_lattice_configurations {
     role_arn         = aws_iam_role.vpc_lattice_infrastructure.arn
     target_group_arn = aws_vpclattice_target_group.test_ipv6.arn
     port_name        = "testvpclattice-ipv6"
@@ -4637,8 +4637,8 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
-  vpc_id     = aws_vpc.test.id
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
+  vpc_id                  = aws_vpc.test.id
   map_public_ip_on_launch = true
 
   tags = {
@@ -4705,17 +4705,17 @@ resource "aws_security_group" "test" {
   }
 
   ingress {
-    prefix_list_ids = [ data.aws_ec2_managed_prefix_list.test.id ]
-    from_port = 0
-    to_port = 0
-    protocol = -1
+    prefix_list_ids = [data.aws_ec2_managed_prefix_list.test.id]
+    from_port       = 0
+    to_port         = 0
+    protocol        = -1
 
   }
 
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
@@ -4726,66 +4726,66 @@ resource "aws_security_group" "test" {
 
 
 resource "aws_vpclattice_service" "test" {
-  name        = %[1]q
+  name = %[1]q
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpclattice_service_network" "test" {
-  name =  %[1]q
+  name = %[1]q
   tags = {
     Name = %[1]q
   }
 }
 
 resource "aws_vpclattice_target_group" "test" {
-  name       =  %[1]q
-  type       = "IP"
-  
+  name = %[1]q
+  type = "IP"
+
   config {
-      port       = 80
-      protocol   = "HTTP"
-      protocol_version = "HTTP1"
-      vpc_identifier = aws_vpc.test.id
-      health_check {
-        enabled = false
-      }
-  }  
+    port             = 80
+    protocol         = "HTTP"
+    protocol_version = "HTTP1"
+    vpc_identifier   = aws_vpc.test.id
+    health_check {
+      enabled = false
+    }
+  }
 
 }
 
 resource "aws_vpclattice_target_group" "test_ipv6" {
-  name       =  "%[1]s-ipv6"
-  type       = "IP"
+  name = "%[1]s-ipv6"
+  type = "IP"
 
   config {
-      port       = 80
-      protocol   = "HTTP"
-      protocol_version = "HTTP1"
-      vpc_identifier = aws_vpc.test.id
-      ip_address_type = "IPV6"
-      health_check {
-        enabled = false
-      }
+    port             = 80
+    protocol         = "HTTP"
+    protocol_version = "HTTP1"
+    vpc_identifier   = aws_vpc.test.id
+    ip_address_type  = "IPV6"
+    health_check {
+      enabled = false
+    }
   }
 }
 
 
 resource "aws_vpclattice_listener" "test" {
-  name       =  "%[1]s-listener"
-  protocol   = "HTTP"
+  name               = "%[1]s-listener"
+  protocol           = "HTTP"
   service_identifier = aws_vpclattice_service.test.id
 
   default_action {
     forward {
       target_groups {
-          target_group_identifier = aws_vpclattice_target_group.test.id
-          weight 				  = 80
-      }    
+        target_group_identifier = aws_vpclattice_target_group.test.id
+        weight                  = 80
+      }
       target_groups {
-          target_group_identifier = aws_vpclattice_target_group.test_ipv6.id
-          weight 				  = 20
+        target_group_identifier = aws_vpclattice_target_group.test_ipv6.id
+        weight                  = 20
       }
     }
 
@@ -4799,13 +4799,13 @@ resource "aws_vpclattice_service_network_service_association" "test" {
 
 resource "aws_vpclattice_service_network_vpc_association" "test" {
   service_network_identifier = aws_vpclattice_service_network.test.arn
-  vpc_identifier = aws_vpc.test.id
+  vpc_identifier             = aws_vpc.test.id
 }
 
 resource "aws_iam_role" "vpc_lattice_infrastructure" {
-  name = "%[1]s-vpcl-infrastructure"
+  name                = "%[1]s-vpcl-infrastructure"
   managed_policy_arns = ["arn:${data.aws_partition.current.partition}:iam::aws:policy/VPCLatticeFullAccess"]
-  assume_role_policy = <<POLICY
+  assume_role_policy  = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -4852,7 +4852,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "ecs_task_policy" {
-  name =  %[1]q
+  name = %[1]q
   role = aws_iam_role.ecs_task_role.name
 
   policy = <<POLICY
