@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -41,7 +42,6 @@ type resourceRDSInstanceState struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithNoOpDelete
-	framework.WithImportByID
 }
 
 func (r *resourceRDSInstanceState) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -59,9 +59,6 @@ func (r *resourceRDSInstanceState) Schema(ctx context.Context, req resource.Sche
 			},
 			names.AttrState: schema.StringAttribute{
 				Required: true,
-				// Validators: []validator.String{
-				// 	enum.FrameworkValidate[awstypes.DBInstanceStatusInfo](),
-				// },
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -150,6 +147,10 @@ func (r *resourceRDSInstanceState) Update(ctx context.Context, req resource.Upda
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *resourceRDSInstanceState) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrIdentifier), req, resp)
 }
 
 func updateRDSInstanceState(ctx context.Context, conn *rds.Client, id string, currentState string, configuredState string, timeout time.Duration) error {

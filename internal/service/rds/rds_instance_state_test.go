@@ -40,7 +40,7 @@ func TestAccRDSRDSInstanceState_basic(t *testing.T) {
 				Config: testAccRDSInstanceStateConfig_basic(rName, "available"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRDSInstanceStateExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, state),
 				),
 			},
@@ -85,36 +85,6 @@ func TestAccRDSRDSInstanceState_update(t *testing.T) {
 	})
 }
 
-func TestAccRDSRDSInstanceState_disappears_Instance(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_rds_instance_state.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.RDSServiceID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRDSInstanceStateConfig_basic(rName, "stopped"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSInstanceStateExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstanceState, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
 func testAccCheckRDSInstanceStateExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -122,7 +92,7 @@ func testAccCheckRDSInstanceStateExists(ctx context.Context, name string) resour
 			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameRDSInstanceState, name, errors.New("not found"))
 		}
 
-		if rs.Primary.ID == "" {
+		if rs.Primary.Attributes[names.AttrIdentifier] == "" {
 			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameRDSInstanceState, name, errors.New("not set"))
 		}
 
@@ -139,6 +109,32 @@ func testAccCheckRDSInstanceStateExists(ctx context.Context, name string) resour
 
 		return nil
 	}
+}
+
+func TestAccRDSRDSInstanceState_disappears_Instance(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_instance_state.test"
+	parentResourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRDSInstanceStateConfig_basic(rName, "available"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRDSInstanceStateExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstance(), parentResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
 func testAccRDSInstanceStateConfig_basic(rName, state string) string {
