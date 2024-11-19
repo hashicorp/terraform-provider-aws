@@ -96,7 +96,6 @@ func (ep *eksProperties) orderEnvironmentVariables() {
 
 		ep.PodProperties.Containers[j].Env = container.Env
 	}
-
 }
 
 func equivalentEKSPropertiesJSON(str1, str2 string) (bool, error) {
