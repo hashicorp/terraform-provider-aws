@@ -25,7 +25,7 @@ Use the [skaff](skaff.md) provider scaffolding tool to generate new ephemeral re
 
 In the `internal/service/<service>/<service>_ephemeral.go` file, you'll find a `Schema` property, which is a map of `Schema` objects. This maps the AWS API data model to the Terraform resource. To make a property available in Terraform, add it as an attribute with the appropriate data type.
 
-Attribute names are to be specified in `snake_case` as opposed to the AWS API which is `CamelCase`.
+Define attributes using `snake_case`, instead of the `CamelCase` format used by the AWS API.
 
 ### Implement Open Handler
 
