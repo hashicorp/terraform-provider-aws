@@ -123,7 +123,7 @@ func testAccCatalogTableOptimizer_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
+func TestAccGlueCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var catalogTableOptimizer glue.GetTableOptimizerOutput
 
@@ -162,7 +162,7 @@ func TestAccCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccCatalogTableOptimizer_DeleteOrphanFileConfiguration(t *testing.T) {
+func TestAccGlueCatalogTableOptimizer_DeleteOrphanFileConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var catalogTableOptimizer glue.GetTableOptimizerOutput
 
