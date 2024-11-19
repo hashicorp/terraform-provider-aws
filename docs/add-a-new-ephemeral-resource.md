@@ -70,7 +70,7 @@ You will need at a minimum:
 
 ### Create Documentation for the Ephemeral Resource
 
-Add a file covering the use of the new ephemeral resource in `website/docs/ephemeral-resources/<service>_<name>.md`. You may want to also add examples of the ephemeral resource in use particularly if its use is complex, or relies on resources in another service. This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the ephemeral resource is made available in a provider release. It is fine to link out to AWS Documentation where appropriate, particularly for values which are likely to change.
+Create a file documenting the use of the new ephemeral resource in `website/docs/ephemeral-resources/<service>_<name>.md` including a basic example. You may also want to include additional examples of the resource in use, especially if its usage is complex or depends on resources from another service. This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the ephemeral resource is included in a provider release. It’s acceptable to link to AWS Documentation where appropriate, particularly for values that are likely to change.
 
 ### Ensure Format and Lint Checks are Passing Locally
 
