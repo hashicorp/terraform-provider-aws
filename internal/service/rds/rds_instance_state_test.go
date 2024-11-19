@@ -15,12 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRDSRDSInstanceState_basic(t *testing.T) {
+func TestAccInstanceState_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_instance_state.test"
@@ -35,9 +34,9 @@ func TestAccRDSRDSInstanceState_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRDSInstanceStateConfig_basic(rName, "available"),
+				Config: testAccInstanceStateConfig_basic(rName, "available"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSInstanceStateExists(ctx, resourceName),
+					testAccCheckInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, state),
 				),
@@ -46,7 +45,7 @@ func TestAccRDSRDSInstanceState_basic(t *testing.T) {
 	})
 }
 
-func TestAccRDSRDSInstanceState_update(t *testing.T) {
+func TestAccInstanceState_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_instance_state.test"
@@ -62,17 +61,17 @@ func TestAccRDSRDSInstanceState_update(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRDSInstanceStateConfig_basic(rName, "available"),
+				Config: testAccInstanceStateConfig_basic(rName, "available"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSInstanceStateExists(ctx, resourceName),
+					testAccCheckInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateAvailable),
 				),
 			},
 			{
-				Config: testAccRDSInstanceStateConfig_basic(rName, "stopped"),
+				Config: testAccInstanceStateConfig_basic(rName, "stopped"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSInstanceStateExists(ctx, resourceName),
+					testAccCheckInstanceStateExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateStopped),
 				),
@@ -81,22 +80,22 @@ func TestAccRDSRDSInstanceState_update(t *testing.T) {
 	})
 }
 
-func testAccCheckRDSInstanceStateExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckInstanceStateExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameRDSInstanceState, name, errors.New("not found"))
+			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameInstanceState, name, errors.New("not found"))
 		}
 
 		if rs.Primary.Attributes[names.AttrIdentifier] == "" {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameRDSInstanceState, name, errors.New("not set"))
+			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameInstanceState, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSClient(ctx)
 		out, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.Attributes[names.AttrIdentifier])
 
 		if err != nil {
-			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameRDSInstanceState, rs.Primary.Attributes[names.AttrIdentifier], err)
+			return create.Error(names.RDS, create.ErrActionCheckingExistence, tfrds.ResNameInstanceState, rs.Primary.Attributes[names.AttrIdentifier], err)
 		}
 
 		if out == nil {
@@ -107,7 +106,7 @@ func testAccCheckRDSInstanceStateExists(ctx context.Context, name string) resour
 	}
 }
 
-func TestAccRDSRDSInstanceState_disappears_Instance(t *testing.T) {
+func TestAccInstanceState_disappears_Instance(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rds_instance_state.test"
@@ -122,9 +121,9 @@ func TestAccRDSRDSInstanceState_disappears_Instance(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRDSInstanceStateConfig_basic(rName, "available"),
+				Config: testAccInstanceStateConfig_basic(rName, "available"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSInstanceStateExists(ctx, resourceName),
+					testAccCheckInstanceStateExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceInstance(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -133,7 +132,7 @@ func TestAccRDSRDSInstanceState_disappears_Instance(t *testing.T) {
 	})
 }
 
-func testAccRDSInstanceStateConfig_basic(rName, state string) string {
+func testAccInstanceStateConfig_basic(rName, state string) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_basic(rName),
 		fmt.Sprintf(`

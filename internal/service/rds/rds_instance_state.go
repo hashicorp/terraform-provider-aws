@@ -24,9 +24,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_rds_instance_state", name="RDS Instance State")
-func newResourceRDSInstanceState(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceRDSInstanceState{}
+// @FrameworkResource("aws_rds_instance_state", name="Instance State")
+func newResourceInstanceState(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceInstanceState{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -35,20 +35,20 @@ func newResourceRDSInstanceState(_ context.Context) (resource.ResourceWithConfig
 }
 
 const (
-	ResNameRDSInstanceState = "RDS Instance State"
+	ResNameInstanceState = "Instance State"
 )
 
-type resourceRDSInstanceState struct {
+type resourceInstanceState struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithNoOpDelete
 }
 
-func (r *resourceRDSInstanceState) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *resourceInstanceState) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_rds_instance_state"
 }
 
-func (r *resourceRDSInstanceState) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceInstanceState) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrIdentifier: schema.StringAttribute{
@@ -70,10 +70,10 @@ func (r *resourceRDSInstanceState) Schema(ctx context.Context, req resource.Sche
 	}
 }
 
-func (r *resourceRDSInstanceState) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceInstanceState) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().RDSClient(ctx)
 
-	var plan resourceRDSInstanceStateData
+	var plan resourceInstanceStateData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -97,10 +97,10 @@ func (r *resourceRDSInstanceState) Create(ctx context.Context, req resource.Crea
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceRDSInstanceState) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceInstanceState) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().RDSClient(ctx)
 
-	var state resourceRDSInstanceStateData
+	var state resourceInstanceStateData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -113,7 +113,7 @@ func (r *resourceRDSInstanceState) Read(ctx context.Context, req resource.ReadRe
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.RDS, create.ErrActionSetting, ResNameRDSInstanceState, state.Identifier.String(), err),
+			create.ProblemStandardMessage(names.RDS, create.ErrActionSetting, ResNameInstanceState, state.Identifier.String(), err),
 			err.Error(),
 		)
 		return
@@ -124,10 +124,10 @@ func (r *resourceRDSInstanceState) Read(ctx context.Context, req resource.ReadRe
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceRDSInstanceState) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceInstanceState) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().RDSClient(ctx)
 
-	var plan, state resourceRDSInstanceStateData
+	var plan, state resourceInstanceStateData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -149,7 +149,7 @@ func (r *resourceRDSInstanceState) Update(ctx context.Context, req resource.Upda
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceRDSInstanceState) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *resourceInstanceState) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrIdentifier), req, resp)
 }
 
@@ -173,7 +173,7 @@ func updateRDSInstanceState(ctx context.Context, conn *rds.Client, id string, cu
 	return nil
 }
 
-type resourceRDSInstanceStateData struct {
+type resourceInstanceStateData struct {
 	Identifier types.String   `tfsdk:"identifier"`
 	State      types.String   `tfsdk:"state"`
 	Timeouts   timeouts.Value `tfsdk:"timeouts"`
