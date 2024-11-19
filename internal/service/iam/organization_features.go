@@ -50,6 +50,7 @@ func (r *resourceOrganizationFeatures) Schema(ctx context.Context, req resource.
 				ElementType: types.StringType,
 				Required:    true,
 				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
 					setvalidator.ValueStringsAre(
 						enum.FrameworkValidate[awstypes.FeatureType](),
 					),

@@ -39,6 +39,8 @@ func TestAccIAMOrganizationFeatures_basic(t *testing.T) {
 				Config: testAccOrganizationFeaturesConfig_basic([]string{"RootCredentialsManagement", "RootSessions"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationFeaturesExists(ctx, resourceName, &organizationfeatures),
+					resource.TestCheckResourceAttr(resourceName, "features.0", "RootCredentialsManagement"),
+					resource.TestCheckResourceAttr(resourceName, "features.1", "RootSessions"),
 				),
 			},
 			{
@@ -50,6 +52,18 @@ func TestAccIAMOrganizationFeatures_basic(t *testing.T) {
 				Config: testAccOrganizationFeaturesConfig_basic([]string{"RootCredentialsManagement"}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationFeaturesExists(ctx, resourceName, &organizationfeatures),
+					resource.TestCheckResourceAttr(resourceName, "features.0", "RootCredentialsManagement"),
+				),
+			}, {
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: false,
+			},
+			{
+				Config: testAccOrganizationFeaturesConfig_basic([]string{"RootSessions"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationFeaturesExists(ctx, resourceName, &organizationfeatures),
+					resource.TestCheckResourceAttr(resourceName, "features.0", "RootSessions"),
 				),
 			},
 		},
