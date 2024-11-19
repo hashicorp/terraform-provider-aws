@@ -33,7 +33,7 @@ Define attributes using `snake_case`, instead of the `CamelCase` format used by 
 
 ### Register Ephemeral Resource to the provider
 
-Ephemeral Resources use a self-registration process that adds them to the provider using the `@EphemeralResource()` annotation in the ephemeral resource's comments. Run `make gen` to register the ephemeral resource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+Ephemeral resources use a self-registration process that adds them to the provider via the `@EphemeralResource()` annotation in the resource's comments. To register the ephemeral resource, run `make gen`. This will generate an entry in the `service_package_gen.go` file located in the service package folder.
 
 ```go
 package something
