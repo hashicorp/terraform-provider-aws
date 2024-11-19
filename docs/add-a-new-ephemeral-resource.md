@@ -3,7 +3,7 @@
 
 New ephemeral resources are required when AWS introduces a new service or adds features to an existing service that necessitate a new ephemeral resource. Ephemeral resources produce ephemeral values and are never stored in the state. Any resource that produces a sensitive value can be an ephemeral resource, though some are more useful than others.
 
-Each ephemeral resource should be submitted for review in isolation, pull requests containing multiple ephemeral resources and/or resources are harder to review and the maintainers will normally ask for them to be broken apart.
+Each ephemeral resource should be submitted for review individually. Pull requests containing multiple ephemeral resources or other resources are more difficult to review, and maintainers will typically request that they be split into separate submissions.
 
 ## Prerequisites
 
