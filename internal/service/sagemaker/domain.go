@@ -2531,7 +2531,7 @@ func expandStudioWebPortalSettings(l []interface{}) *awstypes.StudioWebPortalSet
 	}
 
 	if v, ok := m["hidden_sagemaker_image_version_aliases"].([]interface{}); ok && len(v) > 0 {
-		config.HiddenSageMakerImageVersionAliases = expandHiddenSagemakerImageVersionAliases(v)
+		config.HiddenSageMakerImageVersionAliases = expandHiddenImageVersionAliases(v)
 	}
 
 	return config
@@ -3374,13 +3374,13 @@ func flattenStudioWebPortalSettings(config *awstypes.StudioWebPortalSettings) []
 	}
 
 	if config.HiddenSageMakerImageVersionAliases != nil {
-		m["hidden_sagemaker_image_version_aliases"] = flattenHiddenSagemakerImageVersionAliases(config.HiddenSageMakerImageVersionAliases)
+		m["hidden_sagemaker_image_version_aliases"] = flattenHiddenImageVersionAliases(config.HiddenSageMakerImageVersionAliases)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func expandHiddenSagemakerImageVersionAliases(tfList []interface{}) []awstypes.HiddenSageMakerImage {
+func expandHiddenImageVersionAliases(tfList []interface{}) []awstypes.HiddenSageMakerImage {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -3400,7 +3400,7 @@ func expandHiddenSagemakerImageVersionAliases(tfList []interface{}) []awstypes.H
 	return apiObjects
 }
 
-func flattenHiddenSagemakerImageVersionAliases(config []awstypes.HiddenSageMakerImage) []map[string]interface{} {
+func flattenHiddenImageVersionAliases(config []awstypes.HiddenSageMakerImage) []map[string]interface{} {
 	versionAliases := make([]map[string]interface{}, 0, len(config))
 
 	for _, raw := range config {
