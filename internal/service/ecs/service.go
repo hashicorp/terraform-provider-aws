@@ -1087,7 +1087,7 @@ func resourceService() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"role_arn": {
+						names.AttrRoleARN: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
@@ -1171,7 +1171,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		SchedulingStrategy:       schedulingStrategy,
 		ServiceName:              aws.String(name),
 		Tags:                     getTagsIn(ctx),
-		VpcLatticeConfigurations: expandVpcLatticeConfiguration(d.Get("vpc_lattice_configurations").(*schema.Set)),
+		VpcLatticeConfigurations: expandVPCLatticeConfiguration(d.Get("vpc_lattice_configurations").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1375,7 +1375,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if service.Deployments != nil {
 		for _, deployment := range service.Deployments {
 			if aws.ToString(deployment.Status) == "PRIMARY" {
-				if err := d.Set("vpc_lattice_configurations", flattenVpcLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
+				if err := d.Set("vpc_lattice_configurations", flattenVPCLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
 				}
 			}
@@ -1555,7 +1555,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("vpc_lattice_configurations") {
-			input.VpcLatticeConfigurations = expandVpcLatticeConfiguration(d.Get("vpc_lattice_configurations").(*schema.Set))
+			input.VpcLatticeConfigurations = expandVPCLatticeConfiguration(d.Get("vpc_lattice_configurations").(*schema.Set))
 		}
 
 		// Retry due to IAM eventual consistency.
@@ -1620,7 +1620,6 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	// Drain the ECS service.
 	if status != serviceStatusDraining && service.SchedulingStrategy != awstypes.SchedulingStrategyDaemon && !forceDelete {
-
 		input := &ecs.UpdateServiceInput{
 			Cluster:      aws.String(cluster),
 			DesiredCount: aws.Int32(0),
@@ -2141,7 +2140,7 @@ func expandNetworkConfiguration(nc []interface{}) *awstypes.NetworkConfiguration
 	return &awstypes.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
-func expandVpcLatticeConfiguration(tfSet *schema.Set) []awstypes.VpcLatticeConfiguration {
+func expandVPCLatticeConfiguration(tfSet *schema.Set) []awstypes.VpcLatticeConfiguration {
 	tfList := tfSet.List()
 	if len(tfList) == 0 {
 		return nil
@@ -2153,7 +2152,7 @@ func expandVpcLatticeConfiguration(tfSet *schema.Set) []awstypes.VpcLatticeConfi
 		config := tfMapRaw.(map[string]interface{})
 
 		apiObject := awstypes.VpcLatticeConfiguration{
-			RoleArn:        aws.String(config["role_arn"].(string)),
+			RoleArn:        aws.String(config[names.AttrRoleARN].(string)),
 			TargetGroupArn: aws.String(config["target_group_arn"].(string)),
 			PortName:       aws.String(config["port_name"].(string)),
 		}
@@ -2164,7 +2163,7 @@ func expandVpcLatticeConfiguration(tfSet *schema.Set) []awstypes.VpcLatticeConfi
 	return apiObjects
 }
 
-func flattenVpcLatticeConfigurations(apiObjects []awstypes.VpcLatticeConfiguration) []interface{} {
+func flattenVPCLatticeConfigurations(apiObjects []awstypes.VpcLatticeConfiguration) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -2173,7 +2172,7 @@ func flattenVpcLatticeConfigurations(apiObjects []awstypes.VpcLatticeConfigurati
 
 	for _, apiObject := range apiObjects {
 		tfMap := map[string]interface{}{
-			"role_arn":         aws.ToString(apiObject.RoleArn),
+			names.AttrRoleARN:  aws.ToString(apiObject.RoleArn),
 			"target_group_arn": aws.ToString(apiObject.TargetGroupArn),
 			"port_name":        aws.ToString(apiObject.PortName),
 		}
