@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_codebuild_project: Added support for using AWS CodeStar Connections to authenticate with GitHub and BitBucket.
+```
