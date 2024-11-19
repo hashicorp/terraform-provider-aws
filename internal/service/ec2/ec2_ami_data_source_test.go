@@ -428,7 +428,7 @@ data "aws_ami" "test" {
 
   filter {
     name   = "name"
-    values = ["AwsMarketPublished_IBM App Connect v12.0.12.0 and IBM MQ v9.3.0.16 with RapidDeploy 5.1.12 -422d2ddd-3288-4067-be37-4e2a69450606"]
+    values = ["AwsMarketPublished_IBM App Connect v13.0.1.0 and IBM MQ v9.4.0.5 with RapidDeploy 5.1.15 by-422d2ddd-3288-4067-be37-4e2a69450606"]
   }
 }
 `
