@@ -698,6 +698,40 @@ func TestContainerDefinitionsAreEquivalent_healthCheck(t *testing.T) {
 	}
 }
 
+func TestContainerDefinitionsAreEquivalent_versionConsistency(t *testing.T) {
+	t.Parallel()
+
+	cfgRepresentation := `
+[
+    {
+        "cpu": 10,
+        "image": "jenkins",
+        "memory": 128,
+        "name": "jenkins"
+    }
+]`
+
+	apiRepresentation := `
+[
+    {
+        "cpu": 10,
+        "image": "jenkins",
+        "memory": 128,
+        "name": "jenkins",
+        "versionConsistency": "enabled"
+    }
+]
+`
+
+	equal, err := containerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !equal {
+		t.Fatal("Expected definitions to be equal.")
+	}
+}
+
 func TestExpandContainerDefinitions_InvalidVersionConsistency(t *testing.T) {
 	t.Parallel()
 
@@ -714,7 +748,7 @@ func TestExpandContainerDefinitions_InvalidVersionConsistency(t *testing.T) {
       ],
       "memory": 500,
       "cpu": 10,
-      "versionConsistency": "foo"
+      "versionConsistency": "invalid"
     }
 ]`
 	_, err := expandContainerDefinitions(cfgRepresention)
@@ -722,7 +756,7 @@ func TestExpandContainerDefinitions_InvalidVersionConsistency(t *testing.T) {
 		t.Fatal("Expected error")
 	}
 
-	expectedErr := "invalid version consistency value (foo) for container definition supplied at index (0)"
+	expectedErr := "invalid version consistency value (invalid) for container definition supplied at index (0)"
 	if err.Error() != expectedErr {
 		t.Fatalf("Expected message '%[1]s', got '%[2]s'", expectedErr, err.Error())
 	}

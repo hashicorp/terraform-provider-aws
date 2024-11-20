@@ -110,7 +110,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s:%s$`, rName, "1"))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s$`, rName))),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "enabled"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].versionConsistency"),
 					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "track_latest", acctest.CtFalse),
 				),
@@ -121,7 +121,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s:%s$`, rName, "2"))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(fmt.Sprintf(`task-definition/%s$`, rName))),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "enabled"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].versionConsistency"),
 					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
 				),
 			},
@@ -1513,14 +1513,6 @@ func TestAccECSTaskDefinition_containerDefinitionVersionConsistency(t *testing.T
 				),
 			},
 			{
-				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency_NullUpdate(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "enabled"),
-				),
-			},
-			{
 				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, "enabled"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
@@ -1534,6 +1526,70 @@ func TestAccECSTaskDefinition_containerDefinitionVersionConsistency(t *testing.T
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "disabled"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_containerDefinitionVersionConsistency_enabledToNull(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, "enabled"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "enabled"),
+				),
+			},
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency_Null(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].versionConsistency"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_containerDefinitionVersionConsistency_nullToEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def awstypes.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency_Null(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
+					acctest.CheckResourceAttrJMESNotExists(resourceName, "container_definitions", "[0].versionConsistency"),
+				),
+			},
+			{
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, "enabled"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "enabled"),
 				),
 			},
 		},
@@ -3541,7 +3597,7 @@ TASK_DEFINITION
 `, rName, vc)
 }
 
-func testAccTaskDefinitionConfig_containerDefinitionVersionConsistency_NullUpdate(rName string) string {
+func testAccTaskDefinitionConfig_containerDefinitionVersionConsistency_Null(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q

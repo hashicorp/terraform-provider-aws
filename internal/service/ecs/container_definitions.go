@@ -75,10 +75,6 @@ func (cd containerDefinitions) reduce(isAWSVPC bool) {
 			}
 		}
 
-		if def.VersionConsistency == "" {
-			cd[i].VersionConsistency = awstypes.VersionConsistencyEnabled
-		}
-
 		for j, pm := range def.PortMappings {
 			if pm.Protocol == awstypes.TransportProtocolTcp {
 				cd[i].PortMappings[j].Protocol = ""
@@ -207,12 +203,6 @@ func compactArray[S ~[]E, E any](s S) S {
 func serializeContainerDefinitions(v []awstypes.ContainerDefinition, value smithyjson.Value) error
 
 func flattenContainerDefinitions(apiObjects []awstypes.ContainerDefinition) (string, error) {
-	for i, apiObject := range apiObjects {
-		if apiObject.VersionConsistency == "" {
-			apiObjects[i].VersionConsistency = awstypes.VersionConsistencyEnabled
-		}
-	}
-
 	jsonEncoder := smithyjson.NewEncoder()
 	err := serializeContainerDefinitions(apiObjects, jsonEncoder.Value)
 
