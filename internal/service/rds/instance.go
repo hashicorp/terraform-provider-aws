@@ -3101,7 +3101,7 @@ func startInstance(ctx context.Context, conn *rds.Client, id string, timeout tim
 	}
 
 	if _, err := waitDBInstanceAvailable(ctx, conn, id, timeout); err != nil {
-		return fmt.Errorf("waiting for RDS Instance (%s) start %w", id, err)
+		return fmt.Errorf("waiting for RDS Instance (%s) start: %w", id, err)
 	}
 
 	return nil
