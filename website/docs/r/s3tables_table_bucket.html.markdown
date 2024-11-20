@@ -39,7 +39,8 @@ This resource exports the following attributes in addition to the argument above
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Tables Table Bucket using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Tables Table Bucket using the `arn`.
+For example:
 
 ```terraform
 import {
@@ -48,7 +49,8 @@ import {
 }
 ```
 
-Using `terraform import`, import S3 Tables Table Bucket using the `arn`. For example:
+Using `terraform import`, import S3 Tables Table Bucket using the `arn`.
+For example:
 
 ```console
 % terraform import aws_s3tables_table_bucket.example arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket
