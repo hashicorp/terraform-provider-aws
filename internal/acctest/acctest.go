@@ -80,6 +80,10 @@ const (
 	// Provider name for alternate configuration testing
 	ProviderNameAlternate = "awsalternate"
 
+	// Provider name for echo provider
+	// used for testing ephemeral resources
+	ProviderNameEcho = "echo"
+
 	// Provider name for alternate account and alternate region configuration testing
 	ProviderNameAlternateAccountAlternateRegion = "awsalternateaccountalternateregion"
 
