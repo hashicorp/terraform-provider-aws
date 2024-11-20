@@ -1528,7 +1528,6 @@ func ConfigWithEchoProvider(ephemeralResourceData string) string {
 provider "echo" {
   data = %[1]s
 }
-
 resource "echo" "test" {}
 `, ephemeralResourceData)
 }
