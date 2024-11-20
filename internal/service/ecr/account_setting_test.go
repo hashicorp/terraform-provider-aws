@@ -20,13 +20,13 @@ func TestAccEcrAccountSetting_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccEcrAccountSetting_basic,
+		acctest.CtBasic: testAccAccountSetting_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccEcrAccountSetting_basic(t *testing.T) {
+func testAccAccountSetting_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecr_account_setting.test"
 	rName := "BASIC_SCAN_TYPE_VERSION"
@@ -38,9 +38,9 @@ func testAccEcrAccountSetting_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEcrAccountSettingConfig_basic(rName, "AWS_NATIVE"),
+				Config: testAccAccountSettingConfig_basic(rName, "AWS_NATIVE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccEcrCheckAccountSettingExists(ctx, resourceName),
+					testAccCheckAccountSettingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "AWS_NATIVE")),
 			},
@@ -51,9 +51,9 @@ func testAccEcrAccountSetting_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEcrAccountSettingConfig_basic(rName, "CLAIR"),
+				Config: testAccAccountSettingConfig_basic(rName, "CLAIR"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccEcrCheckAccountSettingExists(ctx, resourceName),
+					testAccCheckAccountSettingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "CLAIR")),
 			},
@@ -61,7 +61,7 @@ func testAccEcrAccountSetting_basic(t *testing.T) {
 	})
 }
 
-func testAccEcrCheckAccountSettingExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAccountSettingExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -80,7 +80,7 @@ func testAccEcrCheckAccountSettingExists(ctx context.Context, n string) resource
 	}
 }
 
-func testAccEcrAccountSettingConfig_basic(Name string, Value string) string {
+func testAccAccountSettingConfig_basic(Name string, Value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_account_setting" "test" {
   name  = %[1]q
