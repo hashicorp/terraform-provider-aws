@@ -1372,12 +1372,10 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
-	if service.Deployments != nil {
-		for _, deployment := range service.Deployments {
-			if aws.ToString(deployment.Status) == "PRIMARY" {
-				if err := d.Set("vpc_lattice_configurations", flattenVPCLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
-					return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
-				}
+	for _, deployment := range service.Deployments {
+		if aws.ToString(deployment.Status) == "PRIMARY" {
+			if err := d.Set("vpc_lattice_configurations", flattenVPCLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
 			}
 		}
 	}
