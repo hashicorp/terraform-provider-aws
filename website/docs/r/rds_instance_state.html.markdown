@@ -10,6 +10,8 @@ description: |-
 
 Terraform resource for managing an AWS RDS (Relational Database) RDS Instance State.
 
+~> Destruction of this resource is a no-op and **will not** modify the instance state
+
 ## Example Usage
 
 ### Basic Usage
