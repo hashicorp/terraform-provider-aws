@@ -2841,11 +2841,12 @@ func waitDBInstanceStopped(ctx context.Context, conn *rds.Client, id string, tim
 			instanceStatusStorageFull,
 			instanceStatusUpgrading,
 		},
-		Target:     []string{instanceStatusStopped},
-		Refresh:    statusDBInstance(ctx, conn, id),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+		Target:                    []string{instanceStatusStopped},
+		Refresh:                   statusDBInstance(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+		Delay:                     10 * time.Second,
+		MinTimeout:                3 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
