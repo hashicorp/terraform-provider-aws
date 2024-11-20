@@ -134,7 +134,7 @@ The `transformation` block supports the following arguments:
 * `step_to_apply` - (Required, Forces new resource) When the service applies the transformation. Currently only `POST_CHUNKING` is supported.
 * `transformation_function` - (Required) The lambda function that processes documents.
 
-### `transformation_function` block 
+### `transformation_function` block
 
 The `transformation_function` block supports the following arguments:
 
