@@ -67,6 +67,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
+			Factory:  resourceAccountSetting,
+			TypeName: "aws_ecr_account_setting",
+			Name:     "Account Setting",
+		},
+		{
 			Factory:  resourceLifecyclePolicy,
 			TypeName: "aws_ecr_lifecycle_policy",
 			Name:     "Lifecycle Policy",
