@@ -377,6 +377,7 @@ type ResourceDatum struct {
 	Implementation                   implementation
 	Serialize                        bool
 	SerializeDelay                   bool
+	SerializeParallelTests           bool
 	PreCheck                         bool
 	SkipEmptyTags                    bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	SkipNullTags                     bool
@@ -683,6 +684,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						continue
 					} else {
 						d.Serialize = b
+					}
+				}
+				if attr, ok := args.Keyword["serializeParallelTests"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid serializeParallelTests value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.SerializeParallelTests = b
 					}
 				}
 				if attr, ok := args.Keyword["serializeDelay"]; ok {

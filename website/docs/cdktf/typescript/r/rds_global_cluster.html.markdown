@@ -292,6 +292,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - RDS Global Cluster Amazon Resource Name (ARN)
+* `endpoint` - Writer endpoint for the new global database cluster. This endpoint always points to the writer DB instance in the current primary cluster.
 * `globalClusterMembers` - Set of objects containing Global Cluster members.
     * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster
     * `is_writer` - Whether the member is the primary DB Cluster
@@ -364,4 +365,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-63ed2a954c6852f58da2c116d6c114fff786c66e1d260cfae7f97136013f0c8e -->
+<!-- cache-key: cdktf-0.20.8 input-ebb294f341f5c02789039d527c8900757e9c8e6841f498bded83d048e0873309 -->

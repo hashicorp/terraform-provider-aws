@@ -62,6 +62,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
+			Factory: newResourceSecurityGroupVPCAssociation,
+			Name:    "Security Group VPC Association",
+		},
+		{
 			Factory: newSecurityGroupEgressRuleResource,
 			Name:    "Security Group Egress Rule",
 			Tags: &types.ServicePackageResourceTags{
@@ -472,9 +476,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceSubnet,
 			TypeName: "aws_subnet",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			},
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceSubnets,

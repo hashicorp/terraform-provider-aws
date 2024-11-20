@@ -75,7 +75,6 @@ The `space_sharing_settings` block supports the following argument:
 The `code_editor_app_settings` block supports the following argument:
 
 * `app_lifecycle_management` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
-* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. See [`code_repository` Block](#code_repository-block) below.
 * `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 
 ### `custom_file_system` Block
@@ -89,7 +88,7 @@ The `custom_file_system` block supports the following argument:
 The `jupyter_lab_app_settings` block supports the following arguments:
 
 * `app_lifecycle_management` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
-* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. See [`code_repository` Block](#code_repository-block) below.
+* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterLab application. See [`code_repository` Block](#code_repository-block) below.
 * `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 
 ### `jupyter_server_app_settings` Block
@@ -197,4 +196,4 @@ Using `terraform import`, import SageMaker Spaces using the `id`. For example:
 % terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-219a68b5e1c4c029f71fce75220da01f457cf6d17319405079eb1c8f95c0d707 -->
+<!-- cache-key: cdktf-0.20.8 input-04b54f82c93faa2e6b5da09042075faf01aa4e508f66ed59b6b7c1671ebb45ea -->

@@ -132,7 +132,7 @@ func resourceRole() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Deprecated: "The managed_policy_arns argument is deprecated. " +
-					"Use the aws_iam_role_policy_attachment resource instead. If Terraform should" +
+					"Use the aws_iam_role_policy_attachment resource instead. If Terraform should " +
 					"exclusively manage all managed policy attachments (the current " +
 					"behavior of this argument), use the aws_iam_role_policy_attachments_exclusive " +
 					"resource as well.",

@@ -14,6 +14,7 @@ nav:
           - Resource: add-a-new-resource.md
           - Service: add-a-new-service.md
           - Data source: add-a-new-datasource.md
+          - Ephemeral Resource: add-a-new-ephemeral-resource.md
           - Function: add-a-new-function.md
           - AWS Region: add-a-new-region.md
           - Import Support: add-import-support.md

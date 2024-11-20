@@ -109,7 +109,7 @@ This resource supports the following arguments:
 * `address` - (Optional) IP address from an EC2 BYOIP pool. This option is only available for VPC EIPs.
 * `associate_with_private_ip` - (Optional) User-specified primary or secondary private IP address to associate with the Elastic IP address. If no private IP address is specified, the Elastic IP address is associated with the primary private IP address.
 * `customer_owned_ipv4_pool` - (Optional) ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing).
-* `domain` - Indicates if this EIP is for use in VPC (`vpc`).
+* `domain` - (Optional) Indicates if this EIP is for use in VPC (`vpc`).
 * `instance` - (Optional) EC2 instance ID.
 * `ipam_pool_id`- (Optional) The ID of an IPAM pool which has an Amazon-provided or BYOIP public IPv4 CIDR provisioned to it.
 * `network_border_group` - (Optional) Location from which the IP address is advertised. Use this parameter to limit the address to this location.

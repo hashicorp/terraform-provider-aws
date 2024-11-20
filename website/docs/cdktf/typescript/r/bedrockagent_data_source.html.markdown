@@ -126,7 +126,7 @@ The `semanticChunkingConfiguration` block supports the following arguments:
 
 * `breakpointPercentileThreshold` - (Required, Forces new resource) The dissimilarity threshold for splitting chunks.
 * `bufferSize` - (Required, Forces new resource) The buffer size.
-* `maxTokens` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
+* `maxToken` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
 
 ### `customTransformationConfiguration` block
 
@@ -226,4 +226,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-a6844c8d1576a70595f0eb27383ed66b24e7350d2c18bdf84a9bc5f9440c3698 -->
+<!-- cache-key: cdktf-0.20.8 input-53f961b0d6c2b05363b21aefafc1c01ca2602d7614f31fcd25d93c800546b9bf -->

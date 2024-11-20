@@ -82,6 +82,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "KeySigningKeyInParentDSRecord", "Due to DNS lookup failure") {
 		return true
 	}
+	// Example (evidently):  NoLongerSupportedException: AWS Evidently has been discontinued.
+	if tfawserr.ErrCodeEquals(err, "NoLongerSupportedException") {
+		return true
+	}
 	// Example (shield): ResourceNotFoundException: The subscription does not exist
 	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "The subscription does not exist") {
 		return true

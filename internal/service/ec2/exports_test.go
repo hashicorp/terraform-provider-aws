@@ -70,6 +70,7 @@ var (
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
 	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
+	ResourceSecurityGroupVPCAssociation                   = newResourceSecurityGroupVPCAssociation
 	ResourceSnapshotCreateVolumePermission                = resourceSnapshotCreateVolumePermission
 	ResourceSpotDataFeedSubscription                      = resourceSpotDataFeedSubscription
 	ResourceSpotFleetRequest                              = resourceSpotFleetRequest

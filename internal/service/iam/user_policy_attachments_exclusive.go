@@ -144,10 +144,10 @@ func (r *resourceUserPolicyAttachmentsExclusive) Update(ctx context.Context, req
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-// syncAttachments handles keeping the configured customer managed policy
+// syncAttachments handles keeping the configured managed IAM policy
 // attachments in sync with the remote resource.
 //
-// Customer managed policies defined on this resource but not attached to
+// Managed IAM policies defined on this resource but not attached to
 // the user will be added. Policies attached to the user but not configured
 // on this resource will be removed.
 func (r *resourceUserPolicyAttachmentsExclusive) syncAttachments(ctx context.Context, userName string, want []string) error {

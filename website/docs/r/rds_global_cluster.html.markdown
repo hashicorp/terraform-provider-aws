@@ -217,6 +217,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - RDS Global Cluster Amazon Resource Name (ARN)
+* `endpoint` - Writer endpoint for the new global database cluster. This endpoint always points to the writer DB instance in the current primary cluster.
 * `global_cluster_members` - Set of objects containing Global Cluster members.
     * `db_cluster_arn` - Amazon Resource Name (ARN) of member DB Cluster
     * `is_writer` - Whether the member is the primary DB Cluster

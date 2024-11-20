@@ -338,7 +338,8 @@ Advanced logging settings. See [Configuring advanced logging controls for your L
 
 ### snap_start
 
-Snap start settings for low-latency startups. This feature is currently only supported for `java11`, `java17` and `java21` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
+Snap start settings for low-latency startups. This feature is currently only supported for specific runtimes, see [Supported features and limitations][14].
+Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
 
 * `apply_on` - (Required) Conditions where snap start is enabled. Valid values are `PublishedVersions`.
 
@@ -386,6 +387,7 @@ This resource exports the following attributes in addition to the arguments abov
 [11]: https://learn.hashicorp.com/terraform/aws/lambda-api-gateway
 [12]: https://docs.aws.amazon.com/lambda/latest/dg/services-efs.html
 [13]: https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-advanced
+[14]: https://docs.aws.amazon.com/lambda/latest/dg/snapstart.html#snapstart-runtimes
 
 ## Timeouts
 
