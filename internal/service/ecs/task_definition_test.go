@@ -1505,27 +1505,27 @@ func TestAccECSTaskDefinition_containerDefinitionVersionConsistency(t *testing.T
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, "disabled"),
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, awstypes.VersionConsistencyDisabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "disabled"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", string(awstypes.VersionConsistencyDisabled)),
 				),
 			},
 			{
-				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, "enabled"),
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, awstypes.VersionConsistencyEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "enabled"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", string(awstypes.VersionConsistencyEnabled)),
 				),
 			},
 			{
-				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, "disabled"),
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, awstypes.VersionConsistencyDisabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "disabled"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", string(awstypes.VersionConsistencyDisabled)),
 				),
 			},
 		},
@@ -1545,11 +1545,11 @@ func TestAccECSTaskDefinition_containerDefinitionVersionConsistency_enabledToNul
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, "enabled"),
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, awstypes.VersionConsistencyEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "enabled"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", string(awstypes.VersionConsistencyEnabled)),
 				),
 			},
 			{
@@ -1585,11 +1585,11 @@ func TestAccECSTaskDefinition_containerDefinitionVersionConsistency_nullToEnable
 				),
 			},
 			{
-				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, "enabled"),
+				Config: testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, awstypes.VersionConsistencyEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "length(@)", "1"),
-					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", "enabled"),
+					acctest.CheckResourceAttrJMES(resourceName, "container_definitions", "[0].versionConsistency", string(awstypes.VersionConsistencyEnabled)),
 				),
 			},
 		},
@@ -3578,7 +3578,7 @@ resource "aws_ecs_task_definition" "test" {
 `, rName, image)
 }
 
-func testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, vc string) string {
+func testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName string, versionConsistency awstypes.VersionConsistency) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family                = %[1]q
@@ -3594,7 +3594,7 @@ resource "aws_ecs_task_definition" "test" {
 ]
 TASK_DEFINITION
 }
-`, rName, vc)
+`, rName, versionConsistency)
 }
 
 func testAccTaskDefinitionConfig_containerDefinitionVersionConsistency_Null(rName string) string {
