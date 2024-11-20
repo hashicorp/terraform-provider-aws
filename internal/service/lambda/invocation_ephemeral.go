@@ -121,7 +121,7 @@ func (e *ephemeralInvocation) Open(ctx context.Context, req ephemeral.OpenReques
 	}
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
-	data.Result = types.StringValue(string(output.Payload))
+	data.Result = flex.StringValueToFramework(ctx, string(output.Payload))
 	resp.Diagnostics.Append(resp.Result.Set(ctx, &data)...)
 }
 
