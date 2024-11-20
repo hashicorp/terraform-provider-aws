@@ -90,10 +90,6 @@ const (
 	// Provider name for alternate account and same region configuration testing
 	ProviderNameAlternateAccountSameRegion = "awsalternateaccountsameregion"
 
-	// Provider name for echo provider
-	// used for testing ephemeral resources
-	ProviderNameEcho = "echo"
-
 	// Provider name for same account and alternate region configuration testing
 	ProviderNameSameAccountAlternateRegion = "awssameaccountalternateregion"
 
