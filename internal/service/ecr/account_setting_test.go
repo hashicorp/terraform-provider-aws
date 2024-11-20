@@ -16,17 +16,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAccountSetting_serial(t *testing.T) {
+func TestAccEcrAccountSetting_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic: testAccAccountSetting_basic,
+		acctest.CtBasic: testAccEcrAccountSetting_basic,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
 }
 
-func testAccAccountSetting_basic(t *testing.T) {
+func testAccEcrAccountSetting_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecr_account_setting.test"
 	rName := "BASIC_SCAN_TYPE_VERSION"
@@ -38,9 +38,9 @@ func testAccAccountSetting_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingConfig_basic(rName, "AWS_NATIVE"),
+				Config: testAccEcrAccountSettingConfig_basic(rName, "AWS_NATIVE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingExists(ctx, resourceName),
+					testAccEcrCheckAccountSettingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "AWS_NATIVE")),
 			},
@@ -51,9 +51,9 @@ func testAccAccountSetting_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAccountSettingConfig_basic(rName, "CLAIR"),
+				Config: testAccEcrAccountSettingConfig_basic(rName, "CLAIR"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAccountSettingExists(ctx, resourceName),
+					testAccEcrCheckAccountSettingExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "CLAIR")),
 			},
@@ -61,7 +61,7 @@ func testAccAccountSetting_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAccountSettingExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccEcrCheckAccountSettingExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -80,7 +80,7 @@ func testAccCheckAccountSettingExists(ctx context.Context, n string) resource.Te
 	}
 }
 
-func testAccAccountSettingConfig_basic(Name string, Value string) string {
+func testAccEcrAccountSettingConfig_basic(Name string, Value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_account_setting" "test" {
   name  = %[1]q
