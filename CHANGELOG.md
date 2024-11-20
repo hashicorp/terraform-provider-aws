@@ -4,6 +4,13 @@ NOTES:
 
 * New [ephemeral resources](https://developer.hashicorp.com/terraform/language/v1.10.x/resources/ephemeral) `aws_kms_secrets`, `aws_lambda_invocation`, and `aws_secretsmanager_secret_version` now support [ephemeral values](https://developer.hashicorp.com/terraform/language/v1.10.x/values/variables#exclude-values-from-state). ([#40009](https://github.com/hashicorp/terraform-provider-aws/issues/40009))
 
+FEATURES:
+
+* **New Ephemeral Resource:** `aws_kms_secrets` ([#40009](https://github.com/hashicorp/terraform-provider-aws/issues/40009))
+* **New Ephemeral Resource:** `aws_lambda_invocation` ([#39988](https://github.com/hashicorp/terraform-provider-aws/issues/39988))
+* **New Ephemeral Resource:** `aws_secretsmanager_secret_version` ([#40009](https://github.com/hashicorp/terraform-provider-aws/issues/40009))
+* **New Resource:** `aws_rds_instance_state` ([#40180](https://github.com/hashicorp/terraform-provider-aws/issues/40180))
+
 ENHANCEMENTS:
 
 * resource/aws_rds_global_cluster: Add `endpoint` argument to point to the writer DB instance in the current primary cluster ([#39960](https://github.com/hashicorp/terraform-provider-aws/issues/39960))
