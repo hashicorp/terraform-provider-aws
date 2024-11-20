@@ -3581,7 +3581,7 @@ resource "aws_ecs_task_definition" "test" {
 func testAccTaskDefinitionConfig_containerDefinitionVersionConsistency(rName, vc string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family                = %[1]q
   container_definitions = <<TASK_DEFINITION
 [
 	{
@@ -3600,7 +3600,7 @@ TASK_DEFINITION
 func testAccTaskDefinitionConfig_containerDefinitionVersionConsistency_Null(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family                = %[1]q
   container_definitions = <<TASK_DEFINITION
 [
 	{
