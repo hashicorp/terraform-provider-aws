@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
@@ -85,22 +84,12 @@ func (r *resourceTable) Schema(ctx context.Context, req resource.SchemaRequest, 
 				Computed: true,
 			},
 			names.AttrName: schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 255),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z_]+$`), "must contain only lowercase letters, numbers, or underscores"),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z]`), "must start with a letter or number"),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[0-9a-z]$`), "must end with a letter or number"),
-				},
+				Required:   true,
+				Validators: tableNameValidator,
 			},
 			names.AttrNamespace: schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 255),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z_]+$`), "must contain only lowercase letters, numbers, or underscores"),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z]`), "must start with a letter or number"),
-					stringvalidator.RegexMatches(regexache.MustCompile(`[0-9a-z]$`), "must end with a letter or number"),
-				},
+				Required:   true,
+				Validators: namespaceNameValidator,
 			},
 			names.AttrOwnerAccountID: schema.StringAttribute{
 				Computed: true,
@@ -410,4 +399,11 @@ func (id tableIdentifier) Populate(m *resourceTableModel) {
 	m.TableBucketARN = fwtypes.ARNValue(id.TableBucketARN)
 	m.Namespace = types.StringValue(id.Namespace)
 	m.Name = types.StringValue(id.Name)
+}
+
+var tableNameValidator = []validator.String{
+	stringvalidator.LengthBetween(1, 255),
+	stringMustContainLowerCaseLettersNumbersUnderscores,
+	stringMustStartWithLetterOrNumber,
+	stringMustEndWithLetterOrNumber,
 }

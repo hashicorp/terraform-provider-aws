@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
@@ -79,9 +78,7 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 					listvalidator.ValueStringsAre(
-						stringvalidator.LengthBetween(1, 255),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z_]*$`), "must contain only lowercase letters, numbers, or underscores"),
-						stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z].*[0-9a-z]$`), "must start and end with a letter or number"),
+						namespaceNameValidator...,
 					),
 				},
 			},
@@ -271,4 +268,11 @@ type resourceNamespaceModel struct {
 	Namespace      fwtypes.ListValueOf[types.String] `tfsdk:"namespace"`
 	OwnerAccountID types.String                      `tfsdk:"owner_account_id"`
 	TableBucketARN fwtypes.ARN                       `tfsdk:"table_bucket_arn"`
+}
+
+var namespaceNameValidator = []validator.String{
+	stringvalidator.LengthBetween(1, 255),
+	stringMustContainLowerCaseLettersNumbersUnderscores,
+	stringMustStartWithLetterOrNumber,
+	stringMustEndWithLetterOrNumber,
 }

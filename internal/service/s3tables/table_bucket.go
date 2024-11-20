@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
@@ -66,8 +65,9 @@ func (r *resourceTableBucket) Schema(ctx context.Context, req resource.SchemaReq
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 63),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z-]*$`), "must contain only lowercase letters, numbers, or hyphens"),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9a-z].*[0-9a-z]$`), "must start and end with a letter or number"),
+					stringMustContainLowerCaseLettersNumbersHypens,
+					stringMustStartWithLetterOrNumber,
+					stringMustEndWithLetterOrNumber,
 					validators.PrefixNoneOf(
 						"xn--",
 						"sthree-",
