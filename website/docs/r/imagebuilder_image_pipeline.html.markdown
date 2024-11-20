@@ -10,7 +10,7 @@ description: |-
 
 Manages an Image Builder Image Pipeline.
 
-~> **NOTE:** Starting with version `5.74.0`, lifecycle meta-argument [`replace_triggered_by`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) must be used in order to prevent a dependency error on destroy. 
+~> **NOTE:** Starting with version `5.74.0`, lifecycle meta-argument [`replace_triggered_by`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#replace_triggered_by) must be used in order to prevent a dependency error on destroy.
 
 ## Example Usage
 
