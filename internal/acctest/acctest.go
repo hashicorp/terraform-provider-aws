@@ -2222,7 +2222,7 @@ data "aws_availability_zones" "available" {
 
 func ConfigAvailableAZsNoOptInDefaultExclude() string {
 	// Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-	return ConfigAvailableAZsNoOptInExclude("usw2-az4", "usgw1-az2")
+	return ConfigAvailableAZsNoOptInExclude("usw2-az4")
 }
 
 func ConfigAvailableAZsNoOptInExclude(excludeZoneIds ...string) string {
