@@ -44,11 +44,13 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/echoprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -77,6 +79,10 @@ const (
 
 	// Provider name for alternate configuration testing
 	ProviderNameAlternate = "awsalternate"
+
+	// Provider name for echo provider
+	// used for testing ephemeral resources
+	ProviderNameEcho = "echo"
 
 	// Provider name for alternate account and alternate region configuration testing
 	ProviderNameAlternateAccountAlternateRegion = "awsalternateaccountalternateregion"
@@ -148,6 +154,20 @@ func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) 
 			}
 
 			return providerServerFactory(), nil
+		}
+	}
+
+	return factories
+}
+
+// ProtoV6ProviderFactories initializes v6 provider factories
+// currently only initializes echo provider for testing ephemeral resources
+func ProtoV6ProviderFactories(_ context.Context, providerNames ...string) map[string]func() (tfprotov6.ProviderServer, error) {
+	factories := make(map[string]func() (tfprotov6.ProviderServer, error))
+
+	for _, name := range providerNames {
+		if name == ProviderNameEcho {
+			factories[name] = echoprovider.NewProviderServer()
 		}
 	}
 
@@ -1500,6 +1520,16 @@ provider "aws" {
   }
 }
 `, key1)
+}
+
+func ConfigWithEchoProvider(ephemeralResourceData string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "echo" {
+  data = %[1]s
+}
+resource "echo" "test" {}
+`, ephemeralResourceData)
 }
 
 // ConfigRegionalProvider creates a new provider configuration with a region.
