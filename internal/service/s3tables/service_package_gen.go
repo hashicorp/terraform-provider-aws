@@ -25,6 +25,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Namespace",
 		},
 		{
+			Factory: newResourceTable,
+			Name:    "Table",
+		},
+		{
 			Factory: newResourceTableBucket,
 			Name:    "Table Bucket",
 		},

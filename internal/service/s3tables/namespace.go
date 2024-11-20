@@ -51,6 +51,7 @@ type resourceNamespace struct {
 func (r *resourceNamespace) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_s3tables_namespace"
 }
+
 func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -63,6 +64,9 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			"created_by": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			names.AttrNamespace: schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
@@ -83,6 +87,9 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 			},
 			names.AttrOwnerAccountID: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"table_bucket_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,

@@ -47,10 +47,10 @@ func TestAccS3TablesNamespace_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
-					acctest.CheckResourceAttrAccountID(resourceName, "created_by"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "created_by"),
 					resource.TestCheckResourceAttr(resourceName, "namespace.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "namespace.0", rName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, "table_bucket_arn", "aws_s3tables_table_bucket.test", names.AttrARN),
 				),
 			},

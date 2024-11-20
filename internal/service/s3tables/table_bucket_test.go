@@ -41,10 +41,10 @@ func TestAccS3TablesTableBucket_basic(t *testing.T) {
 				Config: testAccTableBucketConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableBucketExists(ctx, resourceName, &tablebucket),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3tables", "bucket/"+rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3tables", "bucket/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 				),
 			},
 			{

@@ -5,12 +5,16 @@ package s3tables
 
 var (
 	NewResourceNamespace         = newResourceNamespace
+	NewResourceTable             = newResourceTable
 	NewResourceTableBucket       = newResourceTableBucket
 	NewResourceTableBucketPolicy = newResourceTableBucketPolicy
 
 	FindNamespace         = findNamespace
+	FindTable             = findTable
 	FindTableBucket       = findTableBucket
 	FindTableBucketPolicy = findTableBucketPolicy
+
+	TableIDFromTableARN = tableIDFromTableARN
 )
 
 const (
@@ -18,4 +22,8 @@ const (
 	ResNameTableBucket = resNameTableBucket
 
 	NamespaceIDSeparator = namespaceIDSeparator
+)
+
+type (
+	TableIdentifier = tableIdentifier
 )
