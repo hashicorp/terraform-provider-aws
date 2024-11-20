@@ -78,7 +78,7 @@ func resourceSCRAMSecretAssociationRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	scramSecrets, err := findSCRAMSecretsByClusterARN(ctx, conn, d.Id())
+	allScramSecretsList, err := findSCRAMSecretsByClusterARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MSK SCRAM Secret Association (%s) not found, removing from state", d.Id())
@@ -91,8 +91,17 @@ func resourceSCRAMSecretAssociationRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.Set("cluster_arn", d.Id())
-	d.Set("secret_arn_list", scramSecrets)
 
+	managedScramSecretsList := allScramSecretsList
+	// Only set secret ARNs that are managed by Terraform in the state - if there are other associated secrets, ignore them
+	// this allows us to use multiple SCRAM secret associations. Only do this if the state has ARNs to preserve import behavior.
+	// Note: need to flatten and expand the configured secrets to ensure a consistent set hashing between the values for intersection comparison
+	configuredScramSecretsSet := flex.FlattenStringValueSet(flex.ExpandStringValueSet(d.Get("secret_arn_list").(*schema.Set)))
+	if configuredScramSecretsSet.Len() > 0 {
+		allScramSecretsSet := flex.FlattenStringValueSet(allScramSecretsList)
+		managedScramSecretsList = flex.ExpandStringValueSet(configuredScramSecretsSet.Intersection(allScramSecretsSet))
+	}
+	d.Set("secret_arn_list", managedScramSecretsList)
 	return diags
 }
 

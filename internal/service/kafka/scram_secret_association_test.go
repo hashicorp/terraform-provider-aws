@@ -97,6 +97,35 @@ func TestAccKafkaScramSecretAssociation_update(t *testing.T) {
 	})
 }
 
+func TestAccKafkaScramSecretAssociation_update_multiple_associations(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	primaryResourceName := "aws_msk_scram_secret_association.primary"
+	secondaryResourceName := "aws_msk_scram_secret_association.secondary"
+	secretResourceName := "aws_secretsmanager_secret.test.0"
+	secretResourceName2 := "aws_secretsmanager_secret.test.1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScramSecretAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScramSecretAssociationConfig_multiple_associations(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckScramSecretAssociationExists(ctx, primaryResourceName),
+					resource.TestCheckResourceAttr(primaryResourceName, "secret_arn_list.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(primaryResourceName, "secret_arn_list.*", secretResourceName, names.AttrARN),
+					testAccCheckScramSecretAssociationExists(ctx, secondaryResourceName),
+					resource.TestCheckResourceAttr(secondaryResourceName, "secret_arn_list.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(secondaryResourceName, "secret_arn_list.*", secretResourceName2, names.AttrARN),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKafkaScramSecretAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -256,6 +285,24 @@ func testAccScramSecretAssociationConfig_basic(rName string, count int) string {
 resource "aws_msk_scram_secret_association" "test" {
   cluster_arn     = aws_msk_cluster.test.arn
   secret_arn_list = aws_secretsmanager_secret.test[*].arn
+
+  depends_on = [aws_secretsmanager_secret_version.test]
+}
+`)
+}
+
+func testAccScramSecretAssociationConfig_multiple_associations(rName string) string {
+	return acctest.ConfigCompose(testAccScramSecretAssociationConfig_base(rName, 2), `
+resource "aws_msk_scram_secret_association" "primary" {
+  cluster_arn     = aws_msk_cluster.test.arn
+  secret_arn_list = [aws_secretsmanager_secret.test[0].arn]
+
+  depends_on = [aws_secretsmanager_secret_version.test]
+}
+
+resource "aws_msk_scram_secret_association" "secondary" {
+  cluster_arn     = aws_msk_cluster.test.arn
+  secret_arn_list = [aws_secretsmanager_secret.test[1].arn]
 
   depends_on = [aws_secretsmanager_secret_version.test]
 }
