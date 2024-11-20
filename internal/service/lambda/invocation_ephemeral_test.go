@@ -5,11 +5,14 @@ package lambda_test
 
 import (
 	"fmt"
+	"math/big"
 	"testing"
 
-	"github.com/hashicorp/go-version"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -18,27 +21,37 @@ import (
 func TestAccLambdaInvocationEphemeral_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	echoResourceName := "echo.test"
+	dp := tfjsonpath.New("data")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:   func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck: acctest.ErrorCheck(t, names.LambdaServiceID),
 		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
-			tfversion.SkipBelow(version.Must(version.NewVersion("1.10.0"))),
+			tfversion.SkipBelow(tfversion.Version1_10_0),
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories(ctx, acctest.ProviderNameEcho),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					testAccInvocationEphemeralConfig_basic(rName),
-				),
+				Config: testAccInvocationEphemeralConfig_basic(rName),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(echoResourceName, dp.AtMapKey("executed_version"), knownvalue.StringExact("$LATEST")),
+					statecheck.ExpectKnownValue(echoResourceName, dp.AtMapKey("function_name"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(echoResourceName, dp.AtMapKey("log_result"), knownvalue.Null()),
+					statecheck.ExpectKnownValue(echoResourceName, dp.AtMapKey("result"), knownvalue.StringExact(`{"key1":"value1","key2":"value2"}`)),
+					statecheck.ExpectKnownValue(echoResourceName, dp.AtMapKey(names.AttrStatusCode), knownvalue.NumberExact(big.NewFloat(200))),
+				},
 			},
 		},
 	})
 }
 
 func testAccInvocationEphemeralConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigWithEchoProvider("ephemeral.aws_lambda_invocation.test"),
+		fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_iam_policy_document" "test" {
@@ -76,16 +89,9 @@ ephemeral "aws_lambda_invocation" "test" {
   function_name = aws_lambda_function.test.arn
 
   payload = jsonencode({
-    key1 = {
-      subkey1 = "subvalue1"
-    }
-    key2 = {
-      subkey2 = "subvalue2"
-      subkey3 = {
-        a = "b"
-      }
-    }
+    key1 = "value1"
+    key2 = "value2"
   })
 }
-`, rName)
+`, rName))
 }
