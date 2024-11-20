@@ -1,5 +1,9 @@
 ## 5.77.0 (Unreleased)
 
+NOTES:
+
+* New [ephemeral resources](https://developer.hashicorp.com/terraform/language/v1.10.x/resources/ephemeral) `aws_kms_secrets`, `aws_lambda_invocation`, and `aws_secretsmanager_secret_version` now support [ephemeral values](https://developer.hashicorp.com/terraform/language/v1.10.x/values/variables#exclude-values-from-state). ([#40009](https://github.com/hashicorp/terraform-provider-aws/issues/40009))
+
 ENHANCEMENTS:
 
 * resource/aws_rds_global_cluster: Add `endpoint` argument to point to the writer DB instance in the current primary cluster ([#39960](https://github.com/hashicorp/terraform-provider-aws/issues/39960))
@@ -7,6 +11,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_subnet: Set `tags` from the `DescribeSubnets` response, removing the need for the `ec2:DescribeTags` IAM permission ([#40144](https://github.com/hashicorp/terraform-provider-aws/issues/40144))
+* resource/aws_cognito_user_pool: Fix crash when hashing nil `schema` element ([#40195](https://github.com/hashicorp/terraform-provider-aws/issues/40195))
 * resource/aws_eks_addon: Fix crash when `pod_identity_association` is modified ([#40168](https://github.com/hashicorp/terraform-provider-aws/issues/40168))
 * resource/aws_eks_addon: Fix to prevent persistent differences when `pod_identity_association` is changed ([#40168](https://github.com/hashicorp/terraform-provider-aws/issues/40168))
 
