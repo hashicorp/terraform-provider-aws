@@ -69,7 +69,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceAccountSetting,
 			TypeName: "aws_ecr_account_setting",
-			Name:     "Account Setting",
+			Name:     "Account Settings",
 		},
 		{
 			Factory:  resourceLifecyclePolicy,
