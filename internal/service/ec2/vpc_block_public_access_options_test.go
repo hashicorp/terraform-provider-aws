@@ -16,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCBlockPublicAccessOptions_basic(t *testing.T) {
@@ -45,7 +44,7 @@ func TestAccVPCBlockPublicAccessOptions_basic(t *testing.T) {
 				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(rMode),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "internet_gateway_block_mode", rMode),
-					resource.TestCheckResourceAttrSet(resourceName, "aws_account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAWSAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttrSet(resourceName, "reason"),
@@ -86,7 +85,7 @@ func TestAccVPCBlockPublicAccessOptions_updates(t *testing.T) {
 				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(rMode1),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "internet_gateway_block_mode", rMode1),
-					resource.TestCheckResourceAttrSet(resourceName, "aws_account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAWSAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttrSet(resourceName, "reason"),
@@ -101,7 +100,7 @@ func TestAccVPCBlockPublicAccessOptions_updates(t *testing.T) {
 				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(rMode2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "internet_gateway_block_mode", rMode2),
-					resource.TestCheckResourceAttrSet(resourceName, "aws_account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAWSAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttrSet(resourceName, "reason"),
@@ -116,7 +115,7 @@ func TestAccVPCBlockPublicAccessOptions_updates(t *testing.T) {
 				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(rMode3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "internet_gateway_block_mode", rMode3),
-					resource.TestCheckResourceAttrSet(resourceName, "aws_account_id"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrAWSAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
 					resource.TestCheckResourceAttrSet(resourceName, "reason"),

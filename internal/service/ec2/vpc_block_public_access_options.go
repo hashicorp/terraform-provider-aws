@@ -54,7 +54,7 @@ func (r *resourceVPCBlockPublicAccessOptions) Schema(ctx context.Context, req re
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"aws_account_id": schema.StringAttribute{
+			names.AttrAWSAccountID: schema.StringAttribute{
 				Computed: true,
 			},
 			"aws_region": schema.StringAttribute{
@@ -122,7 +122,7 @@ func (r *resourceVPCBlockPublicAccessOptions) Create(ctx context.Context, req re
 	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID+":"+r.Meta().Region)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, createTimeout)
+	err = waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameVPCBlockPublicAccessOptions, plan.ID.String(), err),
@@ -208,11 +208,10 @@ func (r *resourceVPCBlockPublicAccessOptions) Update(ctx context.Context, req re
 		if resp.Diagnostics.HasError() {
 			return
 		}
-
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, updateTimeout)
+	err := waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameVPCBlockPublicAccessOptions, plan.ID.String(), err),
@@ -267,7 +266,7 @@ func (r *resourceVPCBlockPublicAccessOptions) Delete(ctx context.Context, req re
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, deleteTimeout)
+	err = waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForDeletion, ResNameVPCBlockPublicAccessOptions, state.ID.String(), err),
@@ -278,24 +277,24 @@ func (r *resourceVPCBlockPublicAccessOptions) Delete(ctx context.Context, req re
 }
 
 func (r *resourceVPCBlockPublicAccessOptions) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func waitVPCBlockPublicAccessOptionsUpdated(ctx context.Context, conn *ec2.Client, timeout time.Duration) (*awstypes.VpcBlockPublicAccessOptions, error) {
+func waitVPCBlockPublicAccessOptionsUpdated(ctx context.Context, conn *ec2.Client, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.VpcBlockPublicAccessStateUpdateInProgress)},
-		Target:                    []string{string(awstypes.VpcBlockPublicAccessStateUpdateComplete)},
+		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateInProgress),
+		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateComplete),
 		Refresh:                   statusVPCBlockPublicAccessOptions(ctx, conn),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.VpcBlockPublicAccessOptions); ok {
-		return out, err
+	if _, ok := outputRaw.(*awstypes.VpcBlockPublicAccessOptions); ok {
+		return err
 	}
 
-	return nil, err
+	return err
 }
 
 func statusVPCBlockPublicAccessOptions(ctx context.Context, conn *ec2.Client) retry.StateRefreshFunc {
