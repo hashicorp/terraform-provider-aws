@@ -72,11 +72,7 @@ func testAccCheckAccountSettingExists(ctx context.Context, n string) resource.Te
 
 		_, err := tfecr.FindAccountSettingByName(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
