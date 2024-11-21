@@ -1952,12 +1952,12 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 64.0, 0.5),
+				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 64.0, 0.0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "64"),
-					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0.5"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0"),
 				),
 			},
 			{
