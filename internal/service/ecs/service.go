@@ -554,6 +554,12 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
+			"availability_zone_rebalancing": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.AvailabilityZoneRebalancingDisabled,
+				ValidateDiagFunc: enum.Validate[awstypes.AvailabilityZoneRebalancing](),
+			},
 			names.AttrCapacityProviderStrategy: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -1178,6 +1184,10 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
 	}
 
+	if v, ok := d.GetOk("availability_zone_rebalancing"); ok {
+		input.AvailabilityZoneRebalancing = awstypes.AvailabilityZoneRebalancing(v.(string))
+	}
+
 	if v, ok := d.GetOk("cluster"); ok {
 		input.Cluster = aws.String(v.(string))
 	}
@@ -1317,6 +1327,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aws.ToString(service.ServiceArn))
+	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
 	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
 	}
@@ -1432,6 +1443,12 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 			if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("availability_zone_rebalancing") {
+			if v, ok := d.GetOk("availability_zone_rebalancing"); ok {
+				input.AvailabilityZoneRebalancing = awstypes.AvailabilityZoneRebalancing(v.(string))
 			}
 		}
 
