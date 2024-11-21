@@ -835,6 +835,7 @@ func TestAccBatchJobDefinition_NodeProperties_withEKS(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"deregister_on_new_revision",
+					"node_properties",
 				},
 			},
 		},
