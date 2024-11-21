@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -111,7 +110,6 @@ func (r *resourceVPCBlockPublicAccessExclusion) Schema(ctx context.Context, req 
 }
 
 func (r *resourceVPCBlockPublicAccessExclusion) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-
 	conn := r.Meta().EC2Client(ctx)
 
 	var plan resourceVPCBlockPublicAccessExclusionModel
@@ -176,7 +174,7 @@ func (r *resourceVPCBlockPublicAccessExclusion) Create(ctx context.Context, req 
 		)
 		return
 	}
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, desc_out, &plan)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, desc_out, &plan)...)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -186,7 +184,6 @@ func (r *resourceVPCBlockPublicAccessExclusion) ModifyPlan(ctx context.Context, 
 }
 
 func (r *resourceVPCBlockPublicAccessExclusion) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-
 	conn := r.Meta().EC2Client(ctx)
 
 	var state resourceVPCBlockPublicAccessExclusionModel
@@ -245,7 +242,6 @@ func (r *resourceVPCBlockPublicAccessExclusion) Read(ctx context.Context, req re
 }
 
 func (r *resourceVPCBlockPublicAccessExclusion) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	conn := r.Meta().EC2Client(ctx)
 
 	var plan, state resourceVPCBlockPublicAccessExclusionModel
@@ -314,7 +310,7 @@ func (r *resourceVPCBlockPublicAccessExclusion) Update(ctx context.Context, req 
 		)
 		return
 	}
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &plan)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -440,7 +436,7 @@ func FindVPCBlockPublicAccessExclusionByID(ctx context.Context, conn *ec2.Client
 
 	out, err := conn.DescribeVpcBlockPublicAccessExclusions(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVpcBlockPublicAccessExclusionId) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVpcBlockPublicAccessExclusionID) {
 		return nil, &retry.NotFoundError{
 			Message:     "Exclusion Id:" + id + " Not Found",
 			LastRequest: in,

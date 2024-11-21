@@ -247,17 +247,17 @@ resource "aws_vpc" "test" {
 `
 
 func testAccVPCBlockPublicAccessExclusionConfig_basic_vpc(rBlockMode, rExclusionMode string) string {
-	return acctest.ConfigCompose(fmt.Sprintf(testAccVPCBlockPublicAccessExclusionConfig_base), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCBlockPublicAccessExclusionConfig_base, fmt.Sprintf(`
 
 resource "aws_vpc_block_public_access_exclusion" "test" {
   internet_gateway_exclusion_mode = %[2]q
-  vpc_id = aws_vpc.test.id
+  vpc_id                          = aws_vpc.test.id
 }
 `, rBlockMode, rExclusionMode))
 }
 
 func testAccVPCBlockPublicAccessExclusionConfig_basic_subnet(rBlockMode, rExclusionMode string) string {
-	return acctest.ConfigCompose(fmt.Sprintf(testAccVPCBlockPublicAccessExclusionConfig_base), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccVPCBlockPublicAccessExclusionConfig_base, fmt.Sprintf(`
 
 resource "aws_subnet" "test" {
   cidr_block = "10.1.1.0/24"
@@ -266,7 +266,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_vpc_block_public_access_exclusion" "test" {
   internet_gateway_exclusion_mode = %[2]q
-  subnet_id = aws_subnet.test.id
+  subnet_id                       = aws_subnet.test.id
 }
 `, rBlockMode, rExclusionMode))
 }

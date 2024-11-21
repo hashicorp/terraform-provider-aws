@@ -138,7 +138,7 @@ const (
 	errCodeVPNConnectionLimitExceeded                              = "VpnConnectionLimitExceeded"
 	errCodeVPNGatewayLimitExceeded                                 = "VpnGatewayLimitExceeded"
 	errCodeVolumeInUse                                             = "VolumeInUse"
-	errCodeInvalidVpcBlockPublicAccessExclusionId                  = "InvalidVpcBlockPublicAccessExclusionId.NotFound"
+	errCodeInvalidVpcBlockPublicAccessExclusionID                  = "InvalidVpcBlockPublicAccessExclusionId.NotFound"
 )
 
 func cancelSpotFleetRequestError(apiObject *awstypes.CancelSpotFleetRequestsError) error {
