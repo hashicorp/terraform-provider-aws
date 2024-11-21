@@ -436,7 +436,7 @@ func FindVPCBlockPublicAccessExclusionByID(ctx context.Context, conn *ec2.Client
 
 	out, err := conn.DescribeVpcBlockPublicAccessExclusions(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVpcBlockPublicAccessExclusionID) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCBlockPublicAccessExclusionID) {
 		return nil, &retry.NotFoundError{
 			Message:     "Exclusion Id:" + id + " Not Found",
 			LastRequest: in,
