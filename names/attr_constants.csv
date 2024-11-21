@@ -105,6 +105,7 @@ kms_key,KMSKey
 kms_key_arn,KMSKeyARN
 kms_key_id,KMSKeyID
 language_code,LanguageCode
+last_modified_time,LastModifiedTime
 last_updated_date,LastUpdatedDate
 last_updated_time,LastUpdatedTime
 launch_template,LaunchTemplate
@@ -225,5 +226,6 @@ vpc_config,VPCConfig
 vpc_configuration,VPCConfiguration
 vpc_endpoint_id,VPCEndpointID
 vpc_id,VPCID
+vpc_origin_id,VPCOriginID
 vpc_security_group_ids,VPCSecurityGroupIDs
 weight,Weight

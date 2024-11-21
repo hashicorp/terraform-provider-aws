@@ -1927,6 +1927,24 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-last_modified_time-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrLastModifiedTime` for the string literal "last_modified_time"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"last_modified_time"'
+      - pattern-not-regex: '"last_modified_time":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrLastModifiedTime"
+    options:
+      constant_propagation: false
+
   - id: literal-last_updated_date-string-constant
     languages: [go]
     message: Use the constant `names.AttrLastUpdatedDate` for the string literal "last_updated_date"
@@ -3976,6 +3994,24 @@ rules:
       - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrVPCID"
+    options:
+      constant_propagation: false
+
+  - id: literal-vpc_origin_id-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrVPCOriginID` for the string literal "vpc_origin_id"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"vpc_origin_id"'
+      - pattern-not-regex: '"vpc_origin_id":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrVPCOriginID"
     options:
       constant_propagation: false
 
