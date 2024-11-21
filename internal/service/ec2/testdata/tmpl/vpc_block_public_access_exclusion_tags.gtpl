@@ -4,7 +4,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpc_block_public_access_exclusion" "test" {
   internet_gateway_exclusion_mode = "allow-bidirectional"
-  vpc_id = aws_vpc.test.id
+  vpc_id                          = aws_vpc.test.id
 
 {{- template "tags" . }}
 }

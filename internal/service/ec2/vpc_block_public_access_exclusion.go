@@ -316,7 +316,6 @@ func (r *resourceVPCBlockPublicAccessExclusion) Update(ctx context.Context, req 
 }
 
 func (r *resourceVPCBlockPublicAccessExclusion) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	conn := r.Meta().EC2Client(ctx)
 
 	var state resourceVPCBlockPublicAccessExclusionModel
@@ -429,7 +428,6 @@ func statusVPCBlockPublicAccessExclusion(ctx context.Context, conn *ec2.Client, 
 }
 
 func FindVPCBlockPublicAccessExclusionByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcBlockPublicAccessExclusion, error) {
-
 	in := &ec2.DescribeVpcBlockPublicAccessExclusionsInput{
 		ExclusionIds: []string{id},
 	}

@@ -217,7 +217,6 @@ func testAccCheckBlockPublicAccessExclusionDestroy(ctx context.Context) resource
 
 func testAccCheckBlockPublicAccessExclusionExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCBlockPublicAccessExclusion, name, errors.New("not found"))
