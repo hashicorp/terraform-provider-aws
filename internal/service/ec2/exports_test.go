@@ -123,6 +123,7 @@ var (
 	ResourceVerifiedAccessInstanceTrustProviderAttachment = resourceVerifiedAccessInstanceTrustProviderAttachment
 	ResourceVerifiedAccessTrustProvider                   = resourceVerifiedAccessTrustProvider
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
+	ResourceVPCBlockPublicAccessExclusion                 = newResourceVPCBlockPublicAccessExclusion
 
 	CustomFiltersSchema                                        = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                   = customerGatewayConfigurationToTunnelInfo
