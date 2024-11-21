@@ -14,6 +14,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_ami: Add warning diagnostic when `most_recent` is true and certain filter criteria are missing ([#40211](https://github.com/hashicorp/terraform-provider-aws/issues/40211))
+* resource/aws_ecs_service: Add vpc_lattice_configurations argument ([#40177](https://github.com/hashicorp/terraform-provider-aws/issues/40177))
 * resource/aws_ecs_task_definition: Add `versionConsistency` argument to `container_definitions` ([#40216](https://github.com/hashicorp/terraform-provider-aws/issues/40216))
 * resource/aws_rds_global_cluster: Add `endpoint` argument to point to the writer DB instance in the current primary cluster ([#39960](https://github.com/hashicorp/terraform-provider-aws/issues/39960))
 
