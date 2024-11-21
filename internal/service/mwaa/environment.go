@@ -184,7 +184,7 @@ func resourceEnvironment() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(2, 5),
+				ValidateFunc: validation.IntBetween(1, 5),
 			},
 			"max_workers": {
 				Type:         schema.TypeInt,
@@ -196,7 +196,7 @@ func resourceEnvironment() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.IntBetween(2, 5),
+				ValidateFunc: validation.IntBetween(1, 5),
 			},
 			"min_workers": {
 				Type:         schema.TypeInt,
