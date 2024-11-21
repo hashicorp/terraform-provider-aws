@@ -297,6 +297,7 @@ resource "aws_memorydb_cluster" "test" {
   name                     = %[1]q
   node_type                = "db.t4g.small"
   engine                   = "redis"
+  engine_version           = "7.1"
   num_replicas_per_shard   = 0
   num_shards               = 1
   security_group_ids       = [aws_security_group.test.id]
