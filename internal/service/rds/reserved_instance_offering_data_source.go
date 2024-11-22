@@ -81,8 +81,9 @@ func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData,
 		ProductDescription: aws.String(d.Get("product_description").(string)),
 	}
 
-	offering, err := findReservedDBInstancesOffering(ctx, conn, input, tfslices.PredicateTrue[*types.ReservedDBInstancesOffering]())
-
+	offering, err := findReservedDBInstancesOffering(ctx, conn, input, func(v *types.ReservedDBInstancesOffering) bool {
+		return aws.ToString(v.ProductDescription) == d.Get("product_description").(string) && aws.ToString(v.DBInstanceClass) == d.Get("db_instance_class").(string)
+	})
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RDS Reserved Instance Offering", err))
 	}
@@ -103,7 +104,6 @@ func dataSourceReservedOfferingRead(ctx context.Context, d *schema.ResourceData,
 
 func findReservedDBInstancesOffering(ctx context.Context, conn *rds.Client, input *rds.DescribeReservedDBInstancesOfferingsInput, filter tfslices.Predicate[*types.ReservedDBInstancesOffering]) (*types.ReservedDBInstancesOffering, error) {
 	output, err := findReservedDBInstancesOfferings(ctx, conn, input, filter)
-
 	if err != nil {
 		return nil, err
 	}
