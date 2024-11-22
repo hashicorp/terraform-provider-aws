@@ -2583,9 +2583,9 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		}
 
 		// Need to send the iops and allocated_size if migrating to a gp3 volume that's larger than the threshold.
-		if aws.StringValue(input.StorageType) == storageTypeGP3 && !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
-			input.AllocatedStorage = aws.Int32(int32(d.Get("allocated_storage").(int)))
-			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
+		if aws.ToString(input.StorageType) == storageTypeGP3 && !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
+			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
+			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 		}
 	}
 
