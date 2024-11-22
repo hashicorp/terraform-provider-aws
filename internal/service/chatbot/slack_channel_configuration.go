@@ -220,7 +220,13 @@ func (r *slackChannelConfigurationResource) Update(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	if slackChannelConfigurationHasChanges(ctx, new, old) {
+	diff, d := fwflex.Calculate(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
 		input := &chatbot.UpdateSlackChannelConfigurationInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
@@ -437,38 +443,38 @@ func (loggingLevel) Values() []loggingLevel {
 	}
 }
 
-func slackChannelConfigurationHasChanges(ctx context.Context, plan, state slackChannelConfigurationResourceModel) bool {
-	// Sort SNS Topic ARNs before comparison
-	planSNSTopicARNs, err := sortSNSTopicARNs(ctx, plan.SNSTopicARNs)
-	if err != nil {
-		// Log error and fall back to direct comparison
-		tflog.Warn(ctx, "Failed to sort plan SNS Topic ARNs", map[string]interface{}{
-			"error": err.Error(),
-		})
-		planSNSTopicARNs = plan.SNSTopicARNs
-	}
-
-	stateSNSTopicARNs, err := sortSNSTopicARNs(ctx, state.SNSTopicARNs)
-	if err != nil {
-		// Log error and fall back to direct comparison
-		tflog.Warn(ctx, "Failed to sort state SNS Topic ARNs", map[string]interface{}{
-			"error": err.Error(),
-		})
-		stateSNSTopicARNs = state.SNSTopicARNs
-	}
-
-	return !plan.ChatConfigurationARN.Equal(state.ChatConfigurationARN) ||
-		!plan.ConfigurationName.Equal(state.ConfigurationName) ||
-		!plan.GuardrailPolicyARNs.Equal(state.GuardrailPolicyARNs) ||
-		!plan.IAMRoleARN.Equal(state.IAMRoleARN) ||
-		!plan.LoggingLevel.Equal(state.LoggingLevel) ||
-		!plan.SlackChannelID.Equal(state.SlackChannelID) ||
-		!plan.SlackChannelName.Equal(state.SlackChannelName) ||
-		!plan.SlackTeamID.Equal(state.SlackTeamID) ||
-		!plan.SlackTeamName.Equal(state.SlackTeamName) ||
-		!planSNSTopicARNs.Equal(stateSNSTopicARNs) ||
-		!plan.UserAuthorizationRequired.Equal(state.UserAuthorizationRequired)
-}
+//func slackChannelConfigurationHasChanges(ctx context.Context, plan, state slackChannelConfigurationResourceModel) bool {
+//	// Sort SNS Topic ARNs before comparison
+//	planSNSTopicARNs, err := sortSNSTopicARNs(ctx, plan.SNSTopicARNs)
+//	if err != nil {
+//		// Log error and fall back to direct comparison
+//		tflog.Warn(ctx, "Failed to sort plan SNS Topic ARNs", map[string]interface{}{
+//			"error": err.Error(),
+//		})
+//		planSNSTopicARNs = plan.SNSTopicARNs
+//	}
+//
+//	stateSNSTopicARNs, err := sortSNSTopicARNs(ctx, state.SNSTopicARNs)
+//	if err != nil {
+//		// Log error and fall back to direct comparison
+//		tflog.Warn(ctx, "Failed to sort state SNS Topic ARNs", map[string]interface{}{
+//			"error": err.Error(),
+//		})
+//		stateSNSTopicARNs = state.SNSTopicARNs
+//	}
+//
+//	return !plan.ChatConfigurationARN.Equal(state.ChatConfigurationARN) ||
+//		!plan.ConfigurationName.Equal(state.ConfigurationName) ||
+//		!plan.GuardrailPolicyARNs.Equal(state.GuardrailPolicyARNs) ||
+//		!plan.IAMRoleARN.Equal(state.IAMRoleARN) ||
+//		!plan.LoggingLevel.Equal(state.LoggingLevel) ||
+//		!plan.SlackChannelID.Equal(state.SlackChannelID) ||
+//		!plan.SlackChannelName.Equal(state.SlackChannelName) ||
+//		!plan.SlackTeamID.Equal(state.SlackTeamID) ||
+//		!plan.SlackTeamName.Equal(state.SlackTeamName) ||
+//		!planSNSTopicARNs.Equal(stateSNSTopicARNs) ||
+//		!plan.UserAuthorizationRequired.Equal(state.UserAuthorizationRequired)
+//}
 
 func sortSNSTopicARNs(ctx context.Context, arns types.List) (types.List, error) {
 	if arns.IsNull() || arns.IsUnknown() {
