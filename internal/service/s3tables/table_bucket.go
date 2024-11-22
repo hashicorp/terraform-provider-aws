@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -19,11 +20,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -40,7 +43,6 @@ const (
 
 type resourceTableBucket struct {
 	framework.ResourceWithConfigure
-	framework.WithNoUpdate
 }
 
 func (r *resourceTableBucket) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -57,6 +59,15 @@ func (r *resourceTableBucket) Schema(ctx context.Context, req resource.SchemaReq
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
+			},
+			// TODO: Once Protocol v6 is supported, convert this to a `schema.SingleNestedAttribute` with full schema information
+			// Validations needed:
+			// * iceberg_unreferenced_file_removal.settings.non_current_days:  int32validator.AtLeast(1)
+			// * iceberg_unreferenced_file_removal.settings.unreferenced_days: int32validator.AtLeast(1)
+			"maintenance_configuration": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[tableBucketMaintenanceConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
 			},
 			names.AttrName: schema.StringAttribute{
 				Required: true,
@@ -84,6 +95,9 @@ func (r *resourceTableBucket) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			names.AttrOwnerAccountID: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 	}
@@ -120,6 +134,38 @@ func (r *resourceTableBucket) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
+	if !plan.MaintenanceConfiguration.IsUnknown() && !plan.MaintenanceConfiguration.IsNull() {
+		mc, d := plan.MaintenanceConfiguration.ToPtr(ctx)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if !mc.IcebergUnreferencedFileRemovalSettings.IsNull() {
+			input := s3tables.PutTableBucketMaintenanceConfigurationInput{
+				TableBucketARN: out.Arn,
+				Type:           awstypes.TableBucketMaintenanceTypeIcebergUnreferencedFileRemoval,
+			}
+
+			value, d := expandTableBucketMaintenanceConfigurationValue(ctx, mc.IcebergUnreferencedFileRemovalSettings)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			input.Value = &value
+
+			_, err := conn.PutTableBucketMaintenanceConfiguration(ctx, &input)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
+					err.Error(),
+				)
+				return
+			}
+		}
+	}
+
 	bucket, err := findTableBucket(ctx, conn, aws.ToString(out.Arn))
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -132,6 +178,22 @@ func (r *resourceTableBucket) Create(ctx context.Context, req resource.CreateReq
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	awsMaintenanceConfig, err := conn.GetTableBucketMaintenanceConfiguration(ctx, &s3tables.GetTableBucketMaintenanceConfigurationInput{
+		TableBucketARN: bucket.Arn,
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
+			err.Error(),
+		)
+	}
+	maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.MaintenanceConfiguration = maintenanceConfiguration
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -152,7 +214,7 @@ func (r *resourceTableBucket) Read(ctx context.Context, req resource.ReadRequest
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionSetting, resNameTableBucket, state.Name.String(), err),
+			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, state.Name.String(), err),
 			err.Error(),
 		)
 		return
@@ -163,7 +225,87 @@ func (r *resourceTableBucket) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
+	awsMaintenanceConfig, err := conn.GetTableBucketMaintenanceConfiguration(ctx, &s3tables.GetTableBucketMaintenanceConfigurationInput{
+		TableBucketARN: out.Arn,
+	})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, state.Name.String(), err),
+			err.Error(),
+		)
+	}
+	maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.MaintenanceConfiguration = maintenanceConfiguration
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceTableBucket) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var state, plan resourceTableBucketModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !state.MaintenanceConfiguration.Equal(plan.MaintenanceConfiguration) {
+		conn := r.Meta().S3TablesClient(ctx)
+
+		mc, d := plan.MaintenanceConfiguration.ToPtr(ctx)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if !mc.IcebergUnreferencedFileRemovalSettings.IsNull() {
+			input := s3tables.PutTableBucketMaintenanceConfigurationInput{
+				TableBucketARN: state.ARN.ValueStringPointer(),
+				Type:           awstypes.TableBucketMaintenanceTypeIcebergUnreferencedFileRemoval,
+			}
+
+			value, d := expandTableBucketMaintenanceConfigurationValue(ctx, mc.IcebergUnreferencedFileRemovalSettings)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			input.Value = &value
+
+			_, err := conn.PutTableBucketMaintenanceConfiguration(ctx, &input)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
+					err.Error(),
+				)
+				return
+			}
+		}
+
+		awsMaintenanceConfig, err := conn.GetTableBucketMaintenanceConfiguration(ctx, &s3tables.GetTableBucketMaintenanceConfigurationInput{
+			TableBucketARN: state.ARN.ValueStringPointer(),
+		})
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
+				err.Error(),
+			)
+		}
+		maintenanceConfiguration, d := flattenTableBucketMaintenanceConfiguration(ctx, awsMaintenanceConfig)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.MaintenanceConfiguration = maintenanceConfiguration
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceTableBucket) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -221,8 +363,111 @@ func findTableBucket(ctx context.Context, conn *s3tables.Client, arn string) (*s
 }
 
 type resourceTableBucketModel struct {
-	ARN            types.String      `tfsdk:"arn"`
-	CreatedAt      timetypes.RFC3339 `tfsdk:"created_at"`
-	Name           types.String      `tfsdk:"name"`
-	OwnerAccountID types.String      `tfsdk:"owner_account_id"`
+	ARN                      types.String                                                    `tfsdk:"arn"`
+	CreatedAt                timetypes.RFC3339                                               `tfsdk:"created_at"`
+	MaintenanceConfiguration fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationModel] `tfsdk:"maintenance_configuration" autoflex:"-"`
+	Name                     types.String                                                    `tfsdk:"name"`
+	OwnerAccountID           types.String                                                    `tfsdk:"owner_account_id"`
+}
+
+type tableBucketMaintenanceConfigurationModel struct {
+	IcebergUnreferencedFileRemovalSettings fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel] `tfsdk:"iceberg_unreferenced_file_removal"`
+}
+
+type tableBucketMaintenanceConfigurationValueModel struct {
+	Settings fwtypes.ObjectValueOf[icebergUnreferencedFileRemovalSettingsModel] `tfsdk:"settings"`
+	Status   fwtypes.StringEnum[awstypes.MaintenanceStatus]                     `tfsdk:"status"`
+}
+
+type icebergUnreferencedFileRemovalSettingsModel struct {
+	NonCurrentDays   types.Int32 `tfsdk:"non_current_days"`
+	UnreferencedDays types.Int32 `tfsdk:"unreferenced_days"`
+}
+
+func flattenTableBucketMaintenanceConfiguration(ctx context.Context, in *s3tables.GetTableBucketMaintenanceConfigurationOutput) (result fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationModel], diags diag.Diagnostics) {
+	icebergConfig := in.Configuration[string(awstypes.TableBucketMaintenanceTypeIcebergUnreferencedFileRemoval)]
+
+	valueModel, d := flattenTableBucketMaintenanceConfigurationValue(ctx, &icebergConfig)
+	diags.Append(d...)
+	if diags.HasError() {
+		return result, diags
+	}
+
+	model := tableBucketMaintenanceConfigurationModel{
+		IcebergUnreferencedFileRemovalSettings: valueModel,
+	}
+
+	result, d = fwtypes.NewObjectValueOf(ctx, &model)
+	diags.Append(d...)
+	return result, diags
+}
+
+func expandTableBucketMaintenanceConfigurationValue(ctx context.Context, in fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel]) (result awstypes.TableBucketMaintenanceConfigurationValue, diags diag.Diagnostics) {
+	model, d := in.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return result, diags
+	}
+
+	settings, d := expandIcebergUnreferencedFileRemovalSettings(ctx, model.Settings)
+	diags.Append(d...)
+	if diags.HasError() {
+		return result, diags
+	}
+
+	result.Settings = settings
+	result.Status = model.Status.ValueEnum()
+
+	return result, diags
+}
+
+func flattenTableBucketMaintenanceConfigurationValue(ctx context.Context, in *awstypes.TableBucketMaintenanceConfigurationValue) (result fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel], diags diag.Diagnostics) {
+	iceberg, d := flattenIcebergUnreferencedFileRemovalSettings(ctx, in.Settings)
+	diags.Append(d...)
+	if diags.HasError() {
+		return result, diags
+	}
+
+	model := tableBucketMaintenanceConfigurationValueModel{
+		Settings: iceberg,
+		Status:   fwtypes.StringEnumValue(in.Status),
+	}
+
+	result, d = fwtypes.NewObjectValueOf(ctx, &model)
+	diags.Append(d...)
+	return result, diags
+}
+
+func expandIcebergUnreferencedFileRemovalSettings(ctx context.Context, in fwtypes.ObjectValueOf[icebergUnreferencedFileRemovalSettingsModel]) (result *awstypes.TableBucketMaintenanceSettingsMemberIcebergUnreferencedFileRemoval, diags diag.Diagnostics) {
+	model, d := in.ToPtr(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return result, diags
+	}
+
+	var value awstypes.IcebergUnreferencedFileRemovalSettings
+
+	diags.Append(flex.Expand(ctx, model, &value)...)
+
+	return &awstypes.TableBucketMaintenanceSettingsMemberIcebergUnreferencedFileRemoval{
+		Value: value,
+	}, diags
+}
+
+func flattenIcebergUnreferencedFileRemovalSettings(ctx context.Context, in awstypes.TableBucketMaintenanceSettings) (result fwtypes.ObjectValueOf[icebergUnreferencedFileRemovalSettingsModel], diags diag.Diagnostics) {
+	switch t := in.(type) {
+	case *awstypes.TableBucketMaintenanceSettingsMemberIcebergUnreferencedFileRemoval:
+		var model icebergUnreferencedFileRemovalSettingsModel
+		diags.Append(flex.Flatten(ctx, t.Value, &model)...)
+		result = fwtypes.NewObjectValueOfMust(ctx, &model)
+
+	case *awstypes.UnknownUnionMember:
+		tflog.Warn(ctx, "Unexpected tagged union member", map[string]any{
+			"tag": t.Tag,
+		})
+
+	default:
+		tflog.Warn(ctx, "Unexpected nil tagged union value")
+	}
+	return result, diags
 }
