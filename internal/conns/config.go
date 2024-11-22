@@ -190,7 +190,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		})
 	}
 
-	if accountID == "" {
+	if accountID == "" && !awsbaseConfig.SkipRequestingAccountId {
 		diags = append(diags, errs.NewWarningDiagnostic(
 			"AWS account ID not found for provider",
 			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications."))
