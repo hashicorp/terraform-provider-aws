@@ -33,8 +33,8 @@ resource "aws_memorydb_cluster" "example" {
 The following arguments are required:
 
 * `acl_name` - (Required) The name of the Access Control List to associate with the cluster.
-* `engine` - (Required) The engine that will run on your nodes. Supported values are `redis` and `valkey`.
-* `engine_version` - (Required) Version number of the Redis engine to be used for the cluster. Downgrades are not supported.
+* `engine` - (Optional) The engine that will run on your nodes. Supported values are `redis` and `valkey`.
+* `engine_version` - (Optional) Version number of the engine to be used for the cluster. Downgrades are not supported.
 * `node_type` - (Required) The compute and memory capacity of the nodes in the cluster. See AWS documentation on [supported node types](https://docs.aws.amazon.com/memorydb/latest/devguide/nodes.supportedtypes.html) as well as [vertical scaling](https://docs.aws.amazon.com/memorydb/latest/devguide/cluster-vertical-scaling.html).
 
 The following arguments are optional:
@@ -70,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `cluster_endpoint`
     * `address` - DNS hostname of the cluster configuration endpoint.
     * `port` - Port number that the cluster configuration endpoint is listening on.
-* `engine_patch_version` - Patch version number of the Redis engine used by the cluster.
+* `engine_patch_version` - Patch version number of the engine used by the cluster.
 * `shards` - Set of shards in this cluster.
     * `name` - Name of this shard.
     * `num_nodes` - Number of individual nodes in this shard.

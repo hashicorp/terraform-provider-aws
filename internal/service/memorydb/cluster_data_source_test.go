@@ -73,7 +73,7 @@ func TestAccMemoryDBClusterDataSource_basic(t *testing.T) {
 func testAccClusterDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccClusterConfig_baseNetwork(rName),
-		testAccClusterConfigBaseUserAndACL(rName),
+		testAccClusterConfig_baseUserAndACL(rName),
 		fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name        = %[1]q
@@ -88,8 +88,6 @@ resource "aws_memorydb_cluster" "test" {
   auto_minor_version_upgrade = false
   kms_key_arn                = aws_kms_key.test.arn
   name                       = %[1]q
-  engine                     = "valkey"
-  engine_version             = "7.2"
   node_type                  = "db.t4g.small"
   num_shards                 = 2
   security_group_ids         = [aws_security_group.test.id]

@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -81,16 +82,15 @@ func resourceCluster() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrEngine: {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"redis",
-					"valkey",
-				}, false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[clusterEngine](),
 			},
 			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 			"final_snapshot_name": {
 				Type:         schema.TypeString,
@@ -289,7 +289,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ACLName:                 aws.String(d.Get("acl_name").(string)),
 		AutoMinorVersionUpgrade: aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
 		ClusterName:             aws.String(name),
-		Engine:                  aws.String(d.Get(names.AttrEngine).(string)),
 		NodeType:                aws.String(d.Get("node_type").(string)),
 		NumReplicasPerShard:     aws.Int32(int32(d.Get("num_replicas_per_shard").(int))),
 		NumShards:               aws.Int32(int32(d.Get("num_shards").(int))),
@@ -303,6 +302,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrEngine); ok {
+		input.Engine = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
@@ -383,7 +386,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		input := &memorydb.UpdateClusterInput{
 			ClusterName: aws.String(d.Id()),
-			Engine:      aws.String(d.Get(names.AttrEngine).(string)),
 		}
 
 		if d.HasChange("acl_name") {
@@ -392,6 +394,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange(names.AttrDescription) {
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		}
+
+		if d.HasChange(names.AttrEngine) {
+			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
 		}
 
 		if d.HasChange(names.AttrEngineVersion) {

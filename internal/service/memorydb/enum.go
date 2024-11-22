@@ -125,3 +125,17 @@ func UserStatus_Values() []string {
 		UserStatusModifying,
 	}
 }
+
+type clusterEngine string
+
+const (
+	clusterEngineRedis  clusterEngine = "redis"
+	clusterEngineValkey clusterEngine = "valkey"
+)
+
+func (clusterEngine) Values() []clusterEngine {
+	return []clusterEngine{
+		clusterEngineRedis,
+		clusterEngineValkey,
+	}
+}
