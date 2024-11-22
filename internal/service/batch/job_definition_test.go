@@ -775,6 +775,103 @@ func TestAccBatchJobDefinition_NodeProperties_advanced(t *testing.T) {
 	})
 }
 
+func TestAccBatchJobDefinition_NodeProperties_withEKS(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd awstypes.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_nodePropertiesEKS(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "node_properties", `{
+						"mainNode": 0,
+						"nodeRangeProperties": [
+							{
+							"eksProperties": {
+								"podProperties": {
+								"containers": [
+									{
+									"args": [],
+									"command": ["sleep", "60"],
+									"env": [],
+									"image": "public.ecr.aws/amazonlinux/amazonlinux = 2",
+									"name": "test-eks-container-1",
+									"resources": { "requests": { "memory": "1024Mi", "cpu": "1" } },
+									"securityContext": {
+										"privileged": true,
+										"readOnlyRootFilesystem": true,
+										"runAsGroup": 3000,
+										"runAsNonRoot": true,
+										"runAsUser": 1000
+									},
+									"volumeMounts": []
+									}
+								],
+								"imagePullSecrets": [],
+								"initContainers": [],
+								"volumes": []
+								}
+							},
+							"instanceTypes": [],
+							"targetNodes": "0:"
+							}
+						],
+						"numNodes": 1
+						}`),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+					"node_properties",
+				},
+			},
+		},
+	})
+}
+
+func TestAccBatchJobDefinition_NodeProperties_withECS(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd awstypes.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_nodePropertiesECS(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
+			},
+		},
+	})
+}
 func TestAccBatchJobDefinition_EKSProperties_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jd awstypes.JobDefinition
@@ -1364,6 +1461,104 @@ resource "aws_batch_job_definition" "test" {
     ]
 }
 CONTAINER_PROPERTIES
+}
+`, rName)
+}
+
+func testAccJobDefinitionConfig_nodePropertiesEKS(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "multinode"
+  retry_strategy {
+    attempts = 1
+  }
+
+  node_properties = jsonencode({
+    mainNode = 0
+    numNodes = 1
+    nodeRangeProperties = [{
+      targetNodes = "0:"
+      eksProperties = {
+        podProperties = {
+          containers = [
+            {
+              name  = "test-eks-container-1"
+              image = "public.ecr.aws/amazonlinux/amazonlinux = 2"
+              command = [
+                "sleep",
+                "60"
+              ]
+              resources = {
+                requests = {
+                  memory = "1024Mi"
+                  cpu    = "1"
+                }
+              }
+              securityContext = {
+                "runAsUser"              = 1000
+                "runAsGroup"             = 3000
+                "privileged"             = true
+                "readOnlyRootFilesystem" = true
+                "runAsNonRoot"           = true
+              }
+            }
+          ]
+        }
+      }
+    }]
+  })
+}
+  `, rName)
+}
+
+func testAccJobDefinitionConfig_nodePropertiesECS(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "multinode"
+  retry_strategy {
+    attempts = 1
+  }
+
+  node_properties = jsonencode({
+    mainNode = 0
+    numNodes = 1
+    nodeRangeProperties = [{
+      targetNodes = "0:"
+      ecsProperties = {
+        taskProperties = [{
+          containers = [{
+            image      = "public.ecr.aws/amazonlinux/amazonlinux:1"
+            command    = ["sleep", "60"]
+            name       = "container_a"
+            privileged = false
+            resourceRequirements = [{
+              value = "1"
+              type  = "VCPU"
+              },
+              {
+                value = "2048"
+                type  = "MEMORY"
+            }]
+            },
+            {
+              image   = "public.ecr.aws/amazonlinux/amazonlinux:1"
+              command = ["sleep", "360"]
+              name    = "container_b"
+              resourceRequirements = [{
+                value = "1"
+                type  = "VCPU"
+                },
+                {
+                  value = "2048"
+                  type  = "MEMORY"
+              }]
+          }]
+        }]
+      }
+    }]
+  })
 }
 `, rName)
 }
