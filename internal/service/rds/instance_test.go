@@ -6147,55 +6147,6 @@ func TestAccRDSInstance_Storage_changeThroughput(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_Storage_io(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v types.DBInstance
-	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_Storage_io(rName, 12000),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					names.AttrApplyImmediately,
-					names.AttrFinalSnapshotIdentifier,
-					names.AttrPassword,
-					"skip_final_snapshot",
-					"delete_automated_backups",
-					"blue_green_update",
-				},
-			},
-			{
-				Config: testAccInstanceConfig_Storage_io(rName, 14000),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "14000"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
-				),
-			},
-		},
-	})
-}
-
 // https://github.com/hashicorp/terraform-provider-aws/issues/33512
 func TestAccRDSInstance_Storage_changeIOPSThroughput(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -6262,10 +6213,10 @@ func TestAccRDSInstance_Storage_changeIOPS(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_Storage_throughput(rName, 13000, 500),
+				Config: testAccInstanceConfig_Storage_throughput(rName, 14000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "13000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "14000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
@@ -6313,7 +6264,7 @@ func TestAccRDSInstance_Storage_throughputSSE(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_Storage_typePostgres(t *testing.T) {
+func TestAccRDSInstance_Storage_postgres(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -6330,7 +6281,7 @@ func TestAccRDSInstance_Storage_typePostgres(t *testing.T) {
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_Storage_typePostgres(rName, "gp2", 200),
+				Config: testAccInstanceConfig_Storage_postgres(rName, "gp2", 200),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "200"),
@@ -6353,7 +6304,7 @@ func TestAccRDSInstance_Storage_typePostgres(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccInstanceConfig_Storage_typePostgres(rName, "gp3", 300),
+				Config: testAccInstanceConfig_Storage_postgres(rName, "gp3", 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
@@ -6366,7 +6317,7 @@ func TestAccRDSInstance_Storage_typePostgres(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_newIdentifier_Pending(t *testing.T) {
+func TestAccRDSInstance_NewIdentifier_pending(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -6412,7 +6363,7 @@ func TestAccRDSInstance_newIdentifier_Pending(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_newIdentifier_Immediately(t *testing.T) {
+func TestAccRDSInstance_NewIdentifier_immediately(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -12555,30 +12506,6 @@ resource "aws_db_instance" "test" {
 `, rName, iops, throughput))
 }
 
-func testAccInstanceConfig_Storage_io(rName string, iops int) string {
-	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMySQLGP3(),
-		fmt.Sprintf(`
-resource "aws_db_instance" "test" {
-  identifier           = %[1]q
-  engine               = data.aws_rds_engine_version.default.engine
-  engine_version       = data.aws_rds_engine_version.default.version
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = "test"
-  password             = "avoid-plaintext-passwords"
-  username             = "tfacctest"
-  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-  skip_final_snapshot  = true
-
-  apply_immediately = true
-
-  storage_type      = data.aws_rds_orderable_db_instance.test.storage_type
-  allocated_storage = 400
-  iops               = %[2]d
-}
-`, rName, iops))
-}
-
 func testAccInstanceConfig_Storage_throughputSSE(rName string, iops, throughput int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
@@ -12613,7 +12540,7 @@ resource "aws_db_instance" "test" {
 `, tfrds.InstanceEngineSQLServerStandard, mainInstanceClasses, rName, iops, throughput)
 }
 
-func testAccInstanceConfig_Storage_typePostgres(rName string, storageType string, allocatedStorage int) string {
+func testAccInstanceConfig_Storage_postgres(rName string, storageType string, allocatedStorage int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
