@@ -97,6 +97,8 @@ func ConstOrQuote(constant string) string {
 		"format":                        "AttrFormat",
 		"function_arn":                  "AttrFunctionARN",
 		"group_name":                    "AttrGroupName",
+		"http_port":                     "AttrHTTPPort",
+		"https_port":                    "AttrHTTPSPort",
 		"header":                        "AttrHeader",
 		"health_check":                  "AttrHealthCheck",
 		"hosted_zone_id":                "AttrHostedZoneID",

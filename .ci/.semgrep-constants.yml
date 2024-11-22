@@ -1513,6 +1513,42 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-http_port-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrHTTPPort` for the string literal "http_port"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"http_port"'
+      - pattern-not-regex: '"http_port":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrHTTPPort"
+    options:
+      constant_propagation: false
+
+  - id: literal-https_port-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrHTTPSPort` for the string literal "https_port"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"https_port"'
+      - pattern-not-regex: '"https_port":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrHTTPSPort"
+    options:
+      constant_propagation: false
+
   - id: literal-header-string-constant
     languages: [go]
     message: Use the constant `names.AttrHeader` for the string literal "header"

@@ -2,8 +2,13 @@ package cloudfront
 
 import (
 	"context"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"time"
 )
 
@@ -23,8 +28,30 @@ type cloudfrontVPCOriginEndpointConfigResource struct {
 }
 
 func (r *cloudfrontVPCOriginEndpointConfigResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
-	//TODO implement me
-	panic("implement me")
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrHTTPPort: schema.NumberAttribute{
+				Required: true,
+			},
+			names.AttrHTTPSPort: schema.NumberAttribute{
+				Required: true,
+			},
+			// TODO: OriginProtocolPolicy
+			// TODO: OriginSslProtocols
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+			}),
+		},
+	}
 }
 
 func (r *cloudfrontVPCOriginEndpointConfigResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {

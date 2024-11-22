@@ -85,6 +85,8 @@ group_name,GroupName
 header,Header
 health_check,HealthCheck
 hosted_zone_id,HostedZoneID
+http_port,HTTPPort
+https_port,HTTPSPort
 iam_role_arn,IAMRoleARN
 id,ID
 identifier,Identifier

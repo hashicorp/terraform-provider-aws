@@ -89,6 +89,8 @@ const (
 	AttrFormat                     = "format"
 	AttrFunctionARN                = "function_arn"
 	AttrGroupName                  = "group_name"
+	AttrHTTPPort                   = "http_port"
+	AttrHTTPSPort                  = "https_port"
 	AttrHeader                     = "header"
 	AttrHealthCheck                = "health_check"
 	AttrHostedZoneID               = "hosted_zone_id"
