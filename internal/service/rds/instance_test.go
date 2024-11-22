@@ -3727,79 +3727,6 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 	})
 }
 
-// Regression test for https://github.com/hashicorp/terraform/issues/3760 .
-// We apply a plan, then change just the iops. If the apply succeeds, we
-// consider this a pass, as before in 3760 the request would fail
-func TestAccRDSInstance_Storage_separateIOPSUpdate_Io1(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v types.DBInstance
-	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_iopsUpdate(rName, "io1", 1000),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					testAccCheckInstanceAttributes(&v),
-				),
-			},
-
-			{
-				Config: testAccInstanceConfig_iopsUpdate(rName, "io1", 2000),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					testAccCheckInstanceAttributes(&v),
-				),
-			},
-		},
-	})
-}
-
-func TestAccRDSInstance_Storage_separateIOPSUpdate_Io2(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v types.DBInstance
-	resourceName := "aws_db_instance.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfig_iopsUpdate(rName, "io2", 1000),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					testAccCheckInstanceAttributes(&v),
-				),
-			},
-
-			{
-				Config: testAccInstanceConfig_iopsUpdate(rName, "io2", 2000),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					testAccCheckInstanceAttributes(&v),
-				),
-			},
-		},
-	})
-}
-
 func TestAccRDSInstance_portUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -6126,7 +6053,7 @@ func TestAccRDSInstance_Storage_changeThroughput(t *testing.T) {
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_Storage_throughput(rName, 12000, 500),
+				Config: testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName, 12000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
@@ -6135,7 +6062,7 @@ func TestAccRDSInstance_Storage_changeThroughput(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_Storage_throughput(rName, 12000, 600),
+				Config: testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName, 12000, 600),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
@@ -6165,7 +6092,7 @@ func TestAccRDSInstance_Storage_changeIOPSThroughput(t *testing.T) {
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_Storage_throughput(rName, 12000, 500),
+				Config: testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName, 12000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
@@ -6174,7 +6101,7 @@ func TestAccRDSInstance_Storage_changeIOPSThroughput(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_Storage_throughput(rName, 13000, 600),
+				Config: testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName, 13000, 600),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "13000"),
@@ -6187,7 +6114,7 @@ func TestAccRDSInstance_Storage_changeIOPSThroughput(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/33512
-func TestAccRDSInstance_Storage_changeIOPS(t *testing.T) {
+func TestAccRDSInstance_Storage_changeIOPSGP3(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -6204,7 +6131,7 @@ func TestAccRDSInstance_Storage_changeIOPS(t *testing.T) {
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_Storage_throughput(rName, 12000, 500),
+				Config: testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName, 12000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
@@ -6213,7 +6140,7 @@ func TestAccRDSInstance_Storage_changeIOPS(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfig_Storage_throughput(rName, 14000, 500),
+				Config: testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName, 14000, 500),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "14000"),
@@ -6311,6 +6238,79 @@ func TestAccRDSInstance_Storage_postgres(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
+				),
+			},
+		},
+	})
+}
+
+// Regression test for https://github.com/hashicorp/terraform/issues/3760 .
+// We apply a plan, then change just the iops. If the apply succeeds, we
+// consider this a pass, as before in 3760 the request would fail
+func TestAccRDSInstance_Storage_changeIOPSio1(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_iopsUpdate(rName, "io1", 1000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceAttributes(&v),
+				),
+			},
+
+			{
+				Config: testAccInstanceConfig_iopsUpdate(rName, "io1", 2000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceAttributes(&v),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_Storage_changeIOPSio2(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_iopsUpdate(rName, "io2", 1000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceAttributes(&v),
+				),
+			},
+
+			{
+				Config: testAccInstanceConfig_iopsUpdate(rName, "io2", 2000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceAttributes(&v),
 				),
 			},
 		},
@@ -12480,7 +12480,7 @@ resource "aws_db_instance" "test" {
 `, rName, tfrds.InstanceEngineSQLServerExpress, allocatedStorage))
 }
 
-func testAccInstanceConfig_Storage_throughput(rName string, iops, throughput int) string {
+func testAccInstanceConfig_Storage_iopsThroughputMySQLGP3(rName string, iops, throughput int) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQLGP3(),
 		fmt.Sprintf(`
