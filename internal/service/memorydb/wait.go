@@ -32,8 +32,8 @@ const (
 // waitACLActive waits for MemoryDB ACL to reach an active state after modifications.
 func waitACLActive(ctx context.Context, conn *memorydb.Client, aclId string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{ACLStatusCreating, ACLStatusModifying},
-		Target:  []string{ACLStatusActive},
+		Pending: []string{aclStatusCreating, aclStatusModifying},
+		Target:  []string{aclStatusActive},
 		Refresh: statusACL(ctx, conn, aclId),
 		Timeout: aclActiveTimeout,
 	}
@@ -46,7 +46,7 @@ func waitACLActive(ctx context.Context, conn *memorydb.Client, aclId string) err
 // waitACLDeleted waits for MemoryDB ACL to be deleted.
 func waitACLDeleted(ctx context.Context, conn *memorydb.Client, aclId string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{ACLStatusDeleting},
+		Pending: []string{aclStatusDeleting},
 		Target:  []string{},
 		Refresh: statusACL(ctx, conn, aclId),
 		Timeout: aclDeletedTimeout,
@@ -60,8 +60,8 @@ func waitACLDeleted(ctx context.Context, conn *memorydb.Client, aclId string) er
 // waitClusterAvailable waits for MemoryDB Cluster to reach an active state after modifications.
 func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, clusterId string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{ClusterStatusCreating, ClusterStatusUpdating, ClusterStatusSnapshotting},
-		Target:  []string{ClusterStatusAvailable},
+		Pending: []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
+		Target:  []string{clusterStatusAvailable},
 		Refresh: statusCluster(ctx, conn, clusterId),
 		Timeout: timeout,
 	}
@@ -74,7 +74,7 @@ func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, clusterId 
 // waitClusterDeleted waits for MemoryDB Cluster to be deleted.
 func waitClusterDeleted(ctx context.Context, conn *memorydb.Client, clusterId string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{ClusterStatusDeleting},
+		Pending: []string{clusterStatusDeleting},
 		Target:  []string{},
 		Refresh: statusCluster(ctx, conn, clusterId),
 		Timeout: timeout,
@@ -89,8 +89,8 @@ func waitClusterDeleted(ctx context.Context, conn *memorydb.Client, clusterId st
 // with a new parameter group.
 func waitClusterParameterGroupInSync(ctx context.Context, conn *memorydb.Client, clusterId string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{ClusterParameterGroupStatusApplying},
-		Target:  []string{ClusterParameterGroupStatusInSync},
+		Pending: []string{clusterParameterGroupStatusApplying},
+		Target:  []string{clusterParameterGroupStatusInSync},
 		Refresh: statusClusterParameterGroup(ctx, conn, clusterId),
 		Timeout: clusterParameterGroupInSyncTimeout,
 	}
@@ -104,8 +104,8 @@ func waitClusterParameterGroupInSync(ctx context.Context, conn *memorydb.Client,
 // security group-related changes.
 func waitClusterSecurityGroupsActive(ctx context.Context, conn *memorydb.Client, clusterId string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{ClusterSecurityGroupStatusModifying},
-		Target:  []string{ClusterSecurityGroupStatusActive},
+		Pending: []string{clusterSecurityGroupStatusModifying},
+		Target:  []string{clusterSecurityGroupStatusActive},
 		Refresh: statusClusterSecurityGroups(ctx, conn, clusterId),
 		Timeout: clusterSecurityGroupsActiveTimeout,
 	}
@@ -118,8 +118,8 @@ func waitClusterSecurityGroupsActive(ctx context.Context, conn *memorydb.Client,
 // waitUserActive waits for MemoryDB user to reach an active state after modifications.
 func waitUserActive(ctx context.Context, conn *memorydb.Client, userId string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{UserStatusModifying},
-		Target:  []string{UserStatusActive},
+		Pending: []string{userStatusModifying},
+		Target:  []string{userStatusActive},
 		Refresh: statusUser(ctx, conn, userId),
 		Timeout: userActiveTimeout,
 	}
@@ -132,7 +132,7 @@ func waitUserActive(ctx context.Context, conn *memorydb.Client, userId string) e
 // waitUserDeleted waits for MemoryDB user to be deleted.
 func waitUserDeleted(ctx context.Context, conn *memorydb.Client, userId string) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{UserStatusDeleting},
+		Pending: []string{userStatusDeleting},
 		Target:  []string{},
 		Refresh: statusUser(ctx, conn, userId),
 		Timeout: userDeletedTimeout,
@@ -146,8 +146,8 @@ func waitUserDeleted(ctx context.Context, conn *memorydb.Client, userId string) 
 // waitSnapshotAvailable waits for MemoryDB snapshot to reach the available state.
 func waitSnapshotAvailable(ctx context.Context, conn *memorydb.Client, snapshotId string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{SnapshotStatusCreating},
-		Target:  []string{SnapshotStatusAvailable},
+		Pending: []string{snapshotStatusCreating},
+		Target:  []string{snapshotStatusAvailable},
 		Refresh: statusSnapshot(ctx, conn, snapshotId),
 		Timeout: timeout,
 	}
@@ -160,7 +160,7 @@ func waitSnapshotAvailable(ctx context.Context, conn *memorydb.Client, snapshotI
 // waitSnapshotDeleted waits for MemoryDB snapshot to be deleted.
 func waitSnapshotDeleted(ctx context.Context, conn *memorydb.Client, snapshotId string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{SnapshotStatusDeleting},
+		Pending: []string{snapshotStatusDeleting},
 		Target:  []string{},
 		Refresh: statusSnapshot(ctx, conn, snapshotId),
 		Timeout: timeout,

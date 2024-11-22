@@ -233,7 +233,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 
-	if aws.ToString(cluster.SnsTopicStatus) == ClusterSNSTopicStatusActive {
+	if aws.ToString(cluster.SnsTopicStatus) == clusterSNSTopicStatusActive {
 		d.Set(names.AttrSNSTopicARN, cluster.SnsTopicArn)
 	} else {
 		d.Set(names.AttrSNSTopicARN, "")

@@ -80,12 +80,12 @@ func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.Client, clu
 			// When at least one security group change is being applied (whether
 			// that be adding or removing an SG), say that we're still in progress.
 
-			if aws.ToString(sg.Status) != ClusterSecurityGroupStatusActive {
-				return cluster, ClusterSecurityGroupStatusModifying, nil
+			if aws.ToString(sg.Status) != clusterSecurityGroupStatusActive {
+				return cluster, clusterSecurityGroupStatusModifying, nil
 			}
 		}
 
-		return cluster, ClusterSecurityGroupStatusActive, nil
+		return cluster, clusterSecurityGroupStatusActive, nil
 	}
 }
 

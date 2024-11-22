@@ -458,9 +458,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.SnsTopicArn = aws.String(v)
 
 			if v == "" {
-				input.SnsTopicStatus = aws.String(ClusterSNSTopicStatusInactive)
+				input.SnsTopicStatus = aws.String(clusterSNSTopicStatusInactive)
 			} else {
-				input.SnsTopicStatus = aws.String(ClusterSNSTopicStatusActive)
+				input.SnsTopicStatus = aws.String(clusterSNSTopicStatusActive)
 			}
 		}
 		log.Printf("[DEBUG] Updating MemoryDB Cluster (%s)", d.Id())
@@ -557,7 +557,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("snapshot_retention_limit", cluster.SnapshotRetentionLimit)
 	d.Set("snapshot_window", cluster.SnapshotWindow)
 
-	if aws.ToString(cluster.SnsTopicStatus) == ClusterSNSTopicStatusActive {
+	if aws.ToString(cluster.SnsTopicStatus) == clusterSNSTopicStatusActive {
 		d.Set(names.AttrSNSTopicARN, cluster.SnsTopicArn)
 	} else {
 		d.Set(names.AttrSNSTopicARN, "")
@@ -661,7 +661,7 @@ func deriveClusterNumReplicasPerShard(cluster *awstypes.Cluster) (int, error) {
 	var maxNumberOfNodesPerShard int32
 
 	for _, shard := range cluster.Shards {
-		if aws.ToString(shard.Status) != ClusterShardStatusAvailable {
+		if aws.ToString(shard.Status) != clusterShardStatusAvailable {
 			continue
 		}
 
