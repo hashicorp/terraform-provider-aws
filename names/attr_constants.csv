@@ -125,6 +125,8 @@ names,Names
 namespace,Namespace
 network_configuration,NetworkConfiguration
 network_interface_id,NetworkInterfaceID
+origin_protocol_policy,OriginProtocolPolicy
+origin_ssl_protocols,OriginSSLProtocols
 owner,Owner
 owner_account_id,OwnerAccountID
 owner_id,OwnerID
@@ -227,5 +229,6 @@ vpc_configuration,VPCConfiguration
 vpc_endpoint_id,VPCEndpointID
 vpc_id,VPCID
 vpc_origin_id,VPCOriginID
+vpc_origin_endpoint_config,VPCOriginEndpointConfig
 vpc_security_group_ids,VPCSecurityGroupIDs
 weight,Weight

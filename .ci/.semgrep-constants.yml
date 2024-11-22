@@ -2287,6 +2287,42 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-origin_protocol_policy-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrOriginProtocolPolicy` for the string literal "origin_protocol_policy"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"origin_protocol_policy"'
+      - pattern-not-regex: '"origin_protocol_policy":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrOriginProtocolPolicy"
+    options:
+      constant_propagation: false
+
+  - id: literal-origin_ssl_protocols-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrOriginSSLProtocols` for the string literal "origin_ssl_protocols"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"origin_ssl_protocols"'
+      - pattern-not-regex: '"origin_ssl_protocols":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrOriginSSLProtocols"
+    options:
+      constant_propagation: false
+
   - id: literal-owner-string-constant
     languages: [go]
     message: Use the constant `names.AttrOwner` for the string literal "owner"
@@ -3994,6 +4030,24 @@ rules:
       - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrVPCID"
+    options:
+      constant_propagation: false
+
+  - id: literal-vpc_origin_endpoint_config-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrVPCOriginEndpointConfig` for the string literal "vpc_origin_endpoint_config"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"vpc_origin_endpoint_config"'
+      - pattern-not-regex: '"vpc_origin_endpoint_config":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrVPCOriginEndpointConfig"
     options:
       constant_propagation: false
 
