@@ -5945,6 +5945,7 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 					"latest_restorable_time",
 				},
 			},
+			// should this be here?
 			{
 				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassMySQLGP3, 400),
 				Check: resource.ComposeAggregateTestCheckFunc(
