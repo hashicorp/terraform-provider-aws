@@ -5946,13 +5946,13 @@ func TestAccRDSInstance_BlueGreenDeployment_outOfBand(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccInstanceConfig_gp3(rName, testAccInstanceConfig_orderableClassMySQLGP3, 400),
+				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassMySQLGP3, 400),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "400"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					testAccCheckDBInstanceExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 		},
@@ -5999,13 +5999,13 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccInstanceConfig_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 400),
+				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 400),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "allocated_storage", "400"),
-					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
 					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 		},
@@ -6052,12 +6052,12 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 300),
+				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 400),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
-					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "400"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
@@ -6157,27 +6157,28 @@ func TestAccRDSInstance_Storage_changeThroughput(t *testing.T) {
 	})
 }
 
-func TestAccRDSInstance_storageIO(t *testing.T) {
+func TestAccRDSInstance_Storage_io(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v rds.DBInstance
+	var v types.DBInstance
 	resourceName := "aws_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_storageIO(rName, 12000),
+				Config: testAccInstanceConfig_Storage_io(rName, 12000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "12000"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 			{
@@ -6185,20 +6186,20 @@ func TestAccRDSInstance_storageIO(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"final_snapshot_identifier",
-					"password",
+					names.AttrApplyImmediately,
+					names.AttrFinalSnapshotIdentifier,
+					names.AttrPassword,
 					"skip_final_snapshot",
 					"delete_automated_backups",
 					"blue_green_update",
 				},
 			},
 			{
-				Config: testAccInstanceConfig_storageIO(rName, 14000),
+				Config: testAccInstanceConfig_Storage_io(rName, 14000),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iops", "14000"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "14000"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 		},
@@ -12564,7 +12565,7 @@ resource "aws_db_instance" "test" {
 `, rName, iops, throughput))
 }
 
-func testAccInstanceConfig_storageIO(rName string, iops int) string {
+func testAccInstanceConfig_Storage_io(rName string, iops int) string {
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_orderableClassMySQLGP3(),
 		fmt.Sprintf(`
@@ -12583,7 +12584,6 @@ resource "aws_db_instance" "test" {
 
   storage_type      = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage = 400
-
   iops               = %[2]d
 }
 `, rName, iops))
