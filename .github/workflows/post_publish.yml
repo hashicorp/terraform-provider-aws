@@ -69,7 +69,7 @@ jobs:
               sleep 1h
             else
               echo "Registry and Github Version matches"
-                echo "current=$LATEST_VERSION >> "$GITHUB_OUTPUT"
+              echo "current=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
             fi
           done
 
