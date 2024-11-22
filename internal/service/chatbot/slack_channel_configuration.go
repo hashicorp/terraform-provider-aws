@@ -5,6 +5,8 @@ package chatbot
 
 import (
 	"context"
+	"fmt"
+	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -435,7 +437,26 @@ func (loggingLevel) Values() []loggingLevel {
 	}
 }
 
-func slackChannelConfigurationHasChanges(_ context.Context, plan, state slackChannelConfigurationResourceModel) bool {
+func slackChannelConfigurationHasChanges(ctx context.Context, plan, state slackChannelConfigurationResourceModel) bool {
+	// Sort SNS Topic ARNs before comparison
+	planSNSTopicARNs, err := sortSNSTopicARNs(ctx, plan.SNSTopicARNs)
+	if err != nil {
+		// Log error and fall back to direct comparison
+		tflog.Warn(ctx, "Failed to sort plan SNS Topic ARNs", map[string]interface{}{
+			"error": err.Error(),
+		})
+		planSNSTopicARNs = plan.SNSTopicARNs
+	}
+
+	stateSNSTopicARNs, err := sortSNSTopicARNs(ctx, state.SNSTopicARNs)
+	if err != nil {
+		// Log error and fall back to direct comparison
+		tflog.Warn(ctx, "Failed to sort state SNS Topic ARNs", map[string]interface{}{
+			"error": err.Error(),
+		})
+		stateSNSTopicARNs = state.SNSTopicARNs
+	}
+
 	return !plan.ChatConfigurationARN.Equal(state.ChatConfigurationARN) ||
 		!plan.ConfigurationName.Equal(state.ConfigurationName) ||
 		!plan.GuardrailPolicyARNs.Equal(state.GuardrailPolicyARNs) ||
@@ -445,6 +466,27 @@ func slackChannelConfigurationHasChanges(_ context.Context, plan, state slackCha
 		!plan.SlackChannelName.Equal(state.SlackChannelName) ||
 		!plan.SlackTeamID.Equal(state.SlackTeamID) ||
 		!plan.SlackTeamName.Equal(state.SlackTeamName) ||
-		!plan.SNSTopicARNs.Equal(state.SNSTopicARNs) ||
+		!planSNSTopicARNs.Equal(stateSNSTopicARNs) ||
 		!plan.UserAuthorizationRequired.Equal(state.UserAuthorizationRequired)
+}
+
+func sortSNSTopicARNs(ctx context.Context, arns types.List) (types.List, error) {
+	if arns.IsNull() || arns.IsUnknown() {
+		return arns, nil
+	}
+
+	var arnStrings []string
+	diags := arns.ElementsAs(ctx, &arnStrings, false)
+	if diags.HasError() {
+		return arns, fmt.Errorf("error converting SNS Topic ARNs to strings: %v", diags)
+	}
+
+	sort.Strings(arnStrings)
+
+	sortedArns, diags := types.ListValueFrom(ctx, types.StringType, arnStrings)
+	if diags.HasError() {
+		return arns, fmt.Errorf("error converting sorted strings to List: %v", diags)
+	}
+
+	return sortedArns, nil
 }
