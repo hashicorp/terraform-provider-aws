@@ -35,6 +35,10 @@ func dataSourceSnapshot() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						names.AttrEngine: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 						names.AttrEngineVersion: {
 							Type:     schema.TypeString,
 							Computed: true,
