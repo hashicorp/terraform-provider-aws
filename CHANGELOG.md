@@ -28,8 +28,8 @@ ENHANCEMENTS:
 * resource/aws_ecs_service: Add `availability_zone_rebalancing` attribute ([#40225](https://github.com/hashicorp/terraform-provider-aws/issues/40225))
 * resource/aws_ecs_service: Add vpc_lattice_configurations argument ([#40177](https://github.com/hashicorp/terraform-provider-aws/issues/40177))
 * resource/aws_ecs_task_definition: Add `versionConsistency` argument to `container_definitions` ([#40216](https://github.com/hashicorp/terraform-provider-aws/issues/40216))
-* resource/aws_lambda_function: Add support for `nodejs22.x` `runtime` value ([#xxxxx](https://github.com/hashicorp/terraform-provider-aws/issues/xxxxx))
-* resource/aws_lambda_layer_version: Add support for `nodejs22.x` `compatible_runtimes` value ([#xxxxx](https://github.com/hashicorp/terraform-provider-aws/issues/xxxxx))
+* resource/aws_lambda_function: Add support for `nodejs22.x` `runtime` value ([#40277](https://github.com/hashicorp/terraform-provider-aws/issues/40277))
+* resource/aws_lambda_layer_version: Add support for `nodejs22.x` `compatible_runtimes` value ([#40277](https://github.com/hashicorp/terraform-provider-aws/issues/40277))
 * resource/aws_rds_global_cluster: Add `endpoint` argument to point to the writer DB instance in the current primary cluster ([#39960](https://github.com/hashicorp/terraform-provider-aws/issues/39960))
 
 BUG FIXES:
@@ -47,8 +47,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* resource/aws_lambda_function: Add support for `python3.13` `runtime` value ([#xxxxx](https://github.com/hashicorp/terraform-provider-aws/issues/xxxxx))
-* resource/aws_lambda_layer_version: Add support for `python3.13` `compatible_runtimes` value ([#xxxxx](https://github.com/hashicorp/terraform-provider-aws/issues/xxxxx))
+* resource/aws_lambda_function: Add support for `python3.13` `runtime` value ([#40277](https://github.com/hashicorp/terraform-provider-aws/issues/40277))
+* resource/aws_lambda_layer_version: Add support for `python3.13` `compatible_runtimes` value ([#40277](https://github.com/hashicorp/terraform-provider-aws/issues/40277))
 * resource/aws_medialive_channel: Add missing h265 codec settings ([#40071](https://github.com/hashicorp/terraform-provider-aws/issues/40071))
 
 BUG FIXES:
