@@ -1,8 +1,41 @@
-## 5.77.0 (Unreleased)
+## 5.78.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_s3_bucket_lifecycle_configuration: Lifecycle configurations can now be applied to directory buckets ([#40268](https://github.com/hashicorp/terraform-provider-aws/issues/40268))
+
+BUG FIXES:
+
+* resource/aws_batch_job_definition: Fix crash when specifying `eksProperties` or `ecsProperties` block ([#40172](https://github.com/hashicorp/terraform-provider-aws/issues/40172))
+
+## 5.77.0 (November 21, 2024)
+
+NOTES:
+
+* New [ephemeral resources](https://developer.hashicorp.com/terraform/language/v1.10.x/resources/ephemeral) `aws_kms_secrets`, `aws_lambda_invocation`, and `aws_secretsmanager_secret_version` now support [ephemeral values](https://developer.hashicorp.com/terraform/language/v1.10.x/values/variables#exclude-values-from-state). ([#40009](https://github.com/hashicorp/terraform-provider-aws/issues/40009))
+
+FEATURES:
+
+* **New Ephemeral Resource:** `aws_kms_secrets` ([#40009](https://github.com/hashicorp/terraform-provider-aws/issues/40009))
+* **New Ephemeral Resource:** `aws_lambda_invocation` ([#39988](https://github.com/hashicorp/terraform-provider-aws/issues/39988))
+* **New Ephemeral Resource:** `aws_secretsmanager_secret_version` ([#40009](https://github.com/hashicorp/terraform-provider-aws/issues/40009))
+* **New Resource:** `aws_rds_instance_state` ([#40180](https://github.com/hashicorp/terraform-provider-aws/issues/40180))
 
 ENHANCEMENTS:
 
+* data-source/aws_ami: Add warning diagnostic when `most_recent` is true and certain filter criteria are missing ([#40211](https://github.com/hashicorp/terraform-provider-aws/issues/40211))
+* data-source/aws_ecs_service: Add `availability_zone_rebalancing` attribute ([#40225](https://github.com/hashicorp/terraform-provider-aws/issues/40225))
+* resource/aws_ecs_service: Add `availability_zone_rebalancing` attribute ([#40225](https://github.com/hashicorp/terraform-provider-aws/issues/40225))
+* resource/aws_ecs_service: Add vpc_lattice_configurations argument ([#40177](https://github.com/hashicorp/terraform-provider-aws/issues/40177))
+* resource/aws_ecs_task_definition: Add `versionConsistency` argument to `container_definitions` ([#40216](https://github.com/hashicorp/terraform-provider-aws/issues/40216))
 * resource/aws_rds_global_cluster: Add `endpoint` argument to point to the writer DB instance in the current primary cluster ([#39960](https://github.com/hashicorp/terraform-provider-aws/issues/39960))
+
+BUG FIXES:
+
+* data-source/aws_subnet: Set `tags` from the `DescribeSubnets` response, removing the need for the `ec2:DescribeTags` IAM permission ([#40144](https://github.com/hashicorp/terraform-provider-aws/issues/40144))
+* resource/aws_cognito_user_pool: Fix crash when hashing nil `schema` element ([#40195](https://github.com/hashicorp/terraform-provider-aws/issues/40195))
+* resource/aws_eks_addon: Fix crash when `pod_identity_association` is modified ([#40168](https://github.com/hashicorp/terraform-provider-aws/issues/40168))
+* resource/aws_eks_addon: Fix to prevent persistent differences when `pod_identity_association` is changed ([#40168](https://github.com/hashicorp/terraform-provider-aws/issues/40168))
 
 ## 5.76.0 (November 14, 2024)
 

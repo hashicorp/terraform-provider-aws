@@ -181,14 +181,7 @@ sso_start_url = https://d-123456789a.awsapps.com/start#
 
 			diags = append(diags, p.Configure(ctx, rc)...)
 
-			// The provider always returns a warning if there is no account ID
 			var expected diag.Diagnostics
-			expected = append(expected,
-				errs.NewWarningDiagnostic(
-					"AWS account ID not found for provider",
-					"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-				),
-			)
 
 			if diff := cmp.Diff(diags, expected, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -282,16 +275,7 @@ func (d testCaseDriver) Apply(ctx context.Context, t *testing.T) (context.Contex
 
 	diags = append(diags, p.Configure(ctx, rc)...)
 
-	// The provider always returns a warning if there is no account ID
 	var expected diag.Diagnostics
-	if d.mode == configtesting.TestModeLocal {
-		expected = append(expected,
-			errs.NewWarningDiagnostic(
-				"AWS account ID not found for provider",
-				"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-			),
-		)
-	}
 
 	if diff := cmp.Diff(diags, expected, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
 		t.Errorf("unexpected diagnostics difference: %s", diff)
@@ -623,15 +607,6 @@ func TestProviderConfig_AssumeRole(t *testing.T) { //nolint:paralleltest
 			diags = append(diags, p.Configure(ctx, rc)...)
 
 			expectedDiags := tc.ExpectedDiags
-			// If the provider attempts authorization, it always returns a warning if there is no account ID
-			if !tc.ExpectedDiags.HasError() {
-				expectedDiags = append(expectedDiags,
-					errs.NewWarningDiagnostic(
-						"AWS account ID not found for provider",
-						"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-					),
-				)
-			}
 
 			if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {
 				t.Errorf("unexpected diagnostics difference: %s", diff)
