@@ -563,7 +563,7 @@ func TestAccRDSCluster_storageTypeIo2(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_storageTypeGeneralPurposeToProvisionedIops(t *testing.T) {
+func TestAccRDSCluster_storageTypeGeneralPurposeToProvisionedIOPS(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
