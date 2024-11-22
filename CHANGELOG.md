@@ -47,6 +47,8 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_lambda_function: Add support for `python3.13` `runtime` value ([#xxxxx](https://github.com/hashicorp/terraform-provider-aws/issues/xxxxx))
+* resource/aws_lambda_layer_version: Add support for `python3.13` `compatible_runtimes` value ([#xxxxx](https://github.com/hashicorp/terraform-provider-aws/issues/xxxxx))
 * resource/aws_medialive_channel: Add missing h265 codec settings ([#40071](https://github.com/hashicorp/terraform-provider-aws/issues/40071))
 
 BUG FIXES:
