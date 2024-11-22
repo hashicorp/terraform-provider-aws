@@ -5,8 +5,6 @@ package chatbot
 
 import (
 	"context"
-	"fmt"
-	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -66,9 +65,9 @@ func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request 
 				Required: true,
 			},
 			"guardrail_policy_arns": schema.ListAttribute{
-				Optional:    true,
-				Computed:    true,
-				ElementType: types.StringType,
+				CustomType: fwtypes.ListOfStringType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
 				},
@@ -97,12 +96,12 @@ func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request 
 			"slack_team_name": schema.StringAttribute{
 				Computed: true,
 			},
-			"sns_topic_arns": schema.ListAttribute{
-				Optional:    true,
-				Computed:    true,
-				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
+			"sns_topic_arns": schema.SetAttribute{
+				CustomType: fwtypes.SetOfStringType,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -406,20 +405,20 @@ func waitSlackChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Cli
 }
 
 type slackChannelConfigurationResourceModel struct {
-	ChatConfigurationARN      types.String                     `tfsdk:"chat_configuration_arn"`
-	ConfigurationName         types.String                     `tfsdk:"configuration_name"`
-	GuardrailPolicyARNs       types.List                       `tfsdk:"guardrail_policy_arns"`
-	IAMRoleARN                types.String                     `tfsdk:"iam_role_arn"`
-	LoggingLevel              fwtypes.StringEnum[loggingLevel] `tfsdk:"logging_level"`
-	SlackChannelID            types.String                     `tfsdk:"slack_channel_id"`
-	SlackChannelName          types.String                     `tfsdk:"slack_channel_name"`
-	SlackTeamID               types.String                     `tfsdk:"slack_team_id"`
-	SlackTeamName             types.String                     `tfsdk:"slack_team_name"`
-	SNSTopicARNs              types.List                       `tfsdk:"sns_topic_arns"`
-	Tags                      tftags.Map                       `tfsdk:"tags"`
-	TagsAll                   tftags.Map                       `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value                   `tfsdk:"timeouts"`
-	UserAuthorizationRequired types.Bool                       `tfsdk:"user_authorization_required"`
+	ChatConfigurationARN      types.String                      `tfsdk:"chat_configuration_arn"`
+	ConfigurationName         types.String                      `tfsdk:"configuration_name"`
+	GuardrailPolicyARNs       fwtypes.ListValueOf[types.String] `tfsdk:"guardrail_policy_arns"`
+	IAMRoleARN                types.String                      `tfsdk:"iam_role_arn"`
+	LoggingLevel              fwtypes.StringEnum[loggingLevel]  `tfsdk:"logging_level"`
+	SlackChannelID            types.String                      `tfsdk:"slack_channel_id"`
+	SlackChannelName          types.String                      `tfsdk:"slack_channel_name"`
+	SlackTeamID               types.String                      `tfsdk:"slack_team_id"`
+	SlackTeamName             types.String                      `tfsdk:"slack_team_name"`
+	SNSTopicARNs              fwtypes.SetValueOf[types.String]  `tfsdk:"sns_topic_arns"`
+	Tags                      tftags.Map                        `tfsdk:"tags"`
+	TagsAll                   tftags.Map                        `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                    `tfsdk:"timeouts"`
+	UserAuthorizationRequired types.Bool                        `tfsdk:"user_authorization_required"`
 }
 
 func (data *slackChannelConfigurationResourceModel) InitFromID() error {
@@ -476,23 +475,23 @@ func (loggingLevel) Values() []loggingLevel {
 //		!plan.UserAuthorizationRequired.Equal(state.UserAuthorizationRequired)
 //}
 
-func sortSNSTopicARNs(ctx context.Context, arns types.List) (types.List, error) {
-	if arns.IsNull() || arns.IsUnknown() {
-		return arns, nil
-	}
-
-	var arnStrings []string
-	diags := arns.ElementsAs(ctx, &arnStrings, false)
-	if diags.HasError() {
-		return arns, fmt.Errorf("error converting SNS Topic ARNs to strings: %v", diags)
-	}
-
-	sort.Strings(arnStrings)
-
-	sortedArns, diags := types.ListValueFrom(ctx, types.StringType, arnStrings)
-	if diags.HasError() {
-		return arns, fmt.Errorf("error converting sorted strings to List: %v", diags)
-	}
-
-	return sortedArns, nil
-}
+//func sortSNSTopicARNs(ctx context.Context, arns types.List) (types.List, error) {
+//	if arns.IsNull() || arns.IsUnknown() {
+//		return arns, nil
+//	}
+//
+//	var arnStrings []string
+//	diags := arns.ElementsAs(ctx, &arnStrings, false)
+//	if diags.HasError() {
+//		return arns, fmt.Errorf("error converting SNS Topic ARNs to strings: %v", diags)
+//	}
+//
+//	sort.Strings(arnStrings)
+//
+//	sortedArns, diags := types.ListValueFrom(ctx, types.StringType, arnStrings)
+//	if diags.HasError() {
+//		return arns, fmt.Errorf("error converting sorted strings to List: %v", diags)
+//	}
+//
+//	return sortedArns, nil
+//}
