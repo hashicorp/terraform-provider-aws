@@ -4785,7 +4785,7 @@ func TestAccRDSInstance_SnapshotIdentifier_performanceInsightsEnabled(t *testing
 	})
 }
 
-func TestAccRDSInstance_caCertificateIdentifier(t *testing.T) {
+func TestAccRDSInstance_CACertificate_latest(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -4803,10 +4803,44 @@ func TestAccRDSInstance_caCertificateIdentifier(t *testing.T) {
 		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_caCertificateID(rName),
+				Config: testAccInstanceConfig_CACertificate_latest(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "ca_cert_identifier", dataSourceName, names.AttrID),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_CACertificate_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDBInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_CACertificate_update(rName, "rds-ca-ecc384-g1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-ecc384-g1"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_CACertificate_update(rName, "rds-ca-rsa2048-g1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDBInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-rsa2048-g1"),
 				),
 			},
 		},
@@ -7135,7 +7169,7 @@ resource "aws_db_instance" "test" {
 `, rName))
 }
 
-func testAccInstanceConfig_caCertificateID(rName string) string {
+func testAccInstanceConfig_CACertificate_latest(rName string) string {
 	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
 data "aws_rds_certificate" "latest" {
   latest_valid_till = true
@@ -7154,6 +7188,23 @@ resource "aws_db_instance" "test" {
   username            = "tfacctest"
 }
 `, rName))
+}
+
+func testAccInstanceConfig_CACertificate_update(rName, cert string) string {
+	return acctest.ConfigCompose(testAccInstanceConfig_orderableClassMySQL(), fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  identifier          = %[1]q
+  allocated_storage   = 10
+  apply_immediately   = true
+  ca_cert_identifier  = %[2]q
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  db_name             = "test"
+  skip_final_snapshot = true
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+}
+`, rName, cert))
 }
 
 func testAccInstanceConfig_iamAuth(rName string) string {
@@ -10206,7 +10257,7 @@ resource "aws_db_instance" "source" {
   timeouts {
     update = "120m"
   }
-  ca_cert_identifier = "rds-ca-2019"
+  ca_cert_identifier = "rds-ca-rsa2048-g1"
 }
 `, tfrds.InstanceEngineOracleEnterprise, strings.Replace(mainInstanceClasses, "db.t3.small", "frodo", 1), rName)
 }
@@ -10224,7 +10275,7 @@ resource "aws_db_instance" "test" {
   apply_immediately   = true
 
   parameter_group_name = aws_db_parameter_group.test.name
-  ca_cert_identifier   = "rds-ca-2019"
+  ca_cert_identifier   = "rds-ca-rsa2048-g1"
 
   timeouts {
     update = "120m"
