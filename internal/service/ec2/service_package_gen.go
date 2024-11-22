@@ -19,6 +19,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "Capacity Block Offering",
 		},
 		{
+			Factory: newDataSourceSpotDataFeedSubscription,
+			Name:    "Spot Data Feed Subscription Data Source",
+		},
+		{
 			Factory: newSecurityGroupRuleDataSource,
 			Name:    "Security Group Rule",
 		},
@@ -56,6 +60,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newInstanceMetadataDefaultsResource,
 			Name:    "Instance Metadata Defaults",
+		},
+		{
+			Factory: newResourceSecurityGroupVPCAssociation,
+			Name:    "Security Group VPC Association",
 		},
 		{
 			Factory: newSecurityGroupEgressRuleResource,
@@ -468,9 +476,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceSubnet,
 			TypeName: "aws_subnet",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			},
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceSubnets,

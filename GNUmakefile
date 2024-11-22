@@ -101,21 +101,6 @@ default: build ## build
 
 acctest-lint: testacc-lint testacc-tflint ## [CI] Run all CI acceptance test checks
 
-awssdkpatch: prereq-go ## Install awssdkpatch
-	cd tools/awssdkpatch && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/awssdkpatch
-
-awssdkpatch-apply: awssdkpatch-gen ## Apply a patch generated with awssdkpatch
-	@echo "Applying patch for $(PKG)..."
-	@gopatch --skip-generated -p awssdk.patch ./$(PKG_NAME)/...
-
-awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
-	@if [ "$(PKG)" = "" ]; then \
-		echo "PKG must be set. Try again like:" ; \
-		echo "PKG=foo make awssdkpatch-gen" ; \
-		exit 1 ; \
-	fi
-	@awssdkpatch $(AWSSDKPATCH_OPTS) -service $(PKG)
-
 build: prereq-go fmt-check ## Build provider
 	@echo "make: Building provider..."
 	@$(GO_VER) install
@@ -170,7 +155,6 @@ clean-tidy: prereq-go ## Clean up tidy
 		echo "make: if you get an error, see https://go.dev/doc/manage-install to locally install various Go versions" ; \
 	fi ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
-	cd tools/awssdkpatch && $$gover mod tidy && cd ../.. ; \
 	cd tools/tfsdk2fw && $$gover mod tidy && cd ../.. ; \
 	cd .ci/tools && $$gover mod tidy && cd ../.. ; \
 	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
@@ -485,7 +469,8 @@ semgrep-constants: semgrep-validate ## Fix constants with Semgrep --autofix
 	@semgrep $(SEMGREP_ARGS) --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep-constants.yml \
-		--config .ci/.semgrep-test-constants.yml
+		--config .ci/.semgrep-test-constants.yml \
+		--config .ci/.semgrep-test-constants-temp.yml
 
 semgrep-docker: semgrep-validate ## Run Semgrep (Legacy, use caution)
 	@echo "make: Legacy target, use caution..."
@@ -601,7 +586,7 @@ t: prereq-go fmt-check ## Run acceptance tests (similar to testacc)
 
 test: prereq-go fmt-check ## Run unit tests
 	@echo "make: Running unit tests..."
-	$(GO_VER) test -count $(TEST_COUNT) $(TEST) $(TESTARGS) -timeout=5m
+	$(GO_VER) test -count $(TEST_COUNT) $(TEST) $(TESTARGS) -timeout=15m
 
 test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
@@ -700,6 +685,24 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 
 ts: testacc-short ## Alias to testacc-short
+
+update: ## Update dependencies
+	@echo "make: Updating dependencies..."
+	$(GO_VER) get -u ./...
+	go mod tidy	
+	cd ./tools/literally && $(GO_VER) get -u ./... && go mod tidy
+	cd ./tools/tfsdk2fw && $(GO_VER) get -u ./... && go mod tidy
+	cd .ci/tools && $(GO_VER) get -u && go mod tidy
+	cd .ci/providerlint && $(GO_VER) get -u && go mod tidy
+	cd .ci/providerlint/passes/AWSAT005/testdata && $(GO_VER) get -u ./... && go mod tidy
+	cd .ci/providerlint/passes/AWSAT002/testdata && $(GO_VER) get -u ./... && go mod tidy
+	cd .ci/providerlint/passes/AWSAT003/testdata && $(GO_VER) get -u ./... && go mod tidy
+	cd .ci/providerlint/passes/AWSAT004/testdata && $(GO_VER) get -u ./... && go mod tidy
+	cd .ci/providerlint/passes/AWSV001/testdata && $(GO_VER) get -u ./... && go mod tidy
+	cd .ci/providerlint/passes/AWSR001/testdata && $(GO_VER) get -u ./... && go mod tidy
+	cd .ci/providerlint/passes/AWSAT001/testdata && $(GO_VER) get -u ./... && go mod tidy
+	cd .ci/providerlint/passes/AWSAT006/testdata && $(GO_VER) get -u ./... && go mod tidy
+	cd ./skaff && $(GO_VER) get -u ./... && go mod tidy
 
 website: website-link-check-markdown website-link-check-md website-markdown-lint website-misspell website-terrafmt website-tflint ## [CI] Run all CI website checks
 
@@ -829,9 +832,6 @@ yamllint: ## [CI] YAML Linting / yamllint
 # Please keep targets in alphabetical order
 .PHONY: \
 	acctest-lint \
-	awssdkpatch-apply \
-	awssdkpatch-gen \
-	awssdkpatch \
 	build \
 	changelog-misspell \
 	ci-quick \
@@ -909,6 +909,7 @@ yamllint: ## [CI] YAML Linting / yamllint
 	tfsdk2fw \
 	tools \
 	ts \
+	update \
 	website-link-check-ghrc \
 	website-link-check-markdown \
 	website-link-check-md \

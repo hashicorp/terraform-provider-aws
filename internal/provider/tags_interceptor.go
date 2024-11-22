@@ -88,7 +88,7 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 	}
 
 	// ISO partitions may not support tagging, giving error.
-	if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		return ctx, diags
 	}
 
@@ -139,7 +139,7 @@ func tagsReadFunc(ctx context.Context, d schemaResourceData, sp conns.ServicePac
 		}
 
 		// ISO partitions may not support tagging, giving error.
-		if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return ctx, diags
 		}
 

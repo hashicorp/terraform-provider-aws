@@ -226,7 +226,7 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         Instance(self, "this",
             ami="ami-0dcc1e21636832c5d",
-            host_resource_group_arn="arn:aws:resource-groups:us-west-2:012345678901:group/win-testhost",
+            host_resource_group_arn="arn:aws:resource-groups:us-west-2:123456789012:group/win-testhost",
             instance_type="m5.large",
             tenancy="host"
         )
@@ -296,9 +296,9 @@ This resource supports the following arguments:
 * `subnet_id` - (Optional) VPC Subnet ID to launch in.
 * `tags` - (Optional) Map of tags to assign to the resource. Note that these tags apply to the instance and not block storage devices. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tenancy` - (Optional) Tenancy of the instance (if the instance is running in a VPC). An instance with a tenancy of `dedicated` runs on single-tenant hardware. The `host` tenancy is not supported for the import-instance command. Valid values are `default`, `dedicated`, and `host`.
-* `user_data` - (Optional) User data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead. Updates to this field will trigger a stop/start of the EC2 instance by default. If the `user_data_replace_on_change` is set then updates to this field will trigger a destroy and recreate.
-* `user_data_base64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption. Updates to this field will trigger a stop/start of the EC2 instance by default. If the `user_data_replace_on_change` is set then updates to this field will trigger a destroy and recreate.
-* `user_data_replace_on_change` - (Optional) When used in combination with `user_data` or `user_data_base64` will trigger a destroy and recreate when set to `true`. Defaults to `false` if not set.
+* `user_data` - (Optional) User data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead. Updates to this field will trigger a stop/start of the EC2 instance by default. If the `user_data_replace_on_change` is set then updates to this field will trigger a destroy and recreate of the EC2 instance.
+* `user_data_base64` - (Optional) Can be used instead of `user_data` to pass base64-encoded binary data directly. Use this instead of `user_data` whenever the value is not a valid UTF-8 string. For example, gzip-encoded user data must be base64-encoded and passed via this argument to avoid corruption. Updates to this field will trigger a stop/start of the EC2 instance by default. If the `user_data_replace_on_change` is set then updates to this field will trigger a destroy and recreate of the EC2 instance.
+* `user_data_replace_on_change` - (Optional) When used in combination with `user_data` or `user_data_base64` will trigger a destroy and recreate of the EC2 instance when set to `true`. Defaults to `false` if not set.
 * `volume_tags` - (Optional) Map of tags to assign, at instance-creation time, to root and EBS volumes.
 
 ~> **NOTE:** Do not use `volume_tags` if you plan to manage block device tags outside the `aws_instance` configuration, such as using `tags` in an [`aws_ebs_volume`](/docs/providers/aws/r/ebs_volume.html) resource attached via [`aws_volume_attachment`](/docs/providers/aws/r/volume_attachment.html). Doing so will result in resource cycling and inconsistent behavior.
@@ -537,4 +537,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-37244e9e9462c7af98d7a696acd02d926dea0967817de2ceb33442a3e9d4488d -->
+<!-- cache-key: cdktf-0.20.8 input-b169c9840bf644ff448599387b61111cea61ca09772a64d770d816bebc06994c -->

@@ -79,7 +79,7 @@ func dataSourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "lex",
 		AccountID: meta.(*conns.AWSClient).AccountID,

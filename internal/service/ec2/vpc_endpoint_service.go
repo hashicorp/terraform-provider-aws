@@ -223,7 +223,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,

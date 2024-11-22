@@ -359,7 +359,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
-	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition(ctx), bucket, key)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
@@ -395,10 +395,6 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
-
-	if err := setObjectKMSKeyID(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
 
 	return diags
 }

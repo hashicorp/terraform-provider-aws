@@ -8,11 +8,10 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-cty/cty"
 	fwdiag "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -502,7 +501,7 @@ func (tags KeyValueTags) String() string {
 	var builder strings.Builder
 
 	keys := tags.Keys()
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	builder.WriteString("map[")
 	for i, k := range keys {
@@ -540,7 +539,7 @@ func (tags KeyValueTags) URLQueryString() string {
 		}
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	slices.Sort(keys)
 
 	var buf strings.Builder
 	for _, k := range keys {
@@ -690,7 +689,7 @@ func (td *TagData) String() string {
 			additionalBoolField := fmt.Sprintf("%s:", k)
 
 			if v != nil {
-				additionalBoolField += fmt.Sprintf("%t", *v)
+				additionalBoolField += strconv.FormatBool(*v)
 			}
 
 			additionalBoolFields = append(additionalBoolFields, additionalBoolField)
@@ -927,16 +926,6 @@ func (tags KeyValueTags) ResolveDuplicatesFramework(ctx context.Context, default
 	}
 
 	return New(ctx, result).IgnoreConfig(ignoreConfig)
-}
-
-// ToSnakeCase converts a string to snake case.
-//
-// For example, AWS Go SDK field names are in PascalCase,
-// while Terraform schema attribute names are in snake_case.
-func ToSnakeCase(str string) string {
-	result := regexache.MustCompile("(.)([A-Z][a-z]+)").ReplaceAllString(str, "${1}_${2}")
-	result = regexache.MustCompile("([0-9a-z])([A-Z])").ReplaceAllString(result, "${1}_${2}")
-	return strings.ToLower(result)
 }
 
 func normalizeTagsFromRaw(m map[string]cty.Value, incoming map[string]configTag, source tagSource) {

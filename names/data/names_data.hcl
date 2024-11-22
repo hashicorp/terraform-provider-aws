@@ -630,7 +630,7 @@ service "appstream" {
 
   endpoint_info {
     endpoint_api_call   = "ListAssociatedFleets"
-    endpoint_api_params = "StackName: aws_sdkv2.String(\"test\")"
+    endpoint_api_params = "StackName: aws.String(\"test\")"
   }
 
   resource_prefix {
@@ -1346,7 +1346,7 @@ service "cloudformation" {
 
   endpoint_info {
     endpoint_api_call   = "ListStackInstances"
-    endpoint_api_params = "StackSetName: aws_sdkv2.String(\"test\")"
+    endpoint_api_params = "StackSetName: aws.String(\"test\")"
   }
 
   resource_prefix {
@@ -1403,7 +1403,7 @@ service "cloudfrontkeyvaluestore" {
 
   endpoint_info {
     endpoint_api_call   = "ListKeys"
-    endpoint_api_params = "KvsARN: aws_sdkv2.String(\"arn:aws:cloudfront::111122223333:key-value-store/MaxAge\")"
+    endpoint_api_params = "KvsARN: aws.String(\"arn:aws:cloudfront::111122223333:key-value-store/MaxAge\")"
   }
 
   resource_prefix {
@@ -2036,7 +2036,7 @@ service "cognitoidentity" {
 
   endpoint_info {
     endpoint_api_call   = "ListIdentityPools"
-    endpoint_api_params = "MaxResults: aws_sdkv2.Int32(1)"
+    endpoint_api_params = "MaxResults: aws.Int32(1)"
   }
 
   resource_prefix {
@@ -2076,7 +2076,7 @@ service "cognitoidp" {
 
   endpoint_info {
     endpoint_api_call   = "ListUserPools"
-    endpoint_api_params = "MaxResults: aws_sdkv2.Int32(1)"
+    endpoint_api_params = "MaxResults: aws.Int32(1)"
   }
 
   resource_prefix {
@@ -3758,7 +3758,7 @@ service "fms" {
 
   endpoint_info {
     endpoint_api_call   = "ListAppsLists"
-    endpoint_api_params = "MaxResults: aws_sdkv2.Int32(1)"
+    endpoint_api_params = "MaxResults: aws.Int32(1)"
   }
 
   resource_prefix {
@@ -6797,7 +6797,7 @@ service "quicksight" {
 
   endpoint_info {
     endpoint_api_call   = "ListDashboards"
-    endpoint_api_params = "AwsAccountId: aws_sdkv2.String(\"123456789012\")"
+    endpoint_api_params = "AwsAccountId: aws.String(acctest.Ct12Digit)"
   }
 
   resource_prefix {
@@ -6999,7 +6999,7 @@ service "redshiftdata" {
 
   endpoint_info {
     endpoint_api_call   = "ListDatabases"
-    endpoint_api_params = "Database: aws_sdkv2.String(\"test\")"
+    endpoint_api_params = "Database: aws.String(\"test\")"
   }
 
   resource_prefix {
@@ -7735,6 +7735,7 @@ service "simpledb" {
 
   client {
     go_v1_client_typename = "SimpleDB"
+    skip_client_generate  = true
   }
 
   endpoint_info {
@@ -8369,7 +8370,7 @@ service "sso" {
 
   endpoint_info {
     endpoint_api_call   = "ListAccounts"
-    endpoint_api_params = "AccessToken: aws_sdkv2.String(\"mock-access-token\")"
+    endpoint_api_params = "AccessToken: aws.String(\"mock-access-token\")"
     endpoint_only       = true
   }
 
@@ -8427,7 +8428,7 @@ service "identitystore" {
 
   endpoint_info {
     endpoint_api_call   = "ListUsers"
-    endpoint_api_params = "IdentityStoreId: aws_sdkv2.String(\"d-1234567890\")"
+    endpoint_api_params = "IdentityStoreId: aws.String(\"d-1234567890\")"
   }
 
   resource_prefix {
@@ -8574,6 +8575,29 @@ service "swf" {
   provider_package_correct = "swf"
   doc_prefix               = ["swf_"]
   brand                    = "AWS"
+}
+
+service "taxsettings" {
+  sdk {
+    id = "TaxSettings"
+  }
+
+  names {
+    provider_name_upper = "TaxSettings"
+    human_friendly      = "Tax Settings"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListTaxRegistrations"
+  }
+
+  resource_prefix {
+    correct = "aws_taxsettings_"
+  }
+
+  provider_package_correct = "taxsettings"
+  doc_prefix               = ["taxsettings_"]
+  brand                    = "Amazon"
 }
 
 service "textract" {
@@ -8907,7 +8931,7 @@ service "budgets" {
 
   endpoint_info {
     endpoint_api_call   = "DescribeBudgets"
-    endpoint_api_params = "AccountId: aws_sdkv2.String(\"012345678901\")"
+    endpoint_api_params = "AccountId: aws.String(acctest.Ct12Digit)"
   }
 
   resource_prefix {

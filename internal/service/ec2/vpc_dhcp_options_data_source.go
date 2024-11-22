@@ -105,7 +105,7 @@ func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, m
 
 	ownerID := aws.ToString(opts.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,

@@ -5,193 +5,257 @@ package iot
 
 import (
 	"context"
-	"log"
-	"time"
+	"errors"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iot"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iot_billing_group", name="Billing Group")
+// @FrameworkResource("aws_iot_billing_group", name="Billing Group")
 // @Tags(identifierAttribute="arn")
-func resourceBillingGroup() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceBillingGroupCreate,
-		ReadWithoutTimeout:   resourceBillingGroupRead,
-		UpdateWithoutTimeout: resourceBillingGroupUpdate,
-		DeleteWithoutTimeout: resourceBillingGroupDelete,
+func newResourceBillingGroup(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceBillingGroup{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	return r, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"metadata": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrCreationDate: {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+const (
+	ResNameBillingGroup = "Billing Group"
+)
+
+type resourceBillingGroup struct {
+	framework.ResourceWithConfigure
+}
+
+func (r *resourceBillingGroup) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_iot_billing_group"
+}
+
+func (r *resourceBillingGroup) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	s := schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			names.AttrID:  framework.IDAttribute(),
+			"metadata": schema.ListAttribute{
+				CustomType:  fwtypes.NewListNestedObjectTypeOf[metadataModel](ctx),
+				ElementType: fwtypes.NewObjectTypeOf[metadataModel](ctx),
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
+			names.AttrName: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 128),
+				},
 			},
-			names.AttrProperties: {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						names.AttrDescription: {
-							Type:     schema.TypeString,
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			names.AttrVersion: schema.Int64Attribute{
+				Computed: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrProperties: schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[propertiesModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			names.AttrVersion: {
-				Type:     schema.TypeInt,
-				Computed: true,
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
+
+	response.Schema = s
 }
 
-func resourceBillingGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTClient(ctx)
+func (r *resourceBillingGroup) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	conn := r.Meta().IoTClient(ctx)
+	var data resourceBillingGroupData
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	name := d.Get(names.AttrName).(string)
 	input := &iot.CreateBillingGroupInput{
-		BillingGroupName: aws.String(name),
-		Tags:             getTagsIn(ctx),
+		Tags: getTagsIn(ctx),
+	}
+	response.Diagnostics.Append(flex.Expand(ctx, data, input, flex.WithFieldNamePrefix("BillingGroup"))...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk(names.AttrProperties); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.BillingGroupProperties = expandBillingGroupProperties(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	output, err := conn.CreateBillingGroup(ctx, input)
-
+	out, err := conn.CreateBillingGroup(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating IoT Billing Group (%s): %s", name, err)
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IoT, create.ErrActionCreating, ResNameBillingGroup, data.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IoT, create.ErrActionCreating, ResNameBillingGroup, data.Name.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
 	}
 
-	d.SetId(aws.ToString(output.BillingGroupName))
+	findOut, err := findBillingGroupByName(ctx, conn, data.Name.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IoT, create.ErrActionCreating, ResNameBillingGroup, data.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
-	return append(diags, resourceBillingGroupRead(ctx, d, meta)...)
+	// To preserve historical behavior of the Plugin-SDKV2 based resource, treat
+	// billing group properties with a nested nil description as a null object
+	if findOut.BillingGroupProperties != nil && findOut.BillingGroupProperties.BillingGroupDescription == nil {
+		findOut.BillingGroupProperties = nil
+	}
+
+	// To preserve historical behavior of the Plugin-SDKV2 based resource, the billing
+	// group name is copied to the `id` attribute (not the ID generated by AWS)
+	data.ID = types.StringValue(data.Name.ValueString())
+	response.Diagnostics.Append(flex.Flatten(ctx, findOut, &data, flex.WithFieldNamePrefix("BillingGroup"))...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func resourceBillingGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTClient(ctx)
+func (r *resourceBillingGroup) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	conn := r.Meta().IoTClient(ctx)
 
-	output, err := findBillingGroupByName(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] IoT Billing Group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	var data resourceBillingGroupData
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
+	out, err := findBillingGroupByName(ctx, conn, data.ID.ValueString())
+	if tfresource.NotFound(err) {
+		response.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IoT Billing Group (%s): %s", d.Id(), err)
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IoT, create.ErrActionReading, ResNameBillingGroup, data.ID.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	d.Set(names.AttrARN, output.BillingGroupArn)
-	d.Set(names.AttrName, output.BillingGroupName)
-
-	if output.BillingGroupMetadata != nil {
-		if err := d.Set("metadata", []interface{}{flattenBillingGroupMetadata(output.BillingGroupMetadata)}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting metadata: %s", err)
-		}
-	} else {
-		d.Set("metadata", nil)
+	// To preserve historical behavior of the Plugin-SDKV2 based resource, treat
+	// billing group properties with a nested nil description as a null object
+	if out.BillingGroupProperties != nil && out.BillingGroupProperties.BillingGroupDescription == nil {
+		out.BillingGroupProperties = nil
 	}
-	if v := flattenBillingGroupProperties(output.BillingGroupProperties); len(v) > 0 {
-		if err := d.Set(names.AttrProperties, []interface{}{v}); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting properties: %s", err)
-		}
-	} else {
-		d.Set(names.AttrProperties, nil)
-	}
-	d.Set(names.AttrVersion, output.Version)
 
-	return diags
+	response.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("BillingGroup"))...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func resourceBillingGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTClient(ctx)
+func (r *resourceBillingGroup) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	conn := r.Meta().IoTClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &iot.UpdateBillingGroupInput{
-			BillingGroupName: aws.String(d.Id()),
-			ExpectedVersion:  aws.Int64(int64(d.Get(names.AttrVersion).(int))),
+	var old, new resourceBillingGroupData
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// For tag-only updates the version value needs to be copied
+	// from state into the proposed plan. This will be overwritten
+	// by flex.Flatten below if the properties argument changed.
+	new.Version = old.Version
+	if !old.Properties.Equal(new.Properties) {
+		input := &iot.UpdateBillingGroupInput{}
+		response.Diagnostics.Append(flex.Expand(ctx, new, input, flex.WithFieldNamePrefix("BillingGroup"))...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
-		if v, ok := d.GetOk(names.AttrProperties); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			input.BillingGroupProperties = expandBillingGroupProperties(v.([]interface{})[0].(map[string]interface{}))
-		} else {
-			input.BillingGroupProperties = &awstypes.BillingGroupProperties{}
-		}
+		input.ExpectedVersion = old.Version.ValueInt64Pointer()
 
-		_, err := conn.UpdateBillingGroup(ctx, input)
-
+		out, err := conn.UpdateBillingGroup(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IoT Billing Group (%s): %s", d.Id(), err)
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IoT, create.ErrActionUpdating, ResNameBillingGroup, new.Name.String(), err),
+				err.Error(),
+			)
+			return
 		}
+
+		response.Diagnostics.Append(flex.Flatten(ctx, out, &new)...)
 	}
 
-	return append(diags, resourceBillingGroupRead(ctx, d, meta)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func resourceBillingGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTClient(ctx)
+func (r *resourceBillingGroup) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	conn := r.Meta().IoTClient(ctx)
 
-	log.Printf("[DEBUG] Deleting IoT Billing Group: %s", d.Id())
+	var data resourceBillingGroupData
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	_, err := conn.DeleteBillingGroup(ctx, &iot.DeleteBillingGroupInput{
-		BillingGroupName: aws.String(d.Id()),
+		BillingGroupName: data.Name.ValueStringPointer(),
+		ExpectedVersion:  data.Version.ValueInt64Pointer(),
 	})
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return diags
-	}
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IoT Billing Group (%s): %s", d.Id(), err)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IoT, create.ErrActionDeleting, ResNameBillingGroup, data.Name.String(), err),
+			err.Error(),
+		)
+		return
 	}
+}
 
-	return diags
+func (r *resourceBillingGroup) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+}
+
+func (r *resourceBillingGroup) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 func findBillingGroupByName(ctx context.Context, conn *iot.Client, name string) (*iot.DescribeBillingGroupOutput, error) {
@@ -219,44 +283,21 @@ func findBillingGroupByName(ctx context.Context, conn *iot.Client, name string) 
 	return output, nil
 }
 
-func expandBillingGroupProperties(tfMap map[string]interface{}) *awstypes.BillingGroupProperties {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &awstypes.BillingGroupProperties{}
-
-	if v, ok := tfMap[names.AttrDescription].(string); ok && v != "" {
-		apiObject.BillingGroupDescription = aws.String(v)
-	}
-
-	return apiObject
+type resourceBillingGroupData struct {
+	ARN        types.String                                     `tfsdk:"arn"`
+	ID         types.String                                     `tfsdk:"id" autoflex:",noflatten"`
+	Metadata   fwtypes.ListNestedObjectValueOf[metadataModel]   `tfsdk:"metadata"`
+	Name       types.String                                     `tfsdk:"name"`
+	Tags       tftags.Map                                       `tfsdk:"tags"`
+	TagsAll    tftags.Map                                       `tfsdk:"tags_all"`
+	Version    types.Int64                                      `tfsdk:"version"`
+	Properties fwtypes.ListNestedObjectValueOf[propertiesModel] `tfsdk:"properties"`
 }
 
-func flattenBillingGroupMetadata(apiObject *awstypes.BillingGroupMetadata) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.CreationDate; v != nil {
-		tfMap[names.AttrCreationDate] = aws.ToTime(v).Format(time.RFC3339)
-	}
-
-	return tfMap
+type propertiesModel struct {
+	Description types.String `tfsdk:"description"`
 }
 
-func flattenBillingGroupProperties(apiObject *awstypes.BillingGroupProperties) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.BillingGroupDescription; v != nil {
-		tfMap[names.AttrDescription] = aws.ToString(v)
-	}
-
-	return tfMap
+type metadataModel struct {
+	CreationDate timetypes.RFC3339 `tfsdk:"creation_date"`
 }

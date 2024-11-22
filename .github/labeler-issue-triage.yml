@@ -679,6 +679,8 @@ service/swf:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_swf_'
 service/synthetics:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_synthetics_'
+service/taxsettings:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_taxsettings_'
 service/textract:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_textract_'
 service/timestreaminfluxdb:

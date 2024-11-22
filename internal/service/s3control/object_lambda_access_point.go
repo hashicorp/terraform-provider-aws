@@ -187,7 +187,7 @@ func resourceObjectLambdaAccessPointRead(ctx context.Context, d *schema.Resource
 	d.Set(names.AttrAccountID, accountID)
 	// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazons3objectlambda.html#amazons3objectlambda-resources-for-iam-policies.
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "s3-object-lambda",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: accountID,

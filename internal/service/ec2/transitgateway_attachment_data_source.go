@@ -104,7 +104,7 @@ func dataSourceTransitGatewayAttachmentRead(ctx context.Context, d *schema.Resou
 
 	resourceOwnerID := aws.ToString(transitGatewayAttachment.ResourceOwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: resourceOwnerID,

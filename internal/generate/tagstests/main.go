@@ -128,7 +128,7 @@ func main() {
 				g.Fatalf("parsing base Go test template: %w", err)
 			}
 
-			if err := d.WriteTemplateSet(templates, resource); err != nil {
+			if err := d.BufferTemplateSet(templates, resource); err != nil {
 				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 			}
 
@@ -144,7 +144,7 @@ func main() {
 				g.Fatalf("parsing base Go test template: %w", err)
 			}
 
-			if err := d.WriteTemplateSet(templates, resource); err != nil {
+			if err := d.BufferTemplateSet(templates, resource); err != nil {
 				g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 			}
 
@@ -286,7 +286,7 @@ func main() {
 			}),
 		}
 
-		if err := d.WriteTemplateSet(templates, datum); err != nil {
+		if err := d.BufferTemplateSet(templates, datum); err != nil {
 			g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 		}
 
@@ -377,6 +377,7 @@ type ResourceDatum struct {
 	Implementation                   implementation
 	Serialize                        bool
 	SerializeDelay                   bool
+	SerializeParallelTests           bool
 	PreCheck                         bool
 	SkipEmptyTags                    bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	SkipNullTags                     bool
@@ -685,6 +686,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 						d.Serialize = b
 					}
 				}
+				if attr, ok := args.Keyword["serializeParallelTests"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid serializeParallelTests value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.SerializeParallelTests = b
+					}
+				}
 				if attr, ok := args.Keyword["serializeDelay"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
 						v.errs = append(v.errs, fmt.Errorf("invalid serializeDelay value: %q at %s. Should be duration value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -845,7 +854,7 @@ func generateTestConfig(g *common.Generator, dirPath, test string, withDefaults 
 		ComputedTag:     (test == "tagsComputed"),
 		commonConfig:    common,
 	}
-	if err := tf.WriteTemplateSet(tfTemplates, configData); err != nil {
+	if err := tf.BufferTemplateSet(tfTemplates, configData); err != nil {
 		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)
 	}
 

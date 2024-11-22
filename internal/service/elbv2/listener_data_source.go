@@ -5,7 +5,6 @@ package elbv2
 
 import (
 	"context"
-	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -334,9 +333,9 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	if len(listener.Certificates) == 1 {
 		d.Set(names.AttrCertificateARN, listener.Certificates[0].CertificateArn)
 	}
-	sort.Slice(listener.DefaultActions, func(i, j int) bool {
-		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
-	})
+
+	sortListenerActions(listener.DefaultActions)
+
 	if err := d.Set(names.AttrDefaultAction, flattenListenerActions(d, names.AttrDefaultAction, listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}

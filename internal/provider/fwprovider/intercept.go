@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -43,6 +46,12 @@ func (s dataSourceInterceptors) read() []dataSourceInterceptorReadFunc {
 		return e.read
 	})
 }
+
+type ephemeralResourceInterceptor interface {
+	// TODO implement me
+}
+
+type ephemeralResourceInterceptors []ephemeralResourceInterceptor
 
 type resourceCRUDRequest interface {
 	resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
@@ -237,14 +246,189 @@ func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.Co
 	w.inner.Configure(ctx, request, response)
 }
 
+func (w *wrappedDataSource) ConfigValidators(ctx context.Context) []datasource.ConfigValidator {
+	if v, ok := w.inner.(datasource.DataSourceWithConfigValidators); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+		return v.ConfigValidators(ctx)
+	}
+
+	return nil
+}
+
 // tagsDataSourceInterceptor implements transparent tagging for data sources.
 type tagsDataSourceInterceptor struct {
 	tags *types.ServicePackageResourceTags
 }
 
 func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
-	// TODO
+	if r.tags == nil {
+		return ctx, diags
+	}
+
+	inContext, ok := conns.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	sp, ok := meta.ServicePackages[inContext.ServicePackageName]
+	if !ok {
+		return ctx, diags
+	}
+
+	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+	if err != nil {
+		serviceName = "<service>"
+	}
+
+	resourceName := inContext.ResourceName
+	if resourceName == "" {
+		resourceName = "<thing>"
+	}
+
+	tagsInContext, ok := tftags.FromContext(ctx)
+	if !ok {
+		return ctx, diags
+	}
+
+	switch when {
+	case Before:
+		var configTags tftags.Map
+		diags.Append(request.Config.GetAttribute(ctx, path.Root(names.AttrTags), &configTags)...)
+		if diags.HasError() {
+			return ctx, diags
+		}
+
+		tags := tftags.New(ctx, configTags)
+
+		tagsInContext.TagsIn = option.Some(tags)
+
+	case After:
+		// If the R handler didn't set tags, try and read them from the service API.
+		if tagsInContext.TagsOut.IsNone() {
+			if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+				var identifier string
+				diags.Append(response.State.GetAttribute(ctx, path.Root(identifierAttribute), &identifier)...)
+				if diags.HasError() {
+					return ctx, diags
+				}
+
+				// If the service package has a generic resource list tags methods, call it.
+				var err error
+				if v, ok := sp.(interface {
+					ListTags(context.Context, any, string) error
+				}); ok {
+					err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+				} else if v, ok := sp.(interface {
+					ListTags(context.Context, any, string, string) error
+				}); ok && r.tags.ResourceType != "" {
+					err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+				} else {
+					tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+						"ServicePackage": sp.ServicePackageName(),
+						"ResourceType":   r.tags.ResourceType,
+					})
+				}
+
+				// ISO partitions may not support tagging, giving error.
+				if errs.IsUnsupportedOperationInPartitionError(meta.Partition(ctx), err) {
+					return ctx, diags
+				}
+
+				if inContext.ServicePackageName == names.DynamoDB && err != nil {
+					// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
+					if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+						err = nil
+					}
+				}
+
+				if err != nil {
+					diags.AddError(fmt.Sprintf("listing tags for %s %s (%s)", serviceName, resourceName, identifier), err.Error())
+					return ctx, diags
+				}
+			}
+		}
+
+		tags := tagsInContext.TagsOut.UnwrapOrDefault()
+
+		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
+		stateTags := flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).Map())
+		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), tftags.NewMapFromMapValue(stateTags))...)
+
+		if diags.HasError() {
+			return ctx, diags
+		}
+	}
+
 	return ctx, diags
+}
+
+type wrappedEphemeralResource struct {
+	// bootstrapContext is run on all wrapped methods before any interceptors.
+	bootstrapContext contextFunc
+	inner            ephemeral.EphemeralResourceWithConfigure
+	meta             *conns.AWSClient
+	interceptors     ephemeralResourceInterceptors
+}
+
+func (w *wrappedEphemeralResource) Metadata(ctx context.Context, request ephemeral.MetadataRequest, response *ephemeral.MetadataResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
+	w.inner.Metadata(ctx, request, response)
+}
+
+func (w *wrappedEphemeralResource) Schema(ctx context.Context, request ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
+	w.inner.Schema(ctx, request, response)
+}
+
+func (w *wrappedEphemeralResource) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
+	ctx = w.bootstrapContext(ctx, w.meta)
+	w.inner.Open(ctx, request, response)
+}
+
+func (w *wrappedEphemeralResource) Configure(ctx context.Context, request ephemeral.ConfigureRequest, response *ephemeral.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
+	ctx = w.bootstrapContext(ctx, w.meta)
+	w.inner.Configure(ctx, request, response)
+}
+
+func (w *wrappedEphemeralResource) Renew(ctx context.Context, request ephemeral.RenewRequest, response *ephemeral.RenewResponse) {
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithRenew); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+		v.Renew(ctx, request, response)
+	}
+}
+
+func (w *wrappedEphemeralResource) Close(ctx context.Context, request ephemeral.CloseRequest, response *ephemeral.CloseResponse) {
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithClose); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+		v.Close(ctx, request, response)
+	}
+}
+
+func (w *wrappedEphemeralResource) ConfigValidators(ctx context.Context) []ephemeral.ConfigValidator {
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithConfigValidators); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+		return v.ConfigValidators(ctx)
+	}
+
+	return nil
+}
+
+func (w *wrappedEphemeralResource) ValidateConfig(ctx context.Context, request ephemeral.ValidateConfigRequest, response *ephemeral.ValidateConfigResponse) {
+	if v, ok := w.inner.(ephemeral.EphemeralResourceWithValidateConfig); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+		v.ValidateConfig(ctx, request, response)
+	}
+}
+
+func newWrappedEphemeralResource(bootstrapContext contextFunc, inner ephemeral.EphemeralResourceWithConfigure, interceptors ephemeralResourceInterceptors) ephemeral.EphemeralResourceWithConfigure {
+	return &wrappedEphemeralResource{
+		bootstrapContext: bootstrapContext,
+		inner:            inner,
+		interceptors:     interceptors,
+	}
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
@@ -501,7 +685,7 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 					}
 
 					// ISO partitions may not support tagging, giving error.
-					if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
+					if errs.IsUnsupportedOperationInPartitionError(meta.Partition(ctx), err) {
 						return ctx, diags
 					}
 
@@ -630,7 +814,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 					}
 
 					// ISO partitions may not support tagging, giving error.
-					if errs.IsUnsupportedOperationInPartitionError(meta.Partition, err) {
+					if errs.IsUnsupportedOperationInPartitionError(meta.Partition(ctx), err) {
 						return ctx, diags
 					}
 

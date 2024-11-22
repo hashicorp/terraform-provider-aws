@@ -176,7 +176,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	clusterID := d.Get("cluster_id").(string)
 	cluster, err := findCacheClusterWithNodeInfoByID(ctx, conn, clusterID)

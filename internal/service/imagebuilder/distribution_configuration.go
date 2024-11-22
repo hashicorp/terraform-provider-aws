@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -278,6 +279,35 @@ func resourceDistributionConfiguration() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+						"s3_export_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"disk_image_format": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.DiskImageFormat](),
+									},
+									"role_name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
+									},
+									names.AttrS3Bucket: {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
+									},
+									"s3_prefix": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
+									},
+								},
+							},
 						},
 					},
 				},
@@ -543,6 +573,10 @@ func expandDistribution(tfMap map[string]interface{}) *awstypes.Distribution {
 		apiObject.Region = aws.String(v)
 	}
 
+	if v, ok := tfMap["s3_export_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3ExportConfiguration = expandS3ExportConfiguration(v[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
@@ -737,6 +771,32 @@ func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *awstypes.L
 	return apiObject
 }
 
+func expandS3ExportConfiguration(tfMap map[string]interface{}) *awstypes.S3ExportConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.S3ExportConfiguration{}
+
+	if v, ok := tfMap["disk_image_format"].(string); ok && v != "" {
+		apiObject.DiskImageFormat = awstypes.DiskImageFormat(v)
+	}
+
+	if v, ok := tfMap["role_name"].(string); ok && v != "" {
+		apiObject.RoleName = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrS3Bucket].(string); ok && v != "" {
+		apiObject.S3Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap["s3_prefix"].(string); ok && v != "" {
+		apiObject.S3Prefix = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func flattenAMIDistributionConfiguration(apiObject *awstypes.AmiDistributionConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -832,6 +892,10 @@ func flattenDistribution(apiObject awstypes.Distribution) map[string]interface{}
 
 	if v := apiObject.Region; v != nil {
 		tfMap[names.AttrRegion] = aws.ToString(v)
+	}
+
+	if v := apiObject.S3ExportConfiguration; v != nil {
+		tfMap["s3_export_configuration"] = []interface{}{flattenS3ExportConfiguration(v)}
 	}
 
 	return tfMap
@@ -978,6 +1042,30 @@ func flattenFastLaunchSnapshotConfiguration(apiObject *awstypes.FastLaunchSnapsh
 
 	if v := apiObject.TargetResourceCount; v != nil {
 		tfMap["target_resource_count"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func flattenS3ExportConfiguration(apiObject *awstypes.S3ExportConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"disk_image_format": apiObject.DiskImageFormat,
+	}
+
+	if v := apiObject.RoleName; v != nil {
+		tfMap["role_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.S3Bucket; v != nil {
+		tfMap[names.AttrS3Bucket] = aws.ToString(v)
+	}
+
+	if v := apiObject.S3Prefix; v != nil {
+		tfMap["s3_prefix"] = aws.ToString(v)
 	}
 
 	return tfMap

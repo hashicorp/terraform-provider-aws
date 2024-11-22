@@ -458,7 +458,7 @@ func TestAccVPCLatticeListener_tags(t *testing.T) {
 				Config: testAccListenerConfig_tags1(rName, "key0", "value0"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key0", "value0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile(`service\/svc-.*\/listener\/listener-.+`)),
 				),
@@ -472,7 +472,7 @@ func TestAccVPCLatticeListener_tags(t *testing.T) {
 				Config: testAccListenerConfig_tags2(rName, "key0", "value0updated", acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key0", "value0updated"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -481,7 +481,7 @@ func TestAccVPCLatticeListener_tags(t *testing.T) {
 				Config: testAccListenerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &listener),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

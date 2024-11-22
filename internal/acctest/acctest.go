@@ -41,15 +41,16 @@ import (
 	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go-v2/service/wafv2"
 	wafv2types "github.com/aws/aws-sdk-go-v2/service/wafv2/types"
-	tfawserr_sdkv1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/echoprovider"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -78,6 +79,10 @@ const (
 
 	// Provider name for alternate configuration testing
 	ProviderNameAlternate = "awsalternate"
+
+	// Provider name for echo provider
+	// used for testing ephemeral resources
+	ProviderNameEcho = "echo"
 
 	// Provider name for alternate account and alternate region configuration testing
 	ProviderNameAlternateAccountAlternateRegion = "awsalternateaccountalternateregion"
@@ -149,6 +154,20 @@ func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) 
 			}
 
 			return providerServerFactory(), nil
+		}
+	}
+
+	return factories
+}
+
+// ProtoV6ProviderFactories initializes v6 provider factories
+// currently only initializes echo provider for testing ephemeral resources
+func ProtoV6ProviderFactories(_ context.Context, providerNames ...string) map[string]func() (tfprotov6.ProviderServer, error) {
+	factories := make(map[string]func() (tfprotov6.ProviderServer, error))
+
+	for _, name := range providerNames {
+		if name == ProviderNameEcho {
+			factories[name] = echoprovider.NewProviderServer()
 		}
 	}
 
@@ -720,7 +739,7 @@ func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheck
 		case float64:
 			v = strconv.FormatFloat(x, 'f', -1, 64)
 		case bool:
-			v = fmt.Sprint(x)
+			v = strconv.FormatBool(x)
 		default:
 			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, name, key, jmesPath, result)
 		}
@@ -768,7 +787,7 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 		case float64:
 			value = strconv.FormatFloat(x, 'f', -1, 64)
 		case bool:
-			value = fmt.Sprint(x)
+			value = strconv.FormatBool(x)
 		default:
 			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, nameFirst, keyFirst, jmesPath, result)
 		}
@@ -818,7 +837,7 @@ func CheckResourceAttrJMESNotExists(name, key, jmesPath string) resource.TestChe
 		case float64:
 			v = strconv.FormatFloat(x, 'f', -1, 64)
 		case bool:
-			v = fmt.Sprint(x)
+			v = strconv.FormatBool(x)
 		default:
 			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T), expected no attribute`, name, key, jmesPath, result)
 		}
@@ -891,7 +910,7 @@ func ThirdRegion() string {
 }
 
 func Partition() string {
-	return names.PartitionForRegion(Region())
+	return names.PartitionForRegion(Region()).ID()
 }
 
 func PartitionRegions() []string {
@@ -899,19 +918,19 @@ func PartitionRegions() []string {
 }
 
 func PartitionDNSSuffix() string {
-	return names.DNSSuffixForPartition(Partition())
+	return names.PartitionForRegion(Region()).DNSSuffix()
 }
 
 func PartitionReverseDNSPrefix() string {
-	return names.ReverseDNS(PartitionDNSSuffix())
+	return conns.ReverseDNS(PartitionDNSSuffix())
 }
 
 func alternateRegionPartition() string {
-	return names.PartitionForRegion(AlternateRegion())
+	return names.PartitionForRegion(AlternateRegion()).ID()
 }
 
 func thirdRegionPartition() string {
-	return names.PartitionForRegion(ThirdRegion())
+	return names.PartitionForRegion(ThirdRegion()).ID()
 }
 
 func PreCheckAlternateAccount(t *testing.T) {
@@ -960,7 +979,7 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 	}
 
 	if regions >= 3 {
-		if thirdRegionPartition() == names.USGovCloudPartitionID || Partition() == names.USGovCloudPartitionID {
+		if thirdRegionPartition() == endpoints.AwsUsGovPartitionID || Partition() == endpoints.AwsUsGovPartitionID {
 			t.Skipf("wanted %d regions, partition (%s) only has 2 regions", regions, Partition())
 		}
 
@@ -1341,9 +1360,9 @@ func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	switch Partition() {
-	case names.StandardPartitionID:
+	case endpoints.AwsPartitionID:
 		PreCheckRegion(t, names.USEast1RegionID)
-	case names.ChinaPartitionID:
+	case endpoints.AwsCnPartitionID:
 		PreCheckRegion(t, names.CNNorthwest1RegionID)
 	}
 
@@ -1501,6 +1520,16 @@ provider "aws" {
   }
 }
 `, key1)
+}
+
+func ConfigWithEchoProvider(ephemeralResourceData string) string {
+	//lintignore:AT004
+	return fmt.Sprintf(`
+provider "echo" {
+  data = %[1]s
+}
+resource "echo" "test" {}
+`, ephemeralResourceData)
 }
 
 // ConfigRegionalProvider creates a new provider configuration with a region.
@@ -1786,31 +1815,31 @@ func PreCheckSkipError(err error) bool {
 	// GovCloud has endpoints that respond with (no message provided after the error code):
 	// AccessDeniedException:
 	// Ignore these API endpoints that exist but are not officially enabled
-	if tfawserr_sdkv1.ErrCodeEquals(err, "AccessDeniedException") || tfawserr_sdkv2.ErrCodeEquals(err, "AccessDeniedException") {
+	if tfawserr.ErrCodeEquals(err, "AccessDeniedException") {
 		return true
 	}
 	// Ignore missing API endpoints
-	if tfawserr_sdkv1.ErrMessageContains(err, "RequestError", "send request failed") || tfawserr_sdkv2.ErrMessageContains(err, "RequestError", "send request failed") {
+	if tfawserr.ErrMessageContains(err, "RequestError", "send request failed") {
 		return true
 	}
 	// Ignore unsupported API calls
-	if tfawserr_sdkv1.ErrCodeEquals(err, "UnknownOperationException") || tfawserr_sdkv2.ErrCodeEquals(err, "UnknownOperationException") {
+	if tfawserr.ErrCodeEquals(err, "UnknownOperationException") {
 		return true
 	}
-	if tfawserr_sdkv1.ErrCodeEquals(err, "UnsupportedOperation") || tfawserr_sdkv2.ErrCodeEquals(err, "UnsupportedOperation") {
+	if tfawserr.ErrCodeEquals(err, "UnsupportedOperation") {
 		return true
 	}
-	if tfawserr_sdkv1.ErrMessageContains(err, "InvalidInputException", "Unknown operation") || tfawserr_sdkv2.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
+	if tfawserr.ErrMessageContains(err, "InvalidInputException", "Unknown operation") {
 		return true
 	}
-	if tfawserr_sdkv1.ErrMessageContains(err, "InvalidAction", "is not valid") || tfawserr_sdkv2.ErrMessageContains(err, "InvalidAction", "is not valid") {
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not valid") {
 		return true
 	}
-	if tfawserr_sdkv1.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") || tfawserr_sdkv2.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
+	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
 		return true
 	}
 	// ignore when not authorized to call API from account
-	if tfawserr_sdkv1.ErrCodeEquals(err, "ForbiddenException") || tfawserr_sdkv2.ErrCodeEquals(err, "ForbiddenException") {
+	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
 		return true
 	}
 	// Ignore missing API endpoints
@@ -2203,7 +2232,7 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
 	t.Helper()
 
-	if Partition() != names.StandardPartitionID {
+	if Partition() != endpoints.AwsPartitionID {
 		t.Skipf("skipping test; Endpoint Configuration type EDGE is not supported in this partition (%s)", Partition())
 	}
 }

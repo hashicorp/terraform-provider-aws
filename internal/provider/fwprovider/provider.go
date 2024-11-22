@@ -10,6 +10,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/function"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
@@ -21,12 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 var _ provider.Provider = &fwprovider{}
 var _ provider.ProviderWithFunctions = &fwprovider{}
+var _ provider.ProviderWithEphemeralResources = &fwprovider{}
 
 // New returns a new, initialized Terraform Plugin Framework-style provider instance.
 // The provider instance is fully configured once the `Configure` method has been called.
@@ -301,6 +304,7 @@ func (p *fwprovider) Configure(ctx context.Context, request provider.ConfigureRe
 	v := p.Primary.Meta()
 	response.DataSourceData = v
 	response.ResourceData = v
+	response.EphemeralResourceData = v
 }
 
 // DataSources returns a slice of functions to instantiate each DataSource
@@ -337,6 +341,7 @@ func (p *fwprovider) DataSources(ctx context.Context) []func() datasource.DataSo
 				if meta != nil {
 					ctx = tftags.NewContext(ctx, meta.DefaultTagsConfig(ctx), meta.IgnoreTagsConfig(ctx))
 					ctx = meta.RegisterLogger(ctx)
+					ctx = flex.RegisterLogger(ctx)
 				}
 
 				return ctx
@@ -455,6 +460,58 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 	}
 
 	return resources
+}
+
+// EphemeralResources returns a slice of functions to instantiate each Ephemeral Resource
+// implementation.
+//
+// The resource type name is determined by the Ephemeral Resource implementing
+// the Metadata method. All resources must have unique names.
+func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.EphemeralResource {
+	var errs []error
+	var ephemeralResources []func() ephemeral.EphemeralResource
+
+	for n, sp := range p.Primary.Meta().(*conns.AWSClient).ServicePackages {
+		if data, ok := sp.(conns.ServicePackageWithEphemeralResources); ok {
+			servicePackageName := data.ServicePackageName()
+
+			for _, v := range data.EphemeralResources(ctx) {
+				inner, err := v.Factory(ctx)
+
+				if err != nil {
+					tflog.Warn(ctx, "creating ephemeral resource", map[string]interface{}{
+						"service_package_name": n,
+						"error":                err.Error(),
+					})
+
+					continue
+				}
+
+				// bootstrapContext is run on all wrapped methods before any interceptors.
+				bootstrapContext := func(ctx context.Context, meta *conns.AWSClient) context.Context {
+					ctx = conns.NewEphemeralResourceContext(ctx, servicePackageName, v.Name)
+					if meta != nil {
+						ctx = meta.RegisterLogger(ctx)
+						ctx = flex.RegisterLogger(ctx)
+						ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
+					}
+					return ctx
+				}
+
+				ephemeralResources = append(ephemeralResources, func() ephemeral.EphemeralResource {
+					return newWrappedEphemeralResource(bootstrapContext, inner, nil)
+				})
+			}
+		}
+	}
+
+	if err := errors.Join(errs...); err != nil {
+		tflog.Warn(ctx, "registering ephemeral resources", map[string]interface{}{
+			"error": err.Error(),
+		})
+	}
+
+	return ephemeralResources
 }
 
 // Functions returns a slice of functions to instantiate each Function

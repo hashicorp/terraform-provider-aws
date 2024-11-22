@@ -7,10 +7,10 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -193,7 +193,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Authorizer (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, authorizerARN(meta.(*conns.AWSClient), apiID, d.Id()))
+	d.Set(names.AttrARN, authorizerARN(ctx, meta.(*conns.AWSClient), apiID, d.Id()))
 	d.Set("authorizer_credentials", authorizer.AuthorizerCredentials)
 	if authorizer.AuthorizerResultTtlInSeconds != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)
@@ -255,7 +255,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/authorizerResultTtlInSeconds"),
-			Value: aws.String(fmt.Sprintf("%d", d.Get("authorizer_result_ttl_in_seconds").(int))),
+			Value: aws.String(strconv.Itoa(d.Get("authorizer_result_ttl_in_seconds").(int))),
 		})
 	}
 	if d.HasChange("identity_validation_expression") {
@@ -379,11 +379,6 @@ func findAuthorizerByTwoPartKey(ctx context.Context, conn *apigateway.Client, au
 	return output, nil
 }
 
-func authorizerARN(c *conns.AWSClient, apiID, authorizerID string) string {
-	return arn.ARN{
-		Partition: c.Partition,
-		Service:   "apigateway",
-		Region:    c.Region,
-		Resource:  fmt.Sprintf("/restapis/%s/authorizers/%s", apiID, authorizerID),
-	}.String()
+func authorizerARN(ctx context.Context, c *conns.AWSClient, apiID, authorizerID string) string {
+	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/restapis/%s/authorizers/%s", apiID, authorizerID))
 }

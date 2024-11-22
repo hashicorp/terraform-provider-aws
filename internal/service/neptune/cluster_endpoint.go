@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/neptune/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -105,7 +106,7 @@ func resourceClusterEndpointCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Tags are currently only supported in AWS Commercial.
-	if meta.(*conns.AWSClient).Partition != names.StandardPartitionID {
+	if meta.(*conns.AWSClient).Partition(ctx) != endpoints.AwsPartitionID {
 		input.Tags = nil
 	}
 

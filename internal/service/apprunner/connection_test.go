@@ -39,7 +39,7 @@ func TestAccAppRunnerConnection_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "connection_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", string(types.ProviderTypeGithub)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.ConnectionStatusPendingHandshake)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{

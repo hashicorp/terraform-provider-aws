@@ -63,7 +63,7 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	conn := r.Meta().SimpleDBConn(ctx)
+	conn := simpleDBConn(ctx, r.Meta())
 
 	name := data.Name.ValueString()
 	input := &simpledb.CreateDomainInput{
@@ -90,7 +90,7 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 		return
 	}
 
-	conn := r.Meta().SimpleDBConn(ctx)
+	conn := simpleDBConn(ctx, r.Meta())
 
 	_, err := findDomainByName(ctx, conn, data.ID.ValueString())
 
@@ -119,7 +119,7 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 		return
 	}
 
-	conn := r.Meta().SimpleDBConn(ctx)
+	conn := simpleDBConn(ctx, r.Meta())
 
 	tflog.Debug(ctx, "deleting SimpleDB Domain", map[string]interface{}{
 		names.AttrID: data.ID.ValueString(),

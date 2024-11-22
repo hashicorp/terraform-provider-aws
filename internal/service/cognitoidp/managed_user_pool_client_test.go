@@ -50,14 +50,14 @@ func TestAccCognitoIDPManagedUserPoolClient_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
 					resource.TestMatchResourceAttr(resourceName, names.AttrName, regexache.MustCompile(fmt.Sprintf(`^AmazonOpenSearchService-%s`, rName))),
-					resource.TestCheckResourceAttr(resourceName, "access_token_validity", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_oauth_flows_user_pool_client", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "3"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrClientSecret, regexache.MustCompile(`\w+`)),
 					resource.TestCheckResourceAttr(resourceName, "default_redirect_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_propagate_additional_user_context_data", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_token_revocation", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "id_token_validity", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "prevent_user_existence_errors", ""),
 					resource.TestCheckResourceAttr(resourceName, "refresh_token_validity", "30"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUserPoolID, "aws_cognito_user_pool.test", names.AttrID),
@@ -214,7 +214,7 @@ func TestAccCognitoIDPManagedUserPoolClient_accessTokenValidity(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_accessTokenValidity(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "access_token_validity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "access_token_validity", "1"),
 				),
 			},
 			{
@@ -288,7 +288,7 @@ func TestAccCognitoIDPManagedUserPoolClient_idTokenValidity(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_idTokenValidity(rName, 1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "id_token_validity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "1"),
 				),
 			},
 			{
@@ -593,7 +593,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnitsWTokenValidity(t *
 				Config: testAccManagedUserPoolClientConfig_tokenValidityUnitsTokenValidity(rName, "days"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "id_token_validity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{
@@ -618,7 +618,7 @@ func TestAccCognitoIDPManagedUserPoolClient_tokenValidityUnitsWTokenValidity(t *
 				Config: testAccManagedUserPoolClientConfig_tokenValidityUnitsTokenValidity(rName, "hours"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "id_token_validity", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "id_token_validity", "1"),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("token_validity_units"), knownvalue.ListExact([]knownvalue.Check{
@@ -979,7 +979,7 @@ func TestAccCognitoIDPManagedUserPoolClient_authSessionValidity(t *testing.T) {
 				Config: testAccManagedUserPoolClientConfig_authSessionValidity(rName, 10),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolClientExists(ctx, resourceName, &client),
-					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, "auth_session_validity", "10"),
 				),
 			},
 			{

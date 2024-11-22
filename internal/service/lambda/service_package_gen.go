@@ -5,14 +5,23 @@ package lambda
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type servicePackage struct{}
+
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
+	return []*types.ServicePackageEphemeralResource{
+		{
+			Factory: newEphemeralInvocation,
+			Name:    "Invocation",
+		},
+	}
+}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{}
@@ -145,11 +154,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*lambda_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*lambda.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return lambda_sdkv2.NewFromConfig(cfg,
-		lambda_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return lambda.NewFromConfig(cfg,
+		lambda.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

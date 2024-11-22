@@ -5,8 +5,8 @@ package networkmonitor
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	networkmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/networkmonitor"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/networkmonitor"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -50,11 +50,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*networkmonitor_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*networkmonitor.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return networkmonitor_sdkv2.NewFromConfig(cfg,
-		networkmonitor_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return networkmonitor.NewFromConfig(cfg,
+		networkmonitor.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

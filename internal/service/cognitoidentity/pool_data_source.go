@@ -112,7 +112,7 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.SetId(aws.ToString(ip.IdentityPoolId))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "cognito-identity",
 		AccountID: meta.(*conns.AWSClient).AccountID,

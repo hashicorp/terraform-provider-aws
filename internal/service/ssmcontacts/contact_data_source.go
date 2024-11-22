@@ -16,6 +16,8 @@ import (
 )
 
 // @SDKDataSource("aws_ssmcontacts_contact")
+// @Tags(identifierAttribute="arn")
+// @Testing(serialize=true)
 func DataSourceContact() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceContactRead,
@@ -60,17 +62,6 @@ func dataSourceContactRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(aws.ToString(out.ContactArn))
 
 	if err := setContactResourceData(d, out); err != nil {
-		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionSetting, DSNameContact, d.Id(), err)
-	}
-
-	tags, err := listTags(ctx, conn, d.Id())
-	if err != nil {
-		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionReading, DSNameContact, d.Id(), err)
-	}
-
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return create.AppendDiagError(diags, names.SSMContacts, create.ErrActionSetting, DSNameContact, d.Id(), err)
 	}
 

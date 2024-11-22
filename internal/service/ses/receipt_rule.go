@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sort"
+	"slices"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -336,7 +336,7 @@ func resourceReceiptRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
@@ -764,7 +764,7 @@ func expandReceiptRule(d *schema.ResourceData) *awstypes.ReceiptRule {
 	for k := range actions {
 		keys = append(keys, k)
 	}
-	sort.Ints(keys)
+	slices.Sort(keys)
 
 	sortedActions := []awstypes.ReceiptAction{}
 	for _, k := range keys {

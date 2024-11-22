@@ -56,6 +56,7 @@ The following arguments are supported:
 * `protected_resource_arns` - (Optional) The ARNs for the protected resources.
 * `protected_resource_conditions` - (Optional) The conditions for the protected resource.
 * `restore_metadata_overrides` - (Optional) Override certain restore metadata keys. See the complete list of [restore testing inferred metadata](https://docs.aws.amazon.com/aws-backup/latest/devguide/restore-testing-inferred-metadata.html) .
+* `validation_window_hours` - (Optional) The amount of hours available to run a validation script on the data. Valid range is `1` to `168`.
 
 The `protected_resource_conditions` block supports the following arguments:
 

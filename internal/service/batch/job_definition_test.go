@@ -59,16 +59,16 @@ func TestAccBatchJobDefinition_basic(t *testing.T) {
 						"volumes": []
 						}`),
 					resource.TestCheckResourceAttr(resourceName, "ecs_properties", ""),
-					resource.TestCheckResourceAttr(resourceName, "eks_properties.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "scheduling_priority", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "timeout.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, "scheduling_priority", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
 				),
 			},
@@ -102,18 +102,18 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:1`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_prefix", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "platform_capabilities.*", "EC2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "retry_strategy.0.attempts", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "timeout.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.0.attempts", "3"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "timeout.0.attempt_duration_seconds", "120"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
-					resource.TestCheckResourceAttr(resourceName, "scheduling_priority", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "scheduling_priority", "2"),
 				),
 			},
 			{
@@ -122,7 +122,7 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:2`, rName))),
 					testAccCheckJobDefinitionPreviousRegistered(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
 				),
 			},
 			{
@@ -133,12 +133,12 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:3`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_prefix", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "timeout.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
 				),
 			},
@@ -158,18 +158,18 @@ func TestAccBatchJobDefinition_attributes(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_prefix", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "platform_capabilities.*", "EC2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "retry_strategy.0.attempts", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct4),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "timeout.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.0.attempts", "1"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "4"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "timeout.0.attempt_duration_seconds", "60"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
-					resource.TestCheckResourceAttr(resourceName, "scheduling_priority", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "scheduling_priority", "1"),
 				),
 			},
 		},
@@ -230,14 +230,14 @@ func TestAccBatchJobDefinition_PlatformCapabilities_ec2(t *testing.T) {
 						"volumes": []
 						}`),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "platform_capabilities.*", "EC2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "timeout.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
 				),
 			},
@@ -270,21 +270,21 @@ func TestAccBatchJobDefinition_PlatformCapabilitiesFargate_containerPropertiesDe
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
-					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "length(command)", acctest.Ct0),
+					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "length(command)", "0"),
 					acctest.CheckResourceAttrJMESPair(resourceName, "container_properties", "executionRoleArn", "aws_iam_role.ecs_task_execution_role", names.AttrARN),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "fargatePlatformConfiguration.platformVersion", "LATEST"),
-					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "length(resourceRequirements)", acctest.Ct2),
+					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "length(resourceRequirements)", "2"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "resourceRequirements[?type=='VCPU'].value | [0]", "0.25"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "resourceRequirements[?type=='MEMORY'].value | [0]", "512"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "platform_capabilities.*", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "timeout.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
 				),
 			},
@@ -320,18 +320,18 @@ func TestAccBatchJobDefinition_PlatformCapabilities_fargate(t *testing.T) {
 					acctest.CheckResourceAttrJMESPair(resourceName, "container_properties", "executionRoleArn", "aws_iam_role.ecs_task_execution_role", names.AttrARN),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "fargatePlatformConfiguration.platformVersion", "LATEST"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "networkConfiguration.assignPublicIp", "DISABLED"),
-					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "length(resourceRequirements)", acctest.Ct2),
+					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "length(resourceRequirements)", "2"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "resourceRequirements[?type=='VCPU'].value | [0]", "0.25"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "resourceRequirements[?type=='MEMORY'].value | [0]", "512"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "platform_capabilities.*", "FARGATE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "timeout.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
 				),
 			},
@@ -417,35 +417,35 @@ func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 				Config: testAccJobDefinitionConfig_containerPropertiesAdvanced(rName, "val3", 1, 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
 				),
 			},
 			{
 				Config: testAccJobDefinitionConfig_containerPropertiesAdvanced(rName, "val3", 1, 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
 				),
 			},
 			{
 				Config: testAccJobDefinitionConfig_containerPropertiesAdvanced(rName, "val3", 3, 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "revision", "3"),
 				),
 			},
 			{
 				Config: testAccJobDefinitionConfig_containerPropertiesAdvanced(rName, "val3", 3, 60),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "revision", "3"),
 				),
 			},
 			{
 				Config: testAccJobDefinitionConfig_containerPropertiesAdvanced(rName, "val3", 3, 120),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "revision", "4"),
 				),
 			},
 			{
@@ -485,7 +485,7 @@ func TestAccBatchJobDefinition_ContainerProperties_minorUpdate(t *testing.T) {
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:2`, rName))),
 					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
 				),
 			},
 			{
@@ -494,7 +494,7 @@ func TestAccBatchJobDefinition_ContainerProperties_minorUpdate(t *testing.T) {
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:3`, rName))),
 					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "revision", "3"),
 				),
 			},
 		},
@@ -531,13 +531,13 @@ func TestAccBatchJobDefinition_propagateTags(t *testing.T) {
 						"volumes": []
 						}`),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "timeout.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
 				),
 			},
@@ -564,7 +564,7 @@ func TestAccBatchJobDefinition_ContainerProperties_EmptyField(t *testing.T) {
 				Config: testAccJobDefinitionConfig_containerProperties_emptyField(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "length(environment)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "length(environment)", "1"),
 					acctest.CheckResourceAttrJMES(resourceName, "container_properties", "environment[?name=='VALUE'].value | [0]", names.AttrValue),
 				),
 			},
@@ -636,14 +636,14 @@ func TestAccBatchJobDefinition_NodeProperties_basic(t *testing.T) {
 						"numNodes": 2
 					}`),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "platform_capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPropagateTags, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "timeout.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "retry_strategy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "revision", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "multinode"),
 				),
 			},
@@ -768,13 +768,110 @@ func TestAccBatchJobDefinition_NodeProperties_advanced(t *testing.T) {
 						"numNodes":4
 					}`),
 					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "revision", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
 				),
 			},
 		},
 	})
 }
 
+func TestAccBatchJobDefinition_NodeProperties_withEKS(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd awstypes.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_nodePropertiesEKS(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "node_properties", `{
+						"mainNode": 0,
+						"nodeRangeProperties": [
+							{
+							"eksProperties": {
+								"podProperties": {
+								"containers": [
+									{
+									"args": [],
+									"command": ["sleep", "60"],
+									"env": [],
+									"image": "public.ecr.aws/amazonlinux/amazonlinux = 2",
+									"name": "test-eks-container-1",
+									"resources": { "requests": { "memory": "1024Mi", "cpu": "1" } },
+									"securityContext": {
+										"privileged": true,
+										"readOnlyRootFilesystem": true,
+										"runAsGroup": 3000,
+										"runAsNonRoot": true,
+										"runAsUser": 1000
+									},
+									"volumeMounts": []
+									}
+								],
+								"imagePullSecrets": [],
+								"initContainers": [],
+								"volumes": []
+								}
+							},
+							"instanceTypes": [],
+							"targetNodes": "0:"
+							}
+						],
+						"numNodes": 1
+						}`),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+					"node_properties",
+				},
+			},
+		},
+	})
+}
+
+func TestAccBatchJobDefinition_NodeProperties_withECS(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd awstypes.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_nodePropertiesECS(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
+			},
+		},
+	})
+}
 func TestAccBatchJobDefinition_EKSProperties_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jd awstypes.JobDefinition
@@ -791,8 +888,10 @@ func TestAccBatchJobDefinition_EKSProperties_basic(t *testing.T) {
 				Config: testAccJobDefinitionConfig_EKSProperties_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.init_containers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.0.image_pull_policy", ""),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.init_containers.0.image_pull_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
 				),
@@ -831,7 +930,7 @@ func TestAccBatchJobDefinition_EKSProperties_update(t *testing.T) {
 				Config: testAccJobDefinitionConfig_EKSProperties_advancedUpdate(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.0.image_pull_policy", "Always"),
 					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.volumes.0.name", "tmp"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -866,17 +965,48 @@ func TestAccBatchJobDefinition_EKSProperties_imagePullSecrets(t *testing.T) {
 				Config: testAccJobDefinitionConfig_EKSProperties_imagePullSecrets(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.0.image_pull_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "container"),
-					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.image_pull_secret.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.image_pull_secret.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "eks_properties.*.pod_properties.*.image_pull_secret.*", map[string]string{
 						names.AttrName: "chihiro",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "eks_properties.*.pod_properties.*.image_pull_secret.*", map[string]string{
 						names.AttrName: "haku",
 					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
+			},
+		},
+	})
+}
+
+func TestAccBatchJobDefinition_EKSProperties_multiContainers(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd awstypes.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_EKSProperties_multiContainer(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					resource.TestCheckResourceAttr(resourceName, "eks_properties.0.pod_properties.0.containers.#", "2"),
 				),
 			},
 			{
@@ -943,7 +1073,7 @@ func TestAccBatchJobDefinition_schedulingPriority(t *testing.T) {
 				Config: testAccJobDefinitionConfig_schedulingPriority(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "scheduling_priority", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "scheduling_priority", "2"),
 				),
 			},
 			{
@@ -999,9 +1129,9 @@ func TestAccBatchJobDefinition_ECSProperties_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					resource.TestCheckResourceAttrSet(resourceName, "ecs_properties"),
-					acctest.CheckResourceAttrJMES(resourceName, "ecs_properties", "length(taskProperties)", acctest.Ct1),
-					acctest.CheckResourceAttrJMES(resourceName, "ecs_properties", "length(taskProperties[0].containers)", acctest.Ct2),
-					acctest.CheckResourceAttrJMES(resourceName, "ecs_properties", "length(taskProperties[0].containers[0].environment)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, "ecs_properties", "length(taskProperties)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "ecs_properties", "length(taskProperties[0].containers)", "2"),
+					acctest.CheckResourceAttrJMES(resourceName, "ecs_properties", "length(taskProperties[0].containers[0].environment)", "1"),
 				),
 			},
 			{
@@ -1009,9 +1139,9 @@ func TestAccBatchJobDefinition_ECSProperties_update(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					resource.TestCheckResourceAttrSet(resourceName, "ecs_properties"),
-					acctest.CheckResourceAttrJMES(resourceName, "ecs_properties", "length(taskProperties)", acctest.Ct1),
-					acctest.CheckResourceAttrJMES(resourceName, "ecs_properties", "length(taskProperties[0].containers)", acctest.Ct2),
-					acctest.CheckResourceAttrJMES(resourceName, "ecs_properties", "length(taskProperties[0].containers[0].environment)", acctest.Ct2),
+					acctest.CheckResourceAttrJMES(resourceName, "ecs_properties", "length(taskProperties)", "1"),
+					acctest.CheckResourceAttrJMES(resourceName, "ecs_properties", "length(taskProperties[0].containers)", "2"),
+					acctest.CheckResourceAttrJMES(resourceName, "ecs_properties", "length(taskProperties[0].containers[0].environment)", "2"),
 				),
 			},
 		},
@@ -1331,6 +1461,104 @@ resource "aws_batch_job_definition" "test" {
     ]
 }
 CONTAINER_PROPERTIES
+}
+`, rName)
+}
+
+func testAccJobDefinitionConfig_nodePropertiesEKS(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "multinode"
+  retry_strategy {
+    attempts = 1
+  }
+
+  node_properties = jsonencode({
+    mainNode = 0
+    numNodes = 1
+    nodeRangeProperties = [{
+      targetNodes = "0:"
+      eksProperties = {
+        podProperties = {
+          containers = [
+            {
+              name  = "test-eks-container-1"
+              image = "public.ecr.aws/amazonlinux/amazonlinux = 2"
+              command = [
+                "sleep",
+                "60"
+              ]
+              resources = {
+                requests = {
+                  memory = "1024Mi"
+                  cpu    = "1"
+                }
+              }
+              securityContext = {
+                "runAsUser"              = 1000
+                "runAsGroup"             = 3000
+                "privileged"             = true
+                "readOnlyRootFilesystem" = true
+                "runAsNonRoot"           = true
+              }
+            }
+          ]
+        }
+      }
+    }]
+  })
+}
+  `, rName)
+}
+
+func testAccJobDefinitionConfig_nodePropertiesECS(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "multinode"
+  retry_strategy {
+    attempts = 1
+  }
+
+  node_properties = jsonencode({
+    mainNode = 0
+    numNodes = 1
+    nodeRangeProperties = [{
+      targetNodes = "0:"
+      ecsProperties = {
+        taskProperties = [{
+          containers = [{
+            image      = "public.ecr.aws/amazonlinux/amazonlinux:1"
+            command    = ["sleep", "60"]
+            name       = "container_a"
+            privileged = false
+            resourceRequirements = [{
+              value = "1"
+              type  = "VCPU"
+              },
+              {
+                value = "2048"
+                type  = "MEMORY"
+            }]
+            },
+            {
+              image   = "public.ecr.aws/amazonlinux/amazonlinux:1"
+              command = ["sleep", "360"]
+              name    = "container_b"
+              resourceRequirements = [{
+                value = "1"
+                type  = "VCPU"
+                },
+                {
+                  value = "2048"
+                  type  = "MEMORY"
+              }]
+          }]
+        }]
+      }
+    }]
+  })
 }
 `, rName)
 }
@@ -1730,7 +1958,22 @@ resource "aws_batch_job_definition" "test" {
   type = "container"
   eks_properties {
     pod_properties {
-      host_network = true
+      host_network            = true
+      share_process_namespace = false
+      init_containers {
+        name  = "init0"
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "1024Mi"
+          }
+        }
+      }
       containers {
         image = "public.ecr.aws/amazonlinux/amazonlinux:1"
         command = [
@@ -1765,6 +2008,60 @@ resource "aws_batch_job_definition" "test" {
     pod_properties {
       host_network = true
       containers {
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "1024Mi"
+          }
+        }
+      }
+      image_pull_secret {
+        name = "chihiro"
+      }
+      image_pull_secret {
+        name = "haku"
+      }
+      metadata {
+        labels = {
+          environment = "test"
+          name        = %[1]q
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccJobDefinitionConfig_EKSProperties_multiContainer(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  name = %[1]q
+  type = "container"
+  eks_properties {
+    pod_properties {
+      host_network = true
+      containers {
+        name  = "container1"
+        image = "public.ecr.aws/amazonlinux/amazonlinux:1"
+        command = [
+          "sleep",
+          "60"
+        ]
+        resources {
+          limits = {
+            cpu    = "1"
+            memory = "1024Mi"
+          }
+        }
+      }
+      containers {
+        name  = "container2"
         image = "public.ecr.aws/amazonlinux/amazonlinux:1"
         command = [
           "sleep",

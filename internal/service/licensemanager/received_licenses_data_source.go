@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
-	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,7 +43,7 @@ func dataSourceReceivedLicensesRead(ctx context.Context, d *schema.ResourceData,
 	input := &licensemanager.ListReceivedLicensesInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).LicenseManagerFilters()
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).LicenseManagerFilters()
 	}
 
 	licenses, err := findReceivedLicenses(ctx, conn, input)

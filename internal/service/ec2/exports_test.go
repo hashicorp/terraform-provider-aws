@@ -70,6 +70,7 @@ var (
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
 	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
+	ResourceSecurityGroupVPCAssociation                   = newResourceSecurityGroupVPCAssociation
 	ResourceSnapshotCreateVolumePermission                = resourceSnapshotCreateVolumePermission
 	ResourceSpotDataFeedSubscription                      = resourceSpotDataFeedSubscription
 	ResourceSpotFleetRequest                              = resourceSpotFleetRequest
@@ -123,6 +124,7 @@ var (
 	ResourceVerifiedAccessTrustProvider                   = resourceVerifiedAccessTrustProvider
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 
+	CheckMostRecentAndMissingFilters                           = checkMostRecentAndMissingFilters
 	CustomFiltersSchema                                        = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                   = customerGatewayConfigurationToTunnelInfo
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

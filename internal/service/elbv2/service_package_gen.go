@@ -5,8 +5,8 @@ package elbv2
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -15,7 +15,15 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceListenerRule,
+			Name:    "Listener Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -118,7 +126,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_alb_listener_rule",
 			Name:     "Listener Rule",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -160,7 +168,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_lb_listener_rule",
 			Name:     "Listener Rule",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
+				IdentifierAttribute: names.AttrARN,
 			},
 		},
 		{
@@ -197,11 +205,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*elasticloadbalancingv2_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*elasticloadbalancingv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return elasticloadbalancingv2_sdkv2.NewFromConfig(cfg,
-		elasticloadbalancingv2_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return elasticloadbalancingv2.NewFromConfig(cfg,
+		elasticloadbalancingv2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

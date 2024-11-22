@@ -19,6 +19,7 @@ import (
 
 func testAccAPIGatewayStage_tagsSerial(t *testing.T) {
 	t.Helper()
+	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
 		acctest.CtBasic:                             testAccAPIGatewayStage_tags,
@@ -52,7 +53,7 @@ func testAccAPIGatewayStage_tags(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckStageDestroy(ctx),
@@ -238,7 +239,7 @@ func testAccAPIGatewayStage_tags_null(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckStageDestroy(ctx),
@@ -300,7 +301,7 @@ func testAccAPIGatewayStage_tags_EmptyMap(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckStageDestroy(ctx),
@@ -358,7 +359,7 @@ func testAccAPIGatewayStage_tags_AddOnUpdate(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckStageDestroy(ctx),
@@ -440,7 +441,7 @@ func testAccAPIGatewayStage_tags_EmptyTag_OnCreate(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckStageDestroy(ctx),
@@ -531,7 +532,7 @@ func testAccAPIGatewayStage_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckStageDestroy(ctx),
@@ -670,7 +671,7 @@ func testAccAPIGatewayStage_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy:             testAccCheckStageDestroy(ctx),
@@ -760,7 +761,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_providerOnly(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -945,7 +946,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -1108,7 +1109,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_overlapping(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -1287,7 +1288,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_updateToProviderOnly(t *testing.T) 
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -1378,7 +1379,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_updateToResourceOnly(t *testing.T) 
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -1468,7 +1469,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -1534,7 +1535,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) 
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -1592,7 +1593,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_nullOverlappingResourceTag(t *testi
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -1655,7 +1656,7 @@ func testAccAPIGatewayStage_tags_DefaultTags_nullNonOverlappingResourceTag(t *te
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -1718,7 +1719,7 @@ func testAccAPIGatewayStage_tags_ComputedTag_OnCreate(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -1774,7 +1775,7 @@ func testAccAPIGatewayStage_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -1872,7 +1873,7 @@ func testAccAPIGatewayStage_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -1960,7 +1961,7 @@ func testAccAPIGatewayStage_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),
@@ -2122,7 +2123,7 @@ func testAccAPIGatewayStage_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	resourceName := "aws_api_gateway_stage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		CheckDestroy: testAccCheckStageDestroy(ctx),

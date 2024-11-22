@@ -5,7 +5,7 @@ package fsx
 
 import (
 	"context"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -92,18 +92,14 @@ func dataSourceOpenZFSSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
-	if len(snapshots) > 1 {
-		if !d.Get(names.AttrMostRecent).(bool) {
-			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
-				"specific search criteria, or set `most_recent` attribute to true.")
-		}
-
-		sort.Slice(snapshots, func(i, j int) bool {
-			return aws.ToTime(snapshots[i].CreationTime).Unix() > aws.ToTime(snapshots[j].CreationTime).Unix()
-		})
+	if len(snapshots) > 1 && !d.Get(names.AttrMostRecent).(bool) {
+		return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
+			"specific search criteria, or set `most_recent` attribute to true.")
 	}
 
-	snapshot := snapshots[0]
+	snapshot := slices.MaxFunc(snapshots, func(a, b awstypes.Snapshot) int {
+		return aws.ToTime(a.CreationTime).Compare(aws.ToTime(b.CreationTime))
+	})
 	d.SetId(aws.ToString(snapshot.SnapshotId))
 	arn := aws.ToString(snapshot.ResourceARN)
 	d.Set(names.AttrARN, arn)

@@ -313,6 +313,7 @@ provider "aws" {
 |STS (Security Token)|`sts`|`AWS_ENDPOINT_URL_STS`|`sts`|
 |SWF (Simple Workflow)|`swf`|`AWS_ENDPOINT_URL_SWF`|`swf`|
 |CloudWatch Synthetics|`synthetics`|`AWS_ENDPOINT_URL_SYNTHETICS`|`synthetics`|
+|Tax Settings|`taxsettings`|`AWS_ENDPOINT_URL_TAXSETTINGS`|`taxsettings`|
 |Timestream for InfluxDB|`timestreaminfluxdb`|`AWS_ENDPOINT_URL_TIMESTREAM_INFLUXDB`|`timestream_influxdb`|
 |Timestream Write|`timestreamwrite`|`AWS_ENDPOINT_URL_TIMESTREAM_WRITE`|`timestream_write`|
 |Transcribe|`transcribe`(or `transcribeservice`)|`AWS_ENDPOINT_URL_TRANSCRIBE`|`transcribe`|

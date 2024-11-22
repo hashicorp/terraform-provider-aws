@@ -207,7 +207,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	globalTableARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    mainRegion,
 		Resource:  fmt.Sprintf("table/%s", tableName),
 		Service:   "dynamodb",

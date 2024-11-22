@@ -61,7 +61,7 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(vpcLinkID)
-	d.Set(names.AttrARN, vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrARN, vpcLinkARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set(names.AttrName, output.Name)
 	d.Set(names.AttrSecurityGroupIDs, output.SecurityGroupIds)
 	d.Set(names.AttrSubnetIDs, output.SubnetIds)

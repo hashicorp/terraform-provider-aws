@@ -1474,7 +1474,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("app_security_group_management"); ok {
+	if v, ok := d.GetOk("app_security_group_management"); ok && rstudioDomainEnabled(d.Get("domain_settings").([]interface{})) {
 		input.AppSecurityGroupManagement = awstypes.AppSecurityGroupManagement(v.(string))
 	}
 
@@ -1575,7 +1575,7 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.AppNetworkAccessType = awstypes.AppNetworkAccessType(v.(string))
 		}
 
-		if v, ok := d.GetOk("app_security_group_management"); ok {
+		if v, ok := d.GetOk("app_security_group_management"); ok && rstudioDomainEnabled(d.Get("domain_settings").([]interface{})) {
 			input.AppSecurityGroupManagement = awstypes.AppSecurityGroupManagement(v.(string))
 		}
 
@@ -1761,6 +1761,32 @@ func expandDomainSettingsUpdate(l []interface{}) *awstypes.DomainSettingsForUpda
 	}
 
 	return config
+}
+
+// rstudioDomainEnabled takes domain_settings and returns true if rstudio is enabled
+func rstudioDomainEnabled(domainSettings []interface{}) bool {
+	if len(domainSettings) == 0 || domainSettings[0] == nil {
+		return false
+	}
+
+	m := domainSettings[0].(map[string]interface{})
+
+	v, ok := m["r_studio_server_pro_domain_settings"].([]interface{})
+	if !ok || len(v) < 1 {
+		return false
+	}
+
+	rsspds, ok := v[0].(map[string]interface{})
+	if !ok || len(rsspds) == 0 {
+		return false
+	}
+
+	domainExecutionRoleArn, ok := rsspds["domain_execution_role_arn"].(string)
+	if !ok || domainExecutionRoleArn == "" {
+		return false
+	}
+
+	return true
 }
 
 func expandRStudioServerProDomainSettingsUpdate(l []interface{}) *awstypes.RStudioServerProDomainSettingsForUpdate {
