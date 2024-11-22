@@ -96,9 +96,9 @@ Both `egress` and `ingress` objects have the same arguments.
 * `self` - (Optional) Whether the security group itself will be added as a source to this egress rule.
 * `to_port` - (Required) End range port (or ICMP code if protocol is `icmp`).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the security group.
 * `description` - Description of the security group.
@@ -111,8 +111,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security Groups can be imported using the `security group id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Groups using the security group `id`. For example:
 
+```terraform
+import {
+  to = aws_default_security_group.default_sg
+  id = "sg-903004f8"
+}
 ```
-$ terraform import aws_default_security_group.default_sg sg-903004f8
+
+Using `terraform import`, import Security Groups using the security group `id`. For example:
+
+```console
+% terraform import aws_default_security_group.default_sg sg-903004f8
 ```

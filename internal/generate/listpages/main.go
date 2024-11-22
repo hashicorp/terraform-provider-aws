@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -13,16 +16,17 @@ import (
 	"html/template"
 	"log"
 	"os"
-	"path/filepath"
-	"sort"
+	"slices"
 	"strings"
 
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"golang.org/x/tools/go/packages"
 )
 
 const (
 	defaultFilename = "list_pages_gen.go"
+	sdkV1           = 1
+	sdkV2           = 2
 )
 
 var (
@@ -31,6 +35,7 @@ var (
 	outputPaginator = flag.String("OutputPaginator", "", "name of the output pagination token field")
 	paginator       = flag.String("Paginator", "NextToken", "name of the pagination token field")
 	export          = flag.Bool("Export", false, "whether to export the list functions")
+	v2Suffix        = flag.Bool("V2Suffix", false, "whether to append a V2 suffix to the list functions")
 )
 
 func usage() {
@@ -62,31 +67,29 @@ func main() {
 		filename = args[0]
 	}
 
-	wd, err := os.Getwd()
-
-	if err != nil {
-		log.Fatalf("unable to get working directory: %s", err)
-	}
-
-	servicePackage := filepath.Base(wd)
+	servicePackage := os.Getenv("GOPACKAGE")
 	log.SetPrefix(fmt.Sprintf("generate/listpage: %s: ", servicePackage))
 
-	awsService, err := names.AWSGoV1Package(servicePackage)
-
+	service, err := data.LookupService(servicePackage)
 	if err != nil {
 		log.Fatalf("encountered: %s", err)
 	}
 
+	awsService := service.GoV2Package()
+
 	functions := strings.Split(*listOps, ",")
-	sort.Strings(functions)
+	slices.Sort(functions)
+
+	tmpl := template.Must(template.New("function").Parse(functionTemplate))
 
 	g := Generator{
-		tmpl:            template.Must(template.New("function").Parse(functionTemplate)),
+		tmpl:            tmpl,
 		inputPaginator:  *inputPaginator,
 		outputPaginator: *outputPaginator,
 	}
 
-	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go/service/%s", awsService)
+	sourcePackage := fmt.Sprintf("github.com/aws/aws-sdk-go-v2/service/%[1]s", awsService)
+
 	g.parsePackage(sourcePackage)
 
 	g.printHeader(HeaderInfo{
@@ -95,14 +98,8 @@ func main() {
 		SourcePackage:      sourcePackage,
 	})
 
-	awsUpper, err := names.AWSGoV1ClientTypeName(servicePackage)
-
-	if err != nil {
-		log.Fatalf("encountered: %s", err)
-	}
-
 	for _, functionName := range functions {
-		g.generateFunction(functionName, awsUpper, *export)
+		g.generateFunction(functionName, awsService, *export)
 	}
 
 	src := g.format()
@@ -142,6 +139,7 @@ type Package struct {
 
 func (g *Generator) printHeader(headerInfo HeaderInfo) {
 	header := template.Must(template.New("header").Parse(headerTemplate))
+
 	err := header.Execute(&g.buf, headerInfo)
 	if err != nil {
 		log.Fatalf("error writing header: %s", err)
@@ -178,7 +176,7 @@ func (g *Generator) addPackage(pkg *packages.Package) {
 type FuncSpec struct {
 	Name            string
 	AWSName         string
-	RecvType        string
+	AWSService      string
 	ParamType       string
 	ResultType      string
 	InputPaginator  string
@@ -188,7 +186,6 @@ type FuncSpec struct {
 func (g *Generator) generateFunction(functionName, awsService string, export bool) {
 	var function *ast.FuncDecl
 
-	// TODO: check if a Pages() function has been defined
 	for _, file := range g.pkg.files {
 		if file.file != nil {
 			for _, decl := range file.file.Decls {
@@ -216,11 +213,11 @@ func (g *Generator) generateFunction(functionName, awsService string, export boo
 	}
 
 	funcSpec := FuncSpec{
-		Name:            fixUpFuncName(funcName, awsService),
+		Name:            fixSomeInitialisms(funcName),
 		AWSName:         function.Name.Name,
-		RecvType:        g.expandTypeField(function.Recv),
-		ParamType:       g.expandTypeField(function.Type.Params),  // Assumes there is a single input parameter
-		ResultType:      g.expandTypeField(function.Type.Results), // Assumes we can take the first return parameter
+		AWSService:      awsService,
+		ParamType:       g.expandTypeField(function.Type.Params, false), // Assumes there is a single input parameter
+		ResultType:      g.expandTypeField(function.Type.Results, true), // Assumes we can take the first return parameter
 		InputPaginator:  g.inputPaginator,
 		OutputPaginator: g.outputPaginator,
 	}
@@ -231,8 +228,13 @@ func (g *Generator) generateFunction(functionName, awsService string, export boo
 	}
 }
 
-func (g *Generator) expandTypeField(field *ast.FieldList) string {
+func (g *Generator) expandTypeField(field *ast.FieldList, result bool) string {
 	typeValue := field.List[0].Type
+
+	if !result {
+		typeValue = field.List[1].Type
+	}
+
 	if star, ok := typeValue.(*ast.StarExpr); ok {
 		return fmt.Sprintf("*%s", g.expandTypeExpr(star.X))
 	}
@@ -250,14 +252,10 @@ func (g *Generator) expandTypeExpr(expr ast.Expr) string {
 	return ""
 }
 
-func fixUpFuncName(funcName, service string) string {
-	return strings.ReplaceAll(fixSomeInitialisms(funcName), service, "")
-}
-
-//go:embed header.tmpl
+//go:embed v2/header.gtpl
 var headerTemplate string
 
-//go:embed function.tmpl
+//go:embed v2/function.gtpl
 var functionTemplate string
 
 func (g *Generator) format() []byte {

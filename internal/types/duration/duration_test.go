@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package duration
 
 import (
@@ -7,6 +10,8 @@ import (
 )
 
 func TestParse(t *testing.T) {
+	t.Parallel()
+
 	testcases := map[string]struct {
 		input       string
 		expected    Duration
@@ -70,8 +75,9 @@ func TestParse(t *testing.T) {
 	}
 
 	for name, tc := range testcases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			duration, err := Parse(tc.input)
 
 			if tc.expectedErr == nil && err != nil {
@@ -90,11 +96,60 @@ func TestParse(t *testing.T) {
 	}
 }
 
+func TestNewFromTimeDuration(t *testing.T) {
+	t.Parallel()
+
+	const (
+		day  = 24 * time.Hour
+		year = 365 * day
+	)
+
+	testcases := map[string]struct {
+		input    time.Duration
+		expected Duration
+	}{
+		// Single
+		"years only": {
+			input:    2 * year,
+			expected: Duration{years: 2},
+		},
+		"days only": {
+			input:    21 * day,
+			expected: Duration{days: 21},
+		},
+
+		// Multiple
+		"years days": {
+			input:    1*year + 15*day,
+			expected: Duration{years: 1, days: 15},
+		},
+
+		"zero": {
+			input:    0,
+			expected: Duration{},
+		},
+	}
+
+	for name, tc := range testcases {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			duration := NewFromTimeDuration(tc.input)
+
+			if !duration.equal(tc.expected) {
+				t.Errorf("expected %q, got %q", tc.expected, duration)
+			}
+		})
+	}
+}
+
 func TestSub(t *testing.T) {
+	t.Parallel()
+
 	now := time.Now()
 	tz, err := time.LoadLocation("America/Vancouver")
 	if err != nil {
-		t.Fatalf(err.Error())
+		t.Fatal(err)
 	}
 
 	testcases := map[string]struct {
@@ -140,8 +195,9 @@ func TestSub(t *testing.T) {
 	}
 
 	for name, tc := range testcases {
-		tc := tc
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			actual := Sub(tc.startTime, tc.duration)
 
 			if !actual.Equal(tc.expected) {

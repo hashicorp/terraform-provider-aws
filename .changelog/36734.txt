@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_cloudfrontkeyvaluestore_key: Serialize CloudFront KeyValueStore access
+```
+
+```release-note:bug
+resource/aws_cloudfront_key_value_store: Serialize CloudFront KeyValueStore access
+```

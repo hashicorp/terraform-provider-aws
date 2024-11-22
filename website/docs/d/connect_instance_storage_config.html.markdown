@@ -14,7 +14,7 @@ Provides details about a specific Amazon Connect Instance Storage Config.
 
 ```terraform
 data "aws_connect_instance_storage_config" "example" {
-  association_id = "1234567890123456789012345678901234567890123456789012345678901234"
+  association_id = "1234567891234567890122345678912345678901223456789123456789012234"
   instance_id    = "aaaaaaaa-bbbb-cccc-dddd-111111111111"
   resource_type  = "CONTACT_TRACE_RECORDS"
 }
@@ -22,15 +22,15 @@ data "aws_connect_instance_storage_config" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `association_id` - (Required) The existing association identifier that uniquely identifies the resource type and storage config for the given instance ID.
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance
-* `resource_type` - (Required) A valid resource type. Valid Values: `CHAT_TRANSCRIPTS` | `CALL_RECORDINGS` | `SCHEDULED_REPORTS` | `MEDIA_STREAMS` | `CONTACT_TRACE_RECORDS` | `AGENT_EVENTS` | `REAL_TIME_CONTACT_ANALYSIS_SEGMENTS`.
+* `resource_type` - (Required) A valid resource type. Valid Values: `AGENT_EVENTS` | `ATTACHMENTS` | `CALL_RECORDINGS` | `CHAT_TRANSCRIPTS` | `CONTACT_EVALUATIONS` | `CONTACT_TRACE_RECORDS` | `MEDIA_STREAMS` | `REAL_TIME_CONTACT_ANALYSIS_SEGMENTS` | `SCHEDULED_REPORTS` |  `SCREEN_RECORDINGS`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all of the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the hosting Amazon Connect Instance, `association_id`, and `resource_type` separated by a colon (`:`).
 * `storage_config` - Specifies the storage configuration options for the Connect Instance. [Documented below](#storage_config).

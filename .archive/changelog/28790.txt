@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_s3_bucket: Add error handling for `NotImplemented` errors when reading `lifecycle_rule` or `replication_configuration` into terraform state.
+```
+

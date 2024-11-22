@@ -1,29 +1,37 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssoadmin
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ssoadmin_instance_access_control_attributes")
 func ResourceAccessControlAttributes() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccessControlAttributesCreate,
-		Read:   resourceAccessControlAttributesRead,
-		Update: resourceAccessControlAttributesUpdate,
-		Delete: resourceAccessControlAttributesDelete,
+		CreateWithoutTimeout: resourceAccessControlAttributesCreate,
+		ReadWithoutTimeout:   resourceAccessControlAttributesRead,
+		UpdateWithoutTimeout: resourceAccessControlAttributesUpdate,
+		DeleteWithoutTimeout: resourceAccessControlAttributesDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -33,16 +41,16 @@ func ResourceAccessControlAttributes() *schema.Resource {
 				MinItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"source": {
+									names.AttrSource: {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
@@ -60,11 +68,11 @@ func ResourceAccessControlAttributes() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,95 +80,99 @@ func ResourceAccessControlAttributes() *schema.Resource {
 	}
 }
 
-func resourceAccessControlAttributesCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+func resourceAccessControlAttributesCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	instanceARN := d.Get("instance_arn").(string)
 	input := &ssoadmin.CreateInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(instanceARN),
-		InstanceAccessControlAttributeConfiguration: &ssoadmin.InstanceAccessControlAttributeConfiguration{
+		InstanceAccessControlAttributeConfiguration: &awstypes.InstanceAccessControlAttributeConfiguration{
 			AccessControlAttributes: expandAccessControlAttributes(d),
 		},
 	}
 
-	_, err := conn.CreateInstanceAccessControlAttributeConfiguration(input)
+	_, err := conn.CreateInstanceAccessControlAttributeConfiguration(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating SSO Instance Access Control Attributes (%s): %w", instanceARN, err)
+		return sdkdiag.AppendErrorf(diags, "creating SSO Instance Access Control Attributes (%s): %s", instanceARN, err)
 	}
 
 	d.SetId(instanceARN)
 
-	return resourceAccessControlAttributesRead(d, meta)
+	return append(diags, resourceAccessControlAttributesRead(ctx, d, meta)...)
 }
 
-func resourceAccessControlAttributesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+func resourceAccessControlAttributesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
-	output, err := FindInstanceAttributeControlAttributesByARN(conn, d.Id())
+	output, err := FindInstanceAttributeControlAttributesByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSO Instance Access Control Attributes %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading SSO Instance Access Control Attributes (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SSO Instance Access Control Attributes (%s): %s", d.Id(), err)
 	}
 
 	d.Set("instance_arn", d.Id())
 	if err := d.Set("attribute", flattenAccessControlAttributes(output.InstanceAccessControlAttributeConfiguration.AccessControlAttributes)); err != nil {
-		return fmt.Errorf("setting attribute: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting attribute: %s", err)
 	}
-	d.Set("status", output.Status)
-	d.Set("status_reason", output.StatusReason)
+	d.Set(names.AttrStatus, output.Status)
+	d.Set(names.AttrStatusReason, output.StatusReason)
 
-	return nil
+	return diags
 }
 
-func resourceAccessControlAttributesUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+func resourceAccessControlAttributesUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
 	input := &ssoadmin.UpdateInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(d.Id()),
-		InstanceAccessControlAttributeConfiguration: &ssoadmin.InstanceAccessControlAttributeConfiguration{
+		InstanceAccessControlAttributeConfiguration: &awstypes.InstanceAccessControlAttributeConfiguration{
 			AccessControlAttributes: expandAccessControlAttributes(d),
 		},
 	}
 
-	_, err := conn.UpdateInstanceAccessControlAttributeConfiguration(input)
+	_, err := conn.UpdateInstanceAccessControlAttributeConfiguration(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("updating SSO Instance Access Control Attributes (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating SSO Instance Access Control Attributes (%s): %s", d.Id(), err)
 	}
 
-	return resourceAccessControlAttributesRead(d, meta)
+	return append(diags, resourceAccessControlAttributesRead(ctx, d, meta)...)
 }
 
-func resourceAccessControlAttributesDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSOAdminConn()
+func resourceAccessControlAttributesDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSOAdminClient(ctx)
 
-	_, err := conn.DeleteInstanceAccessControlAttributeConfiguration(&ssoadmin.DeleteInstanceAccessControlAttributeConfigurationInput{
+	_, err := conn.DeleteInstanceAccessControlAttributeConfiguration(ctx, &ssoadmin.DeleteInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("deleting SSO Instance Access Control Attributes (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SSO Instance Access Control Attributes (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindInstanceAttributeControlAttributesByARN(conn *ssoadmin.SSOAdmin, arn string) (*ssoadmin.DescribeInstanceAccessControlAttributeConfigurationOutput, error) {
+func FindInstanceAttributeControlAttributesByARN(ctx context.Context, conn *ssoadmin.Client, arn string) (*ssoadmin.DescribeInstanceAccessControlAttributeConfigurationOutput, error) {
 	input := &ssoadmin.DescribeInstanceAccessControlAttributeConfigurationInput{
 		InstanceArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeInstanceAccessControlAttributeConfiguration(input)
+	output, err := conn.DescribeInstanceAccessControlAttributeConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ssoadmin.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -177,42 +189,44 @@ func FindInstanceAttributeControlAttributesByARN(conn *ssoadmin.SSOAdmin, arn st
 	return output, nil
 }
 
-func expandAccessControlAttributes(d *schema.ResourceData) (attributes []*ssoadmin.AccessControlAttribute) {
+func expandAccessControlAttributes(d *schema.ResourceData) []awstypes.AccessControlAttribute {
+	var attributes []awstypes.AccessControlAttribute
+
 	attInterface := d.Get("attribute").(*schema.Set).List()
 	for _, attrMap := range attInterface {
 		attr := attrMap.(map[string]interface{})
-		var attribute ssoadmin.AccessControlAttribute
-		if key, ok := attr["key"].(string); ok {
+		var attribute awstypes.AccessControlAttribute
+		if key, ok := attr[names.AttrKey].(string); ok {
 			attribute.Key = aws.String(key)
 		}
-		val := attr["value"].(*schema.Set).List()[0].(map[string]interface{})
-		if v, ok := val["source"].(*schema.Set); ok && len(v.List()) > 0 {
-			attribute.Value = &ssoadmin.AccessControlAttributeValue{
-				Source: flex.ExpandStringSet(v),
+		val := attr[names.AttrValue].(*schema.Set).List()[0].(map[string]interface{})
+		if v, ok := val[names.AttrSource].(*schema.Set); ok && len(v.List()) > 0 {
+			attribute.Value = &awstypes.AccessControlAttributeValue{
+				Source: flex.ExpandStringValueSet(v),
 			}
 		}
-		attributes = append(attributes, &attribute)
+		attributes = append(attributes, attribute)
 	}
-	return
+
+	return attributes
 }
 
-func flattenAccessControlAttributes(attributes []*ssoadmin.AccessControlAttribute) []interface{} {
+func flattenAccessControlAttributes(attributes []awstypes.AccessControlAttribute) []interface{} {
 	var results []interface{}
 	if len(attributes) == 0 {
 		return []interface{}{}
 	}
+
 	for _, attr := range attributes {
-		if attr == nil {
-			continue
-		}
 		var val []interface{}
 		val = append(val, map[string]interface{}{
-			"source": flex.FlattenStringSet(attr.Value.Source),
+			names.AttrSource: flex.FlattenStringValueSet(attr.Value.Source),
 		})
 		results = append(results, map[string]interface{}{
-			"key":   aws.StringValue(attr.Key),
-			"value": val,
+			names.AttrKey:   aws.ToString(attr.Key),
+			names.AttrValue: val,
 		})
 	}
+
 	return results
 }

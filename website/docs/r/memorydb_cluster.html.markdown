@@ -58,9 +58,9 @@ The following arguments are optional:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tls_enabled` - (Optional, Forces new resource) A flag to enable in-transit encryption on the cluster. When set to `false`, the `acl_name` must be `open-access`. Defaults to `true`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Same as `name`.
 * `arn` - The ARN of the cluster.
@@ -91,8 +91,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Use the `name` to import a cluster. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a cluster using the `name`. For example:
 
+```terraform
+import {
+  to = aws_memorydb_cluster.example
+  id = "my-cluster"
+}
 ```
-$ terraform import aws_memorydb_cluster.example my-cluster
+
+Using `terraform import`, import a cluster using the `name`. For example:
+
+```console
+% terraform import aws_memorydb_cluster.example my-cluster
 ```

@@ -25,19 +25,21 @@ data "aws_kinesis_stream" "stream" {
 
 * `name` - (Required) Name of the Kinesis Stream.
 
-## Attributes Reference
+## Attribute Reference
 
 `id` is set to the ARN of the Kinesis Stream. In addition, the following attributes
 are exported:
 
 * `arn` - ARN of the Kinesis Stream (same as id).
-* `name` - Name of the Kinesis Stream.
-* `creation_timestamp` - Approximate UNIX timestamp that the stream was created.
-* `status` - Current status of the stream. The stream status is one of CREATING, DELETING, ACTIVE, or UPDATING.
-* `retention_period` - Length of time (in hours) data records are accessible after they are added to the stream.
-* `open_shards` - List of shard ids in the OPEN state. See [Shard State][2] for more.
 * `closed_shards` - List of shard ids in the CLOSED state. See [Shard State][2] for more.
+* `creation_timestamp` - Approximate UNIX timestamp that the stream was created.
+* `encryption_type` - Encryption type used.
+* `kms_key_id` - GUID for the customer-managed AWS KMS key to use for encryption.
+* `name` - Name of the Kinesis Stream.
+* `open_shards` - List of shard ids in the OPEN state. See [Shard State][2] for more.
+* `retention_period` - Length of time (in hours) data records are accessible after they are added to the stream.
 * `shard_level_metrics` - List of shard-level CloudWatch metrics which are enabled for the stream. See [Monitoring with CloudWatch][3] for more.
+* `status` - Current status of the stream. The stream status is one of CREATING, DELETING, ACTIVE, or UPDATING.
 * `stream_mode_details` - [Capacity mode][4] of the data stream. Detailed below.
 * `tags` - Map of tags to assigned to the stream.
 

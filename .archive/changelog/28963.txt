@@ -1,0 +1,19 @@
+```release-note:bug
+data-source/aws_lambda_function: Remove any qualifier from `invoke_arn`
+```
+
+```release-note:bug
+data-source/aws_lambda_function: Fix `AccessDeniedException` errors in [AWS Regions where AWS Signer is not supported](https://docs.aws.amazon.com/general/latest/gr/signer.html#signer_lambda_region)
+```
+
+```release-note:bug
+resource/aws_lambda_function: Retry `ResourceNotFoundException` errors on resource Create
+```
+
+```release-note:enhancement
+resource/aws_lambda_function: Add configurable timeout for Update
+```
+
+```release-note:bug
+resource/aws_lambda_function: Don't persist invalid `filename`, `s3_bucket`, `s3_key` or `s3_object_version` values on resource Update
+```

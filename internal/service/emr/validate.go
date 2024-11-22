@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -14,9 +17,9 @@ func validCustomAMIID(v interface{}, k string) (ws []string, errors []error) {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 characters", k))
 	}
 
-	if !regexp.MustCompile(`^ami\-[a-z0-9]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^ami\-[0-9a-z]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q must begin with 'ami-' and be comprised of only [a-z0-9]: %v", k, value))
+			"%q must begin with 'ami-' and be comprised of only [0-9a-z]: %v", k, value))
 	}
 
 	return
@@ -27,6 +30,7 @@ func validEBSVolumeType() schema.SchemaValidateFunc {
 		"gp3",
 		"gp2",
 		"io1",
+		"io2",
 		"standard",
 		"st1",
 		"sc1",

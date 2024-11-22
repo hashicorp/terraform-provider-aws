@@ -22,13 +22,13 @@ data "aws_ec2_instance_type" "example" {
 
 ## Argument Reference
 
-The following argument is supported:
+This data source supports the following arguments:
 
 * `instance_type` - (Required) Instance
 
 ## Attribute Reference
 
-In addition to the argument above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 ~> **NOTE:** Not all attributes are set for every instance type.
 
@@ -77,6 +77,7 @@ In addition to the argument above, the following attributes are exported:
 * `ipv6_supported` - `true` if IPv6 is supported.
 * `maximum_ipv4_addresses_per_interface` - The maximum number of IPv4 addresses per network interface.
 * `maximum_ipv6_addresses_per_interface` - The maximum number of IPv6 addresses per network interface.
+* `maximum_network_cards` - The maximum number of physical network cards that can be allocated to the instance.
 * `maximum_network_interfaces` - The maximum number of network interfaces for the instance type.
 * `memory_size` - Size of the instance memory, in MiB.
 * `network_performance` - Describes the network performance.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
@@ -6,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
@@ -17,21 +20,22 @@ import (
 )
 
 func TestAccLogsDataProtectionPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy cloudwatchlogs.GetDataProtectionPolicyOutput
 	resourceName := "aws_cloudwatch_log_data_protection_policy.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy,
+		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionPolicy_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataProtectionPolicyExists(resourceName, &policy),
-					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", "aws_cloudwatch_log_group.test", "name"),
+					testAccCheckDataProtectionPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, "aws_cloudwatch_log_group.test", names.AttrName),
 					//lintignore:AWSAT005
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "policy_document", fmt.Sprintf(`
 {
@@ -79,21 +83,22 @@ func TestAccLogsDataProtectionPolicy_basic(t *testing.T) {
 }
 
 func TestAccLogsDataProtectionPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy cloudwatchlogs.GetDataProtectionPolicyOutput
 	resourceName := "aws_cloudwatch_log_data_protection_policy.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy,
+		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionPolicy_basic(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataProtectionPolicyExists(resourceName, &policy),
-					acctest.CheckResourceDisappears(acctest.Provider, tflogs.ResourceDataProtectionPolicy(), resourceName),
+					testAccCheckDataProtectionPolicyExists(ctx, resourceName, &policy),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceDataProtectionPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,20 +107,21 @@ func TestAccLogsDataProtectionPolicy_disappears(t *testing.T) {
 }
 
 func TestAccLogsDataProtectionPolicy_policyDocument(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy cloudwatchlogs.GetDataProtectionPolicyOutput
 	resourceName := "aws_cloudwatch_log_data_protection_policy.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchLogsEndpointID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy,
+		CheckDestroy:             testAccCheckDataProtectionPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDataProtectionPolicy_policyDocument1(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataProtectionPolicyExists(resourceName, &policy),
+					testAccCheckDataProtectionPolicyExists(ctx, resourceName, &policy),
 					//lintignore:AWSAT005
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "policy_document", `
 {
@@ -157,7 +163,7 @@ func TestAccLogsDataProtectionPolicy_policyDocument(t *testing.T) {
 			{
 				Config: testAccDataProtectionPolicy_policyDocument2(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDataProtectionPolicyExists(resourceName, &policy),
+					testAccCheckDataProtectionPolicyExists(ctx, resourceName, &policy),
 					//lintignore:AWSAT005
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "policy_document", fmt.Sprintf(`
 {
@@ -206,31 +212,33 @@ func TestAccLogsDataProtectionPolicy_policyDocument(t *testing.T) {
 	})
 }
 
-func testAccCheckDataProtectionPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient()
+func testAccCheckDataProtectionPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_log_data_protection_policy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudwatch_log_data_protection_policy" {
+				continue
+			}
+
+			_, err := tflogs.FindDataProtectionPolicyByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudWatch Logs Data Protection Policy still exists: %s", rs.Primary.ID)
 		}
 
-		_, err := tflogs.FindDataProtectionPolicyByID(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("CloudWatch Logs Data Protection Policy still exists: %s", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckDataProtectionPolicyExists(n string, v *cloudwatchlogs.GetDataProtectionPolicyOutput) resource.TestCheckFunc {
+func testAccCheckDataProtectionPolicyExists(ctx context.Context, n string, v *cloudwatchlogs.GetDataProtectionPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -241,9 +249,9 @@ func testAccCheckDataProtectionPolicyExists(n string, v *cloudwatchlogs.GetDataP
 			return fmt.Errorf("No CloudWatch Logs Data Protection Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		output, err := tflogs.FindDataProtectionPolicyByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tflogs.FindDataProtectionPolicyByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

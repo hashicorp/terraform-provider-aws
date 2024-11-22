@@ -62,7 +62,9 @@ data "aws_ebs_volumes" "ten_or_twenty_gb_volumes" {
 * `values` - (Required) Set of values that are accepted for the given field.
   EBS Volume IDs will be selected if any one of the given values match.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `ids` - Set of all the EBS Volume IDs found. This data source will fail if

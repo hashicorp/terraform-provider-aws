@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package envvar
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/mitchellh/go-testing-interface"
+	testing "github.com/mitchellh/go-testing-interface"
 )
 
 // Standard AWS environment variables used in the Terraform AWS Provider testing.
@@ -45,8 +48,17 @@ const (
 	// For tests using an alternate AWS account, the equivalent of AWS_SECRET_ACCESS_KEY for that account
 	AlternateSecretAccessKey = "AWS_ALTERNATE_SECRET_ACCESS_KEY"
 
+	// For tests using a third AWS account, the equivalent of AWS_ACCESS_KEY_ID for that account
+	ThirdAccessKeyId = "AWS_THIRD_ACCESS_KEY_ID"
+
+	// For tests using a third AWS account, the equivalent of AWS_PROFILE for that account
+	ThirdProfile = "AWS_THIRD_PROFILE"
+
 	// For tests using a third AWS region, the equivalent of AWS_DEFAULT_REGION for that region
 	ThirdRegion = "AWS_THIRD_REGION"
+
+	// For tests using a third AWS account, the equivalent of AWS_SECRET_ACCESS_KEY for that account
+	ThirdSecretAccessKey = "AWS_THIRD_SECRET_ACCESS_KEY"
 
 	// For tests requiring GitHub permissions
 	GithubToken = "GITHUB_TOKEN"

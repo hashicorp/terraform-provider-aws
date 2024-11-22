@@ -1,0 +1,3 @@
+```release-note:note
+documentation: Duplicate CDKTF guides with differing file extensions have been removed to resolve failures in the provider release workflow.
+```

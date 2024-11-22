@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package main
 
 import (
@@ -8,7 +11,6 @@ import (
 	"io"
 	"os"
 	"path"
-	"sort"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,9 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw/naming"
 	"golang.org/x/exp/slices"
 )
-
-// TODO
-// * timeouts
 
 var (
 	dataSourceType = flag.String("data-source", "", "Data Source type")
@@ -122,7 +121,11 @@ func (m *migrator) migrate(outputFilename string) error {
 
 	d := m.Generator.NewGoFileDestination(outputFilename)
 
-	return d.WriteTemplate("schema", m.Template, templateData)
+	if err := d.BufferTemplate("schema", m.Template, templateData); err != nil {
+		return err
+	}
+
+	return d.Write()
 }
 
 func (m *migrator) generateTemplateData() (*templateData, error) {
@@ -169,9 +172,9 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 			templateData.FrameworkValidatorsPackages = append(templateData.FrameworkValidatorsPackages, v)
 		}
 	}
-	for _, v := range emitter.ProviderPlanModifierPackages {
-		if !slices.Contains(templateData.ProviderPlanModifierPackages, v) {
-			templateData.ProviderPlanModifierPackages = append(templateData.ProviderPlanModifierPackages, v)
+	for _, v := range emitter.GoImports {
+		if !slices.Contains(templateData.GoImports, v) {
+			templateData.GoImports = append(templateData.GoImports, v)
 		}
 	}
 
@@ -190,13 +193,13 @@ type emitter struct {
 	Generator                     *common.Generator
 	FrameworkPlanModifierPackages []string // Package names for any terraform-plugin-framework plan modifiers. May contain duplicates.
 	FrameworkValidatorsPackages   []string // Package names for any terraform-plugin-framework-validators validators. May contain duplicates.
+	GoImports                     []goImport
 	HasTimeouts                   bool
 	HasTopLevelTagsAllMap         bool
 	HasTopLevelTagsMap            bool
 	ImportFrameworkAttr           bool
 	ImportProviderFrameworkTypes  bool
 	IsDataSource                  bool
-	ProviderPlanModifierPackages  []string // Package names for any provider plan modifiers. May contain duplicates.
 	SchemaWriter                  io.Writer
 	StructWriter                  io.Writer
 }
@@ -266,7 +269,7 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 	for name := range schema {
 		names = append(names, name)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
 	emittedFieldName := false
 	for _, name := range names {
@@ -340,7 +343,8 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 	isComputedOnly := property.Computed && !property.Optional
 	isTopLevelAttribute := len(path) == 1
 	var planModifiers []string
-	var fwPlanModifierPackage, fwPlanModifierType, fwValidatorsPackage, fwValidatorType, providerPlanModifierPackage string
+	var defaultSpec string
+	var fwPlanModifierPackage, fwPlanModifierType, fwValidatorsPackage, fwValidatorType string
 
 	// At this point we are emitting code for the values of a schema.Schema's Attributes (map[string]schema.Attribute).
 	switch v := property.Type; v {
@@ -515,6 +519,10 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		fprintf(e.SchemaWriter, "Optional:true,\n")
 	}
 
+	if def := property.Default; def != nil {
+		property.Computed = true
+	}
+
 	if property.Computed {
 		fprintf(e.SchemaWriter, "Computed:true,\n")
 	}
@@ -557,18 +565,27 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 	if def := property.Default; def != nil {
 		switch v := def.(type) {
 		case bool:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
+			e.GoImports = append(e.GoImports, goImport{
+				Path: "github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault",
+			})
+			defaultSpec = fmt.Sprintf("booldefault.StaticBool(%t)", v)
 		case int:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
+			e.GoImports = append(e.GoImports, goImport{
+				Path: "github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default",
+			})
+			defaultSpec = fmt.Sprintf("int64default.StaticInt64(%d)", v)
 		case float64:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
+			e.GoImports = append(e.GoImports, goImport{
+				Path: "github.com/hashicorp/terraform-plugin-framework/resource/schema/float64default",
+			})
+			defaultSpec = fmt.Sprintf("float64default.StaticFloat64(%f)", v)
 		case string:
-			providerPlanModifierPackage = "stringplanmodifier"
-			// Alias the provider plan modifier package name with an "fw" prefix. See also resource.tmpl.
-			planModifiers = append(planModifiers, fmt.Sprintf("fw%s.DefaultValue(%q)", providerPlanModifierPackage, v))
-			e.ProviderPlanModifierPackages = append(e.ProviderPlanModifierPackages, providerPlanModifierPackage)
+			e.GoImports = append(e.GoImports, goImport{
+				Path: "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault",
+			})
+			defaultSpec = fmt.Sprintf("stringdefault.StaticString(%q)", v)
 		default:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
+			fprintf(e.SchemaWriter, "// TODO Default: %#[1]v (%[1]T),\n", def)
 		}
 	}
 
@@ -578,6 +595,10 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 			fprintf(e.SchemaWriter, "%s,\n", planModifier)
 		}
 		fprintf(e.SchemaWriter, "},\n")
+	}
+
+	if defaultSpec != "" {
+		fprintf(e.SchemaWriter, "Default: %s,\n", defaultSpec)
 	}
 
 	// Features that we can't (yet) migrate:
@@ -717,7 +738,7 @@ func (e *emitter) emitComputedOnlyBlock(path []string, schema map[string]*schema
 	for name := range schema {
 		names = append(names, name)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
 	fprintf(e.SchemaWriter, "types.ObjectType{\n")
 
@@ -888,19 +909,24 @@ type templateData struct {
 	EmitResourceUpdateSkeleton    bool
 	FrameworkPlanModifierPackages []string
 	FrameworkValidatorsPackages   []string
+	GoImports                     []goImport
 	HasTimeouts                   bool
 	ImportFrameworkAttr           bool
 	ImportProviderFrameworkTypes  bool
 	Name                          string // e.g. Instance
 	PackageName                   string // e.g. ec2
-	ProviderPlanModifierPackages  []string
 	Schema                        string
 	Struct                        string
 	TFTypeName                    string // e.g. aws_instance
 }
 
-//go:embed datasource.tmpl
+//go:embed datasource.gtpl
 var datasourceImpl string
 
-//go:embed resource.tmpl
+//go:embed resource.gtpl
 var resourceImpl string
+
+type goImport struct {
+	Path  string
+	Alias string
+}

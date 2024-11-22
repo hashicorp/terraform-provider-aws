@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -6,31 +9,31 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2InstanceState_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_instance_state.test"
 	state := "stopped"
-	force := "false"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(state, force),
+				Config: testAccInstanceStateConfig_basic(state, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStateExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttr(resourceName, "state", state),
+					testAccCheckInstanceStateExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, state),
 				),
 			},
 		},
@@ -38,23 +41,23 @@ func TestAccEC2InstanceState_basic(t *testing.T) {
 }
 
 func TestAccEC2InstanceState_state(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_instance_state.test"
 	stateStopped := "stopped"
 	stateRunning := "running"
-	force := "false"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(stateStopped, force),
+				Config: testAccInstanceStateConfig_basic(stateStopped, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStateExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttr(resourceName, "state", stateStopped),
+					testAccCheckInstanceStateExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateStopped),
 				),
 			},
 			{
@@ -63,33 +66,34 @@ func TestAccEC2InstanceState_state(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInstanceStateConfig_basic(stateRunning, force),
+				Config: testAccInstanceStateConfig_basic(stateRunning, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStateExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_id"),
-					resource.TestCheckResourceAttr(resourceName, "state", stateRunning),
+					testAccCheckInstanceStateExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrInstanceID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, stateRunning),
 				),
 			},
 		},
 	})
 }
+
 func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_instance_state.test"
 	parentResourceName := "aws_instance.test"
 	state := "stopped"
-	force := "false"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceStateConfig_basic(state, force),
+				Config: testAccInstanceStateConfig_basic(state, acctest.CtFalse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceStateExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfec2.ResourceInstance(), parentResourceName),
+					testAccCheckInstanceStateExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstance(), parentResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,7 +101,7 @@ func TestAccEC2InstanceState_disappears_Instance(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceStateExists(n string) resource.TestCheckFunc {
+func testAccCheckInstanceStateExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -108,9 +112,9 @@ func testAccCheckInstanceStateExists(n string) resource.TestCheckFunc {
 			return errors.New("No EC2InstanceState ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		out, err := tfec2.FindInstanceStateById(context.Background(), conn, rs.Primary.ID)
+		out, err := tfec2.FindInstanceStateByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -126,11 +130,11 @@ func testAccCheckInstanceStateExists(n string) resource.TestCheckFunc {
 
 func testAccInstanceStateConfig_basic(state string, force string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro", "t1.micro", "m1.small"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 

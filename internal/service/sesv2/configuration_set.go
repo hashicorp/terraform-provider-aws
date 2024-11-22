@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2
 
 import (
@@ -10,21 +13,24 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceConfigurationSet() *schema.Resource {
+// @SDKResource("aws_sesv2_configuration_set", name="Configuration Set")
+// @Tags(identifierAttribute="arn")
+func resourceConfigurationSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationSetCreate,
 		ReadWithoutTimeout:   resourceConfigurationSetRead,
@@ -36,7 +42,7 @@ func ResourceConfigurationSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -107,7 +113,6 @@ func ResourceConfigurationSet() *schema.Resource {
 						"suppressed_reasons": {
 							Type:     schema.TypeList,
 							Optional: true,
-							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
 								ValidateDiagFunc: enum.Validate[types.SuppressionListReason](),
@@ -116,8 +121,8 @@ func ResourceConfigurationSet() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tracking_options": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -131,6 +136,43 @@ func ResourceConfigurationSet() *schema.Resource {
 					},
 				},
 			},
+			"vdm_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"dashboard_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"engagement_metrics": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.FeatureStatus](),
+									},
+								},
+							},
+						},
+						"guardian_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"optimized_shared_delivery": {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.FeatureStatus](),
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -138,86 +180,88 @@ func ResourceConfigurationSet() *schema.Resource {
 }
 
 const (
-	ResNameConfigurationSet = "Configuration Set"
+	resNameConfigurationSet = "Configuration Set"
 )
 
 func resourceConfigurationSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	in := &sesv2.CreateConfigurationSetInput{
+	input := &sesv2.CreateConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Get("configuration_set_name").(string)),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("delivery_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.DeliveryOptions = expandDeliveryOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.DeliveryOptions = expandDeliveryOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("reputation_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.ReputationOptions = expandReputationOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.ReputationOptions = expandReputationOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("sending_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.SendingOptions = expandSendingOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.SendingOptions = expandSendingOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("suppression_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.SuppressionOptions = expandSuppressionOptions(v.([]interface{})[0].(map[string]interface{}))
+	if v, ok := d.GetRawConfig().AsValueMap()["suppression_options"]; ok && v.LengthInt() > 0 {
+		if v, ok := v.Index(cty.NumberIntVal(0)).AsValueMap()["suppressed_reasons"]; ok && !v.IsNull() {
+			tfMap := map[string]interface{}{
+				"suppressed_reasons": []interface{}{},
+			}
+
+			for _, v := range v.AsValueSlice() {
+				tfMap["suppressed_reasons"] = append(tfMap["suppressed_reasons"].([]interface{}), v.AsString())
+			}
+
+			input.SuppressionOptions = expandSuppressionOptions(tfMap)
+		}
 	}
 
 	if v, ok := d.GetOk("tracking_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.TrackingOptions = expandTrackingOptions(v.([]interface{})[0].(map[string]interface{}))
+		input.TrackingOptions = expandTrackingOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
+	if v, ok := d.GetOk("vdm_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.VdmOptions = expandVDMOptions(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	out, err := conn.CreateConfigurationSet(ctx, in)
+	out, err := conn.CreateConfigurationSet(ctx, input)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameConfigurationSet, d.Get("configuration_set_name").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameConfigurationSet, d.Get("configuration_set_name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameConfigurationSet, d.Get("configuration_set_name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameConfigurationSet, d.Get("configuration_set_name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(d.Get("configuration_set_name").(string))
 
-	return resourceConfigurationSetRead(ctx, d, meta)
+	return append(diags, resourceConfigurationSetRead(ctx, d, meta)...)
 }
 
 func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	out, err := FindConfigurationSetByID(ctx, conn, d.Id())
+	out, err := findConfigurationSetByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 ConfigurationSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSet, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameConfigurationSet, d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("configuration-set/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, configurationSetARN(ctx, meta.(*conns.AWSClient), aws.ToString(out.ConfigurationSetName)))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 
 	if out.DeliveryOptions != nil {
 		if err := d.Set("delivery_options", []interface{}{flattenDeliveryOptions(out.DeliveryOptions)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSet, d.Id(), err)
 		}
 	} else {
 		d.Set("delivery_options", nil)
@@ -225,7 +269,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 
 	if out.ReputationOptions != nil {
 		if err := d.Set("reputation_options", []interface{}{flattenReputationOptions(out.ReputationOptions)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSet, d.Id(), err)
 		}
 	} else {
 		d.Set("reputation_options", nil)
@@ -233,7 +277,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 
 	if out.SendingOptions != nil {
 		if err := d.Set("sending_options", []interface{}{flattenSendingOptions(out.SendingOptions)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSet, d.Id(), err)
 		}
 	} else {
 		d.Set("sending_options", nil)
@@ -241,7 +285,7 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 
 	if out.SuppressionOptions != nil {
 		if err := d.Set("suppression_options", []interface{}{flattenSuppressionOptions(out.SuppressionOptions)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSet, d.Id(), err)
 		}
 	} else {
 		d.Set("suppression_options", nil)
@@ -249,34 +293,26 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 
 	if out.TrackingOptions != nil {
 		if err := d.Set("tracking_options", []interface{}{flattenTrackingOptions(out.TrackingOptions)}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSet, d.Id(), err)
 		}
 	} else {
 		d.Set("tracking_options", nil)
 	}
 
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameConfigurationSet, d.Id(), err)
+	if out.VdmOptions != nil {
+		if err := d.Set("vdm_options", []interface{}{flattenVDMOptions(out.VdmOptions)}); err != nil {
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSet, d.Id(), err)
+		}
+	} else {
+		d.Set("vdm_options", nil)
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameConfigurationSet, d.Id(), err)
-	}
-
-	return nil
+	return diags
 }
 
 func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	if d.HasChanges("delivery_options") {
 		in := &sesv2.PutConfigurationSetDeliveryOptionsInput{
@@ -298,7 +334,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet DeliveryOptions (%s): %#v", d.Id(), in)
 		_, err := conn.PutConfigurationSetDeliveryOptions(ctx, in)
 		if err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSet, d.Id(), err)
 		}
 	}
 
@@ -318,7 +354,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet ReputationOptions (%s): %#v", d.Id(), in)
 		_, err := conn.PutConfigurationSetReputationOptions(ctx, in)
 		if err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSet, d.Id(), err)
 		}
 	}
 
@@ -337,7 +373,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 			log.Printf("[DEBUG] Updating SESV2 ConfigurationSet SendingOptions (%s): %#v", d.Id(), in)
 			_, err := conn.PutConfigurationSetSendingOptions(ctx, in)
 			if err != nil {
-				return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+				return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSet, d.Id(), err)
 			}
 		}
 	}
@@ -358,7 +394,7 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet SuppressionOptions (%s): %#v", d.Id(), in)
 		_, err := conn.PutConfigurationSetSuppressionOptions(ctx, in)
 		if err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSet, d.Id(), err)
 		}
 	}
 
@@ -378,64 +414,76 @@ func resourceConfigurationSetUpdate(ctx context.Context, d *schema.ResourceData,
 		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet TrackingOptions (%s): %#v", d.Id(), in)
 		_, err := conn.PutConfigurationSetTrackingOptions(ctx, in)
 		if err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSet, d.Id(), err)
 		}
 	}
 
-	if d.HasChanges("tags_all") {
-		o, n := d.GetChange("tags_all")
+	if d.HasChanges("vdm_options") {
+		in := &sesv2.PutConfigurationSetVdmOptionsInput{
+			ConfigurationSetName: aws.String(d.Id()),
+		}
 
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameConfigurationSet, d.Id(), err)
+		if v, ok := d.GetOk("vdm_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			in.VdmOptions = expandVDMOptions(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		log.Printf("[DEBUG] Updating SESV2 ConfigurationSet VdmOptions (%s): %#v", d.Id(), in)
+		_, err := conn.PutConfigurationSetVdmOptions(ctx, in)
+		if err != nil {
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameConfigurationSet, d.Id(), err)
 		}
 	}
 
-	return resourceConfigurationSetRead(ctx, d, meta)
+	return append(diags, resourceConfigurationSetRead(ctx, d, meta)...)
 }
 
 func resourceConfigurationSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	log.Printf("[INFO] Deleting SESV2 ConfigurationSet %s", d.Id())
-
+	log.Printf("[INFO] Deleting SESV2 ConfigurationSet: %s", d.Id())
 	_, err := conn.DeleteConfigurationSet(ctx, &sesv2.DeleteConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
-
-		return create.DiagError(names.SESV2, create.ErrActionDeleting, ResNameConfigurationSet, d.Id(), err)
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, resNameConfigurationSet, d.Id(), err)
+	}
+
+	return diags
 }
 
-func FindConfigurationSetByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetConfigurationSetOutput, error) {
-	in := &sesv2.GetConfigurationSetInput{
+func findConfigurationSetByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetConfigurationSetOutput, error) {
+	input := &sesv2.GetConfigurationSetInput{
 		ConfigurationSetName: aws.String(id),
 	}
-	out, err := conn.GetConfigurationSet(ctx, in)
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	return findConfigurationSet(ctx, conn, input)
+}
+
+func findConfigurationSet(ctx context.Context, conn *sesv2.Client, input *sesv2.GetConfigurationSetInput) (*sesv2.GetConfigurationSetOutput, error) {
+	output, err := conn.GetConfigurationSet(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
 func flattenDeliveryOptions(apiObject *types.DeliveryOptions) map[string]interface{} {
@@ -520,6 +568,48 @@ func flattenTrackingOptions(apiObject *types.TrackingOptions) map[string]interfa
 	return m
 }
 
+func flattenVDMOptions(apiObject *types.VdmOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.DashboardOptions; v != nil {
+		m["dashboard_options"] = []interface{}{flattenDashboardOptions(v)}
+	}
+
+	if v := apiObject.GuardianOptions; v != nil {
+		m["guardian_options"] = []interface{}{flattenGuardianOptions(v)}
+	}
+
+	return m
+}
+
+func flattenDashboardOptions(apiObject *types.DashboardOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"engagement_metrics": string(apiObject.EngagementMetrics),
+	}
+
+	return m
+}
+
+func flattenGuardianOptions(apiObject *types.GuardianOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"optimized_shared_delivery": string(apiObject.OptimizedSharedDelivery),
+	}
+
+	return m
+}
+
 func expandDeliveryOptions(tfMap map[string]interface{}) *types.DeliveryOptions {
 	if tfMap == nil {
 		return nil
@@ -571,13 +661,17 @@ func expandSuppressionOptions(tfMap map[string]interface{}) *types.SuppressionOp
 		return nil
 	}
 
-	a := &types.SuppressionOptions{}
+	apiObject := &types.SuppressionOptions{}
 
-	if v, ok := tfMap["suppressed_reasons"].([]interface{}); ok && len(v) > 0 {
-		a.SuppressedReasons = expandSuppressedReasons(v)
+	if v, ok := tfMap["suppressed_reasons"].([]interface{}); ok {
+		if len(v) > 0 {
+			apiObject.SuppressedReasons = expandSuppressedReasons(v)
+		} else {
+			apiObject.SuppressedReasons = make([]types.SuppressionListReason, 0)
+		}
 	}
 
-	return a
+	return apiObject
 }
 
 func expandSuppressedReasons(tfList []interface{}) []types.SuppressionListReason {
@@ -604,4 +698,54 @@ func expandTrackingOptions(tfMap map[string]interface{}) *types.TrackingOptions 
 	}
 
 	return a
+}
+
+func expandVDMOptions(tfMap map[string]interface{}) *types.VdmOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.VdmOptions{}
+
+	if v, ok := tfMap["dashboard_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.DashboardOptions = expandDashboardOptions(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["guardian_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		a.GuardianOptions = expandGuardianOptions(v[0].(map[string]interface{}))
+	}
+
+	return a
+}
+
+func expandDashboardOptions(tfMap map[string]interface{}) *types.DashboardOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.DashboardOptions{}
+
+	if v, ok := tfMap["engagement_metrics"].(string); ok && v != "" {
+		a.EngagementMetrics = types.FeatureStatus(v)
+	}
+
+	return a
+}
+
+func expandGuardianOptions(tfMap map[string]interface{}) *types.GuardianOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	a := &types.GuardianOptions{}
+
+	if v, ok := tfMap["optimized_shared_delivery"].(string); ok && v != "" {
+		a.OptimizedSharedDelivery = types.FeatureStatus(v)
+	}
+
+	return a
+}
+
+func configurationSetARN(ctx context.Context, c *conns.AWSClient, configurationSetName string) string {
+	return c.RegionalARN(ctx, "ses", fmt.Sprintf("configuration-set/%s", configurationSetName))
 }

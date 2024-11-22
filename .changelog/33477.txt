@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_sesv2_email_identity: Mark `dkim_signing_attributes.domain_signing_private_key` as sensitive
+```
+```release-note:bug
+data-source/aws_sesv2_email_identity: Mark `dkim_signing_attributes.domain_signing_private_key` as sensitive
+```

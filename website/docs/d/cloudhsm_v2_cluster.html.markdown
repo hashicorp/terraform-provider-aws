@@ -20,14 +20,14 @@ data "aws_cloudhsm_v2_cluster" "cluster" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_id` - (Required) ID of Cloud HSM v2 cluster.
 * `cluster_state` - (Optional) State of the cluster to be found.
 
-## Attributes Reference
+## Attribute Reference
 
-The following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `vpc_id` - ID of the VPC that the CloudHSM cluster resides in.
 * `security_group_id` - ID of the security group associated with the CloudHSM cluster.

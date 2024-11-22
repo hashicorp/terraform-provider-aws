@@ -1,7 +1,6 @@
 name: "Request a New Resource, Data Source, or AWS Service"
 description: "Choose this option to request an entirely new resource, data source, or AWS service be added to the provider."
 title: "[New]: "
-labels: ["needs-triage"]
 body:
   - type: markdown
     attributes:

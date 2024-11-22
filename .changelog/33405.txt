@@ -1,0 +1,39 @@
+```release-note:bug
+resource/aws_lightsail_certificate: Fix validation of `name`
+```
+
+```release-note:bug
+resource/aws_lightsail_database: Fix validation of `name`
+```
+
+```release-note:bug
+resource/aws_lightsail_disk: Fix validation of `name`
+```
+
+```release-note:bug
+resource/aws_lightsail_instance: Fix validation of `name`
+```
+
+```release-note:bug
+resource/aws_lightsail_lb: Fix validation of `lb_name`
+```
+
+```release-note:bug
+resource/aws_lightsail_lb_attachment: Fix validation of `lb_name`
+```
+
+```release-note:bug
+resource/aws_lightsail_lb_certificate: Fix validation of `lb_name`
+```
+
+```release-note:bug
+resource/aws_lightsail_lb_certificate_attachment: Fix validation of `lb_name`
+```
+
+```release-note:bug
+resource/aws_lightsail_lb_https_redirection_policy: Fix validation of `lb_name`
+```
+
+```release-note:bug
+resource/aws_lightsail_lb_stickiness_policy: Fix validation of `lb_name`
+```

@@ -1,0 +1,7 @@
+```release-note:bug
+data-source/aws_dx_connection: Fix the `vlan_id` being returned as null
+```
+
+```release-note:bug
+resource/aws_dx_connection: Fix the `vlan_id` being returned as null
+```

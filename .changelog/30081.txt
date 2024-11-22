@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_apigateway_domain_name: Add ability to update `mutual_tls_authentication.truststore_uri` in place
+```
+
+```release-note:bug
+resource/aws_apigatewayv2_domain_name: Add ability to update `mutual_tls_authentication.truststore_uri` in place
+```

@@ -29,7 +29,7 @@ resource "aws_macie2_classification_export_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `s3_destination` - (Required) Configuration block for a S3 Destination. Defined below
 
@@ -43,16 +43,25 @@ The `s3_destination` configuration block supports the following arguments:
 
 Additional information can be found in the [Storing and retaining sensitive data discovery results with Amazon Macie for AWS Macie documentation](https://docs.aws.amazon.com/macie/latest/user/discovery-results-repository-s3.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the configuration.
 
 ## Import
 
-`aws_macie2_classification_export_configuration` can be imported using the account ID and region, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_classification_export_configuration` using the account ID and region. For example:
 
+```terraform
+import {
+  to = aws_macie2_classification_export_configuration.example
+  id = "123456789012:us-west-2"
+}
 ```
-$ terraform import aws_macie2_classification_export_configuration.example 123456789012:us-west-2
+
+Using `terraform import`, import `aws_macie2_classification_export_configuration` using the account ID and region. For example:
+
+```console
+% terraform import aws_macie2_classification_export_configuration.example 123456789012:us-west-2
 ```

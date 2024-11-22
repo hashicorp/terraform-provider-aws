@@ -1,13 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestSecurityGroupRuleMigrateState(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		StateVersion int
 		ID           string
@@ -19,12 +26,12 @@ func TestSecurityGroupRuleMigrateState(t *testing.T) {
 			StateVersion: 0,
 			ID:           "sg-4235098228",
 			Attributes: map[string]string{
-				"self":                     "false",
+				"self":                     acctest.CtFalse,
 				"to_port":                  "0",
 				"security_group_id":        "sg-13877277",
 				"cidr_blocks.#":            "0",
-				"type":                     "ingress",
-				"protocol":                 "-1",
+				names.AttrType:             "ingress",
+				names.AttrProtocol:         "-1",
 				"from_port":                "0",
 				"source_security_group_id": "sg-11877275",
 			},
@@ -37,9 +44,9 @@ func TestSecurityGroupRuleMigrateState(t *testing.T) {
 				"security_group_id": "sg-0981746d",
 				"from_port":         "0",
 				"to_port":           "0",
-				"type":              "ingress",
-				"self":              "false",
-				"protocol":          "-1",
+				names.AttrType:      "ingress",
+				"self":              acctest.CtFalse,
+				names.AttrProtocol:  "-1",
 				"cidr_blocks.0":     "172.16.1.0/24",
 				"cidr_blocks.1":     "172.16.2.0/24",
 				"cidr_blocks.2":     "172.16.3.0/24",

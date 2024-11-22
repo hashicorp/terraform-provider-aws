@@ -8,4 +8,4 @@ _At the moment, the Terraform AWS Provider has little or no support for MediaCon
 
 * [Find out about contributing](https://hashicorp.github.io/terraform-provider-aws/#contribute) to the AWS provider!
 * AWS Provider Docs: [Home](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-* AWS Docs: [AWS SDK for Go MediaConnect](https://docs.aws.amazon.com/sdk-for-go/api/service/mediaconnect/)
+* AWS Docs: [AWS SDK for Go MediaConnect](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/mediaconnect)

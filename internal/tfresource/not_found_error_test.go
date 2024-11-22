@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfresource
 
 import (
@@ -5,14 +8,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
+	t.Parallel()
+
 	lastRequest := 123
 	err := NewEmptyResultError(lastRequest)
 
-	var nfe *resource.NotFoundError
+	var nfe *retry.NotFoundError
 	ok := errors.As(err, &nfe)
 
 	if !ok {
@@ -27,6 +32,8 @@ func TestEmptyResultErrorAsNotFoundError(t *testing.T) {
 }
 
 func TestEmptyResultErrorIs(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name     string
 		err      error
@@ -72,6 +79,8 @@ func TestEmptyResultErrorIs(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			err := &EmptyResultError{}
 			ok := errors.Is(testCase.err, err)
 			if ok != testCase.expected {
@@ -82,11 +91,13 @@ func TestEmptyResultErrorIs(t *testing.T) {
 }
 
 func TestTooManyResultsErrorAsNotFoundError(t *testing.T) {
+	t.Parallel()
+
 	count := 2
 	lastRequest := 123
 	err := NewTooManyResultsError(count, lastRequest)
 
-	var nfe *resource.NotFoundError
+	var nfe *retry.NotFoundError
 	ok := errors.As(err, &nfe)
 
 	if !ok {
@@ -101,6 +112,8 @@ func TestTooManyResultsErrorAsNotFoundError(t *testing.T) {
 }
 
 func TestTooManyResultsErrorIs(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name     string
 		err      error
@@ -146,6 +159,8 @@ func TestTooManyResultsErrorIs(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			err := &TooManyResultsError{}
 			ok := errors.Is(testCase.err, err)
 			if ok != testCase.expected {

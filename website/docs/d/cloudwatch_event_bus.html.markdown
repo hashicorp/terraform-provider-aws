@@ -22,8 +22,13 @@ data "aws_cloudwatch_event_bus" "example" {
 
 ## Argument Reference
 
-* `name` - (Required) Friendly EventBridge event bus name.
+* `name` - (Required) Name of the event bus.
 
-## Attributes Reference
+## Attribute Reference
 
-* `arn` - ARN.
+This data source exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the event bus.
+* `description` - Event bus description.
+* `id` - Name of the event bus.
+* `kms_key_identifier` - Identifier of the AWS KMS customer managed key for EventBridge to use to encrypt events on this event bus, if one has been specified.

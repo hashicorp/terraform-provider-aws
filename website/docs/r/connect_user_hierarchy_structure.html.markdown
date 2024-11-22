@@ -59,7 +59,7 @@ resource "aws_connect_user_hierarchy_structure" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `hierarchy_structure` - (Required) A block that defines the hierarchy structure's levels. The `hierarchy_structure` block is documented below.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
@@ -76,9 +76,9 @@ Each level block supports the following arguments:
 
 * `name` - (Required) The name of the user hierarchy level. Must not be more than 50 characters.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `hierarchy_structure` - In addition to the arguments defined initially, there are attributes added to the levels created. These additional attributes are documented below.
 * `id` - The identifier of the hosting Amazon Connect Instance.
@@ -90,8 +90,17 @@ A level block supports the following additional attributes:
 
 ## Import
 
-Amazon Connect User Hierarchy Structures can be imported using the `instance_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Connect User Hierarchy Structures using the `instance_id`. For example:
 
+```terraform
+import {
+  to = aws_connect_user_hierarchy_structure.example
+  id = "f1288a1f-6193-445a-b47e-af739b2"
+}
 ```
-$ terraform import aws_connect_user_hierarchy_structure.example f1288a1f-6193-445a-b47e-af739b2
+
+Using `terraform import`, import Amazon Connect User Hierarchy Structures using the `instance_id`. For example:
+
+```console
+% terraform import aws_connect_user_hierarchy_structure.example f1288a1f-6193-445a-b47e-af739b2
 ```

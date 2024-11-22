@@ -46,7 +46,7 @@ The following arguments are optional:
 * `vpc_config` - (Optional) Configuration block. Detailed below.
 * `failure_retention_period` - (Optional) Number of days to retain data about failed runs of this canary. If you omit this field, the default of 31 days is used. The valid range is 1 to 455 days.
 * `run_config` - (Optional) Configuration block for individual canary runs. Detailed below.
-* `s3_bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. Specify the full bucket name including s3:// as the start of the bucket name. **Conflicts with `zip_file`.**
+* `s3_bucket` - (Optional) Full bucket name which is used if your canary script is located in S3. The bucket must already exist. **Conflicts with `zip_file`.**
 * `s3_key` - (Optional) S3 key of your script. **Conflicts with `zip_file`.**
 * `s3_version` - (Optional) S3 version ID of your script. **Conflicts with `zip_file`.**
 * `start_canary` - (Optional) Whether to run or stop the canary.
@@ -83,9 +83,9 @@ If this canary tests an endpoint in a VPC, this structure contains information a
 * `subnet_ids` - (Required) IDs of the subnets where this canary is to run.
 * `security_group_ids` - (Required) IDs of the security groups for this canary.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Canary.
 * `engine_arn` - ARN of the Lambda function that is used as your canary's engine.
@@ -108,8 +108,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Synthetics Canaries can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Synthetics Canaries using the `name`. For example:
 
+```terraform
+import {
+  to = aws_synthetics_canary.some
+  id = "some-canary"
+}
 ```
-$ terraform import aws_synthetics_canary.some some-canary
+
+Using `terraform import`, import Synthetics Canaries using the `name`. For example:
+
+```console
+% terraform import aws_synthetics_canary.some some-canary
 ```

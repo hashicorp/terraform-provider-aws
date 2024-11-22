@@ -29,30 +29,39 @@ resource "aws_kinesis_stream" "example" {
 }
 
 resource "aws_dynamodb_kinesis_streaming_destination" "example" {
-  stream_arn = aws_kinesis_stream.example.arn
-  table_name = aws_dynamodb_table.example.name
+  stream_arn                               = aws_kinesis_stream.example.arn
+  table_name                               = aws_dynamodb_table.example.name
+  approximate_creation_date_time_precision = "MICROSECOND"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
+* `approximate_creation_date_time_precision` - (Optional) Toggle for the precision of Kinesis data stream timestamp. Valid values: `MILLISECOND` and `MICROSECOND`.
 * `stream_arn` - (Required) The ARN for a Kinesis data stream. This must exist in the same account and region as the DynamoDB table.
-  
-* `table_name` - (Required) The name of the DynamoDB table. There
-  can only be one Kinesis streaming destination for a given DynamoDB table.
-  
-## Attributes Reference
+* `table_name` - (Required) The name of the DynamoDB table. There can only be one Kinesis streaming destination for a given DynamoDB table.
 
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `table_name` and `stream_arn` separated by a comma (`,`).
 
 ## Import
 
-DynamoDB Kinesis Streaming Destinations can be imported using the `table_name` and `stream_arn` separated by `,`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB Kinesis Streaming Destinations using the `table_name` and `stream_arn` separated by `,`. For example:
 
+```terraform
+import {
+  to = aws_dynamodb_kinesis_streaming_destination.example
+  id = "example,arn:aws:kinesis:us-east-1:111122223333:exampleStreamName"
+}
 ```
-$ terraform import aws_dynamodb_kinesis_streaming_destination.example example,arn:aws:kinesis:us-east-1:111122223333:exampleStreamName
+
+Using `terraform import`, import DynamoDB Kinesis Streaming Destinations using the `table_name` and `stream_arn` separated by `,`. For example:
+
+```console
+% terraform import aws_dynamodb_kinesis_streaming_destination.example example,arn:aws:kinesis:us-east-1:111122223333:exampleStreamName
 ```

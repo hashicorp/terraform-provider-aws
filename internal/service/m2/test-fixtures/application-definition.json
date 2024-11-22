@@ -1,0 +1,24 @@
+{
+  "template-version": "2.0",
+  "source-locations": [
+    {
+      "source-id": "s3-source",
+      "source-type": "s3",
+      "properties": {
+        "s3-bucket": "${s3_bucket}",
+        "s3-key-prefix": "v${version}"
+      }
+    }
+  ],
+  "definition": {
+    "listeners": [
+      {
+        "port": 8196,
+        "type": "http"
+      }
+    ],
+    "ba-application": {
+      "app-location": "$${s3-source}/PlanetsDemo-v${version}.zip"
+    }
+  }
+}

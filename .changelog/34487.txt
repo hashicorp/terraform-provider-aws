@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_pipes_pipe: Fix error when zero value is sent to `source_parameters` on update
+```

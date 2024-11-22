@@ -41,19 +41,28 @@ resource "aws_sqs_queue_redrive_policy" "q" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `queue_url` - (Required) The URL of the SQS Queue to which to attach the policy
 * `redrive_policy` - (Required) The JSON redrive policy for the SQS queue. Accepts two key/val pairs: `deadLetterTargetArn` and `maxReceiveCount`. Learn more in the [Amazon SQS dead-letter queues documentation](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html).
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-SQS Queue Redrive Policies can be imported using the queue URL, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SQS Queue Redrive Policies using the queue URL. For example:
 
+```terraform
+import {
+  to = aws_sqs_queue_redrive_policy.test
+  id = "https://queue.amazonaws.com/123456789012/myqueue"
+}
 ```
-$ terraform import aws_sqs_queue_redrive_policy.test https://queue.amazonaws.com/0123456789012/myqueue
+
+Using `terraform import`, import SQS Queue Redrive Policies using the queue URL. For example:
+
+```console
+% terraform import aws_sqs_queue_redrive_policy.test https://queue.amazonaws.com/123456789012/myqueue
 ```

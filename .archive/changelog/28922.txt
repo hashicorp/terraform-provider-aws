@@ -1,0 +1,23 @@
+```release-note:new-resource
+aws_globalaccelerator_custom_routing_accelerator
+```
+
+```release-note:new-data-source
+aws_globalaccelerator_custom_routing_accelerator
+```
+
+```release-note:new-resource
+aws_globalaccelerator_custom_routing_listener
+```
+
+```release-note:new-resource
+aws_globalaccelerator_custom_routing_endpoint_group
+```
+
+```release-note:enhancement
+resource/aws_globalaccelerator_accelerator: Add `dual_stack_dns_name` attribute
+```
+
+```release-note:enhancement
+data-source/aws_globalaccelerator_accelerator: Add `dual_stack_dns_name` attribute
+```

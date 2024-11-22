@@ -1,0 +1,3 @@
+```release-note:bug
+provider: Prevent resource recreation if `tags` or `tags_all` are updated
+```

@@ -10,6 +10,8 @@ description: |-
 
 Provides a AWS Transfer Access resource.
 
+~> **NOTE:** We suggest using [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [`aws_iam_policy_document`](/docs/providers/aws/d/iam_policy_document.html) when assigning a value to `policy`. They seamlessly translate Terraform language into JSON, enabling you to maintain consistency within your configuration without the need for context switches. Also, you can sidestep potential complications arising from formatting discrepancies, whitespace inconsistencies, and other nuances inherent to JSON.
+
 ## Example Usage
 
 ### Basic S3
@@ -40,7 +42,7 @@ resource "aws_transfer_access" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `external_id` - (Required) The SID of a group in the directory connected to the Transfer Server (e.g., `S-1-1-12-1234567890-123456789-1234567890-1234`)
 * `server_id` - (Required) The Server ID of the Transfer Server (e.g., `s-12345678`)
@@ -62,15 +64,25 @@ The following arguments are supported:
 * `uid` - (Required) The POSIX user ID used for all EFS operations by this user.
 * `secondary_gids` - (Optional) The secondary POSIX group IDs used for all EFS operations by this user.
 
-## Attributes Reference
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `id`  - The ID of the resource
 
 ## Import
 
-Transfer Accesses can be imported using the `server_id` and `external_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Accesses using the `server_id` and `external_id`. For example:
 
+```terraform
+import {
+  to = aws_transfer_access.example
+  id = "s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234"
+}
 ```
-$ terraform import aws_transfer_access.example s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234
+
+Using `terraform import`, import Transfer Accesses using the `server_id` and `external_id`. For example:
+
+```console
+% terraform import aws_transfer_access.example s-12345678/S-1-1-12-1234567890-123456789-1234567890-1234
 ```

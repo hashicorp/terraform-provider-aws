@@ -1,32 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivs_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ivs"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIVSStreamKeyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ivs_stream_key.test"
 	channelResourceName := "aws_ivs_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ivs.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStreamKeyDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStreamKeyDataSource(dataSourceName),
-					resource.TestCheckResourceAttrPair(dataSourceName, "channel_arn", channelResourceName, "id"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "value"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "ivs", regexp.MustCompile(`stream-key/.+`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "channel_arn", channelResourceName, names.AttrID),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrValue),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "ivs", regexache.MustCompile(`stream-key/.+`)),
 				),
 			},
 		},

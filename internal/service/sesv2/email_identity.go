@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2
 
 import (
@@ -10,21 +13,23 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/aws/aws-sdk-go-v2/service/sesv2/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceEmailIdentity() *schema.Resource {
+// @SDKResource("aws_sesv2_email_identity", name="Email Identity")
+// @Tags(identifierAttribute="arn")
+func resourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEmailIdentityCreate,
 		ReadWithoutTimeout:   resourceEmailIdentityRead,
@@ -36,7 +41,7 @@ func ResourceEmailIdentity() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -59,18 +64,11 @@ func ResourceEmailIdentity() *schema.Resource {
 						"domain_signing_private_key": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Sensitive:    true,
 							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_selector"},
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 20480),
-								func(v interface{}, name string) (warns []string, errs []error) {
-									s := v.(string)
-									if !verify.IsBase64Encoded([]byte(s)) {
-										errs = append(errs, fmt.Errorf(
-											"%s: must be base64-encoded", name,
-										))
-									}
-									return
-								},
+								verify.ValidBase64String,
 							),
 						},
 						"domain_signing_selector": {
@@ -94,7 +92,7 @@ func ResourceEmailIdentity() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"status": {
+						names.AttrStatus: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -115,8 +113,8 @@ func ResourceEmailIdentity() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"verified_for_sending_status": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -128,14 +126,16 @@ func ResourceEmailIdentity() *schema.Resource {
 }
 
 const (
-	ResNameEmailIdentity = "Email Identity"
+	resNameEmailIdentity = "Email Identity"
 )
 
 func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.CreateEmailIdentityInput{
 		EmailIdentity: aws.String(d.Get("email_identity").(string)),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("configuration_set_name"); ok {
@@ -146,51 +146,37 @@ func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, me
 		in.DkimSigningAttributes = expandDKIMSigningAttributes(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
-
-	if len(tags) > 0 {
-		in.Tags = Tags(tags.IgnoreAWS())
-	}
-
 	out, err := conn.CreateEmailIdentity(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameEmailIdentity, d.Get("email_identity").(string), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameEmailIdentity, d.Get("email_identity").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.SESV2, create.ErrActionCreating, ResNameEmailIdentity, d.Get("email_identity").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionCreating, resNameEmailIdentity, d.Get("email_identity").(string), errors.New("empty output"))
 	}
 
 	d.SetId(d.Get("email_identity").(string))
 
-	return resourceEmailIdentityRead(ctx, d, meta)
+	return append(diags, resourceEmailIdentityRead(ctx, d, meta)...)
 }
 
 func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	out, err := FindEmailIdentityByID(ctx, conn, d.Id())
+	out, err := findEmailIdentityByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SESV2 EmailIdentity (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentity, d.Id(), err)
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionReading, resNameEmailIdentity, d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("identity/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, emailIdentityARN(ctx, meta.(*conns.AWSClient), d.Id()))
 	d.Set("configuration_set_name", out.ConfigurationSetName)
 	d.Set("email_identity", d.Id())
 
@@ -200,38 +186,21 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 		tfMap["domain_signing_selector"] = d.Get("dkim_signing_attributes.0.domain_signing_selector").(string)
 
 		if err := d.Set("dkim_signing_attributes", []interface{}{tfMap}); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameEmailIdentity, d.Id(), err)
 		}
 	} else {
 		d.Set("dkim_signing_attributes", nil)
 	}
 
 	d.Set("identity_type", string(out.IdentityType))
-
-	tags, err := ListTags(ctx, conn, d.Get("arn").(string))
-	if err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentity, d.Id(), err)
-	}
-
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, d.Id(), err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return create.DiagError(names.SESV2, create.ErrActionSetting, ResNameEmailIdentity, d.Id(), err)
-	}
-
 	d.Set("verified_for_sending_status", out.VerifiedForSendingStatus)
 
-	return nil
+	return diags
 }
 
 func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	if d.HasChanges("configuration_set_name") {
 		in := &sesv2.PutEmailIdentityConfigurationSetAttributesInput{
@@ -242,10 +211,9 @@ func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, me
 			in.ConfigurationSetName = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Updating SESV2 EmailIdentity ConfigurationSetAttributes (%s): %#v", d.Id(), in)
 		_, err := conn.PutEmailIdentityConfigurationSetAttributes(ctx, in)
 		if err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameEmailIdentity, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameEmailIdentity, d.Id(), err)
 		}
 	}
 
@@ -260,67 +228,62 @@ func resourceEmailIdentityUpdate(ctx context.Context, d *schema.ResourceData, me
 			in.SigningAttributesOrigin = getSigningAttributesOrigin(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating SESV2 EmailIdentity DkimSigningAttributes (%s): %#v", d.Id(), in)
 		_, err := conn.PutEmailIdentityDkimSigningAttributes(ctx, in)
 		if err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameEmailIdentity, d.Id(), err)
+			return create.AppendDiagError(diags, names.SESV2, create.ErrActionUpdating, resNameEmailIdentity, d.Id(), err)
 		}
 	}
 
-	if d.HasChanges("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return create.DiagError(names.SESV2, create.ErrActionUpdating, ResNameEmailIdentity, d.Id(), err)
-		}
-	}
-
-	return resourceEmailIdentityRead(ctx, d, meta)
+	return append(diags, resourceEmailIdentityRead(ctx, d, meta)...)
 }
 
 func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
-	log.Printf("[INFO] Deleting SESV2 EmailIdentity %s", d.Id())
-
+	log.Printf("[INFO] Deleting SESV2 EmailIdentity: %s", d.Id())
 	_, err := conn.DeleteEmailIdentity(ctx, &sesv2.DeleteEmailIdentityInput{
 		EmailIdentity: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
-
-		return create.DiagError(names.SESV2, create.ErrActionDeleting, ResNameEmailIdentity, d.Id(), err)
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return create.AppendDiagError(diags, names.SESV2, create.ErrActionDeleting, resNameEmailIdentity, d.Id(), err)
+	}
+
+	return diags
 }
 
-func FindEmailIdentityByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetEmailIdentityOutput, error) {
-	in := &sesv2.GetEmailIdentityInput{
+func findEmailIdentityByID(ctx context.Context, conn *sesv2.Client, id string) (*sesv2.GetEmailIdentityOutput, error) {
+	input := &sesv2.GetEmailIdentityInput{
 		EmailIdentity: aws.String(id),
 	}
-	out, err := conn.GetEmailIdentity(ctx, in)
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &resource.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	return findEmailIdentity(ctx, conn, input)
+}
+
+func findEmailIdentity(ctx context.Context, conn *sesv2.Client, input *sesv2.GetEmailIdentityInput) (*sesv2.GetEmailIdentityOutput, error) {
+	output, err := conn.GetEmailIdentity(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
 func expandDKIMSigningAttributes(tfMap map[string]interface{}) *types.DkimSigningAttributes {
@@ -374,7 +337,7 @@ func flattenDKIMAttributes(apiObject *types.DkimAttributes) map[string]interface
 		"current_signing_key_length": string(apiObject.CurrentSigningKeyLength),
 		"next_signing_key_length":    string(apiObject.NextSigningKeyLength),
 		"signing_attributes_origin":  string(apiObject.SigningAttributesOrigin),
-		"status":                     string(apiObject.Status),
+		names.AttrStatus:             string(apiObject.Status),
 	}
 
 	if v := apiObject.LastKeyGenerationTimestamp; v != nil {
@@ -386,4 +349,8 @@ func flattenDKIMAttributes(apiObject *types.DkimAttributes) map[string]interface
 	}
 
 	return m
+}
+
+func emailIdentityARN(ctx context.Context, c *conns.AWSClient, emailIdentityName string) string {
+	return c.RegionalARN(ctx, "ses", fmt.Sprintf("identity/%s", emailIdentityName))
 }

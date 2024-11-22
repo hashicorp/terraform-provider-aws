@@ -1,13 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 )
 
 func TestAliasARNToKeyARN(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName      string
 		InputARN      string
@@ -17,17 +23,17 @@ func TestAliasARNToKeyARN(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`error parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",
 			InputARN:      "arn:aws:ec2:us-west-2:123456789012:alias/test-alias", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected service kms`),
+			ExpectedError: regexache.MustCompile(`expected service kms`),
 		},
 		{
 			TestName:    "valid ARN",
@@ -38,6 +44,8 @@ func TestAliasARNToKeyARN(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := tfkms.AliasARNToKeyARN(testCase.InputARN, "test-key")
 
 			if err == nil && testCase.ExpectedError != nil {
@@ -60,6 +68,8 @@ func TestAliasARNToKeyARN(t *testing.T) {
 }
 
 func TestKeyARNOrIDEqual(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name   string
 		first  string
@@ -125,6 +135,8 @@ func TestKeyARNOrIDEqual(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
 			got := tfkms.KeyARNOrIDEqual(testCase.first, testCase.second)
 
 			if got != testCase.want {

@@ -20,12 +20,12 @@ data "aws_network_interface" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `id` – (Optional) Identifier for the network interface.
 * `filter` – (Optional) One or more name/value pairs to filter off of. There are several valid keys, for a full reference, check out [describe-network-interfaces](https://docs.aws.amazon.com/cli/latest/reference/ec2/describe-network-interfaces.html) in the AWS CLI reference.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [Network Interface](/docs/providers/aws/r/network_interface.html) for details on the returned attributes.
 

@@ -49,7 +49,7 @@ resource "aws_glue_trigger" "example-inner" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` – (Required) The name you assign to this workflow.
 * `default_run_properties` – (Optional) A map of default run properties for this workflow. These properties are passed to all jobs associated to the workflow.
@@ -57,9 +57,9 @@ The following arguments are supported:
 * `max_concurrent_runs` - (Optional) Prevents exceeding the maximum number of concurrent runs of any of the component jobs. If you leave this parameter blank, there is no limit to the number of concurrent workflow runs.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of Glue Workflow
 * `id` - Workflow name
@@ -67,8 +67,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Workflows can be imported using `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Workflows using `name`. For example:
 
+```terraform
+import {
+  to = aws_glue_workflow.MyWorkflow
+  id = "MyWorkflow"
+}
 ```
-$ terraform import aws_glue_workflow.MyWorkflow MyWorkflow
+
+Using `terraform import`, import Glue Workflows using `name`. For example:
+
+```console
+% terraform import aws_glue_workflow.MyWorkflow MyWorkflow
 ```

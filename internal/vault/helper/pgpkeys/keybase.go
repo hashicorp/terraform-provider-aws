@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pgpkeys
 
 import (
@@ -8,7 +11,7 @@ import (
 
 	"github.com/ProtonMail/go-crypto/openpgp"
 	cleanhttp "github.com/hashicorp/go-cleanhttp"
-	"github.com/hashicorp/terraform-provider-aws/internal/vault/sdk/helper/jsonutil"
+	"github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
 const (
@@ -70,7 +73,7 @@ func FetchKeybasePubkeys(input []string) (map[string]string, error) {
 		Them: []LThem{},
 	}
 
-	if err := jsonutil.DecodeJSONFromReader(resp.Body, out); err != nil {
+	if err := json.DecodeFromReader(resp.Body, out); err != nil {
 		return nil, err
 	}
 
@@ -101,7 +104,7 @@ func FetchKeybasePubkeys(input []string) (map[string]string, error) {
 		serializedEntity.Reset()
 		err = entityList[0].Serialize(serializedEntity)
 		if err != nil {
-			return nil, fmt.Errorf("error serializing entity for user %q: %w", usernames[i], err)
+			return nil, fmt.Errorf("serializing entity for user %q: %w", usernames[i], err)
 		}
 
 		// The API returns values in the same ordering requested, so this should properly match

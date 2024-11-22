@@ -14,10 +14,19 @@ See the [Amazon CloudFront Developer Guide](https://docs.aws.amazon.com/AmazonCl
 ## Example Usage
 
 ```terraform
+data "aws_canonical_user_id" "current" {}
+
 data "aws_cloudfront_log_delivery_canonical_user_id" "example" {}
 
 resource "aws_s3_bucket" "example" {
   bucket = "example"
+}
+
+resource "aws_s3_bucket_ownership_controls" "example" {
+  bucket = aws_s3_bucket.example.id
+  rule {
+    object_ownership = "BucketOwnerPreferred"
+  }
 }
 
 resource "aws_s3_bucket_acl" "example" {
@@ -31,18 +40,22 @@ resource "aws_s3_bucket_acl" "example" {
       }
       permission = "FULL_CONTROL"
     }
+    owner {
+      id = data.aws_canonical_user_id.current.id
+    }
   }
+  depends_on = [aws_s3_bucket_ownership_controls.example]
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `region` - (Optional) Region you'd like the zone for. By default, fetches the current region.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Canonical user ID for the AWS `awslogsdelivery` account in the region.

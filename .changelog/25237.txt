@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_detective_organization_admin_account
+```
+
+```release-note:note
+resource/aws_detective_organization_admin_account: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```
+
+```release-note:new-resource
+aws_detective_organization_configuration
+```
+
+```release-note:note
+resource/aws_detective_organization_configuration: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```

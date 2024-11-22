@@ -30,7 +30,7 @@ resource "aws_macie2_classification_job" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `schedule_frequency` -  (Optional) The recurrence pattern for running the job. To run the job only once, don't specify a value for this property and set the value for the `job_type` property to `ONE_TIME`. (documented below)
 * `custom_data_identifier_ids` -  (Optional) The custom data identifiers to use for data analysis and classification.
@@ -124,18 +124,27 @@ The `tag_scope_term` object supports the following:
 * `key` -  (Required) The tag key to use in the condition. The only valid value is `TAG`.
 * `target` -  (Required) The type of object to apply the condition to. The only valid value is `S3_OBJECT`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie classification job.
 * `created_at` -  The date and time, in UTC and extended RFC 3339 format, when the job was created.
-* `user_paused_details` - If the current status of the job is `USER_PAUSED`, specifies when the job was paused and when the job or job run will expire and be cancelled if it isn't resumed. This value is present only if the value for `job-status` is `USER_PAUSED`.
+* `user_paused_details` - If the current status of the job is `USER_PAUSED`, specifies when the job was paused and when the job or job run will expire and be canceled if it isn't resumed. This value is present only if the value for `job-status` is `USER_PAUSED`.
 
 ## Import
 
-`aws_macie2_classification_job` can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_classification_job` using the id. For example:
 
+```terraform
+import {
+  to = aws_macie2_classification_job.example
+  id = "abcd1"
+}
 ```
-$ terraform import aws_macie2_classification_job.example abcd1
+
+Using `terraform import`, import `aws_macie2_classification_job` using the id. For example:
+
+```console
+% terraform import aws_macie2_classification_job.example abcd1
 ```

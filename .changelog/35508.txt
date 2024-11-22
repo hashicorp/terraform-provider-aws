@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_redshift_cluster: Add `multi_az` argument
+```
+
+```release-note:enhancement
+data-source/aws_redshift_cluster: Add `multi_az` attribute
+```

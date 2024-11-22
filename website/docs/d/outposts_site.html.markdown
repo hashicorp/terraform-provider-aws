@@ -20,14 +20,14 @@ data "aws_outposts_site" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `id` - (Optional) Identifier of the Site.
 * `name` - (Optional) Name of the Site.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `account_id` - AWS Account identifier.
 * `description` - Description.

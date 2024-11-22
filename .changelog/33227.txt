@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_opensearch_package
+```
+
+```release-note:new-resource
+aws_opensearch_package_association
+```

@@ -1,34 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudhsmv2_test
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccCloudHSMV2_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Cluster": {
-			"basic":      testAccCluster_basic,
-			"disappears": testAccCluster_disappears,
-			"tags":       testAccCluster_Tags,
+			acctest.CtBasic:      testAccCluster_basic,
+			acctest.CtDisappears: testAccCluster_disappears,
+			"tags":               testAccCluster_tags,
+			"hsmType":            testAccCluster_hsmType,
 		},
 		"Hsm": {
 			"availabilityZone":   testAccHSM_AvailabilityZone,
-			"basic":              testAccHSM_basic,
-			"disappears":         testAccHSM_disappears,
-			"disappears_Cluster": testAccHSM_disappears_Cluster,
+			acctest.CtBasic:      testAccHSM_basic,
+			acctest.CtDisappears: testAccHSM_disappears,
 			"ipAddress":          testAccHSM_IPAddress,
+		},
+		"DataSource": {
+			acctest.CtBasic: testAccDataSourceCluster_basic,
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

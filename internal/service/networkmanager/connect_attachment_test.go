@@ -1,105 +1,116 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/networkmanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNetworkManagerConnectAttachment_basic(t *testing.T) {
-	var v networkmanager.ConnectAttachment
+	ctx := acctest.Context(t)
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`attachment/.+`)),
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.protocol", "GRE"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 		},
 	})
 }
 
 func TestAccNetworkManagerConnectAttachment_basic_NoDependsOn(t *testing.T) {
-	var v networkmanager.ConnectAttachment
+	ctx := acctest.Context(t)
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_basic_NoDependsOn(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckConnectAttachmentExists(resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`attachment/.+`)),
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
 					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.protocol", "GRE"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
 			},
 		},
 	})
 }
 
 func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
-	var v networkmanager.ConnectAttachment
+	ctx := acctest.Context(t)
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectAttachmentExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceConnectAttachment(), resourceName),
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceConnectAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -107,30 +118,68 @@ func TestAccNetworkManagerConnectAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
-	var v networkmanager.ConnectAttachment
+func TestAccNetworkManagerConnectAttachment_protocolNoEncap(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ConnectAttachment
 	resourceName := "aws_networkmanager_connect_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectAttachmentDestroy,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectAttachmentConfig_protocolNoEncap(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "attachment_type", "CONNECT"),
+					resource.TestCheckResourceAttrSet(resourceName, "core_network_id"),
+					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "options.0.protocol", "NO_ENCAP"),
+					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+					resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrState},
+			},
+		},
+	})
+}
+
+func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ConnectAttachment
+	resourceName := "aws_networkmanager_connect_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectAttachmentConfig_tags1(rName, "segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectAttachmentExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
 			{
 				Config: testAccConnectAttachmentConfig_tags2(rName, "segment", "shared", "Name", "test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectAttachmentExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
 				),
@@ -138,8 +187,8 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 			{
 				Config: testAccConnectAttachmentConfig_tags1(rName, "segment", "shared"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectAttachmentExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					testAccCheckConnectAttachmentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.segment", "shared"),
 				),
 			},
@@ -152,7 +201,7 @@ func TestAccNetworkManagerConnectAttachment_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectAttachmentExists(n string, v *networkmanager.ConnectAttachment) resource.TestCheckFunc {
+func testAccCheckConnectAttachmentExists(ctx context.Context, n string, v *awstypes.ConnectAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -163,9 +212,9 @@ func testAccCheckConnectAttachmentExists(n string, v *networkmanager.ConnectAtta
 			return fmt.Errorf("No Network Manager Connect Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
-		output, err := tfnetworkmanager.FindConnectAttachmentByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tfnetworkmanager.FindConnectAttachmentByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -177,28 +226,30 @@ func testAccCheckConnectAttachmentExists(n string, v *networkmanager.ConnectAtta
 	}
 }
 
-func testAccCheckConnectAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn()
+func testAccCheckConnectAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_networkmanager_connect_attachment" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_networkmanager_connect_attachment" {
+				continue
+			}
+
+			_, err := tfnetworkmanager.FindConnectAttachmentByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Network Manager Connect Attachment %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfnetworkmanager.FindConnectAttachmentByID(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Network Manager Connect Attachment %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccConnectAttachmentConfig_base(rName string) string {
@@ -238,11 +289,15 @@ resource "aws_networkmanager_global_network" "test" {
 
 resource "aws_networkmanager_core_network" "test" {
   global_network_id = aws_networkmanager_global_network.test.id
-  policy_document   = data.aws_networkmanager_core_network_policy_document.test.json
 
   tags = {
     Name = %[1]q
   }
+}
+
+resource "aws_networkmanager_core_network_policy_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network.test.id
+  policy_document = data.aws_networkmanager_core_network_policy_document.test.json
 }
 
 data "aws_networkmanager_core_network_policy_document" "test" {
@@ -288,7 +343,7 @@ func testAccConnectAttachmentConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), `
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test[*].arn
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"
@@ -326,7 +381,7 @@ func testAccConnectAttachmentConfig_basic_NoDependsOn(rName string) string {
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), `
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = aws_subnet.test[*].arn
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"
@@ -357,11 +412,49 @@ resource "aws_networkmanager_attachment_accepter" "test2" {
 `)
 }
 
+func testAccConnectAttachmentConfig_protocolNoEncap(rName string) string {
+	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), `
+resource "aws_networkmanager_vpc_attachment" "test" {
+  subnet_arns     = aws_subnet.test[*].arn
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  vpc_arn         = aws_vpc.test.arn
+  tags = {
+    segment = "shared"
+  }
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_vpc_attachment.test.id
+  attachment_type = aws_networkmanager_vpc_attachment.test.attachment_type
+}
+
+resource "aws_networkmanager_connect_attachment" "test" {
+  core_network_id         = aws_networkmanager_core_network.test.id
+  transport_attachment_id = aws_networkmanager_vpc_attachment.test.id
+  edge_location           = aws_networkmanager_vpc_attachment.test.edge_location
+  options {
+    protocol = "NO_ENCAP"
+  }
+  tags = {
+    segment = "shared"
+  }
+  depends_on = [
+    "aws_networkmanager_attachment_accepter.test"
+  ]
+}
+
+resource "aws_networkmanager_attachment_accepter" "test2" {
+  attachment_id   = aws_networkmanager_connect_attachment.test.id
+  attachment_type = aws_networkmanager_connect_attachment.test.attachment_type
+}
+`)
+}
+
 func testAccConnectAttachmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"
@@ -399,7 +492,7 @@ func testAccConnectAttachmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, ta
 	return acctest.ConfigCompose(testAccConnectAttachmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_vpc_attachment" "test" {
   subnet_arns     = [aws_subnet.test[0].arn]
-  core_network_id = aws_networkmanager_core_network.test.id
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   vpc_arn         = aws_vpc.test.arn
   tags = {
     segment = "shared"

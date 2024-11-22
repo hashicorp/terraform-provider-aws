@@ -31,9 +31,9 @@ The following arguments are optional:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) Channel type, which determines the allowable resolution and bitrate. Valid values: `STANDARD`, `BASIC`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Channel.
 * `ingest_endpoint` - Channel ingest endpoint, part of the definition of an ingest server, used when setting up streaming software.
@@ -50,8 +50,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IVS (Interactive Video) Channel can be imported using the ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IVS (Interactive Video) Channel using the ARN. For example:
 
+```terraform
+import {
+  to = aws_ivs_channel.example
+  id = "arn:aws:ivs:us-west-2:326937407773:channel/0Y1lcs4U7jk5"
+}
 ```
-$ terraform import aws_ivs_channel.example arn:aws:ivs:us-west-2:326937407773:channel/0Y1lcs4U7jk5
+
+Using `terraform import`, import IVS (Interactive Video) Channel using the ARN. For example:
+
+```console
+% terraform import aws_ivs_channel.example arn:aws:ivs:us-west-2:326937407773:channel/0Y1lcs4U7jk5
 ```

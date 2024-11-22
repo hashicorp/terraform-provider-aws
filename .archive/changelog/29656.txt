@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_codegurureviewer_repository_association
+```

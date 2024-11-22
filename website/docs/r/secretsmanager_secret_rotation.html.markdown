@@ -35,19 +35,22 @@ To enable automatic secret rotation, the Secrets Manager service requires usage 
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `secret_id` - (Required) Specifies the secret to which you want to add a new version. You can specify either the Amazon Resource Name (ARN) or the friendly name of the secret. The secret must already exist.
-* `rotation_lambda_arn` - (Required) Specifies the ARN of the Lambda function that can rotate the secret.
+* `rotate_immediately` - (Optional) Specifies whether to rotate the secret immediately or wait until the next scheduled rotation window. The rotation schedule is defined in `rotation_rules`. For secrets that use a Lambda rotation function to rotate, if you don't immediately rotate the secret, Secrets Manager tests the rotation configuration by running the testSecret step (https://docs.aws.amazon.com/secretsmanager/latest/userguide/rotate-secrets_how.html) of the Lambda rotation function. The test creates an AWSPENDING version of the secret and then removes it. Defaults to `true`.
+* `rotation_lambda_arn` - (Optional) Specifies the ARN of the Lambda function that can rotate the secret. Must be supplied if the secret is not managed by AWS.
 * `rotation_rules` - (Required) A structure that defines the rotation configuration for this secret. Defined below.
 
 ### rotation_rules
 
-* `automatically_after_days` - (Required) Specifies the number of days between automatic scheduled rotations of the secret.
+* `automatically_after_days` - (Optional) Specifies the number of days between automatic scheduled rotations of the secret. Either `automatically_after_days` or `schedule_expression` must be specified.
+* `duration` - (Optional) - The length of the rotation window in hours. For example, `3h` for a three hour window.
+* `schedule_expression` - (Optional) A `cron()` or `rate()` expression that defines the schedule for rotating your secret. Either `automatically_after_days` or `schedule_expression` must be specified.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Amazon Resource Name (ARN) of the secret.
 * `arn` - Amazon Resource Name (ARN) of the secret.
@@ -55,8 +58,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_secretsmanager_secret_rotation` can be imported by using the secret Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_secretsmanager_secret_rotation` using the secret Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_secretsmanager_secret_rotation.example
+  id = "arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456"
+}
 ```
-$ terraform import aws_secretsmanager_secret_rotation.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
+
+Using `terraform import`, import `aws_secretsmanager_secret_rotation` using the secret Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_secretsmanager_secret_rotation.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456
 ```

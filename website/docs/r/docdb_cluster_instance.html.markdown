@@ -1,19 +1,19 @@
 ---
-subcategory: "DocDB (DocumentDB)"
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_instance"
 description: |-
-  Provides an DocDB Cluster Resource Instance
+  Provides an DocumentDB Cluster Resource Instance
 ---
 
 # Resource: aws_docdb_cluster_instance
 
-Provides an DocDB Cluster Resource Instance. A Cluster Instance Resource defines
-attributes that are specific to a single instance in a [DocDB Cluster][1].
+Provides an DocumentDB Cluster Resource Instance. A Cluster Instance Resource defines
+attributes that are specific to a single instance in a [DocumentDB Cluster][1].
 
-You do not designate a primary and subsequent replicas. Instead, you simply add DocDB
-Instances and DocDB manages the replication. You can use the [count][3]
-meta-parameter to make multiple instances and join them all to the same DocDB
+You do not designate a primary and subsequent replicas. Instead, you simply add DocumentDB
+Instances and DocumentDB manages the replication. You can use the [count][3]
+meta-parameter to make multiple instances and join them all to the same DocumentDB
 Cluster, or you may specify different Cluster Instance resources with various
 `instance_class` sizes.
 
@@ -40,19 +40,29 @@ resource "aws_docdb_cluster" "default" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation](https://docs.aws.amazon.com/cli/latest/reference/docdb/create-db-instance.html).
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `apply_immediately` - (Optional) Specifies whether any database modifications
      are applied immediately, or during the next maintenance window. Default is`false`.
 * `auto_minor_version_upgrade` - (Optional) This parameter does not apply to Amazon DocumentDB. Amazon DocumentDB does not perform minor version upgrades regardless of the value set (see [docs](https://docs.aws.amazon.com/documentdb/latest/developerguide/API_DBInstance.html)). Default `true`.
 * `availability_zone` - (Optional, Computed) The EC2 Availability Zone that the DB instance is created in. See [docs](https://docs.aws.amazon.com/documentdb/latest/developerguide/API_CreateDBInstance.html) about the details.
+* `ca_cert_identifier` - (Optional) The identifier of the certificate authority (CA) certificate for the DB instance.
 * `cluster_identifier` - (Required) The identifier of the [`aws_docdb_cluster`](/docs/providers/aws/r/docdb_cluster.html) in which to launch this instance.
+* `copy_tags_to_snapshot` – (Optional, boolean) Copy all DB instance `tags` to snapshots. Default is `false`.
 * `enable_performance_insights` - (Optional) A value that indicates whether to enable Performance Insights for the DB Instance. Default `false`. See [docs] (https://docs.aws.amazon.com/documentdb/latest/developerguide/performance-insights.html) about the details.
-* `engine` - (Optional) The name of the database engine to be used for the DocDB instance. Defaults to `docdb`. Valid Values: `docdb`.
-* `identifier` - (Optional, Forces new resource) The identifier for the DocDB instance, if omitted, Terraform will assign a random, unique identifier.
+* `engine` - (Optional) The name of the database engine to be used for the DocumentDB instance. Defaults to `docdb`. Valid Values: `docdb`.
+* `identifier` - (Optional, Forces new resource) The identifier for the DocumentDB instance, if omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
-* `instance_class` - (Required) The instance class to use. For details on CPU and memory, see [Scaling for DocDB Instances][2]. DocDB currently
-  supports the below instance classes. Please see [AWS Documentation][4] for complete details.
+* `instance_class` - (Required) The instance class to use. For details on CPU and memory, see [Scaling for DocumentDB Instances][2].
+  DocumentDB currently supports the below instance classes.
+  Please see [AWS Documentation][4] for complete details.
+    - db.r6g.large
+    - db.r6g.xlarge
+    - db.r6g.2xlarge
+    - db.r6g.4xlarge
+    - db.r6g.8xlarge
+    - db.r6g.12xlarge
+    - db.r6g.16xlarge
     - db.r5.large
     - db.r5.xlarge
     - db.r5.2xlarge
@@ -65,6 +75,7 @@ The following arguments are supported:
     - db.r4.4xlarge
     - db.r4.8xlarge
     - db.r4.16xlarge
+    - db.t4g.medium
     - db.t3.medium
 * `performance_insights_kms_key_id` - (Optional) The KMS key identifier is the key ARN, key ID, alias ARN, or alias name for the KMS key. If you do not specify a value for PerformanceInsightsKMSKeyId, then Amazon DocumentDB uses your default KMS key.
 * `preferred_maintenance_window` - (Optional) The window to perform maintenance in.
@@ -72,9 +83,9 @@ The following arguments are supported:
 * `promotion_tier` - (Optional) Default 0. Failover Priority setting on instance level. The reader who has lower tier has higher priority to get promoter to writer.
 * `tags` - (Optional) A map of tags to assign to the instance. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of cluster instance
 * `db_subnet_group_name` - The DB subnet group to associate with this DB instance.
@@ -87,7 +98,6 @@ In addition to all arguments above, the following attributes are exported:
 * `storage_encrypted` - Specifies whether the DB cluster is encrypted.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
-* `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 
 [1]: /docs/providers/aws/r/docdb_cluster.html
 [2]: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-cluster-manage-performance.html#db-cluster-manage-scaling-instance
@@ -106,8 +116,17 @@ the time required to take snapshots
 
 ## Import
 
-DocDB Cluster Instances can be imported using the `identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DocumentDB Cluster Instances using the `identifier`. For example:
 
+```terraform
+import {
+  to = aws_docdb_cluster_instance.prod_instance_1
+  id = "aurora-cluster-instance-1"
+}
 ```
-$ terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1
+
+Using `terraform import`, import DocumentDB Cluster Instances using the `identifier`. For example:
+
+```console
+% terraform import aws_docdb_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```

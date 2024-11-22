@@ -23,7 +23,7 @@ data "aws_subnet" "selected" {
   id = var.subnet_id
 }
 
-resource "aws_security_group" "subnet" {
+resource "aws_security_group" "subnet_security_group" {
   vpc_id = data.aws_subnet.selected.vpc_id
 
   ingress {
@@ -74,15 +74,16 @@ The following arguments are required:
 * `name` - (Required) Name of the field to filter by, as defined by [the underlying AWS API](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSubnets.html).
 * `values` - (Required) Set of values that are accepted for the given field. A subnet will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the attributes above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the subnet.
 * `assign_ipv6_address_on_creation` - Whether an IPv6 address is assigned on creation.
 * `available_ip_address_count` - Available IP addresses of the subnet.
 * `customer_owned_ipv4_pool` - Identifier of customer owned IPv4 address pool.
 * `enable_dns64` - Whether DNS queries made to the Amazon-provided DNS Resolver in this subnet return synthetic IPv6 addresses for IPv4-only destinations.
+* `enable_lni_at_device_index` - Indicates the device position for local network interfaces in this subnet. For example, 1 indicates local network interfaces in this subnet are the secondary network interface (eth1). A local network interface cannot be the primary network interface (eth0).
 * `enable_resource_name_dns_aaaa_record_on_launch` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
 * `enable_resource_name_dns_a_record_on_launch` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
 * `ipv6_cidr_block_association_id` - Association ID of the IPv6 CIDR block.

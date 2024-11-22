@@ -31,7 +31,7 @@ data "aws_ebs_volume" "ebs_volume" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `most_recent` - (Optional) If more than one result is returned, use the most
 recent Volume.
@@ -39,13 +39,13 @@ recent Volume.
 several valid keys, for a full reference, check out
 [describe-volumes in the AWS CLI reference][1].
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Volume ID (e.g., vol-59fcb34e).
 * `volume_id` - Volume ID (e.g., vol-59fcb34e).
-* `arn` - Volume ARN (e.g., arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
+* `arn` - Volume ARN (e.g., arn:aws:ec2:us-east-1:123456789012:volume/vol-59fcb34e).
 * `availability_zone` - AZ where the EBS volume exists.
 * `encrypted` - Whether the disk is encrypted.
 * `iops` - Amount of IOPS for the disk.

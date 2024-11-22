@@ -29,9 +29,9 @@ The following arguments are required:
 * `outpost_id` - (Required) Identifier of the Outpost to contain this bucket.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the bucket.
 * `creation_date` - UTC creation date in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
@@ -41,8 +41,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-S3 Control Buckets can be imported using Amazon Resource Name (ARN), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Control Buckets using Amazon Resource Name (ARN). For example:
 
+```terraform
+import {
+  to = aws_s3control_bucket.example
+  id = "arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example"
+}
 ```
-$ terraform import aws_s3control_bucket.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
+
+Using `terraform import`, import S3 Control Buckets using Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_s3control_bucket.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-12345678/bucket/example
 ```

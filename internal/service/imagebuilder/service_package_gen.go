@@ -5,78 +5,191 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	frameworkDataSourceFactories []func(context.Context) (datasource.DataSourceWithConfigure, error)
-	frameworkResourceFactories   []func(context.Context) (resource.ResourceWithConfigure, error)
-	sdkDataSourceFactories       []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+type servicePackage struct{}
+
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
+}
+
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newLifecyclePolicyResource,
+			Name:    "Lifecycle Policy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
 	}
-	sdkResourceFactories []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+}
+
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  dataSourceComponent,
+			TypeName: "aws_imagebuilder_component",
+			Name:     "Component",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  dataSourceComponents,
+			TypeName: "aws_imagebuilder_components",
+			Name:     "Components",
+		},
+		{
+			Factory:  dataSourceContainerRecipe,
+			TypeName: "aws_imagebuilder_container_recipe",
+			Name:     "Container Recipe",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  dataSourceContainerRecipes,
+			TypeName: "aws_imagebuilder_container_recipes",
+			Name:     "Container Recipes",
+		},
+		{
+			Factory:  dataSourceDistributionConfiguration,
+			TypeName: "aws_imagebuilder_distribution_configuration",
+			Name:     "Distribution Configuration",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  dataSourceDistributionConfigurations,
+			TypeName: "aws_imagebuilder_distribution_configurations",
+			Name:     "Distribution Configurations",
+		},
+		{
+			Factory:  dataSourceImage,
+			TypeName: "aws_imagebuilder_image",
+			Name:     "Image",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  dataSourceImagePipeline,
+			TypeName: "aws_imagebuilder_image_pipeline",
+			Name:     "Image Pipeline",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  dataSourceImagePipelines,
+			TypeName: "aws_imagebuilder_image_pipelines",
+			Name:     "Image Pipelines",
+		},
+		{
+			Factory:  dataSourceImageRecipe,
+			TypeName: "aws_imagebuilder_image_recipe",
+			Name:     "Image Recipe",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  dataSourceImageRecipes,
+			TypeName: "aws_imagebuilder_image_recipes",
+			Name:     "Image Recipes",
+		},
+		{
+			Factory:  dataSourceInfrastructureConfiguration,
+			TypeName: "aws_imagebuilder_infrastructure_configuration",
+			Name:     "Infrastructure Configuration",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  dataSourceInfrastructureConfigurations,
+			TypeName: "aws_imagebuilder_infrastructure_configurations",
+			Name:     "Infrastructure Configurations",
+		},
 	}
 }
 
-func (p *servicePackage) Configure(ctx context.Context, meta any) error {
-	return nil
-}
-
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return p.frameworkDataSourceFactories
-}
-
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return p.frameworkResourceFactories
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkDataSourceFactories
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkResourceFactories
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceComponent,
+			TypeName: "aws_imagebuilder_component",
+			Name:     "Component",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  resourceContainerRecipe,
+			TypeName: "aws_imagebuilder_container_recipe",
+			Name:     "Container Recipe",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  resourceDistributionConfiguration,
+			TypeName: "aws_imagebuilder_distribution_configuration",
+			Name:     "Distribution Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  resourceImage,
+			TypeName: "aws_imagebuilder_image",
+			Name:     "Image",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  resourceImagePipeline,
+			TypeName: "aws_imagebuilder_image_pipeline",
+			Name:     "Image Pipeline",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  resourceImageRecipe,
+			TypeName: "aws_imagebuilder_image_recipe",
+			Name:     "Image Recipe",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  resourceInfrastructureConfiguration,
+			TypeName: "aws_imagebuilder_infrastructure_configuration",
+			Name:     "Infrastructure Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory:  resourceWorkflow,
+			TypeName: "aws_imagebuilder_workflow",
+			Name:     "Workflow",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+	}
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "imagebuilder"
+	return names.ImageBuilder
 }
 
-func (p *servicePackage) registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
-	p.frameworkDataSourceFactories = append(p.frameworkDataSourceFactories, factory)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*imagebuilder.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+
+	return imagebuilder.NewFromConfig(cfg,
+		imagebuilder.WithEndpointResolverV2(newEndpointResolverV2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
-func (p *servicePackage) registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
-	p.frameworkResourceFactories = append(p.frameworkResourceFactories, factory)
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
 }
-
-func (p *servicePackage) registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkDataSourceFactories = append(p.sdkDataSourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-func (p *servicePackage) registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkResourceFactories = append(p.sdkResourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)

@@ -21,23 +21,32 @@ resource "aws_dax_subnet_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` – (Required) The name of the subnet group.
 * `description` - (Optional) A description of the subnet group.
 * `subnet_ids` – (Required) A list of VPC subnet IDs for the subnet group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the subnet group.
 * `vpc_id` – VPC ID of the subnet group.
 
 ## Import
 
-DAX Subnet Group can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DAX Subnet Group using the `name`. For example:
 
+```terraform
+import {
+  to = aws_dax_subnet_group.example
+  id = "my_dax_sg"
+}
 ```
-$ terraform import aws_dax_subnet_group.example my_dax_sg
+
+Using `terraform import`, import DAX Subnet Group using the `name`. For example:
+
+```console
+% terraform import aws_dax_subnet_group.example my_dax_sg
 ```

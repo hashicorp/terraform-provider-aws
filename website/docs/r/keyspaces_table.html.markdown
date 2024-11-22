@@ -42,6 +42,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `capacity_specification` - (Optional) Specifies the read/write throughput capacity mode for the table.
+* `client_side_timestamps` - (Optional) Enables client-side timestamps for the table. By default, the setting is disabled.
 * `comment` - (Optional) A description of the table.
 * `default_time_to_live` - (Optional) The default Time to Live setting in seconds for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/TTL-how-it-works.html#ttl-howitworks_default_ttl).
 * `encryption_specification` - (Optional) Specifies how the encryption key for encryption at rest is managed for the table. More information can be found in the [Developer Guide](https://docs.aws.amazon.com/keyspaces/latest/devguide/EncryptionAtRest.html).
@@ -55,6 +56,10 @@ The `capacity_specification` object takes the following arguments:
 * `read_capacity_units` - (Optional) The throughput capacity specified for read operations defined in read capacity units (RCUs).
 * `throughput_mode` - (Optional) The read/write throughput capacity mode for a table. Valid values: `PAY_PER_REQUEST`, `PROVISIONED`. The default value is `PAY_PER_REQUEST`.
 * `write_capacity_units` - (Optional) The throughput capacity specified for write operations defined in write capacity units (WCUs).
+
+The `client_side_timestamps` object takes the following arguments:
+
+* `status` - (Required) Shows how to enable client-side timestamps settings for the specified table. Valid values: `ENABLED`.
 
 The `comment` object takes the following arguments:
 
@@ -98,9 +103,9 @@ The `ttl` object takes the following arguments:
 
 * `status` - (Optional) Valid values: `ENABLED`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the table.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -115,8 +120,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Use the `keyspace_name` and `table_name` separated by `/` to import a table. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a table using the `keyspace_name` and `table_name` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_keyspaces_table.example
+  id = "my_keyspace/my_table"
+}
 ```
-$ terraform import aws_keyspaces_table.example my_keyspace/my_table
+
+Using `terraform import`, import a table using the `keyspace_name` and `table_name` separated by `/`. For example:
+
+```console
+% terraform import aws_keyspaces_table.example my_keyspace/my_table
 ```

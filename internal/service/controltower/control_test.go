@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package controltower_test
 
 import (
@@ -5,56 +8,51 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/controltower"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	types "github.com/aws/aws-sdk-go-v2/service/controltower/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcontroltower "github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccControlTowerControl_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"Control": {
-			"basic":      testAccControl_basic,
-			"disappears": testAccControl_disappears,
+			acctest.CtBasic:      testAccControl_basic,
+			acctest.CtDisappears: testAccControl_disappears,
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
 func testAccControl_basic(t *testing.T) {
-	var control controltower.EnabledControlSummary
+	ctx := acctest.Context(t)
+	var control types.EnabledControlSummary
 	resourceName := "aws_controltower_control.test"
 	controlName := "AWS-GR_EC2_VOLUME_INUSE_CHECK"
 	ouName := "Security"
+	region := "us-west-2" //lintignore:AWSAT003
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, controltower.EndpointsID),
-		CheckDestroy:             testAccCheckControlDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
+		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccControlConfig_basic(controlName, ouName),
+				Config: testAccControlConfig_basic(controlName, ouName, region),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlExists(resourceName, &control),
+					testAccCheckControlExists(ctx, resourceName, &control),
 					resource.TestCheckResourceAttrSet(resourceName, "control_identifier"),
 				),
 			},
@@ -63,26 +61,28 @@ func testAccControl_basic(t *testing.T) {
 }
 
 func testAccControl_disappears(t *testing.T) {
-	var control controltower.EnabledControlSummary
+	ctx := acctest.Context(t)
+	var control types.EnabledControlSummary
 	resourceName := "aws_controltower_control.test"
 	controlName := "AWS-GR_EC2_VOLUME_INUSE_CHECK"
 	ouName := "Security"
+	region := "us-west-2" //lintignore:AWSAT003
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckOrganizationManagementAccount(t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, controltower.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckControlDestroy,
+		CheckDestroy:             testAccCheckControlDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccControlConfig_basic(controlName, ouName),
+				Config: testAccControlConfig_basic(controlName, ouName, region),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckControlExists(resourceName, &control),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcontroltower.ResourceControl(), resourceName),
+					testAccCheckControlExists(ctx, resourceName, &control),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcontroltower.ResourceControl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -90,25 +90,16 @@ func testAccControl_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckControlExists(n string, v *controltower.EnabledControlSummary) resource.TestCheckFunc {
+func testAccCheckControlExists(ctx context.Context, n string, v *types.EnabledControlSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ControlTower Control ID is set")
-		}
 
-		targetIdentifier, controlIdentifier, err := tfcontroltower.ControlParseResourceID(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
 
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn()
-
-		output, err := tfcontroltower.FindEnabledControlByTwoPartKey(context.Background(), conn, targetIdentifier, controlIdentifier)
+		output, err := tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, rs.Primary.Attributes["target_identifier"], rs.Primary.Attributes["control_identifier"])
 
 		if err != nil {
 			return err
@@ -120,37 +111,33 @@ func testAccCheckControlExists(n string, v *controltower.EnabledControlSummary) 
 	}
 }
 
-func testAccCheckControlDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerConn()
+func testAccCheckControlDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_controltower_control" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_controltower_control" {
+				continue
+			}
+
+			_, err := tfcontroltower.FindEnabledControlByTwoPartKey(ctx, conn, rs.Primary.Attributes["target_identifier"], rs.Primary.Attributes["control_identifier"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ControlTower Control %s still exists", rs.Primary.ID)
 		}
 
-		targetIdentifier, controlIdentifier, err := tfcontroltower.ControlParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		_, err = tfcontroltower.FindEnabledControlByTwoPartKey(context.Background(), conn, targetIdentifier, controlIdentifier)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("ControlTower Control %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccControlConfig_basic(controlName string, ouName string) string {
+func testAccControlConfig_basic(controlName, ouName, region string) string {
 	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -168,6 +155,11 @@ resource "aws_controltower_control" "test" {
     for x in data.aws_organizations_organizational_units.test.children :
     x.arn if x.name == "%[2]s"
   ][0]
+
+  parameters {
+    key   = "AllowedRegions"
+    value = jsonencode([%[3]q])
+  }
 }
-`, controlName, ouName)
+`, controlName, ouName, region)
 }

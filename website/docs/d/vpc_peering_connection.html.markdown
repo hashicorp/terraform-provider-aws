@@ -72,32 +72,30 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A VPC Peering Connection will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` are also exported as result attributes.
 
 * `accepter` - Configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the accepter VPC.
 
-* `cidr_block_set` - List of objects with CIDR blocks of the requester VPC.
+* `cidr_block_set` - List of objects with IPv4 CIDR blocks of the requester VPC.
 
-* `peer_cidr_block_set` - List of objects with CIDR blocks of the accepter VPC.
+* `ipv6_cidr_block_set` - List of objects with IPv6 CIDR blocks of the requester VPC.
+
+* `peer_cidr_block_set` - List of objects with IPv4 CIDR blocks of the accepter VPC.
+
+* `peer_ipv6_cidr_block_set` - List of objects with IPv6 CIDR blocks of the accepter VPC.
 
 * `requester` - Configuration block that describes [VPC Peering Connection]
 (https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC.
 
-#### Accepter and Requester Attributes Reference
+#### Accepter and Requester Attribute Reference
 
 * `allow_remote_vpc_dns_resolution` - Indicates whether a local VPC can resolve public DNS hostnames to
 private IP addresses when queried from instances in a peer VPC.
 
-* `allow_classic_link_to_remote_vpc` - Indicates whether a local ClassicLink connection can communicate
-with the peer VPC over the VPC peering connection.
-
-* `allow_vpc_to_remote_classic_link` - Indicates whether a local VPC can communicate with a ClassicLink
-connection in the peer VPC over the VPC peering connection.
-
-#### CIDR block set Attributes Reference
+#### CIDR block set Attribute Reference
 
 * `cidr_block` - CIDR block associated to the VPC of the specific VPC Peering Connection.
 

@@ -5,78 +5,112 @@ package pinpoint
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/intf"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type servicePackage struct {
-	frameworkDataSourceFactories []func(context.Context) (datasource.DataSourceWithConfigure, error)
-	frameworkResourceFactories   []func(context.Context) (resource.ResourceWithConfigure, error)
-	sdkDataSourceFactories       []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+type servicePackage struct{}
+
+func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
+	return []*types.ServicePackageFrameworkDataSource{}
+}
+
+func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceEmailTemplate,
+			Name:    "Email Template",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
 	}
-	sdkResourceFactories []struct {
-		TypeName string
-		Factory  func() *schema.Resource
+}
+
+func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
+	return []*types.ServicePackageSDKDataSource{}
+}
+
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceADMChannel,
+			TypeName: "aws_pinpoint_adm_channel",
+			Name:     "ADM Channel",
+		},
+		{
+			Factory:  resourceAPNSChannel,
+			TypeName: "aws_pinpoint_apns_channel",
+			Name:     "APNS Channel",
+		},
+		{
+			Factory:  resourceAPNSSandboxChannel,
+			TypeName: "aws_pinpoint_apns_sandbox_channel",
+			Name:     "APNS Sandbox Channel",
+		},
+		{
+			Factory:  resourceAPNSVoIPChannel,
+			TypeName: "aws_pinpoint_apns_voip_channel",
+			Name:     "APNS VoIP Channel",
+		},
+		{
+			Factory:  resourceAPNSVoIPSandboxChannel,
+			TypeName: "aws_pinpoint_apns_voip_sandbox_channel",
+			Name:     "APNS VoIP Sandbox Channel",
+		},
+		{
+			Factory:  resourceApp,
+			TypeName: "aws_pinpoint_app",
+			Name:     "App",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceBaiduChannel,
+			TypeName: "aws_pinpoint_baidu_channel",
+			Name:     "Baidu Channel",
+		},
+		{
+			Factory:  resourceEmailChannel,
+			TypeName: "aws_pinpoint_email_channel",
+			Name:     "Email Channel",
+		},
+		{
+			Factory:  resourceEventStream,
+			TypeName: "aws_pinpoint_event_stream",
+			Name:     "Event Stream",
+		},
+		{
+			Factory:  resourceGCMChannel,
+			TypeName: "aws_pinpoint_gcm_channel",
+			Name:     "GCM Channel",
+		},
+		{
+			Factory:  resourceSMSChannel,
+			TypeName: "aws_pinpoint_sms_channel",
+			Name:     "SMS Channel",
+		},
 	}
-}
-
-func (p *servicePackage) Configure(ctx context.Context, meta any) error {
-	return nil
-}
-
-func (p *servicePackage) FrameworkDataSources(ctx context.Context) []func(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return p.frameworkDataSourceFactories
-}
-
-func (p *servicePackage) FrameworkResources(ctx context.Context) []func(context.Context) (resource.ResourceWithConfigure, error) {
-	return p.frameworkResourceFactories
-}
-
-func (p *servicePackage) SDKDataSources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkDataSourceFactories
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []struct {
-	TypeName string
-	Factory  func() *schema.Resource
-} {
-	return p.sdkResourceFactories
 }
 
 func (p *servicePackage) ServicePackageName() string {
-	return "pinpoint"
+	return names.Pinpoint
 }
 
-func (p *servicePackage) registerFrameworkDataSourceFactory(factory func(context.Context) (datasource.DataSourceWithConfigure, error)) {
-	p.frameworkDataSourceFactories = append(p.frameworkDataSourceFactories, factory)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*pinpoint.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+
+	return pinpoint.NewFromConfig(cfg,
+		pinpoint.WithEndpointResolverV2(newEndpointResolverV2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+	), nil
 }
 
-func (p *servicePackage) registerFrameworkResourceFactory(factory func(context.Context) (resource.ResourceWithConfigure, error)) {
-	p.frameworkResourceFactories = append(p.frameworkResourceFactories, factory)
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
 }
-
-func (p *servicePackage) registerSDKDataSourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkDataSourceFactories = append(p.sdkDataSourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-func (p *servicePackage) registerSDKResourceFactory(typeName string, factory func() *schema.Resource) {
-	p.sdkResourceFactories = append(p.sdkResourceFactories, struct {
-		TypeName string
-		Factory  func() *schema.Resource
-	}{TypeName: typeName, Factory: factory})
-}
-
-var (
-	_sp                                = &servicePackage{}
-	ServicePackage intf.ServicePackage = _sp
-)

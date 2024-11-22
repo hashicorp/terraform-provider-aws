@@ -1,0 +1,87 @@
+```release-note:breaking-change
+provider: With the retirement of EC2-Classic the `aws_db_security_group` resource has been removed
+```
+
+```release-note:breaking-change
+provider: With the retirement of EC2-Classic the `aws_elasticache_security_group` resource has been removed
+```
+
+```release-note:breaking-change
+provider: With the retirement of EC2-Classic the `aws_redshift_security_group` resource has been removed
+```
+
+```release-note:breaking-change
+resource/aws_db_instance: With the retirement of EC2-Classic the `security_group_names` attribute has been removed
+```
+
+```release-note:breaking-change
+data-source/aws_db_instance: With the retirement of EC2-Classic the `db_security_groups` attribute has been removed
+```
+
+```release-note:breaking-change
+resource/aws_elasticache_cluster: With the retirement of EC2-Classic the `security_group_names` attribute has been removed
+```
+
+```release-note:breaking-change
+data-source/aws_elasticache_cluster: With the retirement of EC2-Classic the `security_group_names` attribute has been removed
+```
+
+```release-note:breaking-change
+resource/aws_redshift_cluster: With the retirement of EC2-Classic the `cluster_security_groups` attribute has been removed
+```
+
+```release-note:breaking-change
+data-source/aws_redshift_cluster: With the retirement of EC2-Classic the `cluster_security_groups` attribute has been removed
+```
+
+```release-note:breaking-change
+resource/aws_launch_configuration: With the retirement of EC2-Classic the `vpc_classic_link_id` and `vpc_classic_link_security_groups` attributes have been removed
+```
+
+```release-note:breaking-change
+data-source/aws_launch_configuration: With the retirement of EC2-Classic the `vpc_classic_link_id` and `vpc_classic_link_security_groups` attributes have been removed
+```
+
+```release-note:breaking-change
+resource/aws_vpc_peering_connection: With the retirement of EC2-Classic the `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` attributes have been removed
+```
+
+```release-note:breaking-change
+resource/aws_vpc_peering_connection_accepter: With the retirement of EC2-Classic the `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` attributes have been removed
+```
+
+```release-note:breaking-change
+resource/aws_vpc_peering_connection_options: With the retirement of EC2-Classic the `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` attributes have been removed
+```
+
+```release-note:breaking-change
+data-source/aws_vpc_peering_connection: With the retirement of EC2-Classic the `allow_classic_link_to_remote_vpc` and `allow_vpc_to_remote_classic_link` attributes have been removed
+```
+
+```release-note:bug
+resource/aws_vpc_peering_connection: Fix crash in `vpcPeeringConnectionOptionsEqual`
+```
+
+```release-note:breaking-change
+resource/aws_vpc: With the retirement of EC2-Classic the `enable_classiclink` and `enable_classiclink_dns_support` attributes have been removed
+```
+
+```release-note:breaking-change
+resource/aws_default_vpc: With the retirement of EC2-Classic the `enable_classiclink` and `enable_classiclink_dns_support` attributes have been removed
+```
+
+```release-note:breaking-change
+resource/aws_eip: With the retirement of EC2-Classic the `standard` domain is no longer supported
+```
+
+```release-note:breaking-change
+resource/aws_eip_association: With the retirement of EC2-Classic the `standard` domain is no longer supported
+```
+
+```release-note:breaking-change
+resource/aws_security_group: With the retirement of EC2-Classic non-VPC security groups are no longer supported
+```
+
+```release-note:breaking-change
+resource/aws_security_group_rule: With the retirement of EC2-Classic non-VPC security groups are no longer supported
+```

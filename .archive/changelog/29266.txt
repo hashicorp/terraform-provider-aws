@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_kms_key: Reinstate support for KMS multi-Region key ID or ARN values for the `key_id` argument
+```

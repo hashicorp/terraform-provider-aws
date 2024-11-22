@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudwatch_event_rule: Fix ARN-based partner event bus rule ID parsing error
+```

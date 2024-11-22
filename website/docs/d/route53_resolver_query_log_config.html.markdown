@@ -1,0 +1,52 @@
+---
+subcategory: "Route 53 Resolver"
+layout: "aws"
+page_title: "AWS: aws_route53_resolver_query_log_config"
+description: |-
+  Provides details about a specific Route53 Resolver Query Logging Configuration.
+---
+
+# Data Source: aws_route53_resolver_query_log_config
+
+`aws_route53_resolver_query_log_config` provides details about a specific Route53 Resolver Query Logging Configuration.
+
+## Example Usage
+
+```terraform
+data "aws_route53_resolver_query_log_config" "example" {
+  resolver_query_log_config_id = "rqlc-1abc2345ef678g91h"
+}
+```
+
+```terraform
+data "aws_route53_resolver_query_log_config" "example" {
+  filter {
+    name   = "Name"
+    values = ["shared-query-log-config"]
+  }
+
+  filter {
+    name   = "ShareStatus"
+    values = ["SHARED_WITH_ME"]
+  }
+}
+```
+
+## Argument Reference
+
+* `resolver_query_log_config_id` - (Optional) ID of the Route53 Resolver Query Logging Configuration.
+* `filter` - (Optional) One or more name/value pairs to use as filters. There are
+several valid keys, for a full reference, check out
+[Route53resolver Filter value in the AWS API reference][1].
+
+In addition to all arguments above, the following attributes are exported:
+
+* `id` - The ID for the query logging configuration.
+* `arn` - Computed ARN of the Route53 Resolver Query Logging Configuration.
+* `destination_arn` - The ARN of the resource that you want Resolver to send query logs: an Amazon S3 bucket, a CloudWatch Logs log group or a Kinesis Data Firehose delivery stream.
+* `name` - The name of the query logging configuration.
+* `owner_id` - The AWS account ID for the account that created the query logging configuration.
+* `share_status` - An indication of whether the query logging configuration is shared with other AWS accounts or was shared with the current account by another AWS account.
+* `tags` - Map of tags to assign to the service.
+
+[1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_Filter.html

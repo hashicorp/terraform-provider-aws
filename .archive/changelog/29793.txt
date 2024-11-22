@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_grafana_workspace: Add `network_access_control` argument
+```
+
+```release-note:bug
+resource/aws_grafana_workspace: Allow removing `vpc_configuration` 
+```

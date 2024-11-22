@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
@@ -7,6 +10,8 @@ import (
 )
 
 func TestLooksLikeJSONString(t *testing.T) {
+	t.Parallel()
+
 	looksLikeJSON := ` {"abc":"1"} `
 	doesNotLookLikeJSON := `abc: 1`
 
@@ -19,6 +24,8 @@ func TestLooksLikeJSONString(t *testing.T) {
 }
 
 func TestJSONBytesEqualQuotedAndUnquoted(t *testing.T) {
+	t.Parallel()
+
 	unquoted := `{"test": "test"}`
 	quoted := "{\"test\": \"test\"}"
 
@@ -35,6 +42,8 @@ func TestJSONBytesEqualQuotedAndUnquoted(t *testing.T) {
 }
 
 func TestJSONBytesEqualWhitespaceAndNoWhitespace(t *testing.T) {
+	t.Parallel()
+
 	noWhitespace := `{"test":"test"}`
 	whitespace := `
 {
@@ -57,6 +66,8 @@ func TestJSONBytesEqualWhitespaceAndNoWhitespace(t *testing.T) {
 }
 
 func TestSecondJSONUnlessEquivalent(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		name      string
 		oldPolicy string
@@ -74,11 +85,11 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/felixjaehn",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/kidnap",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/tinlicker"
+          "arn:aws:iam::123456789012:role/felixjaehn",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/kidnap",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/tinlicker"
         ]
       },
       "Action": [
@@ -104,11 +115,11 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/tinlicker",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/kidnap",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/felixjaehn"
+          "arn:aws:iam::123456789012:role/tinlicker",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/kidnap",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/felixjaehn"
         ]
       },
       "Action": [
@@ -134,11 +145,11 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/felixjaehn",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/kidnap",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/tinlicker"
+          "arn:aws:iam::123456789012:role/felixjaehn",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/kidnap",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/tinlicker"
         ]
       },
       "Action": [
@@ -167,11 +178,11 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/felixjaehn",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/kidnap",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/tinlicker"
+          "arn:aws:iam::123456789012:role/felixjaehn",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/kidnap",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/tinlicker"
         ]
       },
       "Action": [
@@ -197,10 +208,10 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/tinlicker",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/felixjaehn"
+          "arn:aws:iam::123456789012:role/tinlicker",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/felixjaehn"
         ]
       },
       "Action": [
@@ -226,10 +237,10 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/tinlicker",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/felixjaehn"
+          "arn:aws:iam::123456789012:role/tinlicker",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/felixjaehn"
         ]
       },
       "Action": [
@@ -259,10 +270,10 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/tinlicker",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/felixjaehn"
+          "arn:aws:iam::123456789012:role/tinlicker",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/felixjaehn"
         ]
       },
       "Action": [
@@ -288,10 +299,10 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/tinlicker",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/felixjaehn"
+          "arn:aws:iam::123456789012:role/tinlicker",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/felixjaehn"
         ]
       },
       "Action": [
@@ -320,10 +331,10 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
       "Effect": "Allow",
       "Principal": {
         "AWS": [
-          "arn:aws:iam::012345678901:role/tinlicker",
-          "arn:aws:iam::012345678901:role/paulvandyk",
-          "arn:aws:iam::012345678901:role/garethemery",
-          "arn:aws:iam::012345678901:role/felixjaehn"
+          "arn:aws:iam::123456789012:role/tinlicker",
+          "arn:aws:iam::123456789012:role/paulvandyk",
+          "arn:aws:iam::123456789012:role/garethemery",
+          "arn:aws:iam::123456789012:role/felixjaehn"
         ]
       },
       "Action": [
@@ -343,6 +354,48 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
 			newPolicy: "",
 			want:      "",
 		},
+		{
+			name: "malformed old",
+			oldPolicy: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Condition" : {
+        "StringLike" : ["demo-prefix/"]
+      },
+      "Resource": "*"
+    }
+  ]
+}`,
+			newPolicy: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "*"
+    }
+  ]
+}`,
+			want: `{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:ListBucket"
+      ],
+      "Resource": "*"
+    }
+  ]
+}`,
+		},
 	}
 
 	for _, v := range testCases {
@@ -359,6 +412,8 @@ func TestSecondJSONUnlessEquivalent(t *testing.T) {
 }
 
 func TestNormalizeJSONOrYAMLString(t *testing.T) {
+	t.Parallel()
+
 	var err error
 	var actual string
 
@@ -371,18 +426,31 @@ func TestNormalizeJSONOrYAMLString(t *testing.T) {
 		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedJSON)
 	}
 
-	validNormalizedYaml := `abc: 1
+	validNormalizedYAML := `abc: 1
 `
-	actual, err = NormalizeJSONOrYAMLString(validNormalizedYaml)
+	actual, err = NormalizeJSONOrYAMLString(validNormalizedYAML)
 	if err != nil {
 		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
 	}
-	if actual != validNormalizedYaml {
-		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedYaml)
+	if actual != validNormalizedYAML {
+		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, validNormalizedYAML)
+	}
+
+	validNormalizedYAMLWithCarriageReturn := "abc: 1\r\n"
+	expectedNormalizedYAML := `abc: 1
+`
+	actual, err = NormalizeJSONOrYAMLString(validNormalizedYAMLWithCarriageReturn)
+	if err != nil {
+		t.Fatalf("Expected not to throw an error while parsing template, but got: %s", err)
+	}
+	if actual != expectedNormalizedYAML {
+		t.Fatalf("Got:\n\n%s\n\nExpected:\n\n%s\n", actual, expectedNormalizedYAML)
 	}
 }
 
 func TestSuppressEquivalentJSONDiffsWhitespaceAndNoWhitespace(t *testing.T) {
+	t.Parallel()
+
 	d := new(schema.ResourceData)
 
 	noWhitespace := `{"test":"test"}`
@@ -407,6 +475,8 @@ func TestSuppressEquivalentJSONDiffsWhitespaceAndNoWhitespace(t *testing.T) {
 }
 
 func TestSuppressEquivalentJSONOrYAMLDiffs(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		description string
 		equivalent  bool
@@ -597,5 +667,187 @@ Outputs:
 		if !tc.equivalent && value {
 			t.Fatalf("expected test case (%s) to not be equivalent", tc.description)
 		}
+	}
+}
+
+func TestLegacyPolicyNormalize(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		Name     string
+		Input    string
+		Expected string
+		Error    bool
+	}{
+		{
+			Name:     "basic",
+			Input:    `{"Statement":{"Action":"*","Effect":"Allow","Resource":"*"},"Version":"2012-10-17"}`,
+			Expected: `{"Version":"2012-10-17","Statement":{"Action":"*","Effect":"Allow","Resource":"*"}}`,
+			Error:    false,
+		},
+		{
+			Name: "normalWhitespace",
+			Input: `{
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  },
+  "Version": "2012-10-17"
+}
+`,
+			Expected: `{"Version":"2012-10-17","Statement":{"Action":"*","Effect":"Allow","Resource":"*"}}`,
+			Error:    false,
+		},
+		{
+			Name: "badJSON",
+			Input: `{
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+  "Version": "2012-10-17"
+}
+`,
+			Expected: `{
+  "Statement": {
+    "Effect": "Allow",
+    "Action": "*",
+    "Resource": "*"
+  }
+  "Version": "2012-10-17"
+}
+`,
+			Error: true,
+		},
+		{
+			Name: "principal",
+			Input: `{
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "s3.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""    }
+  ],
+  "Version": "2012-10-17"
+}
+`,
+			Expected: `{"Version":"2012-10-17","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"s3.amazonaws.com"},"Sid":""}]}`,
+			Error:    false,
+		},
+		{
+			Name: "id",
+			Input: `{
+  "Id": "Kygo",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "s3.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""    }
+  ],
+  "Version": "2012-10-17"
+}
+`,
+			Expected: `{"Version":"2012-10-17","Id":"Kygo","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"s3.amazonaws.com"},"Sid":""}]}`,
+			Error:    false,
+		},
+		{
+			Name: "newOrder",
+			Input: `{
+  "Id": "Kygo",
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "s3.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""    }
+  ]
+}
+`,
+			Expected: `{"Version":"2012-10-17","Id":"Kygo","Statement":[{"Action":"sts:AssumeRole","Effect":"Allow","Principal":{"Service":"s3.amazonaws.com"},"Sid":""}]}`,
+			Error:    false,
+		},
+		{
+			Name: "complex1",
+			Input: `{
+"Id": "kms-tf-1",
+"Version": "2012-10-17",
+"Statement": [
+  {
+    "Sid": "Enable IAM User Permissions",
+    "Effect": "Allow",
+    "Principal": {
+      "AWS": [
+        "arn:aws:iam::123456789012:role/felixjaehn",
+        "arn:aws:iam::123456789012:role/garethemery",
+        "arn:aws:iam::123456789012:role/kidnap",
+        "arn:aws:iam::123456789012:role/paulvandyk",
+        "arn:aws:iam::123456789012:role/tinlicker"
+      ]
+    },
+    "Action": [
+      "kms:Describe*",
+      "kms:Get*",
+      "kms:List*",
+      "kms:CreateKey",
+      "kms:DescribeKey",
+      "kms:ScheduleKeyDeletion",
+      "kms:TagResource",
+      "kms:UntagResource"
+    ],
+    "Resource": "*"
+  }
+]
+}`,
+			Expected: `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Action":["kms:Describe*","kms:Get*","kms:List*","kms:CreateKey","kms:DescribeKey","kms:ScheduleKeyDeletion","kms:TagResource","kms:UntagResource"],"Effect":"Allow","Principal":{"AWS":["arn:aws:iam::123456789012:role/felixjaehn","arn:aws:iam::123456789012:role/garethemery","arn:aws:iam::123456789012:role/kidnap","arn:aws:iam::123456789012:role/paulvandyk","arn:aws:iam::123456789012:role/tinlicker"]},"Resource":"*","Sid":"Enable IAM User Permissions"}]}`,
+			Error:    false,
+		},
+		{
+			Name: "complex2",
+			Input: `{
+"Id": "kms-tf-1",
+"ZedsDead": "StillWorse",
+"Version": "2012-10-17",
+"Statement": [
+  {
+    "Sid": "Enable IAM User Permissions"
+  }
+]
+}`,
+			Expected: `{"Version":"2012-10-17","Id":"kms-tf-1","Statement":[{"Sid":"Enable IAM User Permissions"}],"ZedsDead":"StillWorse"}`,
+			Error:    false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
+
+			p, err := LegacyPolicyNormalize(tc.Input)
+
+			if tc.Error {
+				if err == nil {
+					t.Errorf("expected an error")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("expected no error, got: %s", err)
+				}
+			}
+
+			if p != tc.Expected {
+				t.Errorf("expected %s, got: %s", tc.Expected, p)
+			}
+		})
 	}
 }
