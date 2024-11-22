@@ -45,13 +45,14 @@ const (
 )
 
 func dataSourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	resourceID := d.Get("resource_identifier").(string)
 	out, err := findAuthPolicy(ctx, conn, resourceID)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameAuthPolicy, resourceID, err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, DSNameAuthPolicy, resourceID, err)
 	}
 
 	d.SetId(resourceID)
@@ -62,15 +63,15 @@ func dataSourceAuthPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	// TIP: Setting a JSON string to avoid errorneous diffs.
 	p, err := verify.SecondJSONUnlessEquivalent(d.Get(names.AttrPolicy).(string), aws.ToString(out.Policy))
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionSetting, DSNameAuthPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, DSNameAuthPolicy, d.Id(), err)
 	}
 
 	p, err = structure.NormalizeJsonString(p)
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, DSNameAuthPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, DSNameAuthPolicy, d.Id(), err)
 	}
 
 	d.Set(names.AttrPolicy, p)
 
-	return nil
+	return diags
 }

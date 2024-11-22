@@ -31,7 +31,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnable(true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "graph_arn", graphResourceName, names.AttrID),
 				),
 			},
@@ -43,7 +43,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnable(false),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
+					resource.TestCheckResourceAttr(resourceName, "auto_enable", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "graph_arn", graphResourceName, names.AttrID),
 				),
 			},

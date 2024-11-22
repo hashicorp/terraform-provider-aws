@@ -15,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_dynamodb_table", name="Table")
+// @Tags(identifierAttribute="arn")
 func dataSourceTable() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTableRead,
@@ -224,7 +224,6 @@ func dataSourceTable() *schema.Resource {
 func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get(names.AttrName).(string)
 	table, err := findTableByName(ctx, conn, name)
@@ -318,16 +317,6 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if err := d.Set("ttl", flattenTTL(ttlOut)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ttl: %s", err)
-	}
-
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
-	if err != nil && !(tfawserr.ErrMessageContains(err, errCodeUnknownOperationException, "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
-		return sdkdiag.AppendErrorf(diags, "listing tags for DynamoDB Table (%s): %s", d.Get(names.AttrARN).(string), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags

@@ -40,7 +40,7 @@ func TestAccServiceCatalogAppRegistryApplication_basic(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/applications/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/applications/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},

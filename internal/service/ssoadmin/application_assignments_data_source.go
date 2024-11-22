@@ -6,7 +6,6 @@ package ssoadmin
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -75,7 +74,7 @@ func (d *dataSourceApplicationAssignments) Read(ctx context.Context, req datasou
 	}
 
 	paginator := ssoadmin.NewListApplicationAssignmentsPaginator(conn, &ssoadmin.ListApplicationAssignmentsInput{
-		ApplicationArn: aws.String(data.ApplicationARN.ValueString()),
+		ApplicationArn: data.ApplicationARN.ValueStringPointer(),
 	})
 
 	var out ssoadmin.ListApplicationAssignmentsOutput

@@ -6,8 +6,8 @@ package sfn
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sfn"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKDataSource("aws_sfn_state_machine_versions")
-func DataSourceStateMachineVersions() *schema.Resource {
+// @SDKDataSource("aws_sfn_state_machine_versions", name="State Machine Versions")
+func dataSourceStateMachineVersions() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceStateMachineVersionsRead,
 
@@ -37,7 +37,7 @@ func DataSourceStateMachineVersions() *schema.Resource {
 
 func dataSourceStateMachineVersionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SFNConn(ctx)
+	conn := meta.(*conns.AWSClient).SFNClient(ctx)
 
 	smARN := d.Get("statemachine_arn").(string)
 	input := &sfn.ListStateMachineVersionsInput{
@@ -51,9 +51,7 @@ func dataSourceStateMachineVersionsRead(ctx context.Context, d *schema.ResourceD
 		}
 
 		for _, v := range page.StateMachineVersions {
-			if v != nil {
-				smvARNs = append(smvARNs, aws.StringValue(v.StateMachineVersionArn))
-			}
+			smvARNs = append(smvARNs, aws.ToString(v.StateMachineVersionArn))
 		}
 
 		return !lastPage

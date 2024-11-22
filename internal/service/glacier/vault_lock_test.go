@@ -36,8 +36,8 @@ func TestAccGlacierVaultLock_basic(t *testing.T) {
 				Config: testAccVaultLockConfig_complete(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockExists(ctx, resourceName, &vaultLock1),
-					resource.TestCheckResourceAttr(resourceName, "complete_lock", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", "false"),
+					resource.TestCheckResourceAttr(resourceName, "complete_lock", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(resourceName, "vault_name", vaultResourceName, names.AttrName),
 				),
@@ -69,8 +69,8 @@ func TestAccGlacierVaultLock_completeLock(t *testing.T) {
 				Config: testAccVaultLockConfig_complete(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockExists(ctx, resourceName, &vaultLock1),
-					resource.TestCheckResourceAttr(resourceName, "complete_lock", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", "true"),
+					resource.TestCheckResourceAttr(resourceName, "complete_lock", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(resourceName, "vault_name", vaultResourceName, names.AttrName),
 				),
@@ -102,8 +102,8 @@ func TestAccGlacierVaultLock_ignoreEquivalentPolicy(t *testing.T) {
 				Config: testAccVaultLockConfig_policyOrder(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVaultLockExists(ctx, resourceName, &vaultLock1),
-					resource.TestCheckResourceAttr(resourceName, "complete_lock", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", "false"),
+					resource.TestCheckResourceAttr(resourceName, "complete_lock", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttrPair(resourceName, "vault_name", vaultResourceName, names.AttrName),
 				),

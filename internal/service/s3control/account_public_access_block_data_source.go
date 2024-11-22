@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,6 +46,7 @@ func dataSourceAccountPublicAccessBlock() *schema.Resource {
 }
 
 func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
@@ -55,7 +57,7 @@ func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.Resou
 	output, err := findPublicAccessBlockByAccountID(ctx, conn, accountID)
 
 	if err != nil {
-		return diag.Errorf("reading S3 Account Public Access Block (%s): %s", accountID, err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Account Public Access Block (%s): %s", accountID, err)
 	}
 
 	d.SetId(accountID)
@@ -64,5 +66,5 @@ func dataSourceAccountPublicAccessBlockRead(ctx context.Context, d *schema.Resou
 	d.Set("ignore_public_acls", output.IgnorePublicAcls)
 	d.Set("restrict_public_buckets", output.RestrictPublicBuckets)
 
-	return nil
+	return diags
 }

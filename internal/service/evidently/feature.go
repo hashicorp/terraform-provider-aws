@@ -104,7 +104,7 @@ func ResourceFeature() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.FeatureEvaluationStrategy](),
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -285,7 +285,7 @@ func resourceFeatureRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrDescription, feature.Description)
 	d.Set("entity_overrides", feature.EntityOverrides)
 	d.Set("evaluation_strategy", feature.EvaluationStrategy)
-	d.Set("last_updated_time", aws.ToTime(feature.LastUpdatedTime).Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, aws.ToTime(feature.LastUpdatedTime).Format(time.RFC3339))
 	d.Set(names.AttrName, feature.Name)
 	d.Set("project", feature.Project)
 	d.Set(names.AttrStatus, feature.Status)
@@ -518,7 +518,6 @@ func VariationChanges(o, n interface{}) (remove []string, addOrUpdate []awstypes
 	// remove is a list of strings
 	remove = make([]string, 0)
 	for k := range om {
-		k := k
 		if _, ok := nm[k]; !ok {
 			remove = append(remove, k)
 		}

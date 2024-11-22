@@ -209,7 +209,7 @@ func targetParametersSchema() *schema.Schema {
 					},
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"capacity_provider_strategy": {
+							names.AttrCapacityProviderStrategy: {
 								Type:     schema.TypeList,
 								Optional: true,
 								MaxItems: 6,
@@ -1121,7 +1121,7 @@ func expandPipeTargetECSTaskParameters(tfMap map[string]interface{}) *types.Pipe
 
 	apiObject := &types.PipeTargetEcsTaskParameters{}
 
-	if v, ok := tfMap["capacity_provider_strategy"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := tfMap[names.AttrCapacityProviderStrategy].([]interface{}); ok && len(v) > 0 {
 		apiObject.CapacityProviderStrategy = expandCapacityProviderStrategyItems(v)
 	}
 
@@ -2121,7 +2121,7 @@ func flattenPipeTargetECSTaskParameters(apiObject *types.PipeTargetEcsTaskParame
 	}
 
 	if v := apiObject.CapacityProviderStrategy; v != nil {
-		tfMap["capacity_provider_strategy"] = flattenCapacityProviderStrategyItems(v)
+		tfMap[names.AttrCapacityProviderStrategy] = flattenCapacityProviderStrategyItems(v)
 	}
 
 	if v := apiObject.Group; v != nil {

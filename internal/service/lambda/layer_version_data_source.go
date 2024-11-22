@@ -28,6 +28,10 @@ func dataSourceLayerVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"code_sha256": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"compatible_architecture": {
 				Type:             schema.TypeString,
 				Optional:         true,
@@ -83,8 +87,9 @@ func dataSourceLayerVersion() *schema.Resource {
 				Computed: true,
 			},
 			"source_code_hash": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "This attribute is deprecated and will be removed in a future major version. Use `code_sha256` instead.",
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
@@ -142,6 +147,7 @@ func dataSourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.ToString(output.LayerVersionArn))
 	d.Set(names.AttrARN, output.LayerVersionArn)
+	d.Set("code_sha256", output.Content.CodeSha256)
 	d.Set("compatible_architectures", output.CompatibleArchitectures)
 	d.Set("compatible_runtimes", output.CompatibleRuntimes)
 	d.Set(names.AttrCreatedDate, output.CreatedDate)

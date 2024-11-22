@@ -6,8 +6,8 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,7 +19,8 @@ import (
 
 // @SDKResource("aws_default_vpc_dhcp_options", name="DHCP Options")
 // @Tags(identifierAttribute="id")
-func ResourceDefaultVPCDHCPOptions() *schema.Resource {
+// @Testing(tagsTest=false)
+func resourceDefaultVPCDHCPOptions() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultVPCDHCPOptionsCreate,
@@ -83,7 +84,7 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 
 func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeDhcpOptionsInput{}
 
@@ -100,13 +101,13 @@ func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.Resource
 		})...)
 	}
 
-	dhcpOptions, err := FindDHCPOptions(ctx, conn, input)
+	dhcpOptions, err := findDHCPOptions(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Default DHCP Options Set: %s", err)
 	}
 
-	d.SetId(aws.StringValue(dhcpOptions.DhcpOptionsId))
+	d.SetId(aws.ToString(dhcpOptions.DhcpOptionsId))
 
 	return append(diags, resourceVPCDHCPOptionsUpdate(ctx, d, meta)...)
 }

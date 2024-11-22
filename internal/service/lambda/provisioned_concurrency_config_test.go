@@ -35,9 +35,9 @@ func TestAccLambdaProvisionedConcurrencyConfig_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, names.AttrVersion),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
 				),
 			},
 			{
@@ -117,8 +117,8 @@ func TestAccLambdaProvisionedConcurrencyConfig_provisionedConcurrentExecutions(t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "function_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "qualifier", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", "1"),
 				),
 			},
 			{
@@ -132,8 +132,8 @@ func TestAccLambdaProvisionedConcurrencyConfig_provisionedConcurrentExecutions(t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "function_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "qualifier", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "2"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", "1"),
 				),
 			},
 		},
@@ -161,8 +161,8 @@ func TestAccLambdaProvisionedConcurrencyConfig_FunctionName_arn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "qualifier", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", "1"),
 				),
 			},
 			{
@@ -176,8 +176,8 @@ func TestAccLambdaProvisionedConcurrencyConfig_FunctionName_arn(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "qualifier", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "2"),
+					resource.TestCheckResourceAttr(resourceName, "qualifier", "1"),
 				),
 			},
 		},
@@ -232,27 +232,27 @@ func TestAccLambdaProvisionedConcurrencyConfig_skipDestroy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, names.AttrVersion),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccProvisionedConcurrencyConfigConfig_skipDestroy(rName, filename2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
-					testAccCheckProvisionedConcurrencyConfigExistsByName(ctx, rName, acctest.Ct1), // verify config on previous version still exists
+					testAccCheckProvisionedConcurrencyConfigExistsByName(ctx, rName, "1"), // verify config on previous version still exists
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, names.AttrVersion),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccProvisionedConcurrencyConfigConfigBase_withFilename(rName, filename2), // remove the provisioned concurrency config completely
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedConcurrencyConfigExistsByName(ctx, rName, acctest.Ct1),
-					testAccCheckProvisionedConcurrencyConfigExistsByName(ctx, rName, acctest.Ct2),
+					testAccCheckProvisionedConcurrencyConfigExistsByName(ctx, rName, "1"),
+					testAccCheckProvisionedConcurrencyConfigExistsByName(ctx, rName, "2"),
 				),
 			},
 		},
@@ -282,9 +282,9 @@ func TestAccLambdaProvisionedConcurrencyConfig_idMigration530(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, names.AttrVersion),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("%s:1", rName)),
 				),
 			},
@@ -294,9 +294,9 @@ func TestAccLambdaProvisionedConcurrencyConfig_idMigration530(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedConcurrencyConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "function_name", lambdaFunctionResourceName, "function_name"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_concurrent_executions", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "qualifier", lambdaFunctionResourceName, names.AttrVersion),
-					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, fmt.Sprintf("%s,1", rName)),
 				),
 			},
@@ -399,7 +399,7 @@ resource "aws_lambda_function" "test" {
   role          = aws_iam_role.test.arn
   handler       = "lambdapinpoint.handler"
   publish       = true
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }

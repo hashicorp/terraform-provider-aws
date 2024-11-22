@@ -27,7 +27,7 @@ func TestAccElastiCacheUserDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "engine", resourceName, "engine"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrEngine, resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrUserName, resourceName, names.AttrUserName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "access_string", resourceName, "access_string"),

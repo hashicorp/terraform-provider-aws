@@ -20,12 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appconfig_environment")
+// @SDKDataSource("aws_appconfig_environment", name="Environment")
+// @Tags(identifierAttribute="arn")
 func DataSourceEnvironment() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEnvironmentRead,
 		Schema: map[string]*schema.Schema{
-			"application_id": {
+			names.AttrApplicationID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
@@ -81,7 +82,7 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
-	appID := d.Get("application_id").(string)
+	appID := d.Get(names.AttrApplicationID).(string)
 	envID := d.Get("environment_id").(string)
 	ID := fmt.Sprintf("%s:%s", envID, appID)
 
@@ -91,33 +92,15 @@ func dataSourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(ID)
-
-	d.Set("application_id", appID)
-	d.Set("environment_id", envID)
+	d.Set(names.AttrApplicationID, appID)
+	d.Set(names.AttrARN, environmentARN(ctx, meta.(*conns.AWSClient), appID, envID))
 	d.Set(names.AttrDescription, out.Description)
+	d.Set("environment_id", envID)
 	d.Set(names.AttrName, out.Name)
 	d.Set(names.AttrState, out.State)
 
 	if err := d.Set("monitor", flattenEnvironmentMonitors(out.Monitors)); err != nil {
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameEnvironment, ID, err)
-	}
-
-	arn := environmentARN(meta.(*conns.AWSClient), appID, envID).String()
-
-	d.Set(names.AttrARN, arn)
-
-	tags, err := listTags(ctx, conn, arn)
-
-	if err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameEnvironment, ID, err)
-	}
-
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set(names.AttrTags, tags.Map()); err != nil {
-		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameEnvironment, ID, err)
 	}
 
 	return diags

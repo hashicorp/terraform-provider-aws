@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/appsync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,12 +22,12 @@ import (
 
 func testAccType_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var typ appsync.Type
+	var typ awstypes.Type
 	resourceName := "aws_appsync_type.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTypeDestroy(ctx),
@@ -53,12 +53,12 @@ func testAccType_basic(t *testing.T) {
 
 func testAccType_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var typ appsync.Type
+	var typ awstypes.Type
 	resourceName := "aws_appsync_type.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTypeDestroy(ctx),
@@ -77,51 +77,46 @@ func testAccType_disappears(t *testing.T) {
 
 func testAccCheckTypeDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_type" {
 				continue
 			}
 
-			apiID, format, name, err := tfappsync.DecodeTypeID(rs.Primary.ID)
+			_, err := tfappsync.FindTypeByThreePartKey(ctx, conn, rs.Primary.Attributes["api_id"], awstypes.TypeDefinitionFormat(rs.Primary.Attributes[names.AttrFormat]), rs.Primary.Attributes[names.AttrName])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			_, err = tfappsync.FindTypeByThreePartKey(ctx, conn, apiID, format, name)
-			if err == nil {
-				if tfresource.NotFound(err) {
-					return nil
-				}
-				return err
-			}
-
-			return nil
+			return fmt.Errorf("Appsync Type %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccCheckTypeExists(ctx context.Context, resourceName string, typ *appsync.Type) resource.TestCheckFunc {
+func testAccCheckTypeExists(ctx context.Context, n string, v *awstypes.Type) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Appsync Type Not found in state: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		apiID, format, name, err := tfappsync.DecodeTypeID(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
+
+		output, err := tfappsync.FindTypeByThreePartKey(ctx, conn, rs.Primary.Attributes["api_id"], awstypes.TypeDefinitionFormat(rs.Primary.Attributes[names.AttrFormat]), rs.Primary.Attributes[names.AttrName])
+
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
-		out, err := tfappsync.FindTypeByThreePartKey(ctx, conn, apiID, format, name)
-		if err != nil {
-			return err
-		}
-
-		*typ = *out
+		*v = *output
 
 		return nil
 	}

@@ -34,4 +34,3 @@ variable "knownTagValue" {
   type     = string
   nullable = false
 }
-

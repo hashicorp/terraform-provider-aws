@@ -116,7 +116,7 @@ func ResourceLaunch() *schema.Resource {
 					},
 				},
 			},
-			"last_updated_time": {
+			names.AttrLastUpdatedTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -387,7 +387,7 @@ func resourceLaunchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrARN, launch.Arn)
 	d.Set(names.AttrCreatedTime, aws.ToTime(launch.CreatedTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, launch.Description)
-	d.Set("last_updated_time", aws.ToTime(launch.LastUpdatedTime).Format(time.RFC3339))
+	d.Set(names.AttrLastUpdatedTime, aws.ToTime(launch.LastUpdatedTime).Format(time.RFC3339))
 	d.Set(names.AttrName, launch.Name)
 	d.Set("project", launch.Project)
 	d.Set("randomization_salt", launch.RandomizationSalt)

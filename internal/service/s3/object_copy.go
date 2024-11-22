@@ -31,6 +31,7 @@ import (
 
 // @SDKResource("aws_s3_object_copy", name="Object Copy")
 // @Tags(identifierAttribute="arn", resourceType="ObjectCopy")
+// @Testing(noImport=true)
 func resourceObjectCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCopyCreate,
@@ -144,7 +145,7 @@ func resourceObjectCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"expected_bucket_owner": {
+			names.AttrExpectedBucketOwner: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -299,7 +300,7 @@ func resourceObjectCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -358,7 +359,7 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
-	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition(ctx), bucket, key)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
@@ -388,16 +389,12 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("server_side_encryption", output.ServerSideEncryption)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", types.ObjectStorageClassStandard)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
 	if output.StorageClass != "" {
-		d.Set("storage_class", output.StorageClass)
+		d.Set(names.AttrStorageClass, output.StorageClass)
 	}
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
-
-	if err := setObjectKMSKeyID(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
 
 	return diags
 }
@@ -430,7 +427,7 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		"customer_algorithm",
 		"customer_key",
 		"customer_key_md5",
-		"expected_bucket_owner",
+		names.AttrExpectedBucketOwner,
 		"expected_source_bucket_owner",
 		"expires",
 		"grant",
@@ -448,7 +445,7 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		"source_customer_algorithm",
 		"source_customer_key",
 		"source_customer_key_md5",
-		"storage_class",
+		names.AttrStorageClass,
 		"tagging_directive",
 		"website_redirect",
 	}
@@ -567,7 +564,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 		input.SSECustomerKeyMD5 = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("expected_bucket_owner"); ok {
+	if v, ok := d.GetOk(names.AttrExpectedBucketOwner); ok {
 		input.ExpectedBucketOwner = aws.String(v.(string))
 	}
 
@@ -637,7 +634,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 		input.CopySourceSSECustomerKeyMD5 = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("storage_class"); ok {
+	if v, ok := d.GetOk(names.AttrStorageClass); ok {
 		input.StorageClass = types.StorageClass(v.(string))
 	}
 
@@ -645,7 +642,7 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 		input.TaggingDirective = types.TaggingDirective(v.(string))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	tags := tftags.New(ctx, getContextTags(ctx))
 	tags = defaultTagsConfig.MergeTags(tags)
 	if len(tags) > 0 {

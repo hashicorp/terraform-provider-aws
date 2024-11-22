@@ -91,8 +91,9 @@ func resourceGrant() *schema.Resource {
 				Computed: true,
 			},
 			"grant_token": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"grantee_principal": {
 				Type:     schema.TypeString,

@@ -47,13 +47,15 @@ class MyConvertedCode extends TerraformStack {
 are exported:
 
 * `arn` - ARN of the Kinesis Stream (same as id).
-* `name` - Name of the Kinesis Stream.
-* `creationTimestamp` - Approximate UNIX timestamp that the stream was created.
-* `status` - Current status of the stream. The stream status is one of CREATING, DELETING, ACTIVE, or UPDATING.
-* `retentionPeriod` - Length of time (in hours) data records are accessible after they are added to the stream.
-* `openShards` - List of shard ids in the OPEN state. See [Shard State][2] for more.
 * `closedShards` - List of shard ids in the CLOSED state. See [Shard State][2] for more.
+* `creationTimestamp` - Approximate UNIX timestamp that the stream was created.
+* `encryptionType` - Encryption type used.
+* `kmsKeyId` - GUID for the customer-managed AWS KMS key to use for encryption.
+* `name` - Name of the Kinesis Stream.
+* `openShards` - List of shard ids in the OPEN state. See [Shard State][2] for more.
+* `retentionPeriod` - Length of time (in hours) data records are accessible after they are added to the stream.
 * `shardLevelMetrics` - List of shard-level CloudWatch metrics which are enabled for the stream. See [Monitoring with CloudWatch][3] for more.
+* `status` - Current status of the stream. The stream status is one of CREATING, DELETING, ACTIVE, or UPDATING.
 * `streamModeDetails` - [Capacity mode][4] of the data stream. Detailed below.
 * `tags` - Map of tags to assigned to the stream.
 
@@ -66,4 +68,4 @@ are exported:
 [3]: https://docs.aws.amazon.com/streams/latest/dev/monitoring-with-cloudwatch.html
 [4]: https://docs.aws.amazon.com/streams/latest/dev/how-do-i-size-a-stream.html
 
-<!-- cache-key: cdktf-0.20.1 input-d035d44fea77906534614187920d80dfcb1210dd3b168e9a8322ca2eeaffb5f5 -->
+<!-- cache-key: cdktf-0.20.8 input-fa9e8af044240db88bc0177862ab514d3d3abe026c71cbc8ce4c90ad35bdc2bd -->

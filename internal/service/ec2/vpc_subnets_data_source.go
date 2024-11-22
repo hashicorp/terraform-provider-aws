@@ -7,8 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_subnets")
-func DataSourceSubnets() *schema.Resource {
+// @SDKDataSource("aws_subnets", name "Subnets")
+func dataSourceSubnets() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetsRead,
 
@@ -40,7 +40,7 @@ func DataSourceSubnets() *schema.Resource {
 
 func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeSubnetsInput{}
 
@@ -59,7 +59,7 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 		input.Filters = nil
 	}
 
-	output, err := FindSubnets(ctx, conn, input)
+	output, err := findSubnets(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Subnets: %s", err)
@@ -68,7 +68,7 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 	var subnetIDs []string
 
 	for _, v := range output {
-		subnetIDs = append(subnetIDs, aws.StringValue(v.SubnetId))
+		subnetIDs = append(subnetIDs, aws.ToString(v.SubnetId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

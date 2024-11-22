@@ -27,7 +27,7 @@ func dataSourceKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"aws_account_id": {
+			names.AttrAWSAccountID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -186,7 +186,7 @@ func dataSourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.ToString(output.KeyId))
 	d.Set(names.AttrARN, output.Arn)
-	d.Set("aws_account_id", output.AWSAccountId)
+	d.Set(names.AttrAWSAccountID, output.AWSAccountId)
 	d.Set("cloud_hsm_cluster_id", output.CloudHsmClusterId)
 	d.Set(names.AttrCreationDate, aws.ToTime(output.CreationDate).Format(time.RFC3339))
 	d.Set("customer_master_key_spec", output.CustomerMasterKeySpec)

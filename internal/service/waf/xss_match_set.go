@@ -118,15 +118,15 @@ func resourceXSSMatchSetRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAF XSS Match Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading WAF XSS Match Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading WAF XSS Match Set (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "waf",
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  "xssmatchset/" + d.Id(),

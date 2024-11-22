@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -186,7 +187,6 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta int
 	var baselines []awstypes.PatchBaselineIdentity
 
 	pages := ssm.NewDescribePatchBaselinesPaginator(conn, input)
-Baselines:
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -194,18 +194,22 @@ Baselines:
 			return sdkdiag.AppendErrorf(diags, "reading SSM Patch Baselines: %s", err)
 		}
 
-		for _, baseline := range page.BaselineIdentities {
-			if v, ok := d.GetOk("operating_system"); ok {
-				if awstypes.OperatingSystem(v.(string)) == baseline.OperatingSystem {
-					baselines = append(baselines, baseline)
-				}
-			}
+		baselines = append(baselines, page.BaselineIdentities...)
+	}
 
-			if v, ok := d.GetOk("default_baseline"); ok {
-				if v.(bool) == baseline.DefaultBaseline {
-					baselines = []awstypes.PatchBaselineIdentity{baseline}
-					break Baselines
-				}
+	if v, ok := d.GetOk("operating_system"); ok {
+		operatingSystem := awstypes.OperatingSystem(v.(string))
+		baselines = tfslices.Filter(baselines, func(v awstypes.PatchBaselineIdentity) bool {
+			return v.OperatingSystem == operatingSystem
+		})
+	}
+
+	if v, ok := d.GetOk("default_baseline"); ok {
+		defaultBaseline := v.(bool)
+		for _, v := range baselines {
+			if v.DefaultBaseline == defaultBaseline {
+				baselines = []awstypes.PatchBaselineIdentity{v}
+				break
 			}
 		}
 	}

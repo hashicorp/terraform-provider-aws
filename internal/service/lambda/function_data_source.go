@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -21,6 +22,7 @@ import (
 
 // @SDKDataSource("aws_lambda_function", name="Function")
 // @Tags
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceFunction() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceFunctionRead,
@@ -32,6 +34,10 @@ func dataSourceFunction() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"code_sha256": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -186,8 +192,9 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 			},
 			"source_code_hash": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:       schema.TypeString,
+				Computed:   true,
+				Deprecated: "This attribute is deprecated and will be removed in a future major version. Use `code_sha256` instead.",
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
@@ -288,6 +295,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.SetId(functionName)
 	d.Set("architectures", function.Architectures)
 	d.Set(names.AttrARN, unqualifiedARN)
+	d.Set("code_sha256", function.CodeSha256)
 	if function.DeadLetterConfig != nil && function.DeadLetterConfig.TargetArn != nil {
 		if err := d.Set("dead_letter_config", []interface{}{
 			map[string]interface{}{
@@ -313,7 +321,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	if output.Code != nil {
 		d.Set("image_uri", output.Code.ImageUri)
 	}
-	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), unqualifiedARN))
+	d.Set("invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), unqualifiedARN))
 	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
@@ -324,7 +332,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	d.Set("memory_size", function.MemorySize)
 	d.Set("qualified_arn", qualifiedARN)
-	d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), qualifiedARN))
+	d.Set("qualified_invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), qualifiedARN))
 	if output.Concurrency != nil {
 		d.Set("reserved_concurrent_executions", output.Concurrency.ReservedConcurrentExecutions)
 	} else {
@@ -356,7 +364,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	setTagsOut(ctx, output.Tags)
 
 	// See r/aws_lambda_function.
-	if partition, region := meta.(*conns.AWSClient).Partition, meta.(*conns.AWSClient).Region; partition == names.StandardPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region; partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		if function.PackageType == awstypes.PackageTypeZip {

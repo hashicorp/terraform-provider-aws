@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/guardduty"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -208,15 +208,15 @@ func testAccCheckPublishingDestinationExists(ctx context.Context, name string) r
 			DestinationId: aws.String(destination_id),
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
-		_, err := conn.DescribePublishingDestinationWithContext(ctx, input)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
+		_, err := conn.DescribePublishingDestination(ctx, input)
 		return err
 	}
 }
 
 func testAccCheckPublishingDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_guardduty_publishing_destination" {
@@ -234,7 +234,7 @@ func testAccCheckPublishingDestinationDestroy(ctx context.Context) resource.Test
 				DestinationId: aws.String(destination_id),
 			}
 
-			_, err := conn.DescribePublishingDestinationWithContext(ctx, input)
+			_, err := conn.DescribePublishingDestination(ctx, input)
 			// Catch expected error.
 			if err == nil {
 				return fmt.Errorf("Resource still exists.")

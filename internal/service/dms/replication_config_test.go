@@ -10,12 +10,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,12 +25,12 @@ import (
 func TestAccDMSReplicationConfig_basic(t *testing.T) {
 	t.Parallel()
 
-	for _, migrationType := range dms.MigrationTypeValue_Values() { //nolint:paralleltest // false positive
+	for _, migrationType := range enum.Values[awstypes.MigrationTypeValue]() { //nolint:paralleltest // false positive
 		t.Run(migrationType, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 			resourceName := "aws_dms_replication_config.test"
-			var v dms.ReplicationConfig
+			var v awstypes.ReplicationConfig
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -43,27 +44,27 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 							testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 							resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 							acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dms", regexache.MustCompile(`replication-config:[A-Z0-9]{26}`)),
-							resource.TestCheckResourceAttr(resourceName, "compute_config.#", acctest.Ct1),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.availability_zone", ""),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.dns_name_servers", ""),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.kms_key_id", ""),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "128"),
-							resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", acctest.Ct2),
-							resource.TestCheckResourceAttr(resourceName, "compute_config.0.multi_az", "false"),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "2"),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.multi_az", acctest.CtFalse),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.preferred_maintenance_window", "sun:23:45-mon:00:30"),
 							resource.TestCheckResourceAttrSet(resourceName, "compute_config.0.replication_subnet_group_id"),
-							resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", acctest.Ct0),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", "0"),
 							resource.TestCheckResourceAttr(resourceName, "replication_config_identifier", rName),
-							acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_settings", defaultReplicationConfigSettings[migrationType]),
+							acctest.CheckResourceAttrJSONNoDiff(resourceName, "replication_settings", defaultReplicationConfigSettings[awstypes.MigrationTypeValue(migrationType)]),
 							resource.TestCheckResourceAttr(resourceName, "replication_type", migrationType),
 							resource.TestCheckNoResourceAttr(resourceName, "resource_identifier"),
 							resource.TestCheckResourceAttrPair(resourceName, "source_endpoint_arn", "aws_dms_endpoint.source", "endpoint_arn"),
-							resource.TestCheckResourceAttr(resourceName, "start_replication", "false"),
+							resource.TestCheckResourceAttr(resourceName, "start_replication", acctest.CtFalse),
 							resource.TestCheckResourceAttr(resourceName, "supplemental_settings", ""),
-							acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", acctest.Ct1),
+							acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
 							resource.TestCheckResourceAttrPair(resourceName, "target_endpoint_arn", "aws_dms_endpoint.target", "endpoint_arn"),
-							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 						),
 					},
 					{
@@ -82,7 +83,7 @@ func TestAccDMSReplicationConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -106,7 +107,7 @@ func TestAccDMSReplicationConfig_settings_EnableLogging(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -118,8 +119,8 @@ func TestAccDMSReplicationConfig_settings_EnableLogging(t *testing.T) {
 				Config: testAccReplicationConfigConfig_settings_EnableLogging(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogging", "true"),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogContext", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogging", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogContext", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogGroup)", "null"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogStream)", "null"),
@@ -135,8 +136,8 @@ func TestAccDMSReplicationConfig_settings_EnableLogging(t *testing.T) {
 				Config: testAccReplicationConfigConfig_settings_EnableLogContext(rName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogging", "true"),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogContext", "true"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogging", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogContext", acctest.CtTrue),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogGroup)", "null"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogStream)", "null"),
@@ -152,8 +153,8 @@ func TestAccDMSReplicationConfig_settings_EnableLogging(t *testing.T) {
 				Config: testAccReplicationConfigConfig_settings_EnableLogging(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogging", "false"),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogContext", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogging", acctest.CtFalse),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogContext", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogGroup)", "null"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogStream)", "null"),
@@ -199,7 +200,7 @@ func TestAccDMSReplicationConfig_settings_LogComponents(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -211,8 +212,8 @@ func TestAccDMSReplicationConfig_settings_LogComponents(t *testing.T) {
 				Config: testAccReplicationConfigConfig_settings_LogComponents(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogging", "true"),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogContext", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogging", acctest.CtTrue),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogContext", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_WARNING"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogGroup)", "null"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogStream)", "null"),
@@ -232,7 +233,7 @@ func TestAccDMSReplicationConfig_settings_StreamBuffer(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -244,7 +245,7 @@ func TestAccDMSReplicationConfig_settings_StreamBuffer(t *testing.T) {
 				Config: testAccReplicationConfigConfig_settings_StreamBuffer(rName, 4, 16),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.StreamBufferCount", acctest.Ct4),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.StreamBufferCount", "4"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.StreamBufferSizeInMB", "16"),
 					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.CtrlStreamBufferSizeInMB", "5"),
 				),
@@ -259,52 +260,11 @@ func TestAccDMSReplicationConfig_settings_StreamBuffer(t *testing.T) {
 	})
 }
 
-func TestAccDMSReplicationConfig_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationConfigConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				Config: testAccReplicationConfigConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccReplicationConfigConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccDMSReplicationConfig_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -319,7 +279,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "16"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "2"),
 				),
 			},
 			{
@@ -329,7 +289,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "32"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "4"),
 				),
 			},
 		},
@@ -341,7 +301,7 @@ func TestAccDMSReplicationConfig_startReplication(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
-	var v dms.ReplicationConfig
+	var v awstypes.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -353,7 +313,7 @@ func TestAccDMSReplicationConfig_startReplication(t *testing.T) {
 				Config: testAccReplicationConfigConfig_startReplication(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "start_replication", "true"),
+					resource.TestCheckResourceAttr(resourceName, "start_replication", acctest.CtTrue),
 				),
 			},
 			{
@@ -366,21 +326,21 @@ func TestAccDMSReplicationConfig_startReplication(t *testing.T) {
 				Config: testAccReplicationConfigConfig_startReplication(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "start_replication", "false"),
+					resource.TestCheckResourceAttr(resourceName, "start_replication", acctest.CtFalse),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckReplicationConfigExists(ctx context.Context, n string, v *dms.ReplicationConfig) resource.TestCheckFunc {
+func testAccCheckReplicationConfigExists(ctx context.Context, n string, v *awstypes.ReplicationConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 		output, err := tfdms.FindReplicationConfigByARN(ctx, conn, rs.Primary.ID)
 
@@ -401,7 +361,7 @@ func testAccCheckReplicationConfigDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSClient(ctx)
 
 			_, err := tfdms.FindReplicationConfigByARN(ctx, conn, rs.Primary.ID)
 
@@ -663,62 +623,11 @@ resource "aws_dms_replication_config" "test" {
 `, rName, start))
 }
 
-func testAccReplicationConfigConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccReplicationConfigConfig_base_DummyDatabase(rName),
-		fmt.Sprintf(`
-resource "aws_dms_replication_config" "test" {
-  replication_config_identifier = %[1]q
-  replication_type              = "cdc"
-  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
-  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
-  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
-
-  compute_config {
-    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
-    max_capacity_units           = "128"
-    min_capacity_units           = "2"
-    preferred_maintenance_window = "sun:23:45-mon:00:30"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccReplicationConfigConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccReplicationConfigConfig_base_DummyDatabase(rName),
-		fmt.Sprintf(`
-resource "aws_dms_replication_config" "test" {
-  replication_config_identifier = %[1]q
-  replication_type              = "cdc"
-  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
-  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
-  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
-
-  compute_config {
-    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
-    max_capacity_units           = "128"
-    min_capacity_units           = "2"
-    preferred_maintenance_window = "sun:23:45-mon:00:30"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
 var (
-	defaultReplicationConfigSettings = map[string]string{
-		"cdc":               defaultReplicationConfigCdcSettings,
-		"full-load":         defaultReplicationConfigFullLoadSettings,
-		"full-load-and-cdc": defaultReplicationConfigFullLoadAndCdcSettings,
+	defaultReplicationConfigSettings = map[awstypes.MigrationTypeValue]string{
+		awstypes.MigrationTypeValueCdc:            defaultReplicationConfigCdcSettings,
+		awstypes.MigrationTypeValueFullLoad:       defaultReplicationConfigFullLoadSettings,
+		awstypes.MigrationTypeValueFullLoadAndCdc: defaultReplicationConfigFullLoadAndCdcSettings,
 	}
 
 	//go:embed testdata/replication_config/defaults/cdc.json

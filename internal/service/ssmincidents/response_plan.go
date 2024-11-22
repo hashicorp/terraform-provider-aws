@@ -194,6 +194,7 @@ func ResourceResponsePlan() *schema.Resource {
 }
 
 func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	input := &ssmincidents.CreateResponsePlanInput{
@@ -210,19 +211,20 @@ func resourceResponsePlanCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := client.CreateResponsePlan(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get(names.AttrName).(string), err)
 	}
 
 	if output == nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionCreating, ResNameResponsePlan, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(output.Arn))
 
-	return resourceResponsePlanRead(ctx, d, meta)
+	return append(diags, resourceResponsePlanRead(ctx, d, meta)...)
 }
 
 func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	responsePlan, err := FindResponsePlanByID(ctx, client, d.Id())
@@ -230,21 +232,22 @@ func resourceResponsePlanRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSMIncidents ResponsePlan (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionReading, ResNameResponsePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionReading, ResNameResponsePlan, d.Id(), err)
 	}
 
 	if d, err := setResponsePlanResourceData(d, responsePlan); err != nil {
-		return create.DiagError(names.SSMIncidents, create.ErrActionSetting, ResNameResponsePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionSetting, ResNameResponsePlan, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
@@ -281,14 +284,15 @@ func resourceResponsePlanUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := client.UpdateResponsePlan(ctx, input)
 
 		if err != nil {
-			return create.DiagError(names.SSMIncidents, create.ErrActionUpdating, ResNameResponsePlan, d.Id(), err)
+			return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionUpdating, ResNameResponsePlan, d.Id(), err)
 		}
 	}
 
-	return resourceResponsePlanRead(ctx, d, meta)
+	return append(diags, resourceResponsePlanRead(ctx, d, meta)...)
 }
 
 func resourceResponsePlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	client := meta.(*conns.AWSClient).SSMIncidentsClient(ctx)
 
 	log.Printf("[INFO] Deleting SSMIncidents ResponsePlan %s", d.Id())
@@ -303,13 +307,13 @@ func resourceResponsePlanDelete(ctx context.Context, d *schema.ResourceData, met
 		var notFoundError *types.ResourceNotFoundException
 
 		if errors.As(err, &notFoundError) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.SSMIncidents, create.ErrActionDeleting, ResNameResponsePlan, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSMIncidents, create.ErrActionDeleting, ResNameResponsePlan, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // input validation already done in flattenIncidentTemplate function

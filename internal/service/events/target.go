@@ -68,6 +68,20 @@ func resourceTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"appsync_target": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"graphql_operation": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1048576)),
+						},
+					},
+				},
+			},
 			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -120,7 +134,7 @@ func resourceTarget() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"capacity_provider_strategy": {
+						names.AttrCapacityProviderStrategy: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -621,6 +635,12 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
+	if target.AppSyncParameters != nil {
+		if err := d.Set("appsync_target", flattenAppSyncParameters(target.AppSyncParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting appsync_target: %s", err)
+		}
+	}
+
 	return diags
 }
 
@@ -871,6 +891,10 @@ func expandPutTargetsInput(ctx context.Context, d *schema.ResourceData) *eventbr
 		target.DeadLetterConfig = expandDeadLetterParametersConfig(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("appsync_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		target.AppSyncParameters = expandAppSyncParameters(v.([]interface{}))
+	}
+
 	input := &eventbridge.PutTargetsInput{
 		Rule:    aws.String(d.Get(names.AttrRule).(string)),
 		Targets: []types.Target{target},
@@ -935,7 +959,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 		tfMap := c.(map[string]interface{})
 		tags := tftags.New(ctx, tfMap[names.AttrTags].(map[string]interface{}))
 
-		if v, ok := tfMap["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap[names.AttrCapacityProviderStrategy].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
 		}
 
@@ -1199,7 +1223,7 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 	}
 
 	if ecsParameters.CapacityProviderStrategy != nil {
-		config["capacity_provider_strategy"] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
+		config[names.AttrCapacityProviderStrategy] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
 	}
 
 	config[names.AttrTags] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
@@ -1483,4 +1507,24 @@ func flattenTargetCapacityProviderStrategy(cps []types.CapacityProviderStrategyI
 		results = append(results, s)
 	}
 	return results
+}
+
+func flattenAppSyncParameters(apiObject *types.AppSyncParameters) []map[string]interface{} {
+	tfMap := make(map[string]interface{})
+	tfMap["graphql_operation"] = aws.ToString(apiObject.GraphQLOperation)
+
+	return []map[string]interface{}{tfMap}
+}
+
+func expandAppSyncParameters(tfList []interface{}) *types.AppSyncParameters {
+	apiObject := &types.AppSyncParameters{}
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		if v, ok := tfMap["graphql_operation"].(string); ok && v != "" {
+			apiObject.GraphQLOperation = aws.String(v)
+		}
+	}
+
+	return apiObject
 }

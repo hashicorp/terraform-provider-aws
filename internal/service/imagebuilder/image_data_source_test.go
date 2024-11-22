@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -32,16 +32,16 @@ func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:ci.
 					acctest.MatchResourceAttrRegionalARNAccountID(dataSourceName, "build_version_arn", "imagebuilder", "aws", regexache.MustCompile(`image/amazon-linux-2-x86/\d+\.\d+\.\d+/\d+`)),
 					acctest.CheckResourceAttrRFC3339(dataSourceName, "date_created"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "distribution_configuration_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "enhanced_image_metadata_enabled", "false"),
+					resource.TestCheckResourceAttr(dataSourceName, "enhanced_image_metadata_enabled", acctest.CtFalse),
 					resource.TestCheckNoResourceAttr(dataSourceName, "image_recipe_arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "image_scanning_configuration.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(dataSourceName, "image_tests_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "image_scanning_configuration.#", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "image_tests_configuration.#", "0"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "infrastructure_configuration_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, "Amazon Linux 2 x86"),
 					resource.TestCheckResourceAttr(dataSourceName, "os_version", "Amazon Linux 2"),
-					resource.TestCheckResourceAttr(dataSourceName, "output_resources.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(dataSourceName, "platform", imagebuilder.PlatformLinux),
-					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(dataSourceName, "output_resources.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "platform", string(awstypes.PlatformLinux)),
+					resource.TestCheckResourceAttr(dataSourceName, acctest.CtTagsPercent, "0"),
 					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`\d+\.\d+\.\d+/\d+`)),
 				),
 			},
@@ -129,7 +129,7 @@ data "aws_imagebuilder_image" "test" {
 func testAccImageDataSourceConfig_arnSelf(rName string) string {
 	return fmt.Sprintf(`
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.0"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.2"
 }
 
 data "aws_region" "current" {}
@@ -330,7 +330,7 @@ resource "aws_ecr_repository" "test" {
 }
 
 data "aws_imagebuilder_component" "update-linux" {
-  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.0"
+  arn = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:component/update-linux/1.0.2"
 }
 
 resource "aws_imagebuilder_container_recipe" "test" {

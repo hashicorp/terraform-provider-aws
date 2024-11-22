@@ -69,6 +69,7 @@ const (
 )
 
 func resourceSinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	in := &oam.CreateSinkInput{
@@ -78,19 +79,20 @@ func resourceSinkCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	out, err := conn.CreateSink(ctx, in)
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionCreating, ResNameSink, d.Get(names.AttrName).(string), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionCreating, ResNameSink, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionCreating, ResNameSink, d.Get(names.AttrName).(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionCreating, ResNameSink, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Arn))
 
-	return resourceSinkRead(ctx, d, meta)
+	return append(diags, resourceSinkRead(ctx, d, meta)...)
 }
 
 func resourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	out, err := findSinkByID(ctx, conn, d.Id())
@@ -102,7 +104,7 @@ func resourceSinkRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionReading, ResNameSink, d.Id(), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionReading, ResNameSink, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, out.Arn)
@@ -118,6 +120,7 @@ func resourceSinkUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceSinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ObservabilityAccessManagerClient(ctx)
 
 	log.Printf("[INFO] Deleting ObservabilityAccessManager Sink %s", d.Id())
@@ -132,7 +135,7 @@ func resourceSinkDelete(ctx context.Context, d *schema.ResourceData, meta interf
 			return nil
 		}
 
-		return create.DiagError(names.ObservabilityAccessManager, create.ErrActionDeleting, ResNameSink, d.Id(), err)
+		return create.AppendDiagError(diags, names.ObservabilityAccessManager, create.ErrActionDeleting, ResNameSink, d.Id(), err)
 	}
 
 	return nil

@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_ssm_parameter", name="Parameter")
 // @Tags(identifierAttribute="id", resourceType="Parameter")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Parameter")
 func resourceParameter() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceParameterCreate,
@@ -257,7 +258,7 @@ func resourceParameterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "invalid configuration, cannot set type = %s and insecure_value", param.Type)
 	}
 
-	detail, err := findParameterMetadataByName(ctx, conn, d.Id())
+	detail, err := findParameterMetadataByName(ctx, conn, d.Get(names.AttrName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSM Parameter %s not found, removing from state", d.Id())
@@ -336,7 +337,8 @@ func resourceParameterDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] Deleting SSM Parameter: %s", d.Id())
 	_, err := conn.DeleteParameter(ctx, &ssm.DeleteParameterInput{
-		Name: aws.String(d.Id()),
+		// Use "name" instead of "id" in case the resource was imported by ARN.
+		Name: aws.String(d.Get(names.AttrName).(string)),
 	})
 
 	if errs.IsA[*awstypes.ParameterNotFound](err) {

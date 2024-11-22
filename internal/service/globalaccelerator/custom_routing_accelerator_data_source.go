@@ -69,7 +69,7 @@ func dataSourceCustomRoutingAccelerator() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"ip_addresses": {
+						names.AttrIPAddresses: {
 							Type:     schema.TypeList,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -94,7 +94,7 @@ func dataSourceCustomRoutingAccelerator() *schema.Resource {
 func dataSourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	var results []awstypes.CustomRoutingAccelerator
 	pages := globalaccelerator.NewListCustomRoutingAcceleratorsPaginator(conn, &globalaccelerator.ListCustomRoutingAcceleratorsInput{})

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/kafkaconnect"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,9 +20,8 @@ func TestAccKafkaConnectCustomPluginDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_mskconnect_custom_plugin.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.KafkaConnectEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
-		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -34,6 +32,7 @@ func TestAccKafkaConnectCustomPluginDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "latest_revision", dataSourceName, "latest_revision"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrState, dataSourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrTags, dataSourceName, names.AttrTags),
 				),
 			},
 		},
@@ -51,6 +50,10 @@ resource "aws_mskconnect_custom_plugin" "test" {
       bucket_arn = aws_s3_bucket.test.arn
       file_key   = aws_s3_object.test.key
     }
+  }
+
+  tags = {
+    key1 = "value1"
   }
 }
 

@@ -8,13 +8,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/locationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -81,9 +82,9 @@ func ResourceMap() *schema.Resource {
 
 func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	input := &locationservice.CreateMapInput{
+	input := &location.CreateMapInput{
 		Tags: getTagsIn(ctx),
 	}
 
@@ -99,7 +100,7 @@ func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.MapName = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateMapWithContext(ctx, input)
+	output, err := conn.CreateMap(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating map: %s", err)
@@ -109,22 +110,22 @@ func resourceMapCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "creating map: empty result")
 	}
 
-	d.SetId(aws.StringValue(output.MapName))
+	d.SetId(aws.ToString(output.MapName))
 
 	return append(diags, resourceMapRead(ctx, d, meta)...)
 }
 
 func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	input := &locationservice.DescribeMapInput{
+	input := &location.DescribeMapInput{
 		MapName: aws.String(d.Id()),
 	}
 
-	output, err := conn.DescribeMapWithContext(ctx, input)
+	output, err := conn.DescribeMap(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Location Service Map (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -144,11 +145,11 @@ func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set(names.AttrConfiguration, nil)
 	}
 
-	d.Set(names.AttrCreateTime, aws.TimeValue(output.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrCreateTime, aws.ToTime(output.CreateTime).Format(time.RFC3339))
 	d.Set(names.AttrDescription, output.Description)
 	d.Set("map_arn", output.MapArn)
 	d.Set("map_name", output.MapName)
-	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
+	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
 
 	setTagsOut(ctx, output.Tags)
 
@@ -157,10 +158,10 @@ func resourceMapRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceMapUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
 	if d.HasChange(names.AttrDescription) {
-		input := &locationservice.UpdateMapInput{
+		input := &location.UpdateMapInput{
 			MapName: aws.String(d.Id()),
 		}
 
@@ -168,7 +169,7 @@ func resourceMapUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			input.Description = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdateMapWithContext(ctx, input)
+		_, err := conn.UpdateMap(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Location Service Map (%s): %s", d.Id(), err)
@@ -180,15 +181,15 @@ func resourceMapUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceMapDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LocationConn(ctx)
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	input := &locationservice.DeleteMapInput{
+	input := &location.DeleteMapInput{
 		MapName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteMapWithContext(ctx, input)
+	_, err := conn.DeleteMap(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -199,12 +200,12 @@ func resourceMapDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func expandConfiguration(tfMap map[string]interface{}) *locationservice.MapConfiguration {
+func expandConfiguration(tfMap map[string]interface{}) *awstypes.MapConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &locationservice.MapConfiguration{}
+	apiObject := &awstypes.MapConfiguration{}
 
 	if v, ok := tfMap["style"].(string); ok && v != "" {
 		apiObject.Style = aws.String(v)
@@ -213,7 +214,7 @@ func expandConfiguration(tfMap map[string]interface{}) *locationservice.MapConfi
 	return apiObject
 }
 
-func flattenConfiguration(apiObject *locationservice.MapConfiguration) map[string]interface{} {
+func flattenConfiguration(apiObject *awstypes.MapConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -221,7 +222,7 @@ func flattenConfiguration(apiObject *locationservice.MapConfiguration) map[strin
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Style; v != nil {
-		tfMap["style"] = aws.StringValue(v)
+		tfMap["style"] = aws.ToString(v)
 	}
 
 	return tfMap

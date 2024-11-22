@@ -29,6 +29,10 @@ import (
 
 // @SDKResource("aws_apigatewayv2_domain_name", name="Domain Name")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigatewayv2;apigatewayv2.GetDomainNameOutput")
+// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
+// @Testing(tlsKey=true)
+// @Testing(tlsKeyDomain=rName)
 func resourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameCreate,
@@ -169,7 +173,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("api_mapping_selection_expression", output.ApiMappingSelectionExpression)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "apigateway",
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  "/domainnames/" + d.Id(),

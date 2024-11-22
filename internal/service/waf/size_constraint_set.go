@@ -125,7 +125,7 @@ func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "waf",
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  "sizeconstraintset/" + d.Id(),

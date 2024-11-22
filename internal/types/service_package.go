@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -15,6 +16,13 @@ import (
 type ServicePackageResourceTags struct {
 	IdentifierAttribute string // The attribute for the identifier for UpdateTags etc.
 	ResourceType        string // Extra resourceType parameter value for UpdateTags etc.
+}
+
+// ServicePackageEphemeralResource represents a Terraform Plugin Framework ephemeral resource
+// implemented by a service package.
+type ServicePackageEphemeralResource struct {
+	Factory func(context.Context) (ephemeral.EphemeralResourceWithConfigure, error)
+	Name    string
 }
 
 // ServicePackageFrameworkDataSource represents a Terraform Plugin Framework data source

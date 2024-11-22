@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -49,11 +49,11 @@ func TestAccDAXCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "node_type", "dax.t3.small"),
 					resource.TestCheckResourceAttr(
-						resourceName, "replication_factor", acctest.Ct1),
+						resourceName, "replication_factor", "1"),
 					resource.TestCheckResourceAttr(
 						resourceName, names.AttrDescription, "test cluster"),
 					resource.TestMatchResourceAttr(
-						resourceName, "parameter_group_name", regexache.MustCompile(`^default.dax`)),
+						resourceName, names.AttrParameterGroupName, regexache.MustCompile(`^default.dax`)),
 					resource.TestMatchResourceAttr(
 						resourceName, "maintenance_window", regexache.MustCompile(`^\w{3}:\d{2}:\d{2}-\w{3}:\d{2}:\d{2}$`)),
 					resource.TestCheckResourceAttr(
@@ -67,9 +67,9 @@ func TestAccDAXCluster_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(
 						resourceName, names.AttrPort, regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(
-						resourceName, "server_side_encryption.#", acctest.Ct1),
+						resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(
-						resourceName, "server_side_encryption.0.enabled", "false"),
+						resourceName, "server_side_encryption.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(
-						resourceName, "replication_factor", acctest.Ct1),
+						resourceName, "replication_factor", "1"),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(
-						resourceName, "replication_factor", acctest.Ct2),
+						resourceName, "replication_factor", "2"),
 				),
 			},
 			{
@@ -119,7 +119,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
 					resource.TestCheckResourceAttr(
-						resourceName, "replication_factor", acctest.Ct1),
+						resourceName, "replication_factor", "1"),
 				),
 			},
 		},
@@ -142,8 +142,8 @@ func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 				Config: testAccClusterConfig_encryption(rString, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -177,8 +177,8 @@ func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 				Config: testAccClusterConfig_encryption(rString, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -355,6 +355,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	input := &dax.DescribeClustersInput{}
 
 	_, err := conn.DescribeClusters(ctx, input)
+
 	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

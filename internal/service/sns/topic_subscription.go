@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -174,11 +175,12 @@ func resourceTopicSubscription() *schema.Resource {
 }
 
 func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesCreate(d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// Endpoint, Protocol and TopicArn are not passed in Attributes.
@@ -198,7 +200,7 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	output, err := conn.Subscribe(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating SNS Topic Subscription: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SNS Topic Subscription: %s", err)
 	}
 
 	d.SetId(aws.ToString(output.SubscriptionArn))
@@ -220,14 +222,15 @@ func resourceTopicSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if _, err := waitSubscriptionConfirmed(ctx, conn, d.Id(), timeout); err != nil {
-			return diag.Errorf("waiting for SNS Topic Subscription (%s) confirmation: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SNS Topic Subscription (%s) confirmation: %s", d.Id(), err)
 		}
 	}
 
-	return resourceTopicSubscriptionRead(ctx, d, meta)
+	return append(diags, resourceTopicSubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, subscriptionCreateTimeout, func() (interface{}, error) {
@@ -237,36 +240,38 @@ func resourceTopicSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SNS Topic Subscription %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading SNS Topic Subscription (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
 
 	attributes := outputRaw.(map[string]string)
 
-	return diag.FromErr(subscriptionAttributeMap.APIAttributesToResourceData(attributes, d))
+	return sdkdiag.AppendFromErr(diags, subscriptionAttributeMap.APIAttributesToResourceData(attributes, d))
 }
 
 func resourceTopicSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	attributes, err := subscriptionAttributeMap.ResourceDataToAPIAttributesUpdate(d)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	err = putSubscriptionAttributes(ctx, conn, d.Id(), attributes)
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceTopicSubscriptionRead(ctx, d, meta)
+	return append(diags, resourceTopicSubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SNS Topic Subscription: %s", d.Id())
@@ -275,18 +280,18 @@ func resourceTopicSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	})
 
 	if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "Cannot unsubscribe a subscription that is pending confirmation") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting SNS Topic Subscription (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SNS Topic Subscription (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitSubscriptionDeleted(ctx, conn, d.Id(), subscriptionDeleteTimeout); err != nil {
-		return diag.Errorf("waiting for SNS Topic Subscription (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for SNS Topic Subscription (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func putSubscriptionAttributes(ctx context.Context, conn *sns.Client, arn string, attributes map[string]string) error {

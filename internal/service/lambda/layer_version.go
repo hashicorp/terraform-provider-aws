@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -42,6 +43,10 @@ func resourceLayerVersion() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"code_sha256": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -165,7 +170,7 @@ func resourceLayerVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		conns.GlobalMutexKV.Lock(mutexLayerKey)
 		defer conns.GlobalMutexKV.Unlock(mutexLayerKey)
 
-		file, err := readFileContents(filename.(string))
+		file, err := tfio.ReadFileContents(filename.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading ZIP file (%s): %s", filename, err)
 		}
@@ -234,6 +239,7 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.Set(names.AttrARN, output.LayerVersionArn)
+	d.Set("code_sha256", output.Content.CodeSha256)
 	d.Set("compatible_architectures", output.CompatibleArchitectures)
 	d.Set("compatible_runtimes", output.CompatibleRuntimes)
 	d.Set(names.AttrCreatedDate, output.CreatedDate)
@@ -243,7 +249,7 @@ func resourceLayerVersionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("license_info", output.LicenseInfo)
 	d.Set("signing_job_arn", output.Content.SigningJobArn)
 	d.Set("signing_profile_version_arn", output.Content.SigningProfileVersionArn)
-	d.Set("source_code_hash", output.Content.CodeSha256)
+	d.Set("source_code_hash", d.Get("source_code_hash"))
 	d.Set("source_code_size", output.Content.CodeSize)
 	d.Set(names.AttrVersion, strconv.FormatInt(versionNumber, 10))
 

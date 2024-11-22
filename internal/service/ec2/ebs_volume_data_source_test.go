@@ -34,7 +34,7 @@ func TestAccEC2EBSVolumeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrTags, resourceName, names.AttrTags),
 					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "multi_attach_enabled", resourceName, "multi_attach_enabled"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "throughput", resourceName, "throughput"),
+					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrThroughput, resourceName, names.AttrThroughput),
 				),
 			},
 		},

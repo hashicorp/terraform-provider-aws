@@ -5,6 +5,7 @@ package iam_test
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -54,7 +55,7 @@ func TestAccIAMGroupDataSource_users(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrPath, "/"),
 					resource.TestCheckResourceAttr("data.aws_iam_group.test", names.AttrGroupName, groupName),
 					acctest.CheckResourceAttrGlobalARN("data.aws_iam_group.test", names.AttrARN, "iam", fmt.Sprintf("group/%s", groupName)),
-					resource.TestCheckResourceAttr("data.aws_iam_group.test", "users.#", fmt.Sprint(userCount)),
+					resource.TestCheckResourceAttr("data.aws_iam_group.test", "users.#", strconv.Itoa(userCount)),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.arn"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.user_id"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_group.test", "users.0.user_name"),

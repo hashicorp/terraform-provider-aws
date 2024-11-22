@@ -58,7 +58,9 @@ This resource supports the following arguments:
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) for KMS key used for Amazon S3 server side encryption. This value can only be set when `kms_encrypted` is true.
 * `object_acl` - (Optional) Access Control List permission for S3 objects. Defaults to `private`.
 * `oplocks_enabled` - (Optional) Boolean to indicate Opportunistic lock (oplock) status. Defaults to `true`.
-* `cache_attributes` - (Optional) Refresh cache information. see [Cache Attributes](#cache_attributes) for more details.
+* `cache_attributes` - (Optional) Refresh cache information. see [`cache_attributes` Block](#cache_attributes-block) for more details.
+
+  **Note:** If you have previously included a `cache_attributes` block in your configuration, removing it will not reset the refresh cache value and the previous value will remain. You must explicitly set a new value to change it.
 * `read_only` - (Optional) Boolean to indicate write status of file share. File share does not accept writes if `true`. Defaults to `false`.
 * `requester_pays` - (Optional) Boolean who pays the cost of the request and the data download from the Amazon S3 bucket. Set this value to `true` if you want the requester to pay instead of the bucket owner. Defaults to `false`.
 * `smb_acl_enabled` - (Optional) Set this value to `true` to enable ACL (access control list) on the SMB fileshare. Set it to `false` to map file and directory permissions to the POSIX permissions. This setting applies only to `ActiveDirectory` authentication type.
@@ -68,7 +70,9 @@ This resource supports the following arguments:
 * `notification_policy` - (Optional) The notification policy of the file share. For more information see the [AWS Documentation](https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_CreateNFSFileShare.html#StorageGateway-CreateNFSFileShare-request-NotificationPolicy). Default value is `{}`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### cache_attributes
+### `cache_attributes` Block
+
+The `cache_attributes` configuration block supports the following arguments:
 
 * `cache_stale_timeout_in_seconds` - (Optional) Refreshes a file share's cache by using Time To Live (TTL).
  TTL is the length of time since the last refresh after which access to the directory would cause the file gateway

@@ -132,7 +132,7 @@ func resourceWorkGroup() *schema.Resource {
 											},
 										},
 									},
-									"expected_bucket_owner": {
+									names.AttrExpectedBucketOwner: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -240,7 +240,7 @@ func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "athena",
 		AccountID: meta.(*conns.AWSClient).AccountID,
@@ -301,6 +301,7 @@ func resourceWorkGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		input.RecursiveDeleteOption = aws.Bool(v.(bool))
 	}
 
+	log.Printf("[DEBUG] Deleting Athena WorkGroup (%s)", d.Id())
 	_, err := conn.DeleteWorkGroup(ctx, input)
 
 	if err != nil {
@@ -450,7 +451,7 @@ func expandWorkGroupResultConfiguration(l []interface{}) *types.ResultConfigurat
 		resultConfiguration.OutputLocation = aws.String(v)
 	}
 
-	if v, ok := m["expected_bucket_owner"].(string); ok && v != "" {
+	if v, ok := m[names.AttrExpectedBucketOwner].(string); ok && v != "" {
 		resultConfiguration.ExpectedBucketOwner = aws.String(v)
 	}
 
@@ -482,7 +483,7 @@ func expandWorkGroupResultConfigurationUpdates(l []interface{}) *types.ResultCon
 		resultConfigurationUpdates.RemoveOutputLocation = aws.Bool(true)
 	}
 
-	if v, ok := m["expected_bucket_owner"].(string); ok && v != "" {
+	if v, ok := m[names.AttrExpectedBucketOwner].(string); ok && v != "" {
 		resultConfigurationUpdates.ExpectedBucketOwner = aws.String(v)
 	} else {
 		resultConfigurationUpdates.RemoveExpectedBucketOwner = aws.Bool(true)
@@ -559,7 +560,7 @@ func flattenWorkGroupResultConfiguration(resultConfiguration *types.ResultConfig
 	}
 
 	if resultConfiguration.ExpectedBucketOwner != nil {
-		m["expected_bucket_owner"] = aws.ToString(resultConfiguration.ExpectedBucketOwner)
+		m[names.AttrExpectedBucketOwner] = aws.ToString(resultConfiguration.ExpectedBucketOwner)
 	}
 
 	if resultConfiguration.AclConfiguration != nil {

@@ -4,11 +4,12 @@
 package dax
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log"
 	"reflect"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -113,7 +114,7 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"parameter_group_name": {
+			names.AttrParameterGroupName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -235,7 +236,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.ClusterEndpointEncryptionType = awstypes.ClusterEndpointEncryptionType(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameter_group_name"); ok {
+	if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 		input.ParameterGroupName = aws.String(v.(string))
 	}
 
@@ -349,7 +350,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIDs(c.SecurityGroups))
 
 	if c.ParameterGroup != nil {
-		d.Set("parameter_group_name", c.ParameterGroup.ParameterGroupName)
+		d.Set(names.AttrParameterGroupName, c.ParameterGroup.ParameterGroupName)
 	}
 
 	d.Set("maintenance_window", c.PreferredMaintenanceWindow)
@@ -393,8 +394,8 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("parameter_group_name") {
-		req.ParameterGroupName = aws.String(d.Get("parameter_group_name").(string))
+	if d.HasChange(names.AttrParameterGroupName) {
+		req.ParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 		requestUpdate = true
 	}
 
@@ -472,9 +473,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
-	sortedNodes := make([]awstypes.Node, len(c.Nodes))
-	copy(sortedNodes, c.Nodes)
-	sort.Sort(byNodeId(sortedNodes))
+	sortedNodes := slices.SortedFunc(slices.Values(c.Nodes), func(a, b awstypes.Node) int {
+		return cmp.Compare(aws.ToString(a.NodeId), aws.ToString(b.NodeId))
+	})
 
 	nodeData := make([]map[string]interface{}, 0, len(sortedNodes))
 
@@ -488,15 +489,6 @@ func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
 	}
 
 	return d.Set("nodes", nodeData)
-}
-
-type byNodeId []awstypes.Node
-
-func (b byNodeId) Len() int      { return len(b) }
-func (b byNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
-func (b byNodeId) Less(i, j int) bool {
-	return b[i].NodeId != nil && b[j].NodeId != nil &&
-		aws.ToString(b[i].NodeId) < aws.ToString(b[j].NodeId)
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

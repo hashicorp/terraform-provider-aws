@@ -189,7 +189,7 @@ class MyConvertedCode(TerraformStack):
 
 ~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target`, `mongodb_target` or `catalog_target`.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `database_name` (Required) Glue database where results are written.
 * `name` (Required) Name of the crawler.
@@ -326,4 +326,4 @@ Using `terraform import`, import Glue Crawlers using `name`. For example:
 % terraform import aws_glue_crawler.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-0df369bee2ab9f48ca2abe5fa0e864a1921bff66fc146728b45e061f21763933 -->
+<!-- cache-key: cdktf-0.20.8 input-50c320a2a82893a5cc18ae7c50391869c4eb98b3b58b1c569a006ee3eace2a0c -->

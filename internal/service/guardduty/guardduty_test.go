@@ -34,10 +34,10 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"multiple":                 testAccDetectorFeature_multiple,
 		},
 		"Filter": {
-			acctest.CtBasic: testAccFilter_basic,
-			"update":        testAccFilter_update,
-			"tags":          testAccFilter_tags,
-			"disappears":    testAccFilter_disappears,
+			acctest.CtBasic:      testAccFilter_basic,
+			"update":             testAccFilter_update,
+			"tags":               testAccFilter_tags,
+			acctest.CtDisappears: testAccFilter_disappears,
 		},
 		"FindingIDs": {
 			"datasource_basic": testAccFindingIDsDataSource_basic,
@@ -75,8 +75,8 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"invitationMessage":  testAccMember_invitationMessage,
 		},
 		"PublishingDestination": {
-			acctest.CtBasic: testAccPublishingDestination_basic,
-			"disappears":    testAccPublishingDestination_disappears,
+			acctest.CtBasic:      testAccPublishingDestination_basic,
+			acctest.CtDisappears: testAccPublishingDestination_disappears,
 		},
 	}
 
@@ -103,7 +103,7 @@ func testAccMemberFromEnv(t *testing.T) (string, string) {
 
 // testAccPreCheckDetectorExists verifies the current account has a single active GuardDuty detector configured.
 func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
 	_, err := tfguardduty.FindDetector(ctx, conn)
 
@@ -118,7 +118,7 @@ func testAccPreCheckDetectorExists(ctx context.Context, t *testing.T) {
 
 // testAccPreCheckDetectorNotExists verifies the current account has no active GuardDuty detector configured.
 func testAccPreCheckDetectorNotExists(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
 	_, err := tfguardduty.FindDetector(ctx, conn)
 

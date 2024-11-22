@@ -37,9 +37,9 @@ func testAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckModelInvocationLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.embedding_data_delivery_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.image_data_delivery_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "logging_config.text_data_delivery_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.embedding_data_delivery_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.image_data_delivery_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.text_data_delivery_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.log_group_name", logGroupResourceName, names.AttrName),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_config.cloudwatch_config.role_arn", iamRoleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "logging_config.s3_config.bucket_name", s3BucketResourceName, names.AttrID),

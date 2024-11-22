@@ -125,7 +125,7 @@ func ResourceKxEnvironment() *schema.Resource {
 							MaxItems: 100,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"cidr_block": {
+									names.AttrCIDRBlock: {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.IsCIDR,
@@ -606,7 +606,7 @@ func expandAttachmentNetworkACLConfiguration(tfMap map[string]interface{}) *type
 	if v, ok := tfMap["rule_action"].(string); ok && v != "" {
 		a.RuleAction = types.RuleAction(v)
 	}
-	if v, ok := tfMap["cidr_block"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrCIDRBlock].(string); ok && v != "" {
 		a.CidrBlock = &v
 	}
 	if v, ok := tfMap["port_range"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -729,10 +729,10 @@ func flattenAttachmentNetworkACLConfiguration(apiObject *types.NetworkACLEntry) 
 	}
 
 	m := map[string]interface{}{
-		"cidr_block":       aws.ToString(apiObject.CidrBlock),
-		names.AttrProtocol: aws.ToString(apiObject.Protocol),
-		"rule_action":      apiObject.RuleAction,
-		"rule_number":      apiObject.RuleNumber,
+		names.AttrCIDRBlock: aws.ToString(apiObject.CidrBlock),
+		names.AttrProtocol:  aws.ToString(apiObject.Protocol),
+		"rule_action":       apiObject.RuleAction,
+		"rule_number":       apiObject.RuleNumber,
 	}
 
 	if v := apiObject.PortRange; v != nil {

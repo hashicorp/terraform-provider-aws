@@ -107,7 +107,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"actions": setOfStringSchema(),
+							names.AttrActions: setOfStringSchema(),
 							names.AttrCondition: {
 								Type:     schema.TypeSet,
 								Optional: true,
@@ -231,7 +231,7 @@ func dataSourcePolicyDocumentRead(ctx context.Context, d *schema.ResourceData, m
 				}
 			}
 
-			if actions := cfgStmt["actions"].(*schema.Set).List(); len(actions) > 0 {
+			if actions := cfgStmt[names.AttrActions].(*schema.Set).List(); len(actions) > 0 {
 				stmt.Actions = policyDecodeConfigStringList(actions)
 			}
 			if actions := cfgStmt["not_actions"].(*schema.Set).List(); len(actions) > 0 {

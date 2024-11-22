@@ -56,8 +56,6 @@ resource "aws_s3_object" "test" {
   })
 }
 
-data "aws_partition" "current" {}
-
 resource "null_resource" "test" {}
 
 variable "rName" {
@@ -80,4 +78,3 @@ variable "knownTagValue" {
   type     = string
   nullable = false
 }
-

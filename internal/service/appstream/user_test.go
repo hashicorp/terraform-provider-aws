@@ -44,7 +44,7 @@ func TestAccAppStreamUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
@@ -110,7 +110,7 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -126,7 +126,7 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "true"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
@@ -136,7 +136,7 @@ func TestAccAppStreamUser_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", authType),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rEmail),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, "false"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 		},
@@ -157,7 +157,7 @@ func testAccCheckUserExists(ctx context.Context, resourceName string, appStreamU
 			return err
 		}
 
-		user, err := tfappstream.FindUserByUserNameAndAuthType(ctx, conn, userName, authType)
+		user, err := tfappstream.FindUserByTwoPartKey(ctx, conn, userName, authType)
 		if tfresource.NotFound(err) {
 			return fmt.Errorf("AppStream User %q does not exist", rs.Primary.ID)
 		}

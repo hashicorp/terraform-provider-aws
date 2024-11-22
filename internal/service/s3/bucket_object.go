@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -40,6 +39,9 @@ import (
 
 // @SDKResource("aws_s3_bucket_object", name="Bucket Object")
 // @Tags(identifierAttribute="arn", resourceType="BucketObject")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/s3;s3.GetObjectOutput")
+// @Testing(importStateIdFunc=testAccBucketObjectImportStateIdFunc)
+// @Testing(importIgnore="acl;force_destroy")
 func resourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketObjectCreate,
@@ -136,13 +138,6 @@ func resourceBucketObject() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// ignore diffs where the user hasn't specified a kms_key_id but the bucket has a default KMS key configured
-					if new == "" && d.Get("server_side_encryption") == types.ServerSideEncryptionAwsKms {
-						return true
-					}
-					return false
-				},
 			},
 			"metadata": {
 				Type:         schema.TypeMap,
@@ -180,7 +175,7 @@ func resourceBucketObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -225,7 +220,7 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
-	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition(ctx), bucket, key)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
@@ -239,6 +234,9 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
+	if output.SSEKMSKeyId != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set(names.AttrKMSKeyID, output.SSEKMSKeyId)
+	}
 	d.Set("metadata", output.Metadata)
 	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", output.ObjectLockMode)
@@ -246,16 +244,12 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("server_side_encryption", output.ServerSideEncryption)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", types.ObjectStorageClassStandard)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
 	if output.StorageClass != "" {
-		d.Set("storage_class", output.StorageClass)
+		d.Set(names.AttrStorageClass, output.StorageClass)
 	}
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
-
-	if err := resourceBucketObjectSetKMS(ctx, d, meta, output.SSEKMSKeyId); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
 
 	return diags
 }
@@ -471,11 +465,11 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 		input.ServerSideEncryption = types.ServerSideEncryption(v.(string))
 	}
 
-	if v, ok := d.GetOk("storage_class"); ok {
+	if v, ok := d.GetOk(names.AttrStorageClass); ok {
 		input.StorageClass = types.StorageClass(v.(string))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	tags := tftags.New(ctx, getContextTags(ctx))
 	tags = defaultTagsConfig.MergeTags(tags)
 	if len(tags) > 0 {
@@ -502,25 +496,6 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	return append(diags, resourceBucketObjectRead(ctx, d, meta)...)
-}
-
-func resourceBucketObjectSetKMS(ctx context.Context, d *schema.ResourceData, meta interface{}, sseKMSKeyId *string) error {
-	// Only set non-default KMS key ID (one that doesn't match default)
-	if sseKMSKeyId != nil {
-		// retrieve S3 KMS Default Master Key
-		conn := meta.(*conns.AWSClient).KMSClient(ctx)
-		keyMetadata, err := tfkms.FindKeyByID(ctx, conn, defaultKMSKeyAlias)
-		if err != nil {
-			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", defaultKMSKeyAlias, err)
-		}
-
-		if kmsKeyID := aws.ToString(sseKMSKeyId); kmsKeyID != aws.ToString(keyMetadata.Arn) {
-			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS Key ID: %s", kmsKeyID)
-			d.Set(names.AttrKMSKeyID, sseKMSKeyId)
-		}
-	}
-
-	return nil
 }
 
 func resourceBucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
@@ -552,7 +527,7 @@ func hasBucketObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"server_side_encryption",
 		names.AttrSource,
 		"source_hash",
-		"storage_class",
+		names.AttrStorageClass,
 		"website_redirect",
 	} {
 		if d.HasChange(key) {

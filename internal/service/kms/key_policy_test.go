@@ -97,7 +97,7 @@ func TestAccKMSKeyPolicy_bypass(t *testing.T) {
 				Config: testAccKeyPolicyConfig_policyBypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, keyResourceName, &key),
-					resource.TestCheckResourceAttr(attachmentResourceName, "bypass_policy_lockout_safety_check", "true"),
+					resource.TestCheckResourceAttr(attachmentResourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
 			{
@@ -127,14 +127,14 @@ func TestAccKMSKeyPolicy_bypassUpdate(t *testing.T) {
 				Config: testAccKeyPolicyConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, keyResourceName, &before),
-					resource.TestCheckResourceAttr(attachmentResourceName, "bypass_policy_lockout_safety_check", "false"),
+					resource.TestCheckResourceAttr(attachmentResourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 				),
 			},
 			{
 				Config: testAccKeyPolicyConfig_policyBypass(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, keyResourceName, &after),
-					resource.TestCheckResourceAttr(attachmentResourceName, "bypass_policy_lockout_safety_check", "true"),
+					resource.TestCheckResourceAttr(attachmentResourceName, "bypass_policy_lockout_safety_check", acctest.CtTrue),
 				),
 			},
 		},

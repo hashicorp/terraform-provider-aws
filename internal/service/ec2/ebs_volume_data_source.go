@@ -6,7 +6,7 @@ package ec2
 import (
 	"context"
 	"fmt"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,8 +21,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ebs_volume")
-func DataSourceEBSVolume() *schema.Resource {
+// @SDKDataSource("aws_ebs_volume", name="EBS Volume")
+// @Tags
+// @Testing(tagsTest=false)
+func dataSourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSVolumeRead,
 
@@ -74,7 +76,7 @@ func DataSourceEBSVolume() *schema.Resource {
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
-			"throughput": {
+			names.AttrThroughput: {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
@@ -93,11 +95,10 @@ func DataSourceEBSVolume() *schema.Resource {
 func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVolumesInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -105,7 +106,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.Filters = nil
 	}
 
-	output, err := findEBSVolumesV2(ctx, conn, input)
+	output, err := findEBSVolumes(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EBS Volumes: %s", err)
@@ -134,7 +135,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(aws.ToString(volume.VolumeId))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
@@ -149,29 +150,17 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("outpost_arn", volume.OutpostArn)
 	d.Set(names.AttrSize, volume.Size)
 	d.Set(names.AttrSnapshotID, volume.SnapshotId)
-	d.Set("throughput", volume.Throughput)
+	d.Set(names.AttrThroughput, volume.Throughput)
 	d.Set("volume_id", volume.VolumeId)
 	d.Set(names.AttrVolumeType, volume.VolumeType)
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, volume.Tags)
 
 	return diags
 }
 
-type volumeSort []awstypes.Volume
-
-func (a volumeSort) Len() int      { return len(a) }
-func (a volumeSort) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a volumeSort) Less(i, j int) bool {
-	itime := aws.ToTime(a[i].CreateTime)
-	jtime := aws.ToTime(a[j].CreateTime)
-	return itime.Unix() < jtime.Unix()
-}
-
 func mostRecentVolume(volumes []awstypes.Volume) awstypes.Volume {
-	sortedVolumes := volumes
-	sort.Sort(volumeSort(sortedVolumes))
-	return sortedVolumes[len(sortedVolumes)-1]
+	return slices.MaxFunc(volumes, func(a, b awstypes.Volume) int {
+		return a.CreateTime.Compare(aws.ToTime(b.CreateTime))
+	})
 }

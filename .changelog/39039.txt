@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elbv2_listener: Fix crash when reading forward actions not configured in state
+```

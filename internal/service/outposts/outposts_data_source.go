@@ -6,8 +6,8 @@ package outposts
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/outposts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_outposts_outposts")
-func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-name
+// @SDKDataSource("aws_outposts_outposts", name="Outposts")
+func dataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-name
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOutpostsRead,
 
@@ -57,47 +57,40 @@ func DataSourceOutposts() *schema.Resource { // nosemgrep:ci.outposts-in-func-na
 
 func dataSourceOutpostsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.outposts-in-func-name
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
+	conn := meta.(*conns.AWSClient).OutpostsClient(ctx)
 
 	input := &outposts.ListOutpostsInput{}
 
 	var arns, ids []string
 
-	err := conn.ListOutpostsPagesWithContext(ctx, input, func(page *outposts.ListOutpostsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := outposts.NewListOutpostsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing Outposts Outposts: %s", err)
 		}
 
 		for _, outpost := range page.Outposts {
-			if outpost == nil {
+			if v, ok := d.GetOk(names.AttrAvailabilityZone); ok && v.(string) != aws.ToString(outpost.AvailabilityZone) {
 				continue
 			}
 
-			if v, ok := d.GetOk(names.AttrAvailabilityZone); ok && v.(string) != aws.StringValue(outpost.AvailabilityZone) {
+			if v, ok := d.GetOk("availability_zone_id"); ok && v.(string) != aws.ToString(outpost.AvailabilityZoneId) {
 				continue
 			}
 
-			if v, ok := d.GetOk("availability_zone_id"); ok && v.(string) != aws.StringValue(outpost.AvailabilityZoneId) {
+			if v, ok := d.GetOk("site_id"); ok && v.(string) != aws.ToString(outpost.SiteId) {
 				continue
 			}
 
-			if v, ok := d.GetOk("site_id"); ok && v.(string) != aws.StringValue(outpost.SiteId) {
+			if v, ok := d.GetOk(names.AttrOwnerID); ok && v.(string) != aws.ToString(outpost.OwnerId) {
 				continue
 			}
 
-			if v, ok := d.GetOk(names.AttrOwnerID); ok && v.(string) != aws.StringValue(outpost.OwnerId) {
-				continue
-			}
-
-			arns = append(arns, aws.StringValue(outpost.OutpostArn))
-			ids = append(ids, aws.StringValue(outpost.OutpostId))
+			arns = append(arns, aws.ToString(outpost.OutpostArn))
+			ids = append(ids, aws.ToString(outpost.OutpostId))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Outposts Outposts: %s", err)
 	}
 
 	if err := d.Set(names.AttrARNs, arns); err != nil {

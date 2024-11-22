@@ -190,6 +190,7 @@ func waitTagsPropagated(ctx context.Context, conn *kms.Client, id string, tags t
 		}
 
 		if inContext, ok := tftags.FromContext(ctx); ok {
+			tags = tags.IgnoreConfig(inContext.IgnoreConfig)
 			output = output.IgnoreConfig(inContext.IgnoreConfig)
 		}
 

@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route")
-func DataSourceRoute() *schema.Resource {
+// @SDKDataSource("aws_route", name="Route")
+func dataSourceRoute() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRouteRead,
 
@@ -114,7 +114,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	routeTableID := d.Get("route_table_id").(string)
 
-	routeTable, err := findRouteTableByIDV2(ctx, conn, routeTableID)
+	routeTable, err := findRouteTableByID(ctx, conn, routeTableID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", routeTableID, err)
@@ -199,11 +199,11 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	route := routes[0]
 
 	if destination := aws.ToString(route.DestinationCidrBlock); destination != "" {
-		d.SetId(RouteCreateID(routeTableID, destination))
+		d.SetId(routeCreateID(routeTableID, destination))
 	} else if destination := aws.ToString(route.DestinationIpv6CidrBlock); destination != "" {
-		d.SetId(RouteCreateID(routeTableID, destination))
+		d.SetId(routeCreateID(routeTableID, destination))
 	} else if destination := aws.ToString(route.DestinationPrefixListId); destination != "" {
-		d.SetId(RouteCreateID(routeTableID, destination))
+		d.SetId(routeCreateID(routeTableID, destination))
 	}
 
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)

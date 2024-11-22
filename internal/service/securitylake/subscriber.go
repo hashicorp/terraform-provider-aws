@@ -150,8 +150,8 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 										CustomType: fwtypes.NewListNestedObjectTypeOf[subscriberCustomLogSourceProviderModel](ctx),
 										ElementType: types.ObjectType{
 											AttrTypes: map[string]attr.Type{
-												"location":        types.StringType,
-												names.AttrRoleARN: types.StringType,
+												names.AttrLocation: types.StringType,
+												names.AttrRoleARN:  types.StringType,
 											},
 										},
 										PlanModifiers: []planmodifier.List{
@@ -378,7 +378,7 @@ func (r *subscriberResource) Delete(ctx context.Context, request resource.Delete
 	}
 
 	in := &securitylake.DeleteSubscriberInput{
-		SubscriberId: aws.String(data.ID.ValueString()),
+		SubscriberId: data.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteSubscriber(ctx, in)
@@ -687,8 +687,8 @@ func flattenSubscriberCustomLogSourceProviderModel(ctx context.Context, apiObjec
 	}
 
 	obj := map[string]attr.Value{
-		"location":        fwflex.StringToFramework(ctx, apiObject.Location),
-		names.AttrRoleARN: fwflex.StringToFramework(ctx, apiObject.RoleArn),
+		names.AttrLocation: fwflex.StringToFramework(ctx, apiObject.Location),
+		names.AttrRoleARN:  fwflex.StringToFramework(ctx, apiObject.RoleArn),
 	}
 
 	objVal, d := types.ObjectValue(subscriberCustomLogSourceProviderModelAttrTypes, obj)
@@ -708,8 +708,8 @@ var (
 	}
 
 	subscriberCustomLogSourceProviderModelAttrTypes = map[string]attr.Type{
-		"location":        types.StringType,
-		names.AttrRoleARN: types.StringType,
+		names.AttrLocation: types.StringType,
+		names.AttrRoleARN:  types.StringType,
 	}
 
 	subscriberCustomLogSourceResourceModelAttrTypes = map[string]attr.Type{
@@ -747,8 +747,8 @@ type subscriberResourceModel struct {
 	S3BucketArn           types.String                                             `tfsdk:"s3_bucket_arn"`
 	SubscriberEndpoint    types.String                                             `tfsdk:"subscriber_endpoint"`
 	SubscriberStatus      types.String                                             `tfsdk:"subscriber_status"`
-	Tags                  types.Map                                                `tfsdk:"tags"`
-	TagsAll               types.Map                                                `tfsdk:"tags_all"`
+	Tags                  tftags.Map                                               `tfsdk:"tags"`
+	TagsAll               tftags.Map                                               `tfsdk:"tags_all"`
 	Timeouts              timeouts.Value                                           `tfsdk:"timeouts"`
 }
 
