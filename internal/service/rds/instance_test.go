@@ -5916,12 +5916,12 @@ func TestAccRDSInstance_Storage_gp3MySQL(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassMySQLGP3, 400),
+				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassMySQLGP3, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "400"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
-					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
@@ -5969,12 +5969,12 @@ func TestAccRDSInstance_Storage_gp3Postgres(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 400),
+				Config: testAccInstanceConfig_Storage_gp3(rName, testAccInstanceConfig_orderableClassPostgresGP3, 300),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "400"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "12000"),
-					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "500"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "300"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrIOPS, "3000"),
+					resource.TestCheckResourceAttr(resourceName, "storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
