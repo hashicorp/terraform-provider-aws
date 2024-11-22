@@ -1,4 +1,13 @@
 ## 5.78.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_s3_bucket_lifecycle_configuration: Lifecycle configurations can now be applied to directory buckets ([#40268](https://github.com/hashicorp/terraform-provider-aws/issues/40268))
+
+BUG FIXES:
+
+* resource/aws_batch_job_definition: Fix crash when specifying `eksProperties` or `ecsProperties` block ([#40172](https://github.com/hashicorp/terraform-provider-aws/issues/40172))
+
 ## 5.77.0 (November 21, 2024)
 
 NOTES:
