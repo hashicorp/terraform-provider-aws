@@ -581,7 +581,7 @@ func TestAccRDSCluster_storageTypeGeneralPurposeToProvisionedIOPS(t *testing.T) 
 			{
 				Config: testAccClusterConfig_storageChange(rName, "gp3"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "gp3"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
 				),
 			},
 			{
