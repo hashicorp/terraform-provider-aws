@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/codeconnections"
 	"github.com/aws/aws-sdk-go-v2/service/codeconnections/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -23,7 +22,7 @@ import (
 
 func TestAccCodeConnectionsHost_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v codeconnections.GetHostOutput
+	var v types.Host
 	resourceName := "aws_codeconnections_host.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -57,7 +56,7 @@ func TestAccCodeConnectionsHost_basic(t *testing.T) {
 
 func TestAccCodeConnectionsHost_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v codeconnections.GetHostOutput
+	var v types.Host
 	resourceName := "aws_codeconnections_host.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -83,7 +82,7 @@ func TestAccCodeConnectionsHost_disappears(t *testing.T) {
 
 func TestAccCodeConnectionsHost_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v codeconnections.GetHostOutput
+	var v types.Host
 	resourceName := "aws_codeconnections_host.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -122,7 +121,7 @@ func TestAccCodeConnectionsHost_vpc(t *testing.T) {
 
 func TestAccCodeConnectionsHost_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v codeconnections.GetHostOutput
+	var v types.Host
 	resourceName := "aws_codeconnections_host.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -168,7 +167,7 @@ func TestAccCodeConnectionsHost_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckHostExists(ctx context.Context, n string, v *codeconnections.GetHostOutput) resource.TestCheckFunc {
+func testAccCheckHostExists(ctx context.Context, n string, v *types.Host) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

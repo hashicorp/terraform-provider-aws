@@ -209,6 +209,10 @@ func (r *hostResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
+	if tags, err := listTags(ctx, conn, data.ID.ValueString()); err == nil {
+		setTagsOut(ctx, Tags(tags))
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -231,10 +235,6 @@ func (r *hostResource) Update(ctx context.Context, req resource.UpdateRequest, r
 		!old.VPCConfiguration.Equal(new.VPCConfiguration) {
 		input := codeconnections.UpdateHostInput{
 			HostArn: old.HostArn.ValueStringPointer(),
-		}
-		resp.Diagnostics.Append(fwflex.Expand(ctx, old, &input, fwflex.WithFieldNameSuffix("Host"))...)
-		if resp.Diagnostics.HasError() {
-			return
 		}
 
 		out, err := conn.UpdateHost(ctx, &input)
@@ -322,7 +322,7 @@ const (
 	hostStatusVPCConfigInitializing = "VPC_CONFIG_INITIALIZING"
 )
 
-func waitHostPendingOrAvailable(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*codeconnections.GetHostOutput, error) {
+func waitHostPendingOrAvailable(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Host, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{hostStatusVPCConfigInitializing},
 		Target:                    []string{hostStatusPending, hostStatusAvailable},
@@ -333,14 +333,14 @@ func waitHostPendingOrAvailable(ctx context.Context, conn *codeconnections.Clien
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*codeconnections.GetHostOutput); ok {
+	if out, ok := outputRaw.(*awstypes.Host); ok {
 		return out, err
 	}
 
 	return nil, err
 }
 
-func waitHostDeleted(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*codeconnections.GetHostOutput, error) {
+func waitHostDeleted(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Host, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{hostStatusVPCConfigDeleting},
 		Target:  []string{},
@@ -349,7 +349,7 @@ func waitHostDeleted(ctx context.Context, conn *codeconnections.Client, id strin
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*codeconnections.GetHostOutput); ok {
+	if out, ok := outputRaw.(*awstypes.Host); ok {
 		return out, err
 	}
 
@@ -371,12 +371,12 @@ func statusHost(ctx context.Context, conn *codeconnections.Client, id string) re
 	}
 }
 
-func findHostByArn(ctx context.Context, conn *codeconnections.Client, arn string) (*codeconnections.GetHostOutput, error) {
+func findHostByArn(ctx context.Context, conn *codeconnections.Client, arn string) (*awstypes.Host, error) {
 	input := &codeconnections.GetHostInput{
 		HostArn: aws.String(arn),
 	}
 
-	out, err := conn.GetHost(ctx, input)
+	output, err := conn.GetHost(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -389,11 +389,20 @@ func findHostByArn(ctx context.Context, conn *codeconnections.Client, arn string
 		return nil, err
 	}
 
-	if out == nil || out.Name == nil {
+	if output == nil || output.Name == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	host := &awstypes.Host{
+		HostArn:          aws.String(arn),
+		Name:             output.Name,
+		ProviderEndpoint: output.ProviderEndpoint,
+		ProviderType:     output.ProviderType,
+		Status:           output.Status,
+		VpcConfiguration: output.VpcConfiguration,
+	}
+
+	return host, nil
 }
 
 type hostResourceModel struct {
