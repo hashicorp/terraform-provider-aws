@@ -46,6 +46,54 @@ The following arguments are required:
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that contains this Namespace.
 
+The following argument is optional:
+
+* `maintenance_configuration` - (Optional) A single table bucket maintenance configuration block.
+  [See `maintenance_configuration` below](#maintenance_configuration)
+
+### maintenance_configuration
+
+The `maintenance_configuration` configuration block supports the following arguments:
+
+* `iceberg_compaction` - (Required) A single Iceberg compaction settings block.
+  [See `iceberg_compaction` below](#iceberg_compaction)
+* `iceberg_snapshot_management` - (Required) A single Iceberg snapshot management settings block.
+  [See `iceberg_snapshot_management` below](#iceberg_snapshot_management)
+
+### `iceberg_compaction`
+
+The `iceberg_compaction` configuration block supports the following arguments:
+
+* `settings` - (Required) Settings for compaction.
+  [See `iceberg_compaction.settings` below](#iceberg_compactionsettings)
+* `status` - (Required) Whether the configuration is enabled.
+  Valid values are `enabled` and `disabled`.
+
+### `iceberg_compaction.settings`
+
+The `iceberg_compaction.settings` configuration block supports the following argument:
+
+* `target_file_size_mb` - (Required) Data objects smaller than this size may be combined with others to improve query performance.
+  Must be between `64` and `512`.
+
+### `iceberg_snapshot_management`
+
+The `iceberg_snapshot_management` configuration block supports the following arguments:
+
+* `settings` - (Required) Settings for snapshot management.
+  [See `iceberg_snapshot_management.settings` below](#iceberg_snapshot_managementsettings)
+* `status` - (Required) Whether the configuration is enabled.
+  Valid values are `enabled` and `disabled`.
+
+### `iceberg_snapshot_management.settings`
+
+The `iceberg_snapshot_management.settings` configuration block supports the following argument:
+
+* `max_snapshot_age_hours` - (Required) Snapshots older than this will be marked for deletiion.
+  Must be at least `1`.
+* `min_snapshots_to_keep` - (Required) Minimum number of snapshots to keep.
+  Must be at least `1`.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:

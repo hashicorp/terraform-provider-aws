@@ -226,7 +226,7 @@ func (r *resourceTableBucket) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	awsMaintenanceConfig, err := conn.GetTableBucketMaintenanceConfiguration(ctx, &s3tables.GetTableBucketMaintenanceConfigurationInput{
-		TableBucketARN: out.Arn,
+		TableBucketARN: state.ARN.ValueStringPointer(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -385,9 +385,9 @@ type icebergUnreferencedFileRemovalSettingsModel struct {
 }
 
 func flattenTableBucketMaintenanceConfiguration(ctx context.Context, in *s3tables.GetTableBucketMaintenanceConfigurationOutput) (result fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationModel], diags diag.Diagnostics) {
-	icebergConfig := in.Configuration[string(awstypes.TableBucketMaintenanceTypeIcebergUnreferencedFileRemoval)]
+	unreferencedFileRemovalConfig := in.Configuration[string(awstypes.TableBucketMaintenanceTypeIcebergUnreferencedFileRemoval)]
 
-	valueModel, d := flattenTableBucketMaintenanceConfigurationValue(ctx, &icebergConfig)
+	valueModel, d := flattenTableBucketMaintenanceConfigurationValue(ctx, &unreferencedFileRemovalConfig)
 	diags.Append(d...)
 	if diags.HasError() {
 		return result, diags
