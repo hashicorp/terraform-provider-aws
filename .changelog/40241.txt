@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_route53profiles_profile: improve documentation and code example with usage of tags.
+```
+
+```release-note:enhancement
+resource/aws_route53profiles_association: improve documentation and code example with usage of tags.
+```

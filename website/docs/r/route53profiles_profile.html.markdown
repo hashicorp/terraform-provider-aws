@@ -17,6 +17,10 @@ Terraform resource for managing an AWS Route 53 Profile.
 ```terraform
 resource "aws_route53profiles_profile" "example" {
   name = "example"
+  
+  tags = {
+    Environment = "dev"
+  }
 }
 ```
 
@@ -36,7 +40,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `status` - Status of the Profile. Valid values [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html)
 * `status_message` - Status message of the Profile.
 * `share_status` - Share status of the Profile. Valid values [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html)
-* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags_all` - (Optional) Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
