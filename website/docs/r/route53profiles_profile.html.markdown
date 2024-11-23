@@ -17,7 +17,6 @@ Terraform resource for managing an AWS Route 53 Profile.
 ```terraform
 resource "aws_route53profiles_profile" "example" {
   name = "example"
-  
   tags = {
     Environment = "dev"
   }
