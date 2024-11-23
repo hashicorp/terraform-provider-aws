@@ -50,8 +50,7 @@ func (r *cloudfrontVPCOriginResource) Schema(ctx context.Context, request resour
 				Computed: true,
 			},
 
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			names.AttrTags: tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrVPCOriginEndpointConfig: schema.SingleNestedBlock{
@@ -96,7 +95,7 @@ func (r *cloudfrontVPCOriginResource) Schema(ctx context.Context, request resour
 							Attributes: map[string]schema.Attribute{
 								"items": schema.SetAttribute{
 									CustomType:  fwtypes.SetOfStringType,
-									Optional:    true,
+									Required:    true,
 									ElementType: types.StringType,
 								},
 								"quantity": schema.Int64Attribute{
@@ -166,7 +165,6 @@ type vpcOriginModel struct {
 	Status                  types.String                                        `tfsdk:"status"`
 	VpcOriginEndpointConfig fwtypes.ObjectValueOf[vpcOriginEndpointConfigModel] `tfsdk:"vpc_origin_endpoint_config"`
 	Tags                    tftags.Map                                          `tfsdk:"tags"`
-	TagsAll                 tftags.Map                                          `tfsdk:"tags_all"`
 }
 
 type vpcOriginEndpointConfigModel struct {
