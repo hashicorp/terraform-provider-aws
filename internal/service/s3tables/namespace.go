@@ -167,7 +167,7 @@ func (r *resourceNamespace) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionSetting, resNameNamespace, state.Namespace.String(), err),
+			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameNamespace, state.Namespace.String(), err),
 			err.Error(),
 		)
 		return

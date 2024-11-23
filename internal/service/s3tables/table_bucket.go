@@ -230,7 +230,7 @@ func (r *resourceTableBucket) Read(ctx context.Context, req resource.ReadRequest
 	})
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, state.Name.String(), err),
+			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, resNameTableBucket, state.Name.String(), err),
 			err.Error(),
 		)
 	}
@@ -281,7 +281,7 @@ func (r *resourceTableBucket) Update(ctx context.Context, req resource.UpdateReq
 			_, err := conn.PutTableBucketMaintenanceConfiguration(ctx, &input)
 			if err != nil {
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
+					create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, resNameTableBucket, plan.Name.String(), err),
 					err.Error(),
 				)
 				return
@@ -293,7 +293,7 @@ func (r *resourceTableBucket) Update(ctx context.Context, req resource.UpdateReq
 		})
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.S3Tables, create.ErrActionCreating, resNameTableBucket, plan.Name.String(), err),
+				create.ProblemStandardMessage(names.S3Tables, create.ErrActionUpdating, resNameTableBucket, plan.Name.String(), err),
 				err.Error(),
 			)
 		}
