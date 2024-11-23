@@ -15,13 +15,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -213,11 +215,9 @@ func (r *resourceNamespace) Delete(ctx context.Context, req resource.DeleteReque
 	}
 }
 
-const namespaceIDSeparator = ";"
-
 func (r *resourceNamespace) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, namespaceIDSeparator)
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+	identifier, err := parseNamespaceIdentifier(req.ID)
+	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",
 			"Import IDs for S3 Tables Namespaces must use the format <table bucket ARN>"+namespaceIDSeparator+"<namespace>.\n"+
@@ -226,17 +226,9 @@ func (r *resourceNamespace) ImportState(ctx context.Context, req resource.Import
 		return
 	}
 
-	state := resourceNamespaceModel{
-		TableBucketARN: fwtypes.ARNValue(parts[0]),
-		Namespace:      fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue(parts[1])}),
-	}
-
-	diags := resp.State.Set(ctx, &state)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	identifier.PopulateState(ctx, &resp.State, &resp.Diagnostics)
 }
+
 func findNamespace(ctx context.Context, conn *s3tables.Client, bucketARN, name string) (*s3tables.GetNamespaceOutput, error) {
 	in := &s3tables.GetNamespaceInput{
 		Namespace:      aws.String(name),
@@ -275,4 +267,41 @@ var namespaceNameValidator = []validator.String{
 	stringMustContainLowerCaseLettersNumbersUnderscores,
 	stringMustStartWithLetterOrNumber,
 	stringMustEndWithLetterOrNumber,
+}
+
+type namespaceIdentifier struct {
+	TableBucketARN string
+	Namespace      string
+}
+
+const (
+	namespaceIDSeparator = ";"
+	namespaceIDParts     = 2
+)
+
+func parseNamespaceIdentifier(s string) (namespaceIdentifier, error) {
+	parts := strings.Split(s, namespaceIDSeparator)
+	if len(parts) != namespaceIDParts {
+		return namespaceIdentifier{}, errors.New("not enough parts")
+	}
+	for i := range namespaceIDParts {
+		if parts[i] == "" {
+			return namespaceIdentifier{}, errors.New("empty part")
+		}
+	}
+
+	return namespaceIdentifier{
+		TableBucketARN: parts[0],
+		Namespace:      parts[1],
+	}, nil
+}
+
+func (id namespaceIdentifier) String() string {
+	return id.TableBucketARN + tableIDSeparator +
+		id.Namespace
+}
+
+func (id namespaceIdentifier) PopulateState(ctx context.Context, s *tfsdk.State, diags *diag.Diagnostics) {
+	diags.Append(s.SetAttribute(ctx, path.Root("table_bucket_arn"), id.TableBucketARN)...)
+	diags.Append(s.SetAttribute(ctx, path.Root(names.AttrNamespace), []string{id.Namespace})...)
 }

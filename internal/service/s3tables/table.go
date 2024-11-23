@@ -481,7 +481,7 @@ func (r *resourceTable) ImportState(ctx context.Context, req resource.ImportStat
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Invalid Import ID",
-			"Import IDs for S3 Tables Tables must use the format <table bucket ARN>"+namespaceIDSeparator+"<namespace>"+namespaceIDSeparator+"<table name>.\n"+
+			"Import IDs for S3 Tables Tables must use the format <table bucket ARN>"+tableIDSeparator+"<namespace>"+tableIDSeparator+"<table name>.\n"+
 				fmt.Sprintf("Had %q", req.ID),
 		)
 		return
