@@ -2,6 +2,8 @@ package cloudfront
 
 import (
 	"context"
+	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -12,10 +14,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -42,6 +46,9 @@ func (r *cloudfrontVPCOriginResource) Schema(ctx context.Context, request resour
 				Computed:   true,
 			},
 			names.AttrID: framework.IDAttribute(),
+			"etag": schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrLastModifiedTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -91,6 +98,7 @@ func (r *cloudfrontVPCOriginResource) Schema(ctx context.Context, request resour
 							listvalidator.SizeAtLeast(1),
 							listvalidator.SizeAtMost(1),
 						},
+						// TODO: User should be able to just specify an array, not object internals.
 						NestedObject: schema.NestedBlockObject{
 							Attributes: map[string]schema.Attribute{
 								"items": schema.SetAttribute{
@@ -132,35 +140,131 @@ func (r *cloudfrontVPCOriginResource) Create(ctx context.Context, request resour
 		return
 	}
 
-	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.VpcOrigin.Arn)
 	data.CreatedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.CreatedTime)
 	data.Id = fwflex.StringToFramework(ctx, output.VpcOrigin.Id)
 	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.LastModifiedTime)
 	data.Status = fwflex.StringToFramework(ctx, output.VpcOrigin.Status)
+	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *cloudfrontVPCOriginResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	//TODO implement me
-	panic("implement me")
+	var data vpcOriginModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	input := &cloudfront.GetVpcOriginInput{
+		Id: aws.String(data.Id.ValueString()),
+	}
+
+	output, err := conn.GetVpcOrigin(ctx, input)
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.VpcOrigin, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	data.ARN = fwflex.StringToFramework(ctx, output.VpcOrigin.Arn)
+	data.CreatedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.CreatedTime)
+	data.Id = fwflex.StringToFramework(ctx, output.VpcOrigin.Id)
+	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.LastModifiedTime)
+	data.Status = fwflex.StringToFramework(ctx, output.VpcOrigin.Status)
+	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *cloudfrontVPCOriginResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	//TODO implement me
-	panic("implement me")
+	var old vpcOriginModel
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	var new vpcOriginModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	input := &cloudfront.UpdateVpcOriginInput{
+		Id:      aws.String(new.Id.ValueString()),
+		IfMatch: aws.String(old.ETag.ValueString()),
+	}
+
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	output, err := conn.UpdateVpcOrigin(ctx, input)
+
+	// TODO: Handle "IllegalUpdate" error
+	// TODO: Add Timeouts
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("Updating Cloudfront VPC Origin (%s)", old.Id.ValueString()), err.Error())
+		return
+	}
+
+	new.CreatedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.CreatedTime)
+	new.LastModifiedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.LastModifiedTime)
+	new.Status = fwflex.StringToFramework(ctx, output.VpcOrigin.Status)
+	new.ETag = fwflex.StringToFramework(ctx, output.ETag)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+
 }
 
 func (r *cloudfrontVPCOriginResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	//TODO implement me
-	panic("implement me")
+	var data vpcOriginModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().CloudFrontClient(ctx)
+
+	input := &cloudfront.DeleteVpcOriginInput{
+		Id:      aws.String(data.Id.ValueString()),
+		IfMatch: aws.String(data.ETag.ValueString()),
+	}
+
+	_, err := conn.DeleteVpcOrigin(ctx, input)
+
+	// TODO: Handle "IllegalDelete" error
+	// TODO: Add Timeouts
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
+		return
+	}
 }
 
 type vpcOriginModel struct {
 	ARN                     types.String                                        `tfsdk:"arn"`
 	CreatedTime             timetypes.RFC3339                                   `tfsdk:"created_time"`
 	Id                      types.String                                        `tfsdk:"id"`
+	ETag                    types.String                                        `tfsdk:"etag"`
 	LastModifiedTime        timetypes.RFC3339                                   `tfsdk:"last_modified_time"`
 	Status                  types.String                                        `tfsdk:"status"`
 	VpcOriginEndpointConfig fwtypes.ObjectValueOf[vpcOriginEndpointConfigModel] `tfsdk:"vpc_origin_endpoint_config"`
