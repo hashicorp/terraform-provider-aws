@@ -151,7 +151,7 @@ func (r *resourceTableBucket) Create(ctx context.Context, req resource.CreateReq
 				Type:           awstypes.TableBucketMaintenanceTypeIcebergUnreferencedFileRemoval,
 			}
 
-			value, d := expandTableBucketMaintenanceConfigurationValue(ctx, mc.IcebergUnreferencedFileRemovalSettings)
+			value, d := expandTableBucketMaintenanceIcebergUnreferencedFileRemoval(ctx, mc.IcebergUnreferencedFileRemovalSettings)
 			resp.Diagnostics.Append(d...)
 			if resp.Diagnostics.HasError() {
 				return
@@ -274,7 +274,7 @@ func (r *resourceTableBucket) Update(ctx context.Context, req resource.UpdateReq
 				Type:           awstypes.TableBucketMaintenanceTypeIcebergUnreferencedFileRemoval,
 			}
 
-			value, d := expandTableBucketMaintenanceConfigurationValue(ctx, mc.IcebergUnreferencedFileRemovalSettings)
+			value, d := expandTableBucketMaintenanceIcebergUnreferencedFileRemoval(ctx, mc.IcebergUnreferencedFileRemovalSettings)
 			resp.Diagnostics.Append(d...)
 			if resp.Diagnostics.HasError() {
 				return
@@ -375,12 +375,12 @@ type resourceTableBucketModel struct {
 }
 
 type tableBucketMaintenanceConfigurationModel struct {
-	IcebergUnreferencedFileRemovalSettings fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel] `tfsdk:"iceberg_unreferenced_file_removal"`
+	IcebergUnreferencedFileRemovalSettings fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel[icebergUnreferencedFileRemovalSettingsModel]] `tfsdk:"iceberg_unreferenced_file_removal"`
 }
 
-type tableBucketMaintenanceConfigurationValueModel struct {
-	Settings fwtypes.ObjectValueOf[icebergUnreferencedFileRemovalSettingsModel] `tfsdk:"settings"`
-	Status   fwtypes.StringEnum[awstypes.MaintenanceStatus]                     `tfsdk:"status"`
+type tableBucketMaintenanceConfigurationValueModel[T any] struct {
+	Settings fwtypes.ObjectValueOf[T]                       `tfsdk:"settings"`
+	Status   fwtypes.StringEnum[awstypes.MaintenanceStatus] `tfsdk:"status"`
 }
 
 type icebergUnreferencedFileRemovalSettingsModel struct {
@@ -390,15 +390,14 @@ type icebergUnreferencedFileRemovalSettingsModel struct {
 
 func flattenTableBucketMaintenanceConfiguration(ctx context.Context, in *s3tables.GetTableBucketMaintenanceConfigurationOutput) (result fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationModel], diags diag.Diagnostics) {
 	unreferencedFileRemovalConfig := in.Configuration[string(awstypes.TableBucketMaintenanceTypeIcebergUnreferencedFileRemoval)]
-
-	valueModel, d := flattenTableBucketMaintenanceConfigurationValue(ctx, &unreferencedFileRemovalConfig)
+	unreferencedFileRemovalConfigModel, d := flattenTableBucketMaintenanceIcebergUnreferencedFileRemoval(ctx, &unreferencedFileRemovalConfig)
 	diags.Append(d...)
 	if diags.HasError() {
 		return result, diags
 	}
 
 	model := tableBucketMaintenanceConfigurationModel{
-		IcebergUnreferencedFileRemovalSettings: valueModel,
+		IcebergUnreferencedFileRemovalSettings: unreferencedFileRemovalConfigModel,
 	}
 
 	result, d = fwtypes.NewObjectValueOf(ctx, &model)
@@ -406,7 +405,7 @@ func flattenTableBucketMaintenanceConfiguration(ctx context.Context, in *s3table
 	return result, diags
 }
 
-func expandTableBucketMaintenanceConfigurationValue(ctx context.Context, in fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel]) (result awstypes.TableBucketMaintenanceConfigurationValue, diags diag.Diagnostics) {
+func expandTableBucketMaintenanceIcebergUnreferencedFileRemoval(ctx context.Context, in fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel[icebergUnreferencedFileRemovalSettingsModel]]) (result awstypes.TableBucketMaintenanceConfigurationValue, diags diag.Diagnostics) {
 	model, d := in.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -425,14 +424,14 @@ func expandTableBucketMaintenanceConfigurationValue(ctx context.Context, in fwty
 	return result, diags
 }
 
-func flattenTableBucketMaintenanceConfigurationValue(ctx context.Context, in *awstypes.TableBucketMaintenanceConfigurationValue) (result fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel], diags diag.Diagnostics) {
+func flattenTableBucketMaintenanceIcebergUnreferencedFileRemoval(ctx context.Context, in *awstypes.TableBucketMaintenanceConfigurationValue) (result fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel[icebergUnreferencedFileRemovalSettingsModel]], diags diag.Diagnostics) {
 	iceberg, d := flattenIcebergUnreferencedFileRemovalSettings(ctx, in.Settings)
 	diags.Append(d...)
 	if diags.HasError() {
 		return result, diags
 	}
 
-	model := tableBucketMaintenanceConfigurationValueModel{
+	model := tableBucketMaintenanceConfigurationValueModel[icebergUnreferencedFileRemovalSettingsModel]{
 		Settings: iceberg,
 		Status:   fwtypes.StringEnumValue(in.Status),
 	}
