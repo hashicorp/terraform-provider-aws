@@ -15,6 +15,7 @@ var (
 	FindACLByName            = findACLByName
 	FindClusterByName        = findClusterByName
 	FindParameterGroupByName = findParameterGroupByName
+	FindSnapshotByName       = findSnapshotByName
 	ParameterChanges         = parameterChanges
 	ParameterHash            = parameterHash
 )

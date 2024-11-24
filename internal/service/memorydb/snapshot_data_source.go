@@ -119,7 +119,7 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	name := d.Get(names.AttrName).(string)
 
-	snapshot, err := FindSnapshotByName(ctx, conn, name)
+	snapshot, err := findSnapshotByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB Snapshot", err))

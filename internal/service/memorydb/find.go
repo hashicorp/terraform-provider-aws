@@ -14,27 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindSnapshotByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.Snapshot, error) {
-	input := memorydb.DescribeSnapshotsInput{
-		SnapshotName: aws.String(name),
-	}
-
-	output, err := conn.DescribeSnapshots(ctx, &input)
-
-	if errs.IsA[*awstypes.SnapshotNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output.Snapshots)
-}
-
 func FindSubnetGroupByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.SubnetGroup, error) {
 	input := memorydb.DescribeSubnetGroupsInput{
 		SubnetGroupName: aws.String(name),
