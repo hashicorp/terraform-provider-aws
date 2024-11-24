@@ -12,23 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// statusACL fetches the MemoryDB ACL and its status.
-func statusACL(ctx context.Context, conn *memorydb.Client, aclName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		acl, err := FindACLByName(ctx, conn, aclName)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return acl, aws.ToString(acl.Status), nil
-	}
-}
-
 // statusCluster fetches the MemoryDB Cluster and its status.
 func statusCluster(ctx context.Context, conn *memorydb.Client, clusterName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {

@@ -14,27 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindACLByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.ACL, error) {
-	input := memorydb.DescribeACLsInput{
-		ACLName: aws.String(name),
-	}
-
-	output, err := conn.DescribeACLs(ctx, &input)
-
-	if errs.IsA[*awstypes.ACLNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output.ACLs)
-}
-
 func FindClusterByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.Cluster, error) {
 	input := memorydb.DescribeClustersInput{
 		ClusterName:      aws.String(name),

@@ -11,4 +11,6 @@ var (
 	ResourceSnapshot       = resourceSnapshot
 	ResourceSubnetGroup    = resourceSubnetGroup
 	ResourceUser           = resourceUser
+
+	FindACLByName = findACLByName
 )

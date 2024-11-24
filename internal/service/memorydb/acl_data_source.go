@@ -53,14 +53,13 @@ func dataSourceACLRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	name := d.Get(names.AttrName).(string)
 
-	acl, err := FindACLByName(ctx, conn, name)
+	acl, err := findACLByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB ACL", err))
 	}
 
 	d.SetId(aws.ToString(acl.Name))
-
 	d.Set(names.AttrARN, acl.ARN)
 	d.Set("minimum_engine_version", acl.MinimumEngineVersion)
 	d.Set(names.AttrName, acl.Name)

@@ -12,9 +12,6 @@ import (
 )
 
 const (
-	aclActiveTimeout  = 5 * time.Minute
-	aclDeletedTimeout = 5 * time.Minute
-
 	clusterAvailableTimeout = 120 * time.Minute
 	clusterDeletedTimeout   = 120 * time.Minute
 
@@ -28,34 +25,6 @@ const (
 	snapshotAvailableTimeout = 120 * time.Minute
 	snapshotDeletedTimeout   = 120 * time.Minute
 )
-
-// waitACLActive waits for MemoryDB ACL to reach an active state after modifications.
-func waitACLActive(ctx context.Context, conn *memorydb.Client, aclId string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{aclStatusCreating, aclStatusModifying},
-		Target:  []string{aclStatusActive},
-		Refresh: statusACL(ctx, conn, aclId),
-		Timeout: aclActiveTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-// waitACLDeleted waits for MemoryDB ACL to be deleted.
-func waitACLDeleted(ctx context.Context, conn *memorydb.Client, aclId string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{aclStatusDeleting},
-		Target:  []string{},
-		Refresh: statusACL(ctx, conn, aclId),
-		Timeout: aclDeletedTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
 
 // waitClusterAvailable waits for MemoryDB Cluster to reach an active state after modifications.
 func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, clusterId string, timeout time.Duration) error {
