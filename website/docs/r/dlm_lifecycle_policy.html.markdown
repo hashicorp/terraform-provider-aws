@@ -222,6 +222,7 @@ This resource supports the following arguments:
 
 * `description` - (Required) A description for the DLM lifecycle policy.
 * `execution_role_arn` - (Required) The ARN of an IAM role that is able to be assumed by the DLM service.
+* `default_policy` - (Required) Specify the type of default policy to create. valid values are `VOLUME` or `INSTANCE`.
 * `policy_details` - (Required) See the [`policy_details` configuration](#policy-details-arguments) block. Max of 1.
 * `state` - (Optional) Whether the lifecycle policy should be enabled or disabled. `ENABLED` or `DISABLED` are valid values. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -229,9 +230,15 @@ This resource supports the following arguments:
 #### Policy Details arguments
 
 * `action` - (Optional) The actions to be performed when the event-based policy is triggered. You can specify only one action per policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the [`action` configuration](#action-arguments) block.
+* `copy_tags` - (Optional, Default policies only) Indicates whether the policy should copy tags from the source resource to the snapshot or AMI. Default value is `false`.
+* `create_interval` - (Optional, Default policies only) How often the policy should run and create snapshots or AMIs. valid values range from `1` to `7`. Default value is `1`.
+* `extend_deletion` - (Optional, Default policies only) snapshot or AMI retention behavior for the policy if the source volume or instance is deleted, or if the policy enters the error, disabled, or deleted state. Default value is `false`.
+* `retain_interval` - (Optional, Default policies only) Specifies how long the policy should retain snapshots or AMIs before deleting them. valid values range from `2` to `14`. Default value is `7`.
 * `event_source` - (Optional) The event that triggers the event-based policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the [`event_source` configuration](#event-source-arguments) block.
+* `resource_type` - (Optional, Default policies only) Type of default policy to create. Valid values are `VOLUME` and `INSTANCE`.
 * `resource_types` - (Optional) A list of resource types that should be targeted by the lifecycle policy. Valid values are `VOLUME` and `INSTANCE`.
 * `resource_locations` - (Optional) The location of the resources to backup. If the source resources are located in an AWS Region, specify `CLOUD`. If the source resources are located on an Outpost in your account, specify `OUTPOST`. If you specify `OUTPOST`, Amazon Data Lifecycle Manager backs up all resources of the specified type with matching target tags across all of the Outposts in your account. Valid values are `CLOUD` and `OUTPOST`.
+* `policy_language` - (Optional) Type of policy to create. `SIMPLIFIED` To create a default policy. `STANDARD` To create a custom policy.
 * `policy_type` - (Optional) The valid target resource types and actions a policy can manage. Specify `EBS_SNAPSHOT_MANAGEMENT` to create a lifecycle policy that manages the lifecycle of Amazon EBS snapshots. Specify `IMAGE_MANAGEMENT` to create a lifecycle policy that manages the lifecycle of EBS-backed AMIs. Specify `EVENT_BASED_POLICY` to create an event-based policy that performs specific actions when a defined event occurs in your AWS account. Default value is `EBS_SNAPSHOT_MANAGEMENT`.
 * `parameters` - (Optional) A set of optional parameters for snapshot and AMI lifecycle policies. See the [`parameters` configuration](#parameters-arguments) block.
 * `schedule` - (Optional) See the [`schedule` configuration](#schedule-arguments) block.
