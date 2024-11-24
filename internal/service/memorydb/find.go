@@ -14,28 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindClusterByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.Cluster, error) {
-	input := memorydb.DescribeClustersInput{
-		ClusterName:      aws.String(name),
-		ShowShardDetails: aws.Bool(true),
-	}
-
-	output, err := conn.DescribeClusters(ctx, &input)
-
-	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output.Clusters)
-}
-
 func FindParameterGroupByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.ParameterGroup, error) {
 	input := memorydb.DescribeParameterGroupsInput{
 		ParameterGroupName: aws.String(name),

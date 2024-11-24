@@ -12,5 +12,6 @@ var (
 	ResourceSubnetGroup    = resourceSubnetGroup
 	ResourceUser           = resourceUser
 
-	FindACLByName = findACLByName
+	FindACLByName     = findACLByName
+	FindClusterByName = findClusterByName
 )

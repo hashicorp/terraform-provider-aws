@@ -12,77 +12,12 @@ import (
 )
 
 const (
-	clusterAvailableTimeout = 120 * time.Minute
-	clusterDeletedTimeout   = 120 * time.Minute
-
-	clusterParameterGroupInSyncTimeout = 60 * time.Minute
-
-	clusterSecurityGroupsActiveTimeout = 10 * time.Minute
-
 	userActiveTimeout  = 5 * time.Minute
 	userDeletedTimeout = 5 * time.Minute
 
 	snapshotAvailableTimeout = 120 * time.Minute
 	snapshotDeletedTimeout   = 120 * time.Minute
 )
-
-// waitClusterAvailable waits for MemoryDB Cluster to reach an active state after modifications.
-func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, clusterId string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
-		Target:  []string{clusterStatusAvailable},
-		Refresh: statusCluster(ctx, conn, clusterId),
-		Timeout: timeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-// waitClusterDeleted waits for MemoryDB Cluster to be deleted.
-func waitClusterDeleted(ctx context.Context, conn *memorydb.Client, clusterId string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{clusterStatusDeleting},
-		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, clusterId),
-		Timeout: timeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-// waitClusterParameterGroupInSync waits for MemoryDB Cluster to come in sync
-// with a new parameter group.
-func waitClusterParameterGroupInSync(ctx context.Context, conn *memorydb.Client, clusterId string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{clusterParameterGroupStatusApplying},
-		Target:  []string{clusterParameterGroupStatusInSync},
-		Refresh: statusClusterParameterGroup(ctx, conn, clusterId),
-		Timeout: clusterParameterGroupInSyncTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
-
-// waitClusterSecurityGroupsActive waits for MemoryDB Cluster to apply all
-// security group-related changes.
-func waitClusterSecurityGroupsActive(ctx context.Context, conn *memorydb.Client, clusterId string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{clusterSecurityGroupStatusModifying},
-		Target:  []string{clusterSecurityGroupStatusActive},
-		Refresh: statusClusterSecurityGroups(ctx, conn, clusterId),
-		Timeout: clusterSecurityGroupsActiveTimeout,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-
-	return err
-}
 
 // waitUserActive waits for MemoryDB user to reach an active state after modifications.
 func waitUserActive(ctx context.Context, conn *memorydb.Client, userId string) error {

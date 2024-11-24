@@ -12,66 +12,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// statusCluster fetches the MemoryDB Cluster and its status.
-func statusCluster(ctx context.Context, conn *memorydb.Client, clusterName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		cluster, err := FindClusterByName(ctx, conn, clusterName)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return cluster, aws.ToString(cluster.Status), nil
-	}
-}
-
-// statusClusterParameterGroup fetches the MemoryDB Cluster and its parameter group status.
-func statusClusterParameterGroup(ctx context.Context, conn *memorydb.Client, clusterName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		cluster, err := FindClusterByName(ctx, conn, clusterName)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return cluster, aws.ToString(cluster.ParameterGroupStatus), nil
-	}
-}
-
-// statusClusterSecurityGroups fetches the MemoryDB Cluster and its security group status.
-func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.Client, clusterName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		cluster, err := FindClusterByName(ctx, conn, clusterName)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		for _, sg := range cluster.SecurityGroups {
-			// When at least one security group change is being applied (whether
-			// that be adding or removing an SG), say that we're still in progress.
-
-			if aws.ToString(sg.Status) != clusterSecurityGroupStatusActive {
-				return cluster, clusterSecurityGroupStatusModifying, nil
-			}
-		}
-
-		return cluster, clusterSecurityGroupStatusActive, nil
-	}
-}
-
 // statusSnapshot fetches the MemoryDB Snapshot and its status.
 func statusSnapshot(ctx context.Context, conn *memorydb.Client, snapshotName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {

@@ -176,7 +176,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	name := d.Get(names.AttrName).(string)
 
-	cluster, err := FindClusterByName(ctx, conn, name)
+	cluster, err := findClusterByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB Cluster", err))
