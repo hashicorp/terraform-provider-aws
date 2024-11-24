@@ -1,0 +1,3 @@
+```release-note:bug
+resource/medialive: Added missing `teletext_destination_settings`.
+```
