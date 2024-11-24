@@ -17,6 +17,7 @@ import (
 )
 
 // @SDKDataSource("aws_memorydb_parameter_group", name="Parameter Group")
+// @Tags(identifierAttribute="arn")
 func dataSourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceParameterGroupRead,
@@ -63,7 +64,6 @@ func dataSourceParameterGroup() *schema.Resource {
 func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	group, err := findParameterGroupByName(ctx, conn, name)
@@ -73,7 +73,6 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	d.SetId(aws.ToString(group.Name))
-
 	d.Set(names.AttrARN, group.ARN)
 	d.Set(names.AttrDescription, group.Description)
 	d.Set(names.AttrFamily, group.Family)
@@ -88,16 +87,6 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 	if err := d.Set(names.AttrParameter, flattenParameters(parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
-	}
-
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB Parameter Group (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	return diags

@@ -44,6 +44,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceParameterGroup,
 			TypeName: "aws_memorydb_parameter_group",
 			Name:     "Parameter Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  dataSourceSnapshot,
