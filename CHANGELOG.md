@@ -6,6 +6,7 @@ NOTES:
 
 BUG FIXES:
 
+* data-source/aws_rds_reserved_instance_offering: When `product_description` (e.g., "postgresql") is a substring of multiple products, fix `Error: multiple RDS Reserved Instance Offerings matched; use additional constraints to reduce matches to a single RDS Reserved Instance Offering` ([#40281](https://github.com/hashicorp/terraform-provider-aws/issues/40281))
 * provider: Suppress `Warning: AWS account ID not found for provider` when `skip_requesting_account_id` is `true` ([#40264](https://github.com/hashicorp/terraform-provider-aws/issues/40264))
 * resource/aws_batch_job_definition: Fix crash when specifying `eksProperties` or `ecsProperties` block ([#40172](https://github.com/hashicorp/terraform-provider-aws/issues/40172))
 * resource/aws_chatbot_slack_channel_configuration: Fix inconsistent provider result when order of `sns_topic_arns`changes ([#40253](https://github.com/hashicorp/terraform-provider-aws/issues/40253))
