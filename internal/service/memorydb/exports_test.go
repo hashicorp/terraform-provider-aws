@@ -12,6 +12,9 @@ var (
 	ResourceSubnetGroup    = resourceSubnetGroup
 	ResourceUser           = resourceUser
 
-	FindACLByName     = findACLByName
-	FindClusterByName = findClusterByName
+	FindACLByName            = findACLByName
+	FindClusterByName        = findClusterByName
+	FindParameterGroupByName = findParameterGroupByName
+	ParameterChanges         = parameterChanges
+	ParameterHash            = parameterHash
 )

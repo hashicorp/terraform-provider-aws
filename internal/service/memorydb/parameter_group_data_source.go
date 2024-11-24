@@ -53,7 +53,7 @@ func dataSourceParameterGroup() *schema.Resource {
 						},
 					},
 				},
-				Set: ParameterHash,
+				Set: parameterHash,
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
@@ -62,13 +62,11 @@ func dataSourceParameterGroup() *schema.Resource {
 
 func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
-
-	group, err := FindParameterGroupByName(ctx, conn, name)
+	group, err := findParameterGroupByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB Parameter Group", err))
@@ -82,14 +80,14 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set(names.AttrName, group.Name)
 
 	userDefinedParameters := createUserDefinedParameterMap(d)
-
 	parameters, err := listParameterGroupParameters(ctx, conn, d.Get(names.AttrFamily).(string), d.Id(), userDefinedParameters)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing parameters for MemoryDB Parameter Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set(names.AttrParameter, flattenParameters(parameters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "failed to set parameter: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))

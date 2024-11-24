@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -169,7 +170,7 @@ func resourceCluster() *schema.Resource {
 				"shards": {
 					Type:     schema.TypeSet,
 					Computed: true,
-					Set:      shardHash,
+					Set:      clusterShardHash,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrName: {
@@ -179,7 +180,7 @@ func resourceCluster() *schema.Resource {
 							"nodes": {
 								Type:     schema.TypeSet,
 								Computed: true,
-								Set:      nodeHash,
+								Set:      clusterShardNodeHash,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrAvailabilityZone: {
@@ -755,13 +756,10 @@ func waitClusterSecurityGroupsActive(ctx context.Context, conn *memorydb.Client,
 	return nil, err
 }
 
-func shardHash(v interface{}) int {
-	return create.StringHashcode(v.(map[string]interface{})[names.AttrName].(string))
-}
-
-func nodeHash(v interface{}) int {
-	return create.StringHashcode(v.(map[string]interface{})[names.AttrName].(string))
-}
+var (
+	clusterShardHash     = sdkv2.SimpleSchemaSetFunc(names.AttrName)
+	clusterShardNodeHash = sdkv2.SimpleSchemaSetFunc(names.AttrName)
+)
 
 func flattenEndpoint(apiObject *awstypes.Endpoint) []interface{} {
 	if apiObject == nil {
@@ -782,10 +780,10 @@ func flattenEndpoint(apiObject *awstypes.Endpoint) []interface{} {
 }
 
 func flattenShards(apiObjects []awstypes.Shard) *schema.Set {
-	tfSet := schema.NewSet(shardHash, nil)
+	tfSet := schema.NewSet(clusterShardHash, nil)
 
 	for _, apiObject := range apiObjects {
-		nodeSet := schema.NewSet(nodeHash, nil)
+		nodeSet := schema.NewSet(clusterShardNodeHash, nil)
 
 		for _, apiObject := range apiObject.Nodes {
 			nodeSet.Add(map[string]interface{}{

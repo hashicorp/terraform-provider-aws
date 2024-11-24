@@ -14,27 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindParameterGroupByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.ParameterGroup, error) {
-	input := memorydb.DescribeParameterGroupsInput{
-		ParameterGroupName: aws.String(name),
-	}
-
-	output, err := conn.DescribeParameterGroups(ctx, &input)
-
-	if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output.ParameterGroups)
-}
-
 func FindSnapshotByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.Snapshot, error) {
 	input := memorydb.DescribeSnapshotsInput{
 		SnapshotName: aws.String(name),

@@ -106,7 +106,7 @@ func dataSourceCluster() *schema.Resource {
 				"shards": {
 					Type:     schema.TypeSet,
 					Computed: true,
-					Set:      shardHash,
+					Set:      clusterShardHash,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							names.AttrName: {
@@ -116,7 +116,7 @@ func dataSourceCluster() *schema.Resource {
 							"nodes": {
 								Type:     schema.TypeSet,
 								Computed: true,
-								Set:      nodeHash,
+								Set:      clusterShardNodeHash,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										names.AttrAvailabilityZone: {
