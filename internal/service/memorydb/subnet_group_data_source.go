@@ -7,17 +7,19 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_memorydb_subnet_group", name="Subnet Group")
+// @Tags(identifierAttribute="arn")
 func dataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetGroupRead,
@@ -51,12 +53,9 @@ func dataSourceSubnetGroup() *schema.Resource {
 
 func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
-
 	group, err := findSubnetGroupByName(ctx, conn, name)
 
 	if err != nil {
@@ -72,19 +71,11 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	d.Set(names.AttrARN, group.ARN)
 	d.Set(names.AttrDescription, group.Description)
-	d.Set(names.AttrSubnetIDs, flex.FlattenStringSet(subnetIds))
 	d.Set(names.AttrName, group.Name)
+	d.Set(names.AttrSubnetIDs, tfslices.ApplyToAll(group.Subnets, func(v awstypes.Subnet) string {
+		return aws.ToString(v.Identifier)
+	}))
 	d.Set(names.AttrVPCID, group.VpcId)
-
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB Subnet Group (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

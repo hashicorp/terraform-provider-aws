@@ -60,6 +60,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_memorydb_subnet_group",
 			Name:     "Subnet Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  dataSourceUser,
