@@ -128,7 +128,7 @@ The `semantic_chunking_configuration` block supports the following arguments:
 The `custom_transformation_configuration` block supports the following arguments:
 
 * `intermediate_storage` - (Required, Forces new resource) The intermediate storage for custom transformation.
-* `transformation_function` - (Required) The configuration of transformation function.
+* `transformation` - (Required) A custom processing step for documents moving through the data source ingestion pipeline.
 
 ### `intermediate_storage` block
 
@@ -142,12 +142,18 @@ The `s3_location` block supports the following arguments:
 
 * `uri` - (Required, Forces new resource) S3 URI for intermediate storage.
 
+### `transformation` block
+
+The `transformation` block supports the following arguments:
+
+* `step_to_apply` - (Required, Forces new resource) When the service applies the transformation. Currently only `POST_CHUNKING` is supported.
+* `transformation_function` - (Required) The lambda function that processes documents.
+
 ### `transformation_function` block
 
 The `transformation_function` block supports the following arguments:
 
-* `step_to_apply` - (Required, Forces new resource) Currently only `POST_CHUNKING` is supported.
-* `transformation_lambda_configuration` - (Required, Forces new resource) The lambda configuration for custom transformation.
+* `transformation_lambda_configuration` - (Required, Forces new resource) The configuration of the lambda function.
 
 ### `transformation_lambda_configuration` block
 
@@ -214,4 +220,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-53f961b0d6c2b05363b21aefafc1c01ca2602d7614f31fcd25d93c800546b9bf -->
+<!-- cache-key: cdktf-0.20.8 input-a29b632aed73b2eb2bb1ee798a495964c54fc9897dab020469f9ebbf7fd83f31 -->
