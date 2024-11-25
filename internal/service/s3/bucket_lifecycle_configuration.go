@@ -720,25 +720,16 @@ func expandLifecycleRuleAndOperator(ctx context.Context, tfMap map[string]interf
 
 	apiObject := &types.LifecycleRuleAndOperator{}
 
-	if v, ok := tfMap["object_size_greater_than"].(int); ok && v > 0 {
+	if v, ok := tfMap["object_size_greater_than"].(int); ok && v >= 0 {
 		apiObject.ObjectSizeGreaterThan = aws.Int64(int64(v))
 	}
 
-<<<<<<< HEAD
-	if v, null, _ := nullable.Int(m["object_size_greater_than"].(string)).ValueInt64(); !null && v >= 0 {
-		result.Value.ObjectSizeGreaterThan = aws.Int64(v)
-	}
-
-	if v, null, _ := nullable.Int(m["object_size_less_than"].(string)).ValueInt64(); !null && v > 0 {
-		result.Value.ObjectSizeLessThan = aws.Int64(v)
-=======
 	if v, ok := tfMap["object_size_less_than"].(int); ok && v > 0 {
 		apiObject.ObjectSizeLessThan = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap[names.AttrPrefix].(string); ok {
 		apiObject.Prefix = aws.String(v)
->>>>>>> origin/main
 	}
 
 	if v, ok := tfMap[names.AttrTags].(map[string]interface{}); ok && len(v) > 0 {
@@ -977,17 +968,14 @@ func flattenLifecycleRuleAndOperator(ctx context.Context, apiObject *types.Lifec
 		return []interface{}{}
 	}
 
-	tfMap := map[string]interface{}{
-		"object_size_greater_than": aws.ToInt64(apiObject.ObjectSizeGreaterThan),
-		"object_size_less_than":    aws.ToInt64(apiObject.ObjectSizeLessThan),
+	tfMap := map[string]interface{}{}
+
+	if apiObject.ObjectSizeGreaterThan != nil {
+		tfMap["object_size_greater_than"] = strconv.FormatInt(*andOp.Value.ObjectSizeGreaterThan, 10)
 	}
 
-	if andOp.Value.ObjectSizeGreaterThan != nil {
-		m["object_size_greater_than"] = strconv.FormatInt(*andOp.Value.ObjectSizeGreaterThan, 10)
-	}
-
-	if andOp.Value.ObjectSizeLessThan != nil {
-		m["object_size_less_than"] = strconv.FormatInt(*andOp.Value.ObjectSizeLessThan, 10)
+	if apiObject.ObjectSizeLessThan != nil {
+		tfMap["object_size_less_than"] = strconv.FormatInt(*andOp.Value.ObjectSizeLessThan, 10)
 
 	if v := apiObject.Prefix; v != nil {
 		tfMap[names.AttrPrefix] = aws.ToString(v)
