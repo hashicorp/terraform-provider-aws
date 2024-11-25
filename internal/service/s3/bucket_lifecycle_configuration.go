@@ -970,12 +970,13 @@ func flattenLifecycleRuleAndOperator(ctx context.Context, apiObject *types.Lifec
 
 	tfMap := map[string]interface{}{}
 
-	if apiObject.ObjectSizeGreaterThan != nil {
-		tfMap["object_size_greater_than"] = strconv.FormatInt(*andOp.Value.ObjectSizeGreaterThan, 10)
+	if v := apiObject.ObjectSizeGreaterThan; v != nil {
+		tfMap["object_size_greater_than"] = flex.Int64ToStringValue(v)
 	}
 
-	if apiObject.ObjectSizeLessThan != nil {
-		tfMap["object_size_less_than"] = strconv.FormatInt(*andOp.Value.ObjectSizeLessThan, 10)
+	if v := apiObject.ObjectSizeLessThan; v != nil {
+		tfMap["object_size_less_than"] = flex.Int64ToStringValue(v)
+	}
 
 	if v := apiObject.Prefix; v != nil {
 		tfMap[names.AttrPrefix] = aws.ToString(v)
