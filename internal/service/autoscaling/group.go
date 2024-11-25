@@ -8,6 +8,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -34,7 +35,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -959,8 +959,7 @@ func resourceGroup() *schema.Resource {
 
 func instanceMaintenancePolicyDiffSupress(k, old, new string, d *schema.ResourceData) bool {
 	o, n := d.GetChange("instance_maintenance_policy")
-	oList := o.([]interface{})
-	nList := n.([]interface{})
+	oList, nList := o.([]interface{}), n.([]interface{})
 
 	if len(oList) == 0 && len(nList) != 0 {
 		tfMap := nList[0].(map[string]interface{})
@@ -968,6 +967,7 @@ func instanceMaintenancePolicyDiffSupress(k, old, new string, d *schema.Resource
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -1258,7 +1258,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	g, err := findGroupByName(ctx, conn, d.Id())
 
@@ -1481,7 +1481,11 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.VPCZoneIdentifier = expandVPCZoneIdentifiers(d.Get("vpc_zone_identifier").(*schema.Set).List())
 		}
 
-		_, err := conn.UpdateAutoScalingGroup(ctx, input)
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate),
+			func() (interface{}, error) {
+				return conn.UpdateAutoScalingGroup(ctx, input)
+			},
+			errCodeOperationError, errCodeUpdateASG, errCodeValidationError)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Group (%s): %s", d.Id(), err)
@@ -1500,22 +1504,17 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("traffic_source") {
 		o, n := d.GetChange("traffic_source")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
-			_, err := conn.DetachTrafficSources(ctx, &autoscaling.DetachTrafficSourcesInput{
+		for chunk := range slices.Chunk(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
+			input := &autoscaling.DetachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
-			})
+			}
+
+			_, err := conn.DetachTrafficSources(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
@@ -1526,11 +1525,13 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
-			_, err := conn.AttachTrafficSources(ctx, &autoscaling.AttachTrafficSourcesInput{
+		for chunk := range slices.Chunk(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
+			input := &autoscaling.AttachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
-			})
+			}
+
+			_, err := conn.AttachTrafficSources(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) traffic sources: %s", d.Id(), err)
@@ -1544,22 +1545,17 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("load_balancers") {
 		o, n := d.GetChange("load_balancers")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
-			_, err := conn.DetachLoadBalancers(ctx, &autoscaling.DetachLoadBalancersInput{
+		for chunk := range slices.Chunk(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
+			input := &autoscaling.DetachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
-			})
+			}
+
+			_, err := conn.DetachLoadBalancers(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
@@ -1570,11 +1566,13 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
-			_, err := conn.AttachLoadBalancers(ctx, &autoscaling.AttachLoadBalancersInput{
+		for chunk := range slices.Chunk(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
+			input := &autoscaling.AttachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
-			})
+			}
+
+			_, err := conn.AttachLoadBalancers(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) load balancers: %s", d.Id(), err)
@@ -1588,22 +1586,17 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("target_group_arns") {
 		o, n := d.GetChange("target_group_arns")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
-			_, err := conn.DetachLoadBalancerTargetGroups(ctx, &autoscaling.DetachLoadBalancerTargetGroupsInput{
+		for chunk := range slices.Chunk(flex.ExpandStringValueSet(os.Difference(ns)), batchSize) {
+			input := &autoscaling.DetachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
-			})
+			}
+
+			_, err := conn.DetachLoadBalancerTargetGroups(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
@@ -1614,11 +1607,13 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range tfslices.Chunks(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
-			_, err := conn.AttachLoadBalancerTargetGroups(ctx, &autoscaling.AttachLoadBalancerTargetGroupsInput{
+		for chunk := range slices.Chunk(flex.ExpandStringValueSet(ns.Difference(os)), batchSize) {
+			input := &autoscaling.AttachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
-			})
+			}
+
+			_, err := conn.AttachLoadBalancerTargetGroups(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) target groups: %s", d.Id(), err)
@@ -1717,14 +1712,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("enabled_metrics") {
 		o, n := d.GetChange("enabled_metrics")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if disableMetrics := os.Difference(ns); disableMetrics.Len() != 0 {
 			input := &autoscaling.DisableMetricsCollectionInput{
@@ -1756,14 +1744,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("suspended_processes") {
 		o, n := d.GetChange("suspended_processes")
-		if o == nil {
-			o = new(schema.Set)
-		}
-		if n == nil {
-			n = new(schema.Set)
-		}
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
+		os, ns := o.(*schema.Set), n.(*schema.Set)
 
 		if resumeProcesses := os.Difference(ns); resumeProcesses.Len() != 0 {
 			input := &autoscaling.ResumeProcessesInput{
@@ -1887,7 +1868,7 @@ func drainGroup(ctx context.Context, conn *autoscaling.Client, name string, inst
 		}
 	}
 	const batchSize = 50 // API limit.
-	for _, chunk := range tfslices.Chunks(instanceIDs, batchSize) {
+	for chunk := range slices.Chunk(instanceIDs, batchSize) {
 		input := &autoscaling.SetInstanceProtectionInput{
 			AutoScalingGroupName: aws.String(name),
 			InstanceIds:          chunk,
@@ -1968,8 +1949,7 @@ func drainWarmPool(ctx context.Context, conn *autoscaling.Client, name string, t
 func findELBInstanceStates(ctx context.Context, conn *elasticloadbalancing.Client, g *awstypes.AutoScalingGroup) (map[string]map[string]string, error) {
 	instanceStates := make(map[string]map[string]string)
 
-	for _, v := range g.LoadBalancerNames {
-		lbName := v
+	for _, lbName := range g.LoadBalancerNames {
 		input := &elasticloadbalancing.DescribeInstanceHealthInput{
 			LoadBalancerName: aws.String(lbName),
 		}
@@ -2002,8 +1982,7 @@ func findELBInstanceStates(ctx context.Context, conn *elasticloadbalancing.Clien
 func findELBV2InstanceStates(ctx context.Context, conn *elasticloadbalancingv2.Client, g *awstypes.AutoScalingGroup) (map[string]map[string]string, error) {
 	instanceStates := make(map[string]map[string]string)
 
-	for _, v := range g.TargetGroupARNs {
-		targetGroupARN := v
+	for _, targetGroupARN := range g.TargetGroupARNs {
 		input := &elasticloadbalancingv2.DescribeTargetHealthInput{
 			TargetGroupArn: aws.String(targetGroupARN),
 		}

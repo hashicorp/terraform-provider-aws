@@ -69,6 +69,8 @@ var (
 	ResourceRouteTableAssociation                         = resourceRouteTableAssociation
 	ResourceSecurityGroupEgressRule                       = newSecurityGroupEgressRuleResource
 	ResourceSecurityGroupIngressRule                      = newSecurityGroupIngressRuleResource
+	ResourceSecurityGroupRule                             = resourceSecurityGroupRule
+	ResourceSecurityGroupVPCAssociation                   = newResourceSecurityGroupVPCAssociation
 	ResourceSnapshotCreateVolumePermission                = resourceSnapshotCreateVolumePermission
 	ResourceSpotDataFeedSubscription                      = resourceSpotDataFeedSubscription
 	ResourceSpotFleetRequest                              = resourceSpotFleetRequest
@@ -81,6 +83,8 @@ var (
 	ResourceTrafficMirrorSession                          = resourceTrafficMirrorSession
 	ResourceTrafficMirrorTarget                           = resourceTrafficMirrorTarget
 	ResourceTransitGatewayConnect                         = resourceTransitGatewayConnect
+	ResourceTransitGatewayDefaultRouteTableAssociation    = newTransitGatewayDefaultRouteTableAssociationResource
+	ResourceTransitGatewayDefaultRouteTablePropagation    = newTransitGatewayDefaultRouteTablePropagationResource
 	ResourceTransitGatewayMulticastDomain                 = resourceTransitGatewayMulticastDomain
 	ResourceTransitGatewayMulticastDomainAssociation      = resourceTransitGatewayMulticastDomainAssociation
 	ResourceTransitGatewayMulticastGroupMember            = resourceTransitGatewayMulticastGroupMember
@@ -120,6 +124,7 @@ var (
 	ResourceVerifiedAccessTrustProvider                   = resourceVerifiedAccessTrustProvider
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 
+	CheckMostRecentAndMissingFilters                           = checkMostRecentAndMissingFilters
 	CustomFiltersSchema                                        = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                   = customerGatewayConfigurationToTunnelInfo
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

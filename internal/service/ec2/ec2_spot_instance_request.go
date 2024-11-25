@@ -57,10 +57,13 @@ func resourceSpotInstanceRequest() *schema.Resource {
 					continue
 				}
 				// tags_all is Optional+Computed.
-				if k == names.AttrTags || k == names.AttrTagsAll {
+				if k == names.AttrTags || k == names.AttrTagsAll || k == "volume_tags" {
 					continue
 				}
-				v.ForceNew = true
+				// Copy-on-write
+				x := *v // nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
+				x.ForceNew = true
+				s[k] = &x
 			}
 
 			// Remove attributes added for spot instances.
@@ -129,11 +132,6 @@ func resourceSpotInstanceRequest() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 				Computed:     true,
-			}
-			s["volume_tags"] = &schema.Schema{
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			}
 			s["wait_for_fulfillment"] = &schema.Schema{
 				Type:     schema.TypeBool,

@@ -20,7 +20,7 @@ import (
 )
 
 // @SDKDataSource("aws_docdb_engine_version")
-func DataSourceEngineVersion() *schema.Resource {
+func dataSourceEngineVersion() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEngineVersionRead,
 		Schema: map[string]*schema.Schema{

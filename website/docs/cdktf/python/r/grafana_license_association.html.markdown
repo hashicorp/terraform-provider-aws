@@ -62,8 +62,9 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `grafana_token` - (Optional) A token from Grafana Labs that ties your AWS account with a Grafana Labs account.
 * `license_type` - (Required) The type of license for the workspace license association. Valid values are `ENTERPRISE` and `ENTERPRISE_FREE_TRIAL`.
 * `workspace_id` - (Required) The workspace id.
 
@@ -99,4 +100,4 @@ Using `terraform import`, import Grafana workspace license association using the
 % terraform import aws_grafana_license_association.example g-2054c75a02
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-90acddbaf917f9205b009266924d2aa8cb3bd6ec3e83679cbf909ed8d07bd217 -->
+<!-- cache-key: cdktf-0.20.8 input-78984364313468b80fa3a73019f77575fce8fb8f6a36ef50fa639d2f9d2428e5 -->

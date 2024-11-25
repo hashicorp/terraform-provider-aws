@@ -144,7 +144,7 @@ func resourceSnapshotCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &rds.CreateDBSnapshotInput{
 		DBInstanceIdentifier: aws.String(d.Get("db_instance_identifier").(string)),
 		DBSnapshotIdentifier: aws.String(dbSnapshotID),
-		Tags:                 getTagsInV2(ctx),
+		Tags:                 getTagsIn(ctx),
 	}
 
 	output, err := conn.CreateDBSnapshot(ctx, input)
@@ -221,7 +221,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
 	}
 
-	setTagsOutV2(ctx, snapshot.TagList)
+	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }

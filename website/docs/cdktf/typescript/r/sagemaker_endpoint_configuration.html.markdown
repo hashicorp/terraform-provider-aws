@@ -74,6 +74,7 @@ This resource supports the following arguments:
 * `modelName` - (Required) The name of the model to use.
 * `routingConfig` - (Optional) Sets how the endpoint routes incoming traffic. See [routing_config](#routing_config) below.
 * `serverlessConfig` - (Optional) Specifies configuration for how an endpoint performs asynchronous inference.
+* `managedInstanceScaling` - (Optional) Settings that control the range in the number of instances that the endpoint provisions as it scales up or down to accommodate traffic.
 * `variantName` - (Optional) The name of the variant. If omitted, Terraform will assign a random, unique name.
 * `volumeSizeInGb` - (Optional) The size, in GB, of the ML storage volume attached to individual inference instance associated with the production variant. Valid values between `1` and `512`.
 
@@ -91,6 +92,12 @@ This resource supports the following arguments:
 * `maxConcurrency` - (Required) The maximum number of concurrent invocations your serverless endpoint can process. Valid values are between `1` and `200`.
 * `memorySizeInMb` - (Required) The memory size of your serverless endpoint. Valid values are in 1 GB increments: `1024` MB, `2048` MB, `3072` MB, `4096` MB, `5120` MB, or `6144` MB.
 * `provisionedConcurrency` - The amount of provisioned concurrency to allocate for the serverless endpoint. Should be less than or equal to `maxConcurrency`. Valid values are between `1` and `200`.
+
+#### managed_instance_scaling
+
+* `status` - (Optional) Indicates whether managed instance scaling is enabled. Valid values are `ENABLED` and `DISABLED`.
+* `minInstanceCount` - (Optional) The minimum number of instances that the endpoint must retain when it scales down to accommodate a decrease in traffic.
+* `maxInstanceCount` - (Optional) The maximum number of instances that the endpoint can provision when it scales up to accommodate an increase in traffic.
 
 ### data_capture_config
 
@@ -172,4 +179,4 @@ Using `terraform import`, import endpoint configurations using the `name`. For e
 % terraform import aws_sagemaker_endpoint_configuration.test_endpoint_config endpoint-config-foo
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-492f8b7b466397adf784e457b315395272bfaf3f1ca8a0c2c0127878e6bc2a4c -->
+<!-- cache-key: cdktf-0.20.8 input-74160ca7a494fbdfee7a09117b03977ef1e71157bac453042f4a965a4b2af9c8 -->

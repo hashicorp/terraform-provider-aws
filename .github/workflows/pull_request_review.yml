@@ -1,0 +1,51 @@
+name: Pull Request Review
+
+permissions:
+  contents: read
+
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  approved:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Community Check
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          sparse-checkout: .github/actions/community_check
+
+      - name: Run Community Check
+        id: community_check
+        uses: ./.github/actions/community_check
+        with:
+          user_login: ${{ github.event.review.user.login }}
+          maintainers: ${{ secrets.MAINTAINERS }}
+          partners: ${{ secrets.PARTNERS }}
+
+      - name: Maintainer Approval
+        if: |
+          github.event.review.state == 'approved'
+          && (steps.community_check.outputs.maintainer == 'true' || steps.community_check.outputs.partner == 'true')
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        env:
+          REVIEW_AUTHOR_URL: ${{ github.event.review.user.html_url }}
+          REVIEW_AUTHOR_LOGIN: ${{ github.event.review.user.login }}
+          PR_HTML_URL: ${{ github.event.pull_request.html_url }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        with:
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ${{ toJSON(format(':bufo-approves: <{0}|{1}> approved <{2}|{3}>', env.REVIEW_AUTHOR_URL, env.REVIEW_AUTHOR_LOGIN, env.PR_HTML_URL, env.PR_TITLE)) }}
+                  }
+                }
+              ]
+            }

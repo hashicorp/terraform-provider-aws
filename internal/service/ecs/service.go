@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
@@ -553,6 +554,12 @@ func resourceService() *schema.Resource {
 					},
 				},
 			},
+			"availability_zone_rebalancing": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.AvailabilityZoneRebalancingDisabled,
+				ValidateDiagFunc: enum.Validate[awstypes.AvailabilityZoneRebalancing](),
+			},
 			names.AttrCapacityProviderStrategy: {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -654,6 +661,10 @@ func resourceService() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			names.AttrForceDelete: {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"force_new_deployment": {
 				Type:     schema.TypeBool,
@@ -1046,8 +1057,60 @@ func resourceService() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
+									"tag_specifications": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrResourceType: {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.EBSResourceType](),
+												},
+												names.AttrPropagateTags: {
+													Type:     schema.TypeString,
+													Optional: true,
+													DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+														if awstypes.PropagateTags(old) == awstypes.PropagateTagsNone && new == "" {
+															return true
+														}
+														return false
+													},
+													ValidateDiagFunc: enum.Validate[awstypes.PropagateTags](),
+												},
+												names.AttrTags: tftags.TagsSchema(),
+											},
+										},
+									},
 								},
 							},
+						},
+					},
+				},
+			},
+			"vpc_lattice_configurations": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrRoleARN: {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"target_group_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"port_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 64),
+								validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase letters, numbers, underscores and hyphens"),
+								validation.StringDoesNotMatch(regexache.MustCompile(`^-`), "cannot begin with a hyphen"),
+							),
 						},
 					},
 				},
@@ -1097,7 +1160,7 @@ func resourceService() *schema.Resource {
 func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	deploymentController := expandDeploymentController(d.Get("deployment_controller").([]interface{}))
 	deploymentMinimumHealthyPercent := d.Get("deployment_minimum_healthy_percent").(int)
@@ -1114,10 +1177,15 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 		SchedulingStrategy:       schedulingStrategy,
 		ServiceName:              aws.String(name),
 		Tags:                     getTagsIn(ctx),
+		VpcLatticeConfigurations: expandVPCLatticeConfiguration(d.Get("vpc_lattice_configurations").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("availability_zone_rebalancing"); ok {
+		input.AvailabilityZoneRebalancing = awstypes.AvailabilityZoneRebalancing(v.(string))
 	}
 
 	if v, ok := d.GetOk("cluster"); ok {
@@ -1198,7 +1266,7 @@ func resourceServiceCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("volume_configuration"); ok && len(v.([]interface{})) > 0 {
-		input.VolumeConfigurations = expandVolumeConfigurations(v.([]interface{}))
+		input.VolumeConfigurations = expandVolumeConfigurations(ctx, v.([]interface{}))
 	}
 
 	output, err := retryServiceCreate(ctx, conn, input)
@@ -1259,6 +1327,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(aws.ToString(service.ServiceArn))
+	d.Set("availability_zone_rebalancing", service.AvailabilityZoneRebalancing)
 	if err := d.Set(names.AttrCapacityProviderStrategy, flattenCapacityProviderStrategyItems(service.CapacityProviderStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting capacity_provider_strategy: %s", err)
 	}
@@ -1313,6 +1382,15 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(service.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
+
+	for _, deployment := range service.Deployments {
+		if aws.ToString(deployment.Status) == "PRIMARY" {
+			if err := d.Set("vpc_lattice_configurations", flattenVPCLatticeConfigurations(deployment.VpcLatticeConfigurations)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting vpc_lattice_configurations: %s", err)
+			}
+		}
+	}
+
 	if err := d.Set("ordered_placement_strategy", flattenPlacementStrategy(service.PlacementStrategy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ordered_placement_strategy: %s", err)
 	}
@@ -1350,7 +1428,7 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrForceDelete, names.AttrTags, names.AttrTagsAll) {
 		cluster := d.Get("cluster").(string)
 		input := &ecs.UpdateServiceInput{
 			Cluster:            aws.String(cluster),
@@ -1365,6 +1443,12 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 			if v, ok := d.GetOk("alarms"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.DeploymentConfiguration.Alarms = expandAlarms(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if d.HasChange("availability_zone_rebalancing") {
+			if v, ok := d.GetOk("availability_zone_rebalancing"); ok {
+				input.AvailabilityZoneRebalancing = awstypes.AvailabilityZoneRebalancing(v.(string))
 			}
 		}
 
@@ -1482,7 +1566,11 @@ func resourceServiceUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("volume_configuration") {
-			input.VolumeConfigurations = expandVolumeConfigurations(d.Get("volume_configuration").([]interface{}))
+			input.VolumeConfigurations = expandVolumeConfigurations(ctx, d.Get("volume_configuration").([]interface{}))
+		}
+
+		if d.HasChange("vpc_lattice_configurations") {
+			input.VpcLatticeConfigurations = expandVPCLatticeConfiguration(d.Get("vpc_lattice_configurations").(*schema.Set))
 		}
 
 		// Retry due to IAM eventual consistency.
@@ -1543,8 +1631,10 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		return diags
 	}
 
+	forceDelete := d.Get(names.AttrForceDelete).(bool)
+
 	// Drain the ECS service.
-	if status != serviceStatusDraining && service.SchedulingStrategy != awstypes.SchedulingStrategyDaemon {
+	if status != serviceStatusDraining && service.SchedulingStrategy != awstypes.SchedulingStrategyDaemon && !forceDelete {
 		input := &ecs.UpdateServiceInput{
 			Cluster:      aws.String(cluster),
 			DesiredCount: aws.Int32(0),
@@ -1563,6 +1653,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		func() (interface{}, error) {
 			return conn.DeleteService(ctx, &ecs.DeleteServiceInput{
 				Cluster: aws.String(cluster),
+				Force:   aws.Bool(forceDelete),
 				Service: aws.String(d.Id()),
 			})
 		},
@@ -1600,7 +1691,7 @@ func resourceServiceImport(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(name)
 	clusterArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "ecs",
 		AccountID: meta.(*conns.AWSClient).AccountID,
@@ -2064,6 +2155,48 @@ func expandNetworkConfiguration(nc []interface{}) *awstypes.NetworkConfiguration
 	return &awstypes.NetworkConfiguration{AwsvpcConfiguration: awsVpcConfig}
 }
 
+func expandVPCLatticeConfiguration(tfSet *schema.Set) []awstypes.VpcLatticeConfiguration {
+	tfList := tfSet.List()
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	apiObjects := make([]awstypes.VpcLatticeConfiguration, 0)
+
+	for _, tfMapRaw := range tfSet.List() {
+		config := tfMapRaw.(map[string]interface{})
+
+		apiObject := awstypes.VpcLatticeConfiguration{
+			RoleArn:        aws.String(config[names.AttrRoleARN].(string)),
+			TargetGroupArn: aws.String(config["target_group_arn"].(string)),
+			PortName:       aws.String(config["port_name"].(string)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenVPCLatticeConfigurations(apiObjects []awstypes.VpcLatticeConfiguration) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfList := make([]interface{}, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			names.AttrRoleARN:  aws.ToString(apiObject.RoleArn),
+			"target_group_arn": aws.ToString(apiObject.TargetGroupArn),
+			"port_name":        aws.ToString(apiObject.PortName),
+		}
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
 func expandPlacementConstraints(tfList []interface{}) ([]awstypes.PlacementConstraint, error) {
 	if len(tfList) == 0 {
 		return nil, nil
@@ -2251,7 +2384,7 @@ func expandSecretOptions(sop []interface{}) []awstypes.Secret {
 	return out
 }
 
-func expandVolumeConfigurations(vc []interface{}) []awstypes.ServiceVolumeConfiguration {
+func expandVolumeConfigurations(ctx context.Context, vc []interface{}) []awstypes.ServiceVolumeConfiguration {
 	if len(vc) == 0 {
 		return nil
 	}
@@ -2266,7 +2399,7 @@ func expandVolumeConfigurations(vc []interface{}) []awstypes.ServiceVolumeConfig
 		}
 
 		if v, ok := p["managed_ebs_volume"].([]interface{}); ok && len(v) > 0 {
-			config.ManagedEBSVolume = expandManagedEBSVolume(v)
+			config.ManagedEBSVolume = expandManagedEBSVolume(ctx, v)
 		}
 		vcs = append(vcs, config)
 	}
@@ -2274,7 +2407,7 @@ func expandVolumeConfigurations(vc []interface{}) []awstypes.ServiceVolumeConfig
 	return vcs
 }
 
-func expandManagedEBSVolume(ebs []interface{}) *awstypes.ServiceManagedEBSVolumeConfiguration {
+func expandManagedEBSVolume(ctx context.Context, ebs []interface{}) *awstypes.ServiceManagedEBSVolumeConfiguration {
 	if len(ebs) == 0 {
 		return &awstypes.ServiceManagedEBSVolumeConfiguration{}
 	}
@@ -2308,8 +2441,41 @@ func expandManagedEBSVolume(ebs []interface{}) *awstypes.ServiceManagedEBSVolume
 	if v, ok := raw[names.AttrVolumeType].(string); ok && v != "" {
 		config.VolumeType = aws.String(v)
 	}
+	if v, ok := raw["tag_specifications"].([]interface{}); ok && len(v) > 0 {
+		config.TagSpecifications = expandTagSpecifications(ctx, v)
+	}
 
 	return config
+}
+
+func expandTagSpecifications(ctx context.Context, ts []interface{}) []awstypes.EBSTagSpecification {
+	if len(ts) == 0 {
+		return []awstypes.EBSTagSpecification{}
+	}
+
+	var s []awstypes.EBSTagSpecification
+	for _, item := range ts {
+		raw, ok := item.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var config awstypes.EBSTagSpecification
+		if v, ok := raw[names.AttrResourceType].(string); ok && v != "" {
+			config.ResourceType = awstypes.EBSResourceType(v)
+		}
+		if v, ok := raw[names.AttrPropagateTags].(string); ok && v != "" {
+			config.PropagateTags = awstypes.PropagateTags(v)
+		}
+		if v, ok := raw[names.AttrTags].(map[string]any); ok && len(v) > 0 {
+			if v := tftags.New(ctx, v).IgnoreAWS(); len(v) > 0 {
+				config.Tags = Tags(v)
+			}
+		}
+		s = append(s, config)
+	}
+
+	return s
 }
 
 func expandServices(srv []interface{}) []awstypes.ServiceConnectService {

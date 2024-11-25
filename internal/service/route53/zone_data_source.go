@@ -87,7 +87,7 @@ func dataSourceZone() *schema.Resource {
 func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	zoneID, zoneIDExists := d.GetOk("zone_id")
@@ -155,7 +155,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	hostedZoneID := cleanZoneID(aws.ToString(hostedZone.Id))
 	d.SetId(hostedZoneID)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "route53",
 		Resource:  "hostedzone/" + d.Id(),
 	}.String()

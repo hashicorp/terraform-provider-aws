@@ -5,22 +5,18 @@ package quicksight
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_quicksight_user", name="User")
-func DataSourceUser() *schema.Resource {
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
@@ -50,7 +46,7 @@ func DataSourceUser() *schema.Resource {
 				names.AttrNamespace: {
 					Type:     schema.TypeString,
 					Optional: true,
-					Default:  DefaultUserNamespace,
+					Default:  defaultUserNamespace,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 63),
 						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
@@ -75,36 +71,31 @@ func DataSourceUser() *schema.Resource {
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}
 	namespace := d.Get(names.AttrNamespace).(string)
-	in := &quicksight.DescribeUserInput{
-		UserName:     aws.String(d.Get(names.AttrUserName).(string)),
-		AwsAccountId: aws.String(awsAccountID),
-		Namespace:    aws.String(namespace),
-	}
+	userName := d.Get(names.AttrUserName).(string)
+	id := userCreateResourceID(awsAccountID, namespace, userName)
 
-	out, err := conn.DescribeUserWithContext(ctx, in)
+	user, err := findUserByThreePartKey(ctx, conn, awsAccountID, namespace, userName)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading QuickSight User (%s): %s", d.Id(), err)
-	}
-	if out == nil || out.User == nil {
-		return sdkdiag.AppendErrorf(diags, "reading QuickSight User (%s): %s", d.Id(), tfresource.NewEmptyResultError(in))
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight User (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(out.User.UserName)))
-	d.Set("active", out.User.Active)
-	d.Set(names.AttrARN, out.User.Arn)
+	d.SetId(id)
+	d.Set("active", user.Active)
+	d.Set(names.AttrARN, user.Arn)
 	d.Set(names.AttrAWSAccountID, awsAccountID)
-	d.Set(names.AttrEmail, out.User.Email)
-	d.Set("identity_type", out.User.IdentityType)
-	d.Set("principal_id", out.User.PrincipalId)
-	d.Set(names.AttrUserName, out.User.UserName)
-	d.Set("user_role", out.User.Role)
+	d.Set(names.AttrEmail, user.Email)
+	d.Set("identity_type", user.IdentityType)
+	d.Set("principal_id", user.PrincipalId)
+	d.Set(names.AttrUserName, user.UserName)
+	d.Set("user_role", user.Role)
 
 	return diags
 }

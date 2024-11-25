@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -105,7 +104,7 @@ func testAccDefaultSubnet_Existing_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCIDRBlock),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", acctest.CtTrue),
@@ -117,7 +116,7 @@ func testAccDefaultSubnet_Existing_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, "private_dns_hostname_type_on_launch"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
@@ -133,7 +132,7 @@ func testAccDefaultSubnet_Existing_forceDestroy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
 			testAccPreCheckDefaultSubnetExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -160,7 +159,7 @@ func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
 			testAccPreCheckDefaultSubnetExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -178,7 +177,7 @@ func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCIDRBlock),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", acctest.CtTrue),
@@ -190,7 +189,7 @@ func testAccDefaultSubnet_Existing_ipv6(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "ip-name"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
@@ -207,7 +206,7 @@ func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
 			testAccPreCheckDefaultSubnetExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -225,7 +224,7 @@ func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCIDRBlock),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", acctest.CtTrue),
@@ -237,7 +236,7 @@ func testAccDefaultSubnet_Existing_privateDNSNameOptionsOnLaunch(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "private_dns_hostname_type_on_launch", "resource-name"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
@@ -254,7 +253,7 @@ func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
 			testAccPreCheckDefaultSubnetNotFound(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -272,7 +271,7 @@ func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCIDRBlock),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", acctest.CtFalse),
@@ -284,7 +283,7 @@ func testAccDefaultSubnet_NotFound_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, "private_dns_hostname_type_on_launch"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
@@ -300,7 +299,7 @@ func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, endpoints.UsWest2RegionID, endpoints.UsGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
 			testAccPreCheckDefaultSubnetNotFound(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -318,7 +317,7 @@ func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrCIDRBlock, ""),
 					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", ""),
 					resource.TestCheckResourceAttr(resourceName, "enable_dns64", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "enable_lni_at_device_index", "0"),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_aaaa_record_on_launch", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "enable_resource_name_dns_a_record_on_launch", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "existing_default_subnet", acctest.CtFalse),
@@ -330,7 +329,7 @@ func testAccDefaultSubnet_NotFound_ipv6Native(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, "private_dns_hostname_type_on_launch"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},

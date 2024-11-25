@@ -20,6 +20,7 @@ import (
 // @SDKDataSource("aws_appmesh_gateway_route", name="Gateway Route")
 // @Tags
 // @Testing(serialize=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceGatewayRoute() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGatewayRouteRead,

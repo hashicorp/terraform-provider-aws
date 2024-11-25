@@ -1257,6 +1257,7 @@ const (
 	securityPolicyNamePQ_SSH_FIPS_2023_04 securityPolicyName = "TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04"
 	securityPolicyNameRestricted_2018_11  securityPolicyName = "TransferSecurityPolicy-Restricted-2018-11"
 	securityPolicyNameRestricted_2020_06  securityPolicyName = "TransferSecurityPolicy-Restricted-2020-06"
+	securityPolicyNameRestricted_2024_06  securityPolicyName = "TransferSecurityPolicy-Restricted-2024-06"
 )
 
 func (securityPolicyName) Values() []securityPolicyName {
@@ -1274,5 +1275,6 @@ func (securityPolicyName) Values() []securityPolicyName {
 		securityPolicyNamePQ_SSH_FIPS_2023_04,
 		securityPolicyNameRestricted_2018_11,
 		securityPolicyNameRestricted_2020_06,
+		securityPolicyNameRestricted_2024_06,
 	}
 }

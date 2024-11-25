@@ -121,7 +121,7 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.Set("amazon_side_asn", strconv.FormatInt(aws.ToInt64(vgw.AmazonSideAsn), 10))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,

@@ -6,13 +6,13 @@ package redshift
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusClusterAvailability(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
+func statusClusterAvailability(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
@@ -24,11 +24,11 @@ func statusClusterAvailability(ctx context.Context, conn *redshift.Redshift, id 
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.ClusterAvailabilityStatus), nil
+		return output, aws.ToString(output.ClusterAvailabilityStatus), nil
 	}
 }
 
-func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
+func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
@@ -40,11 +40,11 @@ func statusClusterAvailabilityZoneRelocation(ctx context.Context, conn *redshift
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.AvailabilityZoneRelocationStatus), nil
+		return output, aws.ToString(output.AvailabilityZoneRelocationStatus), nil
 	}
 }
 
-func statusCluster(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
+func statusCluster(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
@@ -56,11 +56,11 @@ func statusCluster(ctx context.Context, conn *redshift.Redshift, id string) retr
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.ClusterStatus), nil
+		return output, aws.ToString(output.ClusterStatus), nil
 	}
 }
 
-func statusClusterAqua(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
+func statusClusterAqua(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findClusterByID(ctx, conn, id)
 
@@ -72,11 +72,11 @@ func statusClusterAqua(ctx context.Context, conn *redshift.Redshift, id string) 
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.AquaConfiguration.AquaStatus), nil
+		return output, string(output.AquaConfiguration.AquaStatus), nil
 	}
 }
 
-func statusEndpointAccess(ctx context.Context, conn *redshift.Redshift, name string) retry.StateRefreshFunc {
+func statusEndpointAccess(ctx context.Context, conn *redshift.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findEndpointAccessByName(ctx, conn, name)
 
@@ -88,11 +88,11 @@ func statusEndpointAccess(ctx context.Context, conn *redshift.Redshift, name str
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.EndpointStatus), nil
+		return output, aws.ToString(output.EndpointStatus), nil
 	}
 }
 
-func statusClusterSnapshot(ctx context.Context, conn *redshift.Redshift, id string) retry.StateRefreshFunc {
+func statusClusterSnapshot(ctx context.Context, conn *redshift.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findClusterSnapshotByID(ctx, conn, id)
 
@@ -104,6 +104,6 @@ func statusClusterSnapshot(ctx context.Context, conn *redshift.Redshift, id stri
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, aws.ToString(output.Status), nil
 	}
 }

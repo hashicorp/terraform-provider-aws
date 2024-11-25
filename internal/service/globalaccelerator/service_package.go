@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -17,10 +18,10 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
 	return globalaccelerator.NewFromConfig(cfg,
-		globalaccelerator.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+		globalaccelerator.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *globalaccelerator.Options) {
-			if config["partition"].(string) == names.StandardPartitionID {
+			if config["partition"].(string) == endpoints.AwsPartitionID {
 				// Global Accelerator endpoint is only available in AWS Commercial us-west-2 Region.
 				if cfg.Region != names.USWest2RegionID {
 					tflog.Info(ctx, "overriding region", map[string]any{

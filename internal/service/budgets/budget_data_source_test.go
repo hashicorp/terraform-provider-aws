@@ -34,7 +34,7 @@ func TestAccBudgetsBudgetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBudgetDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccBudgetExists(ctx, resourceName, &budget),
+					testAccCheckBudgetExists(ctx, resourceName, &budget),
 					acctest.CheckResourceAttrAccountID(dataSourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttrPair(dataSourceName, names.AttrName, resourceName, names.AttrName),
 					resource.TestCheckResourceAttrSet(dataSourceName, "calculated_spend.#"),

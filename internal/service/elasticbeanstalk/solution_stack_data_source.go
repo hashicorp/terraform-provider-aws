@@ -17,32 +17,30 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_elastic_beanstalk_solution_stack")
-func DataSourceSolutionStack() *schema.Resource {
+// @SDKDataSource("aws_elastic_beanstalk_solution_stack", name="Solution Stack")
+func dataSourceSolutionStack() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSolutionStackRead,
 
 		Schema: map[string]*schema.Schema{
-			"name_regex": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringIsValidRegExp,
-			},
 			names.AttrMostRecent: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
 			},
-			// Computed values.
 			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"name_regex": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringIsValidRegExp,
 			},
 		},
 	}
 }
 
-// dataSourceSolutionStackRead performs the API lookup.
 func dataSourceSolutionStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)

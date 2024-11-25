@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,7 +37,7 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -46,18 +47,18 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 				Config: testAccExportConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
-					resource.TestCheckResourceAttr(resourceName, "export.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "export.0.data_query.0.query_statement"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.overwrite", "OVERWRITE_REPORT"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.format", "TEXT_OR_CSV"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.compression", "GZIP"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.output_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.0.frequency", "SYNCHRONOUS"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.TIME_GRANULARITY", "HOURLY"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.INCLUDE_RESOURCES", acctest.CtFalseCaps),
@@ -87,7 +88,7 @@ func TestAccBCMDataExportsExport_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -97,18 +98,18 @@ func TestAccBCMDataExportsExport_update(t *testing.T) {
 				Config: testAccExportConfig_update(rName, "OVERWRITE_REPORT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
-					resource.TestCheckResourceAttr(resourceName, "export.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "export.0.data_query.0.query_statement"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.overwrite", "OVERWRITE_REPORT"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.format", "TEXT_OR_CSV"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.compression", "GZIP"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.output_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.0.frequency", "SYNCHRONOUS"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.TIME_GRANULARITY", "HOURLY"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.INCLUDE_RESOURCES", acctest.CtFalseCaps),
@@ -120,18 +121,18 @@ func TestAccBCMDataExportsExport_update(t *testing.T) {
 				Config: testAccExportConfig_update(rName, "CREATE_NEW_REPORT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
-					resource.TestCheckResourceAttr(resourceName, "export.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "export.0.data_query.0.query_statement"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.overwrite", "CREATE_NEW_REPORT"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.format", "TEXT_OR_CSV"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.compression", "GZIP"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.0.s3_output_configurations.0.output_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.0.frequency", "SYNCHRONOUS"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.TIME_GRANULARITY", "HOURLY"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.INCLUDE_RESOURCES", acctest.CtFalseCaps),
@@ -275,7 +276,7 @@ func TestAccBCMDataExportsExport_curSubset(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -285,14 +286,14 @@ func TestAccBCMDataExportsExport_curSubset(t *testing.T) {
 				Config: testAccExportConfig_curSubset(rName, query),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
-					resource.TestCheckResourceAttr(resourceName, "export.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "export.0.data_query.0.query_statement"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.%", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.destination_configurations.0.s3_destination.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.refresh_cadence.0.frequency", "SYNCHRONOUS"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.TIME_GRANULARITY", "HOURLY"),
 				),
@@ -314,7 +315,7 @@ func TestAccBCMDataExportsExport_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -332,59 +333,6 @@ func TestAccBCMDataExportsExport_disappears(t *testing.T) {
 	})
 }
 
-func TestAccBCMDataExportsExport_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	var export bcmdataexports.GetExportOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bcmdataexports_export.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckExportDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccExportConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExportExists(ctx, resourceName, &export),
-					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccExportConfig_tag2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExportExists(ctx, resourceName, &export),
-					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccExportConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckExportExists(ctx, resourceName, &export),
-					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func TestAccBCMDataExportsExport_updateTable(t *testing.T) {
 	ctx := acctest.Context(t)
 	var export bcmdataexports.GetExportOutput
@@ -394,7 +342,7 @@ func TestAccBCMDataExportsExport_updateTable(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
+			acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -586,91 +534,6 @@ resource "aws_bcmdataexports_export" "test" {
   }
 }
 `, rName, overwrite))
-}
-
-func testAccExportConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccExportConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_bcmdataexports_export" "test" {
-  export {
-    name = %[1]q
-    data_query {
-      query_statement = "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT"
-      table_configurations = {
-        "COST_AND_USAGE_REPORT" = {
-          "TIME_GRANULARITY"                      = "HOURLY",
-          "INCLUDE_RESOURCES"                     = "FALSE",
-          "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
-          "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
-        }
-      }
-    }
-    destination_configurations {
-      s3_destination {
-        s3_bucket = aws_s3_bucket.test.bucket
-        s3_prefix = aws_s3_bucket.test.bucket_prefix
-        s3_region = aws_s3_bucket.test.region
-        s3_output_configurations {
-          overwrite   = "OVERWRITE_REPORT"
-          format      = "TEXT_OR_CSV"
-          compression = "GZIP"
-          output_type = "CUSTOM"
-        }
-      }
-    }
-    refresh_cadence {
-      frequency = "SYNCHRONOUS"
-    }
-  }
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccExportConfig_tag2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccExportConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_bcmdataexports_export" "test" {
-  export {
-    name = %[1]q
-    data_query {
-      query_statement = "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT"
-      table_configurations = {
-        "COST_AND_USAGE_REPORT" = {
-          "TIME_GRANULARITY"                      = "HOURLY",
-          "INCLUDE_RESOURCES"                     = "FALSE",
-          "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
-          "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
-        }
-      }
-    }
-    destination_configurations {
-      s3_destination {
-        s3_bucket = aws_s3_bucket.test.bucket
-        s3_prefix = aws_s3_bucket.test.bucket_prefix
-        s3_region = aws_s3_bucket.test.region
-        s3_output_configurations {
-          overwrite   = "OVERWRITE_REPORT"
-          format      = "TEXT_OR_CSV"
-          compression = "GZIP"
-          output_type = "CUSTOM"
-        }
-      }
-    }
-    refresh_cadence {
-      frequency = "SYNCHRONOUS"
-    }
-  }
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccExportConfig_updateTableConfigs(rName, queryStatement string) string {

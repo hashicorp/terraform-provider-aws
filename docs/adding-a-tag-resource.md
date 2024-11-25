@@ -9,14 +9,13 @@ Adding a tag resource, similar to the `aws_ecs_tag` resource, has its own implem
 - Create `internal/service/{service}/tag_gen_test.go` with initial acceptance testing similar to the following (where the parent resource is simple to provision):
 
 ```go
-
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/{Service}"
 	"github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAcc{Service}Tag_basic(t *testing.T) {
@@ -26,7 +25,7 @@ func TestAcc{Service}Tag_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{Service}ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -54,7 +53,7 @@ func TestAcc{Service}Tag_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{Service}ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,7 +76,7 @@ func TestAcc{Service}Tag_Value(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, {Service}.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{Service}ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheck{Service}TagDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -6,14 +6,17 @@ package redshiftserverless
 import (
 	"context"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshiftserverless"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -126,7 +129,7 @@ func resourceEndpointAccess() *schema.Resource {
 
 func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	endpointName := d.Get("endpoint_name").(string)
 	input := &redshiftserverless.CreateEndpointAccessInput{
@@ -139,20 +142,20 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if v, ok := d.GetOk(names.AttrSubnetIDs); ok && v.(*schema.Set).Len() > 0 {
-		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
-		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	output, err := conn.CreateEndpointAccessWithContext(ctx, input)
+	output, err := conn.CreateEndpointAccess(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Redshift Serverless Endpoint Access (%s): %s", endpointName, err)
 	}
 
-	d.SetId(aws.StringValue(output.Endpoint.EndpointName))
+	d.SetId(aws.ToString(output.Endpoint.EndpointName))
 
 	if _, err := waitEndpointAccessActive(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Redshift Serverless Endpoint Access (%s) create: %s", d.Id(), err)
@@ -163,7 +166,7 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	endpointAccess, err := findEndpointAccessByName(ctx, conn, d.Id())
 
@@ -182,12 +185,12 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("endpoint_name", endpointAccess.EndpointName)
 	d.Set("owner_account", d.Get("owner_account"))
 	d.Set(names.AttrPort, endpointAccess.Port)
-	d.Set(names.AttrSubnetIDs, aws.StringValueSlice(endpointAccess.SubnetIds))
+	d.Set(names.AttrSubnetIDs, endpointAccess.SubnetIds)
 	if err := d.Set("vpc_endpoint", []interface{}{flattenVPCEndpoint(endpointAccess.VpcEndpoint)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_endpoint: %s", err)
 	}
-	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(endpointAccess.VpcSecurityGroups, func(v *redshiftserverless.VpcSecurityGroupMembership) string {
-		return aws.StringValue(v.VpcSecurityGroupId)
+	d.Set(names.AttrVPCSecurityGroupIDs, tfslices.ApplyToAll(endpointAccess.VpcSecurityGroups, func(v awstypes.VpcSecurityGroupMembership) string {
+		return aws.ToString(v.VpcSecurityGroupId)
 	}))
 	d.Set("workgroup_name", endpointAccess.WorkgroupName)
 
@@ -196,17 +199,17 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	input := &redshiftserverless.UpdateEndpointAccessInput{
 		EndpointName: aws.String(d.Id()),
 	}
 
 	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
-		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	_, err := conn.UpdateEndpointAccessWithContext(ctx, input)
+	_, err := conn.UpdateEndpointAccess(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Redshift Serverless Endpoint Access (%s): %s", d.Id(), err)
@@ -221,14 +224,14 @@ func resourceEndpointAccessUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
+	conn := meta.(*conns.AWSClient).RedshiftServerlessClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift Serverless Endpoint Access: %s", d.Id())
-	_, err := conn.DeleteEndpointAccessWithContext(ctx, &redshiftserverless.DeleteEndpointAccessInput{
+	_, err := conn.DeleteEndpointAccess(ctx, &redshiftserverless.DeleteEndpointAccessInput{
 		EndpointName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, redshiftserverless.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -241,4 +244,86 @@ func resourceEndpointAccessDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	return diags
+}
+
+func findEndpointAccessByName(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.EndpointAccess, error) {
+	input := &redshiftserverless.GetEndpointAccessInput{
+		EndpointName: aws.String(name),
+	}
+
+	output, err := conn.GetEndpointAccess(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Endpoint, nil
+}
+
+func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.Client, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findEndpointAccessByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.EndpointStatus), nil
+	}
+}
+
+func waitEndpointAccessActive(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.EndpointAccess, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			"CREATING",
+			"MODIFYING",
+		},
+		Target: []string{
+			"ACTIVE",
+		},
+		Refresh: statusEndpointAccess(ctx, conn, name),
+		Timeout: 10 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.EndpointAccess); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEndpointAccessDeleted(ctx context.Context, conn *redshiftserverless.Client, name string) (*awstypes.EndpointAccess, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			"DELETING",
+		},
+		Target:  []string{},
+		Refresh: statusEndpointAccess(ctx, conn, name),
+		Timeout: 10 * time.Minute,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.EndpointAccess); ok {
+		return output, err
+	}
+
+	return nil, err
 }

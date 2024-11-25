@@ -39,7 +39,7 @@ func TestAccSFNActivity_basic(t *testing.T) {
 					testAccCheckActivityExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -89,7 +89,7 @@ func TestAccSFNActivity_tags(t *testing.T) {
 				Config: testAccActivityConfig_basicTags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -102,7 +102,7 @@ func TestAccSFNActivity_tags(t *testing.T) {
 				Config: testAccActivityConfig_basicTags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -111,7 +111,7 @@ func TestAccSFNActivity_tags(t *testing.T) {
 				Config: testAccActivityConfig_basicTags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -136,7 +136,7 @@ func TestAccSFNActivity_encryptionConfigurationCustomerManagedKMSKey(t *testing.
 				Config: testAccActivityConfig_encryptionConfigurationCustomerManagedKMSKey(rName, string(awstypes.EncryptionTypeCustomerManagedKmsKey), reusePeriodSeconds),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeCustomerManagedKmsKey)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_data_key_reuse_period_seconds", strconv.Itoa(reusePeriodSeconds)),
 					resource.TestCheckResourceAttrSet(resourceName, "encryption_configuration.0.kms_key_id"),
@@ -167,7 +167,7 @@ func TestAccSFNActivity_encryptionConfigurationServiceOwnedKey(t *testing.T) {
 				Config: testAccActivityConfig_encryptionConfigurationServiceOwnedKey(rName, string(awstypes.EncryptionTypeAwsOwnedKey)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckActivityExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", string(awstypes.EncryptionTypeAwsOwnedKey)),
 				),
 			},

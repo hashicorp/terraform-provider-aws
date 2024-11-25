@@ -95,7 +95,7 @@ func sweepClusters(region string) error {
 			arn := aws.ToString(v.DBClusterArn)
 			id := aws.ToString(v.DBClusterIdentifier)
 
-			r := ResourceCluster()
+			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(id)
 			d.Set("skip_final_snapshot", true)
@@ -196,7 +196,7 @@ func sweepClusterParameterGroups(region string) error {
 				continue
 			}
 
-			r := ResourceClusterParameterGroup()
+			r := resourceClusterParameterGroup()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -237,7 +237,7 @@ func sweepClusterInstances(region string) error {
 		}
 
 		for _, v := range page.DBInstances {
-			r := ResourceClusterInstance()
+			r := resourceClusterInstance()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.DBInstanceIdentifier))
 
@@ -278,7 +278,7 @@ func sweepGlobalClusters(region string) error {
 		}
 
 		for _, v := range page.GlobalClusters {
-			r := ResourceGlobalCluster()
+			r := resourceGlobalCluster()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.GlobalClusterIdentifier))
 
@@ -319,7 +319,7 @@ func sweepSubnetGroups(region string) error {
 		}
 
 		for _, v := range page.DBSubnetGroups {
-			r := ResourceSubnetGroup()
+			r := resourceSubnetGroup()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.DBSubnetGroupName))
 
@@ -360,7 +360,7 @@ func sweepEventSubscriptions(region string) error {
 		}
 
 		for _, v := range page.EventSubscriptionsList {
-			r := ResourceEventSubscription()
+			r := resourceEventSubscription()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.CustSubscriptionId))
 

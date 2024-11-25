@@ -61,6 +61,7 @@ The `space_sharing_settings` block supports the following argument:
 
 The `code_editor_app_settings` block supports the following argument:
 
+* `app_lifecycle_management` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
 * `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 
 ### `custom_file_system` Block
@@ -73,7 +74,8 @@ The `custom_file_system` block supports the following argument:
 
 The `jupyter_lab_app_settings` block supports the following arguments:
 
-* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. See [`code_repository` Block](#code_repository-block) below.
+* `app_lifecycle_management` - (Optional) Settings that are used to configure and manage the lifecycle of JupyterLab applications in a space. See [`app_lifecycle_management` Block](#app_lifecycle_management-block) below.
+* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterLab application. See [`code_repository` Block](#code_repository-block) below.
 * `default_resource_spec` - (Required) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. See [`default_resource_spec` Block](#default_resource_spec-block) below.
 
 ### `jupyter_server_app_settings` Block
@@ -133,6 +135,18 @@ The `custom_image` block supports the following arguments:
 The `ebs_storage_settings` block supports the following argument:
 
 * `ebs_volume_size_in_gb` - (Required) The size of an EBS storage volume for a space.
+
+### `app_lifecycle_management` Block
+
+The `app_lifecycle_management` block supports the following argument:
+
+* `idle_settings` - (Optional) Settings related to idle shutdown of Studio applications. See [`idle_settings` Block](#idle_settings-block) below.
+
+### `idle_settings` Block
+
+The `idle_settings` block supports the following argument:
+
+* `idle_timeout_in_minutes` - (Optional) The time that SageMaker waits after the application becomes idle before shutting it down. Valid values are between `60` and `525600`.
 
 ## Attribute Reference
 

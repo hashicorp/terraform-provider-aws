@@ -32,6 +32,8 @@ func testAccServerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "logging_role", resourceName, "logging_role"),
 					resource.TestCheckResourceAttrPair(datasourceName, "structured_log_destinations.#", resourceName, "structured_log_destinations.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
+					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsKey1, resourceName, acctest.CtTagsKey1),
 				),
 			},
 		},
@@ -147,6 +149,9 @@ POLICY
 resource "aws_transfer_server" "test" {
   identity_provider_type = "SERVICE_MANAGED"
   logging_role           = aws_iam_role.test.arn
+  tags = {
+    "key1" = "value1"
+  }
 }
 
 data "aws_transfer_server" "test" {

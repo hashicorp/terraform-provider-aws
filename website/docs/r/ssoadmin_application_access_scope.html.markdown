@@ -24,7 +24,7 @@ resource "aws_ssoadmin_application" "example" {
 
 resource "aws_ssoadmin_application_access_scope" "example" {
   application_arn    = aws_ssoadmin_application.example.application_arn
-  authorized_targets = ["arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901"]
+  authorized_targets = ["arn:aws:sso::123456789012:application/ssoins-123456789012/apl-123456789012"]
   scope              = "sso:account:access"
 }
 ```
@@ -53,12 +53,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_ssoadmin_application_access_scope.example
-  id = "arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901,sso:account:access"
+  id = "arn:aws:sso::123456789012:application/ssoins-123456789012/apl-123456789012,sso:account:access"
 }
 ```
 
 Using `terraform import`, import SSO Admin Application Access Scope using the `id`. For example:
 
 ```console
-% terraform import aws_ssoadmin_application_access_scope.example arn:aws:sso::012345678901:application/ssoins-012345678901/apl-012345678901,sso:account:access
+% terraform import aws_ssoadmin_application_access_scope.example arn:aws:sso::123456789012:application/ssoins-123456789012/apl-123456789012,sso:account:access
 ```

@@ -66,7 +66,7 @@ func TestAccElastiCacheClusterDataSource_Engine_Redis_LogDeliveryConfigurations(
 				Config: testAccClusterConfig_dataSourceEngineRedisLogDeliveryConfigurations(rName, true, awstypes.DestinationTypeKinesisFirehose, awstypes.LogFormatJson, true, awstypes.DestinationTypeCloudWatchLogs, awstypes.LogFormatText),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrEngine, "redis"),
-					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.destination_type", "cloudwatch-logs"),
 					resource.TestCheckResourceAttr(dataSourceName, "log_delivery_configuration.0.log_format", "text"),

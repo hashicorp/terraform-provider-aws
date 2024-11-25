@@ -72,8 +72,12 @@ func resourcePrincipalAssociationCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).RAMClient(ctx)
 
 	resourceShareARN, principal := d.Get("resource_share_arn").(string), d.Get(names.AttrPrincipal).(string)
-	id := errs.Must(flex.FlattenResourceId([]string{resourceShareARN, principal}, principalAssociationResourceIDPartCount, false))
-	_, err := findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)
+	id, err := flex.FlattenResourceId([]string{resourceShareARN, principal}, principalAssociationResourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	_, err = findPrincipalAssociationByTwoPartKey(ctx, conn, resourceShareARN, principal)
 
 	switch {
 	case err == nil:

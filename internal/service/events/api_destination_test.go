@@ -6,6 +6,7 @@ package events_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -130,7 +131,7 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethod),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpoint),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "invocation_rate_limit_per_second", fmt.Sprint(invocationRateLimitPerSecond)),
+					resource.TestCheckResourceAttr(resourceName, "invocation_rate_limit_per_second", strconv.Itoa(invocationRateLimitPerSecond)),
 				),
 			},
 			{
@@ -153,7 +154,7 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpointModified),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
-					resource.TestCheckResourceAttr(resourceName, "invocation_rate_limit_per_second", fmt.Sprint(invocationRateLimitPerSecondModified)),
+					resource.TestCheckResourceAttr(resourceName, "invocation_rate_limit_per_second", strconv.Itoa(invocationRateLimitPerSecondModified)),
 				),
 			},
 			{
@@ -171,7 +172,7 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpointModified),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
-					resource.TestCheckResourceAttr(resourceName, "invocation_rate_limit_per_second", fmt.Sprint(invocationRateLimitPerSecond)),
+					resource.TestCheckResourceAttr(resourceName, "invocation_rate_limit_per_second", strconv.Itoa(invocationRateLimitPerSecond)),
 				),
 			},
 		},

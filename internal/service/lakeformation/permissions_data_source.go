@@ -5,8 +5,8 @@ package lakeformation
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
@@ -354,7 +354,7 @@ func dataSourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta
 
 	allPermissions, err := waitPermissionsReady(ctx, conn, input, tableType, columnNames, excludedColumnNames, columnWildcard)
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(prettify(input))))
+	d.SetId(strconv.Itoa(create.StringHashcode(prettify(input))))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Lake Formation permissions: %s", err)
