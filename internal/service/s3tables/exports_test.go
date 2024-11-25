@@ -8,11 +8,13 @@ var (
 	NewResourceTable             = newResourceTable
 	NewResourceTableBucket       = newResourceTableBucket
 	NewResourceTableBucketPolicy = newResourceTableBucketPolicy
+	ResourceTablePolicy          = newResourceTablePolicy
 
 	FindNamespace         = findNamespace
 	FindTable             = findTable
 	FindTableBucket       = findTableBucket
 	FindTableBucketPolicy = findTableBucketPolicy
+	FindTablePolicy       = findTablePolicy
 
 	TableIDFromTableARN = tableIDFromTableARN
 )

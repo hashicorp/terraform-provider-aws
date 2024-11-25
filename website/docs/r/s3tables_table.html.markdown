@@ -122,7 +122,7 @@ import {
 }
 ```
 
-Using `terraform import`, import S3 Tables Table using the `example_id_arg`.
+Using `terraform import`, import S3 Tables Table using the `table_bucket_arn`, the value of `namespace`, and the value of `name`, separated by a semicolon (`;`).
 For example:
 
 ```console

@@ -36,6 +36,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceTableBucketPolicy,
 			Name:    "Table Bucket Policy",
 		},
+		{
+			Factory: newResourceTablePolicy,
+			Name:    "Table Policy",
+		},
 	}
 }
 
