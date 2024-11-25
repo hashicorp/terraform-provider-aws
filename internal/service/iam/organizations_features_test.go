@@ -35,7 +35,7 @@ func TestAccIAMOrganizationsFeatures_serial(t *testing.T) {
 
 func testAccOrganizationsFeatures_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_iam_organization_features.test"
+	resourceName := "aws_iam_organizations_features.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -54,7 +54,7 @@ func testAccOrganizationsFeatures_basic(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enabled_features"), knownvalue.SetSizeExact(2)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_capabilities"), knownvalue.SetExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enabled_features"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("RootCredentialsManagement"),
 						knownvalue.StringExact("RootSessions"),
 					})),
@@ -71,7 +71,7 @@ func testAccOrganizationsFeatures_basic(t *testing.T) {
 
 func testAccOrganizationsFeatures_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_iam_organization_features.test"
+	resourceName := "aws_iam_organizations_features.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -97,7 +97,7 @@ func testAccOrganizationsFeatures_disappears(t *testing.T) {
 
 func testAccOrganizationsFeatures_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_iam_organization_features.test"
+	resourceName := "aws_iam_organizations_features.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -116,7 +116,7 @@ func testAccOrganizationsFeatures_update(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enabled_features"), knownvalue.SetSizeExact(1)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_capabilities"), knownvalue.SetExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enabled_features"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("RootCredentialsManagement"),
 					})),
 				},
@@ -133,7 +133,7 @@ func testAccOrganizationsFeatures_update(t *testing.T) {
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enabled_features"), knownvalue.SetSizeExact(1)),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_capabilities"), knownvalue.SetExact([]knownvalue.Check{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enabled_features"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("RootSessions"),
 					})),
 				},
@@ -185,7 +185,7 @@ func testAccCheckOrganizationsFeaturesExists(ctx context.Context, n string) reso
 
 func testAccOrganizationsFeaturesConfig_basic(features []string) string {
 	return fmt.Sprintf(`
-resource "aws_iam_organization_features" "test" {
+resource "aws_iam_organizations_features" "test" {
   enabled_features = [%[1]s]
 }
 `, fmt.Sprintf(`"%s"`, strings.Join(features, `", "`)))
