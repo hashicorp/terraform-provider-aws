@@ -161,7 +161,7 @@ This resource supports the following arguments:
 * `address` - (Optional) IP address from an EC2 BYOIP pool. This option is only available for VPC EIPs.
 * `associate_with_private_ip` - (Optional) User-specified primary or secondary private IP address to associate with the Elastic IP address. If no private IP address is specified, the Elastic IP address is associated with the primary private IP address.
 * `customer_owned_ipv4_pool` - (Optional) ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing).
-* `domain` - Indicates if this EIP is for use in VPC (`vpc`).
+* `domain` - (Optional) Indicates if this EIP is for use in VPC (`vpc`).
 * `instance` - (Optional) EC2 instance ID.
 * `ipam_pool_id`- (Optional) The ID of an IPAM pool which has an Amazon-provided or BYOIP public IPv4 CIDR provisioned to it.
 * `network_border_group` - (Optional) Location from which the IP address is advertised. Use this parameter to limit the address to this location.
@@ -230,4 +230,4 @@ Using `terraform import`, import EIPs in a VPC using their Allocation ID. For ex
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AssociateAddress.html
 
-<!-- cache-key: cdktf-0.20.8 input-fc859c27b8ed39f1aa79d1a35464a0828f069a21f0ee0b6396a7029a6bbcc2f7 -->
+<!-- cache-key: cdktf-0.20.8 input-91c4da492b7ac21398af60a42ce1f750e891e175c42245bafa1a30196d770bbe -->

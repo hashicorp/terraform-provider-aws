@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -2586,7 +2587,14 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		needsModify = true
 		input.StorageType = aws.String(d.Get(names.AttrStorageType).(string))
 
+		// Need to send the iops and allocated_size if migrating to a gp3 volume that's larger than the threshold.
+		if aws.ToString(input.StorageType) == storageTypeGP3 && !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
+			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
+			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
+		}
+
 		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.ToString(input.StorageType)) {
+			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
 			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 		}
 	}
@@ -2811,6 +2819,42 @@ func waitDBInstanceAvailable(ctx context.Context, conn *rds.Client, id string, t
 		Timeout: timeout,
 	}
 	options.Apply(stateConf)
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DBInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBInstanceStopped(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.DBInstance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			instanceStatusBackingUp,
+			instanceStatusConfiguringEnhancedMonitoring,
+			instanceStatusConfiguringIAMDatabaseAuth,
+			instanceStatusConfiguringLogExports,
+			instanceStatusCreating,
+			instanceStatusMaintenance,
+			instanceStatusModifying,
+			instanceStatusMovingToVPC,
+			instanceStatusRebooting,
+			instanceStatusRenaming,
+			instanceStatusResettingMasterCredentials,
+			instanceStatusStarting,
+			instanceStatusStopping,
+			instanceStatusStorageFull,
+			instanceStatusUpgrading,
+		},
+		Target:                    []string{instanceStatusStopped},
+		Refresh:                   statusDBInstance(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+		Delay:                     10 * time.Second,
+		MinTimeout:                3 * time.Second,
+	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
@@ -3047,4 +3091,44 @@ func flattenEndpoint(apiObject *types.Endpoint) map[string]interface{} {
 	}
 
 	return tfMap
+}
+
+func startInstance(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) error {
+	var err error
+
+	tflog.Info(ctx, "Starting RDS Instance", map[string]any{
+		"rds_instance_id": id,
+	})
+	_, err = conn.StartDBInstance(ctx, &rds.StartDBInstanceInput{
+		DBInstanceIdentifier: &id,
+	})
+
+	if err != nil {
+		return fmt.Errorf("starting RDS Instance (%s): %w", id, err)
+	}
+
+	if _, err := waitDBInstanceAvailable(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for RDS Instance (%s) start: %w", id, err)
+	}
+
+	return nil
+}
+
+func stopInstance(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) error {
+	tflog.Info(ctx, "Stopping RDS Instance", map[string]any{
+		"rds_instance_id": id,
+	})
+	_, err := conn.StopDBInstance(ctx, &rds.StopDBInstanceInput{
+		DBInstanceIdentifier: &id,
+	})
+
+	if err != nil {
+		return fmt.Errorf("stopping RDS Instance (%s): %w", id, err)
+	}
+
+	if _, err := waitDBInstanceStopped(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for RDS Instance (%s) stop: %w", id, err)
+	}
+
+	return nil
 }

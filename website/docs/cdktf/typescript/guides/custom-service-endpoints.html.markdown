@@ -345,6 +345,7 @@ class MyConvertedCode extends TerraformStack {
 |STS (Security Token)|`sts`|`AWS_ENDPOINT_URL_STS`|`sts`|
 |SWF (Simple Workflow)|`swf`|`AWS_ENDPOINT_URL_SWF`|`swf`|
 |CloudWatch Synthetics|`synthetics`|`AWS_ENDPOINT_URL_SYNTHETICS`|`synthetics`|
+|Tax Settings|`taxsettings`|`AWS_ENDPOINT_URL_TAXSETTINGS`|`taxsettings`|
 |Timestream for InfluxDB|`timestreaminfluxdb`|`AWS_ENDPOINT_URL_TIMESTREAM_INFLUXDB`|`timestream_influxdb`|
 |Timestream Write|`timestreamwrite`|`AWS_ENDPOINT_URL_TIMESTREAM_WRITE`|`timestream_write`|
 |Transcribe|`transcribe`(or `transcribeservice`)|`AWS_ENDPOINT_URL_TRANSCRIBE`|`transcribe`|
@@ -466,4 +467,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-d0a8223c41ffa69ec9860297a292de0f947723f1e74ea61de738b44154e87b43 -->
+<!-- cache-key: cdktf-0.20.8 input-700d24e32436a3ee4a58a01b04c6c9d73513eb5022f6c37b8cdb2d1e7a3126f0 -->

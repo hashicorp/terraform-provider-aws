@@ -35,6 +35,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceExportTask,
 		},
+		{
+			Factory: newResourceInstanceState,
+			Name:    "Instance State",
+		},
 	}
 }
 

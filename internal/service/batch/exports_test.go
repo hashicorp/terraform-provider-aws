@@ -12,6 +12,7 @@ var (
 
 	EquivalentContainerPropertiesJSON       = equivalentContainerPropertiesJSON
 	EquivalentECSPropertiesJSON             = equivalentECSPropertiesJSON
+	EquivalentEKSPropertiesJSON             = equivalentEKSPropertiesJSON
 	EquivalentNodePropertiesJSON            = equivalentNodePropertiesJSON
 	ExpandEC2ConfigurationsUpdate           = expandEC2ConfigurationsUpdate
 	ExpandLaunchTemplateSpecificationUpdate = expandLaunchTemplateSpecificationUpdate
