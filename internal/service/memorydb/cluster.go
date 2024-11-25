@@ -682,7 +682,7 @@ func statusClusterSecurityGroups(ctx context.Context, conn *memorydb.Client, nam
 	}
 }
 
-func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Cluster, error) {
+func waitClusterAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.Cluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
 		Target:  []string{clusterStatusAvailable},

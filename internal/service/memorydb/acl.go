@@ -276,7 +276,7 @@ func statusACL(ctx context.Context, conn *memorydb.Client, name string) retry.St
 	}
 }
 
-func waitACLActive(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.ACL, error) {
+func waitACLActive(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.ACL, error) { //nolint:unparam
 	const (
 		timeout = 5 * time.Minute
 	)
