@@ -14,6 +14,7 @@ var (
 	ResourceGroupPolicyAttachment     = resourceGroupPolicyAttachment
 	ResourceInstanceProfile           = resourceInstanceProfile
 	ResourceOpenIDConnectProvider     = resourceOpenIDConnectProvider
+	ResourceOrganizationsFeatures     = newOrganizationsFeaturesResource
 	ResourcePolicy                    = resourcePolicy
 	ResourcePolicyAttachment          = resourcePolicyAttachment
 	ResourceRolePolicy                = resourceRolePolicy

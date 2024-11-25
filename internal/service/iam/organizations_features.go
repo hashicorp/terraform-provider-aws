@@ -22,9 +22,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_iam_organization_features", name="Organization Features")
-func newResourceOrganizationFeatures(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceOrganizationFeatures{}
+// @FrameworkResource("aws_iam_organizations_features", name="Organizations Features")
+func newOrganizationsFeaturesResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &organizationsFeaturesResource{}
 	return r, nil
 }
 
@@ -32,15 +32,15 @@ const (
 	ResNameOrganizationFeatures = "IAM Organization Features"
 )
 
-type resourceOrganizationFeatures struct {
+type organizationsFeaturesResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceOrganizationFeatures) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (*organizationsFeaturesResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_iam_organization_features"
 }
 
-func (r *resourceOrganizationFeatures) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *organizationsFeaturesResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: schema.StringAttribute{
@@ -60,7 +60,7 @@ func (r *resourceOrganizationFeatures) Schema(ctx context.Context, req resource.
 	}
 }
 
-func (r *resourceOrganizationFeatures) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *organizationsFeaturesResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().IAMClient(ctx)
 
 	var plan resourceOrganizationFeaturesModel
@@ -92,7 +92,7 @@ func (r *resourceOrganizationFeatures) Create(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceOrganizationFeatures) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *organizationsFeaturesResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().IAMClient(ctx)
 
 	var state resourceOrganizationFeaturesModel
@@ -119,7 +119,7 @@ func (r *resourceOrganizationFeatures) Read(ctx context.Context, req resource.Re
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceOrganizationFeatures) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *organizationsFeaturesResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().IAMClient(ctx)
 
 	var plan, state resourceOrganizationFeaturesModel
@@ -152,7 +152,7 @@ func (r *resourceOrganizationFeatures) Update(ctx context.Context, req resource.
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceOrganizationFeatures) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *organizationsFeaturesResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().IAMClient(ctx)
 
 	var state resourceOrganizationFeaturesModel
@@ -175,7 +175,7 @@ func (r *resourceOrganizationFeatures) Delete(ctx context.Context, req resource.
 	}
 }
 
-func (r *resourceOrganizationFeatures) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *organizationsFeaturesResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 

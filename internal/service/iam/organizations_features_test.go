@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMOrganizationFeatures_basic(t *testing.T) {
+func TestAccIAMOrganizationsFeatures_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var organizationfeatures iam.ListOrganizationsFeaturesOutput
 	resourceName := "aws_iam_organization_features.test"
@@ -33,12 +33,12 @@ func TestAccIAMOrganizationFeatures_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationFeaturesDestroy(ctx),
+		CheckDestroy:             testAccCheckOrganizationsFeaturesDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrganizationFeaturesConfig_basic([]string{"RootCredentialsManagement", "RootSessions"}),
+				Config: testAccOrganizationsFeaturesConfig_basic([]string{"RootCredentialsManagement", "RootSessions"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationFeaturesExists(ctx, resourceName, &organizationfeatures),
+					testAccCheckOrganizationsFeaturesExists(ctx, resourceName, &organizationfeatures),
 					resource.TestCheckResourceAttr(resourceName, "features.0", "RootCredentialsManagement"),
 					resource.TestCheckResourceAttr(resourceName, "features.1", "RootSessions"),
 				),
@@ -49,9 +49,9 @@ func TestAccIAMOrganizationFeatures_basic(t *testing.T) {
 				ImportStateVerify: false,
 			},
 			{
-				Config: testAccOrganizationFeaturesConfig_basic([]string{"RootCredentialsManagement"}),
+				Config: testAccOrganizationsFeaturesConfig_basic([]string{"RootCredentialsManagement"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationFeaturesExists(ctx, resourceName, &organizationfeatures),
+					testAccCheckOrganizationsFeaturesExists(ctx, resourceName, &organizationfeatures),
 					resource.TestCheckResourceAttr(resourceName, "features.0", "RootCredentialsManagement"),
 				),
 			}, {
@@ -60,9 +60,9 @@ func TestAccIAMOrganizationFeatures_basic(t *testing.T) {
 				ImportStateVerify: false,
 			},
 			{
-				Config: testAccOrganizationFeaturesConfig_basic([]string{"RootSessions"}),
+				Config: testAccOrganizationsFeaturesConfig_basic([]string{"RootSessions"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationFeaturesExists(ctx, resourceName, &organizationfeatures),
+					testAccCheckOrganizationsFeaturesExists(ctx, resourceName, &organizationfeatures),
 					resource.TestCheckResourceAttr(resourceName, "features.0", "RootSessions"),
 				),
 			},
@@ -70,7 +70,7 @@ func TestAccIAMOrganizationFeatures_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckOrganizationFeaturesDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckOrganizationsFeaturesDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
@@ -94,7 +94,7 @@ func testAccCheckOrganizationFeaturesDestroy(ctx context.Context) resource.TestC
 	}
 }
 
-func testAccCheckOrganizationFeaturesExists(ctx context.Context, name string, organizationfeatures *iam.ListOrganizationsFeaturesOutput) resource.TestCheckFunc {
+func testAccCheckOrganizationsFeaturesExists(ctx context.Context, name string, organizationfeatures *iam.ListOrganizationsFeaturesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -113,7 +113,7 @@ func testAccCheckOrganizationFeaturesExists(ctx context.Context, name string, or
 	}
 }
 
-func testAccOrganizationFeaturesConfig_basic(features []string) string {
+func testAccOrganizationsFeaturesConfig_basic(features []string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_organization_features" "test" {
   features = [%[1]s]
