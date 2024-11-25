@@ -221,7 +221,13 @@ func (r *teamsChannelConfigurationResource) Update(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	if teamsChannelConfigurationHasChanges(ctx, new, old) {
+	diff, d := fwflex.Calculate(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
 		input := &chatbot.UpdateMicrosoftTeamsChannelConfigurationInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
@@ -417,19 +423,4 @@ type teamsChannelConfigurationResourceModel struct {
 	TenantID                  types.String                     `tfsdk:"tenant_id"`
 	Timeouts                  timeouts.Value                   `tfsdk:"timeouts"`
 	UserAuthorizationRequired types.Bool                       `tfsdk:"user_authorization_required"`
-}
-
-func teamsChannelConfigurationHasChanges(_ context.Context, plan, state teamsChannelConfigurationResourceModel) bool {
-	return !plan.ChannelID.Equal(state.ChannelID) ||
-		!plan.ChannelName.Equal(state.ChannelName) ||
-		!plan.ChatConfigurationARN.Equal(state.ChatConfigurationARN) ||
-		!plan.ConfigurationName.Equal(state.ConfigurationName) ||
-		!plan.GuardrailPolicyARNs.Equal(state.GuardrailPolicyARNs) ||
-		!plan.IAMRoleARN.Equal(state.IAMRoleARN) ||
-		!plan.LoggingLevel.Equal(state.LoggingLevel) ||
-		!plan.SNSTopicARNs.Equal(state.SNSTopicARNs) ||
-		!plan.TeamID.Equal(state.TeamID) ||
-		!plan.TeamName.Equal(state.TeamName) ||
-		!plan.TenantID.Equal(state.TenantID) ||
-		!plan.UserAuthorizationRequired.Equal(state.UserAuthorizationRequired)
 }
