@@ -205,6 +205,8 @@ func (r *teamsChannelConfigurationResource) Read(ctx context.Context, request re
 		return
 	}
 
+	setTagsOut(ctx, output.Tags)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
