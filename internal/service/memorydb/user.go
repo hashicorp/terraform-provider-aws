@@ -141,13 +141,13 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("access_string", user.AccessString)
 	d.Set(names.AttrARN, user.ARN)
 	if v := user.Authentication; v != nil {
-		authenticationMode := map[string]interface{}{
+		tfMap := map[string]interface{}{
 			"passwords":      d.Get("authentication_mode.0.passwords"),
 			"password_count": aws.ToInt32(v.PasswordCount),
 			names.AttrType:   v.Type,
 		}
 
-		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
+		if err := d.Set("authentication_mode", []interface{}{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting authentication_mode: %s", err)
 		}
 	}
