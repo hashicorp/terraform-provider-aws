@@ -39,7 +39,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Guardrail")
+// @FrameworkResource("aws_bedrock_guardrail", name="Guardrail")
 // @Tags(identifierAttribute="guardrail_arn")
 func newResourceGuardrail(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGuardrail{}

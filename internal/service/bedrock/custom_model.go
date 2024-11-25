@@ -41,7 +41,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Custom Model")
+// @FrameworkResource("aws_bedrock_custom_model", name="Custom Model")
 // @Tags(identifierAttribute="job_arn")
 func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customModelResource{}
