@@ -21,7 +21,7 @@ resource "aws_organizations_organization" "example" {
 }
 
 resource "aws_iam_organizations_features" "example" {
-  features = [
+  enabled_features = [
     "RootCredentialsManagement",
     "RootSessions"
   ]
@@ -32,7 +32,7 @@ resource "aws_iam_organizations_features" "example" {
 
 The following arguments are required:
 
-* `features` - (Required) List of IAM features to enable. Valid values are `RootCredentialsManagement` and `RootSessions`.
+* `enabled_features` - (Required) List of IAM features to enable. Valid values are `RootCredentialsManagement` and `RootSessions`.
 
 ## Attribute Reference
 

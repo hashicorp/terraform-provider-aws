@@ -46,6 +46,7 @@ var (
 	FindGroupPolicyAttachmentsByName    = findGroupPolicyAttachmentsByName
 	FindInstanceProfileByName           = findInstanceProfileByName
 	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
+	FindOrganizationsFeatures           = findOrganizationsFeatures
 	FindPolicyByARN                     = findPolicyByARN
 	FindRolePoliciesByName              = findRolePoliciesByName
 	FindRolePolicyAttachmentsByName     = findRolePolicyAttachmentsByName

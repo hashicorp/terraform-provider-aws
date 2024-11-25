@@ -5,30 +5,42 @@ package iam_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccIAMOrganizationsFeatures_basic(t *testing.T) {
+func TestAccIAMOrganizationsFeatures_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic:      testAccOrganizationsFeatures_basic,
+		acctest.CtDisappears: testAccOrganizationsFeatures_disappears,
+		"update":             testAccOrganizationsFeatures_update,
+	}
+
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccOrganizationsFeatures_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var organizationfeatures iam.ListOrganizationsFeaturesOutput
 	resourceName := "aws_iam_organization_features.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "iam.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
@@ -38,23 +50,78 @@ func TestAccIAMOrganizationsFeatures_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationsFeaturesConfig_basic([]string{"RootCredentialsManagement", "RootSessions"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationsFeaturesExists(ctx, resourceName, &organizationfeatures),
-					resource.TestCheckResourceAttr(resourceName, "features.0", "RootCredentialsManagement"),
-					resource.TestCheckResourceAttr(resourceName, "features.1", "RootSessions"),
+					testAccCheckOrganizationsFeaturesExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enabled_features"), knownvalue.SetSizeExact(2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_capabilities"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("RootCredentialsManagement"),
+						knownvalue.StringExact("RootSessions"),
+					})),
+				},
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: false,
 			},
+		},
+	})
+}
+
+func testAccOrganizationsFeatures_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_iam_organization_features.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "iam.amazonaws.com")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationsFeaturesDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrganizationsFeaturesConfig_basic([]string{"RootCredentialsManagement", "RootSessions"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationsFeaturesExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfiam.ResourceOrganizationsFeatures, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccOrganizationsFeatures_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_iam_organization_features.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "iam.amazonaws.com")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOrganizationsFeaturesDestroy(ctx),
+		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationsFeaturesConfig_basic([]string{"RootCredentialsManagement"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationsFeaturesExists(ctx, resourceName, &organizationfeatures),
-					resource.TestCheckResourceAttr(resourceName, "features.0", "RootCredentialsManagement"),
+					testAccCheckOrganizationsFeaturesExists(ctx, resourceName),
 				),
-			}, {
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enabled_features"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_capabilities"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("RootCredentialsManagement"),
+					})),
+				},
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: false,
@@ -62,9 +129,14 @@ func TestAccIAMOrganizationsFeatures_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationsFeaturesConfig_basic([]string{"RootSessions"}),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationsFeaturesExists(ctx, resourceName, &organizationfeatures),
-					resource.TestCheckResourceAttr(resourceName, "features.0", "RootSessions"),
+					testAccCheckOrganizationsFeaturesExists(ctx, resourceName),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("enabled_features"), knownvalue.SetSizeExact(1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("number_capabilities"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("RootSessions"),
+					})),
+				},
 			},
 		},
 	})
@@ -75,48 +147,46 @@ func testAccCheckOrganizationsFeaturesDestroy(ctx context.Context) resource.Test
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_iam_organization_features" {
+			if rs.Type != "aws_iam_organizations_features" {
 				continue
 			}
 
-			out, err := conn.ListOrganizationsFeatures(ctx, &iam.ListOrganizationsFeaturesInput{})
-			if err != nil {
-				return create.Error(names.IAM, create.ErrActionCheckingDestroyed, tfiam.ResNameOrganizationFeatures, rs.Primary.Attributes["organization_id"], err)
-			}
-			if len(out.EnabledFeatures) == 0 {
-				return nil
+			_, err := tfiam.FindOrganizationsFeatures(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.IAM, create.ErrActionCheckingDestroyed, tfiam.ResNameOrganizationFeatures, rs.Primary.Attributes["organization_id"], errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("IAM Organizations Features %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckOrganizationsFeaturesExists(ctx context.Context, name string, organizationfeatures *iam.ListOrganizationsFeaturesOutput) resource.TestCheckFunc {
+func testAccCheckOrganizationsFeaturesExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameOrganizationFeatures, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
-		resp, err := conn.ListOrganizationsFeatures(ctx, &iam.ListOrganizationsFeaturesInput{})
-		if err != nil {
-			return create.Error(names.IAM, create.ErrActionCheckingExistence, tfiam.ResNameOrganizationFeatures, rs.Primary.Attributes["organization_id"], err)
-		}
 
-		*organizationfeatures = *resp
+		_, err := tfiam.FindOrganizationsFeatures(ctx, conn)
 
-		return nil
+		return err
 	}
 }
 
 func testAccOrganizationsFeaturesConfig_basic(features []string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_organization_features" "test" {
-  features = [%[1]s]
+  enabled_features = [%[1]s]
 }
 `, fmt.Sprintf(`"%s"`, strings.Join(features, `", "`)))
 }
