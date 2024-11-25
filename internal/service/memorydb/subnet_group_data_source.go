@@ -57,7 +57,7 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	name := d.Get(names.AttrName).(string)
 
-	group, err := FindSubnetGroupByName(ctx, conn, name)
+	group, err := findSubnetGroupByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB Subnet Group", err))

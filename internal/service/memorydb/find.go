@@ -14,27 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindSubnetGroupByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.SubnetGroup, error) {
-	input := memorydb.DescribeSubnetGroupsInput{
-		SubnetGroupName: aws.String(name),
-	}
-
-	output, err := conn.DescribeSubnetGroups(ctx, &input)
-
-	if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output.SubnetGroups)
-}
-
 func FindUserByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.User, error) {
 	input := memorydb.DescribeUsersInput{
 		UserName: aws.String(name),

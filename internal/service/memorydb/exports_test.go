@@ -16,6 +16,7 @@ var (
 	FindClusterByName        = findClusterByName
 	FindParameterGroupByName = findParameterGroupByName
 	FindSnapshotByName       = findSnapshotByName
+	FindSubnetGroupByName    = findSubnetGroupByName
 	ParameterChanges         = parameterChanges
 	ParameterHash            = parameterHash
 )
