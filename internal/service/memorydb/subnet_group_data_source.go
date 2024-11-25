@@ -63,12 +63,6 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.SetId(aws.ToString(group.Name))
-
-	var subnetIds []*string
-	for _, subnet := range group.Subnets {
-		subnetIds = append(subnetIds, subnet.Identifier)
-	}
-
 	d.Set(names.AttrARN, group.ARN)
 	d.Set(names.AttrDescription, group.Description)
 	d.Set(names.AttrName, group.Name)
