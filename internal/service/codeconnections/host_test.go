@@ -176,7 +176,7 @@ func testAccCheckHostExists(ctx context.Context, n string, v *types.Host) resour
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeConnectionsClient(ctx)
 
-		output, err := tfcodeconnections.FindHostByArn(ctx, conn, rs.Primary.ID)
+		output, err := tfcodeconnections.FindHostByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -197,7 +197,7 @@ func testAccCheckHostDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfcodeconnections.FindHostByArn(ctx, conn, rs.Primary.ID)
+			_, err := tfcodeconnections.FindHostByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

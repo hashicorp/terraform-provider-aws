@@ -75,7 +75,7 @@ func (r *connectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 256),
-					stringvalidator.RegexMatches(hostArnRegex, ""),
+					stringvalidator.RegexMatches(hostARNRegex, ""),
 					stringvalidator.ConflictsWith(path.Expressions{
 						path.MatchRoot("provider_type"),
 					}...),
@@ -91,7 +91,7 @@ func (r *connectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 					stringvalidator.LengthBetween(1, 32),
 				},
 			},
-			"owner_account_id": schema.StringAttribute{
+			names.AttrOwnerAccountID: schema.StringAttribute{
 				Computed: true,
 			},
 			"provider_type": schema.StringAttribute{
@@ -121,7 +121,7 @@ func (r *connectionResource) Schema(ctx context.Context, req resource.SchemaRequ
 }
 
 var (
-	hostArnRegex = regexache.MustCompile("^arn:aws(-[\\w]+)*:(codestar-connections|codeconnections):.+:[0-9]{12}:host\\/.+")
+	hostARNRegex = regexache.MustCompile("^arn:aws(-[\\w]+)*:(codestar-connections|codeconnections):.+:[0-9]{12}:host\\/.+")
 )
 
 func (r *connectionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -275,7 +275,7 @@ func (r *connectionResource) ModifyPlan(ctx context.Context, request resource.Mo
 }
 
 func (r *connectionResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
 func waitConnectionCreated(ctx context.Context, conn *codeconnections.Client, id string, timeout time.Duration) (*awstypes.Connection, error) {

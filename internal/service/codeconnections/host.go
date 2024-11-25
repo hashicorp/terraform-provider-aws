@@ -122,7 +122,7 @@ func (r *hostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -190,7 +190,7 @@ func (r *hostResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	out, err := findHostByArn(ctx, conn, data.ID.ValueString())
+	out, err := findHostbyARN(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -310,8 +310,8 @@ func (r *hostResource) ModifyPlan(ctx context.Context, request resource.ModifyPl
 }
 
 func (r *hostResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-	resource.ImportStatePassthroughID(ctx, path.Root("arn"), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrARN), req, resp)
 }
 
 const (
@@ -358,7 +358,7 @@ func waitHostDeleted(ctx context.Context, conn *codeconnections.Client, id strin
 
 func statusHost(ctx context.Context, conn *codeconnections.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findHostByArn(ctx, conn, id)
+		out, err := findHostbyARN(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -371,7 +371,7 @@ func statusHost(ctx context.Context, conn *codeconnections.Client, id string) re
 	}
 }
 
-func findHostByArn(ctx context.Context, conn *codeconnections.Client, arn string) (*awstypes.Host, error) {
+func findHostbyARN(ctx context.Context, conn *codeconnections.Client, arn string) (*awstypes.Host, error) {
 	input := &codeconnections.GetHostInput{
 		HostArn: aws.String(arn),
 	}

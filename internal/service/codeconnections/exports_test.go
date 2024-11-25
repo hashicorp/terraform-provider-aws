@@ -9,5 +9,5 @@ var (
 	ResourceHost       = newHostResource
 
 	FindConnectionByARN = findConnectionByARN
-	FindHostByArn       = findHostByArn
+	FindHostByARN       = findHostbyARN
 )

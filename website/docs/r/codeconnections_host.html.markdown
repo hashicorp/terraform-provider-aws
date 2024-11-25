@@ -17,7 +17,7 @@ Terraform resource for managing an AWS CodeConnections Host.
 ### Basic Usage
 
 ```terraform
-resource "aws_codeconnections_host" "example"  {
+resource "aws_codeconnections_host" "example" {
   name              = "example-host"
   provider_endpoint = "https://example.com"
   provider_type     = "GitHubEnterpriseServer"
