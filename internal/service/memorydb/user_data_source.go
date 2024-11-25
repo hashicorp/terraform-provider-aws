@@ -67,7 +67,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	userName := d.Get(names.AttrUserName).(string)
 
-	user, err := FindUserByName(ctx, conn, userName)
+	user, err := findUserByName(ctx, conn, userName)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB User", err))

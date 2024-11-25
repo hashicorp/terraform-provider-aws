@@ -17,6 +17,7 @@ var (
 	FindParameterGroupByName = findParameterGroupByName
 	FindSnapshotByName       = findSnapshotByName
 	FindSubnetGroupByName    = findSubnetGroupByName
+	FindUserByName           = findUserByName
 	ParameterChanges         = parameterChanges
 	ParameterHash            = parameterHash
 )
