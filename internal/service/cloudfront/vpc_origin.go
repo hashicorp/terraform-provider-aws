@@ -260,6 +260,24 @@ func (r *cloudfrontVPCOriginResource) Delete(ctx context.Context, request resour
 	}
 }
 
+func findVPCOriginByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetVpcOriginOutput, error) {
+	input := &cloudfront.GetVpcOriginInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetVpcOrigin(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.VpcOrigin == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 type vpcOriginModel struct {
 	ARN                     types.String                                        `tfsdk:"arn"`
 	CreatedTime             timetypes.RFC3339                                   `tfsdk:"created_time"`

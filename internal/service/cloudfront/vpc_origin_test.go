@@ -6,6 +6,9 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -42,7 +45,26 @@ func TestAccCloudFrontVPCOrigin_basic(t *testing.T) {
 
 func testAccCheckVPCOriginExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		// Not yet implemented
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudfront_vpc_origin" {
+				continue
+			}
+
+			_, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
+		}
+
 		return nil
 	}
 }

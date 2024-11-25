@@ -36,5 +36,6 @@ var (
 	FindPublicKeyByID                          = findPublicKeyByID
 	FindRealtimeLogConfigByARN                 = findRealtimeLogConfigByARN
 	FindResponseHeadersPolicyByID              = findResponseHeadersPolicyByID
+	FindVPCOriginByID                          = findVPCOriginByID
 	WaitDistributionDeployed                   = waitDistributionDeployed
 )
