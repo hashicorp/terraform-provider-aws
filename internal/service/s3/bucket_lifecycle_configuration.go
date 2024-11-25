@@ -720,12 +720,12 @@ func expandLifecycleRuleAndOperator(ctx context.Context, tfMap map[string]interf
 
 	apiObject := &types.LifecycleRuleAndOperator{}
 
-	if v, ok := tfMap["object_size_greater_than"].(int); ok && v >= 0 {
-		apiObject.ObjectSizeGreaterThan = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(tfMap["object_size_greater_than"].(string)).ValueInt64(); !null && v >= 0 {
+		apiObject.ObjectSizeGreaterThan = aws.Int64(v)
 	}
 
-	if v, ok := tfMap["object_size_less_than"].(int); ok && v > 0 {
-		apiObject.ObjectSizeLessThan = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(tfMap["object_size_less_than"].(string)).ValueInt64(); !null && v > 0 {
+		apiObject.ObjectSizeLessThan = aws.Int64(v)
 	}
 
 	if v, ok := tfMap[names.AttrPrefix].(string); ok {

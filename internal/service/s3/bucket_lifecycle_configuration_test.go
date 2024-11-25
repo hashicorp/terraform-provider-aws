@@ -1039,7 +1039,7 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, "prefix1", 0),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.0.and.0.object_size_greater_than", "0"),
