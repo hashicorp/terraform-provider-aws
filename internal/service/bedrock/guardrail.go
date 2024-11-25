@@ -41,6 +41,9 @@ import (
 
 // @FrameworkResource("aws_bedrock_guardrail", name="Guardrail")
 // @Tags(identifierAttribute="guardrail_arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetGuardrailOutput")
+// @Testing(importStateIdFunc="testAccGuardrailImportStateIDFunc")
+// @Testing(importStateIdAttribute="guardrail_id")
 func newResourceGuardrail(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceGuardrail{}
 
