@@ -5,66 +5,121 @@ package iam
 
 import (
 	"context"
+	"fmt"
 	"reflect"
+	"regexp"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_iam_roles", name="Roles")
-func dataSourceRoles() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceRolesRead,
+// @FrameworkDataSource("aws_iam_roles",name="Roles")
+func newDataSourceRoles(context.Context) (datasource.DataSourceWithConfigure, error) {
+	d := &dataSourceRoles{}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARNs: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+	return d, nil
+}
+
+type dataSourceRoles struct {
+	framework.DataSourceWithConfigure
+}
+
+func (*dataSourceRoles) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_iam_roles"
+}
+
+func (d *dataSourceRoles) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrARNs: schema.ListAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
 			},
-			"name_regex": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsValidRegExp,
+			"name_regex": schema.StringAttribute{
+				Optional: true,
 			},
-			names.AttrNames: {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+			names.AttrNames: schema.ListAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
 			},
-			"path_prefix": {
-				Type:     schema.TypeString,
+			"path_prefix": schema.StringAttribute{
 				Optional: true,
 			},
 		},
 	}
 }
 
-func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+func (d *dataSourceRoles) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data RolesDataSourceModel
 
-	input := &iam.ListRolesInput{}
-
-	if v, ok := d.GetOk("path_prefix"); ok {
-		input.PathPrefix = aws.String(v.(string))
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
+	conn := d.Meta().IAMClient(ctx)
+
+	pathPrefix := data.PathPrefix.ValueString()
+	nameRegex := data.NameRegex.ValueString()
+
+	if _, err := regexp.Compile(nameRegex); err != nil {
+		response.Diagnostics.AddError("Invalid name_regex", err.Error())
+		return
+	}
+	results, err := findRoles(ctx, conn, pathPrefix, nameRegex)
+	if err != nil {
+		response.Diagnostics.AddError("find roles", err.Error())
+		return
+	}
+
+	var roleResuls RoleResultsModel
+	roleResuls.ARNs = make([]*string, len(results))
+	roleResuls.Names = make([]*string, len(results))
+	for i := 0; i < len(results); i++ {
+		roleResuls.ARNs[i] = results[i].Arn
+		roleResuls.Names[i] = results[i].RoleName
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, &roleResuls, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+type RoleResultsModel struct {
+	ARNs  []*string
+	Names []*string
+}
+
+type RolesDataSourceModel struct {
+	ARNs       types.List   `tfsdk:"arns"`
+	Names      types.List   `tfsdk:"names"`
+	PathPrefix types.String `tfsdk:"path_prefix"`
+	NameRegex  types.String `tfsdk:"name_regex"`
+}
+
+func findRoles(ctx context.Context, conn *iam.Client, pathPrefix string, nameRegex string) ([]awstypes.Role, error) {
 	var results []awstypes.Role
+
+	input := &iam.ListRolesInput{}
+	if pathPrefix != "" {
+		input.PathPrefix = &pathPrefix
+	}
 
 	pages := iam.NewListRolesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading IAM roles: %s", err)
+			return nil, fmt.Errorf("reading IAM roles: %s", err)
 		}
 
 		for _, role := range page.Roles {
@@ -72,30 +127,12 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta inter
 				continue
 			}
 
-			if v, ok := d.GetOk("name_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.ToString(role.RoleName)) {
+			if nameRegex != "" && !regexache.MustCompile(nameRegex).MatchString(aws.ToString(role.RoleName)) {
 				continue
 			}
 
-			results = append(results, role)
+			results = append((results), role)
 		}
 	}
-
-	d.SetId(meta.(*conns.AWSClient).Region)
-
-	var arns, nms []string
-
-	for _, r := range results {
-		arns = append(arns, aws.ToString(r.Arn))
-		nms = append(nms, aws.ToString(r.RoleName))
-	}
-
-	if err := d.Set(names.AttrARNs, arns); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
-	}
-
-	if err := d.Set(names.AttrNames, nms); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting names: %s", err)
-	}
-
-	return diags
+	return results, nil
 }
