@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -73,9 +74,9 @@ func (r *teamsChannelConfigurationResource) Schema(ctx context.Context, request 
 				Required: true,
 			},
 			"guardrail_policy_arns": schema.ListAttribute{
-				Optional:    true,
-				Computed:    true,
-				ElementType: types.StringType,
+				CustomType: fwtypes.ListOfStringType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
 				},
@@ -92,12 +93,12 @@ func (r *teamsChannelConfigurationResource) Schema(ctx context.Context, request 
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"sns_topic_arns": schema.ListAttribute{
-				Optional:    true,
-				Computed:    true,
-				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
+			"sns_topic_arns": schema.SetAttribute{
+				CustomType: fwtypes.SetOfStringType,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -408,19 +409,19 @@ func waitTeamsChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Cli
 }
 
 type teamsChannelConfigurationResourceModel struct {
-	ChannelID                 types.String                     `tfsdk:"channel_id"`
-	ChannelName               types.String                     `tfsdk:"channel_name"`
-	ChatConfigurationARN      types.String                     `tfsdk:"chat_configuration_arn"`
-	ConfigurationName         types.String                     `tfsdk:"configuration_name"`
-	GuardrailPolicyARNs       types.List                       `tfsdk:"guardrail_policy_arns"`
-	IAMRoleARN                types.String                     `tfsdk:"iam_role_arn"`
-	LoggingLevel              fwtypes.StringEnum[loggingLevel] `tfsdk:"logging_level"`
-	SNSTopicARNs              types.List                       `tfsdk:"sns_topic_arns"`
-	Tags                      tftags.Map                       `tfsdk:"tags"`
-	TagsAll                   tftags.Map                       `tfsdk:"tags_all"`
-	TeamID                    types.String                     `tfsdk:"team_id"`
-	TeamName                  types.String                     `tfsdk:"team_name"`
-	TenantID                  types.String                     `tfsdk:"tenant_id"`
-	Timeouts                  timeouts.Value                   `tfsdk:"timeouts"`
-	UserAuthorizationRequired types.Bool                       `tfsdk:"user_authorization_required"`
+	ChannelID                 types.String                      `tfsdk:"channel_id"`
+	ChannelName               types.String                      `tfsdk:"channel_name"`
+	ChatConfigurationARN      types.String                      `tfsdk:"chat_configuration_arn"`
+	ConfigurationName         types.String                      `tfsdk:"configuration_name"`
+	GuardrailPolicyARNs       fwtypes.ListValueOf[types.String] `tfsdk:"guardrail_policy_arns"`
+	IAMRoleARN                types.String                      `tfsdk:"iam_role_arn"`
+	LoggingLevel              fwtypes.StringEnum[loggingLevel]  `tfsdk:"logging_level"`
+	SNSTopicARNs              fwtypes.SetValueOf[types.String]  `tfsdk:"sns_topic_arns"`
+	Tags                      tftags.Map                        `tfsdk:"tags"`
+	TagsAll                   tftags.Map                        `tfsdk:"tags_all"`
+	TeamID                    types.String                      `tfsdk:"team_id"`
+	TeamName                  types.String                      `tfsdk:"team_name"`
+	TenantID                  types.String                      `tfsdk:"tenant_id"`
+	Timeouts                  timeouts.Value                    `tfsdk:"timeouts"`
+	UserAuthorizationRequired types.Bool                        `tfsdk:"user_authorization_required"`
 }
