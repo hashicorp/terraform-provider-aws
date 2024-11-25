@@ -39,7 +39,7 @@ func TestAccS3TablesTableBucketPolicy_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableBucketPolicyConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableBucketPolicyExists(ctx, resourceName, &tablebucketpolicy),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_policy"),
 					resource.TestCheckResourceAttrPair(resourceName, "table_bucket_arn", "aws_s3tables_table_bucket.test", names.AttrARN),
@@ -59,9 +59,6 @@ func TestAccS3TablesTableBucketPolicy_basic(t *testing.T) {
 
 func TestAccS3TablesTableBucketPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var tablebucketpolicy s3tables.GetTableBucketPolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -78,7 +75,7 @@ func TestAccS3TablesTableBucketPolicy_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableBucketPolicyConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableBucketPolicyExists(ctx, resourceName, &tablebucketpolicy),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.NewResourceTableBucketPolicy, resourceName),
 				),

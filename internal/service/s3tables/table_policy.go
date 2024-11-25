@@ -189,7 +189,6 @@ func (r *resourceTablePolicy) Update(ctx context.Context, req resource.UpdateReq
 func (r *resourceTablePolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().S3TablesClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceTablePolicyModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {

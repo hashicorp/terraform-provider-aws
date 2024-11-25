@@ -35,7 +35,6 @@ const (
 
 type resourceTableBucketPolicy struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
 }
 
 func (r *resourceTableBucketPolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -117,7 +116,7 @@ func (r *resourceTableBucketPolicy) Read(ctx context.Context, req resource.ReadR
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.S3Tables, create.ErrActionSetting, ResNameTableBucketPolicy, state.TableBucketARN.String(), err),
+			create.ProblemStandardMessage(names.S3Tables, create.ErrActionReading, ResNameTableBucketPolicy, state.TableBucketARN.String(), err),
 			err.Error(),
 		)
 		return

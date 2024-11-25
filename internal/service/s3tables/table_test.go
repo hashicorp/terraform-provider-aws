@@ -124,7 +124,7 @@ func TestAccS3TablesTable_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_basic(rName, namespace, bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfs3tables.NewResourceTable, resourceName),
 				),
@@ -162,7 +162,7 @@ func TestAccS3TablesTable_rename(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_basic(rName, namespace, bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -177,7 +177,7 @@ func TestAccS3TablesTable_rename(t *testing.T) {
 			},
 			{
 				Config: testAccTableConfig_basic(rNameUpdated, namespace, bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "modified_at"),
@@ -243,7 +243,7 @@ func TestAccS3TablesTable_updateNamespace(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_basic(rName, namespace, bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, namespace),
 				),
@@ -258,7 +258,7 @@ func TestAccS3TablesTable_updateNamespace(t *testing.T) {
 			},
 			{
 				Config: testAccTableConfig_basic(rName, namespaceUpdated, bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, namespaceUpdated),
 					resource.TestCheckResourceAttrSet(resourceName, "modified_at"),
@@ -325,7 +325,7 @@ func TestAccS3TablesTable_updateNameAndNamespace(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableConfig_basic(rName, namespace, bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, namespace),
@@ -341,7 +341,7 @@ func TestAccS3TablesTable_updateNameAndNamespace(t *testing.T) {
 			},
 			{
 				Config: testAccTableConfig_basic(rNameUpdated, namespaceUpdated, bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableExists(ctx, resourceName, &table),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, namespaceUpdated),
@@ -498,7 +498,7 @@ func testAccCheckTableExists(ctx context.Context, name string, table *s3tables.G
 			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTable, name, errors.New("not found"))
 		}
 
-		if rs.Primary.Attributes["table_bucket_arn"] == "" || rs.Primary.Attributes[names.AttrName] == "" {
+		if rs.Primary.Attributes["table_bucket_arn"] == "" || rs.Primary.Attributes[names.AttrNamespace] == "" || rs.Primary.Attributes[names.AttrName] == "" {
 			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameTable, name, errors.New("not set"))
 		}
 
@@ -571,14 +571,14 @@ resource "aws_s3tables_table" "test" {
   maintenance_configuration = {
     iceberg_compaction = {
       settings = {
-        target_file_size_mb  = %[4]d
+        target_file_size_mb = %[4]d
       }
       status = "enabled"
     }
     iceberg_snapshot_management = {
       settings = {
         max_snapshot_age_hours = %[5]d
-		min_snapshots_to_keep  = %[6]d
+        min_snapshots_to_keep  = %[6]d
       }
       status = "enabled"
     }
