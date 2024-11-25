@@ -553,7 +553,7 @@ type icebergSnapshotManagementSettingsModel struct {
 	MinSnapshotsToKeep  types.Int32 `tfsdk:"min_snapshots_to_keep"`
 }
 
-func flattenTableMaintenanceConfiguration(ctx context.Context, in *s3tables.GetTableMaintenanceConfigurationOutput) (result fwtypes.ObjectValueOf[tableMaintenanceConfigurationModel], diags diag.Diagnostics) {
+func flattenTableMaintenanceConfiguration(ctx context.Context, in *s3tables.GetTableMaintenanceConfigurationOutput) (result fwtypes.ObjectValueOf[tableMaintenanceConfigurationModel], diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	compactionConfig := in.Configuration[string(awstypes.TableMaintenanceTypeIcebergCompaction)]
 	compactionConfigModel, d := flattenTableMaintenanceIcebergCompaction(ctx, &compactionConfig)
 	diags.Append(d...)
@@ -578,7 +578,7 @@ func flattenTableMaintenanceConfiguration(ctx context.Context, in *s3tables.GetT
 	return result, diags
 }
 
-func expandTableMaintenanceIcebergCompaction(ctx context.Context, in fwtypes.ObjectValueOf[tableMaintenanceConfigurationValueModel[icebergCompactionSettingsModel]]) (result awstypes.TableMaintenanceConfigurationValue, diags diag.Diagnostics) {
+func expandTableMaintenanceIcebergCompaction(ctx context.Context, in fwtypes.ObjectValueOf[tableMaintenanceConfigurationValueModel[icebergCompactionSettingsModel]]) (result awstypes.TableMaintenanceConfigurationValue, diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-expander-functions
 	model, d := in.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -597,7 +597,7 @@ func expandTableMaintenanceIcebergCompaction(ctx context.Context, in fwtypes.Obj
 	return result, diags
 }
 
-func flattenTableMaintenanceIcebergCompaction(ctx context.Context, in *awstypes.TableMaintenanceConfigurationValue) (result fwtypes.ObjectValueOf[tableMaintenanceConfigurationValueModel[icebergCompactionSettingsModel]], diags diag.Diagnostics) {
+func flattenTableMaintenanceIcebergCompaction(ctx context.Context, in *awstypes.TableMaintenanceConfigurationValue) (result fwtypes.ObjectValueOf[tableMaintenanceConfigurationValueModel[icebergCompactionSettingsModel]], diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	iceberg, d := flattenIcebergCompactionSettings(ctx, in.Settings)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -614,7 +614,7 @@ func flattenTableMaintenanceIcebergCompaction(ctx context.Context, in *awstypes.
 	return result, diags
 }
 
-func expandIcebergCompactionSettings(ctx context.Context, in fwtypes.ObjectValueOf[icebergCompactionSettingsModel]) (result *awstypes.TableMaintenanceSettingsMemberIcebergCompaction, diags diag.Diagnostics) {
+func expandIcebergCompactionSettings(ctx context.Context, in fwtypes.ObjectValueOf[icebergCompactionSettingsModel]) (result *awstypes.TableMaintenanceSettingsMemberIcebergCompaction, diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-expander-functions
 	model, d := in.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -630,7 +630,7 @@ func expandIcebergCompactionSettings(ctx context.Context, in fwtypes.ObjectValue
 	}, diags
 }
 
-func flattenIcebergCompactionSettings(ctx context.Context, in awstypes.TableMaintenanceSettings) (result fwtypes.ObjectValueOf[icebergCompactionSettingsModel], diags diag.Diagnostics) {
+func flattenIcebergCompactionSettings(ctx context.Context, in awstypes.TableMaintenanceSettings) (result fwtypes.ObjectValueOf[icebergCompactionSettingsModel], diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	switch t := in.(type) {
 	case *awstypes.TableMaintenanceSettingsMemberIcebergCompaction:
 		var model icebergCompactionSettingsModel
@@ -648,7 +648,7 @@ func flattenIcebergCompactionSettings(ctx context.Context, in awstypes.TableMain
 	return result, diags
 }
 
-func expandTableMaintenanceIcebergSnapshotManagement(ctx context.Context, in fwtypes.ObjectValueOf[tableMaintenanceConfigurationValueModel[icebergSnapshotManagementSettingsModel]]) (result awstypes.TableMaintenanceConfigurationValue, diags diag.Diagnostics) {
+func expandTableMaintenanceIcebergSnapshotManagement(ctx context.Context, in fwtypes.ObjectValueOf[tableMaintenanceConfigurationValueModel[icebergSnapshotManagementSettingsModel]]) (result awstypes.TableMaintenanceConfigurationValue, diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-expander-functions
 	model, d := in.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -667,7 +667,7 @@ func expandTableMaintenanceIcebergSnapshotManagement(ctx context.Context, in fwt
 	return result, diags
 }
 
-func flattenTableMaintenanceIcebergSnapshotManagement(ctx context.Context, in *awstypes.TableMaintenanceConfigurationValue) (result fwtypes.ObjectValueOf[tableMaintenanceConfigurationValueModel[icebergSnapshotManagementSettingsModel]], diags diag.Diagnostics) {
+func flattenTableMaintenanceIcebergSnapshotManagement(ctx context.Context, in *awstypes.TableMaintenanceConfigurationValue) (result fwtypes.ObjectValueOf[tableMaintenanceConfigurationValueModel[icebergSnapshotManagementSettingsModel]], diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	iceberg, d := flattenIcebergSnapshotManagementSettings(ctx, in.Settings)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -684,7 +684,7 @@ func flattenTableMaintenanceIcebergSnapshotManagement(ctx context.Context, in *a
 	return result, diags
 }
 
-func expandIcebergSnapshotManagementSettings(ctx context.Context, in fwtypes.ObjectValueOf[icebergSnapshotManagementSettingsModel]) (result *awstypes.TableMaintenanceSettingsMemberIcebergSnapshotManagement, diags diag.Diagnostics) {
+func expandIcebergSnapshotManagementSettings(ctx context.Context, in fwtypes.ObjectValueOf[icebergSnapshotManagementSettingsModel]) (result *awstypes.TableMaintenanceSettingsMemberIcebergSnapshotManagement, diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-expander-functions
 	model, d := in.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -700,7 +700,7 @@ func expandIcebergSnapshotManagementSettings(ctx context.Context, in fwtypes.Obj
 	}, diags
 }
 
-func flattenIcebergSnapshotManagementSettings(ctx context.Context, in awstypes.TableMaintenanceSettings) (result fwtypes.ObjectValueOf[icebergSnapshotManagementSettingsModel], diags diag.Diagnostics) {
+func flattenIcebergSnapshotManagementSettings(ctx context.Context, in awstypes.TableMaintenanceSettings) (result fwtypes.ObjectValueOf[icebergSnapshotManagementSettingsModel], diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	switch t := in.(type) {
 	case *awstypes.TableMaintenanceSettingsMemberIcebergSnapshotManagement:
 		var model icebergSnapshotManagementSettingsModel

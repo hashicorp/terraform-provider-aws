@@ -388,7 +388,7 @@ type icebergUnreferencedFileRemovalSettingsModel struct {
 	UnreferencedDays types.Int32 `tfsdk:"unreferenced_days"`
 }
 
-func flattenTableBucketMaintenanceConfiguration(ctx context.Context, in *s3tables.GetTableBucketMaintenanceConfigurationOutput) (result fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationModel], diags diag.Diagnostics) {
+func flattenTableBucketMaintenanceConfiguration(ctx context.Context, in *s3tables.GetTableBucketMaintenanceConfigurationOutput) (result fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationModel], diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	unreferencedFileRemovalConfig := in.Configuration[string(awstypes.TableBucketMaintenanceTypeIcebergUnreferencedFileRemoval)]
 	unreferencedFileRemovalConfigModel, d := flattenTableBucketMaintenanceIcebergUnreferencedFileRemoval(ctx, &unreferencedFileRemovalConfig)
 	diags.Append(d...)
@@ -405,7 +405,7 @@ func flattenTableBucketMaintenanceConfiguration(ctx context.Context, in *s3table
 	return result, diags
 }
 
-func expandTableBucketMaintenanceIcebergUnreferencedFileRemoval(ctx context.Context, in fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel[icebergUnreferencedFileRemovalSettingsModel]]) (result awstypes.TableBucketMaintenanceConfigurationValue, diags diag.Diagnostics) {
+func expandTableBucketMaintenanceIcebergUnreferencedFileRemoval(ctx context.Context, in fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel[icebergUnreferencedFileRemovalSettingsModel]]) (result awstypes.TableBucketMaintenanceConfigurationValue, diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-expander-functions
 	model, d := in.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -424,7 +424,7 @@ func expandTableBucketMaintenanceIcebergUnreferencedFileRemoval(ctx context.Cont
 	return result, diags
 }
 
-func flattenTableBucketMaintenanceIcebergUnreferencedFileRemoval(ctx context.Context, in *awstypes.TableBucketMaintenanceConfigurationValue) (result fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel[icebergUnreferencedFileRemovalSettingsModel]], diags diag.Diagnostics) {
+func flattenTableBucketMaintenanceIcebergUnreferencedFileRemoval(ctx context.Context, in *awstypes.TableBucketMaintenanceConfigurationValue) (result fwtypes.ObjectValueOf[tableBucketMaintenanceConfigurationValueModel[icebergUnreferencedFileRemovalSettingsModel]], diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	iceberg, d := flattenIcebergUnreferencedFileRemovalSettings(ctx, in.Settings)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -441,7 +441,7 @@ func flattenTableBucketMaintenanceIcebergUnreferencedFileRemoval(ctx context.Con
 	return result, diags
 }
 
-func expandIcebergUnreferencedFileRemovalSettings(ctx context.Context, in fwtypes.ObjectValueOf[icebergUnreferencedFileRemovalSettingsModel]) (result *awstypes.TableBucketMaintenanceSettingsMemberIcebergUnreferencedFileRemoval, diags diag.Diagnostics) {
+func expandIcebergUnreferencedFileRemovalSettings(ctx context.Context, in fwtypes.ObjectValueOf[icebergUnreferencedFileRemovalSettingsModel]) (result *awstypes.TableBucketMaintenanceSettingsMemberIcebergUnreferencedFileRemoval, diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-expander-functions
 	model, d := in.ToPtr(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
@@ -457,7 +457,7 @@ func expandIcebergUnreferencedFileRemovalSettings(ctx context.Context, in fwtype
 	}, diags
 }
 
-func flattenIcebergUnreferencedFileRemovalSettings(ctx context.Context, in awstypes.TableBucketMaintenanceSettings) (result fwtypes.ObjectValueOf[icebergUnreferencedFileRemovalSettingsModel], diags diag.Diagnostics) {
+func flattenIcebergUnreferencedFileRemovalSettings(ctx context.Context, in awstypes.TableBucketMaintenanceSettings) (result fwtypes.ObjectValueOf[icebergUnreferencedFileRemovalSettingsModel], diags diag.Diagnostics) { // nosemgrep:ci.semgrep.framework.manual-flattener-functions
 	switch t := in.(type) {
 	case *awstypes.TableBucketMaintenanceSettingsMemberIcebergUnreferencedFileRemoval:
 		var model icebergUnreferencedFileRemovalSettingsModel
