@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.28.5
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.46
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.20
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.40
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.41
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/acm v1.30.6
@@ -93,7 +93,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/detective v1.31.6
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.34.6
-	github.com/aws/aws-sdk-go-v2/service/directconnect v1.29.6
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.39.5
@@ -174,7 +174,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.3
-	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.31.6
+	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.6
 	github.com/aws/aws-sdk-go-v2/service/oam v1.15.6
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.44.1
@@ -213,7 +213,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/rum v1.21.6
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.68.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.168.0
