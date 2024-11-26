@@ -153,7 +153,7 @@ val services = mapOf(
     "mediapackage" to ServiceSpec("Elemental MediaPackage"),
     "mediapackagev2" to ServiceSpec("Elemental MediaPackage Version 2"),
     "mediastore" to ServiceSpec("Elemental MediaStore"),
-    "memorydb" to ServiceSpec("MemoryDB for Redis"),
+    "memorydb" to ServiceSpec("MemoryDB"),
     "mq" to ServiceSpec("MQ", vpcLock = true),
     "mwaa" to ServiceSpec("MWAA (Managed Workflows for Apache Airflow)", vpcLock = true),
     "neptune" to ServiceSpec("Neptune"),
