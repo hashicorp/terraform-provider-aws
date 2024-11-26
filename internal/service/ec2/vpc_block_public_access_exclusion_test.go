@@ -5,40 +5,32 @@ package ec2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Acceptance test access AWS and cost money to run.
-func TestAccVPCBlockPublicAccessExclusion_basic_vpc(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_basicVPC(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	blockMode := string(awstypes.InternetGatewayBlockModeBlockBidirectional)
-	exclusionModeBidrectional := string(awstypes.InternetGatewayExclusionModeAllowBidirectional)
-	internetGatewayExclusionModeAllowEgress := string(awstypes.InternetGatewayExclusionModeAllowEgress)
-
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	internetGatewayExclusionMode := string(awstypes.InternetGatewayExclusionModeAllowEgress)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2)
 			testAccPreCheckVPCBlockPublicAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -46,37 +38,16 @@ func TestAccVPCBlockPublicAccessExclusion_basic_vpc(t *testing.T) {
 		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCBlockPublicAccessExclusionConfig_basic_vpc(blockMode, exclusionModeBidrectional),
+				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`vpcbpa-exclude-([0-9a-fA-F]+)$`)),
-					resource.TestMatchResourceAttr(resourceName, "exclusion_id", regexache.MustCompile(`vpcbpa-exclude-([0-9a-fA-F]+)$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "internet_gateway_exclusion_mode", exclusionModeBidrectional),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrResourceARN, "ec2", regexache.MustCompile(`vpc/+.`)),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVPCBlockPublicAccessExclusionConfig_basic_vpc(blockMode, internetGatewayExclusionModeAllowEgress),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`vpcbpa-exclude-([0-9a-fA-F]+)$`)),
-					resource.TestMatchResourceAttr(resourceName, "exclusion_id", regexache.MustCompile(`vpcbpa-exclude-([0-9a-fA-F]+)$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "internet_gateway_exclusion_mode", internetGatewayExclusionModeAllowEgress),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
-					resource.TestCheckResourceAttrSet(resourceName, "reason"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrResourceARN, "ec2", regexache.MustCompile(`vpc/+.`)),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion_mode"), knownvalue.StringExact(internetGatewayExclusionMode)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSubnetID), knownvalue.Null()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVPCID), knownvalue.NotNull()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -87,23 +58,15 @@ func TestAccVPCBlockPublicAccessExclusion_basic_vpc(t *testing.T) {
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_basic_subnet(t *testing.T) {
+func TestAccVPCBlockPublicAccessExclusion_basicSubnet(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	blockMode := string(awstypes.InternetGatewayBlockModeBlockBidirectional)
-	exclusionModeBidrectional := string(awstypes.InternetGatewayExclusionModeAllowBidirectional)
-	internetGatewayExclusionModeAllowEgress := string(awstypes.InternetGatewayExclusionModeAllowEgress)
-
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	internetGatewayExclusionMode := string(awstypes.InternetGatewayExclusionModeAllowEgress)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2)
 			testAccPreCheckVPCBlockPublicAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -111,37 +74,16 @@ func TestAccVPCBlockPublicAccessExclusion_basic_subnet(t *testing.T) {
 		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCBlockPublicAccessExclusionConfig_basic_subnet(blockMode, exclusionModeBidrectional),
+				Config: testAccVPCBlockPublicAccessExclusionConfig_basicSubnet(rName, internetGatewayExclusionMode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`vpcbpa-exclude-([0-9a-fA-F]+)$`)),
-					resource.TestMatchResourceAttr(resourceName, "exclusion_id", regexache.MustCompile(`vpcbpa-exclude-([0-9a-fA-F]+)$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "internet_gateway_exclusion_mode", exclusionModeBidrectional),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrSubnetID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrResourceARN, "ec2", regexache.MustCompile(`subnet/+.`)),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVPCBlockPublicAccessExclusionConfig_basic_subnet(blockMode, internetGatewayExclusionModeAllowEgress),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`vpcbpa-exclude-([0-9a-fA-F]+)$`)),
-					resource.TestMatchResourceAttr(resourceName, "exclusion_id", regexache.MustCompile(`vpcbpa-exclude-([0-9a-fA-F]+)$`)),
-					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttrSet(resourceName, "creation_timestamp"),
-					resource.TestCheckResourceAttr(resourceName, "internet_gateway_exclusion_mode", internetGatewayExclusionModeAllowEgress),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrSubnetID),
-					resource.TestCheckResourceAttrSet(resourceName, "reason"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrResourceARN, "ec2", regexache.MustCompile(`subnet/+.`)),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion_mode"), knownvalue.StringExact(internetGatewayExclusionMode)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrResourceARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrSubnetID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrVPCID), knownvalue.Null()),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -154,18 +96,13 @@ func TestAccVPCBlockPublicAccessExclusion_basic_subnet(t *testing.T) {
 
 func TestAccVPCBlockPublicAccessExclusion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	blockMode := string(awstypes.InternetGatewayBlockModeBlockBidirectional)
-	exclusionMode := string(awstypes.InternetGatewayExclusionModeAllowBidirectional)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	internetGatewayExclusionMode := string(awstypes.InternetGatewayExclusionModeAllowEgress)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2)
 			testAccPreCheckVPCBlockPublicAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -173,11 +110,12 @@ func TestAccVPCBlockPublicAccessExclusion_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCBlockPublicAccessExclusionConfig_basic_vpc(blockMode, exclusionMode),
+				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCBlockPublicAccessExclusion, resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -192,80 +130,52 @@ func testAccCheckBlockPublicAccessExclusionDestroy(ctx context.Context) resource
 				continue
 			}
 
-			id := rs.Primary.Attributes[names.AttrID]
-
-			out, err := tfec2.FindVPCBlockPublicAccessExclusionByID(ctx, conn, id)
+			_, err := tfec2.FindVPCBlockPublicAccessExclusionByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
-				return nil
+				continue
 			}
+
 			if err != nil {
-				return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVPCBlockPublicAccessExclusion, id, err)
+				return err
 			}
 
-			//If the status is Delete Complete, that indicates the resource has been destroyed
-			if out.State == awstypes.VpcBlockPublicAccessExclusionStateDeleteComplete {
-				return nil
-			}
-
-			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVPCBlockPublicAccessExclusion, id, errors.New("not destroyed"))
+			return fmt.Errorf("VPC Block Public Access Exclusion %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckBlockPublicAccessExclusionExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckBlockPublicAccessExclusionExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCBlockPublicAccessExclusion, name, errors.New("not found"))
-		}
-
-		id := rs.Primary.Attributes[names.AttrID]
-
-		if id == "" {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCBlockPublicAccessExclusion, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-		_, err := tfec2.FindVPCBlockPublicAccessExclusionByID(ctx, conn, id)
 
-		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameVPCBlockPublicAccessExclusion, rs.Primary.Attributes[names.AttrID], err)
-		}
+		_, err := tfec2.FindVPCBlockPublicAccessExclusionByID(ctx, conn, rs.Primary.ID)
 
-		return nil
+		return err
 	}
 }
 
-const testAccVPCBlockPublicAccessExclusionConfig_base = `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-}
-`
-
-func testAccVPCBlockPublicAccessExclusionConfig_basic_vpc(rBlockMode, rExclusionMode string) string {
-	return acctest.ConfigCompose(testAccVPCBlockPublicAccessExclusionConfig_base, fmt.Sprintf(`
-
+func testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_vpc_block_public_access_exclusion" "test" {
-  internet_gateway_exclusion_mode = %[2]q
+  internet_gateway_exclusion_mode = %[1]q
   vpc_id                          = aws_vpc.test.id
 }
-`, rBlockMode, rExclusionMode))
+`, internetGatewayExclusionMode))
 }
 
-func testAccVPCBlockPublicAccessExclusionConfig_basic_subnet(rBlockMode, rExclusionMode string) string {
-	return acctest.ConfigCompose(testAccVPCBlockPublicAccessExclusionConfig_base, fmt.Sprintf(`
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id     = aws_vpc.test.id
-}
-
+func testAccVPCBlockPublicAccessExclusionConfig_basicSubnet(rName, internetGatewayExclusionMode string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_vpc_block_public_access_exclusion" "test" {
-  internet_gateway_exclusion_mode = %[2]q
-  subnet_id                       = aws_subnet.test.id
+  internet_gateway_exclusion_mode = %[1]q
+  subnet_id                       = aws_subnet.test[0].id
 }
-`, rBlockMode, rExclusionMode))
+`, internetGatewayExclusionMode))
 }

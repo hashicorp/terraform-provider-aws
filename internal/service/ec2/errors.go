@@ -124,6 +124,7 @@ const (
 	errCodeInvalidVerifiedAccessInstanceIdNotFound                 = "InvalidVerifiedAccessInstanceId.NotFound"
 	errCodeInvalidVerifiedAccessTrustProviderIdNotFound            = "InvalidVerifiedAccessTrustProviderId.NotFound"
 	errCodeInvalidVolumeNotFound                                   = "InvalidVolume.NotFound"
+	errCodeInvalidVpcBlockPublicAccessExclusionIdNotFound          = "InvalidVpcBlockPublicAccessExclusionId.NotFound"
 	errCodeNatGatewayNotFound                                      = "NatGatewayNotFound"
 	errCodeNetworkACLEntryAlreadyExists                            = "NetworkAclEntryAlreadyExists"
 	errCodeOperationNotPermitted                                   = "OperationNotPermitted"
@@ -138,7 +139,6 @@ const (
 	errCodeVPNConnectionLimitExceeded                              = "VpnConnectionLimitExceeded"
 	errCodeVPNGatewayLimitExceeded                                 = "VpnGatewayLimitExceeded"
 	errCodeVolumeInUse                                             = "VolumeInUse"
-	errCodeInvalidVPCBlockPublicAccessExclusionID                  = "InvalidVpcBlockPublicAccessExclusionId.NotFound"
 )
 
 func cancelSpotFleetRequestError(apiObject *awstypes.CancelSpotFleetRequestsError) error {

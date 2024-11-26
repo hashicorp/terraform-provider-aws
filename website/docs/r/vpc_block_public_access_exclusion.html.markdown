@@ -60,11 +60,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC Block Public Access Exclusion.
-* `exclusion_id` - The ID of the VPC Block Public Access Exclusion.
-* `resource_arn` - The Amazon Resource Name (ARN) the Exclusion.
-* `creation_timestamp` - Creation Timestamp.
-* `last_update_timestamp` - Last update Timestamp.
-* `reason` - The reason for the update.
+* `resource_arn` - The Amazon Resource Name (ARN) the excluded resource.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -77,7 +73,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Block Public Access Exclusion using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Block Public Access Exclusion using the `id`. For example:
 
 ```terraform
 import {
@@ -86,7 +82,7 @@ import {
 }
 ```
 
-Using `terraform import`, import EC2 (Elastic Compute Cloud) VPC Block Public Access Exclusion using the `example_id_arg`. For example:
+Using `terraform import`, import EC2 (Elastic Compute Cloud) VPC Block Public Access Exclusion using the `id`. For example:
 
 ```console
 % terraform import aws_vpc_block_public_access_exclusion.example vpcbpa-exclude-1234abcd

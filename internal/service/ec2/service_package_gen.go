@@ -66,13 +66,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Security Group VPC Association",
 		},
 		{
-			Factory: newResourceVPCBlockPublicAccessExclusion,
-			Name:    "Block Public Access Exclusion",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrID,
-			},
-		},
-		{
 			Factory: newSecurityGroupEgressRuleResource,
 			Name:    "Security Group Egress Rule",
 			Tags: &types.ServicePackageResourceTags{
@@ -93,6 +86,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newTransitGatewayDefaultRouteTablePropagationResource,
 			Name:    "Transit Gateway Default Route Table Propagation",
+		},
+		{
+			Factory: newVPCBlockPublicAccessExclusionResource,
+			Name:    "Block Public Access Exclusion",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
 		},
 		{
 			Factory: newVPCBlockPublicAccessOptionsResource,

@@ -6434,16 +6434,6 @@ func findTrafficMirrorTargetByID(ctx context.Context, conn *ec2.Client, id strin
 	return output, nil
 }
 
-func findNetworkInsightsPath(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsPathsInput) (*awstypes.NetworkInsightsPath, error) {
-	output, err := findNetworkInsightsPaths(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
 func findNetworkInsightsAnalysis(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsAnalysesInput) (*awstypes.NetworkInsightsAnalysis, error) {
 	output, err := findNetworkInsightsAnalyses(ctx, conn, input)
 
@@ -6497,6 +6487,16 @@ func findNetworkInsightsAnalysisByID(ctx context.Context, conn *ec2.Client, id s
 	}
 
 	return output, nil
+}
+
+func findNetworkInsightsPath(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsPathsInput) (*awstypes.NetworkInsightsPath, error) {
+	output, err := findNetworkInsightsPaths(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func findNetworkInsightsPaths(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkInsightsPathsInput) ([]awstypes.NetworkInsightsPath, error) {
@@ -6592,4 +6592,69 @@ func findVPCBlockPublicAccessOptions(ctx context.Context, conn *ec2.Client) (*aw
 	}
 
 	return output.VpcBlockPublicAccessOptions, nil
+}
+
+func findVPCBlockPublicAccessExclusion(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcBlockPublicAccessExclusionsInput) (*awstypes.VpcBlockPublicAccessExclusion, error) {
+	output, err := findVPCBlockPublicAccessExclusions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findVPCBlockPublicAccessExclusions(ctx context.Context, conn *ec2.Client, input *ec2.DescribeVpcBlockPublicAccessExclusionsInput) ([]awstypes.VpcBlockPublicAccessExclusion, error) {
+	var output []awstypes.VpcBlockPublicAccessExclusion
+
+	err := describeVPCBlockPublicAccessExclusionsPages(ctx, conn, input, func(page *ec2.DescribeVpcBlockPublicAccessExclusionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.VpcBlockPublicAccessExclusions...)
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVpcBlockPublicAccessExclusionIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func findVPCBlockPublicAccessExclusionByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcBlockPublicAccessExclusion, error) {
+	input := &ec2.DescribeVpcBlockPublicAccessExclusionsInput{
+		ExclusionIds: []string{id},
+	}
+
+	output, err := findVPCBlockPublicAccessExclusion(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.VpcBlockPublicAccessExclusionStateDeleteComplete {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.ExclusionId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }

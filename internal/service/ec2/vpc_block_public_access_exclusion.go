@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -15,29 +14,27 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_vpc_block_public_access_exclusion", name="Block Public Access Exclusion")
+// @FrameworkResource("aws_vpc_block_public_access_exclusion", name="VPC Block Public Access Exclusion")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=true)
-func newResourceVPCBlockPublicAccessExclusion(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceVPCBlockPublicAccessExclusion{}
+func newVPCBlockPublicAccessExclusionResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &vpcBlockPublicAccessExclusionResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -46,48 +43,29 @@ func newResourceVPCBlockPublicAccessExclusion(_ context.Context) (resource.Resou
 	return r, nil
 }
 
-const (
-	ResNameVPCBlockPublicAccessExclusion = "VPC Block Public Access Exclusion"
-)
-
-type resourceVPCBlockPublicAccessExclusion struct {
+type vpcBlockPublicAccessExclusionResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
-func (r *resourceVPCBlockPublicAccessExclusion) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_vpc_block_public_access_exclusion"
+func (*vpcBlockPublicAccessExclusionResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_vpc_block_public_access_exclusion"
 }
 
-func (r *resourceVPCBlockPublicAccessExclusion) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *vpcBlockPublicAccessExclusionResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"creation_timestamp": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			"exclusion_id": schema.StringAttribute{
-				Computed: true,
-			},
-			"internet_gateway_exclusion_mode": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.InternetGatewayExclusionMode](),
-				},
-			},
 			names.AttrID: framework.IDAttribute(),
-			"last_update_timestamp": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			"reason": schema.StringAttribute{
-				Computed: true,
+			"internet_gateway_exclusion_mode": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.InternetGatewayExclusionMode](),
+				Required:   true,
 			},
 			names.AttrResourceARN: framework.ARNAttributeComputedOnly(),
 			names.AttrSubnetID: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -95,7 +73,7 @@ func (r *resourceVPCBlockPublicAccessExclusion) Schema(ctx context.Context, req 
 			names.AttrVPCID: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 		},
@@ -109,369 +87,193 @@ func (r *resourceVPCBlockPublicAccessExclusion) Schema(ctx context.Context, req 
 	}
 }
 
-func (r *resourceVPCBlockPublicAccessExclusion) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *vpcBlockPublicAccessExclusionResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data resourceVPCBlockPublicAccessExclusionModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var plan resourceVPCBlockPublicAccessExclusionModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	input := &ec2.CreateVpcBlockPublicAccessExclusionInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input := &ec2.CreateVpcBlockPublicAccessExclusionInput{
-		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcBlockPublicAccessExclusion),
-	}
+	// Additional fields.
+	input.TagSpecifications = getTagSpecificationsIn(ctx, awstypes.ResourceTypeVpcBlockPublicAccessExclusion)
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+	output, err := conn.CreateVpcBlockPublicAccessExclusion(ctx, input)
 
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := conn.CreateVpcBlockPublicAccessExclusion(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCBlockPublicAccessExclusion, plan.ExclusionID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.VpcBlockPublicAccessExclusion == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCBlockPublicAccessExclusion, plan.ExclusionID.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError("creating VPC Block Public Access Exclusion", err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.VpcBlockPublicAccessExclusion, &plan)...)
-	if resp.Diagnostics.HasError() {
+	// Set values for unknowns.
+	data.ExclusionID = fwflex.StringToFramework(ctx, output.VpcBlockPublicAccessExclusion.ExclusionId)
+	data.ResourceARN = fwflex.StringToFramework(ctx, output.VpcBlockPublicAccessExclusion.ResourceArn)
+
+	if _, err := waitVPCBlockPublicAccessExclusionCreated(ctx, conn, data.ExclusionID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ExclusionID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPC Block Public Access Exclusion (%s) create", data.ExclusionID.ValueString()), err.Error())
+
 		return
 	}
 
-	plan.setID()
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitVPCBlockPublicAccessExclusionCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameVPCBlockPublicAccessExclusion, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	// TODO: Read again because the LastUpdateTimeStamp is not provided in the output of the Create Call. At the time of release, if this is changed, then remove this part and uncomment the part above  where the output of create is used to update the plan.
-	desc_out, desc_err := FindVPCBlockPublicAccessExclusionByID(ctx, conn, plan.ID.ValueString())
-	if tfresource.NotFound(desc_err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if desc_err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameVPCBlockPublicAccessExclusion, plan.ID.String(), desc_err),
-			err.Error(),
-		)
-		return
-	}
-	resp.Diagnostics.Append(flex.Flatten(ctx, desc_out, &plan)...)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceVPCBlockPublicAccessExclusion) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
+func (r *vpcBlockPublicAccessExclusionResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data resourceVPCBlockPublicAccessExclusionModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-func (r *resourceVPCBlockPublicAccessExclusion) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().EC2Client(ctx)
 
-	var state resourceVPCBlockPublicAccessExclusionModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	output, err := findVPCBlockPublicAccessExclusionByID(ctx, conn, data.ExclusionID.ValueString())
 
-	if err := state.InitFromID(); err != nil {
-		resp.Diagnostics.AddError("parsing resource ID", err.Error())
-
-		return
-	}
-
-	out, err := FindVPCBlockPublicAccessExclusionByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameVPCBlockPublicAccessExclusion, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading VPC Block Public Access Exclusion (%s)", data.ExclusionID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// Extract VPC Id and Subnet Id to support import
-	resource_arn := state.ResourceARN.ValueString()
+	// Extract VPC ID and Subnet ID.
+	resourceARN, err := arn.Parse(data.ResourceARN.ValueString())
 
-	arn, err := arn.Parse(resource_arn)
 	if err != nil {
-		resp.Diagnostics.AddError("Parsing Resource ARN", err.Error())
+		response.Diagnostics.AddError("parsing Resource ARN", err.Error())
+
 		return
 	}
 
-	if strings.HasPrefix(arn.Resource, "vpc/") {
-		vpc_id := strings.TrimPrefix(arn.Resource, "vpc/")
-		state.VPCID = types.StringValue(vpc_id)
-	} else if strings.HasPrefix(arn.Resource, "subnet/") {
-		subnet_id := strings.TrimPrefix(arn.Resource, "subnet/")
-		state.SubnetID = types.StringValue(subnet_id)
+	if resource := resourceARN.Resource; strings.HasPrefix(resource, "vpc/") {
+		data.VPCID = types.StringValue(strings.TrimPrefix(resource, "vpc/"))
+	} else if strings.HasPrefix(resource, "subnet/") {
+		data.SubnetID = types.StringValue(strings.TrimPrefix(resource, "subnet/"))
 	} else {
-		resp.Diagnostics.AddError("Parsing Resource_ARN", fmt.Sprintf("Unknown resource type: %s", arn.Resource))
+		response.Diagnostics.AddError("parsing Resource_ARN", fmt.Sprintf("unknown resource type: %s", resource))
+
 		return
 	}
 
-	setTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, output.Tags)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceVPCBlockPublicAccessExclusion) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *vpcBlockPublicAccessExclusionResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new, old resourceVPCBlockPublicAccessExclusionModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var plan, state resourceVPCBlockPublicAccessExclusionModel
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if !plan.InternetGatewayExclusionMode.Equal(state.InternetGatewayExclusionMode) {
-		input := ec2.ModifyVpcBlockPublicAccessExclusionInput{
-			ExclusionId:                  state.ID.ValueStringPointer(),
-			InternetGatewayExclusionMode: awstypes.InternetGatewayExclusionMode(plan.InternetGatewayExclusionMode.ValueString()),
+	if !new.InternetGatewayExclusionMode.Equal(old.InternetGatewayExclusionMode) {
+		input := &ec2.ModifyVpcBlockPublicAccessExclusionInput{
+			ExclusionId:                  fwflex.StringFromFramework(ctx, new.ExclusionID),
+			InternetGatewayExclusionMode: new.InternetGatewayExclusionMode.ValueEnum(),
 		}
 
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		_, err := conn.ModifyVpcBlockPublicAccessExclusion(ctx, input)
 
-		out, err := conn.ModifyVpcBlockPublicAccessExclusion(ctx, &input)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.EC2, create.ErrActionUpdating, ResNameVPCBlockPublicAccessExclusion, plan.ExclusionID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.VpcBlockPublicAccessExclusion == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.EC2, create.ErrActionUpdating, ResNameVPCBlockPublicAccessExclusion, plan.ExclusionID.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating VPC Block Public Access Exclusion (%s)", new.ExclusionID.ValueString()), err.Error())
+
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-		if resp.Diagnostics.HasError() {
+		if _, err := waitVPCBlockPublicAccessExclusionUpdated(ctx, conn, new.ExclusionID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for VPC Block Public Access Exclusion (%s) update", new.ExclusionID.ValueString()), err.Error())
+
 			return
 		}
 	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitVPCBlockPublicAccessExclusionUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForUpdate, ResNameVPCBlockPublicAccessExclusion, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	out, err := FindVPCBlockPublicAccessExclusionByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameVPCBlockPublicAccessExclusion, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceVPCBlockPublicAccessExclusion) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *vpcBlockPublicAccessExclusionResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data resourceVPCBlockPublicAccessExclusionModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var state resourceVPCBlockPublicAccessExclusionModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	input := &ec2.DeleteVpcBlockPublicAccessExclusionInput{
+		ExclusionId: fwflex.StringFromFramework(ctx, data.ExclusionID),
+	}
+
+	_, err := conn.DeleteVpcBlockPublicAccessExclusion(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVpcBlockPublicAccessExclusionIdNotFound) {
 		return
 	}
 
-	input := ec2.DeleteVpcBlockPublicAccessExclusionInput{
-		ExclusionId: state.ExclusionID.ValueStringPointer(),
-	}
-
-	_, err := conn.DeleteVpcBlockPublicAccessExclusion(ctx, &input)
-	if err != nil {
-		if !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is in delete-complete state and cannot be deleted") {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameVPCBlockPublicAccessExclusion, state.ID.String(), err),
-				err.Error(),
-			)
-		}
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is in delete-complete state and cannot be deleted") {
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitVPCBlockPublicAccessExclusionDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForDeletion, ResNameVPCBlockPublicAccessExclusion, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting VPC Block Public Access Exclusion (%s)", data.ExclusionID.ValueString()), err.Error())
+
+		return
+	}
+
+	if _, err := waitVPCBlockPublicAccessExclusionDeleted(ctx, conn, data.ExclusionID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPC Block Public Access Exclusion (%s) delete", data.ExclusionID.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceVPCBlockPublicAccessExclusion) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+func (r *vpcBlockPublicAccessExclusionResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
-func waitVPCBlockPublicAccessExclusionCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcBlockPublicAccessExclusion, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateCreateInProgress),
-		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateCreateComplete),
-		Refresh:                   statusVPCBlockPublicAccessExclusion(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            2,
-		ContinuousTargetOccurence: 2,
+func (r *vpcBlockPublicAccessExclusionResource) ConfigValidators(context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot(names.AttrSubnetID),
+			path.MatchRoot(names.AttrVPCID),
+		),
 	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(awstypes.VpcBlockPublicAccessExclusion); ok {
-		return &out, err
-	}
-
-	return nil, err
-}
-
-func waitVPCBlockPublicAccessExclusionUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcBlockPublicAccessExclusion, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateUpdateInProgress),
-		Target: enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateUpdateComplete,
-			awstypes.VpcBlockPublicAccessExclusionStateCreateComplete),
-		Refresh:                   statusVPCBlockPublicAccessExclusion(ctx, conn, id),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(awstypes.VpcBlockPublicAccessExclusion); ok {
-		return &out, err
-	}
-
-	return nil, err
-}
-
-func waitVPCBlockPublicAccessExclusionDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcBlockPublicAccessExclusion, error) {
-	stateConf := &retry.StateChangeConf{
-		// There might API inconsistencies where even after invoking delete, the Describe might come back with a CreateComplete or UpdateComplete status (the status before delete was invoked). To account for that, we are also adding those two statuses as valid statues to retry.
-		Pending: enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateUpdateComplete,
-			awstypes.VpcBlockPublicAccessExclusionStateCreateComplete,
-			awstypes.VpcBlockPublicAccessExclusionStateDeleteInProgress),
-		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateDeleteComplete),
-		Refresh:                   statusVPCBlockPublicAccessExclusion(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            1,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(awstypes.VpcBlockPublicAccessExclusion); ok {
-		return &out, err
-	}
-
-	return nil, err
-}
-
-func statusVPCBlockPublicAccessExclusion(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := FindVPCBlockPublicAccessExclusionByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return &out, string(out.State), nil
-	}
-}
-
-func FindVPCBlockPublicAccessExclusionByID(ctx context.Context, conn *ec2.Client, id string) (*awstypes.VpcBlockPublicAccessExclusion, error) {
-	in := &ec2.DescribeVpcBlockPublicAccessExclusionsInput{
-		ExclusionIds: []string{id},
-	}
-
-	out, err := conn.DescribeVpcBlockPublicAccessExclusions(ctx, in)
-
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCBlockPublicAccessExclusionID) {
-		return nil, &retry.NotFoundError{
-			Message:     "Exclusion Id:" + id + " Not Found",
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || out.VpcBlockPublicAccessExclusions == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return &(out.VpcBlockPublicAccessExclusions[0]), nil
 }
 
 type resourceVPCBlockPublicAccessExclusionModel struct {
-	CreationTimestamp            timetypes.RFC3339 `tfsdk:"creation_timestamp"`
-	ExclusionID                  types.String      `tfsdk:"exclusion_id"`
-	ID                           types.String      `tfsdk:"id"`
-	InternetGatewayExclusionMode types.String      `tfsdk:"internet_gateway_exclusion_mode"`
-	LastUpdateTimestamp          timetypes.RFC3339 `tfsdk:"last_update_timestamp"`
-	Reason                       types.String      `tfsdk:"reason"`
-	ResourceARN                  types.String      `tfsdk:"resource_arn"`
-	SubnetID                     types.String      `tfsdk:"subnet_id"`
-	Timeouts                     timeouts.Value    `tfsdk:"timeouts"`
-	Tags                         tftags.Map        `tfsdk:"tags"`
-	TagsAll                      tftags.Map        `tfsdk:"tags_all"`
-	VPCID                        types.String      `tfsdk:"vpc_id"`
-}
-
-func (data *resourceVPCBlockPublicAccessExclusionModel) InitFromID() error {
-	data.ExclusionID = data.ID
-	return nil
-}
-
-func (data *resourceVPCBlockPublicAccessExclusionModel) setID() {
-	data.ID = data.ExclusionID
+	ExclusionID                  types.String                                              `tfsdk:"id"`
+	InternetGatewayExclusionMode fwtypes.StringEnum[awstypes.InternetGatewayExclusionMode] `tfsdk:"internet_gateway_exclusion_mode"`
+	ResourceARN                  types.String                                              `tfsdk:"resource_arn"`
+	SubnetID                     types.String                                              `tfsdk:"subnet_id"`
+	Tags                         tftags.Map                                                `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                                `tfsdk:"tags_all"`
+	Timeouts                     timeouts.Value                                            `tfsdk:"timeouts"`
+	VPCID                        types.String                                              `tfsdk:"vpc_id"`
 }

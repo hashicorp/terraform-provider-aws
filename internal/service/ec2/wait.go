@@ -3215,3 +3215,68 @@ func waitVPCBlockPublicAccessOptionsUpdated(ctx context.Context, conn *ec2.Clien
 
 	return nil, err
 }
+
+func waitVPCBlockPublicAccessExclusionCreated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcBlockPublicAccessExclusion, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateCreateInProgress),
+		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateCreateComplete),
+		Refresh:                   statusVPCBlockPublicAccessExclusion(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessExclusion); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCBlockPublicAccessExclusionUpdated(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcBlockPublicAccessExclusion, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateUpdateInProgress),
+		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessExclusionStateUpdateComplete),
+		Refresh:                   statusVPCBlockPublicAccessExclusion(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessExclusion); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCBlockPublicAccessExclusionDeleted(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*awstypes.VpcBlockPublicAccessExclusion, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			awstypes.VpcBlockPublicAccessExclusionStateDeleteInProgress,
+			// There might API inconsistencies where even after invoking delete, the Describe might come back with a CreateComplete or UpdateComplete status (the status before delete was invoked).
+			// To account for that, we are also adding those two statuses as valid statues to retry.
+			awstypes.VpcBlockPublicAccessExclusionStateCreateComplete,
+			awstypes.VpcBlockPublicAccessExclusionStateUpdateComplete,
+		),
+		Target:  []string{},
+		Refresh: statusVPCBlockPublicAccessExclusion(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessExclusion); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
