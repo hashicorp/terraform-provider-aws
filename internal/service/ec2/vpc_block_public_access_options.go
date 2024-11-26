@@ -98,19 +98,17 @@ func (r *vpcBlockPublicAccessOptionsResource) Create(ctx context.Context, reques
 		return
 	}
 
-	options, err := waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, r.CreateTimeout(ctx, data.Timeouts))
+	// Set values for unknowns.
+	data.AWSAccountID = fwflex.StringToFramework(ctx, output.VpcBlockPublicAccessOptions.AwsAccountId)
+	data.AWSRegion = fwflex.StringToFramework(ctx, output.VpcBlockPublicAccessOptions.AwsRegion)
+	data.ID = data.AWSRegion
 
-	if err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), fwflex.StringToFramework(ctx, output.VpcBlockPublicAccessOptions.AwsRegion)) // Set 'id' so as to taint the resource.
-		response.Diagnostics.AddError("waiting for VPC Block Public Access Options create", err.Error())
+	if _, err := waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPC Block Public Access Options (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
-
-	// Set values for unknowns.
-	data.AWSAccountID = fwflex.StringToFramework(ctx, options.AwsAccountId)
-	data.AWSRegion = fwflex.StringToFramework(ctx, options.AwsRegion)
-	data.ID = data.AWSRegion
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
