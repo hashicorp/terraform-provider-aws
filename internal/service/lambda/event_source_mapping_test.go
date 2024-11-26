@@ -2463,6 +2463,7 @@ resource "aws_lambda_event_source_mapping" "test" {
     type = "VPC_SECURITY_GROUP"
     uri  = aws_security_group.test.id
   }
+
 }
 `, rName, batchSize, kafkaBootstrapServers))
 }
@@ -2501,6 +2502,11 @@ resource "aws_lambda_event_source_mapping" "test" {
   source_access_configuration {
     type = "VPC_SECURITY_GROUP"
     uri  = aws_security_group.test.id
+  }
+
+  provisioned_poller_config {
+    maximum_pollers = 80
+    minimum_pollers = 10
   }
 }
 `, rName, batchSize, kafkaBootstrapServers))
