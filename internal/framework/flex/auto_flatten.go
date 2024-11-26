@@ -107,7 +107,7 @@ func autoFlattenConvert(ctx context.Context, from, to any, flexer autoFlexer) di
 			!typTo.Implements(reflect.TypeFor[basetypes.ListValuable]()) &&
 			!typTo.Implements(reflect.TypeFor[basetypes.SetValuable]()) {
 			tflog.SubsystemInfo(ctx, subsystemName, "Converting")
-			diags.Append(autoFlexConvertStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
+			diags.Append(flattenStruct(ctx, sourcePath, from, targetPath, to, flexer)...)
 			return diags
 		}
 	}
@@ -1136,7 +1136,7 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, source
 			return diags
 		}
 
-		diags.Append(autoFlexConvertStruct(ctx, sourcePath, fromInterface, targetPath, target, flattener)...)
+		diags.Append(flattenStruct(ctx, sourcePath, fromInterface, targetPath, target, flattener)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -1198,7 +1198,7 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, sourceP
 		return diags
 	}
 
-	diags.Append(autoFlexConvertStruct(ctx, sourcePath, vFrom.Interface(), targetPath, to, flattener)...)
+	diags.Append(flattenStruct(ctx, sourcePath, vFrom.Interface(), targetPath, to, flattener)...)
 	if diags.HasError() {
 		return diags
 	}
@@ -1468,7 +1468,7 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 			return diags
 		}
 
-		diags.Append(autoFlexConvertStruct(ctx, sourcePath, vFrom.Index(i).Interface(), targetPath, target, flattener)...)
+		diags.Append(flattenStruct(ctx, sourcePath, vFrom.Index(i).Interface(), targetPath, target, flattener)...)
 		if diags.HasError() {
 			return diags
 		}
@@ -1484,6 +1484,134 @@ func (flattener autoFlattener) sliceOfStructToNestedObjectCollection(ctx context
 	}
 
 	vTo.Set(reflect.ValueOf(val))
+	return diags
+}
+
+// flattenStruct traverses struct `from`, calling `flexer` for each exported field.
+func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPath path.Path, to any, flexer autoFlexer) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
+	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeyTargetPath, targetPath.String())
+
+	ctx, valFrom, valTo, d := autoFlexValues(ctx, from, to)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	// TODO: this only applies when Expanding
+	if fromExpander, ok := valFrom.Interface().(Expander); ok {
+		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Expander")
+		diags.Append(expandExpander(ctx, fromExpander, valTo)...)
+		return diags
+	}
+
+	// TODO: this only applies when Expanding
+	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
+		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.TypedExpander")
+		diags.Append(expandTypedExpander(ctx, fromTypedExpander, valTo)...)
+		return diags
+	}
+
+	// TODO: this only applies when Expanding
+	if valTo.Kind() == reflect.Interface {
+		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
+			"from": valFrom.Type(),
+			"to":   valTo.Kind(),
+		})
+		return diags
+	}
+
+	// TODO: this only applies when Flattening
+	if toFlattener, ok := to.(Flattener); ok {
+		tflog.SubsystemInfo(ctx, subsystemName, "Target implements flex.Flattener")
+		diags.Append(flattenFlattener(ctx, valFrom, toFlattener)...)
+		return diags
+	}
+
+	typeFrom := valFrom.Type()
+	typeTo := valTo.Type()
+
+	opts := flexer.getOptions()
+	for i := 0; i < typeFrom.NumField(); i++ {
+		fromField := typeFrom.Field(i)
+		if fromField.PkgPath != "" {
+			continue // Skip unexported fields.
+		}
+		fromNameOverride, fromOpts := autoflexTags(fromField)
+		fieldName := fromField.Name
+		if opts.isIgnoredField(fieldName) {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+			})
+			continue
+		}
+		// TODO: this only applies when Expanding
+		if fromNameOverride == "-" {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+			})
+			continue
+		}
+		if fieldName == mapBlockKeyFieldName {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
+				logAttrKeySourceFieldname: mapBlockKeyFieldName,
+			})
+			continue
+		}
+
+		toField, ok := findFieldFuzzy(ctx, fieldName, typeFrom, typeTo, flexer)
+		if !ok {
+			// Corresponding field not found in to.
+			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+			})
+			continue
+		}
+		toFieldName := toField.Name
+		// TODO: this only applies when Flattening
+		toNameOverride, toOpts := autoflexTags(toField)
+		toFieldVal := valTo.FieldByIndex(toField.Index)
+		if toNameOverride == "-" {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored target field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+				logAttrKeyTargetFieldname: toFieldName,
+			})
+			continue
+		}
+		if toOpts.NoFlatten() {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping noflatten target field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+				logAttrKeyTargetFieldname: toFieldName,
+			})
+			continue
+		}
+		if !toFieldVal.CanSet() {
+			// Corresponding field value can't be changed.
+			tflog.SubsystemDebug(ctx, subsystemName, "Field cannot be set", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+				logAttrKeyTargetFieldname: toFieldName,
+			})
+			continue
+		}
+
+		tflog.SubsystemTrace(ctx, subsystemName, "Matched fields", map[string]any{
+			logAttrKeySourceFieldname: fieldName,
+			logAttrKeyTargetFieldname: toFieldName,
+		})
+
+		opts := fieldOpts{
+			legacy:    fromOpts.Legacy() || toOpts.Legacy(),
+			omitempty: toOpts.OmitEmpty(),
+		}
+
+		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal, opts)...)
+		if diags.HasError() {
+			break
+		}
+	}
+
 	return diags
 }
 
