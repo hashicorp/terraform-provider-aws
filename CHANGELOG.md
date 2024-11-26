@@ -4,6 +4,17 @@ NOTES:
 
 * resource/aws_s3_bucket_lifecycle_configuration: Lifecycle configurations can now be applied to directory buckets ([#40268](https://github.com/hashicorp/terraform-provider-aws/issues/40268))
 
+FEATURES:
+
+* **New Resource:** `aws_iam_organizations_features` ([#40164](https://github.com/hashicorp/terraform-provider-aws/issues/40164))
+
+ENHANCEMENTS:
+
+* data-source/aws_memorydb_cluster: Add `engine` attribute ([#40224](https://github.com/hashicorp/terraform-provider-aws/issues/40224))
+* data-source/aws_memorydb_snapshot: Add `cluster_configuration.engine` attribute ([#40224](https://github.com/hashicorp/terraform-provider-aws/issues/40224))
+* resource/aws_memorydb_cluster: Add `engine` argument ([#40224](https://github.com/hashicorp/terraform-provider-aws/issues/40224))
+* resource/aws_memorydb_snapshot: Add `cluster_configuration.engine` attribute ([#40224](https://github.com/hashicorp/terraform-provider-aws/issues/40224))
+
 BUG FIXES:
 
 * data-source/aws_rds_reserved_instance_offering: When `product_description` (e.g., "postgresql") is a substring of multiple products, fix `Error: multiple RDS Reserved Instance Offerings matched; use additional constraints to reduce matches to a single RDS Reserved Instance Offering` ([#40281](https://github.com/hashicorp/terraform-provider-aws/issues/40281))
