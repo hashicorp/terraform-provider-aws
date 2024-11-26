@@ -121,6 +121,49 @@ func TestAccVPCBlockPublicAccessExclusion_disappears(t *testing.T) {
 	})
 }
 
+func TestAccVPCBlockPublicAccessExclusion_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_block_public_access_exclusion.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	internetGatewayExclusionMode1 := string(awstypes.InternetGatewayExclusionModeAllowBidirectional)
+	internetGatewayExclusionMode2 := string(awstypes.InternetGatewayExclusionModeAllowEgress)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckVPCBlockPublicAccess(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion_mode"), knownvalue.StringExact(internetGatewayExclusionMode1)),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion_mode"), knownvalue.StringExact(internetGatewayExclusionMode2)),
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckBlockPublicAccessExclusionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
