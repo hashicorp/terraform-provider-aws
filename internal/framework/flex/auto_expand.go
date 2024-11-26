@@ -1160,7 +1160,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 	typeFrom := valFrom.Type()
 	typeTo := valTo.Type()
 
-	fieldIndexes, d := structFieldIndexes(ctx, typeFrom, flexer.getOptions())
+	fieldIndexes, d := expandStructFieldIndexes(ctx, typeFrom, flexer.getOptions())
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
@@ -1208,7 +1208,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 	return diags
 }
 
-func structFieldIndexes(ctx context.Context, typ reflect.Type, opts AutoFlexOptions) (indexes [][]int, diags diag.Diagnostics) {
+func expandStructFieldIndexes(ctx context.Context, typ reflect.Type, opts AutoFlexOptions) (indexes [][]int, diags diag.Diagnostics) {
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
 		if !field.IsExported() && !field.Anonymous {
@@ -1241,6 +1241,20 @@ func structFieldIndexes(ctx context.Context, typ reflect.Type, opts AutoFlexOpti
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
 				logAttrKeySourceFieldname: mapBlockKeyFieldName,
 			})
+			continue
+		}
+
+		if field.Anonymous {
+			embeddedIndexes, d := expandStructFieldIndexes(ctx, field.Type, opts)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			for _, embeddedIndex := range embeddedIndexes {
+				indexes = append(indexes, append(fieldIndexSequence, embeddedIndex...))
+			}
+
 			continue
 		}
 
