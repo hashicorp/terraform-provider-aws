@@ -209,62 +209,57 @@ func (r *hostResource) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	if tags, err := listTags(ctx, conn, data.ID.ValueString()); err == nil {
-		setTagsOut(ctx, Tags(tags))
-	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *hostResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var old, new hostResourceModel
+	var new, old hostResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &old)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &new)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().CodeConnectionsClient(ctx)
 
-	if !old.ProviderEndpoint.Equal(new.ProviderEndpoint) ||
-		!old.VPCConfiguration.Equal(new.VPCConfiguration) {
+	if !new.ProviderEndpoint.Equal(old.ProviderEndpoint) ||
+		!new.VPCConfiguration.Equal(old.VPCConfiguration) {
 		input := codeconnections.UpdateHostInput{
-			HostArn: old.HostArn.ValueStringPointer(),
+			HostArn: new.HostArn.ValueStringPointer(),
 		}
 
 		out, err := conn.UpdateHost(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CodeConnections, create.ErrActionUpdating, ResNameHost, old.ID.String(), err),
+				create.ProblemStandardMessage(names.CodeConnections, create.ErrActionUpdating, ResNameHost, new.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CodeConnections, create.ErrActionUpdating, ResNameHost, old.ID.String(), nil),
+				create.ProblemStandardMessage(names.CodeConnections, create.ErrActionUpdating, ResNameHost, new.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
 		}
 
-		updateTimeout := r.UpdateTimeout(ctx, old.Timeouts)
-		_, err = waitHostPendingOrAvailable(ctx, conn, old.ID.ValueString(), updateTimeout)
+		updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
+		_, err = waitHostPendingOrAvailable(ctx, conn, new.ID.ValueString(), updateTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CodeConnections, create.ErrActionWaitingForUpdate, ResNameHost, old.ID.String(), err),
+				create.ProblemStandardMessage(names.CodeConnections, create.ErrActionWaitingForUpdate, ResNameHost, new.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 	}
-	// set values not returned by update call
-	new.HostArn = old.HostArn
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
