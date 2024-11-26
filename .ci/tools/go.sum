@@ -568,8 +568,8 @@ github.com/golangci/go-printf-func-name v0.1.0 h1:dVokQP+NMTO7jwO4bwsRwLWeudOVUP
 github.com/golangci/go-printf-func-name v0.1.0/go.mod h1:wqhWFH5mUdJQhweRnldEywnR5021wTdZSNgwYceV14s=
 github.com/golangci/gofmt v0.0.0-20240816233607-d8596aa466a9 h1:/1322Qns6BtQxUZDTAT4SdcoxknUki7IAoK4SAXr8ME=
 github.com/golangci/gofmt v0.0.0-20240816233607-d8596aa466a9/go.mod h1:Oesb/0uFAyWoaw1U1qS5zyjCg5NP9C9iwjnI4tIsXEE=
-github.com/golangci/golangci-lint v1.62.0 h1:/G0g+bi1BhmGJqLdNQkKBWjcim8HjOPc4tsKuHDOhcI=
-github.com/golangci/golangci-lint v1.62.0/go.mod h1:jtoOhQcKTz8B6dGNFyfQV3WZkQk+YvBDewDtNpiAJts=
+github.com/golangci/golangci-lint v1.62.2 h1:b8K5K9PN+rZN1+mKLtsZHz2XXS9aYKzQ9i25x3Qnxxw=
+github.com/golangci/golangci-lint v1.62.2/go.mod h1:ILWWyeFUrctpHVGMa1dg2xZPKoMUTc5OIMgW7HZr34g=
 github.com/golangci/misspell v0.6.0 h1:JCle2HUTNWirNlDIAUO44hUsKhOFqGPoC4LZxlaSXDs=
 github.com/golangci/misspell v0.6.0/go.mod h1:keMNyY6R9isGaSAu+4Q8NMBwMPkh15Gtc8UCVoDtAWo=
 github.com/golangci/modinfo v0.3.4 h1:oU5huX3fbxqQXdfspamej74DFX0kyGLkw1ppvXoJ8GA=
@@ -1143,8 +1143,8 @@ github.com/stretchr/testify v1.7.2/go.mod h1:R6va5+xMeoiuVRoj+gSkQ7d3FALtqAAGI1F
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
-github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
-github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
+github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
+github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/subosito/gotenv v1.6.0 h1:9NlTDc1FTs4qu0DDq7AEtTPNw6SVm7uBMsUCUjABIf8=
 github.com/subosito/gotenv v1.6.0/go.mod h1:Dk4QP5c2W3ibzajGcXpNraDfq2IrhjMIvMSWPKKo0FU=
 github.com/tdakkota/asciicheck v0.2.0 h1:o8jvnUANo0qXtnslk2d3nMKTFNlOnJjRrNcj0j9qkHM=
@@ -1184,8 +1184,8 @@ github.com/ultraware/whitespace v0.1.1 h1:bTPOGejYFulW3PkcrqkeQwOd6NKOOXvmGD9bo/
 github.com/ultraware/whitespace v0.1.1/go.mod h1:XcP1RLD81eV4BW8UhQlpaR+SDc2givTvyI8a586WjW8=
 github.com/uudashr/gocognit v1.1.3 h1:l+a111VcDbKfynh+airAy/DJQKaXh2m9vkoysMPSZyM=
 github.com/uudashr/gocognit v1.1.3/go.mod h1:aKH8/e8xbTRBwjbCkwZ8qt4l2EpKXl31KMHgSS+lZ2U=
-github.com/uudashr/iface v1.2.0 h1:ECJjh5q/1Zmnv/2yFpWV6H3oMg5+Mo+vL0aqw9Gjazo=
-github.com/uudashr/iface v1.2.0/go.mod h1:Ux/7d/rAF3owK4m53cTVXL4YoVHKNqnoOeQHn2xrlp0=
+github.com/uudashr/iface v1.2.1 h1:vHHyzAUmWZ64Olq6NZT3vg/z1Ws56kyPdBOd5kTXDF8=
+github.com/uudashr/iface v1.2.1/go.mod h1:4QvspiRd3JLPAEXBQ9AiZpLbJlrWWgRChOKDJEuQTdg=
 github.com/vmihailenco/msgpack/v4 v4.3.12/go.mod h1:gborTTJjAo/GWTqqRjrLCn9pgNN+NXzzngzBKDPIqw4=
 github.com/vmihailenco/msgpack/v5 v5.4.1 h1:cQriyiUvjTwOHg8QZaPihLWeRAAVoCpE00IUPn0Bjt8=
 github.com/vmihailenco/msgpack/v5 v5.4.1/go.mod h1:GaZTsDaehaPpQVyxrf5mtQlH+pc21PIudVV/E3rRQok=
