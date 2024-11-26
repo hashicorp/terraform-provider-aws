@@ -1160,38 +1160,22 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 	typeFrom := valFrom.Type()
 	typeTo := valTo.Type()
 
-	opts := flexer.getOptions()
-	for i := 0; i < typeFrom.NumField(); i++ {
-		fromField := typeFrom.Field(i)
-		if !fromField.IsExported() {
-			continue // Skip unexported fields.
-		}
-		fromNameOverride, fromOpts := autoflexTags(fromField)
-		fieldName := fromField.Name
-		if opts.isIgnoredField(fieldName) {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
-			})
-			continue
-		}
-		if fromNameOverride == "-" {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
-			})
-			continue
-		}
-		if fieldName == mapBlockKeyFieldName {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
-				logAttrKeySourceFieldname: mapBlockKeyFieldName,
-			})
-			continue
-		}
+	fieldIndexes, d := structFieldIndexes(ctx, typeFrom, flexer.getOptions())
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
 
-		toField, ok := findFieldFuzzy(ctx, fieldName, typeFrom, typeTo, flexer)
+	for _, fieldIndex := range fieldIndexes {
+		fromField := typeFrom.FieldByIndex(fieldIndex)
+		fromFieldName := fromField.Name
+		_, fromFieldOpts := autoflexTags(fromField)
+
+		toField, ok := findFieldFuzzy(ctx, fromFieldName, typeFrom, typeTo, flexer)
 		if !ok {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
+				logAttrKeySourceFieldname: fromFieldName,
 			})
 			continue
 		}
@@ -1200,28 +1184,70 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 		if !toFieldVal.CanSet() {
 			// Corresponding field value can't be changed.
 			tflog.SubsystemDebug(ctx, subsystemName, "Field cannot be set", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
+				logAttrKeySourceFieldname: fromFieldName,
 				logAttrKeyTargetFieldname: toFieldName,
 			})
 			continue
 		}
 
 		tflog.SubsystemTrace(ctx, subsystemName, "Matched fields", map[string]any{
-			logAttrKeySourceFieldname: fieldName,
+			logAttrKeySourceFieldname: fromFieldName,
 			logAttrKeyTargetFieldname: toFieldName,
 		})
 
 		opts := fieldOpts{
-			legacy: fromOpts.Legacy(),
+			legacy: fromFieldOpts.Legacy(),
 		}
 
-		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal, opts)...)
+		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fieldIndex), targetPath.AtName(toFieldName), toFieldVal, opts)...)
 		if diags.HasError() {
 			break
 		}
 	}
 
 	return diags
+}
+
+func structFieldIndexes(ctx context.Context, typ reflect.Type, opts AutoFlexOptions) (indexes [][]int, diags diag.Diagnostics) {
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		if !field.IsExported() && !field.Anonymous {
+			// Skip unexported fields. Unexported embedded structs (anonymous fields) are allowed because they may
+			// contain exported fields that are promoted; which means they can be read/set.
+			continue
+		}
+
+		// This index sequence is the location of the field within the struct.
+		// For promoted fields from an embedded struct, the length of this sequence will be > 1
+		fieldIndexSequence := []int{i}
+
+		fromNameOverride, _ := autoflexTags(field)
+		fieldName := field.Name
+		if opts.isIgnoredField(fieldName) {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+			})
+			continue
+		}
+
+		if fromNameOverride == "-" {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+			})
+			continue
+		}
+
+		if fieldName == mapBlockKeyFieldName {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
+				logAttrKeySourceFieldname: mapBlockKeyFieldName,
+			})
+			continue
+		}
+
+		indexes = append(indexes, fieldIndexSequence)
+	}
+
+	return indexes, diags
 }
 
 // mapBlockKey takes a struct and extracts the value of the `key`
