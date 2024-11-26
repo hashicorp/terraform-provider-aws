@@ -5693,7 +5693,7 @@ service "memorydb" {
 
   names {
     provider_name_upper = "MemoryDB"
-    human_friendly      = "MemoryDB for Redis"
+    human_friendly      = "MemoryDB"
   }
 
   client {
@@ -5710,7 +5710,7 @@ service "memorydb" {
 
   provider_package_correct = "memorydb"
   doc_prefix               = ["memorydb_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "meta" {

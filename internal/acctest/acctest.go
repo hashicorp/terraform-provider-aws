@@ -12,8 +12,8 @@ import (
 	"net"
 	"os"
 	"os/exec"
-	"reflect"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -31,7 +31,6 @@ import (
 	dstypes "github.com/aws/aws-sdk-go-v2/service/directoryservice/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
-	iamtypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	organizationstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
@@ -1122,6 +1121,20 @@ func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) *organizati
 	return PreCheckOrganizationsEnabledWithProvider(ctx, t, func() *schema.Provider { return Provider })
 }
 
+func PreCheckOrganizationsEnabledServicePrincipal(ctx context.Context, t *testing.T, servicePrincipalName string) {
+	t.Helper()
+
+	servicePrincipalNames, err := tforganizations.FindEnabledServicePrincipalNames(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsClient(ctx))
+
+	if err != nil {
+		t.Fatalf("reading Organization service principals: %s", err)
+	}
+
+	if !slices.Contains(servicePrincipalNames, servicePrincipalName) {
+		t.Skipf("trusted access for %s must be enabled in AWS Organizations", servicePrincipalName)
+	}
+}
+
 func PreCheckOrganizationsEnabledWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) *organizationstypes.Organization {
 	t.Helper()
 
@@ -1270,7 +1283,7 @@ func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T,
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String(pathPrefix),
 	}
-	var role iamtypes.Role
+	var roleFound bool
 
 	pages := iam.NewListRolesPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -1282,13 +1295,13 @@ func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T,
 			t.Fatalf("listing IAM roles: %s", err)
 		}
 
-		for _, r := range page.Roles {
-			role = r
+		if len(page.Roles) > 0 {
+			roleFound = true
 			break
 		}
 	}
 
-	if reflect.ValueOf(role).IsZero() {
+	if !roleFound {
 		t.Skipf("skipping tests; missing IAM service-linked role %s. Please create the role and retry", pathPrefix)
 	}
 }

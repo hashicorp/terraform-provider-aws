@@ -125,6 +125,7 @@ var (
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 	ResourceVPCBlockPublicAccessExclusion                 = newResourceVPCBlockPublicAccessExclusion
 
+	CheckMostRecentAndMissingFilters                           = checkMostRecentAndMissingFilters
 	CustomFiltersSchema                                        = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                   = customerGatewayConfigurationToTunnelInfo
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone

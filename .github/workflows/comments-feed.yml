@@ -35,7 +35,7 @@ jobs:
           ISSUE_URL: ${{ github.event.issue.html_url }}
           ISSUE_TITLE: ${{ github.event.issue.title }}
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
             {

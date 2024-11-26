@@ -328,10 +328,6 @@ func testAccCheckACLExists(ctx context.Context, n string) resource.TestCheckFunc
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MemoryDB ACL ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
 
 		_, err := tfmemorydb.FindACLByName(ctx, conn, rs.Primary.Attributes[names.AttrName])

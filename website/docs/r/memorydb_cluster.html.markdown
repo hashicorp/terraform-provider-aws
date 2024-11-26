@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_cluster"
 description: |-
@@ -19,6 +19,8 @@ resource "aws_memorydb_cluster" "example" {
   acl_name                 = "open-access"
   name                     = "my-cluster"
   node_type                = "db.t4g.small"
+  engine                   = "redis"
+  engine_version           = "7.1"
   num_shards               = 2
   security_group_ids       = [aws_security_group.example.id]
   snapshot_retention_limit = 7
@@ -31,6 +33,8 @@ resource "aws_memorydb_cluster" "example" {
 The following arguments are required:
 
 * `acl_name` - (Required) The name of the Access Control List to associate with the cluster.
+* `engine` - (Optional) The engine that will run on your nodes. Supported values are `redis` and `valkey`.
+* `engine_version` - (Optional) Version number of the engine to be used for the cluster. Downgrades are not supported.
 * `node_type` - (Required) The compute and memory capacity of the nodes in the cluster. See AWS documentation on [supported node types](https://docs.aws.amazon.com/memorydb/latest/devguide/nodes.supportedtypes.html) as well as [vertical scaling](https://docs.aws.amazon.com/memorydb/latest/devguide/cluster-vertical-scaling.html).
 
 The following arguments are optional:
@@ -38,7 +42,6 @@ The following arguments are optional:
 * `auto_minor_version_upgrade` - (Optional, Forces new resource) When set to `true`, the cluster will automatically receive minor engine version upgrades after launch. Defaults to `true`.
 * `data_tiering` - (Optional, Forces new resource) Enables data tiering. This option is not supported by all instance types. For more information, see [Data tiering](https://docs.aws.amazon.com/memorydb/latest/devguide/data-tiering.html).
 * `description` - (Optional) Description for the cluster. Defaults to `"Managed by Terraform"`.
-* `engine_version` - (Optional) Version number of the Redis engine to be used for the cluster. Downgrades are not supported.
 * `final_snapshot_name` - (Optional) Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
 * `kms_key_arn` - (Optional, Forces new resource) ARN of the KMS key used to encrypt the cluster at rest.
 * `maintenance_window` - (Optional) Specifies the weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:23:00-mon:01:30`.
@@ -67,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `cluster_endpoint`
     * `address` - DNS hostname of the cluster configuration endpoint.
     * `port` - Port number that the cluster configuration endpoint is listening on.
-* `engine_patch_version` - Patch version number of the Redis engine used by the cluster.
+* `engine_patch_version` - Patch version number of the engine used by the cluster.
 * `shards` - Set of shards in this cluster.
     * `name` - Name of this shard.
     * `num_nodes` - Number of individual nodes in this shard.

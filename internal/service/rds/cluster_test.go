@@ -563,6 +563,37 @@ func TestAccRDSCluster_storageTypeIo2(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_storageTypeGeneralPurposeToProvisionedIOPS(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_storageChange(rName, "gp3"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "gp3"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_storageChange(rName, "io2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, names.AttrStorageType, "io2"),
+				),
+			},
+		},
+	})
+}
+
 // For backwards compatibility, the control plane should always return a blank string even if sending "aurora" as the storage type
 func TestAccRDSCluster_storageTypeAuroraReturnsBlank(t *testing.T) {
 	if testing.Short() {
@@ -3391,6 +3422,35 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot       = true
 }
 `, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, sType))
+}
+
+func testAccClusterConfig_storageChange(rName string, sType string) string {
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  storage_type               = %[4]q
+  supports_iops              = true
+  supports_clusters          = true
+}
+
+resource "aws_db_instance" "test" {
+  apply_immediately    = true
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  storage_type         = data.aws_rds_orderable_db_instance.test.storage_type
+  allocated_storage    = 400
+  iops                 = 12000
+  password             = "mustbeeightcharaters"
+  username             = "test"
+  skip_final_snapshot  = true
+}
+`, tfrds.ClusterEnginePostgres, mainInstanceClasses, rName, sType))
 }
 
 func testAccClusterConfig_allocatedStorage(rName string) string {
