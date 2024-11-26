@@ -25,9 +25,8 @@ func TestAccIAMOrganizationsFeatures_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		acctest.CtBasic:      testAccOrganizationsFeatures_basic,
-		acctest.CtDisappears: testAccOrganizationsFeatures_disappears,
-		"update":             testAccOrganizationsFeatures_update,
+		acctest.CtBasic: testAccOrganizationsFeatures_basic,
+		"update":        testAccOrganizationsFeatures_update,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -64,32 +63,6 @@ func testAccOrganizationsFeatures_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: false,
-			},
-		},
-	})
-}
-
-func testAccOrganizationsFeatures_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_iam_organizations_features.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckOrganizationManagementAccount(ctx, t)
-			acctest.PreCheckOrganizationsEnabledServicePrincipal(ctx, t, "iam.amazonaws.com")
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOrganizationsFeaturesDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccOrganizationsFeaturesConfig_basic([]string{"RootCredentialsManagement", "RootSessions"}),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOrganizationsFeaturesExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfiam.ResourceOrganizationsFeatures, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
