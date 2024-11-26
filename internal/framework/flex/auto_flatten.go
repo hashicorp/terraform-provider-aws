@@ -1500,30 +1500,6 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		return diags
 	}
 
-	// TODO: this only applies when Expanding
-	if fromExpander, ok := valFrom.Interface().(Expander); ok {
-		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.Expander")
-		diags.Append(expandExpander(ctx, fromExpander, valTo)...)
-		return diags
-	}
-
-	// TODO: this only applies when Expanding
-	if fromTypedExpander, ok := valFrom.Interface().(TypedExpander); ok {
-		tflog.SubsystemInfo(ctx, subsystemName, "Source implements flex.TypedExpander")
-		diags.Append(expandTypedExpander(ctx, fromTypedExpander, valTo)...)
-		return diags
-	}
-
-	// TODO: this only applies when Expanding
-	if valTo.Kind() == reflect.Interface {
-		tflog.SubsystemError(ctx, subsystemName, "AutoFlex Expand; incompatible types", map[string]any{
-			"from": valFrom.Type(),
-			"to":   valTo.Kind(),
-		})
-		return diags
-	}
-
-	// TODO: this only applies when Flattening
 	if toFlattener, ok := to.(Flattener); ok {
 		tflog.SubsystemInfo(ctx, subsystemName, "Target implements flex.Flattener")
 		diags.Append(flattenFlattener(ctx, valFrom, toFlattener)...)
@@ -1539,16 +1515,8 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		if fromField.PkgPath != "" {
 			continue // Skip unexported fields.
 		}
-		fromNameOverride, fromOpts := autoflexTags(fromField)
 		fieldName := fromField.Name
 		if opts.isIgnoredField(fieldName) {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
-			})
-			continue
-		}
-		// TODO: this only applies when Expanding
-		if fromNameOverride == "-" {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
 				logAttrKeySourceFieldname: fieldName,
 			})
@@ -1570,7 +1538,6 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			continue
 		}
 		toFieldName := toField.Name
-		// TODO: this only applies when Flattening
 		toNameOverride, toOpts := autoflexTags(toField)
 		toFieldVal := valTo.FieldByIndex(toField.Index)
 		if toNameOverride == "-" {
@@ -1602,7 +1569,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		})
 
 		opts := fieldOpts{
-			legacy:    fromOpts.Legacy() || toOpts.Legacy(),
+			legacy:    toOpts.Legacy(),
 			omitempty: toOpts.OmitEmpty(),
 		}
 
