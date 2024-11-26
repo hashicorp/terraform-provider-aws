@@ -4313,7 +4313,7 @@ func TestFlattenIgnoreStructTag(t *testing.T) {
 			Target:     &tfSingleStringFieldIgnore{},
 			WantTarget: &tfSingleStringFieldIgnore{},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
+				infoFlattening(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
 				infoConverting(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
 				traceSkipIgnoredTargetField(reflect.TypeFor[awsSingleStringValue](), "Field1", reflect.TypeFor[*tfSingleStringFieldIgnore](), "Field1"),
 			},
@@ -4325,14 +4325,14 @@ func TestFlattenIgnoreStructTag(t *testing.T) {
 			Target:     &tfSingleStringFieldIgnore{},
 			WantTarget: &tfSingleStringFieldIgnore{},
 			expectedLogLines: []map[string]any{
-				infoExpanding(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
+				infoFlattening(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
 				infoConverting(reflect.TypeFor[awsSingleStringPointer](), reflect.TypeFor[*tfSingleStringFieldIgnore]()),
 				traceSkipIgnoredTargetField(reflect.TypeFor[awsSingleStringPointer](), "Field1", reflect.TypeFor[*tfSingleStringFieldIgnore](), "Field1"),
 			},
 		},
 	}
 
-	runAutoExpandTestCases(t, testCases)
+	runAutoFlattenTestCases(t, testCases)
 }
 
 func TestFlattenInterfaceToStringTypable(t *testing.T) {
