@@ -187,13 +187,13 @@ data "aws_iam_policy_document" "test" {
 
 resource "aws_s3tables_table" "test" {
   name             = %[1]q
-  namespace        = aws_s3tables_namespace.test.namespace[0]
+  namespace        = aws_s3tables_namespace.test.namespace
   table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
   format           = "ICEBERG"
 }
 
 resource "aws_s3tables_namespace" "test" {
-  namespace        = [%[2]q]
+  namespace        = %[2]q
   table_bucket_arn = aws_s3tables_table_bucket.test.arn
 
   lifecycle {

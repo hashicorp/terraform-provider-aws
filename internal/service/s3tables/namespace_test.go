@@ -48,8 +48,7 @@ func TestAccS3TablesNamespace_basic(t *testing.T) {
 					testAccCheckNamespaceExists(ctx, resourceName, &namespace),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, "created_by"),
-					resource.TestCheckResourceAttr(resourceName, "namespace.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "namespace.0", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamespace, rName),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, "table_bucket_arn", "aws_s3tables_table_bucket.test", names.AttrARN),
 				),
@@ -59,7 +58,7 @@ func TestAccS3TablesNamespace_basic(t *testing.T) {
 				ImportState:                          true,
 				ImportStateIdFunc:                    testAccNamespaceImportStateIdFunc(resourceName),
 				ImportStateVerify:                    true,
-				ImportStateVerifyIdentifierAttribute: "namespace.0",
+				ImportStateVerifyIdentifierAttribute: names.AttrNamespace,
 			},
 		},
 	})
@@ -103,7 +102,7 @@ func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfs3tables.FindNamespace(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes["namespace.0"])
+			_, err := tfs3tables.FindNamespace(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes[names.AttrNamespace])
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -125,13 +124,13 @@ func testAccCheckNamespaceExists(ctx context.Context, name string, namespace *s3
 			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameNamespace, name, errors.New("not found"))
 		}
 
-		if rs.Primary.Attributes["table_bucket_arn"] == "" || rs.Primary.Attributes["namespace.0"] == "" {
+		if rs.Primary.Attributes["table_bucket_arn"] == "" || rs.Primary.Attributes[names.AttrNamespace] == "" {
 			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameNamespace, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3TablesClient(ctx)
 
-		resp, err := tfs3tables.FindNamespace(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes["namespace.0"])
+		resp, err := tfs3tables.FindNamespace(ctx, conn, rs.Primary.Attributes["table_bucket_arn"], rs.Primary.Attributes[names.AttrNamespace])
 		if err != nil {
 			return create.Error(names.S3Tables, create.ErrActionCheckingExistence, tfs3tables.ResNameNamespace, rs.Primary.ID, err)
 		}
@@ -149,17 +148,17 @@ func testAccNamespaceImportStateIdFunc(resourceName string) resource.ImportState
 			return "", fmt.Errorf("not found: %s", resourceName)
 		}
 
-		return rs.Primary.Attributes["table_bucket_arn"] + tfs3tables.NamespaceIDSeparator + rs.Primary.Attributes["namespace.0"], nil
+		return rs.Primary.Attributes["table_bucket_arn"] + tfs3tables.NamespaceIDSeparator + rs.Primary.Attributes[names.AttrNamespace], nil
 	}
 }
 
 func namespaceDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
-	v, ok := is.Attributes["namespace.0"]
+	v, ok := is.Attributes[names.AttrNamespace]
 	if !ok {
-		return errors.New(`Identifying attribute "namespace.0" not defined`)
+		return errors.New(`Identifying attribute "namespace" not defined`)
 	}
 
-	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrNamespace), []string{v})); err != nil {
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrNamespace), v)); err != nil {
 		return err
 	}
 
@@ -178,7 +177,7 @@ func namespaceDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *t
 func testAccNamespaceConfig_basic(rName, bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3tables_namespace" "test" {
-  namespace        = [%[1]q]
+  namespace        = %[1]q
   table_bucket_arn = aws_s3tables_table_bucket.test.arn
 }
 

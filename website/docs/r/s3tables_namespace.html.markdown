@@ -16,7 +16,7 @@ Terraform resource for managing an AWS S3 Tables Namespace.
 
 ```terraform
 resource "aws_s3tables_namespace" "example" {
-  namespace        = ["example-namespace"]
+  namespace        = "example-namespace"
   table_bucket_arn = aws_s3tables_table_bucket.example.arn
 }
 
@@ -30,7 +30,6 @@ resource "aws_s3tables_table_bucket" "example" {
 The following arguments are required:
 
 * `namespace` - (Required, Forces new resource) Name of the namespace.
-  Note that this is a list with a maximum size of 1.
   Must be between 1 and 255 characters in length.
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that contains this Namespace.

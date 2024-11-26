@@ -62,7 +62,7 @@ func TestAccS3TablesTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "modified_at", resourceName, names.AttrCreatedAt),
 					resource.TestCheckNoResourceAttr(resourceName, "modified_by"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrNamespace, "aws_s3tables_namespace.test", "namespace.0"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrNamespace, "aws_s3tables_namespace.test", names.AttrNamespace),
 					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttrPair(resourceName, "table_bucket_arn", "aws_s3tables_table_bucket.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(awstypes.TableTypeCustomer)),
@@ -540,13 +540,13 @@ func testAccTableConfig_basic(rName, namespace, bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3tables_table" "test" {
   name             = %[1]q
-  namespace        = aws_s3tables_namespace.test.namespace[0]
+  namespace        = aws_s3tables_namespace.test.namespace
   table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
   format           = "ICEBERG"
 }
 
 resource "aws_s3tables_namespace" "test" {
-  namespace        = [%[2]q]
+  namespace        = %[2]q
   table_bucket_arn = aws_s3tables_table_bucket.test.arn
 
   lifecycle {
@@ -564,7 +564,7 @@ func testAccTableConfig_maintenanceConfiguration(rName, namespace, bucketName st
 	return fmt.Sprintf(`
 resource "aws_s3tables_table" "test" {
   name             = %[1]q
-  namespace        = aws_s3tables_namespace.test.namespace[0]
+  namespace        = aws_s3tables_namespace.test.namespace
   table_bucket_arn = aws_s3tables_namespace.test.table_bucket_arn
   format           = "ICEBERG"
 
@@ -586,7 +586,7 @@ resource "aws_s3tables_table" "test" {
 }
 
 resource "aws_s3tables_namespace" "test" {
-  namespace        = [%[2]q]
+  namespace        = %[2]q
   table_bucket_arn = aws_s3tables_table_bucket.test.arn
 
   lifecycle {

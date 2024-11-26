@@ -13,13 +13,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3tables/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -69,20 +67,12 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrNamespace: schema.ListAttribute{
-				CustomType:  fwtypes.ListOfStringType,
-				ElementType: types.StringType,
-				Required:    true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
+			names.AttrNamespace: schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.List{
-					listvalidator.SizeAtLeast(1),
-					listvalidator.SizeAtMost(1),
-					listvalidator.ValueStringsAre(
-						namespaceNameValidator...,
-					),
-				},
+				Validators: namespaceNameValidator,
 			},
 			names.AttrOwnerAccountID: schema.StringAttribute{
 				Computed: true,
@@ -115,6 +105,7 @@ func (r *resourceNamespace) Create(ctx context.Context, req resource.CreateReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	input.Namespace = []string{plan.Namespace.ValueString()}
 
 	out, err := conn.CreateNamespace(ctx, &input)
 	if err != nil {
@@ -145,6 +136,7 @@ func (r *resourceNamespace) Create(ctx context.Context, req resource.CreateReque
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	plan.Namespace = types.StringValue(out.Namespace[0])
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -158,11 +150,7 @@ func (r *resourceNamespace) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	var elements []string
-	state.Namespace.ElementsAs(ctx, &elements, false)
-	namespace := elements[0]
-
-	out, err := findNamespace(ctx, conn, state.TableBucketARN.ValueString(), namespace)
+	out, err := findNamespace(ctx, conn, state.TableBucketARN.ValueString(), state.Namespace.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -192,12 +180,8 @@ func (r *resourceNamespace) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	var elements []string
-	state.Namespace.ElementsAs(ctx, &elements, false)
-	namespace := elements[0]
-
 	input := s3tables.DeleteNamespaceInput{
-		Namespace:      aws.String(namespace),
+		Namespace:      state.Namespace.ValueStringPointer(),
 		TableBucketARN: state.TableBucketARN.ValueStringPointer(),
 	}
 
@@ -255,11 +239,11 @@ func findNamespace(ctx context.Context, conn *s3tables.Client, bucketARN, name s
 }
 
 type resourceNamespaceModel struct {
-	CreatedAt      timetypes.RFC3339                 `tfsdk:"created_at"`
-	CreatedBy      types.String                      `tfsdk:"created_by"`
-	Namespace      fwtypes.ListValueOf[types.String] `tfsdk:"namespace"`
-	OwnerAccountID types.String                      `tfsdk:"owner_account_id"`
-	TableBucketARN fwtypes.ARN                       `tfsdk:"table_bucket_arn"`
+	CreatedAt      timetypes.RFC3339 `tfsdk:"created_at"`
+	CreatedBy      types.String      `tfsdk:"created_by"`
+	Namespace      types.String      `tfsdk:"namespace" autoflex:"-"`
+	OwnerAccountID types.String      `tfsdk:"owner_account_id"`
+	TableBucketARN fwtypes.ARN       `tfsdk:"table_bucket_arn"`
 }
 
 var namespaceNameValidator = []validator.String{
@@ -303,5 +287,5 @@ func (id namespaceIdentifier) String() string {
 
 func (id namespaceIdentifier) PopulateState(ctx context.Context, s *tfsdk.State, diags *diag.Diagnostics) {
 	diags.Append(s.SetAttribute(ctx, path.Root("table_bucket_arn"), id.TableBucketARN)...)
-	diags.Append(s.SetAttribute(ctx, path.Root(names.AttrNamespace), []string{id.Namespace})...)
+	diags.Append(s.SetAttribute(ctx, path.Root(names.AttrNamespace), id.Namespace)...)
 }
