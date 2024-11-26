@@ -1512,7 +1512,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 	opts := flexer.getOptions()
 	for i := 0; i < typeFrom.NumField(); i++ {
 		fromField := typeFrom.Field(i)
-		if fromField.PkgPath != "" {
+		if !fromField.IsExported() {
 			continue // Skip unexported fields.
 		}
 		fieldName := fromField.Name
@@ -1600,7 +1600,7 @@ func setMapBlockKey(ctx context.Context, to any, key reflect.Value) diag.Diagnos
 
 	for i, typTo := 0, valTo.Type(); i < typTo.NumField(); i++ {
 		field := typTo.Field(i)
-		if field.PkgPath != "" {
+		if !field.IsExported() {
 			continue // Skip unexported fields.
 		}
 

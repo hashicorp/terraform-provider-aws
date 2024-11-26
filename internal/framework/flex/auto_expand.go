@@ -1163,7 +1163,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 	opts := flexer.getOptions()
 	for i := 0; i < typeFrom.NumField(); i++ {
 		fromField := typeFrom.Field(i)
-		if fromField.PkgPath != "" {
+		if !fromField.IsExported() {
 			continue // Skip unexported fields.
 		}
 		fromNameOverride, fromOpts := autoflexTags(fromField)
@@ -1237,7 +1237,7 @@ func mapBlockKey(ctx context.Context, from any) (reflect.Value, diag.Diagnostics
 
 	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
 		field := typFrom.Field(i)
-		if field.PkgPath != "" {
+		if !field.IsExported() {
 			continue // Skip unexported fields.
 		}
 

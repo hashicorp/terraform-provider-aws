@@ -89,7 +89,7 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.
 	opts := flexer.getOptions()
 	for i := 0; i < typeTo.NumField(); i++ {
 		field := typeTo.Field(i)
-		if field.PkgPath != "" {
+		if !field.IsExported() {
 			continue // Skip unexported fields.
 		}
 		fieldNameTo := field.Name

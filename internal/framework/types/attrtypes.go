@@ -34,7 +34,7 @@ func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, diag.Diag
 	attributeTypes := make(map[string]attr.Type)
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		if field.PkgPath != "" {
+		if !field.IsExported() {
 			continue // Skip unexported fields.
 		}
 		tag := field.Tag.Get(`tfsdk`)
