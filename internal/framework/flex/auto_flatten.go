@@ -1522,12 +1522,6 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			})
 			continue
 		}
-		if fieldName == mapBlockKeyFieldName {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
-				logAttrKeySourceFieldname: mapBlockKeyFieldName,
-			})
-			continue
-		}
 
 		toField, ok := findFieldFuzzy(ctx, fieldName, typeFrom, typeTo, flexer)
 		if !ok {
