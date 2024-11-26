@@ -5,50 +5,52 @@ package ec2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCBlockPublicAccessOptions_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
+func TestAccVPCBlockPublicAccessOptions_serial(t *testing.T) {
+	t.Parallel()
+
+	testCases := map[string]func(t *testing.T){
+		acctest.CtBasic: testAccVPCBlockPublicAccessOptions_basic,
+		"update":        testAccVPCBlockPublicAccessOptions_update,
 	}
 
-	resourceName := "aws_vpc_block_public_access_options.test"
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
 
+func testAccVPCBlockPublicAccessOptions_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_vpc_block_public_access_options.test"
 	rMode := string(awstypes.InternetGatewayBlockModeBlockBidirectional)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.EC2)
 			testAccPreCheckVPCBlockPublicAccess(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCBlockPublicAccessOptionsDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(rMode),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "internet_gateway_block_mode", rMode),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAWSAccountID),
-					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttrSet(resourceName, "reason"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAWSAccountID), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("aws_region"), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_block_mode"), knownvalue.StringExact(rMode)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -59,14 +61,9 @@ func TestAccVPCBlockPublicAccessOptions_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCBlockPublicAccessOptions_updates(t *testing.T) {
+func testAccVPCBlockPublicAccessOptions_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	resourceName := "aws_vpc_block_public_access_options.test"
-
 	rMode1 := string(awstypes.InternetGatewayBlockModeBlockBidirectional)
 	rMode2 := string(awstypes.InternetGatewayBlockModeBlockIngress)
 	rMode3 := string(awstypes.InternetGatewayBlockModeOff)
@@ -79,17 +76,13 @@ func TestAccVPCBlockPublicAccessOptions_updates(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCBlockPublicAccessOptionsDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(rMode1),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "internet_gateway_block_mode", rMode1),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAWSAccountID),
-					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttrSet(resourceName, "reason"),
-				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_block_mode"), knownvalue.StringExact(rMode1)),
+				},
 			},
 			{
 				ResourceName:      resourceName,
@@ -98,60 +91,18 @@ func TestAccVPCBlockPublicAccessOptions_updates(t *testing.T) {
 			},
 			{
 				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(rMode2),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "internet_gateway_block_mode", rMode2),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAWSAccountID),
-					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttrSet(resourceName, "reason"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_block_mode"), knownvalue.StringExact(rMode2)),
+				},
 			},
 			{
 				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(rMode3),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "internet_gateway_block_mode", rMode3),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAWSAccountID),
-					resource.TestCheckResourceAttrSet(resourceName, "aws_region"),
-					resource.TestCheckResourceAttrSet(resourceName, "last_update_timestamp"),
-					resource.TestCheckResourceAttrSet(resourceName, "reason"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_block_mode"), knownvalue.StringExact(rMode3)),
+				},
 			},
 		},
 	})
-}
-
-func testAccCheckVPCBlockPublicAccessOptionsDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_vpc_block_public_access_options" {
-				continue
-			}
-
-			out, err := conn.DescribeVpcBlockPublicAccessOptions(ctx, &ec2.DescribeVpcBlockPublicAccessOptionsInput{})
-			if out.VpcBlockPublicAccessOptions.InternetGatewayBlockMode == awstypes.InternetGatewayBlockModeOff {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVPCBlockPublicAccessOptions, rs.Primary.ID, err)
-			}
-
-			return create.Error(names.EC2, create.ErrActionCheckingDestroyed, tfec2.ResNameVPCBlockPublicAccessOptions, rs.Primary.ID, errors.New("not destroyed"))
-		}
-
-		return nil
-	}
 }
 
 func testAccPreCheckVPCBlockPublicAccess(ctx context.Context, t *testing.T) {

@@ -6577,3 +6577,19 @@ func findCapacityBlockOfferings(ctx context.Context, conn *ec2.Client, input *ec
 
 	return output, nil
 }
+
+func findVPCBlockPublicAccessOptions(ctx context.Context, conn *ec2.Client) (*awstypes.VpcBlockPublicAccessOptions, error) {
+	input := &ec2.DescribeVpcBlockPublicAccessOptionsInput{}
+
+	output, err := conn.DescribeVpcBlockPublicAccessOptions(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.VpcBlockPublicAccessOptions == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.VpcBlockPublicAccessOptions, nil
+}

@@ -31,31 +31,29 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `aws_account_id` - The AWS account id to which these options apply.
-* `aws_region_id` - The AWS region to which these options apply.
-* `last_update_timestamp` - Last Update Timestamp
-* `reason` - Reason for update.
+* `aws_region` - The AWS region to which these options apply.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Block Public Access Options using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Block Public Access Options using the `aws_region`. For example:
 
 ```terraform
 import {
   to = aws_vpc_block_public_access_options.example
-  id = "111222333444:us-east-1"
+  id = "us-east-1"
 }
 ```
 
-Using `terraform import`, import VPC Block Public Access Options using the `example_id_arg`. For example:
+Using `terraform import`, import VPC Block Public Access Options using the `aws_region`. For example:
 
 ```console
-% terraform import aws_vpc_block_public_access_options.example 111222333444:us-east-1
+% terraform import aws_vpc_block_public_access_options.example us-east-1
 ```
