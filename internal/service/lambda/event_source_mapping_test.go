@@ -1309,7 +1309,7 @@ func TestAccLambdaEventSourceMapping_SQS_metricsConfig(t *testing.T) {
 		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSourceMappingConfig_sqsMetricsConfig(rName),
+				Config: testAccEventSourceMappingConfig_sqsMetricsConfig1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "metrics_config.0.metrics.0", "EventCount"),
@@ -1322,7 +1322,7 @@ func TestAccLambdaEventSourceMapping_SQS_metricsConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"last_modified"},
 			},
 			{
-				Config: testAccEventSourceMappingConfig_sqsBase(rName),
+				Config: testAccEventSourceMappingConfig_sqsMetricsConfig2(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "metrics_config.#", "0"),
@@ -2720,15 +2720,24 @@ resource "aws_lambda_event_source_mapping" "test" {
 `)
 }
 
-func testAccEventSourceMappingConfig_sqsMetricsConfig(rName string) string {
+func testAccEventSourceMappingConfig_sqsMetricsConfig1(rName string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), `
 resource "aws_lambda_event_source_mapping" "test" {
-	event_source_arn = aws_sqs_queue.test.arn
-	function_name    = aws_lambda_function.test.arn
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
 
-	metrics_config {
-		metrics = ["EventCount"]
-	}
+  metrics_config {
+    metrics = ["EventCount"]
+  }
+}
+`)
+}
+
+func testAccEventSourceMappingConfig_sqsMetricsConfig2(rName string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), `
+resource "aws_lambda_event_source_mapping" "test" {
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
 }
 `)
 }
