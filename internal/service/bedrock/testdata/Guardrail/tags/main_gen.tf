@@ -13,21 +13,7 @@ resource "aws_bedrock_guardrail" "test" {
       output_strength = "HIGH"
       type            = "VIOLENCE"
     }
-#    filters_config {
-#      input_strength  = "HIGH"
-#      output_strength = "HIGH"
-#      type            = "VIOLENCE"
-#    }
   }
-
-#  word_policy_config {
-#    managed_word_lists_config {
-#      type = "PROFANITY"
-#    }
-#    words_config {
-#      text = "HATE"
-#    }
-#  }
 
   tags = var.resource_tags
 }
