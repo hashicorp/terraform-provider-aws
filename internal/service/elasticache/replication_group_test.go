@@ -2350,21 +2350,19 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "6.0", acctest.CtKey1, acctest.CtValue1),
+				Config: testAccReplicationGroupConfig_clusterCountAndTag(rName, 2, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.0"),
 					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
 						{acctest.CtKey1, acctest.CtValue1},
 					}),
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_versionAndTag(rName, "6.2", acctest.CtKey1, acctest.CtValue1Updated),
+				Config: testAccReplicationGroupConfig_clusterCountAndTag(rName, 3, acctest.CtKey1, acctest.CtValue1Updated),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "6.2"),
-					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 2, []kvp{
+					testAccReplicationGroupCheckMemberClusterTags(resourceName, clusterDataSourcePrefix, 3, []kvp{
 						{acctest.CtKey1, acctest.CtValue1Updated},
 					}),
 				),
@@ -4263,8 +4261,7 @@ resource "aws_elasticache_replication_group" "test" {
 	)
 }
 
-func testAccReplicationGroupConfig_versionAndTag(rName, version, tagKey1, tagValue1 string) string {
-	const clusterCount = 2
+func testAccReplicationGroupConfig_clusterCountAndTag(rName string, clusterCount int, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccReplicationGroupClusterData(clusterCount),
 		fmt.Sprintf(`
@@ -4274,13 +4271,13 @@ resource "aws_elasticache_replication_group" "test" {
   node_type            = "cache.t3.small"
   num_cache_clusters   = %[2]d
   apply_immediately    = true
-  engine_version       = %[3]q
+  engine_version       = 6.2
 
   tags = {
-    %[4]q = %[5]q
+    %[3]q = %[4]q
   }
 }
-`, rName, clusterCount, version, tagKey1, tagValue1),
+`, rName, clusterCount, tagKey1, tagValue1),
 	)
 }
 

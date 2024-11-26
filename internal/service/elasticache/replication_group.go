@@ -791,6 +791,14 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		o, n := d.GetChange("num_cache_clusters")
 		oldCacheClusterCount, newCacheClusterCount := o.(int), n.(int)
 
+		// tagging may cause this resource to not yet be available, so wait for it to be available
+		const (
+			delay = 30 * time.Second
+		)
+		if _, err := waitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), delay); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) update: %s", d.Id(), err)
+		}
+
 		if d.HasChanges("num_node_groups", "replicas_per_node_group") {
 			if err := modifyReplicationGroupShardConfiguration(ctx, conn, d); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
