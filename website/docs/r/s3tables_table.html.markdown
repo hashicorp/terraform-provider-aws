@@ -23,7 +23,7 @@ resource "aws_s3tables_table" "example" {
 }
 
 resource "aws_s3tables_namespace" "example" {
-  namespace        = ["example-namespace"]
+  namespace        = "example-namespace"
   table_bucket_arn = aws_s3tables_table_bucket.example.arn
 }
 
