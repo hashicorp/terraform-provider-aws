@@ -202,54 +202,6 @@ func findOrganizationsFeatures(ctx context.Context, conn *iam.Client) (*iam.List
 	return output, nil
 }
 
-func manageOrganizationFeatures(ctx context.Context, conn *iam.Client, planFeatures, stateFeatures []string) (*iam.ListOrganizationsFeaturesOutput, error) {
-	var featuresToEnable, featuresToDisable []string
-	for _, feature := range planFeatures {
-		if !slices.Contains(stateFeatures, feature) {
-			featuresToEnable = append(featuresToEnable, feature)
-		}
-	}
-	for _, feature := range stateFeatures {
-		if !slices.Contains(planFeatures, feature) {
-			featuresToDisable = append(featuresToDisable, feature)
-		}
-	}
-	if slices.Contains(featuresToEnable, string(awstypes.FeatureTypeRootCredentialsManagement)) {
-		var input iam.EnableOrganizationsRootCredentialsManagementInput
-		_, err := conn.EnableOrganizationsRootCredentialsManagement(ctx, &input)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if slices.Contains(featuresToEnable, string(awstypes.FeatureTypeRootSessions)) {
-		var input iam.EnableOrganizationsRootSessionsInput
-		_, err := conn.EnableOrganizationsRootSessions(ctx, &input)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if slices.Contains(featuresToDisable, string(awstypes.FeatureTypeRootCredentialsManagement)) {
-		var input iam.DisableOrganizationsRootCredentialsManagementInput
-		_, err := conn.DisableOrganizationsRootCredentialsManagement(ctx, &input)
-		if err != nil {
-			return nil, err
-		}
-	}
-	if slices.Contains(featuresToDisable, string(awstypes.FeatureTypeRootSessions)) {
-		var input iam.DisableOrganizationsRootSessionsInput
-		_, err := conn.DisableOrganizationsRootSessions(ctx, &input)
-		if err != nil {
-			return nil, err
-		}
-	}
-	var input iam.ListOrganizationsFeaturesInput
-	out, err := conn.ListOrganizationsFeatures(ctx, &input)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func updateOrganizationFeatures(ctx context.Context, conn *iam.Client, new, old []awstypes.FeatureType) error {
 	toEnable := itypes.Set[awstypes.FeatureType](new).Difference(old)
 	toDisable := itypes.Set[awstypes.FeatureType](old).Difference(new)
