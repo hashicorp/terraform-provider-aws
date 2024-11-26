@@ -1511,7 +1511,7 @@ resource "aws_security_group" "test" {
   count = %[2]d
 
   vpc_id = aws_vpc.test.id
-  name   = %[1]q
+  name   = "%[1]s-${count.index}"
 
   tags = {
     Name = %[1]q
