@@ -1509,25 +1509,21 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 	typeFrom := valFrom.Type()
 	typeTo := valTo.Type()
 
-	opts := flexer.getOptions()
-	for i := 0; i < typeFrom.NumField(); i++ {
-		fromField := typeFrom.Field(i)
-		if !fromField.IsExported() {
-			continue // Skip unexported fields.
-		}
-		fieldName := fromField.Name
-		if opts.isIgnoredField(fieldName) {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
-			})
-			continue
-		}
+	fieldIndexes, d := flattenStructFieldIndexes(ctx, typeFrom, flexer.getOptions())
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
 
-		toField, ok := findFieldFuzzy(ctx, fieldName, typeFrom, typeTo, flexer)
+	for _, fieldIndex := range fieldIndexes {
+		fromField := typeFrom.FieldByIndex(fieldIndex)
+		fromFieldName := fromField.Name
+
+		toField, ok := findFieldFuzzy(ctx, fromFieldName, typeFrom, typeTo, flexer)
 		if !ok {
 			// Corresponding field not found in to.
 			tflog.SubsystemDebug(ctx, subsystemName, "No corresponding field", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
+				logAttrKeySourceFieldname: fromFieldName,
 			})
 			continue
 		}
@@ -1536,14 +1532,14 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		toFieldVal := valTo.FieldByIndex(toField.Index)
 		if toNameOverride == "-" {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored target field", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
+				logAttrKeySourceFieldname: fromFieldName,
 				logAttrKeyTargetFieldname: toFieldName,
 			})
 			continue
 		}
 		if toOpts.NoFlatten() {
 			tflog.SubsystemTrace(ctx, subsystemName, "Skipping noflatten target field", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
+				logAttrKeySourceFieldname: fromFieldName,
 				logAttrKeyTargetFieldname: toFieldName,
 			})
 			continue
@@ -1551,14 +1547,14 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 		if !toFieldVal.CanSet() {
 			// Corresponding field value can't be changed.
 			tflog.SubsystemDebug(ctx, subsystemName, "Field cannot be set", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
+				logAttrKeySourceFieldname: fromFieldName,
 				logAttrKeyTargetFieldname: toFieldName,
 			})
 			continue
 		}
 
 		tflog.SubsystemTrace(ctx, subsystemName, "Matched fields", map[string]any{
-			logAttrKeySourceFieldname: fieldName,
+			logAttrKeySourceFieldname: fromFieldName,
 			logAttrKeyTargetFieldname: toFieldName,
 		})
 
@@ -1567,13 +1563,40 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			omitempty: toOpts.OmitEmpty(),
 		}
 
-		diags.Append(flexer.convert(ctx, sourcePath.AtName(fieldName), valFrom.Field(i), targetPath.AtName(toFieldName), toFieldVal, opts)...)
+		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fieldIndex), targetPath.AtName(toFieldName), toFieldVal, opts)...)
 		if diags.HasError() {
 			break
 		}
 	}
 
 	return diags
+}
+
+func flattenStructFieldIndexes(ctx context.Context, typ reflect.Type, opts AutoFlexOptions) (indexes [][]int, diags diag.Diagnostics) {
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		if !field.IsExported() && !field.Anonymous {
+			// Skip unexported fields. Unexported embedded structs (anonymous fields) are allowed because they may
+			// contain exported fields that are promoted; which means they can be read/set.
+			continue
+		}
+
+		// This index sequence is the location of the field within the struct.
+		// For promoted fields from an embedded struct, the length of this sequence will be > 1
+		fieldIndexSequence := []int{i}
+
+		fieldName := field.Name
+		if opts.isIgnoredField(fieldName) {
+			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+				logAttrKeySourceFieldname: fieldName,
+			})
+			continue
+		}
+
+		indexes = append(indexes, fieldIndexSequence)
+	}
+
+	return indexes, diags
 }
 
 // setMapBlockKey takes a struct and assigns the value of the `key`
