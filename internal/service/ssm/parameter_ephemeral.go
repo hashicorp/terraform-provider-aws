@@ -66,6 +66,16 @@ func (e *ephemeralParameter) Open(ctx context.Context, request ephemeral.OpenReq
 		return
 	}
 
+	// Terraform does not have the notion of planning for ephemeral resources,
+	// data sources, or providers. As a result, default handlers are not
+	// implemented for these objects in the Terraform Plugin Framework.
+	//
+	// To align with the data source data.aws_ssm_parameter,
+	// we default `with_decryption`.
+	if data.WithDecryption.IsNull() {
+		data.WithDecryption = types.BoolValue(true)
+	}
+
 	input := ssm.GetParameterInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 	if response.Diagnostics.HasError() {
