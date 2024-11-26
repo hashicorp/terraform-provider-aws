@@ -249,6 +249,8 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Owners = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
+	diags = checkMostRecentAndMissingFilters(diags, input, d.Get(names.AttrMostRecent).(bool))
+
 	images, err := findImages(ctx, conn, input)
 
 	if err != nil {
@@ -417,4 +419,29 @@ func flattenAMIStateReason(m *awstypes.StateReason) map[string]interface{} {
 		s[names.AttrMessage] = "UNSET"
 	}
 	return s
+}
+
+// checkMostRecentAndMissingFilters appends a diagnostic if the provided configuration
+// uses the most recent image and is not filtered by owner or image ID
+func checkMostRecentAndMissingFilters(diags diag.Diagnostics, input *ec2.DescribeImagesInput, mostRecent bool) diag.Diagnostics {
+	filtered := false
+	for _, f := range input.Filters {
+		name := aws.ToString(f.Name)
+		if name == "image-id" || name == "owner-id" {
+			filtered = true
+		}
+	}
+
+	if mostRecent && len(input.Owners) == 0 && !filtered {
+		return append(diags, diag.Diagnostic{
+			Severity: diag.Warning,
+			Summary:  "Most Recent Image Not Filtered",
+			Detail: `"most_recent" is set to "true" and results are not filtered by owner or image ID. ` +
+				"With this configuration, a third party may introduce a new image which " +
+				"will be returned by this data source. Consider filtering by owner or image ID " +
+				"to avoid this possibility.",
+		})
+	}
+
+	return diags
 }

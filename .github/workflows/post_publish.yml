@@ -69,7 +69,7 @@ jobs:
               sleep 1h
             else
               echo "Registry and Github Version matches"
-                echo "current=$LATEST_VERSION >> "$GITHUB_OUTPUT"
+              echo "current=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
             fi
           done
 
@@ -107,14 +107,12 @@ jobs:
       - name: Send Slack Notification Upon Failure
         if: ${{ failure() }}
         uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
         with:
-          channel-id: ${{ secrets.SLACK_CHANNEL }}
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
-          webhook-type: incoming-webhook
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             {
+              "channel" : "${{ secrets.SLACK_CHANNEL }}",
               "blocks": [
                 {
                   "type": "section",

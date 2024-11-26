@@ -124,6 +124,7 @@ var (
 	ResourceVerifiedAccessTrustProvider                   = resourceVerifiedAccessTrustProvider
 	ResourceVolumeAttachment                              = resourceVolumeAttachment
 
+	CheckMostRecentAndMissingFilters                           = checkMostRecentAndMissingFilters
 	CustomFiltersSchema                                        = customFiltersSchema
 	CustomerGatewayConfigurationToTunnelInfo                   = customerGatewayConfigurationToTunnelInfo
 	ErrCodeDefaultSubnetAlreadyExistsInAvailabilityZone        = errCodeDefaultSubnetAlreadyExistsInAvailabilityZone
