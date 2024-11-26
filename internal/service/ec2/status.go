@@ -1572,3 +1572,19 @@ func statusNetworkInsightsAnalysis(ctx context.Context, conn *ec2.Client, id str
 		return output, string(output.Status), nil
 	}
 }
+
+func statusVPCBlockPublicAccessOptions(ctx context.Context, conn *ec2.Client) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVPCBlockPublicAccessOptions(ctx, conn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}

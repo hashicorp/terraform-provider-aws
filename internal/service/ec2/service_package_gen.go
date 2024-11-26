@@ -66,7 +66,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Security Group VPC Association",
 		},
 		{
-			Factory: newResourceVPCBlockPublicAccessOptions,
+			Factory: newVPCBlockPublicAccessOptionsResource,
 			Name:    "VPC Block Public Access Options",
 		},
 		{

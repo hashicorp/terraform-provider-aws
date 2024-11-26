@@ -5,30 +5,30 @@ package ec2
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_vpc_block_public_access_options", name="VPC Block Public Access Options")
-func newResourceVPCBlockPublicAccessOptions(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceVPCBlockPublicAccessOptions{}
+func newVPCBlockPublicAccessOptionsResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &vpcBlockPublicAccessOptionsResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -36,42 +36,35 @@ func newResourceVPCBlockPublicAccessOptions(_ context.Context) (resource.Resourc
 	return r, nil
 }
 
-const (
-	ResNameVPCBlockPublicAccessOptions = "VPC Block Public Access Options"
-)
-
-type resourceVPCBlockPublicAccessOptions struct {
+type vpcBlockPublicAccessOptionsResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceVPCBlockPublicAccessOptions) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_vpc_block_public_access_options"
+func (*vpcBlockPublicAccessOptionsResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_vpc_block_public_access_options"
 }
 
-func (r *resourceVPCBlockPublicAccessOptions) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *vpcBlockPublicAccessOptionsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			names.AttrAWSAccountID: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"aws_region": schema.StringAttribute{
 				Computed: true,
-			},
-			"internet_gateway_block_mode": schema.StringAttribute{
-				Required: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.InternetGatewayBlockMode](),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"last_update_timestamp": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			"reason": schema.StringAttribute{
-				Computed: true,
+			names.AttrID: framework.IDAttribute(),
+			"internet_gateway_block_mode": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.InternetGatewayBlockMode](),
+				Required:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -84,240 +77,140 @@ func (r *resourceVPCBlockPublicAccessOptions) Schema(ctx context.Context, req re
 	}
 }
 
-func (r *resourceVPCBlockPublicAccessOptions) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *vpcBlockPublicAccessOptionsResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data vpcBlockPublicAccessOptionsResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var plan resourceVPCBlockPublicAccessOptionsModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
+	input := &ec2.ModifyVpcBlockPublicAccessOptionsInput{
+		InternetGatewayBlockMode: data.InternetGatewayBlockMode.ValueEnum(),
 	}
 
-	var input ec2.ModifyVpcBlockPublicAccessOptionsInput
+	output, err := conn.ModifyVpcBlockPublicAccessOptions(ctx, input)
 
-	input.InternetGatewayBlockMode = awstypes.InternetGatewayBlockMode(plan.InternetGatewayBlockMode.ValueString())
-
-	out, err := conn.ModifyVpcBlockPublicAccessOptions(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCBlockPublicAccessOptions, "ModifyVpcBlockPublicAccessOptions", err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("creating VPC Block Public Access Options", err.Error())
+
 		return
 	}
 
-	if out == nil || out.VpcBlockPublicAccessOptions == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCBlockPublicAccessOptions, plan.ID.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
+	options, err := waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, r.CreateTimeout(ctx, data.Timeouts))
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.VpcBlockPublicAccessOptions, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID+":"+r.Meta().Region)
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	err = waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameVPCBlockPublicAccessOptions, plan.ID.String(), err),
-			err.Error(),
-		)
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), fwflex.StringToFramework(ctx, output.VpcBlockPublicAccessOptions.AwsRegion)) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError("waiting for VPC Block Public Access Options create", err.Error())
+
 		return
 	}
 
-	desc_out, desc_err := conn.DescribeVpcBlockPublicAccessOptions(ctx, &ec2.DescribeVpcBlockPublicAccessOptionsInput{})
-	if desc_err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameVPCBlockPublicAccessOptions, plan.ID.String(), desc_err),
-			desc_err.Error(),
-		)
-		return
-	}
+	// Set values for unknowns.
+	data.AWSAccountID = fwflex.StringToFramework(ctx, options.AwsAccountId)
+	data.AWSRegion = fwflex.StringToFramework(ctx, options.AwsRegion)
+	data.ID = data.AWSRegion
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, desc_out.VpcBlockPublicAccessOptions, &plan)...)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceVPCBlockPublicAccessOptions) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *vpcBlockPublicAccessOptionsResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data vpcBlockPublicAccessOptionsResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var state resourceVPCBlockPublicAccessOptionsModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	options, err := findVPCBlockPublicAccessOptions(ctx, conn)
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	out, err := conn.DescribeVpcBlockPublicAccessOptions(ctx, &ec2.DescribeVpcBlockPublicAccessOptionsInput{})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameVPCBlockPublicAccessOptions, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading VPC Block Public Access Options (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.VpcBlockPublicAccessOptions, &state)...)
-	if resp.Diagnostics.HasError() {
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, options, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceVPCBlockPublicAccessOptions) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *vpcBlockPublicAccessOptionsResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new vpcBlockPublicAccessOptionsResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var plan, state resourceVPCBlockPublicAccessOptionsModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
+	input := &ec2.ModifyVpcBlockPublicAccessOptionsInput{
+		InternetGatewayBlockMode: new.InternetGatewayBlockMode.ValueEnum(),
 	}
 
-	if !plan.InternetGatewayBlockMode.Equal(state.InternetGatewayBlockMode) {
-		var input ec2.ModifyVpcBlockPublicAccessOptionsInput
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	_, err := conn.ModifyVpcBlockPublicAccessOptions(ctx, input)
 
-		out, err := conn.ModifyVpcBlockPublicAccessOptions(ctx, &input)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCBlockPublicAccessOptions, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.VpcBlockPublicAccessOptions == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCBlockPublicAccessOptions, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-
-		resp.Diagnostics.Append(flex.Flatten(ctx, out.VpcBlockPublicAccessOptions, &plan)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	err := waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, updateTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForCreation, ResNameVPCBlockPublicAccessOptions, plan.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("updating VPC Block Public Access Options (%s)", new.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	desc_out, desc_err := conn.DescribeVpcBlockPublicAccessOptions(ctx, &ec2.DescribeVpcBlockPublicAccessOptionsInput{})
-	if desc_err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameVPCBlockPublicAccessOptions, plan.ID.String(), desc_err),
-			desc_err.Error(),
-		)
+	if _, err := waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPC Block Public Access Options (%s) update", new.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, desc_out.VpcBlockPublicAccessOptions, &plan)...)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceVPCBlockPublicAccessOptions) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *vpcBlockPublicAccessOptionsResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data vpcBlockPublicAccessOptionsResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().EC2Client(ctx)
 
-	var state resourceVPCBlockPublicAccessOptionsModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
+	// On deletion of this resource set the VPC Block Public Access Options to off.
+	input := &ec2.ModifyVpcBlockPublicAccessOptionsInput{
+		InternetGatewayBlockMode: awstypes.InternetGatewayBlockModeOff,
 	}
 
-	var input ec2.ModifyVpcBlockPublicAccessOptionsInput
+	_, err := conn.ModifyVpcBlockPublicAccessOptions(ctx, input)
 
-	// On deletion of this resource set the VPC Block Public Access Options to off
-	input.InternetGatewayBlockMode = awstypes.InternetGatewayBlockModeOff
-
-	out, err := conn.ModifyVpcBlockPublicAccessOptions(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCBlockPublicAccessOptions, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting VPC Block Public Access Options (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	if out == nil || out.VpcBlockPublicAccessOptions == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameVPCBlockPublicAccessOptions, state.ID.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
+	if _, err := waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for VPC Block Public Access Options (%s) delete", data.ID.ValueString()), err.Error())
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	err = waitVPCBlockPublicAccessOptionsUpdated(ctx, conn, deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionWaitingForDeletion, ResNameVPCBlockPublicAccessOptions, state.ID.String(), err),
-			err.Error(),
-		)
 		return
 	}
 }
 
-func (r *resourceVPCBlockPublicAccessOptions) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
-}
-
-func waitVPCBlockPublicAccessOptionsUpdated(ctx context.Context, conn *ec2.Client, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateInProgress),
-		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateComplete),
-		Refresh:                   statusVPCBlockPublicAccessOptions(ctx, conn),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if _, ok := outputRaw.(*awstypes.VpcBlockPublicAccessOptions); ok {
-		return err
-	}
-
-	return err
-}
-
-func statusVPCBlockPublicAccessOptions(ctx context.Context, conn *ec2.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := conn.DescribeVpcBlockPublicAccessOptions(ctx, &ec2.DescribeVpcBlockPublicAccessOptionsInput{})
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.VpcBlockPublicAccessOptions.State), nil
-	}
-}
-
-type resourceVPCBlockPublicAccessOptionsModel struct {
-	AWSAccountID             types.String      `tfsdk:"aws_account_id"`
-	AWSRegion                types.String      `tfsdk:"aws_region"`
-	InternetGatewayBlockMode types.String      `tfsdk:"internet_gateway_block_mode"`
-	ID                       types.String      `tfsdk:"id"`
-	LastUpdateTimestamp      timetypes.RFC3339 `tfsdk:"last_update_timestamp"`
-	Reason                   types.String      `tfsdk:"reason"`
-	Timeouts                 timeouts.Value    `tfsdk:"timeouts"`
+type vpcBlockPublicAccessOptionsResourceModel struct {
+	AWSAccountID             types.String                                          `tfsdk:"aws_account_id"`
+	AWSRegion                types.String                                          `tfsdk:"aws_region"`
+	ID                       types.String                                          `tfsdk:"id"`
+	InternetGatewayBlockMode fwtypes.StringEnum[awstypes.InternetGatewayBlockMode] `tfsdk:"internet_gateway_block_mode"`
+	Timeouts                 timeouts.Value                                        `tfsdk:"timeouts"`
 }
