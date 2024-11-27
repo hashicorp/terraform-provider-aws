@@ -26,7 +26,7 @@ var hostedZoneIDsMap = map[string]string{
 	endpoints.ApSoutheast5RegionID: "Z08660063OXLMA7F1FJHU",
 	endpoints.CaCentral1RegionID:   "Z1QDHH18159H29",
 	endpoints.CaWest1RegionID:      "Z03565811Z33SLEZTHOUL",
-	names.CNNorth1RegionID:     "Z5CN8UMXT92WN",
+	endpoints.CnNorth1RegionID:     "Z5CN8UMXT92WN",
 	names.CNNorthwest1RegionID: "Z282HJ1KT0DH03",
 	endpoints.EuCentral1RegionID:   "Z21DNDUVLTQW6Q",
 	endpoints.EuCentral2RegionID:   "Z030506016YDQGETNASS",

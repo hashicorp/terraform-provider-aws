@@ -155,7 +155,6 @@ const (
 	USWest2RegionID = "us-west-2" // US West (Oregon).
 
 	// AWS China partition's regions.
-	CNNorth1RegionID     = "cn-north-1"     // China (Beijing).
 	CNNorthwest1RegionID = "cn-northwest-1" // China (Ningxia).
 
 	// AWS GovCloud (US) partition's regions.
