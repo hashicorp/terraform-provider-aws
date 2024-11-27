@@ -152,7 +152,7 @@ func resourceDeploymentStrategyRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("replicate_to", output.ReplicateTo)
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Resource:  fmt.Sprintf("deploymentstrategy/%s", d.Id()),
