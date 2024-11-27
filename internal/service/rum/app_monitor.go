@@ -212,7 +212,7 @@ func resourceAppMonitorRead(ctx context.Context, d *schema.ResourceData, meta in
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "rum",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "appmonitor/" + name,
 	}.String()
 	d.Set(names.AttrARN, arn)
