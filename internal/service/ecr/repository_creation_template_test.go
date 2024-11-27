@@ -49,7 +49,7 @@ func TestAccECRRepositoryCreationTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "repository_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_tags.Foo", "Bar"),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
 			},
 			{
@@ -147,7 +147,7 @@ func TestAccECRRepositoryCreationTemplate_repository(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "repository_policy", regexache.MustCompile(repositoryPrefix)),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
 			},
 			{
@@ -161,7 +161,7 @@ func TestAccECRRepositoryCreationTemplate_repository(t *testing.T) {
 					testAccCheckRepositoryCreationTemplateExists(ctx, resourceName),
 					resource.TestMatchResourceAttr(resourceName, "repository_policy", regexache.MustCompile(repositoryPrefix)),
 					resource.TestMatchResourceAttr(resourceName, "repository_policy", regexache.MustCompile("ecr:DescribeImages")),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
 			},
 		},
