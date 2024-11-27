@@ -44,7 +44,7 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`upload:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`upload:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "APPIUM_JAVA_TESTNG_TEST_SPEC"),
 					resource.TestCheckResourceAttr(resourceName, "category", "PRIVATE"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
@@ -61,7 +61,7 @@ func TestAccDeviceFarmUpload_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUploadExists(ctx, resourceName, &proj),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`upload:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`upload:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "APPIUM_JAVA_TESTNG_TEST_SPEC"),
 					resource.TestCheckResourceAttr(resourceName, "category", "PRIVATE"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),

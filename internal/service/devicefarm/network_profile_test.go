@@ -49,7 +49,7 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "uplink_bandwidth_bits", "104857600"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`networkprofile:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`networkprofile:.+`)),
 				),
 			},
 			{
@@ -67,7 +67,7 @@ func TestAccDeviceFarmNetworkProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "uplink_bandwidth_bits", "104857600"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "project_arn", "aws_devicefarm_project.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`networkprofile:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "devicefarm", regexache.MustCompile(`networkprofile:.+`)),
 				),
 			},
 		},
