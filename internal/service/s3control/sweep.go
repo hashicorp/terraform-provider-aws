@@ -70,7 +70,7 @@ func sweepAccessGrants(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListAccessGrantsInput{
 		AccountId: aws.String(accountID),
 	}
@@ -112,7 +112,7 @@ func sweepAccessGrantsInstances(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListAccessGrantsInstancesInput{
 		AccountId: aws.String(accountID),
 	}
@@ -154,7 +154,7 @@ func sweepAccessGrantsLocations(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListAccessGrantsLocationsInput{
 		AccountId: aws.String(accountID),
 	}
@@ -196,7 +196,7 @@ func sweepAccessPoints(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListAccessPointsInput{
 		AccountId: aws.String(accountID),
 	}
@@ -251,7 +251,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListMultiRegionAccessPointsInput{
 		AccountId: aws.String(accountID),
 	}
@@ -295,7 +295,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListAccessPointsForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 	}
@@ -343,7 +343,7 @@ func sweepStorageLensConfigurations(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListStorageLensConfigurationsInput{
 		AccountId: aws.String(accountID),
 	}
