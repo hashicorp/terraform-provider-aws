@@ -213,7 +213,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	ruleArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   rbin.ServiceID,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("rule/%s", aws.ToString(out.Identifier)),
 	}.String()
