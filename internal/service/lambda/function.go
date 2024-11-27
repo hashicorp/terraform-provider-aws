@@ -1401,7 +1401,7 @@ func signerServiceIsAvailable(region string) bool {
 	availableRegions := map[string]struct{}{
 		names.USEast1RegionID:      {},
 		endpoints.UsEast2RegionID:      {},
-		names.USWest1RegionID:      {},
+		endpoints.UsWest1RegionID:      {},
 		names.USWest2RegionID:      {},
 		endpoints.AfSouth1RegionID:     {},
 		endpoints.ApEast1RegionID:      {},

@@ -44,7 +44,7 @@ func RegisterSweepers() {
 
 func sweepAccessPolicies(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID || region == endpoints.UsGovEast1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Access Policy sweep for region: %s", region)
 		return nil
 	}
@@ -91,7 +91,7 @@ func sweepAccessPolicies(region string) error {
 
 func sweepCollections(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID || region == endpoints.UsGovEast1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Collection sweep for region: %s", region)
 		return nil
 	}
@@ -134,7 +134,7 @@ func sweepCollections(region string) error {
 
 func sweepSecurityConfigs(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID || region == endpoints.UsGovEast1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Security Config sweep for region: %s", region)
 		return nil
 	}
@@ -179,7 +179,7 @@ func sweepSecurityConfigs(region string) error {
 
 func sweepSecurityPolicies(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID || region == endpoints.UsGovEast1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Security Policy sweep for region: %s", region)
 		return nil
 	}
@@ -253,7 +253,7 @@ func sweepSecurityPolicies(region string) error {
 
 func sweepVPCEndpoints(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID || region == endpoints.UsGovEast1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Security Policy sweep for region: %s", region)
 		return nil
 	}

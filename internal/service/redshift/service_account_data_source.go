@@ -44,7 +44,7 @@ var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.UsEast2RegionID:    "391106570357",
 	endpoints.UsGovEast1RegionID: "665727464434",
 	endpoints.UsGovWest1RegionID: "665727464434",
-	names.USWest1RegionID:    "262260360010",
+	endpoints.UsWest1RegionID:    "262260360010",
 	names.USWest2RegionID:    "902366379725",
 }
 
