@@ -30,7 +30,7 @@ var accountIDPerRegionMap = map[string]string{
 	endpoints.CaCentral1RegionID:   "985666609251",
 	names.CNNorth1RegionID:     "638102146993",
 	names.CNNorthwest1RegionID: "037604701340",
-	names.EUCentral1RegionID:   "054676820928",
+	endpoints.EuCentral1RegionID:   "054676820928",
 	names.EUNorth1RegionID:     "897822967062",
 	names.EUSouth1RegionID:     "635631232127",
 	names.EUWest1RegionID:      "156460612806",
