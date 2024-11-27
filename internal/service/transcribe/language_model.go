@@ -166,7 +166,7 @@ func resourceLanguageModelRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "transcribe",
 		Region:    meta.(*conns.AWSClient).Region,

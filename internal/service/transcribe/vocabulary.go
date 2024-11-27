@@ -145,7 +145,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "transcribe",
 		Region:    meta.(*conns.AWSClient).Region,
