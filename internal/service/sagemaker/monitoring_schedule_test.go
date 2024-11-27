@@ -34,7 +34,7 @@ func TestAccSageMakerMonitoringSchedule_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMonitoringScheduleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("monitoring-schedule/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("monitoring-schedule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "monitoring_schedule_config.0.monitoring_job_definition_name", "aws_sagemaker_data_quality_job_definition.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "monitoring_schedule_config.0.monitoring_type", "DataQuality"),
