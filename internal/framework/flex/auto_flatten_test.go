@@ -5306,7 +5306,58 @@ func TestFlattenStructSetOfStringEnum(t *testing.T) {
 	}
 }
 
-func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
+func TestFlattenEmbeddedStruct(t *testing.T) {
+	t.Parallel()
+
+	testCases := autoFlexTestCases{
+		"exported": {
+			Source: &awsEmbeddedStruct{
+				Field1: "a",
+				Field2: "b",
+			},
+			Target: &tfExportedEmbeddedStruct{},
+			WantTarget: &tfExportedEmbeddedStruct{
+				TFExportedStruct: TFExportedStruct{
+					Field1: types.StringValue("a"),
+				},
+				Field2: types.StringValue("b"),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsEmbeddedStruct](), reflect.TypeFor[*tfExportedEmbeddedStruct]()),
+				infoConverting(reflect.TypeFor[awsEmbeddedStruct](), reflect.TypeFor[*tfExportedEmbeddedStruct]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsEmbeddedStruct](), "Field1", reflect.TypeFor[*tfExportedEmbeddedStruct]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[types.String]()),
+				traceMatchedFields("Field2", reflect.TypeFor[awsEmbeddedStruct](), "Field2", reflect.TypeFor[*tfExportedEmbeddedStruct]()),
+				infoConvertingWithPath("Field2", reflect.TypeFor[string](), "Field2", reflect.TypeFor[types.String]()),
+			},
+		},
+		"unexported": {
+			Source: &awsEmbeddedStruct{
+				Field1: "a",
+				Field2: "b",
+			},
+			Target: &tfUnexportedEmbeddedStruct{},
+			WantTarget: &tfUnexportedEmbeddedStruct{
+				tfSingleStringField: tfSingleStringField{
+					Field1: types.StringValue("a"),
+				},
+				Field2: types.StringValue("b"),
+			},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsEmbeddedStruct](), reflect.TypeFor[*tfUnexportedEmbeddedStruct]()),
+				infoConverting(reflect.TypeFor[awsEmbeddedStruct](), reflect.TypeFor[*tfUnexportedEmbeddedStruct]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsEmbeddedStruct](), "Field1", reflect.TypeFor[*tfUnexportedEmbeddedStruct]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[types.String]()),
+				traceMatchedFields("Field2", reflect.TypeFor[awsEmbeddedStruct](), "Field2", reflect.TypeFor[*tfUnexportedEmbeddedStruct]()),
+				infoConvertingWithPath("Field2", reflect.TypeFor[string](), "Field2", reflect.TypeFor[types.String]()),
+			},
+		},
+	}
+	// cmp.Diff cannot handle an unexported field
+	runAutoFlattenTestCases(t, testCases, cmpopts.EquateComparable(tfUnexportedEmbeddedStruct{}))
+}
+
+func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases, opts ...cmp.Option) {
 	t.Helper()
 
 	for testName, testCase := range testCases {
@@ -5336,7 +5387,7 @@ func runAutoFlattenTestCases(t *testing.T, testCases autoFlexTestCases) {
 
 			if !diags.HasError() {
 				less := func(a, b any) bool { return fmt.Sprintf("%+v", a) < fmt.Sprintf("%+v", b) }
-				if diff := cmp.Diff(testCase.Target, testCase.WantTarget, cmpopts.SortSlices(less)); diff != "" {
+				if diff := cmp.Diff(testCase.Target, testCase.WantTarget, append(opts, cmpopts.SortSlices(less))...); diff != "" {
 					if !testCase.WantDiff {
 						t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 					}
