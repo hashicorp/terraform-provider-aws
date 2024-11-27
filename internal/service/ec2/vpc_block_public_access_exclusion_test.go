@@ -205,6 +205,12 @@ func testAccCheckVPCBlockPublicAccessExclusionExists(ctx context.Context, n stri
 	}
 }
 
+// For generated tests.
+var (
+	testAccCheckBlockPublicAccessExclusionDestroy = testAccCheckVPCBlockPublicAccessExclusionDestroy
+	testAccCheckBlockPublicAccessExclusionExists  = testAccCheckVPCBlockPublicAccessExclusionExists
+)
+
 func testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_vpc_block_public_access_exclusion" "test" {
