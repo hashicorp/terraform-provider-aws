@@ -691,7 +691,7 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "kendra",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/data-source/%s", indexId, id),
 	}.String()
