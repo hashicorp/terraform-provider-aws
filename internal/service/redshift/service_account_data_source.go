@@ -20,7 +20,7 @@ import (
 // See https://docs.amazonaws.cn/en_us/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions
 
 var ServiceAccountPerRegionMap = map[string]string{
-	endpoints.AfSouth1RegionID: "365689465814",
+	endpoints.AfSouth1RegionID:     "365689465814",
 	endpoints.ApEast1RegionID:      "313564881002",
 	endpoints.ApNortheast1RegionID: "404641285394",
 	endpoints.ApNortheast2RegionID: "760740231472",

@@ -189,7 +189,7 @@ const (
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/seq2seq.json
 
 var prebuiltECRImageIDByRegion_blazing = map[string]string{
-	endpoints.AfSouth1RegionID: "455444449433",
+	endpoints.AfSouth1RegionID:     "455444449433",
 	endpoints.ApEast1RegionID:      "286214385809",
 	endpoints.ApNortheast1RegionID: "501404015308",
 	endpoints.ApNortheast2RegionID: "306986355934",
@@ -229,7 +229,7 @@ var prebuiltECRImageIDByRegion_blazing = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/clarify.json
 
 var prebuiltECRImageIDByRegion_clarify = map[string]string{
-	endpoints.AfSouth1RegionID: "811711786498",
+	endpoints.AfSouth1RegionID:     "811711786498",
 	endpoints.ApEast1RegionID:      "098760798382",
 	endpoints.ApNortheast1RegionID: "377024640650",
 	endpoints.ApNortheast2RegionID: "263625296855",
@@ -259,7 +259,7 @@ var prebuiltECRImageIDByRegion_clarify = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/data-wrangler.json
 
 var prebuiltECRImageIDByRegion_dataWrangler = map[string]string{
-	endpoints.AfSouth1RegionID: "143210264188",
+	endpoints.AfSouth1RegionID:     "143210264188",
 	endpoints.ApEast1RegionID:      "707077482487",
 	endpoints.ApNortheast1RegionID: "649008135260",
 	endpoints.ApNortheast2RegionID: "131546521161",
@@ -288,7 +288,7 @@ var prebuiltECRImageIDByRegion_dataWrangler = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/debugger.json
 
 var prebuiltECRImageIDByRegion_debugger = map[string]string{
-	endpoints.AfSouth1RegionID: "314341159256",
+	endpoints.AfSouth1RegionID:     "314341159256",
 	endpoints.ApEast1RegionID:      "199566480951",
 	endpoints.ApNortheast1RegionID: "430734990657",
 	endpoints.ApNortheast2RegionID: "578805364391",
@@ -323,7 +323,7 @@ var prebuiltECRImageIDByRegion_debugger = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/xgboost-neo.json
 
 var prebuiltECRImageIDByRegion_inferentiaNeo = map[string]string{
-	endpoints.AfSouth1RegionID: "774647643957",
+	endpoints.AfSouth1RegionID:     "774647643957",
 	endpoints.ApEast1RegionID:      "110948597952",
 	endpoints.ApNortheast1RegionID: "941853720454",
 	endpoints.ApNortheast2RegionID: "151534178276",
@@ -360,7 +360,7 @@ var prebuiltECRImageIDByRegion_inferentiaNeo = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/tensorflow.json
 
 var prebuiltECRImageIDByRegion_SageMakerCustom = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
-	endpoints.AfSouth1RegionID: "313743910680",
+	endpoints.AfSouth1RegionID:     "313743910680",
 	endpoints.ApEast1RegionID:      "057415533634",
 	endpoints.ApNortheast1RegionID: "520713654638",
 	endpoints.ApNortheast2RegionID: "520713654638",
@@ -410,7 +410,7 @@ var prebuiltECRImageIDByRegion_SageMakerRL = map[string]string{ // nosemgrep:ci.
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/spark.json
 
 var prebuiltECRImageIDByRegion_spark = map[string]string{
-	endpoints.AfSouth1RegionID: "309385258863",
+	endpoints.AfSouth1RegionID:     "309385258863",
 	endpoints.ApEast1RegionID:      "732049463269",
 	endpoints.ApNortheast1RegionID: "411782140378",
 	endpoints.ApNortheast2RegionID: "860869212795",
@@ -448,7 +448,7 @@ var prebuiltECRImageIDByRegion_spark = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-base-python.json
 
 var prebuiltECRImageIDByRegion_SageMakerBasePython = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
-	endpoints.AfSouth1RegionID: "559312083959",
+	endpoints.AfSouth1RegionID:     "559312083959",
 	endpoints.ApEast1RegionID:      "493642496378",
 	endpoints.ApNortheast1RegionID: "102112518831",
 	endpoints.ApNortheast2RegionID: "806072073708",
@@ -488,7 +488,7 @@ var prebuiltECRImageIDByRegion_SageMakerGeospatial = map[string]string{ // nosem
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/forecasting-deepar.json
 
 var prebuiltECRImageIDByRegion_deepAR = map[string]string{
-	endpoints.AfSouth1RegionID: "455444449433",
+	endpoints.AfSouth1RegionID:     "455444449433",
 	endpoints.ApEast1RegionID:      "286214385809",
 	endpoints.ApNortheast1RegionID: "633353088612",
 	endpoints.ApNortheast2RegionID: "204372634319",
@@ -533,7 +533,7 @@ var prebuiltECRImageIDByRegion_deepAR = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/pca.json
 
 var prebuiltECRImageIDByRegion_factorMachines = map[string]string{
-	endpoints.AfSouth1RegionID: "455444449433",
+	endpoints.AfSouth1RegionID:     "455444449433",
 	endpoints.ApEast1RegionID:      "286214385809",
 	endpoints.ApNortheast1RegionID: "351501993468",
 	endpoints.ApNortheast2RegionID: "835164637446",
@@ -598,7 +598,7 @@ var prebuiltECRImageIDByRegion_lda = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sklearn.json
 
 var prebuiltECRImageIDByRegion_XGBoost = map[string]string{
-	endpoints.AfSouth1RegionID: "510948584623",
+	endpoints.AfSouth1RegionID:     "510948584623",
 	endpoints.ApEast1RegionID:      "651117190479",
 	endpoints.ApNortheast1RegionID: "354813040037",
 	endpoints.ApNortheast2RegionID: "366743142698",
@@ -650,7 +650,7 @@ var prebuiltECRImageIDByRegion_XGBoost = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/huggingface-llm.json
 
 var prebuiltECRImageIDByRegion_deepLearning = map[string]string{
-	endpoints.AfSouth1RegionID: "626614931356",
+	endpoints.AfSouth1RegionID:     "626614931356",
 	endpoints.ApEast1RegionID:      "871362719292",
 	endpoints.ApNortheast1RegionID: "763104351884",
 	endpoints.ApNortheast2RegionID: "763104351884",
@@ -690,7 +690,7 @@ var prebuiltECRImageIDByRegion_deepLearning = map[string]string{
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/model-monitor.json
 
 var prebuiltECRImageIDByRegion_modelMonitor = map[string]string{
-	endpoints.AfSouth1RegionID: "875698925577",
+	endpoints.AfSouth1RegionID:     "875698925577",
 	endpoints.ApEast1RegionID:      "001633400207",
 	endpoints.ApNortheast1RegionID: "574779866223",
 	endpoints.ApNortheast2RegionID: "709848358524",

@@ -20,7 +20,7 @@ import (
 // See https://docs.aws.amazon.com/govcloud-us/latest/ug-west/verifying-cloudtrail.html
 
 var serviceAccountPerRegionMap = map[string]string{
-	endpoints.AfSouth1RegionID: "525921808201",
+	endpoints.AfSouth1RegionID:     "525921808201",
 	endpoints.ApEast1RegionID:      "119688915426",
 	endpoints.ApNortheast1RegionID: "216624486486",
 	endpoints.ApNortheast2RegionID: "492519147666",

@@ -18,7 +18,7 @@ import (
 // See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy
 // See https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-logging-bucket-permissions
 var accountIDPerRegionMap = map[string]string{
-	endpoints.AfSouth1RegionID: "098369216593",
+	endpoints.AfSouth1RegionID:     "098369216593",
 	endpoints.ApEast1RegionID:      "754344448648",
 	endpoints.ApNortheast1RegionID: "582318560864",
 	endpoints.ApNortheast2RegionID: "600734575887",

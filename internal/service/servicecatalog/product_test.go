@@ -167,7 +167,7 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.description", "artefaktbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact_parameters.0.template_physical_id"),
-					acctest.MatchResourceAttrRegionalARN(ctx, 
+					acctest.MatchResourceAttrRegionalARN(ctx,
 						resourceName,
 						"provisioning_artifact_parameters.0.template_physical_id",
 						"cloudformation",

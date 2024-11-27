@@ -17,7 +17,7 @@ import (
 // See https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html
 
 var hostedZoneIDs = map[string]string{
-	endpoints.AfSouth1RegionID: "Z1EI3BVKMKK4AM",
+	endpoints.AfSouth1RegionID:     "Z1EI3BVKMKK4AM",
 	endpoints.ApSoutheast1RegionID: "Z16FZ9L249IFLT",
 	endpoints.ApSoutheast2RegionID: "Z2PCDNR3VC2G1N",
 	endpoints.ApSoutheast3RegionID: "Z05913172VM7EAZB40TA8",
