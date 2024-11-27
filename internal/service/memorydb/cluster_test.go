@@ -35,7 +35,7 @@ func TestAccMemoryDBCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", names.AttrID),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexache.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
@@ -98,7 +98,7 @@ func TestAccMemoryDBCluster_defaults(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl_name", "open-access"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_endpoint.0.address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
@@ -1044,7 +1044,7 @@ func TestAccMemoryDBCluster_valkeyEngine(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "acl_name", "aws_memorydb_acl.test", names.AttrID),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "memorydb", "cluster/"+rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtFalse),
 					resource.TestMatchResourceAttr(resourceName, "cluster_endpoint.0.address", regexache.MustCompile(`^clustercfg\..*?\.amazonaws\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "cluster_endpoint.0.port", "6379"),
