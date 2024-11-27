@@ -298,7 +298,7 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.OpsWorks,
 		Region:    region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("stack/%s/", d.Id()),
 	}.String()
 

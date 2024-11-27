@@ -37,7 +37,7 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "apache_passenger"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_healing", acctest.CtTrue),
