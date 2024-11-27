@@ -4535,13 +4535,13 @@ func testAccClusterConfig_replicationSource_promote(rName string) string {
 resource "aws_rds_cluster" "alternate" {
   provider = "awsalternate"
 
-  cluster_identifier            = "%[1]s-replica"
-  db_subnet_group_name          = aws_db_subnet_group.test.name
-  engine                        = %[2]q
-  kms_key_id                    = aws_kms_key.test.arn
-  storage_encrypted             = true
-  skip_final_snapshot           = true
-  source_region                 = data.aws_region.current.name
+  cluster_identifier   = "%[1]s-replica"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  engine               = %[2]q
+  kms_key_id           = aws_kms_key.test.arn
+  storage_encrypted    = true
+  skip_final_snapshot  = true
+  source_region        = data.aws_region.current.name
 
   depends_on = [
     aws_rds_cluster_instance.test,
