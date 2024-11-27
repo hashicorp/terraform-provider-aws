@@ -58,6 +58,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "metrics_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
 			},
@@ -1294,11 +1295,7 @@ func TestAccLambdaEventSourceMapping_documentDB(t *testing.T) {
 
 func TestAccLambdaEventSourceMapping_SQS_metricsConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var conf lambda.GetEventSourceMappingOutput
+	var v lambda.GetEventSourceMappingOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lambda_event_source_mapping.test"
 
@@ -1311,7 +1308,7 @@ func TestAccLambdaEventSourceMapping_SQS_metricsConfig(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_sqsMetricsConfig1(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "metrics_config.0.metrics.0", "EventCount"),
 				),
 			},
@@ -1324,7 +1321,7 @@ func TestAccLambdaEventSourceMapping_SQS_metricsConfig(t *testing.T) {
 			{
 				Config: testAccEventSourceMappingConfig_sqsMetricsConfig2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventSourceMappingExists(ctx, resourceName, &conf),
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "metrics_config.#", "0"),
 				),
 			},

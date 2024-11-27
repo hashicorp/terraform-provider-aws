@@ -466,7 +466,7 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("metrics_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.MetricsConfig = expandMetricsConfig(v.([]interface{})[0].(map[string]interface{}))
+		input.MetricsConfig = expandEventSourceMappingMetricsConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("parallelization_factor"); ok {
@@ -607,7 +607,7 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("maximum_record_age_in_seconds", output.MaximumRecordAgeInSeconds)
 	d.Set("maximum_retry_attempts", output.MaximumRetryAttempts)
 	if v := output.MetricsConfig; v != nil {
-		if err := d.Set("metrics_config", []interface{}{flattenMetricsConfig(v)}); err != nil {
+		if err := d.Set("metrics_config", []interface{}{flattenEventSourceMappingMetricsConfig(v)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting metrics_config: %s", err)
 		}
 	} else {
@@ -732,7 +732,7 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if d.HasChange("metrics_config") {
 			if v, ok := d.GetOk("metrics_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.MetricsConfig = expandMetricsConfig((v.([]interface{})[0].(map[string]interface{})))
+				input.MetricsConfig = expandEventSourceMappingMetricsConfig((v.([]interface{})[0].(map[string]interface{})))
 			} else {
 				input.MetricsConfig = &awstypes.EventSourceMappingMetricsConfig{}
 			}
@@ -1343,7 +1343,7 @@ func flattenScalingConfig(apiObject *awstypes.ScalingConfig) map[string]interfac
 	return tfMap
 }
 
-func expandMetricsConfig(tfMap map[string]interface{}) *awstypes.EventSourceMappingMetricsConfig {
+func expandEventSourceMappingMetricsConfig(tfMap map[string]interface{}) *awstypes.EventSourceMappingMetricsConfig {
 	if tfMap == nil {
 		return nil
 	}
@@ -1357,14 +1357,12 @@ func expandMetricsConfig(tfMap map[string]interface{}) *awstypes.EventSourceMapp
 	return apiObject
 }
 
-func flattenMetricsConfig(apiObject *awstypes.EventSourceMappingMetricsConfig) map[string]interface{} {
+func flattenEventSourceMappingMetricsConfig(apiObject *awstypes.EventSourceMappingMetricsConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"metrics": apiObject.Metrics,
-	}
+	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Metrics; v != nil {
 		tfMap["metrics"] = flex.FlattenStringyValueSet(v)
