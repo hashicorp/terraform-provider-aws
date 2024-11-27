@@ -6617,7 +6617,7 @@ func findVPCBlockPublicAccessExclusions(ctx context.Context, conn *ec2.Client, i
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVpcBlockPublicAccessExclusionIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCBlockPublicAccessExclusionIdNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

@@ -233,7 +233,7 @@ func (r *vpcBlockPublicAccessExclusionResource) Delete(ctx context.Context, requ
 
 	_, err := conn.DeleteVpcBlockPublicAccessExclusion(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVpcBlockPublicAccessExclusionIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCBlockPublicAccessExclusionIdNotFound) {
 		return
 	}
 
