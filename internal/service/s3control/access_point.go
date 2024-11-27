@@ -275,7 +275,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 		accessPointARN := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition(ctx),
 			Service:   "s3",
-			Region:    meta.(*conns.AWSClient).Region,
+			Region:    meta.(*conns.AWSClient).Region(ctx),
 			AccountID: accountID,
 			Resource:  fmt.Sprintf("accesspoint/%s", aws.ToString(output.Name)),
 		}
