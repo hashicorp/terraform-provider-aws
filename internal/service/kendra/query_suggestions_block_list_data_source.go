@@ -121,7 +121,7 @@ func dataSourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Reso
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "kendra",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/query-suggestions-block-list/%s", indexID, querySuggestionsBlockListID),
 	}.String()
 	d.Set(names.AttrARN, arn)

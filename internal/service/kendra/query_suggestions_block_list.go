@@ -183,7 +183,7 @@ func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Resour
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "kendra",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/query-suggestions-block-list/%s", indexId, id),
 	}.String()
 

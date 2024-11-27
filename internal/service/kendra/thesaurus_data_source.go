@@ -128,7 +128,7 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "kendra",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/thesaurus/%s", indexID, thesaurusID),
 	}.String()
 	d.Set(names.AttrARN, arn)

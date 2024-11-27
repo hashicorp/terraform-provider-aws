@@ -128,7 +128,7 @@ func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "kendra",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/faq/%s", indexId, id),
 	}.String()
 

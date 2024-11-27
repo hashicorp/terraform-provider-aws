@@ -245,7 +245,7 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "kendra",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s/experience/%s", indexId, id),
 	}.String()
 

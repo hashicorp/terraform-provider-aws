@@ -305,7 +305,7 @@ func dataSourceIndexRead(ctx context.Context, d *schema.ResourceData, meta inter
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "kendra",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("index/%s", id),
 	}.String()
 
