@@ -60,7 +60,7 @@ func dataSourceUserPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 			Partition: meta.(*conns.AWSClient).Partition(ctx),
 			Service:   "cognito-idp",
 			Region:    meta.(*conns.AWSClient).Region,
-			AccountID: meta.(*conns.AWSClient).AccountID,
+			AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 			Resource:  "userpool/" + userPoolID,
 		}.String()
 
