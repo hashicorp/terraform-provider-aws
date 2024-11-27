@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -334,7 +335,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 
 func sweepStorageLensConfigurations(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USGovEast1RegionID || region == names.USGovWest1RegionID {
+	if region == endpoints.UsGovEast1RegionID || region == names.USGovWest1RegionID {
 		log.Printf("[WARN] Skipping S3 Storage Lens Configuration sweep for region: %s", region)
 		return nil
 	}

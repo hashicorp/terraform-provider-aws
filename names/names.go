@@ -154,11 +154,7 @@ const (
 	USWest1RegionID = "us-west-1" // US West (N. California).
 	USWest2RegionID = "us-west-2" // US West (Oregon).
 
-	// AWS China partition's regions.
-	CNNorthwest1RegionID = "cn-northwest-1" // China (Ningxia).
-
 	// AWS GovCloud (US) partition's regions.
-	USGovEast1RegionID = "us-gov-east-1" // AWS GovCloud (US-East).
 	USGovWest1RegionID = "us-gov-west-1" // AWS GovCloud (US-West).
 
 	// AWS ISO (US) partition's regions.

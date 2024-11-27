@@ -75,7 +75,7 @@ func TestIsIsolatedRegion(t *testing.T) {
 			expected: false,
 		},
 		{
-			input:    names.USGovEast1RegionID,
+			input:    endpoints.UsGovEast1RegionID,
 			expected: false,
 		},
 		{
@@ -167,7 +167,7 @@ func TestIsStandardRegion(t *testing.T) {
 			expected: false,
 		},
 		{
-			input:    names.USGovEast1RegionID,
+			input:    endpoints.UsGovEast1RegionID,
 			expected: false,
 		},
 		{
