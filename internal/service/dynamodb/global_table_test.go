@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -156,7 +157,7 @@ func testAccCheckGlobalTableExists(ctx context.Context, n string) resource.TestC
 func testAccPreCheckGlobalTable(ctx context.Context, t *testing.T) {
 	// Region availability for Version 2017.11.29: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html
 	supportedRegions := []string{
-		names.APNortheast1RegionID,
+		endpoints.ApNortheast1RegionID,
 		names.APNortheast2RegionID,
 		names.APSoutheast1RegionID,
 		names.APSoutheast2RegionID,

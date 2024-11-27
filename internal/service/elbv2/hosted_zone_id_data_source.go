@@ -22,7 +22,7 @@ import (
 var hostedZoneIDPerRegionALBMap = map[string]string{
 	endpoints.AfSouth1RegionID: "Z268VQBMOI5EKX",
 	endpoints.ApEast1RegionID:      "Z3DQVH9N71FHZ0",
-	names.APNortheast1RegionID: "Z14GRHDCWA56QT",
+	endpoints.ApNortheast1RegionID: "Z14GRHDCWA56QT",
 	names.APNortheast2RegionID: "ZWKZPGTI48KDX",
 	names.APNortheast3RegionID: "Z5LXEXXYW11ES",
 	names.APSouth1RegionID:     "ZP97RAFLXTNZK",
@@ -60,7 +60,7 @@ var hostedZoneIDPerRegionALBMap = map[string]string{
 var hostedZoneIDPerRegionNLBMap = map[string]string{
 	endpoints.AfSouth1RegionID: "Z203XCE67M25HM",
 	endpoints.ApEast1RegionID:      "Z12Y7K3UBGUAD1",
-	names.APNortheast1RegionID: "Z31USIVHYNEOWT",
+	endpoints.ApNortheast1RegionID: "Z31USIVHYNEOWT",
 	names.APNortheast2RegionID: "ZIBE1TIR4HY56",
 	names.APNortheast3RegionID: "Z1GWIQ4HH19I5X",
 	names.APSouth1RegionID:     "ZVDDRBQ08TROA",

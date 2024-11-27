@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -17,17 +18,17 @@ import (
 // See https://docs.aws.amazon.com/general/latest/gr/apprunner.html
 
 var hostedZoneIDPerRegionMap = map[string]string{
-	names.USEast2RegionID:      "Z0224347AD7KVHMLOX31",
-	names.USEast1RegionID:      "Z01915732ZBZKC8D32TPT",
-	names.USWest2RegionID:      "Z02243383FTQ64HJ5772Q",
-	names.APSouth1RegionID:     "Z00855883LBHKTIC4ODF2",
-	names.APSoutheast1RegionID: "Z09819469CZ3KQ8PWMCL",
-	names.APSoutheast2RegionID: "Z03657752RA8799S0TI5I",
-	names.APNortheast1RegionID: "Z08491812XW6IPYLR6CCA",
-	names.EUCentral1RegionID:   "Z0334911C2FDI2Q9M4FZ",
-	names.EUWest1RegionID:      "Z087551914Z2PCAU0QHMW",
-	names.EUWest2RegionID:      "Z098228427VC6B3IX76ON",
-	names.EUWest3RegionID:      "Z087117439MBKHYM69QS6",
+	names.USEast2RegionID:          "Z0224347AD7KVHMLOX31",
+	names.USEast1RegionID:          "Z01915732ZBZKC8D32TPT",
+	names.USWest2RegionID:          "Z02243383FTQ64HJ5772Q",
+	names.APSouth1RegionID:         "Z00855883LBHKTIC4ODF2",
+	names.APSoutheast1RegionID:     "Z09819469CZ3KQ8PWMCL",
+	names.APSoutheast2RegionID:     "Z03657752RA8799S0TI5I",
+	endpoints.ApNortheast1RegionID: "Z08491812XW6IPYLR6CCA",
+	names.EUCentral1RegionID:       "Z0334911C2FDI2Q9M4FZ",
+	names.EUWest1RegionID:          "Z087551914Z2PCAU0QHMW",
+	names.EUWest2RegionID:          "Z098228427VC6B3IX76ON",
+	names.EUWest3RegionID:          "Z087117439MBKHYM69QS6",
 }
 
 // @FrameworkDataSource("aws_apprunner_hosted_zone_id", name="Hosted Zone ID")
