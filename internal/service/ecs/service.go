@@ -1694,7 +1694,7 @@ func resourceServiceImport(ctx context.Context, d *schema.ResourceData, meta int
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "ecs",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("cluster/%s", cluster),
 	}.String()
 	d.Set("cluster", clusterArn)

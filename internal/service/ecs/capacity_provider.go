@@ -258,7 +258,7 @@ func resourceCapacityProviderImport(ctx context.Context, d *schema.ResourceData,
 	d.SetId(arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Service:   "ecs",
 		Resource:  "capacity-provider/" + d.Id(),
 	}.String())
