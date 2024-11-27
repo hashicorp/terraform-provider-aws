@@ -109,6 +109,11 @@ func resourceEBSSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"completion_duration_minutes": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ValidateFunc: validation.All(validation.IntDivisibleBy(15), validation.IntAtMost(2880)),
+			},
 		},
 	}
 }
@@ -133,6 +138,10 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("completion_duration_minutes"); ok {
+		input.CompletionDurationMinutes = aws.Int32(int32(v.(int)))
 	}
 
 	output, err := conn.CopySnapshot(ctx, input)
