@@ -490,13 +490,13 @@ func (r *resourceTable) ImportState(ctx context.Context, req resource.ImportStat
 }
 
 func findTable(ctx context.Context, conn *s3tables.Client, bucketARN, namespace, name string) (*s3tables.GetTableOutput, error) {
-	in := &s3tables.GetTableInput{
+	in := s3tables.GetTableInput{
 		Name:           aws.String(name),
 		Namespace:      aws.String(namespace),
 		TableBucketARN: aws.String(bucketARN),
 	}
 
-	out, err := conn.GetTable(ctx, in)
+	out, err := conn.GetTable(ctx, &in)
 	if err != nil {
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{

@@ -214,12 +214,12 @@ func (r *resourceNamespace) ImportState(ctx context.Context, req resource.Import
 }
 
 func findNamespace(ctx context.Context, conn *s3tables.Client, bucketARN, name string) (*s3tables.GetNamespaceOutput, error) {
-	in := &s3tables.GetNamespaceInput{
+	in := s3tables.GetNamespaceInput{
 		Namespace:      aws.String(name),
 		TableBucketARN: aws.String(bucketARN),
 	}
 
-	out, err := conn.GetNamespace(ctx, in)
+	out, err := conn.GetNamespace(ctx, &in)
 	if err != nil {
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{

@@ -230,13 +230,13 @@ func (r *resourceTablePolicy) ImportState(ctx context.Context, req resource.Impo
 }
 
 func findTablePolicy(ctx context.Context, conn *s3tables.Client, bucketARN, namespace, name string) (*s3tables.GetTablePolicyOutput, error) {
-	in := &s3tables.GetTablePolicyInput{
+	in := s3tables.GetTablePolicyInput{
 		Name:           aws.String(name),
 		Namespace:      aws.String(namespace),
 		TableBucketARN: aws.String(bucketARN),
 	}
 
-	out, err := conn.GetTablePolicy(ctx, in)
+	out, err := conn.GetTablePolicy(ctx, &in)
 	if err != nil {
 		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, &retry.NotFoundError{
