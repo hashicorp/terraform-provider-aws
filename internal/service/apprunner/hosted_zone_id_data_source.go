@@ -28,7 +28,7 @@ var hostedZoneIDPerRegionMap = map[string]string{
 	endpoints.EuCentral1RegionID:       "Z0334911C2FDI2Q9M4FZ",
 	endpoints.EuWest1RegionID:          "Z087551914Z2PCAU0QHMW",
 	endpoints.EuWest2RegionID:          "Z098228427VC6B3IX76ON",
-	names.EUWest3RegionID:          "Z087117439MBKHYM69QS6",
+	endpoints.EuWest3RegionID:          "Z087117439MBKHYM69QS6",
 }
 
 // @FrameworkDataSource("aws_apprunner_hosted_zone_id", name="Hosted Zone ID")

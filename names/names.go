@@ -149,7 +149,6 @@ const (
 	// AWS Standard partition's regions.
 	GlobalRegionID = "aws-global" // AWS Standard global region.
 
-	EUWest3RegionID    = "eu-west-3"    // Europe (Paris).
 	ILCentral1RegionID = "il-central-1" // Israel (Tel Aviv).
 	MECentral1RegionID = "me-central-1" // Middle East (UAE).
 	MESouth1RegionID   = "me-south-1"   // Middle East (Bahrain).
