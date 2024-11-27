@@ -115,7 +115,7 @@ func resourceReceiptFilterRead(ctx context.Context, d *schema.ResourceData, meta
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("receipt-filter/%s", d.Id()),
 	}.String()

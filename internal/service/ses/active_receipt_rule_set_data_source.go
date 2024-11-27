@@ -49,7 +49,7 @@ func dataSourceActiveReceiptRuleSetRead(ctx context.Context, d *schema.ResourceD
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("receipt-rule-set/%s", name),
 	}.String()

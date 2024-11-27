@@ -89,7 +89,7 @@ func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta
 	arn := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
 		Service:   "ses",
 	}.String()
