@@ -1559,7 +1559,7 @@ func testAccDistributionRetainConfig() string {
 func testAccRegionProviderConfig() string {
 	switch acctest.Partition() {
 	case endpoints.AwsPartitionID:
-		return acctest.ConfigRegionalProvider(names.USEast1RegionID)
+		return acctest.ConfigRegionalProvider(endpoints.UsEast1RegionID)
 	case endpoints.AwsCnPartitionID:
 		return acctest.ConfigRegionalProvider(endpoints.CnNorthwest1RegionID)
 	default:

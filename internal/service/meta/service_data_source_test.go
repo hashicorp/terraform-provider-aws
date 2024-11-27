@@ -126,8 +126,8 @@ func TestAccMetaServiceDataSource_byDNSName(t *testing.T) {
 			{
 				Config: testAccServiceDataSourceConfig_byDNSName(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, names.USEast1RegionID),
-					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", names.USEast1RegionID, names.RDS)),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrRegion, endpoints.UsEast1RegionID),
+					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_name", fmt.Sprintf("%s.%s.%s", "com.amazonaws", endpoints.UsEast1RegionID, names.RDS)),
 					resource.TestCheckResourceAttr(dataSourceName, "reverse_dns_prefix", "com.amazonaws"),
 					resource.TestCheckResourceAttr(dataSourceName, "service_id", names.RDS),
 					resource.TestCheckResourceAttr(dataSourceName, "supported", acctest.CtTrue),

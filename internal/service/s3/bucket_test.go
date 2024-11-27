@@ -434,7 +434,7 @@ func TestAccS3Bucket_Duplicate_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, names.USEast1RegionID)
+			acctest.PreCheckRegionNot(t, endpoints.UsEast1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -461,7 +461,7 @@ func TestAccS3Bucket_Duplicate_UsEast1(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBucketConfig_duplicate(names.USEast1RegionID, bucketName),
+				Config:      testAccBucketConfig_duplicate(endpoints.UsEast1RegionID, bucketName),
 				ExpectError: regexache.MustCompile(tfs3.ErrCodeBucketAlreadyExists),
 			},
 		},
@@ -482,7 +482,7 @@ func TestAccS3Bucket_Duplicate_UsEast1AltAccount(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBucketConfig_duplicateAltAccount(names.USEast1RegionID, bucketName),
+				Config:      testAccBucketConfig_duplicateAltAccount(endpoints.UsEast1RegionID, bucketName),
 				ExpectError: regexache.MustCompile(tfs3.ErrCodeBucketAlreadyExists),
 			},
 		},
@@ -2331,7 +2331,7 @@ func TestBucketName(t *testing.T) {
 	}
 
 	for _, v := range validEastNames {
-		if err := tfs3.ValidBucketName(v, names.USEast1RegionID); err != nil {
+		if err := tfs3.ValidBucketName(v, endpoints.UsEast1RegionID); err != nil {
 			t.Fatalf("%q should be a valid S3 bucket name", v)
 		}
 	}
@@ -2342,7 +2342,7 @@ func TestBucketName(t *testing.T) {
 	}
 
 	for _, v := range invalidEastNames {
-		if err := tfs3.ValidBucketName(v, names.USEast1RegionID); err == nil {
+		if err := tfs3.ValidBucketName(v, endpoints.UsEast1RegionID); err == nil {
 			t.Fatalf("%q should not be a valid S3 bucket name", v)
 		}
 	}
@@ -2369,9 +2369,9 @@ func TestBucketRegionalDomainName(t *testing.T) {
 			ExpectedOutput:   bucket + ".s3.custom.amazonaws.com",
 		},
 		{
-			Region:           names.USEast1RegionID,
+			Region:           endpoints.UsEast1RegionID,
 			ExpectedErrCount: 0,
-			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.%s", names.USEast1RegionID, acctest.PartitionDNSSuffix()),
+			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.%s", endpoints.UsEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
 			Region:           names.USWest2RegionID,
@@ -2409,7 +2409,7 @@ func TestWebsiteEndpoint(t *testing.T) {
 	}{
 		{
 			LocationConstraint: "",
-			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", names.USEast1RegionID, acctest.PartitionDNSSuffix()),
+			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", endpoints.UsEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
 			LocationConstraint: endpoints.UsEast2RegionID,

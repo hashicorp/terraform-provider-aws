@@ -19,7 +19,7 @@ func TestAccPricingProductDataSource_ec2(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, endpoints.ApSouth1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApSouth1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PricingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -41,7 +41,7 @@ func TestAccPricingProductDataSource_redshift(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, endpoints.ApSouth1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApSouth1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PricingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

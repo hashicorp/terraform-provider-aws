@@ -901,7 +901,7 @@ func Region() string {
 }
 
 func AlternateRegion() string {
-	return envvar.GetWithDefault(envvar.AlternateRegion, names.USEast1RegionID)
+	return envvar.GetWithDefault(envvar.AlternateRegion, endpoints.UsEast1RegionID)
 }
 
 func ThirdRegion() string {
@@ -1374,7 +1374,7 @@ func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
 
 	switch Partition() {
 	case endpoints.AwsPartitionID:
-		PreCheckRegion(t, names.USEast1RegionID)
+		PreCheckRegion(t, endpoints.UsEast1RegionID)
 	case endpoints.AwsCnPartitionID:
 		PreCheckRegion(t, endpoints.CnNorthwest1RegionID)
 	}

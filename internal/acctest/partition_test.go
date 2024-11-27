@@ -8,7 +8,6 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestIsIsolatedPartition(t *testing.T) {
@@ -67,7 +66,7 @@ func TestIsIsolatedRegion(t *testing.T) {
 		expected bool
 	}{
 		{
-			input:    names.USEast1RegionID,
+			input:    endpoints.UsEast1RegionID,
 			expected: false,
 		},
 		{
@@ -159,7 +158,7 @@ func TestIsStandardRegion(t *testing.T) {
 		expected bool
 	}{
 		{
-			input:    names.USEast1RegionID,
+			input:    endpoints.UsEast1RegionID,
 			expected: true,
 		},
 		{

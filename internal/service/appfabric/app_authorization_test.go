@@ -29,7 +29,7 @@ func testAccAppAuthorization_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -69,7 +69,7 @@ func testAccAppAuthorization_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -105,7 +105,7 @@ func testAccAppAuthorization_apiKeyUpdate(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -165,7 +165,7 @@ func testAccAppAuthorization_oath2Update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),

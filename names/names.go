@@ -149,7 +149,6 @@ const (
 	// AWS Standard partition's regions.
 	GlobalRegionID = "aws-global" // AWS Standard global region.
 
-	USEast1RegionID = "us-east-1" // US East (N. Virginia).
 	USWest2RegionID = "us-west-2" // US West (Oregon).
 )
 

@@ -755,7 +755,7 @@ func TestAccRoute53Record_Geoproximity_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_geoproximityCNAME(names.USEast1RegionID, fmt.Sprintf("%s-atl-1", names.USEast1RegionID)),
+				Config: testAccRecordConfig_geoproximityCNAME(endpoints.UsEast1RegionID, fmt.Sprintf("%s-atl-1", endpoints.UsEast1RegionID)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, "aws_route53_record.awsregion", &record1),
 					testAccCheckRecordExists(ctx, "aws_route53_record.localzonegroup", &record2),
@@ -850,7 +850,7 @@ func TestAccRoute53Record_Latency_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_latencyCNAME(names.USEast1RegionID, endpoints.EuWest1RegionID, endpoints.ApNortheast1RegionID),
+				Config: testAccRecordConfig_latencyCNAME(endpoints.UsEast1RegionID, endpoints.EuWest1RegionID, endpoints.ApNortheast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 					testAccCheckRecordExists(ctx, "aws_route53_record.second_region", &record2),
@@ -1116,7 +1116,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_setIdentifierRenameGeoproximityRegion(names.USEast1RegionID, "before"),
+				Config: testAccRecordConfig_setIdentifierRenameGeoproximityRegion(endpoints.UsEast1RegionID, "before"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
@@ -1128,7 +1128,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityRegion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
-				Config: testAccRecordConfig_setIdentifierRenameGeoproximityRegion(names.USEast1RegionID, "after"),
+				Config: testAccRecordConfig_setIdentifierRenameGeoproximityRegion(endpoints.UsEast1RegionID, "after"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
@@ -1149,7 +1149,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityLocalZoneGroup(t *test
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup(fmt.Sprintf("%s-atl-1", names.USEast1RegionID), "before"),
+				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup(fmt.Sprintf("%s-atl-1", endpoints.UsEast1RegionID), "before"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
@@ -1161,7 +1161,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityLocalZoneGroup(t *test
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
-				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup(fmt.Sprintf("%s-atl-1", names.USEast1RegionID), "after"),
+				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup(fmt.Sprintf("%s-atl-1", endpoints.UsEast1RegionID), "after"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
@@ -1248,7 +1248,7 @@ func TestAccRoute53Record_SetIdentifierRename_latency(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_setIdentifierRenameLatency(names.USEast1RegionID, "before"),
+				Config: testAccRecordConfig_setIdentifierRenameLatency(endpoints.UsEast1RegionID, "before"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
@@ -1260,7 +1260,7 @@ func TestAccRoute53Record_SetIdentifierRename_latency(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
-				Config: testAccRecordConfig_setIdentifierRenameLatency(names.USEast1RegionID, "after"),
+				Config: testAccRecordConfig_setIdentifierRenameLatency(endpoints.UsEast1RegionID, "after"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),

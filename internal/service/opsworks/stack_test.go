@@ -258,7 +258,7 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 			// This test requires a very particular AWS Region configuration
 			// in order to exercise the OpsWorks classic endpoint functionality.
 			acctest.PreCheckMultipleRegion(t, 2)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckAlternateRegionIs(t, endpoints.UsWest1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
@@ -284,7 +284,7 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
 					// "In this case, the actual API endpoint of the stack is in us-east-1."
-					resource.TestCheckResourceAttr(resourceName, "stack_endpoint", names.USEast1RegionID),
+					resource.TestCheckResourceAttr(resourceName, "stack_endpoint", endpoints.UsEast1RegionID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),

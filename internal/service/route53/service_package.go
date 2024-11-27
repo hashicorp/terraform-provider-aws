@@ -25,13 +25,13 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			switch config["partition"].(string) {
 			case endpoints.AwsPartitionID:
 				// https://docs.aws.amazon.com/general/latest/gr/r53.html Setting default to us-east-1.
-				if cfg.Region != names.USEast1RegionID {
+				if cfg.Region != endpoints.UsEast1RegionID {
 					tflog.Info(ctx, "overriding region", map[string]any{
 						"original_region": cfg.Region,
-						"override_region": names.USEast1RegionID,
+						"override_region": endpoints.UsEast1RegionID,
 					})
 				}
-				o.Region = names.USEast1RegionID
+				o.Region = endpoints.UsEast1RegionID
 			case endpoints.AwsCnPartitionID:
 				// The AWS Go SDK is missing endpoint information for Route 53 in the AWS China partition.
 				// This can likely be removed in the future.

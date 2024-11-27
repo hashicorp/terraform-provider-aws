@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,7 +27,7 @@ func testAccPolicy_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -64,7 +65,7 @@ func testAccPolicy_disappears(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -92,7 +93,7 @@ func testAccPolicy_cloudFrontDistribution(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -126,7 +127,7 @@ func testAccPolicy_includeMap(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -161,7 +162,7 @@ func testAccPolicy_update(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -235,7 +236,7 @@ func testAccPolicy_resourceTags(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -271,7 +272,7 @@ func testAccPolicy_alb(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -305,7 +306,7 @@ func testAccPolicy_securityGroup(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
@@ -337,7 +338,7 @@ func testAccPolicy_rscSet(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},

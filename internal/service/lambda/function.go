@@ -1399,7 +1399,7 @@ func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN strin
 // See https://docs.aws.amazon.com/general/latest/gr/signer.html#signer_lambda_region.
 func signerServiceIsAvailable(region string) bool {
 	availableRegions := map[string]struct{}{
-		names.USEast1RegionID:      {},
+		endpoints.UsEast1RegionID:      {},
 		endpoints.UsEast2RegionID:      {},
 		endpoints.UsWest1RegionID:      {},
 		names.USWest2RegionID:      {},

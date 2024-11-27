@@ -102,12 +102,12 @@ func TestAccDataZoneEnvironmentBlueprintConfiguration_enabled_regions(t *testing
 		CheckDestroy:             testAccCheckEnvironmentBlueprintConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentBlueprintConfigurationConfig_enabled_regions(domainName, names.USEast1RegionID),
+				Config: testAccEnvironmentBlueprintConfigurationConfig_enabled_regions(domainName, endpoints.UsEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentBlueprintConfigurationExists(ctx, resourceName, &environmentblueprintconfiguration),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_blueprint_id"),
 					resource.TestCheckResourceAttr(resourceName, "enabled_regions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "enabled_regions.0", names.USEast1RegionID),
+					resource.TestCheckResourceAttr(resourceName, "enabled_regions.0", endpoints.UsEast1RegionID),
 				),
 			},
 			{

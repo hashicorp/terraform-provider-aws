@@ -633,9 +633,9 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_stsRegion(names.USEast1RegionID, names.USWest2RegionID),
+				Config: testAccProviderConfig_stsRegion(endpoints.UsEast1RegionID, names.USWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegion(ctx, t, &provider, names.USEast1RegionID),
+					testAccCheckRegion(ctx, t, &provider, endpoints.UsEast1RegionID),
 					testAccCheckSTSRegion(ctx, t, &provider, names.USWest2RegionID),
 				),
 				PlanOnly: true,

@@ -161,7 +161,7 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 			// This test requires a very particular AWS Region configuration
 			// in order to exercise the OpsWorks classic endpoint functionality.
 			acctest.PreCheckMultipleRegion(t, 2)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckAlternateRegionIs(t, endpoints.UsWest1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
