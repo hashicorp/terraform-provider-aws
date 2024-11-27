@@ -260,7 +260,7 @@ func resourceStackInstancesCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if v, ok := d.GetOk(AttrRegions); !ok || v.(*schema.Set).Len() == 0 {
-		input.Regions = []string{meta.(*conns.AWSClient).Region}
+		input.Regions = []string{meta.(*conns.AWSClient).Region(ctx)}
 	}
 
 	if v, ok := d.GetOk(AttrAccounts); ok && v.(*schema.Set).Len() > 0 {
@@ -697,7 +697,7 @@ func findStackInstancesByNameCallAs(ctx context.Context, meta interface{}, stack
 	}
 
 	if len(output.Regions) == 0 && len(regions) == 0 {
-		output.Regions = []string{meta.(*conns.AWSClient).Region}
+		output.Regions = []string{meta.(*conns.AWSClient).Region(ctx)}
 	}
 
 	if deployedByOU {

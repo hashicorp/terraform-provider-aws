@@ -230,7 +230,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
