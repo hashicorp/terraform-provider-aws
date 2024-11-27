@@ -157,7 +157,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codedeploy",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("application:%s", appName),
 	}.String()
 	d.Set(names.AttrARN, arn)

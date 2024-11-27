@@ -577,7 +577,7 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codedeploy",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("deploymentgroup:%s/%s", appName, groupName),
 	}.String()
 	d.Set(names.AttrARN, arn)
