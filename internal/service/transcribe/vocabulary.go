@@ -148,7 +148,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "transcribe",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("vocabulary/%s", d.Id()),
 	}.String()
 
