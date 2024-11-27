@@ -37,7 +37,7 @@ func TestAccNetworkFirewallFirewallPolicy_basic(t *testing.T) {
 				Config: testAccFirewallPolicyConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFirewallPolicyExists(ctx, resourceName, &firewallPolicy),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall-policy/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall-policy/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "firewall_policy.0.policy_variables.#", "0"),
