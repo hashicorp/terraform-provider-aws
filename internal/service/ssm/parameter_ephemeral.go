@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -99,7 +98,7 @@ func (e *ephemeralParameter) Open(ctx context.Context, request ephemeral.OpenReq
 	}
 
 	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
-	data.Value = fwflex.StringValueToFramework(ctx, string(*output.Value))
+	data.Value = flex.StringValueToFramework(ctx, string(*output.Value))
 	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 }
 
