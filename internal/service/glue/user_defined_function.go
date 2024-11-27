@@ -101,7 +101,7 @@ func ResourceUserDefinedFunction() *schema.Resource {
 func resourceUserDefinedFunctionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
-	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID(ctx))
 	dbName := d.Get(names.AttrDatabaseName).(string)
 	funcName := d.Get(names.AttrName).(string)
 
@@ -176,7 +176,7 @@ func resourceUserDefinedFunctionRead(ctx context.Context, d *schema.ResourceData
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("userDefinedFunction/%s/%s", dbName, aws.ToString(udf.FunctionName)),
 	}.String()
 

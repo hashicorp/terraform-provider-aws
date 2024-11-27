@@ -293,7 +293,7 @@ func resourceDevEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("devEndpoint/%s", d.Id()),
 	}.String()
 

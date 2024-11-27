@@ -156,7 +156,7 @@ func resourceDataQualityRulesetRead(ctx context.Context, d *schema.ResourceData,
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("dataQualityRuleset/%s", aws.ToString(dataQualityRuleset.Name)),
 	}.String()
 

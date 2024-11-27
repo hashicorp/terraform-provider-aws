@@ -501,7 +501,7 @@ func resourceCrawlerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("crawler/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, crawlerARN)

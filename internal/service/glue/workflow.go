@@ -130,7 +130,7 @@ func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta inte
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("workflow/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, workFlowArn)

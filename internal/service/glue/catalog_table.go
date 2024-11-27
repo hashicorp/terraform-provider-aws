@@ -407,7 +407,7 @@ func ReadTableID(id string) (string, string, string, error) {
 func resourceCatalogTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueClient(ctx)
-	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID)
+	catalogID := createCatalogID(d, meta.(*conns.AWSClient).AccountID(ctx))
 	dbName := d.Get(names.AttrDatabaseName).(string)
 	name := d.Get(names.AttrName).(string)
 
@@ -454,7 +454,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.ToString(table.Name)),
 	}.String()
 	d.Set(names.AttrARN, tableArn)
