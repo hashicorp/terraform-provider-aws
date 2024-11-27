@@ -810,7 +810,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
-		if err := updatePITR(ctx, conn, d.Id(), true, meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := updatePITR(ctx, conn, d.Id(), true, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("enabling point in time recovery: %w", err))
 		}
 	}
@@ -1174,7 +1174,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 			var input = &awstypes.UpdateReplicationGroupMemberAction{
 				KMSMasterKeyId: sseSpecification.KMSMasterKeyId,
-				RegionName:     aws.String(meta.(*conns.AWSClient).Region),
+				RegionName:     aws.String(meta.(*conns.AWSClient).Region(ctx)),
 			}
 			var update = awstypes.ReplicationGroupUpdate{Update: input}
 			replicaInputs = append(replicaInputs, update)
@@ -1250,7 +1250,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("point_in_time_recovery") {
-		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
 		}
 	}
@@ -2021,7 +2021,7 @@ func clearSSEDefaultKey(ctx context.Context, client *conns.AWSClient, sseList []
 
 	sse := sseList[0].(map[string]interface{})
 
-	dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", client.Region)
+	dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", client.Region(ctx))
 	if err != nil {
 		return sseList
 	}
