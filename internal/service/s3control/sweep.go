@@ -335,7 +335,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 
 func sweepStorageLensConfigurations(region string) error {
 	ctx := sweep.Context(region)
-	if region == endpoints.UsGovEast1RegionID || region == names.USGovWest1RegionID {
+	if region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
 		log.Printf("[WARN] Skipping S3 Storage Lens Configuration sweep for region: %s", region)
 		return nil
 	}

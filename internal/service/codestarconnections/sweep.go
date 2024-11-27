@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -33,7 +32,7 @@ func RegisterSweepers() {
 
 func sweepConnections(region string) error {
 	ctx := sweep.Context(region)
-	if region == endpoints.UsGovEast1RegionID || region == names.USGovWest1RegionID {
+	if region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
 		log.Printf("[WARN] Skipping CodeStar Connections Connection sweep for region: %s", region)
 		return nil
 	}
@@ -78,7 +77,7 @@ func sweepConnections(region string) error {
 
 func sweepHosts(region string) error {
 	ctx := sweep.Context(region)
-	if region == endpoints.UsGovEast1RegionID || region == names.USGovWest1RegionID {
+	if region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
 		log.Printf("[WARN] Skipping CodeStar Connections Host sweep for region: %s", region)
 		return nil
 	}

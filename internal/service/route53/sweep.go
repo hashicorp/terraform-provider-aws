@@ -218,7 +218,7 @@ func sweepQueryLogs(region string) error {
 
 func sweepTrafficPolicies(region string) error {
 	ctx := sweep.Context(region)
-	if region == endpoints.UsGovEast1RegionID || region == names.USGovWest1RegionID {
+	if region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
 		log.Printf("[WARN] Skipping Route 53 Traffic Policy sweep for region: %s", region)
 		return nil
 	}
@@ -266,7 +266,7 @@ func sweepTrafficPolicies(region string) error {
 
 func sweepTrafficPolicyInstances(region string) error {
 	ctx := sweep.Context(region)
-	if region == endpoints.UsGovEast1RegionID || region == names.USGovWest1RegionID {
+	if region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
 		log.Printf("[WARN] Skipping Route 53 Traffic Policy Instance sweep for region: %s", region)
 		return nil
 	}

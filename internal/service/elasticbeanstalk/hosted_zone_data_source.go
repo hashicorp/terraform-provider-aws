@@ -42,7 +42,7 @@ var hostedZoneIDs = map[string]string{
 	names.USWest1RegionID:    "Z1LQECGX5PH1X",
 	names.USWest2RegionID:    "Z38NKT9BP95V3O",
 	endpoints.UsGovEast1RegionID: "Z35TSARG0EJ4VU",
-	names.USGovWest1RegionID: "Z4KAURWC4UUUG",
+	endpoints.UsGovWest1RegionID: "Z4KAURWC4UUUG",
 }
 
 // @SDKDataSource("aws_elastic_beanstalk_hosted_zone")

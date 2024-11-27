@@ -40,13 +40,13 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 				}
 				o.Region = endpoints.CnNorthwest1RegionID
 			case endpoints.AwsUsGovPartitionID:
-				if cfg.Region != names.USGovWest1RegionID {
+				if cfg.Region != endpoints.UsGovWest1RegionID {
 					tflog.Info(ctx, "overriding region", map[string]any{
 						"original_region": cfg.Region,
-						"override_region": names.USGovWest1RegionID,
+						"override_region": endpoints.UsGovWest1RegionID,
 					})
 				}
-				o.Region = names.USGovWest1RegionID
+				o.Region = endpoints.UsGovWest1RegionID
 			}
 		},
 	), nil

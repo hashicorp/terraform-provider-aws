@@ -2379,9 +2379,9 @@ func TestBucketRegionalDomainName(t *testing.T) {
 			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.%s", names.USWest2RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			Region:           names.USGovWest1RegionID,
+			Region:           endpoints.UsGovWest1RegionID,
 			ExpectedErrCount: 0,
-			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.%s", names.USGovWest1RegionID, acctest.PartitionDNSSuffix()),
+			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.%s", endpoints.UsGovWest1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
 			Region:           endpoints.CnNorth1RegionID,

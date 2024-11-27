@@ -587,7 +587,7 @@ func TestAccProvider_Region_govCloud(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.USGovWest1RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsGovWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
 					testAccCheckPartition(ctx, t, &provider, endpoints.AwsUsGovPartitionID),

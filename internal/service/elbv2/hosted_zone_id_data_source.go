@@ -51,7 +51,7 @@ var hostedZoneIDPerRegionALBMap = map[string]string{
 	names.USEast1RegionID:      "Z35SXDOTRQ7X7K",
 	names.USEast2RegionID:      "Z3AADJGX6KTTL2",
 	endpoints.UsGovEast1RegionID:   "Z166TLBEWOO7G0",
-	names.USGovWest1RegionID:   "Z33AYJ8TM3BH4J",
+	endpoints.UsGovWest1RegionID:   "Z33AYJ8TM3BH4J",
 	names.USWest1RegionID:      "Z368ELLRRE2KJ0",
 	names.USWest2RegionID:      "Z1H1FL5HABSF5",
 }
@@ -89,7 +89,7 @@ var hostedZoneIDPerRegionNLBMap = map[string]string{
 	names.USEast1RegionID:      "Z26RNL4JYFTOTI",
 	names.USEast2RegionID:      "ZLMOA37VPKANP",
 	endpoints.UsGovEast1RegionID:   "Z1ZSMQQ6Q24QQ8",
-	names.USGovWest1RegionID:   "ZMG1MZ2THAWF1",
+	endpoints.UsGovWest1RegionID:   "ZMG1MZ2THAWF1",
 	names.USWest1RegionID:      "Z24FKFUX50B4VW",
 	names.USWest2RegionID:      "Z18D5FSROUN65G",
 }

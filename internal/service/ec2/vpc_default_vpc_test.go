@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -84,7 +85,7 @@ func testAccDefaultVPC_Existing_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -131,7 +132,7 @@ func testAccDefaultVPC_Existing_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -178,7 +179,7 @@ func testAccDefaultVPC_Existing_forceDestroy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCExists(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -206,7 +207,7 @@ func testAccDefaultVPC_NotFound_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -253,7 +254,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlock(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -300,7 +301,7 @@ func testAccDefaultVPC_NotFound_forceDestroy(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
@@ -329,7 +330,7 @@ func testAccDefaultVPC_NotFound_assignGeneratedIPv6CIDRBlockAdoption(t *testing.
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegionNot(t, names.USWest2RegionID, names.USGovWest1RegionID)
+			acctest.PreCheckRegionNot(t, names.USWest2RegionID, endpoints.UsGovWest1RegionID)
 			testAccPreCheckDefaultVPCNotFound(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
