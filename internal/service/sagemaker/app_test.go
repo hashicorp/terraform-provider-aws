@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -40,7 +41,7 @@ func testAccDecodeAppID(t *testing.T) {
 	arn := arn.ARN{
 		AccountID: "012345678912",
 		Partition: acctest.Partition(),
-		Region:    names.EUWest2RegionID,
+		Region:    endpoints.EuWest2RegionID,
 		Resource:  "app/domain-id/user-profile-name/%s/app-name",
 		Service:   names.SageMaker,
 	}.String()

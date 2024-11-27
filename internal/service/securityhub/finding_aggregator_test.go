@@ -146,7 +146,7 @@ resource "aws_securityhub_finding_aggregator" "test_aggregator" {
 
   depends_on = [aws_securityhub_account.example]
 }
-`, endpoints.EuWest1RegionID, names.EUWest2RegionID, names.USEast1RegionID)
+`, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID, names.USEast1RegionID)
 }
 
 func testAccFindingAggregatorConfig_allRegionsExceptSpecified() string {
@@ -159,5 +159,5 @@ resource "aws_securityhub_finding_aggregator" "test_aggregator" {
 
   depends_on = [aws_securityhub_account.example]
 }
-`, endpoints.EuWest1RegionID, names.EUWest2RegionID)
+`, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID)
 }

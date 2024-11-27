@@ -1413,7 +1413,7 @@ func signerServiceIsAvailable(region string) bool {
 		endpoints.CaCentral1RegionID:   {},
 		endpoints.EuCentral1RegionID:   {},
 		endpoints.EuWest1RegionID:      {},
-		names.EUWest2RegionID:      {},
+		endpoints.EuWest2RegionID:      {},
 		endpoints.EuSouth1RegionID:     {},
 		names.EUWest3RegionID:      {},
 		endpoints.EuNorth1RegionID:     {},
