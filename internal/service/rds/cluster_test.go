@@ -1319,8 +1319,8 @@ func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
 			{
 				Config: testAccClusterConfig_replicationSourceIDKMSKeyID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(ctx, resourceName, &primaryCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(ctx, resourceName2, &replicaCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceName, &primaryCluster, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceName2, &replicaCluster, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 				),
 			},
 		},
@@ -1702,8 +1702,8 @@ func TestAccRDSCluster_GlobalClusterIdentifier_primarySecondaryClusters(t *testi
 			{
 				Config: testAccClusterConfig_GlobalClusterID_primarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 				),
 			},
 		},
@@ -1737,8 +1737,8 @@ func TestAccRDSCluster_GlobalClusterIdentifier_replicationSourceIdentifier(t *te
 			{
 				Config: testAccClusterConfig_GlobalClusterID_replicationSourceID(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 				),
 			},
 		},
@@ -1775,8 +1775,8 @@ func TestAccRDSCluster_GlobalClusterIdentifier_secondaryClustersWriteForwarding(
 			{
 				Config: testAccClusterConfig_GlobalClusterID_secondaryClustersWriteForwarding(rNameGlobal, rNamePrimary, rNameSecondary),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttr(resourceNameSecondary, "enable_global_write_forwarding", acctest.CtTrue),
 				),
 			},
