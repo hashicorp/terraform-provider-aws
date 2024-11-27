@@ -139,7 +139,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "guardduty",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("detector/%s/ipset/%s", detectorId, ipSetId),
 	}.String()
 	d.Set(names.AttrARN, arn)

@@ -206,7 +206,7 @@ func resourceFilterRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "guardduty",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("detector/%s/filter/%s", detectorID, name),
 	}.String()
 	d.Set(names.AttrARN, arn)
