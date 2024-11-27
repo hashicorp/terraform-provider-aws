@@ -383,7 +383,6 @@ resource "aws_ebs_snapshot_copy" "test" {
   tags = {
     Name = %[1]q
   }
-  
 }
 `, rName, durantionMinutes))
 }
