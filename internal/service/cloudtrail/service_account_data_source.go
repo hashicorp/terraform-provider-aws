@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,7 +20,7 @@ import (
 // See https://docs.aws.amazon.com/govcloud-us/latest/ug-west/verifying-cloudtrail.html
 
 var serviceAccountPerRegionMap = map[string]string{
-	names.AFSouth1RegionID:     "525921808201",
+	endpoints.AfSouth1RegionID: "525921808201",
 	names.APEast1RegionID:      "119688915426",
 	names.APNortheast1RegionID: "216624486486",
 	names.APNortheast2RegionID: "492519147666",

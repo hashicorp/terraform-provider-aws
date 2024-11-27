@@ -6,12 +6,13 @@ package s3
 import (
 	"fmt"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_website_region_endpoints.
 var hostedZoneIDsMap = map[string]string{
-	names.AFSouth1RegionID:     "Z83WF9RJE8B12",
+	endpoints.AfSouth1RegionID: "Z83WF9RJE8B12",
 	names.APEast1RegionID:      "ZNB98KWMFR0R6",
 	names.APNortheast1RegionID: "Z2M4EHUR26P7ZW",
 	names.APNortheast2RegionID: "Z3W03O7B5YMIYP",

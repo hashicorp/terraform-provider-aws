@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,7 +20,7 @@ import (
 // See https://docs.amazonaws.cn/en_us/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions
 
 var ServiceAccountPerRegionMap = map[string]string{
-	names.AFSouth1RegionID:     "365689465814",
+	endpoints.AfSouth1RegionID: "365689465814",
 	names.APEast1RegionID:      "313564881002",
 	names.APNortheast1RegionID: "404641285394",
 	names.APNortheast2RegionID: "760740231472",

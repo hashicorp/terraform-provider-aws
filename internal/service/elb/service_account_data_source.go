@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,7 +18,7 @@ import (
 // See http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy
 // See https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-logging-bucket-permissions
 var accountIDPerRegionMap = map[string]string{
-	names.AFSouth1RegionID:     "098369216593",
+	endpoints.AfSouth1RegionID: "098369216593",
 	names.APEast1RegionID:      "754344448648",
 	names.APNortheast1RegionID: "582318560864",
 	names.APNortheast2RegionID: "600734575887",

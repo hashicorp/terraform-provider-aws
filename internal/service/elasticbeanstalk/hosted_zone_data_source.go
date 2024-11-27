@@ -6,6 +6,7 @@ package elasticbeanstalk
 import (
 	"context"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,7 +17,7 @@ import (
 // See https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html
 
 var hostedZoneIDs = map[string]string{
-	names.AFSouth1RegionID:     "Z1EI3BVKMKK4AM",
+	endpoints.AfSouth1RegionID: "Z1EI3BVKMKK4AM",
 	names.APSoutheast1RegionID: "Z16FZ9L249IFLT",
 	names.APSoutheast2RegionID: "Z2PCDNR3VC2G1N",
 	names.APSoutheast3RegionID: "Z05913172VM7EAZB40TA8",

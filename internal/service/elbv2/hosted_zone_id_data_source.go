@@ -7,6 +7,7 @@ import (
 	"context"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,7 +20,7 @@ import (
 
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
 var hostedZoneIDPerRegionALBMap = map[string]string{
-	names.AFSouth1RegionID:     "Z268VQBMOI5EKX",
+	endpoints.AfSouth1RegionID: "Z268VQBMOI5EKX",
 	names.APEast1RegionID:      "Z3DQVH9N71FHZ0",
 	names.APNortheast1RegionID: "Z14GRHDCWA56QT",
 	names.APNortheast2RegionID: "ZWKZPGTI48KDX",
@@ -57,7 +58,7 @@ var hostedZoneIDPerRegionALBMap = map[string]string{
 
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
 var hostedZoneIDPerRegionNLBMap = map[string]string{
-	names.AFSouth1RegionID:     "Z203XCE67M25HM",
+	endpoints.AfSouth1RegionID: "Z203XCE67M25HM",
 	names.APEast1RegionID:      "Z12Y7K3UBGUAD1",
 	names.APNortheast1RegionID: "Z31USIVHYNEOWT",
 	names.APNortheast2RegionID: "ZIBE1TIR4HY56",
