@@ -158,7 +158,7 @@ func testAccPreCheckGlobalTable(ctx context.Context, t *testing.T) {
 	// Region availability for Version 2017.11.29: https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/GlobalTables.html
 	supportedRegions := []string{
 		endpoints.ApNortheast1RegionID,
-		names.APNortheast2RegionID,
+		endpoints.ApNortheast2RegionID,
 		names.APSoutheast1RegionID,
 		names.APSoutheast2RegionID,
 		names.EUCentral1RegionID,
