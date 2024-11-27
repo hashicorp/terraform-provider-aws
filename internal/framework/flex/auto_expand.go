@@ -6,6 +6,7 @@ package flex
 import (
 	"context"
 	"fmt"
+	"iter"
 	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
 // Expand  = TF -->  AWS
@@ -1160,14 +1162,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 	typeFrom := valFrom.Type()
 	typeTo := valTo.Type()
 
-	fieldIndexes, d := expandStructFieldIndexes(ctx, typeFrom, flexer.getOptions())
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	for _, fieldIndex := range fieldIndexes {
-		fromField := typeFrom.FieldByIndex(fieldIndex)
+	for fromField := range expandSourceFields(ctx, typeFrom, flexer.getOptions()) {
 		fromFieldName := fromField.Name
 		_, fromFieldOpts := autoflexTags(fromField)
 
@@ -1199,7 +1194,7 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 			legacy: fromFieldOpts.Legacy(),
 		}
 
-		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fieldIndex), targetPath.AtName(toFieldName), toFieldVal, opts)...)
+		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)
 		if diags.HasError() {
 			break
 		}
@@ -1208,60 +1203,37 @@ func expandStruct(ctx context.Context, sourcePath path.Path, from any, targetPat
 	return diags
 }
 
-func expandStructFieldIndexes(ctx context.Context, typ reflect.Type, opts AutoFlexOptions) (indexes [][]int, diags diag.Diagnostics) {
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		if !field.IsExported() && !field.Anonymous {
-			// Skip unexported fields. Unexported embedded structs (anonymous fields) are allowed because they may
-			// contain exported fields that are promoted; which means they can be read/set.
-			continue
-		}
-
-		// This index sequence is the location of the field within the struct.
-		// For promoted fields from an embedded struct, the length of this sequence will be > 1
-		fieldIndexSequence := []int{i}
-
-		fromNameOverride, _ := autoflexTags(field)
-		fieldName := field.Name
-		if opts.isIgnoredField(fieldName) {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
-			})
-			continue
-		}
-
-		if fromNameOverride == "-" {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
-			})
-			continue
-		}
-
-		if fieldName == mapBlockKeyFieldName {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
-				logAttrKeySourceFieldname: mapBlockKeyFieldName,
-			})
-			continue
-		}
-
-		if field.Anonymous {
-			embeddedIndexes, d := expandStructFieldIndexes(ctx, field.Type, opts)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil, diags
+func expandSourceFields(ctx context.Context, typ reflect.Type, opts AutoFlexOptions) iter.Seq[reflect.StructField] {
+	return func(yield func(reflect.StructField) bool) {
+		for field := range tfreflect.ExportedStructFields(typ) {
+			fieldName := field.Name
+			if opts.isIgnoredField(fieldName) {
+				tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+					logAttrKeySourceFieldname: fieldName,
+				})
+				continue
 			}
 
-			for _, embeddedIndex := range embeddedIndexes {
-				indexes = append(indexes, append(fieldIndexSequence, embeddedIndex...))
+			fromNameOverride, _ := autoflexTags(field)
+			if fromNameOverride == "-" {
+				tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+					logAttrKeySourceFieldname: fieldName,
+				})
+				continue
 			}
 
-			continue
-		}
+			if fieldName == mapBlockKeyFieldName {
+				tflog.SubsystemTrace(ctx, subsystemName, "Skipping map block key", map[string]any{
+					logAttrKeySourceFieldname: mapBlockKeyFieldName,
+				})
+				continue
+			}
 
-		indexes = append(indexes, fieldIndexSequence)
+			if !yield(field) {
+				return
+			}
+		}
 	}
-
-	return indexes, diags
 }
 
 // mapBlockKey takes a struct and extracts the value of the `key`
