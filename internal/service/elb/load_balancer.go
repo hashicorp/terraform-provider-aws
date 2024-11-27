@@ -344,7 +344,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "elasticloadbalancing",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "loadbalancer/" + d.Id(),
 	}
 	d.Set(names.AttrARN, arn.String())
