@@ -64,7 +64,7 @@ func (d *hostedZoneIDDataSource) Read(ctx context.Context, request datasource.Re
 
 	var region string
 	if data.Region.IsNull() {
-		region = d.Meta().Region
+		region = d.Meta().Region(ctx)
 	} else {
 		region = data.Region.ValueString()
 	}
