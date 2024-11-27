@@ -178,7 +178,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	executionARN := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "execute-api",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("%s/%s", restAPIID, stageName),
 	}.String()
