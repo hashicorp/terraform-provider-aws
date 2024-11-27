@@ -55,7 +55,7 @@ func testAccAccountIdByRegion(region string) (string, error) {
 		endpoints.ApNortheast2RegionID:     "805673136642",
 		endpoints.ApSouth1RegionID:         "134975661615",
 		endpoints.ApSoutheast1RegionID:     "077577004113",
-		names.APSoutheast2RegionID:     "112188327105",
+		endpoints.ApSoutheast2RegionID:     "112188327105",
 		names.CACentral1RegionID:       "800535022691",
 		names.EUCentral1RegionID:       "797584052317",
 		names.EUWest1RegionID:          "319803218673",
