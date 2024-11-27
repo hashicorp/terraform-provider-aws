@@ -72,7 +72,7 @@ func dataSourceReplicationSubnetGroupRead(ctx context.Context, d *schema.Resourc
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "dms",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("subgrp:%s", d.Id()),
 	}.String()
 	d.Set("replication_subnet_group_arn", arn)
