@@ -150,7 +150,7 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.Redshift,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("parametergroup:%s", d.Id()),
 	}.String()

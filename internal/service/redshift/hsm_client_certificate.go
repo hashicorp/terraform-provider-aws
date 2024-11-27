@@ -98,7 +98,7 @@ func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceDat
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.Redshift,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("hsmclientcertificate:%s", d.Id()),
 	}.String()
