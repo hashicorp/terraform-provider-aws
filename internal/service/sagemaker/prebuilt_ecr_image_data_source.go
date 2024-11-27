@@ -221,7 +221,7 @@ var prebuiltECRImageIDByRegion_blazing = map[string]string{
 	endpoints.UsGovEast1RegionID:   "237065988967",
 	endpoints.UsGovWest1RegionID:   "226302683700",
 	endpoints.UsIsoEast1RegionID:   "490574956308",
-	names.USISOBEast1RegionID:  "765400339828",
+	endpoints.UsIsobEast1RegionID:  "765400339828",
 	names.USWest1RegionID:      "632365934929",
 	names.USWest2RegionID:      "433757028032",
 }
@@ -347,7 +347,7 @@ var prebuiltECRImageIDByRegion_inferentiaNeo = map[string]string{
 	names.USEast2RegionID:      "007439368137",
 	endpoints.UsGovWest1RegionID:   "263933020539",
 	endpoints.UsIsoEast1RegionID:   "167761179201",
-	names.USISOBEast1RegionID:  "406031935815",
+	endpoints.UsIsobEast1RegionID:  "406031935815",
 	names.USWest1RegionID:      "710691900526",
 	names.USWest2RegionID:      "301217895009",
 }
@@ -382,7 +382,7 @@ var prebuiltECRImageIDByRegion_SageMakerCustom = map[string]string{ // nosemgrep
 	names.USEast2RegionID:      "520713654638",
 	endpoints.UsGovWest1RegionID:   "246785580436",
 	endpoints.UsIsoEast1RegionID:   "744548109606",
-	names.USISOBEast1RegionID:  "453391408702",
+	endpoints.UsIsobEast1RegionID:  "453391408702",
 	names.USWest1RegionID:      "520713654638",
 	names.USWest2RegionID:      "520713654638",
 }
@@ -520,7 +520,7 @@ var prebuiltECRImageIDByRegion_deepAR = map[string]string{
 	endpoints.UsGovEast1RegionID:   "237065988967",
 	endpoints.UsGovWest1RegionID:   "226302683700",
 	endpoints.UsIsoEast1RegionID:   "490574956308",
-	names.USISOBEast1RegionID:  "765400339828",
+	endpoints.UsIsobEast1RegionID:  "765400339828",
 	names.USWest1RegionID:      "632365934929",
 	names.USWest2RegionID:      "156387875391",
 }
@@ -565,7 +565,7 @@ var prebuiltECRImageIDByRegion_factorMachines = map[string]string{
 	endpoints.UsGovEast1RegionID:   "237065988967",
 	endpoints.UsGovWest1RegionID:   "226302683700",
 	endpoints.UsIsoEast1RegionID:   "490574956308",
-	names.USISOBEast1RegionID:  "765400339828",
+	endpoints.UsIsobEast1RegionID:  "765400339828",
 	names.USWest1RegionID:      "632365934929",
 	names.USWest2RegionID:      "174872318107",
 }
@@ -586,7 +586,7 @@ var prebuiltECRImageIDByRegion_lda = map[string]string{
 	names.USEast2RegionID:      "999911452149",
 	endpoints.UsGovWest1RegionID:   "226302683700",
 	endpoints.UsIsoEast1RegionID:   "490574956308",
-	names.USISOBEast1RegionID:  "765400339828",
+	endpoints.UsIsobEast1RegionID:  "765400339828",
 	names.USWest1RegionID:      "632365934929",
 	names.USWest2RegionID:      "266724342769",
 }
@@ -630,7 +630,7 @@ var prebuiltECRImageIDByRegion_XGBoost = map[string]string{
 	endpoints.UsGovEast1RegionID:   "237065988967",
 	endpoints.UsGovWest1RegionID:   "414596584902",
 	endpoints.UsIsoEast1RegionID:   "833128469047",
-	names.USISOBEast1RegionID:  "281123927165",
+	endpoints.UsIsobEast1RegionID:  "281123927165",
 	names.USWest1RegionID:      "746614075791",
 	names.USWest2RegionID:      "246618743249",
 }
@@ -684,7 +684,7 @@ var prebuiltECRImageIDByRegion_deepLearning = map[string]string{
 	endpoints.UsGovEast1RegionID:   "446045086412",
 	endpoints.UsGovWest1RegionID:   "442386744353",
 	endpoints.UsIsoEast1RegionID:   "886529160074",
-	names.USISOBEast1RegionID:  "094389454867",
+	endpoints.UsIsobEast1RegionID:  "094389454867",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/model-monitor.json

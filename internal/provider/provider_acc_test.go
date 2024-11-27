@@ -610,7 +610,7 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.USISOBEast1RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsIsobEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "sc2s.sgov.gov"),
 					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoBPartitionID),

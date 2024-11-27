@@ -83,7 +83,7 @@ func TestIsIsolatedRegion(t *testing.T) {
 			expected: true,
 		},
 		{
-			input:    names.USISOBEast1RegionID,
+			input:    endpoints.UsIsobEast1RegionID,
 			expected: true,
 		},
 		{
@@ -175,7 +175,7 @@ func TestIsStandardRegion(t *testing.T) {
 			expected: false,
 		},
 		{
-			input:    names.USISOBEast1RegionID,
+			input:    endpoints.UsIsobEast1RegionID,
 			expected: false,
 		},
 		{

@@ -2424,8 +2424,8 @@ func TestWebsiteEndpoint(t *testing.T) {
 			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.c2s.ic.gov", endpoints.UsIsoEast1RegionID),
 		},
 		{
-			LocationConstraint: names.USISOBEast1RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.sc2s.sgov.gov", names.USISOBEast1RegionID),
+			LocationConstraint: endpoints.UsIsobEast1RegionID,
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.sc2s.sgov.gov", endpoints.UsIsobEast1RegionID),
 		},
 		{
 			LocationConstraint: endpoints.CnNorth1RegionID,
