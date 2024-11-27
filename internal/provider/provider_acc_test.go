@@ -719,7 +719,7 @@ func testAccCheckRegion(ctx context.Context, t *testing.T, p **schema.Provider, 
 			return fmt.Errorf("provider not initialized")
 		}
 
-		if got := (*p).Meta().(*conns.AWSClient).Region; got != expectedRegion {
+		if got := (*p).Meta().(*conns.AWSClient).Region(ctx); got != expectedRegion {
 			return fmt.Errorf("expected Region (%s), got: %s", expectedRegion, got)
 		}
 

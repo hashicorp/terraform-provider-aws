@@ -1569,7 +1569,7 @@ provider %[1]q {
 `, providerName, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), AlternateRegion(), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
-func RegionProviderFunc(region string, providers *[]*schema.Provider) ProviderFunc {
+func RegionProviderFunc(ctx context.Context, region string, providers *[]*schema.Provider) ProviderFunc {
 	return func() *schema.Provider {
 		if region == "" {
 			log.Println("[DEBUG] No region given")
@@ -1595,7 +1595,7 @@ func RegionProviderFunc(region string, providers *[]*schema.Provider) ProviderFu
 				continue
 			}
 
-			clientRegion := client.Region
+			clientRegion := client.Region(ctx)
 			log.Printf("[DEBUG] Checking AWS provider region %q against %q", clientRegion, region)
 			if clientRegion == region {
 				log.Printf("[DEBUG] Found AWS provider with region: %s", region)

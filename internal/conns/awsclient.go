@@ -26,7 +26,6 @@ import (
 )
 
 type AWSClient struct {
-	Region          string
 	ServicePackages map[string]ServicePackage
 
 	accountID                 string
@@ -40,6 +39,7 @@ type AWSClient struct {
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
 	partition                 endpoints.Partition
+	region                    string
 	session                   *session_sdkv1.Session
 	s3ExpressClient           *s3.Client
 	s3UsePathStyle            bool   // From provider configuration.
@@ -86,6 +86,11 @@ func (c *AWSClient) Partition(context.Context) string {
 	return c.partition.ID()
 }
 
+// Region returns the ID of the configured AWS Region.
+func (c *AWSClient) Region(context.Context) string {
+	return c.region
+}
+
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com
 // The prefix should not contain a trailing period.
@@ -98,7 +103,7 @@ func (c *AWSClient) RegionalARN(ctx context.Context, service, resource string) s
 	return arn.ARN{
 		Partition: c.Partition(ctx),
 		Service:   service,
-		Region:    c.Region,
+		Region:    c.Region(ctx),
 		AccountID: c.AccountID(ctx),
 		Resource:  resource,
 	}.String()
@@ -109,7 +114,7 @@ func (c *AWSClient) RegionalARNNoAccount(ctx context.Context, service, resource 
 	return arn.ARN{
 		Partition: c.Partition(ctx),
 		Service:   service,
-		Region:    c.Region,
+		Region:    c.Region(ctx),
 		Resource:  resource,
 	}.String()
 }
@@ -118,7 +123,7 @@ func (c *AWSClient) RegionalARNNoAccount(ctx context.Context, service, resource 
 // e.g. PREFIX.us-west-2.amazonaws.com
 // The prefix should not contain a trailing period.
 func (c *AWSClient) RegionalHostname(ctx context.Context, prefix string) string {
-	return fmt.Sprintf("%s.%s.%s", prefix, c.Region, c.DNSSuffix(ctx))
+	return fmt.Sprintf("%s.%s.%s", prefix, c.Region(ctx), c.DNSSuffix(ctx))
 }
 
 // S3ExpressClient returns an AWS SDK for Go v2 S3 API client suitable for use with S3 Express (directory buckets).
@@ -239,8 +244,8 @@ func (c *AWSClient) ReverseDNSPrefix(ctx context.Context) string {
 }
 
 // EC2RegionalPrivateDNSSuffix returns the EC2 private DNS suffix for the configured AWS Region.
-func (c *AWSClient) EC2RegionalPrivateDNSSuffix(context.Context) string {
-	region := c.Region
+func (c *AWSClient) EC2RegionalPrivateDNSSuffix(ctx context.Context) string {
+	region := c.Region(ctx)
 	if region == endpoints.UsEast1RegionID {
 		return "ec2.internal"
 	}
@@ -249,8 +254,8 @@ func (c *AWSClient) EC2RegionalPrivateDNSSuffix(context.Context) string {
 }
 
 // EC2RegionalPublicDNSSuffix returns the EC2 public DNS suffix for the configured AWS Region.
-func (c *AWSClient) EC2RegionalPublicDNSSuffix(context.Context) string {
-	region := c.Region
+func (c *AWSClient) EC2RegionalPublicDNSSuffix(ctx context.Context) string {
+	region := c.Region(ctx)
 	if region == endpoints.UsEast1RegionID {
 		return "compute-1"
 	}
