@@ -63,7 +63,7 @@ func dataSourceWorkspacesRead(ctx context.Context, d *schema.ResourceData, meta 
 		workspaceIDs = append(workspaceIDs, aws.ToString(w.WorkspaceId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("aliases", aliases)
 	d.Set(names.AttrARNs, arns)
 	d.Set("workspace_ids", workspaceIDs)
