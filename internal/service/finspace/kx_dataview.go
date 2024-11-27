@@ -252,7 +252,7 @@ func resourceKxDataviewRead(ctx context.Context, d *schema.ResourceData, meta in
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   names.FinSpace,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("kxEnvironment/%s/kxDatabase/%s/kxDataview/%s", aws.ToString(out.EnvironmentId), aws.ToString(out.DatabaseName), aws.ToString(out.DataviewName)),
 	}.String()
 	d.Set(names.AttrARN, dataviewARN)
