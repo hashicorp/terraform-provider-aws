@@ -18,7 +18,7 @@ import (
 // See https://docs.aws.amazon.com/general/latest/gr/apprunner.html
 
 var hostedZoneIDPerRegionMap = map[string]string{
-	names.USEast2RegionID:          "Z0224347AD7KVHMLOX31",
+	endpoints.UsEast2RegionID:          "Z0224347AD7KVHMLOX31",
 	names.USEast1RegionID:          "Z01915732ZBZKC8D32TPT",
 	names.USWest2RegionID:          "Z02243383FTQ64HJ5772Q",
 	endpoints.ApSouth1RegionID:         "Z00855883LBHKTIC4ODF2",

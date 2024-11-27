@@ -2412,8 +2412,8 @@ func TestWebsiteEndpoint(t *testing.T) {
 			Expected:           fmt.Sprintf("bucket-name.s3-website-%s.%s", names.USEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			LocationConstraint: names.USEast2RegionID,
-			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", names.USEast2RegionID, acctest.PartitionDNSSuffix()),
+			LocationConstraint: endpoints.UsEast2RegionID,
+			Expected:           fmt.Sprintf("bucket-name.s3-website.%s.%s", endpoints.UsEast2RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
 			LocationConstraint: endpoints.UsGovEast1RegionID,

@@ -150,7 +150,6 @@ const (
 	GlobalRegionID = "aws-global" // AWS Standard global region.
 
 	USEast1RegionID = "us-east-1" // US East (N. Virginia).
-	USEast2RegionID = "us-east-2" // US East (Ohio).
 	USWest1RegionID = "us-west-1" // US West (N. California).
 	USWest2RegionID = "us-west-2" // US West (Oregon).
 )

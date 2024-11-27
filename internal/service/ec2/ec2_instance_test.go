@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -3905,7 +3906,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToDisabledToEnabledToUnspe
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, names.USEast2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -3972,7 +3973,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpUnspecifiedToEnabledToDisabledToUnspe
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, names.USEast2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -4038,7 +4039,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpEnabledToDisabled(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, names.USEast2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -4082,7 +4083,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpDisabledToEnabled(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, names.USEast2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -4131,7 +4132,7 @@ func TestAccEC2Instance_cpuOptionsAmdSevSnpCoreThreads(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			// AMD SEV-SNP currently only supported in us-east-2
 			// Ref: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/snp-requirements.html
-			acctest.PreCheckRegion(t, names.USEast2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

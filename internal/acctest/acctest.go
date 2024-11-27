@@ -905,7 +905,7 @@ func AlternateRegion() string {
 }
 
 func ThirdRegion() string {
-	return envvar.GetWithDefault(envvar.ThirdRegion, names.USEast2RegionID)
+	return envvar.GetWithDefault(envvar.ThirdRegion, endpoints.UsEast2RegionID)
 }
 
 func Partition() string {

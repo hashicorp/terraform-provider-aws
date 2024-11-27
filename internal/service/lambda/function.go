@@ -1400,7 +1400,7 @@ func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN strin
 func signerServiceIsAvailable(region string) bool {
 	availableRegions := map[string]struct{}{
 		names.USEast1RegionID:      {},
-		names.USEast2RegionID:      {},
+		endpoints.UsEast2RegionID:      {},
 		names.USWest1RegionID:      {},
 		names.USWest2RegionID:      {},
 		endpoints.AfSouth1RegionID:     {},
