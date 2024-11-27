@@ -247,7 +247,6 @@ func resourceEventSourceMapping() *schema.Resource {
 			"provisioned_poller_config": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -736,6 +735,15 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if d.HasChange("parallelization_factor") {
 			input.ParallelizationFactor = aws.Int32(int32(d.Get("parallelization_factor").(int)))
+		}
+
+		if d.HasChange("provisioned_poller_config") {
+			if v, ok := d.GetOk("provisioned_poller_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.ProvisionedPollerConfig = expandProvisionedPollerConfig(v.([]interface{})[0].(map[string]interface{}))
+			} else {
+				// AWS ignores the removal if this is left as nil.
+				input.ProvisionedPollerConfig = &awstypes.ProvisionedPollerConfig{}
+			}
 		}
 
 		if d.HasChange("scaling_config") {

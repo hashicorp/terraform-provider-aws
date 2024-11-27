@@ -58,6 +58,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
 			},
@@ -877,12 +878,11 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_msk(rName, "100"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "60"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
@@ -904,12 +904,10 @@ func TestAccLambdaEventSourceMapping_msk(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_msk(rName, "9999"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "9999"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "60"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
@@ -939,14 +937,12 @@ func TestAccLambdaEventSourceMapping_mskWithEventSourceConfig(t *testing.T) {
 				Config: testAccEventSourceMappingConfig_mskWithEventSourceConfig(rName, "100"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.consumer_group_id", "amazon-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttrPair(resourceName, "event_source_arn", eventSourceResourceName, names.AttrARN),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
-					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "amazon_managed_kafka_event_source_config.0.consumer_group_id", "amazon-managed-test-group-id"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "80"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.minimum_pollers", "10"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
@@ -979,11 +975,11 @@ func TestAccLambdaEventSourceMapping_selfManagedKafka(t *testing.T) {
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test1:9092,test2:9092"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
@@ -1024,15 +1020,13 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfig(t *te
 					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "batch_size", "100"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
+					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_event_source.0.endpoints.KAFKA_BOOTSTRAP_SERVERS", "test1:9092,test2:9092"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_managed_kafka_event_source_config.0.consumer_group_id", "self-managed-test-group-id"),
 					resource.TestCheckResourceAttr(resourceName, "source_access_configuration.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "80"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.minimum_pollers", "10"),
-					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
 					resource.TestCheckResourceAttr(resourceName, "topics.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "topics.*", "test"),
 				),
@@ -1042,6 +1036,53 @@ func TestAccLambdaEventSourceMapping_selfManagedKafkaWithEventSourceConfig(t *te
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+		},
+	})
+}
+
+func TestAccLambdaEventSourceMapping_selfManagedKafkaWithProvisionedPollerConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambda.GetEventSourceMappingOutput
+	resourceName := "aws_lambda_event_source_mapping.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "100", "null"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "100"),
+					resource.TestCheckResourceAttrSet(resourceName, "provisioned_poller_config.0.minimum_pollers"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, "100", "test1:9092,test2:9092", "150", "15"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.maximum_pollers", "150"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.0.minimum_pollers", "15"),
+				),
+			},
+			{
+				Config: testAccEventSourceMappingConfig_selfManagedKafka(rName, "100", "test1:9092,test2:9092"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "0"),
+				),
 			},
 		},
 	})
@@ -2377,10 +2418,6 @@ resource "aws_lambda_event_source_mapping" "test" {
   topics            = ["test"]
   starting_position = "TRIM_HORIZON"
 
-  provisioned_poller_config {
-    maximum_pollers = 60
-  }
-
   depends_on = [aws_iam_policy_attachment.test]
 }
 `, rName, batchSize))
@@ -2422,11 +2459,6 @@ resource "aws_lambda_event_source_mapping" "test" {
     consumer_group_id = "amazon-managed-test-group-id"
   }
 
-  provisioned_poller_config {
-    maximum_pollers = 80
-    minimum_pollers = 10
-  }
-
   depends_on = [aws_iam_policy_attachment.test]
 }
 `, rName, batchSize))
@@ -2463,7 +2495,6 @@ resource "aws_lambda_event_source_mapping" "test" {
     type = "VPC_SECURITY_GROUP"
     uri  = aws_security_group.test.id
   }
-
 }
 `, rName, batchSize, kafkaBootstrapServers))
 }
@@ -2503,13 +2534,54 @@ resource "aws_lambda_event_source_mapping" "test" {
     type = "VPC_SECURITY_GROUP"
     uri  = aws_security_group.test.id
   }
-
-  provisioned_poller_config {
-    maximum_pollers = 80
-    minimum_pollers = 10
-  }
 }
 `, rName, batchSize, kafkaBootstrapServers))
+}
+
+func testAccEventSourceMappingConfig_selfManagedKafkaWithProvisionedPollerConfig(rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers string) string {
+	if batchSize == "" {
+		batchSize = "null"
+	}
+	if maxPollers == "" {
+		maxPollers = "null"
+	}
+	if minPollers == "" {
+		minPollers = "null"
+	}
+
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_kafkaBase(rName), fmt.Sprintf(`
+resource "aws_lambda_event_source_mapping" "test" {
+  batch_size        = %[2]s
+  enabled           = false
+  function_name     = aws_lambda_function.test.arn
+  topics            = ["test"]
+  starting_position = "TRIM_HORIZON"
+
+  self_managed_event_source {
+    endpoints = {
+      KAFKA_BOOTSTRAP_SERVERS = %[3]q
+    }
+  }
+
+  dynamic "source_access_configuration" {
+    for_each = aws_subnet.test[*].id
+    content {
+      type = "VPC_SUBNET"
+      uri  = "subnet:${source_access_configuration.value}"
+    }
+  }
+
+  source_access_configuration {
+    type = "VPC_SECURITY_GROUP"
+    uri  = aws_security_group.test.id
+  }
+
+  provisioned_poller_config {
+    maximum_pollers = %[4]s
+    minimum_pollers = %[5]s
+  }
+}
+`, rName, batchSize, kafkaBootstrapServers, maxPollers, minPollers))
 }
 
 func testAccEventSourceMappingConfig_dynamoDBBatchSize(rName, batchSize string) string {
