@@ -56,7 +56,7 @@ func dataSourceDomainIdentityRead(ctx context.Context, d *schema.ResourceData, m
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("identity/%s", domainName),
 	}.String()
 	d.Set(names.AttrARN, arn)

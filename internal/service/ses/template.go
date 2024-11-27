@@ -119,7 +119,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("template/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

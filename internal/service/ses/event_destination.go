@@ -212,7 +212,7 @@ func resourceEventDestinationRead(ctx context.Context, d *schema.ResourceData, m
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("configuration-set/%s:event-destination/%s", configurationSetName, d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

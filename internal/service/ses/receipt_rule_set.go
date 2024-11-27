@@ -90,7 +90,7 @@ func resourceReceiptRuleSetRead(ctx context.Context, d *schema.ResourceData, met
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("receipt-rule-set/%s", name),
 	}.String()
 	d.Set(names.AttrARN, arn)
