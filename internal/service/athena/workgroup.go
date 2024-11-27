@@ -243,7 +243,7 @@ func resourceWorkGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "athena",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("workgroup/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
