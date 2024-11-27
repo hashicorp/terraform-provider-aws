@@ -59,7 +59,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster:.+`)),
 					acctest.CheckResourceAttrGreaterThanValue(resourceName, "availability_zones.#", 0),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
