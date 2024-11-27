@@ -250,7 +250,7 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codepipeline",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("actiontype:%s/%s/%s/%s", types.ActionOwnerCustom, category, provider, version),
 	}.String()
 	d.Set(names.AttrARN, arn)
