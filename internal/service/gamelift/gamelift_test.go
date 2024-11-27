@@ -53,7 +53,7 @@ func testAccAccountIdByRegion(region string) (string, error) {
 	m := map[string]string{
 		endpoints.ApNortheast1RegionID: "120069834884",
 		endpoints.ApNortheast2RegionID:     "805673136642",
-		names.APSouth1RegionID:         "134975661615",
+		endpoints.ApSouth1RegionID:         "134975661615",
 		names.APSoutheast1RegionID:     "077577004113",
 		names.APSoutheast2RegionID:     "112188327105",
 		names.CACentral1RegionID:       "800535022691",

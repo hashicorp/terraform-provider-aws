@@ -149,8 +149,6 @@ const (
 	// AWS Standard partition's regions.
 	GlobalRegionID = "aws-global" // AWS Standard global region.
 
-	APNortheast3RegionID = "ap-northeast-3" // Asia Pacific (Osaka).
-	APSouth1RegionID     = "ap-south-1"     // Asia Pacific (Mumbai).
 	APSouth2RegionID     = "ap-south-2"     // Asia Pacific (Hyderabad).
 	APSoutheast1RegionID = "ap-southeast-1" // Asia Pacific (Singapore).
 	APSoutheast2RegionID = "ap-southeast-2" // Asia Pacific (Sydney).
