@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -36,9 +37,11 @@ func (e *ephemeralParameter) Metadata(_ context.Context, _ ephemeral.MetadataReq
 func (e *ephemeralParameter) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrName: schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				Required: true,
+			},
+			names.AttrName: schema.StringAttribute{
+				Computed: true,
 			},
 			names.AttrType: schema.StringAttribute{
 				Computed: true,
@@ -52,6 +55,7 @@ func (e *ephemeralParameter) Schema(ctx context.Context, _ ephemeral.SchemaReque
 			},
 			"with_decryption": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -76,10 +80,13 @@ func (e *ephemeralParameter) Open(ctx context.Context, request ephemeral.OpenReq
 		data.WithDecryption = types.BoolValue(true)
 	}
 
-	input := ssm.GetParameterInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
-	if response.Diagnostics.HasError() {
-		return
+	// Ephemeral resources expect all dependencies to exist beforehand.
+	// Therefore, the ARN must be set, as opening an ephemeral resource is deferred
+	// if it references an instance marked as unknown.
+	// This can happen if the referenced SSM parameter is created in the same plan.
+	input := ssm.GetParameterInput{
+		Name:           data.ARN.ValueStringPointer(),
+		WithDecryption: data.WithDecryption.ValueBoolPointer(),
 	}
 
 	output, err := findParameterByName(ctx, conn, *input.Name, *input.WithDecryption)
@@ -91,8 +98,8 @@ func (e *ephemeralParameter) Open(ctx context.Context, request ephemeral.OpenReq
 		return
 	}
 
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
 	data.Value = fwflex.StringValueToFramework(ctx, string(*output.Value))
-
 	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 }
 
