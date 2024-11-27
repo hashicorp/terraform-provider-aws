@@ -35,12 +35,12 @@ func TestAccVPCBlockPublicAccessExclusion_basicVPC(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion_mode"), knownvalue.StringExact(internetGatewayExclusionMode)),
@@ -71,12 +71,12 @@ func TestAccVPCBlockPublicAccessExclusion_basicSubnet(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCBlockPublicAccessExclusionConfig_basicSubnet(rName, internetGatewayExclusionMode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion_mode"), knownvalue.StringExact(internetGatewayExclusionMode)),
@@ -107,12 +107,12 @@ func TestAccVPCBlockPublicAccessExclusion_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceVPCBlockPublicAccessExclusion, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -135,12 +135,12 @@ func TestAccVPCBlockPublicAccessExclusion_update(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion_mode"), knownvalue.StringExact(internetGatewayExclusionMode1)),
@@ -154,7 +154,7 @@ func TestAccVPCBlockPublicAccessExclusion_update(t *testing.T) {
 			{
 				Config: testAccVPCBlockPublicAccessExclusionConfig_basicVPC(rName, internetGatewayExclusionMode2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_exclusion_mode"), knownvalue.StringExact(internetGatewayExclusionMode2)),
@@ -164,7 +164,7 @@ func TestAccVPCBlockPublicAccessExclusion_update(t *testing.T) {
 	})
 }
 
-func testAccCheckBlockPublicAccessExclusionDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
@@ -190,7 +190,7 @@ func testAccCheckBlockPublicAccessExclusionDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckBlockPublicAccessExclusionExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckVPCBlockPublicAccessExclusionExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
