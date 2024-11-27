@@ -109,7 +109,7 @@ func dataSourceBotRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "lex",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("bot:%s", name),
 	}
 	d.Set(names.AttrARN, arn.String())

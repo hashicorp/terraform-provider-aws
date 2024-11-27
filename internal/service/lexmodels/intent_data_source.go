@@ -88,7 +88,7 @@ func dataSourceIntentRead(ctx context.Context, d *schema.ResourceData, meta inte
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "lex",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("intent:%s", d.Get(names.AttrName).(string)),
 	}
 	d.Set(names.AttrARN, arn.String())
