@@ -206,7 +206,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	globalTableARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    mainRegion,
 		Resource:  fmt.Sprintf("table/%s", tableName),
