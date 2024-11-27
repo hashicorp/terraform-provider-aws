@@ -744,7 +744,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
 	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
 	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
-	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region; partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		// Code Signing is only supported on zip packaged lambda functions.
@@ -1388,7 +1388,7 @@ func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN strin
 	return arn.ARN{
 		Partition: c.Partition(ctx),
 		Service:   "apigateway",
-		Region:    c.Region,
+		Region:    c.Region(ctx),
 		AccountID: "lambda",
 		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionOrAliasARN),
 	}.String()
