@@ -239,7 +239,7 @@ func testAccCheckRunDynamoDBTableBackupJob(ctx context.Context, rName string) re
 		resourceARN := arn.ARN{
 			Partition: client.Partition(ctx),
 			Service:   "dynamodb",
-			Region:    client.Region,
+			Region:    client.Region(ctx),
 			AccountID: client.AccountID(ctx),
 			Resource:  fmt.Sprintf("table/%s", rName),
 		}.String()
