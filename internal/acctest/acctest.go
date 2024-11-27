@@ -1376,7 +1376,7 @@ func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
 	case endpoints.AwsPartitionID:
 		PreCheckRegion(t, names.USEast1RegionID)
 	case endpoints.AwsCnPartitionID:
-		PreCheckRegion(t, names.CNNorthwest1RegionID)
+		PreCheckRegion(t, endpoints.CnNorthwest1RegionID)
 	}
 
 	conn := Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)

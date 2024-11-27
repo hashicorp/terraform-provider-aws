@@ -541,7 +541,7 @@ func TestAccProvider_Region_china(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.CNNorthwest1RegionID),
+				Config: testAccProviderConfig_region(endpoints.CnNorthwest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com.cn"),
 					testAccCheckPartition(ctx, t, &provider, endpoints.AwsCnPartitionID),
