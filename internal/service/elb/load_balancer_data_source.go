@@ -230,7 +230,7 @@ func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, met
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "elasticloadbalancing",
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
