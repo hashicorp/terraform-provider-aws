@@ -241,7 +241,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		StackSetName: aws.String(stackSetName),
 	}
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
