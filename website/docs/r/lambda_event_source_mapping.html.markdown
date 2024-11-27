@@ -172,7 +172,9 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `maximum_retry_attempts`: - (Optional) The maximum number of times to retry when the function returns an error. Only available for stream sources (DynamoDB and Kinesis). Minimum and default of -1 (forever), maximum of 10000.
 * `metrics_config`: - (Optional) CloudWatch metrics configuration of the event source. Only available for stream sources (DynamoDB and Kinesis) and SQS queues. Detailed below.
 * `parallelization_factor`: - (Optional) The number of batches to process from each shard concurrently. Only available for stream sources (DynamoDB and Kinesis). Minimum and default of 1, maximum of 10.
-* `provisioned_poller_config`: - (Optional) Amazon MSK and self-managed Apache Kafka only, the provisioned mode configuration for the event source.
+* `provisioned_poller_config`: - (Optional) Event poller configuration for the event source.
+  Only valid for Amazon MSK or self-managed Apache Kafka sources.
+  Detailed below. 
 * `queues` - (Optional) The name of the Amazon MQ broker destination queue to consume. Only available for MQ sources. The list must contain exactly one queue name.
 * `scaling_config` - (Optional) Scaling configuration of the event source. Only available for SQS queues. Detailed below.
 * `self_managed_event_source`: - (Optional) For Self Managed Kafka sources, the location of the self managed cluster. If set, configuration must also include `source_access_configuration`. Detailed below.
