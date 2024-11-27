@@ -280,7 +280,7 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ssm",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "association/" + aws.ToString(association.AssociationId),
 	}.String()
 	d.Set(names.AttrARN, arn)

@@ -400,7 +400,7 @@ func resourceMaintenanceWindowTaskRead(ctx context.Context, d *schema.ResourceDa
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ssm",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "windowtask/" + windowTaskID,
 	}.String()
 	d.Set(names.AttrARN, arn)

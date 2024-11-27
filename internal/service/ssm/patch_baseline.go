@@ -331,7 +331,7 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "ssm",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "patchbaseline/" + strings.TrimPrefix(d.Id(), "/"),
 	}.String()
 	d.Set(names.AttrARN, arn)
