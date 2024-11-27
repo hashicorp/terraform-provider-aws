@@ -80,7 +80,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	if v, ok := d.GetOk("lex_bot"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.LexBot = expandLexBot(v.([]interface{})[0].(map[string]interface{}))
 		if input.LexBot.LexRegion == nil {
-			input.LexBot.LexRegion = aws.String(meta.(*conns.AWSClient).Region)
+			input.LexBot.LexRegion = aws.String(meta.(*conns.AWSClient).Region(ctx))
 		}
 	}
 
