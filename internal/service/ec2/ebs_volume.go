@@ -207,7 +207,7 @@ func resourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta int
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("volume/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())

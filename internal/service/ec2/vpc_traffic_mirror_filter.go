@@ -126,7 +126,7 @@ func resourceTrafficMirrorFilterRead(ctx context.Context, d *schema.ResourceData
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "traffic-mirror-filter/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)
