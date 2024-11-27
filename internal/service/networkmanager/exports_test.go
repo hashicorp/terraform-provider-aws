@@ -11,6 +11,7 @@ var (
 	ResourceCoreNetwork                          = resourceCoreNetwork
 	ResourceCustomerGatewayAssociation           = resourceCustomerGatewayAssociation
 	ResourceDevice                               = resourceDevice
+	ResourceDXGatewayAttachment                  = newResourceDXGatewayAttachment
 	ResourceGlobalNetwork                        = resourceGlobalNetwork
 	ResourceLink                                 = resourceLink
 	ResourceLinkAssociation                      = resourceLinkAssociation

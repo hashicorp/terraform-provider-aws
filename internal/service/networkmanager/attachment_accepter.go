@@ -63,7 +63,16 @@ func resourceAttachmentAccepter() *schema.Resource {
 			},
 			"edge_location": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
+			},
+			"edge_locations": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
 			},
 			names.AttrOwnerAccountID: {
 				Type:     schema.TypeString,
@@ -139,6 +148,16 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 
 		d.SetId(attachmentID)
 
+	case awstypes.AttachmentTypeDirectConnectGateway:
+		dxgwAttachment, err := findDXGatewayAttachmentByID(ctx, conn, attachmentID)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Network Manager Direct Connect Gateway Attachment (%s): %s", attachmentID, err)
+		}
+		state = dxgwAttachment.Attachment.State
+
+		d.SetId(attachmentID)
+
 	default:
 		return sdkdiag.AppendErrorf(diags, "unsupported Network Manager Attachment type: %s", attachmentType)
 	}
@@ -174,6 +193,11 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 			if _, err := waitTransitGatewayRouteTableAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Transit Gateway Route Table Attachment (%s) create: %s", attachmentID, err)
 			}
+
+		case awstypes.AttachmentTypeDirectConnectGateway:
+			if _, err := waitDXGatewayAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Direct Connect Gateway Attachment (%s) create: %s", attachmentID, err)
+			}
 		}
 	}
 
@@ -203,6 +227,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		}
 
 		a = vpcAttachment.Attachment
+		d.Set("edge_location", a.EdgeLocation)
 
 	case awstypes.AttachmentTypeSiteToSiteVpn:
 		vpnAttachment, err := findSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
@@ -218,6 +243,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		}
 
 		a = vpnAttachment.Attachment
+		d.Set("edge_location", a.EdgeLocation)
 
 	case awstypes.AttachmentTypeConnect:
 		connectAttachment, err := findConnectAttachmentByID(ctx, conn, d.Id())
@@ -233,6 +259,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		}
 
 		a = connectAttachment.Attachment
+		d.Set("edge_location", a.EdgeLocation)
 
 	case awstypes.AttachmentTypeTransitGatewayRouteTable:
 		tgwAttachment, err := findTransitGatewayRouteTableAttachmentByID(ctx, conn, d.Id())
@@ -248,12 +275,28 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		}
 
 		a = tgwAttachment.Attachment
+		d.Set("edge_location", a.EdgeLocation)
+
+	case awstypes.AttachmentTypeDirectConnectGateway:
+		dxgwAttachment, err := findDXGatewayAttachmentByID(ctx, conn, d.Id())
+
+		if !d.IsNewResource() && tfresource.NotFound(err) {
+			log.Printf("[WARN] Network Manager Direct Connect Gateway Attachment %s not found, removing from state", d.Id())
+			d.SetId("")
+			return diags
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Network Manager Direct Connect Gateway Attachment (%s): %s", d.Id(), err)
+		}
+
+		a = dxgwAttachment.Attachment
+		d.Set("edge_locations", a.EdgeLocations)
 	}
 
 	d.Set("attachment_policy_rule_number", a.AttachmentPolicyRuleNumber)
 	d.Set("core_network_arn", a.CoreNetworkArn)
 	d.Set("core_network_id", a.CoreNetworkId)
-	d.Set("edge_location", a.EdgeLocation)
 	d.Set(names.AttrOwnerAccountID, a.OwnerAccountId)
 	d.Set(names.AttrResourceARN, a.ResourceArn)
 	d.Set("segment_name", a.SegmentName)
