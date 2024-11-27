@@ -1630,6 +1630,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if _, err := waitGlobalClusterMemberRemoved(ctx, conn, clusterARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster (%s) removal from RDS Global Cluster (%s): %s", d.Id(), os, err)
 		}
+
+		// Removal from a global cluster puts the cluster into 'promoting' state. Wait for it to become available again.
+		if _, err := waitDBClusterAvailable(ctx, conn, d.Id(), true, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) available: %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("iam_roles") {
