@@ -155,7 +155,6 @@ const (
 	USWest2RegionID = "us-west-2" // US West (Oregon).
 
 	// AWS ISO (US) partition's regions.
-	USISOEast1RegionID = "us-iso-east-1" // US ISO East.
 	USISOWest1RegionID = "us-iso-west-1" // US ISO WEST.
 
 	// AWS ISOB (US) partition's regions.

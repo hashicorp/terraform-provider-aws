@@ -518,7 +518,7 @@ func TestAccProvider_Region_c2s(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.USISOEast1RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsIsoEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "c2s.ic.gov"),
 					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoPartitionID),
