@@ -6,6 +6,7 @@ package flex
 import (
 	"context"
 	"fmt"
+	"iter"
 	"reflect"
 	"strings"
 	"time"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	smithyjson "github.com/hashicorp/terraform-provider-aws/internal/json"
+	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 	"github.com/shopspring/decimal"
 )
 
@@ -1509,14 +1511,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 	typeFrom := valFrom.Type()
 	typeTo := valTo.Type()
 
-	fieldIndexes, d := flattenStructFieldIndexes(ctx, typeFrom, flexer.getOptions())
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	for _, fieldIndex := range fieldIndexes {
-		fromField := typeFrom.FieldByIndex(fieldIndex)
+	for fromField := range flattenSourceFields(ctx, typeFrom, flexer.getOptions()) {
 		fromFieldName := fromField.Name
 
 		toField, ok := findFieldFuzzy(ctx, fromFieldName, typeFrom, typeTo, flexer)
@@ -1563,7 +1558,7 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 			omitempty: toOpts.OmitEmpty(),
 		}
 
-		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fieldIndex), targetPath.AtName(toFieldName), toFieldVal, opts)...)
+		diags.Append(flexer.convert(ctx, sourcePath.AtName(fromFieldName), valFrom.FieldByIndex(fromField.Index), targetPath.AtName(toFieldName), toFieldVal, opts)...)
 		if diags.HasError() {
 			break
 		}
@@ -1572,31 +1567,22 @@ func flattenStruct(ctx context.Context, sourcePath path.Path, from any, targetPa
 	return diags
 }
 
-func flattenStructFieldIndexes(ctx context.Context, typ reflect.Type, opts AutoFlexOptions) (indexes [][]int, diags diag.Diagnostics) {
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
-		if !field.IsExported() && !field.Anonymous {
-			// Skip unexported fields. Unexported embedded structs (anonymous fields) are allowed because they may
-			// contain exported fields that are promoted; which means they can be read/set.
-			continue
+func flattenSourceFields(ctx context.Context, typ reflect.Type, opts AutoFlexOptions) iter.Seq[reflect.StructField] {
+	return func(yield func(reflect.StructField) bool) {
+		for field := range tfreflect.ExportedStructFields(typ) {
+			fieldName := field.Name
+			if opts.isIgnoredField(fieldName) {
+				tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
+					logAttrKeySourceFieldname: fieldName,
+				})
+				continue
+			}
+
+			if !yield(field) {
+				return
+			}
 		}
-
-		// This index sequence is the location of the field within the struct.
-		// For promoted fields from an embedded struct, the length of this sequence will be > 1
-		fieldIndexSequence := []int{i}
-
-		fieldName := field.Name
-		if opts.isIgnoredField(fieldName) {
-			tflog.SubsystemTrace(ctx, subsystemName, "Skipping ignored source field", map[string]any{
-				logAttrKeySourceFieldname: fieldName,
-			})
-			continue
-		}
-
-		indexes = append(indexes, fieldIndexSequence)
 	}
-
-	return indexes, diags
 }
 
 // setMapBlockKey takes a struct and assigns the value of the `key`

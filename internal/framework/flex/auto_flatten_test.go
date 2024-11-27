@@ -4226,9 +4226,9 @@ func TestFlattenOptions(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*aws01](), reflect.TypeFor[*tf01]()),
 				infoConverting(reflect.TypeFor[aws01](), reflect.TypeFor[*tf01]()),
-				traceSkipIgnoredSourceField(reflect.TypeFor[aws01](), "Tags", reflect.TypeFor[*tf01]()),
 				traceMatchedFields("Field1", reflect.TypeFor[aws01](), "Field1", reflect.TypeFor[*tf01]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[bool](), "Field1", reflect.TypeFor[types.Bool]()),
+				traceSkipIgnoredSourceField(reflect.TypeFor[aws01](), "Tags", reflect.TypeFor[*tf01]()),
 			},
 		},
 		"ignore tags by default": {
@@ -4245,9 +4245,9 @@ func TestFlattenOptions(t *testing.T) {
 			expectedLogLines: []map[string]any{
 				infoFlattening(reflect.TypeFor[*aws01](), reflect.TypeFor[*tf01]()),
 				infoConverting(reflect.TypeFor[aws01](), reflect.TypeFor[*tf01]()),
-				traceSkipIgnoredSourceField(reflect.TypeFor[aws01](), "Tags", reflect.TypeFor[*tf01]()),
 				traceMatchedFields("Field1", reflect.TypeFor[aws01](), "Field1", reflect.TypeFor[*tf01]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[bool](), "Field1", reflect.TypeFor[types.Bool]()),
+				traceSkipIgnoredSourceField(reflect.TypeFor[aws01](), "Tags", reflect.TypeFor[*tf01]()),
 			},
 		},
 		"include tags with option override": {
