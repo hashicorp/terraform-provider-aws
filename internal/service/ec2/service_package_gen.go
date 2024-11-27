@@ -89,7 +89,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		},
 		{
 			Factory: newVPCBlockPublicAccessExclusionResource,
-			Name:    "Block Public Access Exclusion",
+			Name:    "VPC Block Public Access Exclusion",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},

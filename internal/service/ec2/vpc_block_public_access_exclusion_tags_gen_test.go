@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -24,11 +24,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -36,7 +36,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -59,7 +59,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -71,7 +71,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -80,7 +80,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -107,7 +107,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -120,7 +120,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -128,7 +128,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -151,7 +151,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -163,13 +163,13 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -184,7 +184,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -197,7 +197,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags(t *testing.T) {
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_null(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -205,11 +205,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_null(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -217,7 +217,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -240,7 +240,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_null(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -258,7 +258,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_EmptyMap(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -266,17 +266,17 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyMap(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -291,7 +291,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyMap(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
@@ -307,7 +307,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_AddOnUpdate(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -315,17 +315,17 @@ func TestAccVPCBlockPublicAccessExclusion_tags_AddOnUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -340,7 +340,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_AddOnUpdate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -348,7 +348,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -371,7 +371,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_AddOnUpdate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -386,7 +386,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -394,11 +394,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnCreate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -406,7 +406,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -429,7 +429,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -441,13 +441,13 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnCreate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -462,7 +462,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -475,7 +475,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -483,11 +483,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -495,7 +495,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -518,7 +518,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -527,7 +527,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -554,7 +554,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -567,7 +567,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -575,7 +575,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -598,7 +598,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -613,7 +613,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Add(t *testing.
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -621,11 +621,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Replace(t *test
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy:             testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -633,7 +633,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Replace(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -656,7 +656,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Replace(t *test
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -664,7 +664,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Replace(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -687,7 +687,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Replace(t *test
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -702,7 +702,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_EmptyTag_OnUpdate_Replace(t *test
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -710,11 +710,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -723,7 +723,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -743,7 +743,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -757,7 +757,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -767,7 +767,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -789,7 +789,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -804,7 +804,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -813,7 +813,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -833,7 +833,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -847,13 +847,13 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -869,7 +869,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -882,7 +882,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_providerOnly(t *testi
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -890,11 +890,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *tes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -905,7 +905,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -931,7 +931,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *tes
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -947,7 +947,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *tes
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -959,7 +959,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *tes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -989,7 +989,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *tes
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1006,13 +1006,13 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *tes
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1028,7 +1028,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *tes
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -1041,7 +1041,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nonOverlapping(t *tes
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1049,11 +1049,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testin
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1064,7 +1064,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1088,7 +1088,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1104,7 +1104,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1117,7 +1117,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1145,7 +1145,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1163,7 +1163,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1174,7 +1174,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testin
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1198,7 +1198,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1216,7 +1216,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_overlapping(t *testin
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1224,11 +1224,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToProviderOnly(
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1236,7 +1236,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToProviderOnly(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1260,7 +1260,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToProviderOnly(
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1269,7 +1269,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToProviderOnly(
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1289,7 +1289,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToProviderOnly(
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1305,7 +1305,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToProviderOnly(
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1313,11 +1313,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToResourceOnly(
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1326,7 +1326,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToResourceOnly(
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1346,7 +1346,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToResourceOnly(
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1354,7 +1354,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToResourceOnly(
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1378,7 +1378,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToResourceOnly(
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1393,7 +1393,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_updateToResourceOnly(
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1401,11 +1401,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyResourceTag(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1416,7 +1416,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyResourceTag(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1440,7 +1440,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyResourceTag(t *t
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1458,7 +1458,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyResourceTag(t *t
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1466,11 +1466,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyProviderOnlyTag(
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1479,7 +1479,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyProviderOnlyTag(
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1499,7 +1499,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyProviderOnlyTag(
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1515,7 +1515,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_emptyProviderOnlyTag(
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1523,11 +1523,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullOverlappingResour
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1538,7 +1538,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullOverlappingResour
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1562,7 +1562,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullOverlappingResour
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1583,7 +1583,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullOverlappingResour
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1591,11 +1591,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullNonOverlappingRes
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1606,7 +1606,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullNonOverlappingRes
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1632,7 +1632,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullNonOverlappingRes
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1653,7 +1653,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_DefaultTags_nullNonOverlappingRes
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1661,17 +1661,17 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnCreate(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tagsComputed1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1694,7 +1694,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnCreate(t *testing.T
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tagsComputed1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
@@ -1707,7 +1707,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnCreate(t *testing.T
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1715,11 +1715,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Add(t *testi
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1727,7 +1727,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Add(t *testi
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1751,7 +1751,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Add(t *testi
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tagsComputed2/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tagsComputed2/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
@@ -1759,7 +1759,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Add(t *testi
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1788,7 +1788,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Add(t *testi
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tagsComputed2/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tagsComputed2/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
@@ -1803,7 +1803,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Add(t *testi
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1811,11 +1811,11 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Replace(t *t
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1823,7 +1823,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Replace(t *t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1847,13 +1847,13 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Replace(t *t
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tagsComputed1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1876,7 +1876,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Replace(t *t
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tagsComputed1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
@@ -1889,7 +1889,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_ComputedTag_OnUpdate_Replace(t *t
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1897,12 +1897,12 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_DefaultTag(t *
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1916,7 +1916,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_DefaultTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1951,7 +1951,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_DefaultTag(t *
 			// 2: Update ignored tag only
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1965,7 +1965,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_DefaultTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2000,7 +2000,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_DefaultTag(t *
 			// 3: Update both tags
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -2014,7 +2014,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_DefaultTag(t *
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2050,7 +2050,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_DefaultTag(t *
 	})
 }
 
-func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccVPCVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_exclusion.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2058,12 +2058,12 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_ResourceTag(t 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.EC2ServiceID),
-		CheckDestroy: testAccCheckBlockPublicAccessExclusionDestroy(ctx),
+		CheckDestroy: testAccCheckVPCBlockPublicAccessExclusionDestroy(ctx),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -2075,7 +2075,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_ResourceTag(t 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2121,7 +2121,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_ResourceTag(t 
 			// 2: Update ignored tag
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -2133,7 +2133,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_ResourceTag(t 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2178,7 +2178,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_ResourceTag(t 
 			// 3: Update both tags
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/BlockPublicAccessExclusion/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/VPCBlockPublicAccessExclusion/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -2190,7 +2190,7 @@ func TestAccVPCBlockPublicAccessExclusion_tags_IgnoreTags_Overlap_ResourceTag(t 
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBlockPublicAccessExclusionExists(ctx, resourceName),
+					testAccCheckVPCBlockPublicAccessExclusionExists(ctx, resourceName),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
