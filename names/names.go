@@ -149,7 +149,6 @@ const (
 	// AWS Standard partition's regions.
 	GlobalRegionID = "aws-global" // AWS Standard global region.
 
-	CACentral1RegionID = "ca-central-1" // Canada (Central).
 	CAWest1RegionID    = "ca-west-1"    // Canada West (Calgary).
 	EUCentral1RegionID = "eu-central-1" // Europe (Frankfurt).
 	EUCentral2RegionID = "eu-central-2" // Europe (Zurich).
