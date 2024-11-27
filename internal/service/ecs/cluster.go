@@ -333,7 +333,7 @@ func resourceClusterImport(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set(names.AttrName, d.Id())
 	d.SetId(arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Service:   "ecs",
 		Resource:  "cluster/" + d.Id(),
