@@ -31,7 +31,7 @@ func testAccAppAuthorizationConnection_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, endpoints.ApNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),
@@ -66,7 +66,7 @@ func testAccAppAuthorizationConnection_OAuth2(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, names.USEast1RegionID, endpoints.ApNortheast1RegionID, names.EUWest1RegionID)
+			acctest.PreCheckRegion(t, names.USEast1RegionID, endpoints.ApNortheast1RegionID, endpoints.EuWest1RegionID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppFabricServiceID),

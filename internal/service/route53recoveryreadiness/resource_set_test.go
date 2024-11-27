@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,7 +28,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_basic(t *testing.T) {
 	cwArn := arn.ARN{
 		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
-		Region:    names.EUWest1RegionID,
+		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -63,7 +64,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_disappears(t *testing.T) {
 	cwArn := arn.ARN{
 		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
-		Region:    names.EUWest1RegionID,
+		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -94,7 +95,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_tags(t *testing.T) {
 	cwArn := arn.ARN{
 		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
-		Region:    names.EUWest1RegionID,
+		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -146,7 +147,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_readinessScope(t *testing.T) {
 	cwArn := arn.ARN{
 		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
-		Region:    names.EUWest1RegionID,
+		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
@@ -182,7 +183,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_basicDNSTargetResource(t *testin
 	hzArn := arn.ARN{
 		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
-		Region:    names.EUWest1RegionID,
+		Region:    endpoints.EuWest1RegionID,
 		Resource:  "hostedzone/zzzzzzzzz",
 		Service:   "route53",
 	}.String()
@@ -225,7 +226,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_dnsTargetResourceNLBTarget(t *te
 	hzArn := arn.ARN{
 		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
-		Region:    names.EUWest1RegionID,
+		Region:    endpoints.EuWest1RegionID,
 		Resource:  "hostedzone/zzzzzzzzz",
 		Service:   "route53",
 	}.String()
@@ -263,7 +264,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_dnsTargetResourceR53Target(t *te
 	hzArn := arn.ARN{
 		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
-		Region:    names.EUWest1RegionID,
+		Region:    endpoints.EuWest1RegionID,
 		Resource:  "hostedzone/zzzzzzzzz",
 		Service:   "route53",
 	}.String()
@@ -303,7 +304,7 @@ func TestAccRoute53RecoveryReadinessResourceSet_timeout(t *testing.T) {
 	cwArn := arn.ARN{
 		AccountID: acctest.Ct12Digit,
 		Partition: acctest.Partition(),
-		Region:    names.EUWest1RegionID,
+		Region:    endpoints.EuWest1RegionID,
 		Resource:  "alarm:zzzzzzzzz",
 		Service:   "cloudwatch",
 	}.String()
