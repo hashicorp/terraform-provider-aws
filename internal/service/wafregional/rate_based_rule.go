@@ -160,7 +160,7 @@ func resourceRateBasedRuleRead(ctx context.Context, d *schema.ResourceData, meta
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "waf-regional",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "ratebasedrule/" + d.Id(),
 	}.String()
 	d.Set(names.AttrARN, arn)

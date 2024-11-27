@@ -108,7 +108,7 @@ func resourceIPSetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "waf-regional",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "ipset/" + d.Id(),
 	}
 	d.Set(names.AttrARN, arn.String())
