@@ -3196,7 +3196,7 @@ func waitVPNGatewayVPCAttachmentDetached(ctx context.Context, conn *ec2.Client, 
 	return nil, err
 }
 
-func waitVPCBlockPublicAccessOptionsUpdated(ctx context.Context, conn *ec2.Client, timeout time.Duration) (*awstypes.VpcBlockPublicAccessOptions, error) {
+func waitVPCBlockPublicAccessOptionsUpdated(ctx context.Context, conn *ec2.Client, timeout time.Duration) (*awstypes.VpcBlockPublicAccessOptions, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateInProgress),
 		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateComplete),
