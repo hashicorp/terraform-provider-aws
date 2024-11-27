@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -183,7 +184,7 @@ func TestAccACMPCACertificateAuthority_keyStorageSecurityStandard(t *testing.T) 
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// See https://docs.aws.amazon.com/privateca/latest/userguide/data-protection.html#private-keys.
-			acctest.PreCheckRegion(t, names.APSouth2RegionID, names.APSoutheast3RegionID, names.APSoutheast4RegionID, names.EUCentral2RegionID, names.EUSouth2RegionID, names.MECentral1RegionID)
+			acctest.PreCheckRegion(t, endpoints.ApSouth2RegionID, names.APSoutheast3RegionID, names.APSoutheast4RegionID, names.EUCentral2RegionID, names.EUSouth2RegionID, names.MECentral1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
