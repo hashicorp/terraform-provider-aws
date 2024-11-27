@@ -204,7 +204,7 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.0.certificate_type", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
@@ -232,7 +232,7 @@ func TestAccGameLiftFleet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "log_paths.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rNameUpdated),
@@ -379,7 +379,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -431,7 +431,7 @@ func TestAccGameLiftFleet_allFields(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "build_id", "aws_gamelift_build.test", names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)), resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "c4.large"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "ON_DEMAND"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, desc),
@@ -560,7 +560,7 @@ func TestAccGameLiftFleet_script(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "script_id", "aws_gamelift_script.test", names.AttrID),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`fleet/fleet-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_configuration.0.certificate_type", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "ec2_instance_type", "t2.micro"),
