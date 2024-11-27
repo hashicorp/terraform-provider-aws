@@ -189,7 +189,7 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "cognito-identity",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("identitypool/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
