@@ -153,9 +153,6 @@ const (
 	USEast2RegionID = "us-east-2" // US East (Ohio).
 	USWest1RegionID = "us-west-1" // US West (N. California).
 	USWest2RegionID = "us-west-2" // US West (Oregon).
-
-	// AWS ISOF partition's regions.
-	EUISOEWest1RegionID = "eu-isoe-west-1" // EU ISOE West.
 )
 
 // PartitionForRegion returns the partition for the given Region.
