@@ -238,6 +238,24 @@ func resourceEventSourceMapping() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.IntBetween(-1, 10_000),
 			},
+			"metrics_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"metrics": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.EventSourceMappingMetric](),
+							},
+						},
+					},
+				},
+			},
 			"parallelization_factor": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -447,6 +465,10 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 		input.MaximumRetryAttempts = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("metrics_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.MetricsConfig = expandEventSourceMappingMetricsConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("parallelization_factor"); ok {
 		input.ParallelizationFactor = aws.Int32(int32(v.(int)))
 	}
@@ -584,6 +606,13 @@ func resourceEventSourceMappingRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("maximum_batching_window_in_seconds", output.MaximumBatchingWindowInSeconds)
 	d.Set("maximum_record_age_in_seconds", output.MaximumRecordAgeInSeconds)
 	d.Set("maximum_retry_attempts", output.MaximumRetryAttempts)
+	if v := output.MetricsConfig; v != nil {
+		if err := d.Set("metrics_config", []interface{}{flattenEventSourceMappingMetricsConfig(v)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting metrics_config: %s", err)
+		}
+	} else {
+		d.Set("metrics_config", nil)
+	}
 	d.Set("parallelization_factor", output.ParallelizationFactor)
 	d.Set("queues", output.Queues)
 	if v := output.ScalingConfig; v != nil {
@@ -699,6 +728,14 @@ func resourceEventSourceMappingUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if d.HasChange("maximum_retry_attempts") {
 			input.MaximumRetryAttempts = aws.Int32(int32(d.Get("maximum_retry_attempts").(int)))
+		}
+
+		if d.HasChange("metrics_config") {
+			if v, ok := d.GetOk("metrics_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.MetricsConfig = expandEventSourceMappingMetricsConfig((v.([]interface{})[0].(map[string]interface{})))
+			} else {
+				input.MetricsConfig = &awstypes.EventSourceMappingMetricsConfig{}
+			}
 		}
 
 		if d.HasChange("parallelization_factor") {
@@ -1301,6 +1338,34 @@ func flattenScalingConfig(apiObject *awstypes.ScalingConfig) map[string]interfac
 
 	if v := apiObject.MaximumConcurrency; v != nil {
 		tfMap["maximum_concurrency"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func expandEventSourceMappingMetricsConfig(tfMap map[string]interface{}) *awstypes.EventSourceMappingMetricsConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.EventSourceMappingMetricsConfig{}
+
+	if v, ok := tfMap["metrics"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Metrics = flex.ExpandStringyValueSet[awstypes.EventSourceMappingMetric](v)
+	}
+
+	return apiObject
+}
+
+func flattenEventSourceMappingMetricsConfig(apiObject *awstypes.EventSourceMappingMetricsConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Metrics; v != nil {
+		tfMap["metrics"] = flex.FlattenStringyValueSet(v)
 	}
 
 	return tfMap
