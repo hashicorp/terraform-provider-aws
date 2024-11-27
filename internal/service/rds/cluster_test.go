@@ -977,6 +977,28 @@ func TestAccRDSCluster_takeFinalSnapshot(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_GlobalClusterIdentifierTakeFinalSnapshot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroyWithFinalSnapshot(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_GlobalClusterID_finalSnapshot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+				),
+			},
+		},
+	})
+}
+
 // This is a regression test to make sure that we always cover the scenario as highlighted in
 // https://github.com/hashicorp/terraform/issues/11568
 // Expected error updated to match API response
@@ -3592,6 +3614,28 @@ resource "aws_rds_cluster" "test" {
   final_snapshot_identifier = %[1]q
 }
 `, rName, tfrds.ClusterEngineAuroraMySQL)
+}
+
+func testAccClusterConfig_GlobalClusterID_finalSnapshot(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_global_cluster" "test" {
+  global_cluster_identifier = %[1]q
+  engine                    = "aurora-postgresql"
+  engine_version            = "11.9"
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier        = %[1]q
+  database_name             = "test"
+  engine                    = aws_rds_global_cluster.test.engine
+  engine_version            = aws_rds_global_cluster.test.engine_version
+  master_username           = "tfacctest"
+  master_password           = "avoid-plaintext-passwords"
+  final_snapshot_identifier = %[1]q
+  skip_final_snapshot       = false
+  global_cluster_identifier = aws_rds_global_cluster.test.id
+}
+`, rName)
 }
 
 func testAccClusterConfig_withoutUserNameAndPassword(n int) string {
