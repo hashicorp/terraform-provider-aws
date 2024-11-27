@@ -303,7 +303,7 @@ func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface
 	jobARN := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("job/%s", d.Id()),
 	}.String()

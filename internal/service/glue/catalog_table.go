@@ -453,7 +453,7 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	tableArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "glue",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.ToString(table.Name)),
 	}.String()
