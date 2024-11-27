@@ -45,6 +45,118 @@ func TestAccSSMParameterEphemeral_basic(t *testing.T) {
 	})
 }
 
+func TestAccSSMParameterEphemeral_secureString(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	echoResourceName := "echo.test"
+	dataPath := tfjsonpath.New("data")
+	secretString := "super-secret"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_10_0),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories(ctx, acctest.ProviderNameEcho),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterEphemeralResourceConfig_secureString(rName, secretString),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("value"), knownvalue.StringExact(secretString)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccSSMParameterEphemeral_variable(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	echoResourceName := "echo.test"
+	dataPath := tfjsonpath.New("data")
+	secretString := "super-secret"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_10_0),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories(ctx, acctest.ProviderNameEcho),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterEphemeralResourceConfig_variable(rName, secretString),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("value"), knownvalue.StringExact(secretString)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccSSMParameterEphemeral_secureStringVariable(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	echoResourceName := "echo.test"
+	dataPath := tfjsonpath.New("data")
+	secretString := "super-secret"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_10_0),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories(ctx, acctest.ProviderNameEcho),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterEphemeralResourceConfig_secureStringVariable(rName, secretString),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("value"), knownvalue.StringExact(secretString)),
+				},
+			},
+		},
+	})
+}
+
+func TestAccSSMParameterEphemeral_ephemeralVariable(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	echoResourceName := "echo.test"
+	dataPath := tfjsonpath.New("data")
+	secretString := "super-secret"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:   func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck: acctest.ErrorCheck(t, names.SSMServiceID),
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(tfversion.Version1_10_0),
+		},
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV6ProviderFactories: acctest.ProtoV6ProviderFactories(ctx, acctest.ProviderNameEcho),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterEphemeralResourceConfig_ephemeralVariable(rName, secretString),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey(names.AttrARN), knownvalue.NotNull()),
+					statecheck.ExpectKnownValue(echoResourceName, dataPath.AtMapKey("value"), knownvalue.StringExact(secretString)),
+				},
+			},
+		},
+	})
+}
+
 func testAccParameterEphemeralResourceConfig_basic(rName, secretString string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigWithEchoProvider("ephemeral.aws_ssm_parameter.test"),
