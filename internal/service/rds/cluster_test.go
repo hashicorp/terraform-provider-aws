@@ -1291,6 +1291,51 @@ func TestAccRDSCluster_copyTagsToSnapshot_restorePointInTime(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_ReplicationSourceIdentifier_promote(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var primaryCluster types.DBCluster
+	var replicaCluster types.DBCluster
+	resourceName := "aws_rds_cluster.test"
+	resourceName2 := "aws_rds_cluster.alternate"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	// record the initialized providers so that we can use them to
+	// check for the cluster in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckClusterDestroyWithProvider(ctx), &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_replicationSource_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExistsWithProvider(ctx, resourceName, &primaryCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceName2, &replicaCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttrSet(resourceName2, "replication_source_identifier"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_replicationSource_promote(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExistsWithProvider(ctx, resourceName, &primaryCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceName2, &replicaCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceName2, "replication_source_identifier", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_ReplicationSourceIdentifier_kmsKeyID(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3379,7 +3424,7 @@ data "aws_rds_orderable_db_instance" "test" {
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
   db_subnet_group_name      = aws_db_subnet_group.test.name
-  ca_certificate_identifier = "rds-ca-2019"
+  ca_certificate_identifier = "rds-ca-rsa2048-g1"
   cluster_identifier        = %[1]q
   engine                    = data.aws_rds_orderable_db_instance.test.engine
   engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
@@ -4345,6 +4390,166 @@ resource "aws_rds_cluster" "alternate" {
 `, tfrds.ClusterEngineAuroraMySQL, mainInstanceClasses, rName))
 }
 
+func testAccClusterConfig_replicationSource_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  provider = "awsalternate"
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+data "aws_rds_engine_version" "default" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = [%[2]s]
+}
+
+resource "aws_rds_cluster_parameter_group" "test" {
+  name        = %[3]q
+  family      = data.aws_rds_engine_version.default.parameter_group_family
+  description = "RDS default cluster parameter group"
+
+  parameter {
+    name         = "binlog_format"
+    value        = "STATEMENT"
+    apply_method = "pending-reboot"
+  }
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier              = "%[3]s-primary"
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
+  database_name                   = "test"
+  engine                          = data.aws_rds_engine_version.default.engine
+  master_username                 = "tfacctest"
+  master_password                 = "avoid-plaintext-passwords"
+  storage_encrypted               = true
+  skip_final_snapshot             = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = "%[3]s-primary"
+  cluster_identifier = aws_rds_cluster.test.id
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+  engine             = aws_rds_cluster.test.engine
+  engine_version     = aws_rds_cluster.test.engine_version
+}
+
+resource "aws_kms_key" "test" {
+  provider = "awsalternate"
+
+  description = %[3]q
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
+}
+  POLICY
+}
+
+resource "aws_vpc" "test" {
+  provider = "awsalternate"
+
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[3]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  provider = "awsalternate"
+
+  count = 3
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+
+  tags = {
+    Name = %[3]q
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  provider = "awsalternate"
+
+  name       = %[3]q
+  subnet_ids = aws_subnet.test[*].id
+}
+`, tfrds.ClusterEngineAuroraMySQL, mainInstanceClasses, rName))
+}
+
+func testAccClusterConfig_replicationSource_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_replicationSource_base(rName),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "alternate" {
+  provider = "awsalternate"
+
+  cluster_identifier            = "%[1]s-replica"
+  db_subnet_group_name          = aws_db_subnet_group.test.name
+  engine                        = %[2]q
+  kms_key_id                    = aws_kms_key.test.arn
+  storage_encrypted             = true
+  skip_final_snapshot           = true
+  replication_source_identifier = aws_rds_cluster.test.arn
+  source_region                 = data.aws_region.current.name
+
+  depends_on = [
+    aws_rds_cluster_instance.test,
+  ]
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL))
+}
+
+func testAccClusterConfig_replicationSource_promote(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_replicationSource_base(rName),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "alternate" {
+  provider = "awsalternate"
+
+  cluster_identifier            = "%[1]s-replica"
+  db_subnet_group_name          = aws_db_subnet_group.test.name
+  engine                        = %[2]q
+  kms_key_id                    = aws_kms_key.test.arn
+  storage_encrypted             = true
+  skip_final_snapshot           = true
+  source_region                 = data.aws_region.current.name
+
+  depends_on = [
+    aws_rds_cluster_instance.test,
+  ]
+}
+`, rName, tfrds.ClusterEngineAuroraMySQL))
+}
+
 func testAccClusterConfig_networkType(rName string, networkType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnetsIPv6(rName, 2),
@@ -4420,6 +4625,13 @@ resource "aws_rds_cluster" "test" {
 
 func testAccClusterConfig_EngineMode_global(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_rds_global_cluster" "test" {
+  engine                    = %[2]q
+  engine_version            = data.aws_rds_engine_version.default.version
+  force_destroy             = true # Partial configuration removal ordering fix for after Terraform 0.12
+  global_cluster_identifier = %[1]q
+}
+
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   engine              = %[2]q
