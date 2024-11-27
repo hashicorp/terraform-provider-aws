@@ -100,6 +100,8 @@ var (
 	ResourceTransitGatewayRouteTablePropagation           = resourceTransitGatewayRouteTablePropagation
 	ResourceTransitGatewayVPCAttachment                   = resourceTransitGatewayVPCAttachment
 	ResourceTransitGatewayVPCAttachmentAccepter           = resourceTransitGatewayVPCAttachmentAccepter
+	ResourceVPCBlockPublicAccessExclusion                 = newVPCBlockPublicAccessExclusionResource
+	ResourceVPCBlockPublicAccessOptions                   = newVPCBlockPublicAccessOptionsResource
 	ResourceVPCDHCPOptions                                = resourceVPCDHCPOptions
 	ResourceVPCDHCPOptionsAssociation                     = resourceVPCDHCPOptionsAssociation
 	ResourceVPCEndpoint                                   = resourceVPCEndpoint
@@ -219,6 +221,7 @@ var (
 	FindTransitGatewayRouteTablePropagationByTwoPartKey        = findTransitGatewayRouteTablePropagationByTwoPartKey
 	FindTransitGatewayStaticRoute                              = findTransitGatewayStaticRoute
 	FindTransitGatewayVPCAttachmentByID                        = findTransitGatewayVPCAttachmentByID
+	FindVPCBlockPublicAccessExclusionByID                      = findVPCBlockPublicAccessExclusionByID
 	FindVPCCIDRBlockAssociationByID                            = findVPCCIDRBlockAssociationByID
 	FindVPCDHCPOptionsAssociation                              = findVPCDHCPOptionsAssociation
 	FindVPCEndpointConnectionByServiceIDAndVPCEndpointID       = findVPCEndpointConnectionByServiceIDAndVPCEndpointID

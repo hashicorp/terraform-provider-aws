@@ -58,6 +58,7 @@ func TestAccLambdaEventSourceMapping_Kinesis_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "function_response_types.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyARN, ""),
 					acctest.CheckResourceAttrRFC3339(resourceName, "last_modified"),
+					resource.TestCheckResourceAttr(resourceName, "metrics_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_poller_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tumbling_window_in_seconds", "0"),
 				),
@@ -1338,6 +1339,48 @@ func TestAccLambdaEventSourceMapping_documentDB(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"last_modified", "last_processing_result"},
+			},
+		},
+	})
+}
+
+func TestAccLambdaEventSourceMapping_SQS_metricsConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v lambda.GetEventSourceMappingOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_event_source_mapping.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEventSourceMappingDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEventSourceMappingConfig_sqsMetricsConfig1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "metrics_config.0.metrics.0", "EventCount"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
+			},
+			{
+				Config: testAccEventSourceMappingConfig_sqsMetricsConfig2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEventSourceMappingExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "metrics_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified"},
 			},
 		},
 	})
@@ -2763,6 +2806,28 @@ resource "aws_lambda_event_source_mapping" "test" {
 }
 
 func testAccEventSourceMappingConfig_sqsScalingConfig2(rName string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), `
+resource "aws_lambda_event_source_mapping" "test" {
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
+}
+`)
+}
+
+func testAccEventSourceMappingConfig_sqsMetricsConfig1(rName string) string {
+	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), `
+resource "aws_lambda_event_source_mapping" "test" {
+  event_source_arn = aws_sqs_queue.test.arn
+  function_name    = aws_lambda_function.test.arn
+
+  metrics_config {
+    metrics = ["EventCount"]
+  }
+}
+`)
+}
+
+func testAccEventSourceMappingConfig_sqsMetricsConfig2(rName string) string {
 	return acctest.ConfigCompose(testAccEventSourceMappingConfig_sqsBase(rName), `
 resource "aws_lambda_event_source_mapping" "test" {
   event_source_arn = aws_sqs_queue.test.arn

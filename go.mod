@@ -7,7 +7,7 @@ go 1.23.3
 godebug tlskyber=0
 
 require (
-	github.com/ProtonMail/go-crypto v1.1.2
+	github.com/ProtonMail/go-crypto v1.1.3
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.24.0
 	github.com/aws/aws-sdk-go v1.55.5
@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.28.5
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.46
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.20
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.40
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.41
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/acm v1.30.6
@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.6
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.22.4
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.27.1
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/chime v1.34.6
@@ -76,7 +76,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.35.6
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.50.6
-	github.com/aws/aws-sdk-go-v2/service/connect v1.117.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.118.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.28.6
@@ -93,14 +93,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/detective v1.31.6
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.34.6
-	github.com/aws/aws-sdk-go-v2/service/directconnect v1.29.6
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.14.3
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.37.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.193.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.194.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.6
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.52.0
@@ -174,7 +174,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.35.5
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.3
-	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.31.6
+	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.6
 	github.com/aws/aws-sdk-go-v2/service/oam v1.15.6
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.44.1
@@ -213,7 +213,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/rum v1.21.6
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.68.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.168.0
