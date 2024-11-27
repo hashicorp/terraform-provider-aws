@@ -184,7 +184,7 @@ func TestAccACMPCACertificateAuthority_keyStorageSecurityStandard(t *testing.T) 
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			// See https://docs.aws.amazon.com/privateca/latest/userguide/data-protection.html#private-keys.
-			acctest.PreCheckRegion(t, endpoints.ApSouth2RegionID, endpoints.ApSoutheast3RegionID, endpoints.ApSoutheast4RegionID, endpoints.EuCentral2RegionID, endpoints.EuSouth2RegionID, names.MECentral1RegionID)
+			acctest.PreCheckRegion(t, endpoints.ApSouth2RegionID, endpoints.ApSoutheast3RegionID, endpoints.ApSoutheast4RegionID, endpoints.EuCentral2RegionID, endpoints.EuSouth2RegionID, endpoints.MeCentral1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
