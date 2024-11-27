@@ -1417,7 +1417,7 @@ func signerServiceIsAvailable(region string) bool {
 		endpoints.EuSouth1RegionID:     {},
 		endpoints.EuWest3RegionID:      {},
 		endpoints.EuNorth1RegionID:     {},
-		names.MESouth1RegionID:     {},
+		endpoints.MeSouth1RegionID:     {},
 		names.SAEast1RegionID:      {},
 	}
 	_, ok := availableRegions[region]

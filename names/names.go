@@ -149,13 +149,11 @@ const (
 	// AWS Standard partition's regions.
 	GlobalRegionID = "aws-global" // AWS Standard global region.
 
-	MECentral1RegionID = "me-central-1" // Middle East (UAE).
-	MESouth1RegionID   = "me-south-1"   // Middle East (Bahrain).
-	SAEast1RegionID    = "sa-east-1"    // South America (Sao Paulo).
-	USEast1RegionID    = "us-east-1"    // US East (N. Virginia).
-	USEast2RegionID    = "us-east-2"    // US East (Ohio).
-	USWest1RegionID    = "us-west-1"    // US West (N. California).
-	USWest2RegionID    = "us-west-2"    // US West (Oregon).
+	SAEast1RegionID = "sa-east-1" // South America (Sao Paulo).
+	USEast1RegionID = "us-east-1" // US East (N. Virginia).
+	USEast2RegionID = "us-east-2" // US East (Ohio).
+	USWest1RegionID = "us-west-1" // US West (N. California).
+	USWest2RegionID = "us-west-2" // US West (Oregon).
 
 	// AWS China partition's regions.
 	CNNorth1RegionID     = "cn-north-1"     // China (Beijing).
