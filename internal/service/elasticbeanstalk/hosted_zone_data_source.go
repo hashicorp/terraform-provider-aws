@@ -18,7 +18,7 @@ import (
 
 var hostedZoneIDs = map[string]string{
 	endpoints.AfSouth1RegionID: "Z1EI3BVKMKK4AM",
-	names.APSoutheast1RegionID: "Z16FZ9L249IFLT",
+	endpoints.ApSoutheast1RegionID: "Z16FZ9L249IFLT",
 	names.APSoutheast2RegionID: "Z2PCDNR3VC2G1N",
 	names.APSoutheast3RegionID: "Z05913172VM7EAZB40TA8",
 	endpoints.ApEast1RegionID:      "ZPWYUBWRU171A",

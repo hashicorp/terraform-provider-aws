@@ -159,7 +159,7 @@ func testAccPreCheckGlobalTable(ctx context.Context, t *testing.T) {
 	supportedRegions := []string{
 		endpoints.ApNortheast1RegionID,
 		endpoints.ApNortheast2RegionID,
-		names.APSoutheast1RegionID,
+		endpoints.ApSoutheast1RegionID,
 		names.APSoutheast2RegionID,
 		names.EUCentral1RegionID,
 		names.EUWest1RegionID,
