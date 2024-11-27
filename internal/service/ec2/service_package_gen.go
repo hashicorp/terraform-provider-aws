@@ -88,6 +88,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Transit Gateway Default Route Table Propagation",
 		},
 		{
+			Factory: newVPCBlockPublicAccessOptionsResource,
+			Name:    "VPC Block Public Access Options",
+		},
+		{
 			Factory: newVPCEndpointPrivateDNSResource,
 			Name:    "VPC Endpoint Private DNS",
 		},

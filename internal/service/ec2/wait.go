@@ -3195,3 +3195,23 @@ func waitVPNGatewayVPCAttachmentDetached(ctx context.Context, conn *ec2.Client, 
 
 	return nil, err
 }
+
+func waitVPCBlockPublicAccessOptionsUpdated(ctx context.Context, conn *ec2.Client, timeout time.Duration) (*awstypes.VpcBlockPublicAccessOptions, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateInProgress),
+		Target:                    enum.Slice(awstypes.VpcBlockPublicAccessStateUpdateComplete),
+		Refresh:                   statusVPCBlockPublicAccessOptions(ctx, conn),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcBlockPublicAccessOptions); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Reason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
