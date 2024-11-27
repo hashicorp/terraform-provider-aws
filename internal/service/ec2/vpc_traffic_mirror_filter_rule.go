@@ -182,7 +182,7 @@ func resourceTrafficMirrorFilterRuleRead(ctx context.Context, d *schema.Resource
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "traffic-mirror-filter-rule/" + d.Id(),
 	}.String()

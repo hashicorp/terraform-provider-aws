@@ -5808,7 +5808,7 @@ func testAccPreCheckHasDefaultVPCDefaultSubnets(ctx context.Context, t *testing.
 	client := acctest.Provider.Meta().(*conns.AWSClient)
 
 	if !(hasDefaultVPC(ctx, t) && defaultSubnetCount(ctx, t) > 0) {
-		t.Skipf("skipping tests; %s does not have a default VPC with default subnets", client.Region)
+		t.Skipf("skipping tests; %s does not have a default VPC with default subnets", client.Region(ctx))
 	}
 }
 

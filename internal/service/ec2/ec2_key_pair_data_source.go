@@ -103,7 +103,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "key-pair/" + keyName,
 	}.String()

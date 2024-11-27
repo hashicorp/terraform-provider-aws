@@ -284,7 +284,7 @@ func resourceLogFlowRead(ctx context.Context, d *schema.ResourceData, meta inter
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("vpc-flow-log/%s", d.Id()),
 	}.String()

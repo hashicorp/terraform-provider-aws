@@ -809,7 +809,7 @@ func resourceFleetRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("fleet/%s", d.Id()),
 	}.String()

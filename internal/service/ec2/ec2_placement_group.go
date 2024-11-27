@@ -141,7 +141,7 @@ func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, met
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
 	}.String()
