@@ -1952,21 +1952,23 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 64.0, 0.0),
+				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 64.0, 0.0, 300),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "64"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause", "300"),
 				),
 			},
 			{
-				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 256.0, 8.5),
+				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 256.0, 8.5, 86400),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "8.5"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause", ""),
 				),
 			},
 		},
@@ -4792,7 +4794,7 @@ resource "aws_rds_cluster" "test" {
 `, rName, tfrds.ClusterEngineAuroraMySQL, autoPause, maxCapacity, minCapacity, secondsBeforeTimeout, secondsUntilAutoPause, timeoutAction)
 }
 
-func testAccClusterConfig_serverlessV2ScalingConfiguration(rName string, maxCapacity, minCapacity float64) string {
+func testAccClusterConfig_serverlessV2ScalingConfiguration(rName string, maxCapacity, minCapacity float64, secondsUntilAutoPause int) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
@@ -4809,11 +4811,12 @@ resource "aws_rds_cluster" "test" {
   engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
 
   serverlessv2_scaling_configuration {
-    max_capacity = %[3]f
-    min_capacity = %[4]f
+    max_capacity             = %[3]f
+    min_capacity             = %[4]f
+    seconds_until_auto_pause = %[5]d
   }
 }
-`, tfrds.ClusterEngineAuroraPostgreSQL, rName, maxCapacity, minCapacity)
+`, tfrds.ClusterEngineAuroraPostgreSQL, rName, maxCapacity, minCapacity, secondsUntilAutoPause)
 }
 
 func testAccClusterConfig_ScalingConfiguration_defaultMinCapacity(rName string, autoPause bool, maxCapacity, secondsUntilAutoPause int, timeoutAction string) string {
@@ -5378,7 +5381,7 @@ resource "aws_iam_role" "role" {
 		"Action": "sts:AssumeRole",
 		"Principal": {
 			"Service": [
-				"directoryservice.rds.${data.aws_partition.current.dns_suffix}",				
+				"directoryservice.rds.${data.aws_partition.current.dns_suffix}",
 				"rds.${data.aws_partition.current.dns_suffix}"
 			]
 		},
