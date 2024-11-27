@@ -173,7 +173,7 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.Redshift,
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("eventsubscription:%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
