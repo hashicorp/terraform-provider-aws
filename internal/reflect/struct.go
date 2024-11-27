@@ -32,3 +32,24 @@ func StructFields(typ reflect.Type) iter.Seq[reflect.StructField] {
 		}
 	}
 }
+
+func exportedFields(fields iter.Seq[reflect.StructField]) iter.Seq[reflect.StructField] {
+	return func(yield func(reflect.StructField) bool) {
+		for field := range fields {
+			if !field.IsExported() && !field.Anonymous {
+				continue
+			}
+
+			if !yield(field) {
+				return
+			}
+		}
+	}
+}
+
+// ExportedStructFields returns an iterator that lists all exported fields in a struct. If an unexported embedded field
+// includes exported fields, the exported embedded fields will be included.
+// If the struct contains an embedded struct, the fields of the embedded struct have the index in both structs.
+func ExportedStructFields(typ reflect.Type) iter.Seq[reflect.StructField] {
+	return exportedFields(StructFields(typ))
+}
