@@ -97,8 +97,8 @@ github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.6 h1:sxKe/rHVVxLQJgqnxB
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.6/go.mod h1:kplgf9W6J8e3ml6xKdfdNRuCCdXZbgmwVd6xfUeHkkM=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.22.4 h1:R0Tw4Xon1Lz8TGmeTi3D2Qi8Rn601myEGVFRw0Rp3aY=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.22.4/go.mod h1:U9FfwVNRitPo23yN28RGlXRR1EgqcwnP0P2oTUHKCi8=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.27.1 h1:Uq364zd0sw4Sa5DovhBKFn5oXqEws3KQkzMMnRl1N5k=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.27.1/go.mod h1:+QNM3upOuzc6CrYFdtDnNApChkfbC6lIAI2nqct4/u8=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.28.0 h1:geJGr/Ruk/lbobTVZuRoj07wzsW/acebgJtmGCL66gw=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.28.0/go.mod h1:+QNM3upOuzc6CrYFdtDnNApChkfbC6lIAI2nqct4/u8=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.28.6 h1:RVzQr0yvPN3OGZ2ipFVe1SBIwvomwjCvGg9S2q1QQbM=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.28.6/go.mod h1:v5aGgmg7e0sS9wbdIK1CwgSIGCBmKbwnnI3F0vj3Fb0=
 github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.0 h1:9MsvMH/fdhu4NhtaYrAvyOGrewZTkh6W5bwxIbKAQGk=
@@ -163,8 +163,8 @@ github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.40.0 h1:rNj0NoMlMlV9B3r
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.40.0/go.mod h1:MH4YodNw/6ZHhRwow3baZ7RQP6z8GKSMsO94X5OZ3Y0=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.50.6 h1:GsIoN6f+LLTX/Sa70WO77Cy1GTrSF9xi7e8OwwOiGcs=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.50.6/go.mod h1:5vbQi0lIP9T7RLGyjmQZhqf5Xv9WxHXk7qlHnhEqWKc=
-github.com/aws/aws-sdk-go-v2/service/connect v1.117.0 h1:ELPEshWAPZzprvgJfY0vZcyuPx9eSsXpkdNyQ6kl198=
-github.com/aws/aws-sdk-go-v2/service/connect v1.117.0/go.mod h1:oGrMxGM/Ww+glDJ7cfMU1X22kJ6XBBHXsfxIhKD6E3k=
+github.com/aws/aws-sdk-go-v2/service/connect v1.118.0 h1:V73ScBHLvdVmIuceWrAQHkbGmy7PnDNOyImWZs5CrjI=
+github.com/aws/aws-sdk-go-v2/service/connect v1.118.0/go.mod h1:oGrMxGM/Ww+glDJ7cfMU1X22kJ6XBBHXsfxIhKD6E3k=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.21.6 h1:w475oN5DyGiDt58pLYm1Gq7wKzH4FuZM1tNj+Agd1j4=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.21.6/go.mod h1:gCKtUjvhDcgZCLqqdc5AI9cxEFx4VCvvgKy8FL2UeXY=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.20.0 h1:4YuCMtKeY+TwG277Rh/4zC6ijMjJ5XeMj9djxZ0luXI=
@@ -211,8 +211,8 @@ github.com/aws/aws-sdk-go-v2/service/drs v1.30.6 h1:gRx0PWMok7r3zmoiwdFzYRyJwp2R
 github.com/aws/aws-sdk-go-v2/service/drs v1.30.6/go.mod h1:k4mtLg6LgO18IaHeQX9bCms31VSXidi44A1oqMiJ6CA=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.37.1 h1:vucMirlM6D+RDU8ncKaSZ/5dGrXNajozVwpmWNPn2gQ=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.37.1/go.mod h1:fceORfs010mNxZbQhfqUjUeHlTwANmIT4mvHamuUaUg=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.193.0 h1:RhSoBFT5/8tTmIseJUXM6INTXTQDF8+0oyxWBnozIms=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.193.0/go.mod h1:mzj8EEjIHSN2oZRXiw1Dd+uB4HZTl7hC8nBzX9IZMWw=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.194.0 h1:56YXcRmryw9wiTrvdVeJEUwBCoN/+o33R52PA7CCi08=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.194.0/go.mod h1:mzj8EEjIHSN2oZRXiw1Dd+uB4HZTl7hC8nBzX9IZMWw=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.36.6 h1:zg+3FGHA0PBs0KM25qE/rOf2o5zsjNa1g/Qq83+SDI0=
 github.com/aws/aws-sdk-go-v2/service/ecr v1.36.6/go.mod h1:ZSq54Z9SIsOTf1Efwgw1msilSs4XVEfVQiP9nYVnKpM=
 github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.6 h1:9DXEMWmABYPz/NXSFmp9Y14yI5FQ5jmPPvllS9hXXfY=

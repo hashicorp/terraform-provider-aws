@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.6
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.22.4
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.27.1
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/chime v1.34.6
@@ -76,7 +76,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.35.6
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.50.6
-	github.com/aws/aws-sdk-go-v2/service/connect v1.117.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.118.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.28.6
@@ -100,7 +100,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.14.3
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.37.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.193.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.194.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.6
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.52.0
