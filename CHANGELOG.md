@@ -1,4 +1,10 @@
 ## 5.79.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_vpc_block_public_access_exclusion` ([#40235](https://github.com/hashicorp/terraform-provider-aws/issues/40235))
+* **New Resource:** `aws_vpc_block_public_access_options` ([#40233](https://github.com/hashicorp/terraform-provider-aws/issues/40233))
+
 ## 5.78.0 (November 26, 2024)
 
 NOTES:
