@@ -143,7 +143,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "applicationinsights",
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "application/resource-group/" + rgName,
 	}.String()
 	d.Set(names.AttrARN, arn)
