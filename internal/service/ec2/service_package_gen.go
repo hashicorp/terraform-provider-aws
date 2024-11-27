@@ -88,6 +88,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Transit Gateway Default Route Table Propagation",
 		},
 		{
+			Factory: newVPCBlockPublicAccessExclusionResource,
+			Name:    "VPC Block Public Access Exclusion",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
 			Factory: newVPCBlockPublicAccessOptionsResource,
 			Name:    "VPC Block Public Access Options",
 		},

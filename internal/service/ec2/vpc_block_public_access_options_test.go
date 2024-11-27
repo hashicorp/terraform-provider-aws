@@ -33,7 +33,7 @@ func TestAccVPCBlockPublicAccessOptions_serial(t *testing.T) {
 func testAccVPCBlockPublicAccessOptions_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_options.test"
-	rMode := string(awstypes.InternetGatewayBlockModeBlockBidirectional)
+	internetGatewayBlockMode := string(awstypes.InternetGatewayBlockModeBlockBidirectional)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -45,11 +45,11 @@ func testAccVPCBlockPublicAccessOptions_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(rMode),
+				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(internetGatewayBlockMode),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrAWSAccountID), knownvalue.NotNull()),
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("aws_region"), knownvalue.NotNull()),
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_block_mode"), knownvalue.StringExact(rMode)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_block_mode"), knownvalue.StringExact(internetGatewayBlockMode)),
 				},
 			},
 			{
@@ -64,9 +64,9 @@ func testAccVPCBlockPublicAccessOptions_basic(t *testing.T) {
 func testAccVPCBlockPublicAccessOptions_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_block_public_access_options.test"
-	rMode1 := string(awstypes.InternetGatewayBlockModeBlockBidirectional)
-	rMode2 := string(awstypes.InternetGatewayBlockModeBlockIngress)
-	rMode3 := string(awstypes.InternetGatewayBlockModeOff)
+	internetGatewayBlockMode1 := string(awstypes.InternetGatewayBlockModeBlockBidirectional)
+	internetGatewayBlockMode2 := string(awstypes.InternetGatewayBlockModeBlockIngress)
+	internetGatewayBlockMode3 := string(awstypes.InternetGatewayBlockModeOff)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -79,9 +79,9 @@ func testAccVPCBlockPublicAccessOptions_update(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(rMode1),
+				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(internetGatewayBlockMode1),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_block_mode"), knownvalue.StringExact(rMode1)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_block_mode"), knownvalue.StringExact(internetGatewayBlockMode1)),
 				},
 			},
 			{
@@ -90,15 +90,15 @@ func testAccVPCBlockPublicAccessOptions_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(rMode2),
+				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(internetGatewayBlockMode2),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_block_mode"), knownvalue.StringExact(rMode2)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_block_mode"), knownvalue.StringExact(internetGatewayBlockMode2)),
 				},
 			},
 			{
-				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(rMode3),
+				Config: testAccVPCBlockPublicAccessOptionsConfig_basic(internetGatewayBlockMode3),
 				ConfigStateChecks: []statecheck.StateCheck{
-					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_block_mode"), knownvalue.StringExact(rMode3)),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("internet_gateway_block_mode"), knownvalue.StringExact(internetGatewayBlockMode3)),
 				},
 			},
 		},
@@ -119,10 +119,10 @@ func testAccPreCheckVPCBlockPublicAccess(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccVPCBlockPublicAccessOptionsConfig_basic(rMode string) string {
+func testAccVPCBlockPublicAccessOptionsConfig_basic(internetGatewayBlockMode string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc_block_public_access_options" "test" {
   internet_gateway_block_mode = %[1]q
 }
-`, rMode)
+`, internetGatewayBlockMode)
 }
