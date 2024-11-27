@@ -159,7 +159,6 @@ func (r *resourceTable) Create(ctx context.Context, req resource.CreateRequest, 
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	input.Namespace = plan.Namespace.ValueStringPointer()
 
 	_, err := conn.CreateTable(ctx, &input)
 	if err != nil {
@@ -526,7 +525,7 @@ type resourceTableModel struct {
 	ModifiedAt               timetypes.RFC3339                                         `tfsdk:"modified_at"`
 	ModifiedBy               types.String                                              `tfsdk:"modified_by"`
 	Name                     types.String                                              `tfsdk:"name"`
-	Namespace                types.String                                              `tfsdk:"namespace" autoflex:"-"`
+	Namespace                types.String                                              `tfsdk:"namespace" autoflex:",noflatten"` // On read, Namespace is an array
 	OwnerAccountID           types.String                                              `tfsdk:"owner_account_id"`
 	TableBucketARN           fwtypes.ARN                                               `tfsdk:"table_bucket_arn"`
 	Type                     fwtypes.StringEnum[awstypes.TableType]                    `tfsdk:"type"`
