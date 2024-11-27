@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type testAccGame struct {
@@ -52,19 +51,19 @@ func testAccSampleGame(region string) (*testAccGame, error) {
 func testAccAccountIdByRegion(region string) (string, error) {
 	m := map[string]string{
 		endpoints.ApNortheast1RegionID: "120069834884",
-		endpoints.ApNortheast2RegionID:     "805673136642",
-		endpoints.ApSouth1RegionID:         "134975661615",
-		endpoints.ApSoutheast1RegionID:     "077577004113",
-		endpoints.ApSoutheast2RegionID:     "112188327105",
-		endpoints.CaCentral1RegionID:       "800535022691",
-		endpoints.EuCentral1RegionID:       "797584052317",
-		endpoints.EuWest1RegionID:          "319803218673",
-		endpoints.EuWest2RegionID:          "937342764187",
-		endpoints.SaEast1RegionID:          "028872612690",
-		endpoints.UsEast1RegionID:          "783764748367",
-		endpoints.UsEast2RegionID:          "415729564621",
-		endpoints.UsWest1RegionID:          "715879310420",
-		names.USWest2RegionID:          "741061592171",
+		endpoints.ApNortheast2RegionID: "805673136642",
+		endpoints.ApSouth1RegionID:     "134975661615",
+		endpoints.ApSoutheast1RegionID: "077577004113",
+		endpoints.ApSoutheast2RegionID: "112188327105",
+		endpoints.CaCentral1RegionID:   "800535022691",
+		endpoints.EuCentral1RegionID:   "797584052317",
+		endpoints.EuWest1RegionID:      "319803218673",
+		endpoints.EuWest2RegionID:      "937342764187",
+		endpoints.SaEast1RegionID:      "028872612690",
+		endpoints.UsEast1RegionID:      "783764748367",
+		endpoints.UsEast2RegionID:      "415729564621",
+		endpoints.UsWest1RegionID:      "715879310420",
+		endpoints.UsWest2RegionID:      "741061592171",
 	}
 
 	if accId, ok := m[region]; ok {

@@ -44,7 +44,7 @@ var accountIDPerRegionMap = map[string]string{
 	endpoints.UsGovEast1RegionID: "190560391635",
 	endpoints.UsGovWest1RegionID: "048591011584",
 	endpoints.UsWest1RegionID:    "027434742980",
-	names.USWest2RegionID:    "797873946194",
+	endpoints.UsWest2RegionID:    "797873946194",
 }
 
 // @SDKDataSource("aws_elb_service_account", name="Service Account")

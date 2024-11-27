@@ -243,7 +243,7 @@ func sweepAccessPoints(region string) error {
 
 func sweepMultiRegionAccessPoints(region string) error {
 	ctx := sweep.Context(region)
-	if region != names.USWest2RegionID {
+	if region != endpoints.UsWest2RegionID {
 		log.Printf("[WARN] Skipping S3 Multi-Region Access Point sweep for region: %s", region)
 		return nil
 	}

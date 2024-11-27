@@ -2297,7 +2297,7 @@ func TestBucketName(t *testing.T) {
 	}
 
 	for _, v := range validDnsNames {
-		if err := tfs3.ValidBucketName(v, names.USWest2RegionID); err != nil {
+		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID); err != nil {
 			t.Fatalf("%q should be a valid S3 bucket name", v)
 		}
 	}
@@ -2314,7 +2314,7 @@ func TestBucketName(t *testing.T) {
 	}
 
 	for _, v := range invalidDnsNames {
-		if err := tfs3.ValidBucketName(v, names.USWest2RegionID); err == nil {
+		if err := tfs3.ValidBucketName(v, endpoints.UsWest2RegionID); err == nil {
 			t.Fatalf("%q should not be a valid S3 bucket name", v)
 		}
 	}
@@ -2374,9 +2374,9 @@ func TestBucketRegionalDomainName(t *testing.T) {
 			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.%s", endpoints.UsEast1RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
-			Region:           names.USWest2RegionID,
+			Region:           endpoints.UsWest2RegionID,
 			ExpectedErrCount: 0,
-			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.%s", names.USWest2RegionID, acctest.PartitionDNSSuffix()),
+			ExpectedOutput:   bucket + fmt.Sprintf(".s3.%s.%s", endpoints.UsWest2RegionID, acctest.PartitionDNSSuffix()),
 		},
 		{
 			Region:           endpoints.UsGovWest1RegionID,

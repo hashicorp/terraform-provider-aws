@@ -45,7 +45,7 @@ var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.UsGovEast1RegionID: "665727464434",
 	endpoints.UsGovWest1RegionID: "665727464434",
 	endpoints.UsWest1RegionID:    "262260360010",
-	names.USWest2RegionID:    "902366379725",
+	endpoints.UsWest2RegionID:    "902366379725",
 }
 
 // @SDKDataSource("aws_redshift_service_account", name="Service Account")

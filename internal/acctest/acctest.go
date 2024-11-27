@@ -897,7 +897,7 @@ func AccountID(ctx context.Context) string {
 }
 
 func Region() string {
-	return envvar.GetWithDefault(envvar.DefaultRegion, names.USWest2RegionID)
+	return envvar.GetWithDefault(envvar.DefaultRegion, endpoints.UsWest2RegionID)
 }
 
 func AlternateRegion() string {

@@ -146,10 +146,7 @@ const (
 )
 
 const (
-	// AWS Standard partition's regions.
 	GlobalRegionID = "aws-global" // AWS Standard global region.
-
-	USWest2RegionID = "us-west-2" // US West (Oregon).
 )
 
 // PartitionForRegion returns the partition for the given Region.

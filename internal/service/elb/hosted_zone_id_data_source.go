@@ -49,7 +49,7 @@ var hostedZoneIDPerRegionMap = map[string]string{
 	endpoints.UsGovEast1RegionID:   "Z166TLBEWOO7G0",
 	endpoints.UsGovWest1RegionID:   "Z33AYJ8TM3BH4J",
 	endpoints.UsWest1RegionID:      "Z368ELLRRE2KJ0",
-	names.USWest2RegionID:      "Z1H1FL5HABSF5",
+	endpoints.UsWest2RegionID:      "Z1H1FL5HABSF5",
 }
 
 // @SDKDataSource("aws_elb_hosted_zone_id", name="Hosted Zone ID")

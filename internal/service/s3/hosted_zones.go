@@ -7,12 +7,11 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_website_region_endpoints.
 var hostedZoneIDsMap = map[string]string{
-	endpoints.AfSouth1RegionID: "Z83WF9RJE8B12",
+	endpoints.AfSouth1RegionID:     "Z83WF9RJE8B12",
 	endpoints.ApEast1RegionID:      "ZNB98KWMFR0R6",
 	endpoints.ApNortheast1RegionID: "Z2M4EHUR26P7ZW",
 	endpoints.ApNortheast2RegionID: "Z3W03O7B5YMIYP",
@@ -45,7 +44,7 @@ var hostedZoneIDsMap = map[string]string{
 	endpoints.UsGovEast1RegionID:   "Z2NIFVYYW2VKV1",
 	endpoints.UsGovWest1RegionID:   "Z31GFT0UA1I2HV",
 	endpoints.UsWest1RegionID:      "Z2F56UZL2M1ACD",
-	names.USWest2RegionID:      "Z3BJ6K6RIION7M",
+	endpoints.UsWest2RegionID:      "Z3BJ6K6RIION7M",
 }
 
 // hostedZoneIDForRegion returns the Route 53 hosted zone ID for an S3 website endpoint Region.

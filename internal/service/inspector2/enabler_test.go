@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -264,7 +265,7 @@ func testAccEnabler_lambdaCode(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			// https://docs.aws.amazon.com/inspector/latest/user/inspector_regions.html#ins-regional-feature-availability.
-			acctest.PreCheckRegion(t, names.USWest2RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,

@@ -51,7 +51,7 @@ var serviceAccountPerRegionMap = map[string]string{
 	endpoints.UsGovEast1RegionID:   "608710470296",
 	endpoints.UsGovWest1RegionID:   "608710470296",
 	endpoints.UsWest1RegionID:      "388731089494",
-	names.USWest2RegionID:      "113285607260",
+	endpoints.UsWest2RegionID:      "113285607260",
 }
 
 // @SDKDataSource("aws_cloudtrail_service_account", name="Service Account")

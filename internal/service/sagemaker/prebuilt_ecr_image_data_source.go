@@ -223,7 +223,7 @@ var prebuiltECRImageIDByRegion_blazing = map[string]string{
 	endpoints.UsIsoEast1RegionID:   "490574956308",
 	endpoints.UsIsobEast1RegionID:  "765400339828",
 	endpoints.UsWest1RegionID:      "632365934929",
-	names.USWest2RegionID:      "433757028032",
+	endpoints.UsWest2RegionID:      "433757028032",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/clarify.json
@@ -253,7 +253,7 @@ var prebuiltECRImageIDByRegion_clarify = map[string]string{
 	endpoints.UsEast2RegionID:      "211330385671",
 	endpoints.UsGovWest1RegionID:   "598674086554",
 	endpoints.UsWest1RegionID:      "740489534195",
-	names.USWest2RegionID:      "306415355426",
+	endpoints.UsWest2RegionID:      "306415355426",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/data-wrangler.json
@@ -282,7 +282,7 @@ var prebuiltECRImageIDByRegion_dataWrangler = map[string]string{
 	endpoints.UsEast1RegionID:      "663277389841",
 	endpoints.UsEast2RegionID:      "415577184552",
 	endpoints.UsWest1RegionID:      "926135532090",
-	names.USWest2RegionID:      "174368400705",
+	endpoints.UsWest2RegionID:      "174368400705",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/debugger.json
@@ -311,7 +311,7 @@ var prebuiltECRImageIDByRegion_debugger = map[string]string{
 	endpoints.UsEast2RegionID:      "915447279597",
 	endpoints.UsGovWest1RegionID:   "515509971035",
 	endpoints.UsWest1RegionID:      "685455198987",
-	names.USWest2RegionID:      "895741380848",
+	endpoints.UsWest2RegionID:      "895741380848",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/inferentia-mxnet.json
@@ -349,7 +349,7 @@ var prebuiltECRImageIDByRegion_inferentiaNeo = map[string]string{
 	endpoints.UsIsoEast1RegionID:   "167761179201",
 	endpoints.UsIsobEast1RegionID:  "406031935815",
 	endpoints.UsWest1RegionID:      "710691900526",
-	names.USWest2RegionID:      "301217895009",
+	endpoints.UsWest2RegionID:      "301217895009",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/chainer.json
@@ -384,7 +384,7 @@ var prebuiltECRImageIDByRegion_SageMakerCustom = map[string]string{ // nosemgrep
 	endpoints.UsIsoEast1RegionID:   "744548109606",
 	endpoints.UsIsobEast1RegionID:  "453391408702",
 	endpoints.UsWest1RegionID:      "520713654638",
-	names.USWest2RegionID:      "520713654638",
+	endpoints.UsWest2RegionID:      "520713654638",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/ray-pytorch.json
@@ -404,7 +404,7 @@ var prebuiltECRImageIDByRegion_SageMakerRL = map[string]string{ // nosemgrep:ci.
 	endpoints.UsEast1RegionID:      "462105765813",
 	endpoints.UsEast2RegionID:      "462105765813",
 	endpoints.UsWest1RegionID:      "462105765813",
-	names.USWest2RegionID:      "462105765813",
+	endpoints.UsWest2RegionID:      "462105765813",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/spark.json
@@ -442,7 +442,7 @@ var prebuiltECRImageIDByRegion_spark = map[string]string{
 	endpoints.UsGovEast1RegionID:   "260923028637",
 	endpoints.UsGovWest1RegionID:   "271483468897",
 	endpoints.UsWest1RegionID:      "667973535471",
-	names.USWest2RegionID:      "153931337802",
+	endpoints.UsWest2RegionID:      "153931337802",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-base-python.json
@@ -476,13 +476,13 @@ var prebuiltECRImageIDByRegion_SageMakerBasePython = map[string]string{ // nosem
 	endpoints.UsGovEast1RegionID:   "107072934176",
 	endpoints.UsGovWest1RegionID:   "107173498710",
 	endpoints.UsWest1RegionID:      "742091327244",
-	names.USWest2RegionID:      "236514542706",
+	endpoints.UsWest2RegionID:      "236514542706",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/sagemaker-geospatial.json
 
 var prebuiltECRImageIDByRegion_SageMakerGeospatial = map[string]string{ // nosemgrep:ci.sagemaker-in-var-name
-	names.USWest2RegionID: "081189585635",
+	endpoints.UsWest2RegionID: "081189585635",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/forecasting-deepar.json
@@ -522,7 +522,7 @@ var prebuiltECRImageIDByRegion_deepAR = map[string]string{
 	endpoints.UsIsoEast1RegionID:   "490574956308",
 	endpoints.UsIsobEast1RegionID:  "765400339828",
 	endpoints.UsWest1RegionID:      "632365934929",
-	names.USWest2RegionID:      "156387875391",
+	endpoints.UsWest2RegionID:      "156387875391",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/factorization-machines.json
@@ -567,7 +567,7 @@ var prebuiltECRImageIDByRegion_factorMachines = map[string]string{
 	endpoints.UsIsoEast1RegionID:   "490574956308",
 	endpoints.UsIsobEast1RegionID:  "765400339828",
 	endpoints.UsWest1RegionID:      "632365934929",
-	names.USWest2RegionID:      "174872318107",
+	endpoints.UsWest2RegionID:      "174872318107",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/lda.json
@@ -588,7 +588,7 @@ var prebuiltECRImageIDByRegion_lda = map[string]string{
 	endpoints.UsIsoEast1RegionID:   "490574956308",
 	endpoints.UsIsobEast1RegionID:  "765400339828",
 	endpoints.UsWest1RegionID:      "632365934929",
-	names.USWest2RegionID:      "266724342769",
+	endpoints.UsWest2RegionID:      "266724342769",
 }
 
 // https://github.com/aws/sagemaker-python-sdk/blob/master/src/sagemaker/image_uri_config/xgboost.json
@@ -632,7 +632,7 @@ var prebuiltECRImageIDByRegion_XGBoost = map[string]string{
 	endpoints.UsIsoEast1RegionID:   "833128469047",
 	endpoints.UsIsobEast1RegionID:  "281123927165",
 	endpoints.UsWest1RegionID:      "746614075791",
-	names.USWest2RegionID:      "246618743249",
+	endpoints.UsWest2RegionID:      "246618743249",
 }
 
 // https://github.com/aws/deep-learning-containers/blob/master/available_images.md
@@ -680,7 +680,7 @@ var prebuiltECRImageIDByRegion_deepLearning = map[string]string{
 	endpoints.UsEast1RegionID:      "763104351884",
 	endpoints.UsEast2RegionID:      "763104351884",
 	endpoints.UsWest1RegionID:      "763104351884",
-	names.USWest2RegionID:      "763104351884",
+	endpoints.UsWest2RegionID:      "763104351884",
 	endpoints.UsGovEast1RegionID:   "446045086412",
 	endpoints.UsGovWest1RegionID:   "442386744353",
 	endpoints.UsIsoEast1RegionID:   "886529160074",
@@ -716,7 +716,7 @@ var prebuiltECRImageIDByRegion_modelMonitor = map[string]string{
 	endpoints.UsEast1RegionID:      "156813124566",
 	endpoints.UsEast2RegionID:      "777275614652",
 	endpoints.UsWest1RegionID:      "890145073186",
-	names.USWest2RegionID:      "159807026194",
+	endpoints.UsWest2RegionID:      "159807026194",
 }
 
 // @SDKDataSource("aws_sagemaker_prebuilt_ecr_image", name="Prebuilt ECR Image")

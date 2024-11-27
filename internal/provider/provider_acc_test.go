@@ -564,7 +564,7 @@ func TestAccProvider_Region_commercial(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.USWest2RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
 					testAccCheckPartition(ctx, t, &provider, endpoints.AwsPartitionID),
@@ -633,10 +633,10 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_stsRegion(endpoints.UsEast1RegionID, names.USWest2RegionID),
+				Config: testAccProviderConfig_stsRegion(endpoints.UsEast1RegionID, endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegion(ctx, t, &provider, endpoints.UsEast1RegionID),
-					testAccCheckSTSRegion(ctx, t, &provider, names.USWest2RegionID),
+					testAccCheckSTSRegion(ctx, t, &provider, endpoints.UsWest2RegionID),
 				),
 				PlanOnly: true,
 			},
