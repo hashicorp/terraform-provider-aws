@@ -26,17 +26,17 @@ import (
 )
 
 type AWSClient struct {
-	AccountID         string
-	defaultTagsConfig *tftags.DefaultConfig
-	ignoreTagsConfig  *tftags.IgnoreConfig
-	Region            string
-	ServicePackages   map[string]ServicePackage
+	Region          string
+	ServicePackages map[string]ServicePackage
 
+	accountID                 string
 	awsConfig                 *aws.Config
 	clients                   map[string]any
 	conns                     map[string]any
+	defaultTagsConfig         *tftags.DefaultConfig
 	endpoints                 map[string]string // From provider configuration.
 	httpClient                *http.Client
+	ignoreTagsConfig          *tftags.IgnoreConfig
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
 	partition                 endpoints.Partition
@@ -76,6 +76,11 @@ func (c *AWSClient) Endpoints(context.Context) map[string]string {
 	return maps.Clone(c.endpoints)
 }
 
+// AccountID returns the configured AWS account ID.
+func (c *AWSClient) AccountID(context.Context) string {
+	return c.accountID
+}
+
 // Partition returns the ID of the configured AWS partition.
 func (c *AWSClient) Partition(context.Context) string {
 	return c.partition.ID()
@@ -94,7 +99,7 @@ func (c *AWSClient) RegionalARN(ctx context.Context, service, resource string) s
 		Partition: c.Partition(ctx),
 		Service:   service,
 		Region:    c.Region,
-		AccountID: c.AccountID,
+		AccountID: c.AccountID(ctx),
 		Resource:  resource,
 	}.String()
 }
@@ -209,7 +214,7 @@ func (c *AWSClient) DefaultKMSKeyPolicy(ctx context.Context) string {
 		}
 	]
 }	
-`, c.Partition(ctx), c.AccountID)
+`, c.Partition(ctx), c.AccountID(ctx))
 }
 
 // GlobalAcceleratorHostedZoneID returns the Route 53 hosted zone ID

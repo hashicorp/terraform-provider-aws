@@ -647,6 +647,7 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 // For historical reasons, ignore a single empty `assume_role` block
 func TestAccProvider_AssumeRole_empty(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
@@ -656,7 +657,7 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 			{
 				Config: testAccProviderConfig_assumeRoleEmpty,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
+					acctest.CheckCallerIdentityAccountID(ctx, "data.aws_caller_identity.current"),
 				),
 			},
 		},
