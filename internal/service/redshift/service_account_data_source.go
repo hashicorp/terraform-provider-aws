@@ -21,7 +21,7 @@ import (
 
 var ServiceAccountPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID: "365689465814",
-	names.APEast1RegionID:      "313564881002",
+	endpoints.ApEast1RegionID:      "313564881002",
 	names.APNortheast1RegionID: "404641285394",
 	names.APNortheast2RegionID: "760740231472",
 	names.APNortheast3RegionID: "090321488786",

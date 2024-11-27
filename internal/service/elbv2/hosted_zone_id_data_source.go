@@ -21,7 +21,7 @@ import (
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
 var hostedZoneIDPerRegionALBMap = map[string]string{
 	endpoints.AfSouth1RegionID: "Z268VQBMOI5EKX",
-	names.APEast1RegionID:      "Z3DQVH9N71FHZ0",
+	endpoints.ApEast1RegionID:      "Z3DQVH9N71FHZ0",
 	names.APNortheast1RegionID: "Z14GRHDCWA56QT",
 	names.APNortheast2RegionID: "ZWKZPGTI48KDX",
 	names.APNortheast3RegionID: "Z5LXEXXYW11ES",
@@ -59,7 +59,7 @@ var hostedZoneIDPerRegionALBMap = map[string]string{
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
 var hostedZoneIDPerRegionNLBMap = map[string]string{
 	endpoints.AfSouth1RegionID: "Z203XCE67M25HM",
-	names.APEast1RegionID:      "Z12Y7K3UBGUAD1",
+	endpoints.ApEast1RegionID:      "Z12Y7K3UBGUAD1",
 	names.APNortheast1RegionID: "Z31USIVHYNEOWT",
 	names.APNortheast2RegionID: "ZIBE1TIR4HY56",
 	names.APNortheast3RegionID: "Z1GWIQ4HH19I5X",

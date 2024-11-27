@@ -17,7 +17,7 @@ import (
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region.
 var hostedZoneIDPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID: "Z268VQBMOI5EKX",
-	names.APEast1RegionID:      "Z3DQVH9N71FHZ0",
+	endpoints.ApEast1RegionID:      "Z3DQVH9N71FHZ0",
 	names.APNortheast1RegionID: "Z14GRHDCWA56QT",
 	names.APNortheast2RegionID: "ZWKZPGTI48KDX",
 	names.APNortheast3RegionID: "Z5LXEXXYW11ES",

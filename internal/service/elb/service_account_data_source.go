@@ -19,7 +19,7 @@ import (
 // See https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-access-logs.html#access-logging-bucket-permissions
 var accountIDPerRegionMap = map[string]string{
 	endpoints.AfSouth1RegionID: "098369216593",
-	names.APEast1RegionID:      "754344448648",
+	endpoints.ApEast1RegionID:      "754344448648",
 	names.APNortheast1RegionID: "582318560864",
 	names.APNortheast2RegionID: "600734575887",
 	names.APNortheast3RegionID: "383597477331",
