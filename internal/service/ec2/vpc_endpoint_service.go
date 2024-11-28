@@ -138,6 +138,14 @@ func resourceVPCEndpointService() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[awstypes.ServiceConnectivityType](),
 				},
 			},
+			"supported_regions": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -176,6 +184,10 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 
 	if v, ok := d.GetOk("supported_ip_address_types"); ok && v.(*schema.Set).Len() > 0 {
 		input.SupportedIpAddressTypes = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("supported_regions"); ok && v.(*schema.Set).Len() > 0 {
+		input.SupportedRegions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Creating EC2 VPC Endpoint Service: %v", input)
@@ -252,6 +264,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set(names.AttrState, svcCfg.ServiceState)
 	d.Set("supported_ip_address_types", svcCfg.SupportedIpAddressTypes)
+	d.Set("supported_regions", flattenSupportedRegions(svcCfg.SupportedRegions))
 
 	setTagsOut(ctx, svcCfg.Tags)
 
@@ -270,7 +283,7 @@ func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if d.HasChanges("acceptance_required", "gateway_load_balancer_arns", "network_load_balancer_arns", "private_dns_name", "supported_ip_address_types") {
+	if d.HasChanges("acceptance_required", "gateway_load_balancer_arns", "network_load_balancer_arns", "private_dns_name", "supported_ip_address_types", "supported_regions") {
 		input := &ec2.ModifyVpcEndpointServiceConfigurationInput{
 			ServiceId: aws.String(d.Id()),
 		}
@@ -285,6 +298,8 @@ func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceDat
 		if d.HasChange("private_dns_name") {
 			input.PrivateDnsName = aws.String(d.Get("private_dns_name").(string))
 		}
+
+		input.AddSupportedRegions, input.RemoveSupportedRegions = flattenAddAndRemoveStringValueLists(d, "supported_regions")
 
 		input.AddSupportedIpAddressTypes, input.RemoveSupportedIpAddressTypes = flattenAddAndRemoveStringValueLists(d, "supported_ip_address_types")
 
@@ -381,4 +396,18 @@ func flattenPrivateDNSNameConfiguration(apiObject *awstypes.PrivateDnsNameConfig
 	}
 
 	return tfMap
+}
+
+func flattenSupportedRegions(apiObjects []awstypes.SupportedRegionDetail) []*string {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []*string
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, apiObject.Region)
+	}
+
+	return tfList
 }
