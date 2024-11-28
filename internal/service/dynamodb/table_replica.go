@@ -176,7 +176,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 	// Some attributes take time to propagate to the table replica, so we need to wait a bit longer.
 	waitReplicaActiveFunc := waitReplicaActive
 	if _, ok := d.GetOk("deletion_protection_enabled"); ok {
-		waitReplicaActiveFunc = waitReplicaActiveWithDelay
+		waitReplicaActiveFunc = waitReplicaPropagationActive
 	}
 
 	if _, err := waitReplicaActiveFunc(ctx, conn, tableName, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate), optFn); err != nil {
@@ -427,7 +427,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 
 			// Wait for deletion protection to propagate to the table replica.
-			if _, err := waitReplicaActiveWithDelay(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
+			if _, err := waitReplicaPropagationActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTableReplica, d.Id(), err)
 			}
 		}

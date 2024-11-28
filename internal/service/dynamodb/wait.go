@@ -20,7 +20,7 @@ const (
 	kinesisStreamingDestinationDisabledTimeout = 5 * time.Minute
 	pitrUpdateTimeout                          = 30 * time.Second
 	replicaUpdateTimeout                       = 30 * time.Minute
-	replicateUpdateDelay                       = 1*time.Minute + 30*time.Second // Some attributes take time to propagate to the table replica.
+	replicaPropagationDelay                    = 1*time.Minute + 30*time.Second
 	ttlUpdateTimeout                           = 30 * time.Second
 	updateTableContinuousBackupsTimeout        = 20 * time.Minute
 	updateTableTimeout                         = 20 * time.Minute
@@ -96,9 +96,9 @@ func waitReplicaActive(ctx context.Context, conn *dynamodb.Client, tableName, re
 }
 
 // Some attributes take time to propagate to the table replica, so we need to wait a bit longer.
-func waitReplicaActiveWithDelay(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) { //nolint:unparam
+func waitReplicaPropagationActive(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Delay:   replicateUpdateDelay,
+		Delay:   replicaPropagationDelay,
 		Pending: enum.Slice(awstypes.ReplicaStatusCreating, awstypes.ReplicaStatusUpdating, awstypes.ReplicaStatusDeleting),
 		Target:  enum.Slice(awstypes.ReplicaStatusActive),
 		Refresh: statusReplicaUpdate(ctx, conn, tableName, region, optFns...),
