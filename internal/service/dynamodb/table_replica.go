@@ -276,6 +276,8 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	var
 	// handled direct to replica
 	// * arn
+	// * kms_key_arn
+	// * deletion_protection_enabled
 	// * point_in_time_recovery
 	// * tags
 	diags diag.Diagnostics
@@ -407,7 +409,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	// handle replica specific changes
 	// * point_in_time_recovery
 	// * deletion_protection_enabled
-	if d.HasChanges("point_in_time_recovery", "deletion_protection_enabled", names.AttrTagsAll) {
+	if d.HasChanges("point_in_time_recovery", "deletion_protection_enabled") {
 		if d.HasChange(names.AttrTagsAll) {
 			o, n := d.GetChange(names.AttrTagsAll)
 			if err := updateTags(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
