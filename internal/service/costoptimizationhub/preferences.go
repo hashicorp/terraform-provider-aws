@@ -111,7 +111,7 @@ func (r *resourcePreferences) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	plan.MemberAccountDiscountVisibility = flex.StringValueToFramework(ctx, out.MemberAccountDiscountVisibility)
 	plan.SavingsEstimationMode = flex.StringValueToFramework(ctx, out.SavingsEstimationMode)
 
@@ -144,7 +144,7 @@ func (r *resourcePreferences) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 	state.MemberAccountDiscountVisibility = flex.StringValueToFramework(ctx, out.MemberAccountDiscountVisibility)
 	state.SavingsEstimationMode = flex.StringValueToFramework(ctx, out.SavingsEstimationMode)
 

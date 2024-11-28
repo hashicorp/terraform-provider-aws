@@ -27,28 +27,28 @@ func testAccRepositoryEndpointDataSource_basic(t *testing.T) {
 				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "npm"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 			{
 				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "pypi"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 			{
 				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "maven"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 			{
 				Config: testAccRepositoryEndpointDataSourceConfig_basic(rName, "nuget"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 		},
@@ -69,7 +69,7 @@ func testAccRepositoryEndpointDataSource_owner(t *testing.T) {
 				Config: testAccRepositoryEndpointDataSourceConfig_owner(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "repository_endpoint"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 		},

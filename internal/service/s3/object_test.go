@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -652,7 +653,7 @@ func TestAccS3Object_updatesWithVersioningViaAccessPoint(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &originalObj),
 					testAccCheckObjectBody(&originalObj, "initial versioned object state"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("accesspoint/%s/updateable-key", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3", fmt.Sprintf("accesspoint/%s/updateable-key", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, accessPointResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "etag", "cee4407fa91906284e2a5e5e03e86b1b"),
 				),
@@ -1865,7 +1866,7 @@ func TestAccS3Object_crossRegion(t *testing.T) {
 func TestAccS3Object_optInRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	optInRegion := names.APEast1RegionID // Hong Kong.
+	optInRegion := endpoints.ApEast1RegionID // Hong Kong.
 	providers := make(map[string]*schema.Provider)
 
 	resource.ParallelTest(t, resource.TestCase{

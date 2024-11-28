@@ -68,7 +68,7 @@ func dataSourceEBSVolumesRead(ctx context.Context, d *schema.ResourceData, meta 
 		volumeIDs = append(volumeIDs, aws.ToString(v.VolumeId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, volumeIDs)
 
 	return diags

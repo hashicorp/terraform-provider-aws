@@ -33,7 +33,7 @@ func TestAccNetworkFirewallFirewallDataSource_arn(t *testing.T) {
 				Config: testAccFirewallDataSourceConfig_arn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(dataSourceName, "encryption_configuration.#", "1"),
@@ -81,7 +81,7 @@ func TestAccNetworkFirewallFirewallDataSource_name(t *testing.T) {
 				Config: testAccFirewallDataSourceConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(dataSourceName, "encryption_configuration.#", "1"),
@@ -129,7 +129,7 @@ func TestAccNetworkFirewallFirewallDataSource_arnandname(t *testing.T) {
 				Config: testAccFirewallDataSourceConfig_arnandname(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFirewallExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "network-firewall", fmt.Sprintf("firewall/%s", rName)),
 					resource.TestCheckResourceAttr(dataSourceName, "delete_protection", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(dataSourceName, "encryption_configuration.#", "1"),

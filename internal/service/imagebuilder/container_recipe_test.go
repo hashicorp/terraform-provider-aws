@@ -35,7 +35,7 @@ func TestAccImageBuilderContainerRecipe_basic(t *testing.T) {
 				Config: testAccContainerRecipeConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerRecipeExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", regexache.MustCompile(fmt.Sprintf("container-recipe/%s/1.0.0", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "imagebuilder", regexache.MustCompile(fmt.Sprintf("container-recipe/%s/1.0.0", rName))),
 					resource.TestCheckResourceAttr(resourceName, "component.#", "1"),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "component.0.component_arn", "imagebuilder", "aws", "component/update-linux/x.x.x"),
 					resource.TestCheckResourceAttr(resourceName, "component.0.parameter.#", "0"),
@@ -47,7 +47,7 @@ func TestAccImageBuilderContainerRecipe_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwner),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwner),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "parent_image", "imagebuilder", "aws", "image/amazon-linux-x86-2/x.x.x"),
 					resource.TestCheckResourceAttr(resourceName, "platform", string(awstypes.PlatformLinux)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

@@ -36,10 +36,10 @@ func testAccIPAMResourceDiscoveryAssociation_basic(t *testing.T) {
 				Config: testAccIPAMResourceDiscoveryAssociationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMResourceDiscoveryAssociationExists(ctx, resourceName, &rda),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`ipam-resource-discovery-association/ipam-res-disco-assoc-[0-9a-f]+$`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`ipam-resource-discovery-association/ipam-res-disco-assoc-[0-9a-f]+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_id", ipamName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_resource_discovery_id", rdName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},

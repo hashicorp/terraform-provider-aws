@@ -283,7 +283,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 						names.AttrName:  "character_set_client",
 						names.AttrValue: "utf8",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("pg:%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("pg:%s$", rName))),
 				),
 			},
 			{
@@ -318,7 +318,7 @@ func TestAccRDSParameterGroup_basic(t *testing.T) {
 						names.AttrName:  "character_set_client",
 						names.AttrValue: "utf8",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("pg:%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("pg:%s$", rName))),
 				),
 			},
 			{

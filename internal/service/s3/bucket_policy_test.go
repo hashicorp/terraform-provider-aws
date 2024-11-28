@@ -499,8 +499,8 @@ func testAccCheckBucketHasPolicy(ctx context.Context, n string, expectedPolicyTe
 		}
 
 		// Policy text must be generated inside a resource.TestCheckFunc in order for
-		// the acctest.AccountID() helper to function properly.
-		expectedPolicyText := fmt.Sprintf(expectedPolicyTemplate, acctest.AccountID(), acctest.Partition(), bucketName)
+		// the acctest.AccountID(ctx) helper to function properly.
+		expectedPolicyText := fmt.Sprintf(expectedPolicyTemplate, acctest.AccountID(ctx), acctest.Partition(), bucketName)
 		equivalent, err := awspolicy.PoliciesAreEquivalent(policy, expectedPolicyText)
 		if err != nil {
 			return fmt.Errorf("Error testing policy equivalence: %s", err)

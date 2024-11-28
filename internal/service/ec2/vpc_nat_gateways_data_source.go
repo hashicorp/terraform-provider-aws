@@ -83,7 +83,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 		natGatewayIDs = append(natGatewayIDs, aws.ToString(v.NatGatewayId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, natGatewayIDs)
 
 	return diags

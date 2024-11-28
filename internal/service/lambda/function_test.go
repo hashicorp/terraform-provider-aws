@@ -66,7 +66,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 					testAccCheckFunctionName(&conf, funcName),
 					resource.TestCheckResourceAttr(resourceName, "architectures.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "architectures.0", string(awstypes.ArchitectureX8664)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "lambda", fmt.Sprintf("function:%s", funcName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttrSet(resourceName, "code_sha256"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "512"),
@@ -76,7 +76,7 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_group", fmt.Sprintf("/aws/lambda/%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(awstypes.PackageTypeZip)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSkipDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, tflambda.FunctionVersionLatest),
@@ -146,7 +146,7 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, tflambda.FunctionVersionLatest),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, tflambda.FunctionVersionLatest)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, tflambda.FunctionVersionLatest)),
 				),
 			},
 			{
@@ -160,7 +160,7 @@ func TestAccLambdaFunction_unpublishedCodeUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, tflambda.FunctionVersionLatest),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, tflambda.FunctionVersionLatest)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, tflambda.FunctionVersionLatest)),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -565,7 +565,7 @@ func TestAccLambdaFunction_versioned(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
 				),
 			},
 			{
@@ -609,7 +609,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 				Config: testAccFunctionConfig_publishable("test-fixtures/lambdatest.zip", rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
 				),
 			},
 			{
@@ -624,7 +624,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, version),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, version)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, version)),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
 					},
@@ -639,7 +639,7 @@ func TestAccLambdaFunction_versionedUpdate(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, versionUpdated),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, versionUpdated)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, versionUpdated)),
 					resource.TestCheckResourceAttr(resourceName, "runtime", string(awstypes.RuntimeNodejs20x)),
 					func(s *terraform.State) error {
 						return testAccCheckAttributeIsDateAfter(s, resourceName, "last_modified", timeBeforeUpdate)
@@ -681,7 +681,7 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, unpublishedVersion),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, unpublishedVersion)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, unpublishedVersion)),
 				),
 			},
 			{
@@ -691,7 +691,7 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf2),
 					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
 				),
 			},
 			{
@@ -706,7 +706,7 @@ func TestAccLambdaFunction_enablePublish(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFunctionExists(ctx, resourceName, &conf3),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
 				),
 			},
 		},
@@ -736,7 +736,7 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf1),
 					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
 				),
 			},
 			{
@@ -746,7 +746,7 @@ func TestAccLambdaFunction_disablePublish(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf2),
 					resource.TestCheckResourceAttr(resourceName, "publish", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", rName, "1")),
 				),
 			},
 			{

@@ -37,7 +37,7 @@ func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
@@ -80,7 +80,7 @@ func TestAccDLMLifecyclePolicy_event(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_event(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkLifecyclePolicyExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),

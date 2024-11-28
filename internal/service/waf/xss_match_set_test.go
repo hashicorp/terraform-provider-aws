@@ -36,7 +36,7 @@ func TestAccWAFXSSMatchSet_basic(t *testing.T) {
 				Config: testAccXSSMatchSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckXSSMatchSetExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "waf", regexache.MustCompile(`xssmatchset/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "waf", regexache.MustCompile(`xssmatchset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "xss_match_tuples.*", map[string]string{

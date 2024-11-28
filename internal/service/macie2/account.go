@@ -102,7 +102,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "enabling Macie Account: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	return append(diags, resourceAccountRead(ctx, d, meta)...)
 }

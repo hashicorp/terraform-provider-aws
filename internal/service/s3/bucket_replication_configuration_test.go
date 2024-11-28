@@ -1113,7 +1113,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_noChange(t *testing.T) {
 			{
 				Config: testAccBucketConfig_replicationV2PrefixAndTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExistsWithProvider(ctx, bucketResourceName, acctest.RegionProviderFunc(region, &providers)),
+					testAccCheckBucketExistsWithProvider(ctx, bucketResourceName, acctest.RegionProviderFunc(ctx, region, &providers)),
 					resource.TestCheckResourceAttr(bucketResourceName, "replication_configuration.0.rules.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(bucketResourceName, "replication_configuration.0.rules.*", map[string]string{
 						"filter.#":        "1",
@@ -1156,7 +1156,7 @@ func TestAccS3BucketReplicationConfiguration_migrate_withChange(t *testing.T) {
 			{
 				Config: testAccBucketConfig_replicationV2PrefixAndTags(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBucketExistsWithProvider(ctx, bucketResourceName, acctest.RegionProviderFunc(region, &providers)),
+					testAccCheckBucketExistsWithProvider(ctx, bucketResourceName, acctest.RegionProviderFunc(ctx, region, &providers)),
 					resource.TestCheckResourceAttr(bucketResourceName, "replication_configuration.0.rules.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(bucketResourceName, "replication_configuration.0.rules.*", map[string]string{
 						"filter.#":        "1",

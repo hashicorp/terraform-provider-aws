@@ -41,7 +41,7 @@ func TestAccGlueMlTransform_basic(t *testing.T) {
 				Config: testAccMLTransformConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMLTransformExists(ctx, resourceName, &transform),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", regexache.MustCompile(`mlTransform/tfm-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", regexache.MustCompile(`mlTransform/tfm-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, roleResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

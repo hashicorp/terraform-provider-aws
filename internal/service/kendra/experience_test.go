@@ -43,7 +43,7 @@ func TestAccKendraExperience_basic(t *testing.T) {
 				Config: testAccExperienceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExperienceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/experience/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/experience/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "endpoints.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),

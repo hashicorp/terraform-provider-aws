@@ -72,7 +72,7 @@ func (d *customModelsDataSource) Read(ctx context.Context, request datasource.Re
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
