@@ -1247,15 +1247,10 @@ func mapBlockKey(ctx context.Context, from any) (reflect.Value, diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourceType, fullTypeName(valueType(valFrom)))
 
-	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
-		field := typFrom.Field(i)
-		if !field.IsExported() {
-			continue // Skip unexported fields.
-		}
-
+	for field := range tfreflect.ExportedStructFields(valFrom.Type()) {
 		// go from StringValue to string
 		if field.Name == mapBlockKeyFieldName {
-			fieldVal := valFrom.Field(i)
+			fieldVal := valFrom.FieldByIndex(field.Index)
 
 			if v, ok := fieldVal.Interface().(basetypes.StringValuable); ok {
 				v, d := v.ToStringValue(ctx)
@@ -1269,7 +1264,7 @@ func mapBlockKey(ctx context.Context, from any) (reflect.Value, diag.Diagnostics
 			// this is not ideal but perhaps better than a panic?
 			// return reflect.ValueOf(fmt.Sprintf("%s", valFrom.Field(i))), diags
 
-			return valFrom.Field(i), diags
+			return fieldVal, diags
 		}
 	}
 
