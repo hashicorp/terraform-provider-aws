@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_vpc_endpoint_service")
-func DataSourceVPCEndpointService() *schema.Resource {
+// @SDKDataSource("aws_vpc_endpoint_service", name="Endpoint Service")
+func dataSourceVPCEndpointService() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCEndpointServiceRead,
 
@@ -62,6 +62,11 @@ func DataSourceVPCEndpointService() *schema.Resource {
 			},
 			"private_dns_name": {
 				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"private_dns_names": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
 			"service": {
@@ -102,10 +107,10 @@ func DataSourceVPCEndpointService() *schema.Resource {
 func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &ec2.DescribeVpcEndpointServicesInput{
-		Filters: newAttributeFilterListV2(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"service-type": d.Get("service_type").(string),
 			},
@@ -117,7 +122,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	if v, ok := d.GetOk(names.AttrServiceName); ok {
 		serviceName = v.(string)
 	} else if v, ok := d.GetOk("service"); ok {
-		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*conns.AWSClient).Region, v.(string))
+		serviceName = fmt.Sprintf("com.amazonaws.%s.%s", meta.(*conns.AWSClient).Region(ctx), v.(string))
 	}
 
 	if serviceName != "" {
@@ -125,11 +130,11 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk(names.AttrTags); ok {
-		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, v.(map[string]interface{}))))...)
+		input.Filters = append(input.Filters, newTagFilterList(
+			Tags(tftags.New(ctx, v.(map[string]interface{}))))...)
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set))...)
 
 	if len(input.Filters) == 0 {
@@ -137,7 +142,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 		input.Filters = nil
 	}
 
-	serviceDetails, serviceNames, err := findVPCEndpointServicesV2(ctx, conn, input)
+	serviceDetails, serviceNames, err := findVPCEndpointServices(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC Endpoint Services: %s", err)
@@ -174,10 +179,10 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 
 	d.Set("acceptance_required", sd.AcceptanceRequired)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", serviceID),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -187,6 +192,13 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("manages_vpc_endpoints", sd.ManagesVpcEndpoints)
 	d.Set(names.AttrOwner, sd.Owner)
 	d.Set("private_dns_name", sd.PrivateDnsName)
+
+	privateDnsNames := make([]string, len(sd.PrivateDnsNames))
+	for i, privateDnsDetail := range sd.PrivateDnsNames {
+		privateDnsNames[i] = aws.ToString(privateDnsDetail.PrivateDnsName)
+	}
+	d.Set("private_dns_names", privateDnsNames)
+
 	d.Set("service_id", serviceID)
 	d.Set(names.AttrServiceName, serviceName)
 	if len(sd.ServiceType) > 0 {
@@ -197,7 +209,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("supported_ip_address_types", sd.SupportedIpAddressTypes)
 	d.Set("vpc_endpoint_policy_supported", sd.VpcEndpointPolicySupported)
 
-	err = d.Set(names.AttrTags, keyValueTagsV2(ctx, sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	err = d.Set(names.AttrTags, keyValueTags(ctx, sd.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

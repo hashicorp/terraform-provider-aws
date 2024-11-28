@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_route_table_association")
-func ResourceVPCEndpointRouteTableAssociation() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_route_table_association", name="VPC Endpoint Route Table Association")
+func resourceVPCEndpointRouteTableAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointRouteTableAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointRouteTableAssociationRead,
@@ -65,9 +65,9 @@ func resourceVPCEndpointRouteTableAssociationCreate(ctx context.Context, d *sche
 		return sdkdiag.AppendErrorf(diags, "creating VPC Endpoint Route Table Association (%s): %s", id, err)
 	}
 
-	d.SetId(VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
+	d.SetId(vpcEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
 
-	err = waitVPCEndpointRouteTableAssociationReadyV2(ctx, conn, endpointID, routeTableID)
+	err = waitVPCEndpointRouteTableAssociationReady(ctx, conn, endpointID, routeTableID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint Route Table Association (%s) to become available: %s", id, err)
@@ -86,7 +86,7 @@ func resourceVPCEndpointRouteTableAssociationRead(ctx context.Context, d *schema
 	id := fmt.Sprintf("%s/%s", endpointID, routeTableID)
 
 	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return nil, findVPCEndpointRouteTableAssociationExistsV2(ctx, conn, endpointID, routeTableID)
+		return nil, findVPCEndpointRouteTableAssociationExists(ctx, conn, endpointID, routeTableID)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -127,7 +127,7 @@ func resourceVPCEndpointRouteTableAssociationDelete(ctx context.Context, d *sche
 		return sdkdiag.AppendErrorf(diags, "deleting VPC Endpoint Route Table Association (%s): %s", id, err)
 	}
 
-	err = waitVPCEndpointRouteTableAssociationDeletedV2(ctx, conn, endpointID, routeTableID)
+	err = waitVPCEndpointRouteTableAssociationDeleted(ctx, conn, endpointID, routeTableID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for VPC Endpoint Route Table Association (%s) to delete: %s", id, err)
@@ -146,7 +146,7 @@ func resourceVPCEndpointRouteTableAssociationImport(ctx context.Context, d *sche
 	routeTableID := parts[1]
 	log.Printf("[DEBUG] Importing VPC Endpoint (%s) Route Table (%s) Association", endpointID, routeTableID)
 
-	d.SetId(VPCEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
+	d.SetId(vpcEndpointRouteTableAssociationCreateID(endpointID, routeTableID))
 	d.Set(names.AttrVPCEndpointID, endpointID)
 	d.Set("route_table_id", routeTableID)
 

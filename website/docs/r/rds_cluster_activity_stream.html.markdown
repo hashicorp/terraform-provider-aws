@@ -56,7 +56,7 @@ resource "aws_rds_cluster_activity_stream" "default" {
 For more detailed documentation about each argument, refer to
 the [AWS official documentation][3].
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `resource_arn` - (Required, Forces new resources) The Amazon Resource Name (ARN) of the DB cluster.
 * `mode` - (Required, Forces new resources) Specifies the mode of the database activity stream. Database events such as a change or access generate an activity stream event. The database session can handle these events either synchronously or asynchronously. One of: `sync`, `async`.

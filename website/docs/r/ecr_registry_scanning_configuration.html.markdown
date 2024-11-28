@@ -77,12 +77,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_ecr_registry_scanning_configuration.example
-  id = "012345678901"
+  id = "123456789012"
 }
 ```
 
 Using `terraform import`, import ECR Scanning Configurations using the `registry_id`. For example:
 
 ```console
-% terraform import aws_ecr_registry_scanning_configuration.example 012345678901
+% terraform import aws_ecr_registry_scanning_configuration.example 123456789012
 ```

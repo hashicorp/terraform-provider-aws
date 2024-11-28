@@ -50,7 +50,7 @@ func main() {
 			log.Fatalf("in service data, line %d, HumanFriendly cannot be blank", i+lineOffset)
 		}
 
-		// TODO: Check for duplicates in HumanFriendly, ProviderPackageActual,
+		// TODO: Check for duplicates in HumanFriendly,
 		// ProviderPackageCorrect, ProviderNameUpper, GoV1ClientTypeName,
 		// ResourcePrefixActual, ResourcePrefixCorrect, FilePrefix, DocPrefix
 
@@ -72,50 +72,37 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, if Exclude is blank, either AWSCLIV2CommandNoDashes or GoV2Package must have values", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ProviderPackageActual() != "" && l.ProviderPackageCorrect() == "" {
-			log.Fatalf("in service data, line %d, for service %s, ProviderPackageActual can't be non-blank if ProviderPackageCorrect is blank", i+lineOffset, l.HumanFriendly())
+		if l.ResourcePrefixCorrect() != "" && l.ResourcePrefixCorrect() != fmt.Sprintf("aws_%s_", l.ProviderPackageCorrect()) {
+			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect should be aws_<package>_, where <package> is ProviderPackage Correct, had: prefix %q, package %q", i+lineOffset, l.HumanFriendly(), l.ResourcePrefixCorrect(), l.ProviderPackageCorrect())
 		}
 
-		if l.ProviderPackageActual() == "" && l.ProviderPackageCorrect() == "" && !l.Exclude() {
-			log.Fatalf("in service data, line %d, for service %s, ProviderPackageActual and ProviderPackageCorrect cannot both be blank unless Exclude is non-blank", i+lineOffset, l.HumanFriendly())
+		packageToUse := l.ProviderPackage()
+		if packageToUse == "" {
+			log.Fatalf("in service data, for service %s, service package name must not be blank", l.HumanFriendly())
 		}
 
-		if l.ProviderPackageCorrect() != "" && l.ProviderPackageActual() == l.ProviderPackageCorrect() {
-			log.Fatalf("in service data, line %d, for service %s, ProviderPackageActual should only be used if different from ProviderPackageCorrect", i+lineOffset, l.HumanFriendly())
-		}
-
-		packageToUse := l.ProviderPackageCorrect()
-
-		if l.ProviderPackageActual() != "" {
-			packageToUse = l.ProviderPackageActual()
-		}
-
-		if p := l.Aliases(); len(p) > 0 && packageToUse != "" {
+		if p := l.Aliases(); len(p) > 0 {
 			for _, v := range p {
 				if v == packageToUse {
-					log.Fatalf("in service data, line %d, for service %s, Aliases should not include ProviderPackageActual, if not blank, or ProviderPackageCorrect, if not blank and ProviderPackageActual is blank", i+lineOffset, l.HumanFriendly())
+					log.Fatalf("in service data, line %d, for service %s, Aliases should not include service package name", i+lineOffset, l.HumanFriendly())
 				}
 			}
 		}
 
-		if !l.ClientSDKV1() && !l.ClientSDKV2() && !l.Exclude() {
+		if !l.IsClientSDKV1() && !l.IsClientSDKV2() && !l.Exclude() {
 			log.Fatalf("in service data, line %d, for service %s, at least one of ClientSDKV1 or ClientSDKV2 must have a value if Exclude is blank", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ClientSDKV1() && (l.GoV1Package() == "" || l.GoV1ClientTypeName() == "") {
+		if l.IsClientSDKV1() && (l.GoV1Package() == "" || l.GoV1ClientTypeName() == "") {
 			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientTypeName can be blank", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ClientSDKV2() && l.GoV2Package() == "" {
+		if l.IsClientSDKV2() && l.GoV2Package() == "" && l.ProviderPackage() != "meta" {
 			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 2 so GoV2Package cannot be blank", i+lineOffset, l.HumanFriendly())
 		}
 
 		if l.ResourcePrefixCorrect() == "" && !l.Exclude() {
 			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect must have a value if Exclude is blank", i+lineOffset, l.HumanFriendly())
-		}
-
-		if l.ResourcePrefixCorrect() != "" && l.ResourcePrefixCorrect() != fmt.Sprintf("aws_%s_", l.ProviderPackageCorrect()) {
-			log.Fatalf("in service data, line %d, for service %s, ResourcePrefixCorrect should be aws_<package>_, where <package> is ProviderPackageCorrect", i+lineOffset, l.HumanFriendly())
 		}
 
 		if l.ResourcePrefixCorrect() != "" && l.ResourcePrefixActual() == l.ResourcePrefixCorrect() {
@@ -134,7 +121,7 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, Brand must be AWS, Amazon, or blank; found %s", l.HumanFriendly(), i, l.Brand())
 		}
 
-		if (!l.Exclude() || (l.Exclude() && l.AllowedSubcategory() != "")) && len(l.DocPrefix()) == 0 {
+		if (!l.Exclude() || (l.Exclude() && l.AllowedSubcategory())) && len(l.DocPrefix()) == 0 {
 			log.Fatalf("in service data, line %d, for service %s, DocPrefix cannot be blank unless Exclude is non-blank and AllowedSubcategory is blank", i+lineOffset, l.HumanFriendly())
 		}
 
@@ -142,7 +129,6 @@ func main() {
 		checkAllLowercase(i, l.HumanFriendly(), "AWSCLIV2CommandNoDashes", l.AWSCLIV2CommandNoDashes())
 		checkAllLowercase(i, l.HumanFriendly(), "GoV1Package", l.GoV1Package())
 		checkAllLowercase(i, l.HumanFriendly(), "GoV2Package", l.GoV2Package())
-		checkAllLowercase(i, l.HumanFriendly(), "ProviderPackageActual", l.ProviderPackageActual())
 		checkAllLowercase(i, l.HumanFriendly(), "ProviderPackageCorrect", l.ProviderPackageCorrect())
 		checkAllLowercase(i, l.HumanFriendly(), "SplitPackageRealPackage", l.SplitPackageRealPackage())
 		checkAllLowercase(i, l.HumanFriendly(), "Aliases", l.Aliases()...)
@@ -155,7 +141,7 @@ func main() {
 		checkNotAllLowercase(i, l.HumanFriendly(), "GoV1ClientTypeName", l.GoV1ClientTypeName())
 		checkNotAllLowercase(i, l.HumanFriendly(), "HumanFriendly", l.HumanFriendly())
 
-		if !l.Exclude() && l.AllowedSubcategory() != "" {
+		if !l.Exclude() && l.AllowedSubcategory() {
 			log.Fatalf("in service data, line %d, for service %s, AllowedSubcategory can only be non-blank if Exclude is non-blank", i+lineOffset, l.HumanFriendly())
 		}
 
@@ -163,7 +149,7 @@ func main() {
 			log.Fatalf("in service data, line %d, for service %s, if Exclude is not blank, include a Note why", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.Exclude() && l.AllowedSubcategory() == "" {
+		if l.Exclude() && !l.AllowedSubcategory() {
 			continue
 		}
 
@@ -286,7 +272,7 @@ func checkDocFile(dir, name string, prefixes []DocPrefix) error {
 			sc := scanner.Text()
 			sc = strings.TrimSuffix(strings.TrimPrefix(sc, "subcategory: \""), "\"")
 			if hf != sc {
-				return fmt.Errorf("file (%s) subcategory (%s) doesn't match file name prefix, expecting %s", name, sc, hf)
+				return fmt.Errorf("file (%s) subcategory (%s) doesn't match HumanFriendly, expecting %s", name, sc, hf)
 			}
 		case 2:
 			continue

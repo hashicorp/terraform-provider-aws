@@ -11,19 +11,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_elastic_beanstalk_application_version", name="Application Version")
 // @Tags(identifierAttribute="arn")
-func ResourceApplicationVersion() *schema.Resource {
+func resourceApplicationVersion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceApplicationVersionCreate,
 		ReadWithoutTimeout:   resourceApplicationVersionRead,
@@ -42,14 +44,19 @@ func ResourceApplicationVersion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrDescription: {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			names.AttrDescription: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			names.AttrForceDelete: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			names.AttrKey: {
 				Type:     schema.TypeString,
@@ -61,7 +68,7 @@ func ResourceApplicationVersion() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			names.AttrForceDelete: {
+			"process": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
@@ -76,26 +83,21 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	application := d.Get("application").(string)
-	description := d.Get(names.AttrDescription).(string)
-	bucket := d.Get(names.AttrBucket).(string)
-	key := d.Get(names.AttrKey).(string)
 	name := d.Get(names.AttrName).(string)
-
-	s3Location := awstypes.S3Location{
-		S3Bucket: aws.String(bucket),
-		S3Key:    aws.String(key),
+	input := &elasticbeanstalk.CreateApplicationVersionInput{
+		ApplicationName: aws.String(d.Get("application").(string)),
+		Description:     aws.String(d.Get(names.AttrDescription).(string)),
+		Process:         aws.Bool(d.Get("process").(bool)),
+		SourceBundle: &awstypes.S3Location{
+			S3Bucket: aws.String(d.Get(names.AttrBucket).(string)),
+			S3Key:    aws.String(d.Get(names.AttrKey).(string)),
+		},
+		Tags:         getTagsIn(ctx),
+		VersionLabel: aws.String(name),
 	}
 
-	createOpts := elasticbeanstalk.CreateApplicationVersionInput{
-		ApplicationName: aws.String(application),
-		Description:     aws.String(description),
-		SourceBundle:    &s3Location,
-		Tags:            getTagsIn(ctx),
-		VersionLabel:    aws.String(name),
-	}
+	_, err := conn.CreateApplicationVersion(ctx, input)
 
-	_, err := conn.CreateApplicationVersion(ctx, &createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Elastic Beanstalk Application Version (%s): %s", name, err)
 	}
@@ -109,28 +111,20 @@ func resourceApplicationVersionRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	resp, err := conn.DescribeApplicationVersions(ctx, &elasticbeanstalk.DescribeApplicationVersionsInput{
-		ApplicationName: aws.String(d.Get("application").(string)),
-		VersionLabels:   []string{d.Id()},
-	})
+	applicationVersion, err := findApplicationVersionByTwoPartKey(ctx, conn, d.Get("application").(string), d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Elastic Beanstalk Application Version (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Application Version (%s): %s", d.Id(), err)
 	}
 
-	if len(resp.ApplicationVersions) == 0 {
-		log.Printf("[DEBUG] Elastic Beanstalk application version read: application version not found")
-
-		d.SetId("")
-
-		return diags
-	} else if len(resp.ApplicationVersions) != 1 {
-		return sdkdiag.AppendErrorf(diags, "reading application version properties: found %d versions of label %q, expected 1",
-			len(resp.ApplicationVersions), d.Id())
-	}
-
-	arn := aws.ToString(resp.ApplicationVersions[0].ApplicationVersionArn)
-	d.Set(names.AttrARN, arn)
-	d.Set(names.AttrDescription, resp.ApplicationVersions[0].Description)
+	d.Set(names.AttrARN, applicationVersion.ApplicationVersionArn)
+	d.Set(names.AttrDescription, applicationVersion.Description)
 
 	return diags
 }
@@ -140,7 +134,15 @@ func resourceApplicationVersionUpdate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 	if d.HasChange(names.AttrDescription) {
-		if err := resourceApplicationVersionDescriptionUpdate(ctx, conn, d); err != nil {
+		input := &elasticbeanstalk.UpdateApplicationVersionInput{
+			ApplicationName: aws.String(d.Get("application").(string)),
+			Description:     aws.String(d.Get(names.AttrDescription).(string)),
+			VersionLabel:    aws.String(d.Id()),
+		}
+
+		_, err := conn.UpdateApplicationVersion(ctx, input)
+
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Elastic Beanstalk Application Version (%s): %s", d.Id(), err)
 		}
 	}
@@ -152,68 +154,85 @@ func resourceApplicationVersionDelete(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
-	application := d.Get("application").(string)
-	name := d.Id()
+	applicationName := d.Get("application").(string)
 
 	if !d.Get(names.AttrForceDelete).(bool) {
-		environments, err := versionUsedBy(ctx, application, name, conn)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Application Version (%s): %s", d.Id(), err)
+		now := time.Now()
+		input := &elasticbeanstalk.DescribeEnvironmentsInput{
+			ApplicationName:       aws.String(applicationName),
+			IncludeDeleted:        aws.Bool(true),
+			IncludedDeletedBackTo: aws.Time(now.Add(-1 * time.Minute)),
+			VersionLabel:          aws.String(d.Id()),
 		}
 
-		if len(environments) > 1 {
-			return sdkdiag.AppendErrorf(diags, "Unable to delete Application Version, it is currently in use by the following environments: %s.", environments)
+		environments, err := findEnvironments(ctx, conn, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Environments: %s", err)
+		}
+
+		environmentIDs := tfslices.ApplyToAll(environments, func(v awstypes.EnvironmentDescription) string {
+			return aws.ToString(v.EnvironmentId)
+		})
+
+		if len(environmentIDs) > 1 {
+			return sdkdiag.AppendErrorf(diags, "Elastic Beanstalk Application Version (%s) is currently in use by the following environments: %s", d.Id(), environmentIDs)
 		}
 	}
+
 	_, err := conn.DeleteApplicationVersion(ctx, &elasticbeanstalk.DeleteApplicationVersionInput{
-		ApplicationName:    aws.String(application),
-		VersionLabel:       aws.String(name),
+		ApplicationName:    aws.String(applicationName),
 		DeleteSourceBundle: aws.Bool(false),
+		VersionLabel:       aws.String(d.Id()),
 	})
 
 	// application version is pending delete, or no longer exists.
-	if tfawserr.ErrCodeEquals(err, "InvalidParameterValue") {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidParameterValue) {
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Application version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Application Version (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func resourceApplicationVersionDescriptionUpdate(ctx context.Context, conn *elasticbeanstalk.Client, d *schema.ResourceData) error {
-	application := d.Get("application").(string)
-	description := d.Get(names.AttrDescription).(string)
-	name := d.Get(names.AttrName).(string)
+func findApplicationVersionByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.Client, applicationName, versionLabel string) (*awstypes.ApplicationVersionDescription, error) {
+	input := &elasticbeanstalk.DescribeApplicationVersionsInput{
+		ApplicationName: aws.String(applicationName),
+		VersionLabels:   []string{versionLabel},
+	}
 
-	_, err := conn.UpdateApplicationVersion(ctx, &elasticbeanstalk.UpdateApplicationVersionInput{
-		ApplicationName: aws.String(application),
-		Description:     aws.String(description),
-		VersionLabel:    aws.String(name),
-	})
-
-	return err
+	return findApplicationVersion(ctx, conn, input)
 }
 
-func versionUsedBy(ctx context.Context, applicationName, versionLabel string, conn *elasticbeanstalk.Client) ([]string, error) {
-	now := time.Now()
-	resp, err := conn.DescribeEnvironments(ctx, &elasticbeanstalk.DescribeEnvironmentsInput{
-		ApplicationName:       aws.String(applicationName),
-		VersionLabel:          aws.String(versionLabel),
-		IncludeDeleted:        aws.Bool(true),
-		IncludedDeletedBackTo: aws.Time(now.Add(-1 * time.Minute)),
+func findApplicationVersion(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeApplicationVersionsInput) (*awstypes.ApplicationVersionDescription, error) {
+	output, err := findApplicationVersions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findApplicationVersions(ctx context.Context, conn *elasticbeanstalk.Client, input *elasticbeanstalk.DescribeApplicationVersionsInput) ([]awstypes.ApplicationVersionDescription, error) {
+	var output []awstypes.ApplicationVersionDescription
+
+	err := describeApplicationVersionsPages(ctx, conn, input, func(page *elasticbeanstalk.DescribeApplicationVersionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.ApplicationVersions...)
+
+		return !lastPage
 	})
 
 	if err != nil {
 		return nil, err
 	}
 
-	var environmentIDs []string
-	for _, environment := range resp.Environments {
-		environmentIDs = append(environmentIDs, *environment.EnvironmentId)
-	}
-
-	return environmentIDs, nil
+	return output, nil
 }

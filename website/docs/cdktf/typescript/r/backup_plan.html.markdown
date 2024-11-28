@@ -68,6 +68,7 @@ This resource supports the following arguments:
 * `ruleName` - (Required) An display name for a backup rule.
 * `targetVaultName` - (Required) The name of a logical container where backups are stored.
 * `schedule` - (Optional) A CRON expression specifying when AWS Backup initiates a backup job.
+* `scheduleExpressionTimezone` - (Optional) The timezone in which the schedule expression is set. Default value: `"Etc/UTC"`.
 * `enableContinuousBackup` - (Optional) Enable continuous backups for supported resources.
 * `startWindow` - (Optional) The amount of time in minutes before beginning a backup.
 * `completionWindow` - (Optional) The amount of time in minutes AWS Backup attempts a backup before canceling the job and returning an error.
@@ -81,7 +82,7 @@ This resource supports the following arguments:
 
 * `coldStorageAfter` - (Optional) Specifies the number of days after creation that a recovery point is moved to cold storage.
 * `deleteAfter` - (Optional) Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `coldStorageAfter`.
-* `opt_in_to_archive_for_supported_resources` - (Optional) This setting will instruct your backup plan to transition supported resources to archive (cold) storage tier in accordance with your lifecycle settings.
+* `optInToArchiveForSupportedResources` - (Optional) This setting will instruct your backup plan to transition supported resources to archive (cold) storage tier in accordance with your lifecycle settings.
 
 ### Copy Action Arguments
 
@@ -134,4 +135,4 @@ Using `terraform import`, import Backup Plan using the `id`. For example:
 % terraform import aws_backup_plan.test <id>
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ae01c9fb9e7affc0382314ccec1c65f4cc4f130b5e941d660e20c92e9b5312b9 -->
+<!-- cache-key: cdktf-0.20.8 input-826f12ea1a977c3111ab982ec617895faf024ed3b6b3e4bcf7de41f5a62b6aeb -->

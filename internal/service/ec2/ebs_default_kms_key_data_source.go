@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_ebs_default_kms_key")
-func DataSourceEBSDefaultKMSKey() *schema.Resource {
+// @SDKDataSource("aws_ebs_default_kms_key", name="EBS Default KMS Key")
+func dataSourceEBSDefaultKMSKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEBSDefaultKMSKeyRead,
 
@@ -40,7 +40,7 @@ func dataSourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading EBS default KMS key: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("key_arn", res.KmsKeyId)
 
 	return diags

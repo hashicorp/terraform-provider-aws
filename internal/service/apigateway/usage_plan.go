@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_api_gateway_usage_plan", name="Usage Plan")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetUsagePlanOutput")
 func resourceUsagePlan() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUsagePlanCreate,
@@ -237,9 +238,9 @@ func resourceUsagePlanRead(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("/usageplans/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

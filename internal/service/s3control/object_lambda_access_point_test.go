@@ -38,18 +38,18 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					resource.TestMatchResourceAttr(resourceName, names.AttrAlias, regexache.MustCompile("^.{1,20}-.*--ol-s3$")),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", acctest.Ct0),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.supporting_access_point", accessPointResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.transformation_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.transformation_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.transformation_configuration.*", map[string]string{
-						"actions.#":                             acctest.Ct1,
-						"content_transformation.#":              acctest.Ct1,
-						"content_transformation.0.aws_lambda.#": acctest.Ct1,
+						"actions.#":                             "1",
+						"content_transformation.#":              "1",
+						"content_transformation.0.aws_lambda.#": "1",
 						"content_transformation.0.aws_lambda.0.function_payload": "",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.transformation_configuration.*.actions.*", "GetObject"),
@@ -107,19 +107,19 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointConfig_optionals(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", acctest.Ct2),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.allowed_features.*", "GetObject-PartNumber"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.allowed_features.*", "GetObject-Range"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.supporting_access_point", accessPointResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.transformation_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.transformation_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.transformation_configuration.*", map[string]string{
-						"actions.#":                             acctest.Ct1,
-						"content_transformation.#":              acctest.Ct1,
-						"content_transformation.0.aws_lambda.#": acctest.Ct1,
+						"actions.#":                             "1",
+						"content_transformation.#":              "1",
+						"content_transformation.0.aws_lambda.#": "1",
 						"content_transformation.0.aws_lambda.0.function_payload": "{\"res-x\": \"100\",\"res-y\": \"100\"}",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.transformation_configuration.*.actions.*", "GetObject"),
@@ -135,17 +135,17 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", acctest.Ct0),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.supporting_access_point", accessPointResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "configuration.0.transformation_configuration.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.transformation_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration.0.transformation_configuration.*", map[string]string{
-						"actions.#":                             acctest.Ct1,
-						"content_transformation.#":              acctest.Ct1,
-						"content_transformation.0.aws_lambda.#": acctest.Ct1,
+						"actions.#":                             "1",
+						"content_transformation.#":              "1",
+						"content_transformation.0.aws_lambda.#": "1",
 						"content_transformation.0.aws_lambda.0.function_payload": "",
 					}),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.transformation_configuration.*.actions.*", "GetObject"),
@@ -213,20 +213,20 @@ func testAccCheckObjectLambdaAccessPointExists(ctx context.Context, n string, v 
 	}
 }
 
-func testAccObjectLambdaAccessPointBaseConfig(rName string) string {
+func testAccObjectLambdaAccessPointConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
 resource "aws_lambda_function" "test" {
   filename      = "test-fixtures/lambdatest.zip"
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs20.x"
 }
 `, rName))
 }
 
 func testAccObjectLambdaAccessPointConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccObjectLambdaAccessPointConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -257,7 +257,7 @@ resource "aws_s3control_object_lambda_access_point" "test" {
 }
 
 func testAccObjectLambdaAccessPointConfig_optionals(rName string) string {
-	return acctest.ConfigCompose(testAccObjectLambdaAccessPointBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccObjectLambdaAccessPointConfig_base(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }

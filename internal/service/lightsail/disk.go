@@ -24,7 +24,7 @@ import (
 )
 
 // @SDKResource("aws_lightsail_disk", name="Disk")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Disk")
 func ResourceDisk() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDiskCreate,

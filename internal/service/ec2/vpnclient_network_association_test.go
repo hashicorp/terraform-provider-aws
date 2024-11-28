@@ -43,8 +43,8 @@ func testAccClientVPNNetworkAssociation_basic(t *testing.T, semaphore tfsync.Sem
 				Config: testAccClientVPNNetworkAssociationConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(ctx, resourceName, &assoc),
-					resource.TestMatchResourceAttr(resourceName, "association_id", regexache.MustCompile("^cvpn-assoc-[0-9a-z]+$")),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, "association_id"),
+					resource.TestMatchResourceAttr(resourceName, names.AttrAssociationID, regexache.MustCompile("^cvpn-assoc-[0-9a-z]+$")),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrAssociationID),
 					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrSubnetID, subnetResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrVPCID, vpcResourceName, names.AttrID),
@@ -82,9 +82,9 @@ func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T, semaphore 
 				Config: testAccClientVPNNetworkAssociationConfig_multipleSubnets(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(ctx, resourceNames[0], &assoc),
-					resource.TestMatchResourceAttr(resourceNames[0], "association_id", regexache.MustCompile("^cvpn-assoc-[0-9a-z]+$")),
-					resource.TestMatchResourceAttr(resourceNames[1], "association_id", regexache.MustCompile("^cvpn-assoc-[0-9a-z]+$")),
-					resource.TestCheckResourceAttrPair(resourceNames[0], names.AttrID, resourceNames[0], "association_id"),
+					resource.TestMatchResourceAttr(resourceNames[0], names.AttrAssociationID, regexache.MustCompile("^cvpn-assoc-[0-9a-z]+$")),
+					resource.TestMatchResourceAttr(resourceNames[1], names.AttrAssociationID, regexache.MustCompile("^cvpn-assoc-[0-9a-z]+$")),
+					resource.TestCheckResourceAttrPair(resourceNames[0], names.AttrID, resourceNames[0], names.AttrAssociationID),
 					resource.TestCheckResourceAttrPair(resourceNames[0], "client_vpn_endpoint_id", endpointResourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceNames[0], names.AttrSubnetID, subnetResourceNames[0], names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceNames[1], names.AttrSubnetID, subnetResourceNames[1], names.AttrID),

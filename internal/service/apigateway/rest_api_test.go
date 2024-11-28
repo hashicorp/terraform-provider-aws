@@ -33,25 +33,28 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_name(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "0"),
 					resource.TestCheckNoResourceAttr(resourceName, "body"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`[0-9a-z]+`)),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "EDGE"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "0"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "execution_arn", "execute-api", regexache.MustCompile(`[0-9a-z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameters.%", acctest.Ct0),
-					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexache.MustCompile(`[0-9a-z]+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
+					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexache.MustCompile(`^[0-9a-z]+$`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -59,58 +62,6 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
-			},
-		},
-	})
-}
-
-func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf apigateway.GetRestApiOutput
-	resourceName := "aws_api_gateway_rest_api.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRestAPIConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/+.`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"put_rest_api_mode"},
-			},
-
-			{
-				Config: testAccRestAPIConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/+.`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-
-			{
-				Config: testAccRestAPIConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", regexache.MustCompile(`/restapis/+.`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -126,12 +77,12 @@ func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_name(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &restApi),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -150,15 +101,16 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_endpointConfiguration(rName, "REGIONAL"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "0"),
 				),
 			},
 			{
@@ -170,11 +122,12 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 			// For backwards compatibility, test removing endpoint_configuration, which should do nothing
 			{
 				Config: testAccRestAPIConfig_name(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "REGIONAL"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "0"),
 				),
 			},
 			// Test updating endpoint type
@@ -207,11 +160,12 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 					}
 				},
 				Config: testAccRestAPIConfig_endpointConfiguration(rName, "EDGE"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "EDGE"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "0"),
 				),
 			},
 		},
@@ -228,7 +182,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				PreConfig: func() {
@@ -257,10 +211,10 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 					}
 				},
 				Config: testAccRestAPIConfig_endpointConfiguration(rName, "PRIVATE"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
 				),
 			},
@@ -283,11 +237,11 @@ func TestAccAPIGatewayRestAPI_apiKeySource(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_keySource(rName, "AUTHORIZER"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "AUTHORIZER"),
 				),
 			},
@@ -299,13 +253,13 @@ func TestAccAPIGatewayRestAPI_apiKeySource(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_keySource(rName, "HEADER"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
 				),
 			},
 			{
 				Config: testAccRestAPIConfig_name(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
 				),
 			},
@@ -323,12 +277,12 @@ func TestAccAPIGatewayRestAPI_APIKeySource_overrideBody(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_keySourceOverrideBody(rName, "AUTHORIZER", "HEADER"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "AUTHORIZER"),
 				),
 			},
@@ -342,7 +296,7 @@ func TestAccAPIGatewayRestAPI_APIKeySource_overrideBody(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_keySourceOverrideBody(rName, "HEADER", "HEADER"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
 				),
 			},
@@ -350,7 +304,7 @@ func TestAccAPIGatewayRestAPI_APIKeySource_overrideBody(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_keySourceOverrideBody(rName, "HEADER", "AUTHORIZER"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "HEADER"),
 				),
 			},
@@ -368,12 +322,12 @@ func TestAccAPIGatewayRestAPI_APIKeySource_setByBody(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_keySourceSetByBody(rName, "AUTHORIZER"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "api_key_source", "AUTHORIZER"),
 				),
 			},
@@ -397,13 +351,13 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1(rName, "application/octet-stream"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet-stream"),
 				),
 			},
@@ -415,9 +369,9 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1(rName, "application/octet"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet"),
 				),
 			},
@@ -435,13 +389,13 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1OverrideBody(rName, "application/octet-stream", "image/jpeg"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet-stream"),
 				),
 			},
@@ -455,8 +409,8 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1OverrideBody(rName, "application/octet", "image/jpeg"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet"),
 				),
 			},
@@ -464,8 +418,8 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1OverrideBody(rName, "application/octet", "image/png"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet"),
 				),
 			},
@@ -483,13 +437,13 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_setByBody(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_binaryMediaTypes1SetByBody(rName, "application/octet-stream"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "binary_media_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "binary_media_types.0", "application/octet-stream"),
 				),
 			},
@@ -513,13 +467,13 @@ func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			// The body is expected to only set a title (name) and one route
 			{
 				Config: testAccRestAPIConfig_body(rName, "/test"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test"}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -535,8 +489,8 @@ func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_body(rName, "/update"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/update"}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
@@ -557,12 +511,12 @@ func TestAccAPIGatewayRestAPI_description(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_description(rName, "description1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
@@ -575,7 +529,7 @@ func TestAccAPIGatewayRestAPI_description(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_description(rName, "description2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
@@ -593,12 +547,12 @@ func TestAccAPIGatewayRestAPI_Description_overrideBody(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_descriptionOverrideBody(rName, "tfdescription1", "oasdescription1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tfdescription1"),
 				),
 			},
@@ -612,7 +566,7 @@ func TestAccAPIGatewayRestAPI_Description_overrideBody(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_descriptionOverrideBody(rName, "tfdescription2", "oasdescription1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tfdescription2"),
 				),
 			},
@@ -620,7 +574,7 @@ func TestAccAPIGatewayRestAPI_Description_overrideBody(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_descriptionOverrideBody(rName, "tfdescription2", "oasdescription2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tfdescription2"),
 				),
 			},
@@ -638,12 +592,12 @@ func TestAccAPIGatewayRestAPI_Description_setByBody(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_descriptionSetByBody(rName, "oasdescription1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "oasdescription1"),
 				),
 			},
@@ -666,11 +620,11 @@ func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpoint(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 				),
 			},
@@ -682,13 +636,13 @@ func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpoint(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpoint(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 				),
 			},
@@ -706,12 +660,12 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpointOverrideBody(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 				),
 			},
@@ -725,7 +679,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpointOverrideBody(rName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtFalse),
 				),
 			},
@@ -733,7 +687,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpointOverrideBody(rName, true, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 				),
 			},
@@ -751,12 +705,12 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_setByBody(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_disableExecuteEndpointSetByBody(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "disable_execute_api_endpoint", acctest.CtTrue),
 				),
 			},
@@ -782,16 +736,16 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_vpcEndpointIDs1(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 				),
 			},
@@ -803,24 +757,24 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIds2(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName2, names.AttrID),
 				),
 			},
 			{
 				Config: testAccRestAPIConfig_vpcEndpointIDs1(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &restApi),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", acctest.Ct1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &restApi),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "PRIVATE"),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 				),
 			},
@@ -841,14 +795,14 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsOverrideBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -863,9 +817,9 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsOverrideBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -874,9 +828,9 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsOverrideBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -898,14 +852,14 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -921,9 +875,9 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -932,9 +886,9 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName3, vpcEndpointResourceName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName3, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -955,14 +909,14 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideToMergeBody(t *test
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsOverrideBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -978,9 +932,9 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideToMergeBody(t *test
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsMergeBody(rName, vpcEndpointResourceName1, vpcEndpointResourceName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName1, names.AttrID),
 					testAccCheckRestAPIEndpointsCount(ctx, &conf, 1),
 				),
@@ -1006,14 +960,14 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_endpointConfigurationVPCEndpointIdsSetByBody(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.*", vpcEndpointResourceName, names.AttrID),
 				),
 			},
@@ -1037,13 +991,13 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSize(rName, acctest.Ct1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", acctest.Ct1),
+				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "1"),
 				),
 			},
 			{
@@ -1054,15 +1008,15 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "-1"), // -1 removes existing values
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", ""),
 				),
 			},
 			{
 				Config: testAccRestAPIConfig_minimumCompressionSize(rName, "5242880"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "5242880"),
 				),
 			},
@@ -1080,13 +1034,13 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, acctest.Ct1, 5242880),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "1", 5242880),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", acctest.Ct1),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "1"),
 				),
 			},
 			{
@@ -1097,18 +1051,18 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 			},
 			// Verify updated minimum compression size still overrides
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, acctest.Ct2, 5242880),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "2", 5242880),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", acctest.Ct2),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "2"),
 				),
 			},
 			// Verify updated body minimum compression size is still overridden
 			{
-				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, acctest.Ct2, 1048576),
+				Config: testAccRestAPIConfig_minimumCompressionSizeOverrideBody(rName, "2", 1048576),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", acctest.Ct2),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "2"),
 				),
 			},
 		},
@@ -1125,12 +1079,12 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_setByBody(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_minimumCompressionSizeSetByBody(rName, 1048576),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "minimum_compression_size", "1048576"),
 				),
 			},
@@ -1155,12 +1109,12 @@ func TestAccAPIGatewayRestAPI_Name_overrideBody(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_nameOverrideBody(rName, "title1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
 			},
@@ -1174,7 +1128,7 @@ func TestAccAPIGatewayRestAPI_Name_overrideBody(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_nameOverrideBody(rName2, "title1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
@@ -1182,7 +1136,7 @@ func TestAccAPIGatewayRestAPI_Name_overrideBody(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_nameOverrideBody(rName2, "title2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 				),
 			},
@@ -1200,7 +1154,7 @@ func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			// Verify invalid body fails creation, when fail_on_warnings is true
 			{
@@ -1211,7 +1165,7 @@ func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_failOnWarnings(rName, "original", ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/users"}),
 					resource.TestMatchResourceAttr(resourceName, names.AttrDescription, regexache.MustCompile(`original`)),
 				),
@@ -1246,12 +1200,12 @@ func TestAccAPIGatewayRestAPI_parameters(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_parameters1(rName, "basepath", "prepend"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/foo", "/foo/bar", "/foo/bar/baz", "/foo/bar/baz/test"}),
 				),
 			},
@@ -1263,8 +1217,8 @@ func TestAccAPIGatewayRestAPI_parameters(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_parameters1(rName, "basepath", "ignore"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test"}),
 				),
 			},
@@ -1283,11 +1237,11 @@ func TestAccAPIGatewayRestAPI_Policy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_policy(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText),
 				),
 			},
@@ -1299,7 +1253,7 @@ func TestAccAPIGatewayRestAPI_Policy_basic(t *testing.T) {
 			},
 			{
 				Config: testAccRestAPIConfig_updatePolicy(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedUpdatePolicyText),
 				),
 			},
@@ -1317,11 +1271,11 @@ func TestAccAPIGatewayRestAPI_Policy_order(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_policyOrder(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, names.AttrPolicy, expectedPolicyText),
 				),
 			},
@@ -1343,12 +1297,12 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_policyOverrideBody(rName, "/test", "Allow"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test"}),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Allow"`)),
 				),
@@ -1363,7 +1317,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_policyOverrideBody(rName, "/test2", "Allow"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test2"}),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Allow"`)),
 				),
@@ -1372,7 +1326,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 			{
 				Config: testAccRestAPIConfig_policyOverrideBody(rName, "/test2", "Deny"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					testAccCheckRestAPIRoutes(ctx, &conf, []string{"/", "/test2"}),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Deny"`)),
 				),
@@ -1391,12 +1345,12 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRestAPIDestroy(ctx),
+		CheckDestroy:             testAccCheckRESTAPIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRestAPIConfig_policySetByBody(rName, "Allow"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRestAPIExists(ctx, resourceName, &conf),
+					testAccCheckRESTAPIExists(ctx, resourceName, &conf),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`"Allow"`)),
 				),
 			},
@@ -1465,7 +1419,7 @@ func testAccCheckRestAPIEndpointsCount(ctx context.Context, conf *apigateway.Get
 	}
 }
 
-func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.GetRestApiOutput) resource.TestCheckFunc {
+func testAccCheckRESTAPIExists(ctx context.Context, n string, v *apigateway.GetRestApiOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1486,7 +1440,7 @@ func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.GetR
 	}
 }
 
-func testAccCheckRestAPIDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckRESTAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
@@ -1984,31 +1938,6 @@ resource "aws_api_gateway_rest_api" "test" {
   })
 }
 `, rName))
-}
-
-func testAccRestAPIConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
-
-  tags = {
-    %q = %q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccRestAPIConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_api_gateway_rest_api" "test" {
-  name = "%s"
-
-  tags = {
-    %q = %q
-    %q = %q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccRestAPIConfig_policy(rName string) string {

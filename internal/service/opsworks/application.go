@@ -9,21 +9,25 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_opsworks_application")
-func ResourceApplication() *schema.Resource {
+// @SDKResource("aws_opsworks_application", name="Application")
+func resourceApplication() *schema.Resource {
 	return &schema.Resource{
 
 		CreateWithoutTimeout: resourceApplicationCreate,
@@ -46,9 +50,9 @@ func ResourceApplication() *schema.Resource {
 				ForceNew: true,
 			},
 			names.AttrType: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(opsworks.AppType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AppType](),
 			},
 			"stack_id": {
 				Type:     schema.TypeString,
@@ -81,9 +85,11 @@ func ResourceApplication() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrType: {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(append(opsworks.SourceType_Values(), "other"), false),
+							Type:     schema.TypeString,
+							Required: true,
+							// Because the SDK only accepts typed arguments from SourceType, we cannot add `other` even though the API will accept it.
+							// This service has been deprecated and will only for completeness sake be migrated, will remove the validation as to not cause a client validation exception but rather let AWS API handle it.
+							//ValidateFunc: validation.StringInSlice(append(opsworks.SourceType_Values(), "other"), false),
 						},
 
 						names.AttrURL: {
@@ -230,31 +236,32 @@ func resourceApplicationValidate(d *schema.ResourceData) error {
 		return fmt.Errorf("Only one ssl_configuration is permitted.")
 	}
 
-	if d.Get(names.AttrType) == opsworks.AppTypeNodejs || d.Get(names.AttrType) == opsworks.AppTypeJava {
+	attrType := awstypes.AppType(d.Get(names.AttrType).(string))
+	if attrType == awstypes.AppTypeNodejs || attrType == awstypes.AppTypeJava {
 		// allowed attributes: none
 		if d.Get("document_root").(string) != "" || d.Get("rails_env").(string) != "" || d.Get("auto_bundle_on_deploy").(string) != "" || d.Get("aws_flow_ruby_settings").(string) != "" {
-			return fmt.Errorf("No additional attributes are allowed for app type '%s'.", d.Get(names.AttrType).(string))
+			return fmt.Errorf("No additional attributes are allowed for app type '%s'.", attrType)
 		}
-	} else if d.Get(names.AttrType) == opsworks.AppTypeRails {
+	} else if attrType == awstypes.AppTypeRails {
 		// allowed attributes: document_root, rails_env, auto_bundle_on_deploy
 		if d.Get("aws_flow_ruby_settings").(string) != "" {
-			return fmt.Errorf("Only 'document_root, rails_env, auto_bundle_on_deploy' are allowed for app type '%s'.", opsworks.AppTypeRails)
+			return fmt.Errorf("Only 'document_root, rails_env, auto_bundle_on_deploy' are allowed for app type '%s'.", awstypes.AppTypeRails)
 		}
 		// rails_env is required
 		if _, ok := d.GetOk("rails_env"); !ok {
 			return fmt.Errorf("Set rails_env must be set if type is set to rails.")
 		}
-	} else if d.Get(names.AttrType) == opsworks.AppTypePhp || d.Get(names.AttrType) == opsworks.AppTypeStatic || d.Get(names.AttrType) == opsworks.AppTypeOther {
-		log.Printf("[DEBUG] the app type is : %s", d.Get(names.AttrType).(string))
+	} else if attrType == awstypes.AppTypePhp || attrType == awstypes.AppTypeStatic || attrType == awstypes.AppTypeOther {
+		log.Printf("[DEBUG] the app type is : %s", attrType)
 		log.Printf("[DEBUG] the attributes are: document_root '%s', rails_env '%s', auto_bundle_on_deploy '%s', aws_flow_ruby_settings '%s'", d.Get("document_root").(string), d.Get("rails_env").(string), d.Get("auto_bundle_on_deploy").(string), d.Get("aws_flow_ruby_settings").(string))
 		// allowed attributes: document_root
 		if d.Get("rails_env").(string) != "" || d.Get("auto_bundle_on_deploy").(string) != "" || d.Get("aws_flow_ruby_settings").(string) != "" {
-			return fmt.Errorf("Only 'document_root' is allowed for app type '%s'.", d.Get(names.AttrType).(string))
+			return fmt.Errorf("Only 'document_root' is allowed for app type '%s'.", attrType)
 		}
-	} else if d.Get(names.AttrType) == opsworks.AppTypeAwsFlowRuby {
+	} else if attrType == awstypes.AppTypeAwsFlowRuby {
 		// allowed attributes: aws_flow_ruby_settings
 		if d.Get("document_root").(string) != "" || d.Get("rails_env").(string) != "" || d.Get("auto_bundle_on_deploy").(string) != "" {
-			return fmt.Errorf("Only 'aws_flow_ruby_settings' is allowed for app type '%s'.", d.Get(names.AttrType).(string))
+			return fmt.Errorf("Only 'aws_flow_ruby_settings' is allowed for app type '%s'.", attrType)
 		}
 	}
 
@@ -263,19 +270,13 @@ func resourceApplicationValidate(d *schema.ResourceData) error {
 
 func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
-
-	req := &opsworks.DescribeAppsInput{
-		AppIds: []*string{
-			aws.String(d.Id()),
-		},
-	}
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
 	log.Printf("[DEBUG] Reading OpsWorks Application: %s", d.Id())
 
-	resp, err := conn.DescribeAppsWithContext(ctx, req)
+	output, err := findAppByID(ctx, conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[DEBUG] OpsWorks Application (%s) not found", d.Id())
 		d.SetId("")
 		return diags
@@ -285,33 +286,30 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Application (%s): %s", d.Id(), err)
 	}
 
-	app := resp.Apps[0]
-	log.Printf("[DEBUG] Opsworks Application: %#v", app)
-
-	d.Set(names.AttrName, app.Name)
-	d.Set("stack_id", app.StackId)
-	d.Set(names.AttrType, app.Type)
-	d.Set(names.AttrDescription, app.Description)
-	d.Set("domains", flex.FlattenStringList(app.Domains))
-	d.Set("enable_ssl", app.EnableSsl)
-	err = resourceSetApplicationSSL(d, app.SslConfiguration)
+	d.Set(names.AttrName, output.Name)
+	d.Set("stack_id", output.StackId)
+	d.Set(names.AttrType, output.Type)
+	d.Set(names.AttrDescription, output.Description)
+	d.Set("domains", output.Domains)
+	d.Set("enable_ssl", output.EnableSsl)
+	err = resourceSetApplicationSSL(d, output.SslConfiguration)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Application (%s): setting ssl_configuration: %s", d.Id(), err)
 	}
-	err = resourceSetApplicationSource(d, app.AppSource)
+	err = resourceSetApplicationSource(d, output.AppSource)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpsWorks Application (%s): setting app_source: %s", d.Id(), err)
 	}
-	resourceSetApplicationsDataSource(d, app.DataSources)
-	resourceSetApplicationEnvironmentVariable(d, app.Environment)
-	resourceSetApplicationAttributes(d, app.Attributes)
+	resourceSetApplicationsDataSource(d, output.DataSources)
+	resourceSetApplicationEnvironmentVariable(d, output.Environment)
+	resourceSetApplicationAttributes(d, output.Attributes)
 
 	return diags
 }
 
 func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
 	err := resourceApplicationValidate(d)
 	if err != nil {
@@ -322,9 +320,9 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		Name:             aws.String(d.Get(names.AttrName).(string)),
 		Shortname:        aws.String(d.Get("short_name").(string)),
 		StackId:          aws.String(d.Get("stack_id").(string)),
-		Type:             aws.String(d.Get(names.AttrType).(string)),
+		Type:             awstypes.AppType(d.Get(names.AttrType).(string)),
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
-		Domains:          flex.ExpandStringList(d.Get("domains").([]interface{})),
+		Domains:          flex.ExpandStringValueList(d.Get("domains").([]interface{})),
 		EnableSsl:        aws.Bool(d.Get("enable_ssl").(bool)),
 		SslConfiguration: resourceApplicationSSL(d),
 		AppSource:        resourceApplicationSource(d),
@@ -333,19 +331,19 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		Attributes:       resourceApplicationAttributes(d),
 	}
 
-	resp, err := conn.CreateAppWithContext(ctx, req)
+	resp, err := conn.CreateApp(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating OpsWorks Application: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.AppId))
+	d.SetId(aws.ToString(resp.AppId))
 
 	return append(diags, resourceApplicationRead(ctx, d, meta)...)
 }
 
 func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
 	err := resourceApplicationValidate(d)
 	if err != nil {
@@ -355,9 +353,9 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	req := &opsworks.UpdateAppInput{
 		AppId:            aws.String(d.Id()),
 		Name:             aws.String(d.Get(names.AttrName).(string)),
-		Type:             aws.String(d.Get(names.AttrType).(string)),
+		Type:             awstypes.AppType(d.Get(names.AttrType).(string)),
 		Description:      aws.String(d.Get(names.AttrDescription).(string)),
-		Domains:          flex.ExpandStringList(d.Get("domains").([]interface{})),
+		Domains:          flex.ExpandStringValueList(d.Get("domains").([]interface{})),
 		EnableSsl:        aws.Bool(d.Get("enable_ssl").(bool)),
 		SslConfiguration: resourceApplicationSSL(d),
 		AppSource:        resourceApplicationSource(d),
@@ -368,7 +366,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Updating OpsWorks Application: %s", d.Id())
 
-	_, err = conn.UpdateAppWithContext(ctx, req)
+	_, err = conn.UpdateApp(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating OpsWorks Application (%s): %s", d.Id(), err)
 	}
@@ -378,14 +376,14 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := meta.(*conns.AWSClient).OpsWorksClient(ctx)
 
 	log.Printf("[DEBUG] Deleting OpsWorks Application: %s", d.Id())
-	_, err := conn.DeleteAppWithContext(ctx, &opsworks.DeleteAppInput{
+	_, err := conn.DeleteApp(ctx, &opsworks.DeleteAppInput{
 		AppId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -396,16 +394,40 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceFindEnvironmentVariable(key string, vs []*opsworks.EnvironmentVariable) *opsworks.EnvironmentVariable {
+func findAppByID(ctx context.Context, conn *opsworks.Client, id string) (*awstypes.App, error) {
+	input := &opsworks.DescribeAppsInput{
+		AppIds: []string{id},
+	}
+
+	output, err := conn.DescribeApps(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Apps == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return tfresource.AssertSingleValueResult(output.Apps)
+}
+
+func resourceFindEnvironmentVariable(key string, vs []awstypes.EnvironmentVariable) *awstypes.EnvironmentVariable {
 	for _, v := range vs {
-		if aws.StringValue(v.Key) == key {
-			return v
+		if aws.ToString(v.Key) == key {
+			return &v
 		}
 	}
 	return nil
 }
 
-func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []*opsworks.EnvironmentVariable) {
+func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []awstypes.EnvironmentVariable) {
 	if len(vs) == 0 {
 		d.Set(names.AttrEnvironment, nil)
 		return
@@ -419,10 +441,10 @@ func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []*ops
 	for i := 0; i < len(values); i++ {
 		value := values[i].(map[string]interface{})
 		if v := resourceFindEnvironmentVariable(value[names.AttrKey].(string), vs); v != nil {
-			if !aws.BoolValue(v.Secure) {
-				value["secure"] = aws.BoolValue(v.Secure)
-				value[names.AttrKey] = aws.StringValue(v.Key)
-				value[names.AttrValue] = aws.StringValue(v.Value)
+			if !aws.ToBool(v.Secure) {
+				value["secure"] = aws.ToBool(v.Secure)
+				value[names.AttrKey] = aws.ToString(v.Key)
+				value[names.AttrValue] = aws.ToString(v.Value)
 				values[i] = value
 			}
 		} else {
@@ -434,14 +456,14 @@ func resourceSetApplicationEnvironmentVariable(d *schema.ResourceData, vs []*ops
 	d.Set(names.AttrEnvironment, values)
 }
 
-func resourceApplicationEnvironmentVariable(d *schema.ResourceData) []*opsworks.EnvironmentVariable {
+func resourceApplicationEnvironmentVariable(d *schema.ResourceData) []awstypes.EnvironmentVariable {
 	environmentVariables := d.Get(names.AttrEnvironment).(*schema.Set).List()
-	result := make([]*opsworks.EnvironmentVariable, len(environmentVariables))
+	result := make([]awstypes.EnvironmentVariable, len(environmentVariables))
 
 	for i := 0; i < len(environmentVariables); i++ {
 		env := environmentVariables[i].(map[string]interface{})
 
-		result[i] = &opsworks.EnvironmentVariable{
+		result[i] = awstypes.EnvironmentVariable{
 			Key:    aws.String(env[names.AttrKey].(string)),
 			Value:  aws.String(env[names.AttrValue].(string)),
 			Secure: aws.Bool(env["secure"].(bool)),
@@ -450,14 +472,14 @@ func resourceApplicationEnvironmentVariable(d *schema.ResourceData) []*opsworks.
 	return result
 }
 
-func resourceApplicationSource(d *schema.ResourceData) *opsworks.Source {
+func resourceApplicationSource(d *schema.ResourceData) *awstypes.Source {
 	count := d.Get("app_source.#").(int)
 	if count == 0 {
 		return nil
 	}
 
-	return &opsworks.Source{
-		Type:     aws.String(d.Get("app_source.0.type").(string)),
+	return &awstypes.Source{
+		Type:     awstypes.SourceType(d.Get("app_source.0.type").(string)),
 		Url:      aws.String(d.Get("app_source.0.url").(string)),
 		Username: aws.String(d.Get("app_source.0.username").(string)),
 		Password: aws.String(d.Get("app_source.0.password").(string)),
@@ -466,21 +488,21 @@ func resourceApplicationSource(d *schema.ResourceData) *opsworks.Source {
 	}
 }
 
-func resourceSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) error {
+func resourceSetApplicationSource(d *schema.ResourceData, v *awstypes.Source) error {
 	nv := make([]interface{}, 0, 1)
 	if v != nil {
 		m := make(map[string]interface{})
-		if v.Type != nil {
-			m[names.AttrType] = aws.StringValue(v.Type)
-		}
+
+		m[names.AttrType] = v.Type
+
 		if v.Url != nil {
-			m[names.AttrURL] = aws.StringValue(v.Url)
+			m[names.AttrURL] = aws.ToString(v.Url)
 		}
 		if v.Username != nil {
-			m[names.AttrUsername] = aws.StringValue(v.Username)
+			m[names.AttrUsername] = aws.ToString(v.Username)
 		}
 		if v.Revision != nil {
-			m["revision"] = aws.StringValue(v.Revision)
+			m["revision"] = aws.ToString(v.Revision)
 		}
 
 		// v.Password and v.SshKey will, on read, contain the placeholder string
@@ -495,15 +517,15 @@ func resourceSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) er
 	return d.Set("app_source", nv)
 }
 
-func resourceApplicationsDataSource(d *schema.ResourceData) []*opsworks.DataSource {
+func resourceApplicationsDataSource(d *schema.ResourceData) []awstypes.DataSource {
 	arn := d.Get("data_source_arn").(string)
 	databaseName := d.Get("data_source_database_name").(string)
 	databaseType := d.Get("data_source_type").(string)
 
-	result := make([]*opsworks.DataSource, 1)
+	result := make([]awstypes.DataSource, 1)
 
 	if len(arn) > 0 || len(databaseName) > 0 || len(databaseType) > 0 {
-		result[0] = &opsworks.DataSource{
+		result[0] = awstypes.DataSource{
 			Arn:          aws.String(arn),
 			DatabaseName: aws.String(databaseName),
 			Type:         aws.String(databaseType),
@@ -512,7 +534,7 @@ func resourceApplicationsDataSource(d *schema.ResourceData) []*opsworks.DataSour
 	return result
 }
 
-func resourceSetApplicationsDataSource(d *schema.ResourceData, v []*opsworks.DataSource) {
+func resourceSetApplicationsDataSource(d *schema.ResourceData, v []awstypes.DataSource) {
 	d.Set("data_source_arn", nil)
 	d.Set("data_source_database_name", nil)
 	d.Set("data_source_type", nil)
@@ -526,34 +548,34 @@ func resourceSetApplicationsDataSource(d *schema.ResourceData, v []*opsworks.Dat
 	d.Set("data_source_type", v[0].Type)
 }
 
-func resourceApplicationSSL(d *schema.ResourceData) *opsworks.SslConfiguration {
+func resourceApplicationSSL(d *schema.ResourceData) *awstypes.SslConfiguration {
 	count := d.Get("ssl_configuration.#").(int)
 	if count == 0 {
 		return nil
 	}
 
-	return &opsworks.SslConfiguration{
+	return &awstypes.SslConfiguration{
 		PrivateKey:  aws.String(d.Get("ssl_configuration.0.private_key").(string)),
 		Certificate: aws.String(d.Get("ssl_configuration.0.certificate").(string)),
 		Chain:       aws.String(d.Get("ssl_configuration.0.chain").(string)),
 	}
 }
 
-func resourceSetApplicationSSL(d *schema.ResourceData, v *opsworks.SslConfiguration) error {
+func resourceSetApplicationSSL(d *schema.ResourceData, v *awstypes.SslConfiguration) error {
 	nv := make([]interface{}, 0, 1)
 	set := false
 	if v != nil {
 		m := make(map[string]interface{})
 		if v.PrivateKey != nil {
-			m[names.AttrPrivateKey] = aws.StringValue(v.PrivateKey)
+			m[names.AttrPrivateKey] = aws.ToString(v.PrivateKey)
 			set = true
 		}
 		if v.Certificate != nil {
-			m[names.AttrCertificate] = aws.StringValue(v.Certificate)
+			m[names.AttrCertificate] = aws.ToString(v.Certificate)
 			set = true
 		}
 		if v.Chain != nil {
-			m["chain"] = aws.StringValue(v.Chain)
+			m["chain"] = aws.ToString(v.Chain)
 			set = true
 		}
 		if set {
@@ -564,17 +586,17 @@ func resourceSetApplicationSSL(d *schema.ResourceData, v *opsworks.SslConfigurat
 	return d.Set("ssl_configuration", nv)
 }
 
-func resourceApplicationAttributes(d *schema.ResourceData) map[string]*string {
-	attributes := make(map[string]*string)
+func resourceApplicationAttributes(d *schema.ResourceData) map[string]string {
+	attributes := make(map[string]string)
 
 	if val := d.Get("document_root").(string); len(val) > 0 {
-		attributes[opsworks.AppAttributesKeysDocumentRoot] = aws.String(val)
+		attributes[string(awstypes.AppAttributesKeysDocumentRoot)] = val
 	}
 	if val := d.Get("aws_flow_ruby_settings").(string); len(val) > 0 {
-		attributes[opsworks.AppAttributesKeysAwsFlowRubySettings] = aws.String(val)
+		attributes[string(awstypes.AppAttributesKeysAwsFlowRubySettings)] = val
 	}
 	if val := d.Get("rails_env").(string); len(val) > 0 {
-		attributes[opsworks.AppAttributesKeysRailsEnv] = aws.String(val)
+		attributes[string(awstypes.AppAttributesKeysRailsEnv)] = val
 	}
 	if val := d.Get("auto_bundle_on_deploy").(string); len(val) > 0 {
 		if val == "1" {
@@ -582,38 +604,39 @@ func resourceApplicationAttributes(d *schema.ResourceData) map[string]*string {
 		} else if val == "0" {
 			val = "false"
 		}
-		attributes[opsworks.AppAttributesKeysAutoBundleOnDeploy] = aws.String(val)
+		attributes[string(awstypes.AppAttributesKeysAutoBundleOnDeploy)] = val
 	}
 
 	return attributes
 }
 
-func resourceSetApplicationAttributes(d *schema.ResourceData, v map[string]*string) {
+func resourceSetApplicationAttributes(d *schema.ResourceData, v map[string]string) {
 	d.Set("document_root", nil)
 	d.Set("rails_env", nil)
 	d.Set("aws_flow_ruby_settings", nil)
 	d.Set("auto_bundle_on_deploy", nil)
 
-	if d.Get(names.AttrType) == opsworks.AppTypeNodejs || d.Get(names.AttrType) == opsworks.AppTypeJava {
+	attrType := d.Get(names.AttrType)
+	if attrType == awstypes.AppTypeNodejs || attrType == awstypes.AppTypeJava {
 		return
-	} else if d.Get(names.AttrType) == opsworks.AppTypeRails {
-		if val, ok := v[opsworks.AppAttributesKeysDocumentRoot]; ok {
+	} else if attrType == awstypes.AppTypeRails {
+		if val, ok := v[string(awstypes.AppAttributesKeysDocumentRoot)]; ok {
 			d.Set("document_root", val)
 		}
-		if val, ok := v[opsworks.AppAttributesKeysRailsEnv]; ok {
+		if val, ok := v[string(awstypes.AppAttributesKeysRailsEnv)]; ok {
 			d.Set("rails_env", val)
 		}
-		if val, ok := v[opsworks.AppAttributesKeysAutoBundleOnDeploy]; ok {
+		if val, ok := v[string(awstypes.AppAttributesKeysAutoBundleOnDeploy)]; ok {
 			d.Set("auto_bundle_on_deploy", val)
 		}
 		return
-	} else if d.Get(names.AttrType) == opsworks.AppTypePhp || d.Get(names.AttrType) == opsworks.AppTypeStatic || d.Get(names.AttrType) == opsworks.AppTypeOther {
-		if val, ok := v[opsworks.AppAttributesKeysDocumentRoot]; ok {
+	} else if attrType == awstypes.AppTypePhp || attrType == awstypes.AppTypeStatic || attrType == awstypes.AppTypeOther {
+		if val, ok := v[string(awstypes.AppAttributesKeysDocumentRoot)]; ok {
 			d.Set("document_root", val)
 		}
 		return
-	} else if d.Get(names.AttrType) == opsworks.AppTypeAwsFlowRuby {
-		if val, ok := v[opsworks.AppAttributesKeysAwsFlowRubySettings]; ok {
+	} else if attrType == awstypes.AppTypeAwsFlowRuby {
+		if val, ok := v[string(awstypes.AppAttributesKeysAwsFlowRubySettings)]; ok {
 			d.Set("aws_flow_ruby_settings", val)
 		}
 		return

@@ -64,7 +64,7 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 		output = append(output, page.LogGroups...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	var arns, logGroupNames []string
 

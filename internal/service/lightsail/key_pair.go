@@ -13,11 +13,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -29,7 +32,7 @@ const (
 )
 
 // @SDKResource("aws_lightsail_key_pair", name=KeyPair)
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="KeyPair")
 func ResourceKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyPairCreate,
@@ -209,6 +212,10 @@ func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta int
 		KeyPairName: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Lightsail Key Pair (%s): %s", d.Id(), err)
 	}
@@ -250,4 +257,26 @@ func encryptValue(encryptionKey, value, description string) (string, string, err
 	}
 
 	return fingerprints[0], itypes.Base64Encode(encryptedValue[0]), nil
+}
+
+func FindKeyPairById(ctx context.Context, conn *lightsail.Client, id string) (*types.KeyPair, error) {
+	in := &lightsail.GetKeyPairInput{KeyPairName: aws.String(id)}
+	out, err := conn.GetKeyPair(ctx, in)
+
+	if IsANotFoundError(err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.KeyPair == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.KeyPair, nil
 }

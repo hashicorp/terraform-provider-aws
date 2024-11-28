@@ -339,7 +339,7 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
 	}
 
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 	newTags := KeyValueTags(ctx, getTagsIn(ctx))
 	oldTags := tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -361,7 +361,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route 53 Domains Domain %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {

@@ -27,7 +27,7 @@ import (
 )
 
 // @SDKResource("aws_lightsail_certificate", name="Certificate")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Certificate")
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCertificateCreate,

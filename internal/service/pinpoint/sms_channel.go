@@ -7,18 +7,21 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/pinpoint"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/pinpoint"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/pinpoint/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_pinpoint_sms_channel")
-func ResourceSMSChannel() *schema.Resource {
+// @SDKResource("aws_pinpoint_sms_channel", name="SMS Channel")
+func resourceSMSChannel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSMSChannelUpsert,
 		ReadWithoutTimeout:   resourceSMSChannelRead,
@@ -61,11 +64,11 @@ func ResourceSMSChannel() *schema.Resource {
 
 func resourceSMSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
 	applicationId := d.Get(names.AttrApplicationID).(string)
 
-	params := &pinpoint.SMSChannelRequest{
+	params := &awstypes.SMSChannelRequest{
 		Enabled: aws.Bool(d.Get(names.AttrEnabled).(bool)),
 	}
 
@@ -82,7 +85,7 @@ func resourceSMSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 		SMSChannelRequest: params,
 	}
 
-	_, err := conn.UpdateSmsChannelWithContext(ctx, &req)
+	_, err := conn.UpdateSmsChannel(ctx, &req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting Pinpoint SMS Channel for application %s: %s", applicationId, err)
 	}
@@ -94,43 +97,41 @@ func resourceSMSChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceSMSChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
 	log.Printf("[INFO] Reading Pinpoint SMS Channel  for application %s", d.Id())
 
-	output, err := conn.GetSmsChannelWithContext(ctx, &pinpoint.GetSmsChannelInput{
-		ApplicationId: aws.String(d.Id()),
-	})
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
-			log.Printf("[WARN] Pinpoint SMS Channel for application %s not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
+	output, err := findSMSChannelByApplicationId(ctx, conn, d.Id())
 
-		return sdkdiag.AppendErrorf(diags, "getting Pinpoint SMS Channel for application %s: %s", d.Id(), err)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Pinpoint SMS Channel (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	res := output.SMSChannelResponse
-	d.Set(names.AttrApplicationID, res.ApplicationId)
-	d.Set(names.AttrEnabled, res.Enabled)
-	d.Set("sender_id", res.SenderId)
-	d.Set("short_code", res.ShortCode)
-	d.Set("promotional_messages_per_second", res.PromotionalMessagesPerSecond)
-	d.Set("transactional_messages_per_second", res.TransactionalMessagesPerSecond)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Pinpoint SMS Channel (%s): %s", d.Id(), err)
+	}
+
+	d.Set(names.AttrApplicationID, output.ApplicationId)
+	d.Set(names.AttrEnabled, output.Enabled)
+	d.Set("sender_id", output.SenderId)
+	d.Set("short_code", output.ShortCode)
+	d.Set("promotional_messages_per_second", output.PromotionalMessagesPerSecond)
+	d.Set("transactional_messages_per_second", output.TransactionalMessagesPerSecond)
 	return diags
 }
 
 func resourceSMSChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).PinpointConn(ctx)
+	conn := meta.(*conns.AWSClient).PinpointClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Pinpoint SMS Channel for application %s", d.Id())
-	_, err := conn.DeleteSmsChannelWithContext(ctx, &pinpoint.DeleteSmsChannelInput{
+	_, err := conn.DeleteSmsChannel(ctx, &pinpoint.DeleteSmsChannelInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, pinpoint.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -138,4 +139,27 @@ func resourceSMSChannelDelete(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "deleting Pinpoint SMS Channel for application %s: %s", d.Id(), err)
 	}
 	return diags
+}
+
+func findSMSChannelByApplicationId(ctx context.Context, conn *pinpoint.Client, applicationId string) (*awstypes.SMSChannelResponse, error) {
+	input := &pinpoint.GetSmsChannelInput{
+		ApplicationId: aws.String(applicationId),
+	}
+
+	output, err := conn.GetSmsChannel(ctx, input)
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.SMSChannelResponse == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SMSChannelResponse, nil
 }

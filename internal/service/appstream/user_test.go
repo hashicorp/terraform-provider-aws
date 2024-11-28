@@ -157,7 +157,7 @@ func testAccCheckUserExists(ctx context.Context, resourceName string, appStreamU
 			return err
 		}
 
-		user, err := tfappstream.FindUserByUserNameAndAuthType(ctx, conn, userName, authType)
+		user, err := tfappstream.FindUserByTwoPartKey(ctx, conn, userName, authType)
 		if tfresource.NotFound(err) {
 			return fmt.Errorf("AppStream User %q does not exist", rs.Primary.ID)
 		}

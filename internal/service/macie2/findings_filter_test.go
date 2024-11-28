@@ -10,13 +10,14 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,8 +39,8 @@ func testAccFindingsFilter_basic(t *testing.T) {
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, macie2.FindingsFilterActionArchive),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, string(awstypes.FindingsFilterActionArchive)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
 				),
 			},
 			{
@@ -148,58 +149,58 @@ func testAccFindingsFilter_complete(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingsFilterConfig_complete(description, macie2.FindingsFilterActionArchive, 1),
+				Config: testAccFindingsFilterConfig_complete(description, string(awstypes.FindingsFilterActionArchive), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, macie2.FindingsFilterActionArchive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, string(awstypes.FindingsFilterActionArchive)),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
 					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, names.AttrName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"eq.#":          acctest.Ct1,
+						"eq.#":          "1",
 						"eq.0":          acctest.Region(),
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "position", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 				),
 			},
 			{
-				Config: testAccFindingsFilterConfig_complete(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
+				Config: testAccFindingsFilterConfig_complete(descriptionUpdated, string(awstypes.FindingsFilterActionNoop), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, macie2.FindingsFilterActionNoop),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, string(awstypes.FindingsFilterActionNoop)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
-					resource.TestCheckResourceAttr(resourceName, "position", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
 					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, names.AttrName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"eq.#":          acctest.Ct1,
+						"eq.#":          "1",
 						"eq.0":          acctest.Region(),
 					}),
 				),
 			},
 			{
-				Config: testAccFindingsFilterConfig_complete(descriptionUpdated, macie2.FindingsFilterActionNoop, 1),
+				Config: testAccFindingsFilterConfig_complete(descriptionUpdated, string(awstypes.FindingsFilterActionNoop), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, macie2.FindingsFilterActionNoop),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, string(awstypes.FindingsFilterActionNoop)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
-					resource.TestCheckResourceAttr(resourceName, "position", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.0.field", names.AttrRegion),
 					resource.TestCheckResourceAttrPair(resourceName, "finding_criteria.0.criterion.0.eq.0", dataSourceRegion, names.AttrName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"eq.#":          acctest.Ct1,
+						"eq.#":          "1",
 						"eq.0":          acctest.Region(),
 					}),
 				),
@@ -230,37 +231,37 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingsFilterConfig_complete(description, macie2.FindingsFilterActionArchive, 1),
+				Config: testAccFindingsFilterConfig_complete(description, string(awstypes.FindingsFilterActionArchive), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, macie2.FindingsFilterActionArchive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, string(awstypes.FindingsFilterActionArchive)),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "finding_criteria.0.criterion.*.eq.*", dataSourceRegion, names.AttrName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"eq.#":          acctest.Ct1,
+						"eq.#":          "1",
 						"eq.0":          acctest.Region(),
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "position", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 				),
 			},
 			{
-				Config: testAccFindingsFilterConfig_completeMultipleCriterion(descriptionUpdated, macie2.FindingsFilterActionNoop, startDate, endDate, 1),
+				Config: testAccFindingsFilterConfig_completeMultipleCriterion(descriptionUpdated, string(awstypes.FindingsFilterActionNoop), startDate, endDate, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, macie2.FindingsFilterActionNoop),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, string(awstypes.FindingsFilterActionNoop)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
-					resource.TestCheckResourceAttr(resourceName, "position", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "finding_criteria.0.criterion.*.eq.*", dataSourceRegion, names.AttrName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"eq.#":          acctest.Ct1,
+						"eq.#":          "1",
 						"eq.0":          acctest.Region(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
@@ -276,15 +277,16 @@ func testAccFindingsFilter_WithDate(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: "sample",
-						"eq.#":          acctest.Ct1,
+						"eq.#":          "1",
 						"eq.0":          acctest.CtTrue,
 					}),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"finding_criteria"},
 			},
 		},
 	})
@@ -307,38 +309,38 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingsFilterConfig_complete(description, macie2.FindingsFilterActionArchive, 1),
+				Config: testAccFindingsFilterConfig_complete(description, string(awstypes.FindingsFilterActionArchive), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, macie2.FindingsFilterActionArchive),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, string(awstypes.FindingsFilterActionArchive)),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "finding_criteria.0.criterion.*.eq.*", dataSourceRegion, names.AttrName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
-					resource.TestCheckResourceAttr(resourceName, "position", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"eq.#":          acctest.Ct1,
+						"eq.#":          "1",
 						"eq.0":          acctest.Region(),
 					}),
 				),
 			},
 			{
-				Config: testAccFindingsFilterConfig_completeMultipleCriterionNumber(descriptionUpdated, macie2.FindingsFilterActionNoop, firstNumber, secondNumber, 1),
+				Config: testAccFindingsFilterConfig_completeMultipleCriterionNumber(descriptionUpdated, string(awstypes.FindingsFilterActionNoop), firstNumber, secondNumber, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, macie2.FindingsFilterActionNoop),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, string(awstypes.FindingsFilterActionNoop)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionUpdated),
-					resource.TestCheckResourceAttr(resourceName, "position", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"eq.#":          acctest.Ct1,
+						"eq.#":          "1",
 						"eq.0":          acctest.Region(),
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
@@ -348,15 +350,16 @@ func testAccFindingsFilter_WithNumber(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: "sample",
-						"eq.#":          acctest.Ct1,
+						"eq.#":          "1",
 						"eq.0":          acctest.CtTrue,
 					}),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"finding_criteria"},
 			},
 		},
 	})
@@ -375,22 +378,22 @@ func testAccFindingsFilter_withTags(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFindingsFilterConfig_tags(description, macie2.FindingsFilterActionArchive, 1),
+				Config: testAccFindingsFilterConfig_tags(description, string(awstypes.FindingsFilterActionArchive), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingsFilterExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrAction, macie2.FindingsFilterActionArchive),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, string(awstypes.FindingsFilterActionArchive)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key", names.AttrValue),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key", names.AttrValue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "position", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`findings-filter/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "position", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "finding_criteria.0.criterion.*", map[string]string{
 						names.AttrField: names.AttrRegion,
-						"eq.#":          acctest.Ct1,
+						"eq.#":          "1",
 						"eq.0":          acctest.Region(),
 					}),
 				),
@@ -411,10 +414,10 @@ func testAccCheckFindingsFilterExists(ctx context.Context, resourceName string, 
 			return fmt.Errorf("not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Client(ctx)
 		input := &macie2.GetFindingsFilterInput{Id: aws.String(rs.Primary.ID)}
 
-		resp, err := conn.GetFindingsFilterWithContext(ctx, input)
+		resp, err := conn.GetFindingsFilter(ctx, input)
 
 		if err != nil {
 			return err
@@ -432,7 +435,7 @@ func testAccCheckFindingsFilterExists(ctx context.Context, resourceName string, 
 
 func testAccCheckFindingsFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_macie2_findings_filter" {
@@ -440,10 +443,10 @@ func testAccCheckFindingsFilterDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			input := &macie2.GetFindingsFilterInput{Id: aws.String(rs.Primary.ID)}
-			resp, err := conn.GetFindingsFilterWithContext(ctx, input)
+			resp, err := conn.GetFindingsFilter(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-				tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 				continue
 			}
 

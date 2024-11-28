@@ -41,11 +41,11 @@ func TestAccVPCRouteTable_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -126,13 +126,13 @@ func TestAccVPCRouteTable_ipv4ToInternetGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct2),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, names.AttrID),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "gateway_id", igwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr1, "gateway_id", igwResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr2, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -141,13 +141,13 @@ func TestAccVPCRouteTable_ipv4ToInternetGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct2),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "gateway_id", igwResourceName, names.AttrID),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr3, "gateway_id", igwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr2, "gateway_id", igwResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr3, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -174,12 +174,12 @@ func TestAccVPCRouteTable_ipv4ToInstance(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -211,12 +211,12 @@ func TestAccVPCRouteTable_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 					testAccCheckRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr, "egress_only_gateway_id", eoigwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -229,52 +229,6 @@ func TestAccVPCRouteTable_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 				// Verify that expanded form of the destination CIDR causes no diff.
 				Config:   testAccVPCRouteTableConfig_ipv6EgressOnlyInternetGateway(rName, "::0/0"),
 				PlanOnly: true,
-			},
-		},
-	})
-}
-
-func TestAccVPCRouteTable_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var routeTable awstypes.RouteTable
-	resourceName := "aws_route_table.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteTableDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccVPCRouteTableConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccVPCRouteTableConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccVPCRouteTableConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
 			},
 		},
 	})
@@ -340,13 +294,13 @@ func TestAccVPCRouteTable_Route_mode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct2),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, names.AttrID),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "gateway_id", igwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr1, "gateway_id", igwResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr2, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -360,13 +314,13 @@ func TestAccVPCRouteTable_Route_mode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct2),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, names.AttrID),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "gateway_id", igwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr1, "gateway_id", igwResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr2, "gateway_id", igwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -380,11 +334,11 @@ func TestAccVPCRouteTable_Route_mode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -420,12 +374,12 @@ func TestAccVPCRouteTable_ipv4ToTransitGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, names.AttrTransitGatewayID, tgwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr, names.AttrTransitGatewayID, tgwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -461,12 +415,12 @@ func TestAccVPCRouteTable_ipv4ToVPCEndpoint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, names.AttrVPCEndpointID, vpceResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr, names.AttrVPCEndpointID, vpceResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -498,12 +452,12 @@ func TestAccVPCRouteTable_ipv4ToCarrierGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "carrier_gateway_id", cgwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr, "carrier_gateway_id", cgwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -535,12 +489,12 @@ func TestAccVPCRouteTable_ipv4ToLocalGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "local_gateway_id", lgwDataSourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr, "local_gateway_id", lgwDataSourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -572,12 +526,12 @@ func TestAccVPCRouteTable_ipv4ToVPCPeeringConnection(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "vpc_peering_connection_id", pcxResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr, "vpc_peering_connection_id", pcxResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -609,12 +563,12 @@ func TestAccVPCRouteTable_vgwRoutePropagation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "propagating_vgws.*", vgwResourceName1, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -623,12 +577,12 @@ func TestAccVPCRouteTable_vgwRoutePropagation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "propagating_vgws.*", vgwResourceName2, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -660,7 +614,7 @@ func TestAccVPCRouteTable_conditionalCIDRBlock(t *testing.T) {
 				Config: testAccVPCRouteTableConfig_conditionalIPv4IPv6(rName, destinationCidr, destinationIpv6Cidr, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr, "gateway_id", igwResourceName, names.AttrID),
 				),
 			},
 			{
@@ -698,12 +652,12 @@ func TestAccVPCRouteTable_ipv4ToNatGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr, "nat_gateway_id", ngwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr, "nat_gateway_id", ngwResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -735,12 +689,12 @@ func TestAccVPCRouteTable_IPv6ToNetworkInterface_unattached(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 					testAccCheckRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -774,11 +728,11 @@ func TestAccVPCRouteTable_IPv4ToNetworkInterfaces_unattached(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -786,13 +740,13 @@ func TestAccVPCRouteTable_IPv4ToNetworkInterfaces_unattached(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct2),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, names.AttrNetworkInterfaceID, eni1ResourceName, names.AttrID),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr2, names.AttrNetworkInterfaceID, eni2ResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr1, names.AttrNetworkInterfaceID, eni1ResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr2, names.AttrNetworkInterfaceID, eni2ResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -806,13 +760,13 @@ func TestAccVPCRouteTable_IPv4ToNetworkInterfaces_unattached(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 3),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct2),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr2, names.AttrNetworkInterfaceID, eni1ResourceName, names.AttrID),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, names.AttrNetworkInterfaceID, eni2ResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr2, names.AttrNetworkInterfaceID, eni1ResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr1, names.AttrNetworkInterfaceID, eni2ResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -821,11 +775,11 @@ func TestAccVPCRouteTable_IPv4ToNetworkInterfaces_unattached(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -850,11 +804,11 @@ func TestAccVPCRouteTable_vpcMultipleCIDRs(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -890,11 +844,11 @@ func TestAccVPCRouteTable_gatewayVPCEndpoint(t *testing.T) {
 					// Refresh the route table once the VPC endpoint route is present.
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -929,58 +883,58 @@ func TestAccVPCRouteTable_multipleRoutes(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteTableConfig_multiples(rName,
-					"cidr_block", destinationCidr1, "gateway_id", fmt.Sprintf(`%s.%s`, igwResourceName, names.AttrID),
-					"cidr_block", destinationCidr2, names.AttrNetworkInterfaceID, fmt.Sprintf(`%s.%s`, instanceResourceName, "primary_network_interface_id"),
+					names.AttrCIDRBlock, destinationCidr1, "gateway_id", fmt.Sprintf(`%s.%s`, igwResourceName, names.AttrID),
+					names.AttrCIDRBlock, destinationCidr2, names.AttrNetworkInterfaceID, fmt.Sprintf(`%s.%s`, instanceResourceName, "primary_network_interface_id"),
 					"ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", fmt.Sprintf(`%s.%s`, eoigwResourceName, names.AttrID)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 5),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct3),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, names.AttrID),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr2, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "3"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr1, "gateway_id", igwResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr2, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
 					testAccCheckRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", eoigwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
 				Config: testAccVPCRouteTableConfig_multiples(rName,
-					"cidr_block", destinationCidr1, "vpc_peering_connection_id", fmt.Sprintf(`%s.%s`, pcxResourceName, names.AttrID),
-					"cidr_block", destinationCidr3, names.AttrNetworkInterfaceID, fmt.Sprintf(`%s.%s`, instanceResourceName, "primary_network_interface_id"),
+					names.AttrCIDRBlock, destinationCidr1, "vpc_peering_connection_id", fmt.Sprintf(`%s.%s`, pcxResourceName, names.AttrID),
+					names.AttrCIDRBlock, destinationCidr3, names.AttrNetworkInterfaceID, fmt.Sprintf(`%s.%s`, instanceResourceName, "primary_network_interface_id"),
 					"ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", fmt.Sprintf(`%s.%s`, eoigwResourceName, names.AttrID)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 5),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct3),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "vpc_peering_connection_id", pcxResourceName, names.AttrID),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr3, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "3"),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr1, "vpc_peering_connection_id", pcxResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr3, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
 					testAccCheckRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", eoigwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
 				Config: testAccVPCRouteTableConfig_multiples(rName,
 					"ipv6_cidr_block", destinationCidr4, "vpc_peering_connection_id", fmt.Sprintf(`%s.%s`, pcxResourceName, names.AttrID),
-					"cidr_block", destinationCidr3, "gateway_id", fmt.Sprintf(`%s.%s`, igwResourceName, names.AttrID),
-					"cidr_block", destinationCidr2, names.AttrNetworkInterfaceID, fmt.Sprintf(`%s.%s`, instanceResourceName, "primary_network_interface_id")),
+					names.AttrCIDRBlock, destinationCidr3, "gateway_id", fmt.Sprintf(`%s.%s`, igwResourceName, names.AttrID),
+					names.AttrCIDRBlock, destinationCidr2, names.AttrNetworkInterfaceID, fmt.Sprintf(`%s.%s`, instanceResourceName, "primary_network_interface_id")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 5),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct3),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "3"),
 					testAccCheckRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr4, "vpc_peering_connection_id", pcxResourceName, names.AttrID),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr3, "gateway_id", igwResourceName, names.AttrID),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", destinationCidr2, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr3, "gateway_id", igwResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, destinationCidr2, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -1012,12 +966,12 @@ func TestAccVPCRouteTable_prefixListToInternetGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "route.#", acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`route-table/.+$`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 					testAccCheckRouteTablePrefixListRoute(resourceName, plResourceName, "gateway_id", igwResourceName, names.AttrID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -1047,7 +1001,7 @@ func TestAccVPCRouteTable_localRoute(t *testing.T) {
 			{
 				Config: testAccVPCRouteTableConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 				),
@@ -1088,33 +1042,33 @@ func TestAccVPCRouteTable_localRouteAdoptUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteTableConfig_ipv4NetworkInterfaceToLocal(rName, vpcCIDR, localGatewayCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"gateway_id": "local",
-						"cidr_block": localGatewayCIDR,
+						"gateway_id":        "local",
+						names.AttrCIDRBlock: localGatewayCIDR,
 					}),
 				),
 			},
 			{
 				Config: testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", vpcCIDR, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, vpcCIDR, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccVPCRouteTableConfig_ipv4NetworkInterfaceToLocal(rName, vpcCIDR, localGatewayCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"gateway_id": "local",
-						"cidr_block": localGatewayCIDR,
+						"gateway_id":        "local",
+						names.AttrCIDRBlock: localGatewayCIDR,
 					}),
 				),
 			},
@@ -1151,7 +1105,7 @@ func TestAccVPCRouteTable_localRouteImportUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteConfig_ipv4NoRoute(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 				),
@@ -1173,7 +1127,7 @@ func TestAccVPCRouteTable_localRouteImportUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteConfig_ipv4LocalToNetworkInterface(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					resource.TestCheckResourceAttr(rteResourceName, "gateway_id", ""),
@@ -1183,31 +1137,31 @@ func TestAccVPCRouteTable_localRouteImportUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", vpcCIDR, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, vpcCIDR, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
 				),
 			},
 			{
 				Config: testAccVPCRouteTableConfig_ipv4NetworkInterfaceToLocal(rName, vpcCIDR, localGatewayCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"gateway_id": "local",
-						"cidr_block": localGatewayCIDR,
+						"gateway_id":        "local",
+						names.AttrCIDRBlock: localGatewayCIDR,
 					}),
 				),
 			},
 			{
 				Config: testAccVPCRouteTableConfig_ipv4LocalNetworkInterface(rName, vpcCIDR, subnetCIDR),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, resourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
-					testAccCheckRouteTableRoute(resourceName, "cidr_block", vpcCIDR, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
+					testAccCheckRouteTableRoute(resourceName, names.AttrCIDRBlock, vpcCIDR, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
 				),
 			},
 		},
@@ -1227,7 +1181,7 @@ func testAccCheckRouteTableExists(ctx context.Context, n string, v *awstypes.Rou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		routeTable, err := tfec2.FindRouteTableByIDV2(ctx, conn, rs.Primary.ID)
+		routeTable, err := tfec2.FindRouteTableByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -1248,7 +1202,7 @@ func testAccCheckRouteTableDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfec2.FindRouteTableByIDV2(ctx, conn, rs.Primary.ID)
+			_, err := tfec2.FindRouteTableByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -1330,7 +1284,7 @@ func testAccCheckRouteTableWaitForVPCEndpointRoute(ctx context.Context, routeTab
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		resp, err := conn.DescribePrefixLists(ctx, &ec2.DescribePrefixListsInput{
-			Filters: tfec2.NewAttributeFilterListV2(map[string]string{
+			Filters: tfec2.NewAttributeFilterList(map[string]string{
 				"prefix-list-name": aws.ToString(vpce.ServiceName),
 			}),
 		})
@@ -1538,47 +1492,6 @@ resource "aws_route_table" "test" {
   }
 }
 `, rName, destinationCidr))
-}
-
-func testAccVPCRouteTableConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccVPCRouteTableConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccVPCRouteTableConfig_ipv4PeeringConnection(rName, destinationCidr string) string {

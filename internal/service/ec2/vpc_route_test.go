@@ -249,7 +249,7 @@ func TestAccVPCRoute_ipv6ToInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
@@ -484,7 +484,7 @@ func TestAccVPCRoute_ipv4ToInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
@@ -579,7 +579,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_attached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
@@ -628,7 +628,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eni1ResourceName, names.AttrID),
@@ -651,7 +651,7 @@ func TestAccVPCRoute_IPv4ToNetworkInterface_twoAttachments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eni2ResourceName, names.AttrID),
@@ -1590,7 +1590,7 @@ func TestAccVPCRoute_localRouteCreateError(t *testing.T) {
 			{
 				Config: testAccVPCRouteConfig_ipv4NoRoute(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 				),
@@ -1622,7 +1622,7 @@ func TestAccVPCRoute_localRouteImport(t *testing.T) {
 			{
 				Config: testAccVPCRouteConfig_ipv4NoRoute(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 				),
@@ -1664,7 +1664,7 @@ func TestAccVPCRoute_localRouteImportAndUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteConfig_ipv4NoRoute(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 				),
@@ -1686,7 +1686,7 @@ func TestAccVPCRoute_localRouteImportAndUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteConfig_ipv4LocalToNetworkInterface(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
@@ -1696,7 +1696,7 @@ func TestAccVPCRoute_localRouteImportAndUpdate(t *testing.T) {
 			{
 				Config: testAccVPCRouteConfig_ipv4LocalRestore(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckVPCExistsV2(ctx, vpcResourceName, &vpc),
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
 					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", "local"),
@@ -1826,7 +1826,7 @@ func TestAccVPCRoute_prefixListToInstance(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, instanceResourceName, "primary_network_interface_id"),
@@ -1921,7 +1921,7 @@ func TestAccVPCRoute_PrefixListToNetworkInterface_attached(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, instanceResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "local_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrNetworkInterfaceID, eniResourceName, names.AttrID),
@@ -2271,11 +2271,11 @@ func testAccCheckRouteExists(ctx context.Context, n string, v *awstypes.Route) r
 		var route *awstypes.Route
 		var err error
 		if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
-			route, err = tfec2.FindRouteByIPv4DestinationV2(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
+			route, err = tfec2.FindRouteByIPv4Destination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
-			route, err = tfec2.FindRouteByIPv6DestinationV2(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
+			route, err = tfec2.FindRouteByIPv6Destination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
 		} else if v := rs.Primary.Attributes["destination_prefix_list_id"]; v != "" {
-			route, err = tfec2.FindRouteByPrefixListIDDestinationV2(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
+			route, err = tfec2.FindRouteByPrefixListIDDestination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
 		}
 
 		if err != nil {
@@ -2299,11 +2299,11 @@ func testAccCheckRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			var err error
 			if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
-				_, err = tfec2.FindRouteByIPv4DestinationV2(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
+				_, err = tfec2.FindRouteByIPv4Destination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
 			} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
-				_, err = tfec2.FindRouteByIPv6DestinationV2(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
+				_, err = tfec2.FindRouteByIPv6Destination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
 			} else if v := rs.Primary.Attributes["destination_prefix_list_id"]; v != "" {
-				_, err = tfec2.FindRouteByPrefixListIDDestinationV2(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
+				_, err = tfec2.FindRouteByPrefixListIDDestination(ctx, conn, rs.Primary.Attributes["route_table_id"], v)
 			}
 
 			if tfresource.NotFound(err) {

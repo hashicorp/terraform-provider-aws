@@ -74,7 +74,6 @@ func resourceDeploymentGroup() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"alarms": {
 							Type:     schema.TypeSet,
-							MaxItems: 10,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -420,6 +419,11 @@ func resourceDeploymentGroup() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"termination_hook_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"trigger_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -513,6 +517,10 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 		input.OutdatedInstancesStrategy = types.OutdatedInstancesStrategy(v.(string))
 	}
 
+	if v, ok := d.GetOk("termination_hook_enabled"); ok {
+		input.TerminationHookEnabled = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("trigger_configuration"); ok {
 		input.TriggerConfigurations = expandTriggerConfigs(v.(*schema.Set).List())
 	}
@@ -566,10 +574,10 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	groupName := aws.ToString(group.DeploymentGroupName)
 	d.Set("app_name", appName)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codedeploy",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("deploymentgroup:%s/%s", appName, groupName),
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -606,6 +614,7 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("outdated_instances_strategy", group.OutdatedInstancesStrategy)
 	d.Set(names.AttrServiceRoleARN, group.ServiceRoleArn)
+	d.Set("termination_hook_enabled", group.TerminationHookEnabled)
 	if err := d.Set("trigger_configuration", flattenTriggerConfigs(group.TriggerConfigurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trigger_configuration: %s", err)
 	}
@@ -618,13 +627,9 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).DeployClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		// required fields
-		applicationName := d.Get("app_name").(string)
-		serviceRoleArn := d.Get(names.AttrServiceRoleARN).(string)
-
-		input := codedeploy.UpdateDeploymentGroupInput{
-			ApplicationName: aws.String(applicationName),
-			ServiceRoleArn:  aws.String(serviceRoleArn),
+		input := &codedeploy.UpdateDeploymentGroupInput{
+			ApplicationName: aws.String(d.Get("app_name").(string)),
+			ServiceRoleArn:  aws.String(d.Get(names.AttrServiceRoleARN).(string)),
 		}
 
 		if d.HasChange("deployment_group_name") {
@@ -709,32 +714,30 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 			}
 		}
 
-		log.Printf("[DEBUG] Updating CodeDeploy DeploymentGroup %s", d.Id())
-
-		var err error
-		err = retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
-			_, err = conn.UpdateDeploymentGroup(ctx, &input)
-
-			if errs.IsA[*types.InvalidRoleException](err) {
-				return retry.RetryableError(err)
-			}
-
-			if errs.IsAErrorMessageContains[*types.InvalidTriggerConfigException](err, "Topic ARN") {
-				return retry.RetryableError(err)
-			}
-
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.UpdateDeploymentGroup(ctx, &input)
+		if d.HasChange("termination_hook_enabled") {
+			_, n := d.GetChange("termination_hook_enabled")
+			input.TerminationHookEnabled = aws.Bool(n.(bool))
 		}
+
+		_, err := tfresource.RetryWhen(ctx, 5*time.Minute,
+			func() (interface{}, error) {
+				return conn.UpdateDeploymentGroup(ctx, input)
+			},
+			func(err error) (bool, error) {
+				if errs.IsA[*types.InvalidRoleException](err) {
+					return true, err
+				}
+
+				if errs.IsAErrorMessageContains[*types.InvalidTriggerConfigException](err, "Topic ARN") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodeDeploy deployment group (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodeDeploy Deployment Group (%s): %s", d.Id(), err)
 		}
 	}
 

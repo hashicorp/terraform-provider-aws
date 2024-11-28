@@ -87,6 +87,21 @@ func TestAccOpenSearchServerlessAccessPolicy_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
 				),
 			},
+			{
+				Config: testAccAccessPolicyConfig_updatePolicy(rName, "description updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessPolicyExists(ctx, resourceName, &accesspolicy),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "data"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description updated"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAccessPolicyImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -260,6 +275,42 @@ resource "aws_opensearchserverless_access_policy" "test" {
       ],
       "Principal" : [
         "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/admin"
+      ]
+    }
+  ])
+}
+`, rName, description)
+}
+
+func testAccAccessPolicyConfig_updatePolicy(rName, description string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_opensearchserverless_access_policy" "test" {
+  name        = %[1]q
+  type        = "data"
+  description = %[2]q
+  policy = jsonencode([
+    {
+      "Rules" : [
+        {
+          "ResourceType" : "index",
+          "Resource" : [
+            "index/books/*"
+          ],
+          "Permission" : [
+            "aoss:CreateIndex",
+            "aoss:ReadDocument",
+            "aoss:UpdateIndex",
+            "aoss:DeleteIndex",
+            "aoss:WriteDocument"
+          ]
+        }
+      ],
+      "Principal" : [
+        "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/admin",
+        "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:user/admin2"
       ]
     }
   ])

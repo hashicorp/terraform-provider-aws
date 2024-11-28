@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"sort"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -33,7 +32,7 @@ import (
 )
 
 // @SDKResource("aws_route53_zone", name="Hosted Zone")
-// @Tags(identifierAttribute="id", resourceType="hostedzone")
+// @Tags(identifierAttribute="zone_id", resourceType="hostedzone")
 func resourceZone() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceZoneCreate,
@@ -140,7 +139,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Private Route53 Hosted Zones can only be created with their first VPC association,
 	// however we need to associate the remaining after creation.
-	vpcs := expandVPCs(d.Get("vpc").(*schema.Set).List(), meta.(*conns.AWSClient).Region)
+	vpcs := expandVPCs(d.Get("vpc").(*schema.Set).List(), meta.(*conns.AWSClient).Region(ctx))
 	if len(vpcs) > 0 {
 		input.VPC = vpcs[0]
 	}
@@ -191,10 +190,11 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		return sdkdiag.AppendErrorf(diags, "reading Route53 Hosted Zone (%s): %s", d.Id(), err)
 	}
 
+	zoneID := cleanZoneID(aws.ToString(output.HostedZone.Id))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "route53",
-		Resource:  fmt.Sprintf("hostedzone/%s", d.Id()),
+		Resource:  "hostedzone/" + zoneID,
 	}.String()
 	d.Set(names.AttrARN, arn)
 	d.Set(names.AttrComment, "")
@@ -202,7 +202,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API.
 	d.Set(names.AttrName, normalizeZoneName(aws.ToString(output.HostedZone.Name)))
-	d.Set("zone_id", cleanZoneID(aws.ToString(output.HostedZone.Id)))
+	d.Set("zone_id", zoneID)
 
 	var nameServers []string
 
@@ -225,7 +225,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("primary_name_server", nameServers[0])
-	sort.Strings(nameServers)
+	slices.Sort(nameServers)
 	d.Set("name_servers", nameServers)
 	if err := d.Set("vpc", flattenVPCs(output.VPCs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc: %s", err)
@@ -252,7 +252,7 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChange("vpc") {
-		region := meta.(*conns.AWSClient).Region
+		region := meta.(*conns.AWSClient).Region(ctx)
 		o, n := d.GetChange("vpc")
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
@@ -382,8 +382,7 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 	const (
 		chunkSize = 100
 	)
-	chunks := tfslices.Chunks(resourceRecordSets, chunkSize)
-	for _, chunk := range chunks {
+	for chunk := range slices.Chunk(resourceRecordSets, chunkSize) {
 		changes := tfslices.ApplyToAll(chunk, func(v awstypes.ResourceRecordSet) awstypes.Change {
 			return awstypes.Change{
 				Action:            awstypes.ChangeActionDelete,

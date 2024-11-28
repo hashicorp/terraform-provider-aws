@@ -23,6 +23,8 @@ import (
 )
 
 // @SDKDataSource("aws_iam_openid_connect_provider", name="OIDC Provider")
+// @Tags
+// @Testing(tagsIdentifierAttribute="arn", tagsResourceType="OIDCProvider")
 func dataSourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOpenIDConnectProviderRead,
@@ -62,7 +64,6 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &iam.GetOpenIDConnectProviderInput{}
 
@@ -94,9 +95,7 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 	d.Set("client_id_list", flex.FlattenStringValueList(resp.ClientIDList))
 	d.Set("thumbprint_list", flex.FlattenStringValueList(resp.ThumbprintList))
 
-	if err := d.Set(names.AttrTags, KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, resp.Tags)
 
 	return diags
 }

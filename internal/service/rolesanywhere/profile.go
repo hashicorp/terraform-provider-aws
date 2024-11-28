@@ -5,15 +5,18 @@ package rolesanywhere
 
 import (
 	"context"
-	"errors"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere"
-	"github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
-	"github.com/aws/aws-sdk-go/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/rolesanywhere/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,7 +25,7 @@ import (
 
 // @SDKResource("aws_rolesanywhere_profile", name="Profile")
 // @Tags(identifierAttribute="arn")
-func ResourceProfile() *schema.Resource {
+func resourceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProfileCreate,
 		ReadWithoutTimeout:   resourceProfileRead,
@@ -63,7 +66,7 @@ func ResourceProfile() *schema.Resource {
 			},
 			"role_arns": {
 				Type:     schema.TypeSet,
-				Required: true,
+				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -80,12 +83,13 @@ func ResourceProfile() *schema.Resource {
 }
 
 func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := &rolesanywhere.CreateProfileInput{
 		Name:     aws.String(name),
-		RoleArns: expandStringList(d.Get("role_arns").(*schema.Set).List()),
+		RoleArns: flex.ExpandStringValueSet(d.Get("role_arns").(*schema.Set)),
 		Tags:     getTagsIn(ctx),
 	}
 
@@ -98,7 +102,7 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("managed_policy_arns"); ok {
-		input.ManagedPolicyArns = expandStringList(v.(*schema.Set).List())
+		input.ManagedPolicyArns = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("require_instance_properties"); ok {
@@ -113,27 +117,28 @@ func resourceProfileCreate(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.CreateProfile(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating RolesAnywhere Profile (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating RolesAnywhere Profile (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Profile.ProfileId))
+	d.SetId(aws.ToString(output.Profile.ProfileId))
 
-	return resourceProfileRead(ctx, d, meta)
+	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
 func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	profile, err := FindProfileByID(ctx, conn, d.Id())
+	profile, err := findProfileByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RolesAnywhere Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading RolesAnywhere Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RolesAnywhere Profile (%s): %s", d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, profile.ProfileArn)
@@ -145,13 +150,14 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("role_arns", profile.RoleArns)
 	d.Set("session_policy", profile.SessionPolicy)
 
-	return nil
+	return diags
 }
 
 func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
-	if d.HasChangesExcept(names.AttrEnabled, names.AttrTagsAll) {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &rolesanywhere.UpdateProfileInput{
 			ProfileId: aws.String(d.Id()),
 		}
@@ -161,7 +167,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("managed_policy_arns") {
-			input.ManagedPolicyArns = expandStringList(d.Get("managed_policy_arns").(*schema.Set).List())
+			input.ManagedPolicyArns = flex.ExpandStringValueSet(d.Get("managed_policy_arns").(*schema.Set))
 		}
 
 		if d.HasChange(names.AttrName) {
@@ -169,7 +175,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("role_arns") {
-			input.RoleArns = expandStringList(d.Get("role_arns").(*schema.Set).List())
+			input.RoleArns = flex.ExpandStringValueSet(d.Get("role_arns").(*schema.Set))
 		}
 
 		if d.HasChange("session_policy") {
@@ -179,7 +185,7 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		log.Printf("[DEBUG] Updating RolesAnywhere Profile (%s): %#v", d.Id(), input)
 		_, err := conn.UpdateProfile(ctx, input)
 		if err != nil {
-			return diag.Errorf("updating RolesAnywhere Profile (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RolesAnywhere Profile (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -188,20 +194,21 @@ func resourceProfileUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if n == true {
 			err := enableProfile(ctx, d.Id(), meta)
 			if err != nil {
-				diag.Errorf("enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "enabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
 		} else {
 			err := disableProfile(ctx, d.Id(), meta)
 			if err != nil {
-				diag.Errorf("disabling RolesAnywhere Profile (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "disabling RolesAnywhere Profile (%s): %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceProfileRead(ctx, d, meta)
+	return append(diags, resourceProfileRead(ctx, d, meta)...)
 }
 
 func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RolesAnywhereClient(ctx)
 
 	log.Printf("[DEBUG] Deleting RolesAnywhere Profile (%s)", d.Id())
@@ -209,16 +216,40 @@ func resourceProfileDelete(ctx context.Context, d *schema.ResourceData, meta int
 		ProfileId: aws.String(d.Id()),
 	})
 
-	var resourceNotFoundException *types.ResourceNotFoundException
-	if errors.As(err, &resourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting RolesAnywhere Profile: (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RolesAnywhere Profile: (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findProfileByID(ctx context.Context, conn *rolesanywhere.Client, id string) (*awstypes.ProfileDetail, error) {
+	in := &rolesanywhere.GetProfileInput{
+		ProfileId: aws.String(id),
+	}
+
+	out, err := conn.GetProfile(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.Profile == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.Profile, nil
 }
 
 func disableProfile(ctx context.Context, profileId string, meta interface{}) error {

@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayRouteTableAssociation
+	var v awstypes.TransitGatewayRouteTableAssociation
 	resourceName := "aws_ec2_transit_gateway_route_table_association.test"
 	transitGatewayRouteTableResourceName := "aws_ec2_transit_gateway_route_table.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -61,7 +61,7 @@ func testAccTransitGatewayRouteTableAssociation_basic(t *testing.T, semaphore tf
 
 func testAccTransitGatewayRouteTableAssociation_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayRouteTableAssociation
+	var v awstypes.TransitGatewayRouteTableAssociation
 	resourceName := "aws_ec2_transit_gateway_route_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -89,7 +89,7 @@ func testAccTransitGatewayRouteTableAssociation_disappears(t *testing.T, semapho
 
 func testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
-	var v ec2.TransitGatewayRouteTableAssociation
+	var v awstypes.TransitGatewayRouteTableAssociation
 	resourceName := "aws_ec2_transit_gateway_route_table_association.test"
 	transitGatewayRouteTableResourceName := "aws_ec2_transit_gateway_route_table.test"
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
@@ -128,26 +128,16 @@ func testAccTransitGatewayRouteTableAssociation_replaceExistingAssociation(t *te
 	})
 }
 
-func testAccCheckTransitGatewayRouteTableAssociationExists(ctx context.Context, n string, v *ec2.TransitGatewayRouteTableAssociation) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRouteTableAssociationExists(ctx context.Context, n string, v *awstypes.TransitGatewayRouteTableAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Transit Gateway Route Table Association ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		transitGatewayRouteTableID, transitGatewayAttachmentID, err := tfec2.TransitGatewayRouteTableAssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-
-		output, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+		output, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_route_table_id"], rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
 
 		if err != nil {
 			return err
@@ -161,20 +151,14 @@ func testAccCheckTransitGatewayRouteTableAssociationExists(ctx context.Context, 
 
 func testAccCheckTransitGatewayRouteTableAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_route_table_association" {
 				continue
 			}
 
-			transitGatewayRouteTableID, transitGatewayAttachmentID, err := tfec2.TransitGatewayRouteTableAssociationParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, transitGatewayAttachmentID)
+			_, err := tfec2.FindTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_route_table_id"], rs.Primary.Attributes[names.AttrTransitGatewayAttachmentID])
 
 			if tfresource.NotFound(err) {
 				continue

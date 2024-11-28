@@ -201,7 +201,7 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 		DomainEntry: domainEntry,
 	})
 
-	if err != nil && errs.IsA[*types.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) || errs.IsA[*types.OperationFailureException](err) {
 		return diags
 	}
 

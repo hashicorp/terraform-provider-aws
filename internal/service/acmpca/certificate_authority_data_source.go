@@ -21,7 +21,6 @@ import (
 
 // @SDKDataSource("aws_acmpca_certificate_authority", name="Certificate Authority")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
 func dataSourceCertificateAuthority() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateAuthorityRead,

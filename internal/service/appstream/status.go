@@ -47,7 +47,7 @@ func statusImageBuilderState(ctx context.Context, conn *appstream.Client, name s
 // statusUserAvailable fetches the user available
 func statusUserAvailable(ctx context.Context, conn *appstream.Client, username, authType string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		user, err := FindUserByUserNameAndAuthType(ctx, conn, username, authType)
+		user, err := FindUserByTwoPartKey(ctx, conn, username, authType)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

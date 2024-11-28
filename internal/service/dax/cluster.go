@@ -4,11 +4,12 @@
 package dax
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"log"
 	"reflect"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -472,9 +473,9 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
-	sortedNodes := make([]awstypes.Node, len(c.Nodes))
-	copy(sortedNodes, c.Nodes)
-	sort.Sort(byNodeId(sortedNodes))
+	sortedNodes := slices.SortedFunc(slices.Values(c.Nodes), func(a, b awstypes.Node) int {
+		return cmp.Compare(aws.ToString(a.NodeId), aws.ToString(b.NodeId))
+	})
 
 	nodeData := make([]map[string]interface{}, 0, len(sortedNodes))
 
@@ -488,15 +489,6 @@ func setClusterNodeData(d *schema.ResourceData, c awstypes.Cluster) error {
 	}
 
 	return d.Set("nodes", nodeData)
-}
-
-type byNodeId []awstypes.Node
-
-func (b byNodeId) Len() int      { return len(b) }
-func (b byNodeId) Swap(i, j int) { b[i], b[j] = b[j], b[i] }
-func (b byNodeId) Less(i, j int) bool {
-	return b[i].NodeId != nil && b[j].NodeId != nil &&
-		aws.ToString(b[i].NodeId) < aws.ToString(b[j].NodeId)
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

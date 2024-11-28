@@ -25,7 +25,8 @@ import (
 
 // @SDKResource("aws_appintegrations_event_integration", name="Event Integration")
 // @Tags(identifierAttribute="arn")
-func ResourceEventIntegration() *schema.Resource {
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appintegrations;appintegrations.GetEventIntegrationOutput")
+func resourceEventIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEventIntegrationCreate,
 		ReadWithoutTimeout:   resourceEventIntegrationRead,

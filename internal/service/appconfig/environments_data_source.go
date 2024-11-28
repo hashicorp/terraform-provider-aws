@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_appconfig_environments")
+// @SDKDataSource("aws_appconfig_environments", name="Environments")
 func DataSourceEnvironments() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEnvironmentsRead,

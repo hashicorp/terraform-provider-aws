@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -46,7 +46,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "SPECIFIED_REGIONS"),
-					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", "3"),
 				),
 			},
 			{
@@ -54,7 +54,7 @@ func testAccFindingAggregator_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFindingAggregatorExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "linking_mode", "ALL_REGIONS_EXCEPT_SPECIFIED"),
-					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "specified_regions.#", "2"),
 				),
 			},
 		},

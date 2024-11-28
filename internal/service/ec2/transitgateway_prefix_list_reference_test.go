@@ -43,7 +43,7 @@ func testAccTransitGatewayPrefixListReference_basic(t *testing.T, semaphore tfsy
 					testAccTransitGatewayPrefixListReferenceExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "blackhole", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "prefix_list_id", managedPrefixListResourceName, names.AttrID),
-					acctest.CheckResourceAttrAccountID(resourceName, "prefix_list_owner_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "prefix_list_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTransitGatewayAttachmentID, ""),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_route_table_id", transitGatewayResourceName, "association_default_route_table_id"),
 				),
@@ -159,20 +159,14 @@ func testAccTransitGatewayPrefixListReference_TransitGatewayAttachmentID(t *test
 
 func testAccCheckTransitGatewayPrefixListReferenceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_transit_gateway_prefix_list_reference" {
 				continue
 			}
 
-			transitGatewayRouteTableID, prefixListID, err := tfec2.TransitGatewayPrefixListReferenceParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx, conn, transitGatewayRouteTableID, prefixListID)
+			_, err := tfec2.FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_route_table_id"], rs.Primary.Attributes["prefix_list_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -196,19 +190,9 @@ func testAccTransitGatewayPrefixListReferenceExists(ctx context.Context, n strin
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Transit Gateway Prefix List Reference is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		transitGatewayRouteTableID, prefixListID, err := tfec2.TransitGatewayPrefixListReferenceParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-
-		_, err = tfec2.FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx, conn, transitGatewayRouteTableID, prefixListID)
+		_, err := tfec2.FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx, conn, rs.Primary.Attributes["transit_gateway_route_table_id"], rs.Primary.Attributes["prefix_list_id"])
 
 		return err
 	}

@@ -35,7 +35,7 @@ const (
 
 // @SDKResource("aws_mwaa_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
-func ResourceEnvironment() *schema.Resource {
+func resourceEnvironment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEnvironmentCreate,
 		ReadWithoutTimeout:   resourceEnvironmentRead,
@@ -180,11 +180,23 @@ func ResourceEnvironment() *schema.Resource {
 					},
 				},
 			},
+			"max_webservers": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(2, 5),
+			},
 			"max_workers": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IntAtLeast(1),
+			},
+			"min_webservers": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(2, 5),
 			},
 			"min_workers": {
 				Type:         schema.TypeInt,
@@ -357,6 +369,14 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.MinWorkers = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := d.GetOk("max_webservers"); ok {
+		input.MaxWebservers = aws.Int32(int32(v.(int)))
+	}
+
+	if v, ok := d.GetOk("min_webservers"); ok {
+		input.MinWebservers = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk("plugins_s3_object_version"); ok {
 		input.PluginsS3ObjectVersion = aws.String(v.(string))
 	}
@@ -421,7 +441,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
-	environment, err := FindEnvironmentByName(ctx, conn, d.Id())
+	environment, err := findEnvironmentByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MWAA Environment %s not found, removing from state", d.Id())
@@ -451,6 +471,8 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("max_workers", environment.MaxWorkers)
 	d.Set("min_workers", environment.MinWorkers)
+	d.Set("max_webservers", environment.MaxWebservers)
+	d.Set("min_webservers", environment.MinWebservers)
 	d.Set(names.AttrName, environment.Name)
 	if err := d.Set(names.AttrNetworkConfiguration, flattenNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
@@ -520,6 +542,14 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("min_workers") {
 			input.MinWorkers = aws.Int32(int32(d.Get("min_workers").(int)))
+		}
+
+		if d.HasChange("max_webservers") {
+			input.MaxWebservers = aws.Int32(int32(d.Get("max_webservers").(int)))
+		}
+
+		if d.HasChange("min_webservers") {
+			input.MinWebservers = aws.Int32(int32(d.Get("min_webservers").(int)))
 		}
 
 		if d.HasChange(names.AttrNetworkConfiguration) {
@@ -631,7 +661,7 @@ func environmentModuleLoggingConfigurationSchema() *schema.Resource {
 	}
 }
 
-func FindEnvironmentByName(ctx context.Context, conn *mwaa.Client, name string) (*awstypes.Environment, error) {
+func findEnvironmentByName(ctx context.Context, conn *mwaa.Client, name string) (*awstypes.Environment, error) {
 	input := &mwaa.GetEnvironmentInput{
 		Name: aws.String(name),
 	}
@@ -658,7 +688,7 @@ func FindEnvironmentByName(ctx context.Context, conn *mwaa.Client, name string) 
 
 func statusEnvironment(ctx context.Context, conn *mwaa.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		environment, err := FindEnvironmentByName(ctx, conn, name)
+		environment, err := findEnvironmentByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -675,7 +705,7 @@ func statusEnvironment(ctx context.Context, conn *mwaa.Client, name string) retr
 func waitEnvironmentCreated(ctx context.Context, conn *mwaa.Client, name string, timeout time.Duration) (*awstypes.Environment, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.EnvironmentStatusCreating),
-		Target:  enum.Slice(awstypes.EnvironmentStatusAvailable),
+		Target:  enum.Slice(awstypes.EnvironmentStatusAvailable, awstypes.EnvironmentStatusPending),
 		Refresh: statusEnvironment(ctx, conn, name),
 		Timeout: timeout,
 	}

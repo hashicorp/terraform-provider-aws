@@ -46,7 +46,7 @@ func dataSourceAPIs() *schema.Resource {
 func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	tagsToMatch := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -74,7 +74,7 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		ids = append(ids, api.ApiId)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	if err := d.Set(names.AttrIDs, flex.FlattenStringSet(ids)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ids: %s", err)

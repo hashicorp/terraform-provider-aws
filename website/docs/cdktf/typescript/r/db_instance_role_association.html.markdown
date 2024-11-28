@@ -34,6 +34,9 @@ class MyConvertedCode extends TerraformStack {
     new DbInstanceRoleAssociation(this, "example", {
       dbInstanceIdentifier: Token.asString(awsDbInstanceExample.identifier),
       featureName: "S3_INTEGRATION",
+      lifecycle: {
+        replaceTriggeredBy: [awsDbInstanceExample.id],
+      },
       roleArn: Token.asString(awsIamRoleExample.arn),
     });
   }
@@ -54,6 +57,13 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - DB Instance Identifier and IAM Role ARN separated by a comma (`,`)
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -87,4 +97,4 @@ Using `terraform import`, import `aws_db_instance_role_association` using the DB
 % terraform import aws_db_instance_role_association.example my-db-instance,arn:aws:iam::123456789012:role/my-role
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ea9099caf40d7a4cade1ea4194ea1b75c0145f79cdeb15a2e5c098eb364ca5d9 -->
+<!-- cache-key: cdktf-0.20.8 input-c34db82964ab3bf0f638d220b644c559759ab610787f629522f52a04104e2938 -->

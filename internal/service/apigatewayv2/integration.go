@@ -44,7 +44,7 @@ func resourceIntegration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
@@ -191,7 +191,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		IntegrationType: awstypes.IntegrationType(d.Get("integration_type").(string)),
 	}
 
-	if v, ok := d.GetOk("connection_id"); ok {
+	if v, ok := d.GetOk(names.AttrConnectionID); ok {
 		input.ConnectionId = aws.String(v.(string))
 	}
 
@@ -282,7 +282,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 Integration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("connection_id", output.ConnectionId)
+	d.Set(names.AttrConnectionID, output.ConnectionId)
 	d.Set("connection_type", output.ConnectionType)
 	d.Set("content_handling_strategy", output.ContentHandlingStrategy)
 	d.Set("credentials_arn", output.CredentialsArn)
@@ -319,8 +319,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		IntegrationType: awstypes.IntegrationType(d.Get("integration_type").(string)),
 	}
 
-	if d.HasChange("connection_id") {
-		input.ConnectionId = aws.String(d.Get("connection_id").(string))
+	if d.HasChange(names.AttrConnectionID) {
+		input.ConnectionId = aws.String(d.Get(names.AttrConnectionID).(string))
 	}
 
 	if d.HasChange("connection_type") {

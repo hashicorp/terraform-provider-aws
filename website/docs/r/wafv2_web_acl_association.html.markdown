@@ -28,7 +28,7 @@ resource "aws_api_gateway_rest_api" "example" {
     paths = {
       "/path1" = {
         get = {
-          x-amazon-apigateway-integration = {
+          "x-amazon-apigateway-integration" = {
             httpMethod           = "GET"
             payloadFormatVersion = "1.0"
             type                 = "HTTP_PROXY"

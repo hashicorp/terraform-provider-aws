@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,7 +18,7 @@ import (
 
 func TestAccEC2AMIFromInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var image ec2.Image
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_from_instance.test"
 
@@ -38,8 +38,8 @@ func TestAccEC2AMIFromInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "platform_details", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(resourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(resourceName, "hypervisor", "xen"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -48,7 +48,7 @@ func TestAccEC2AMIFromInstance_basic(t *testing.T) {
 
 func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var image ec2.Image
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_from_instance.test"
 
@@ -62,7 +62,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 				Config: testAccAMIFromInstanceConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -70,7 +70,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 				Config: testAccAMIFromInstanceConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -79,7 +79,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 				Config: testAccAMIFromInstanceConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAMIExists(ctx, resourceName, &image),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -89,7 +89,7 @@ func TestAccEC2AMIFromInstance_tags(t *testing.T) {
 
 func TestAccEC2AMIFromInstance_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var image ec2.Image
+	var image awstypes.Image
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ami_from_instance.test"
 

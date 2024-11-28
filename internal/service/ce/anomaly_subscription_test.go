@@ -39,8 +39,8 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ce", regexache.MustCompile(`anomalysubscription/.+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ce", regexache.MustCompile(`anomalysubscription/.+`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "frequency", "DAILY"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_arn_list.#"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber.0.type", "EMAIL"),
@@ -244,7 +244,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 				Config: testAccAnomalySubscriptionConfig_tags1(rName, address, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -257,7 +257,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 				Config: testAccAnomalySubscriptionConfig_tags2(rName, address, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -266,7 +266,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 				Config: testAccAnomalySubscriptionConfig_tags1(rName, address, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

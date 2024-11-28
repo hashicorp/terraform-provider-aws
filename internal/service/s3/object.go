@@ -31,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
-	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -165,13 +164,6 @@ func resourceObject() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// ignore diffs where the user hasn't specified a kms_key_id but the bucket has a default KMS key configured
-					if new == "" && d.Get("server_side_encryption") == types.ServerSideEncryptionAwsKms {
-						return true
-					}
-					return false
-				},
 			},
 			"metadata": {
 				Type:         schema.TypeMap,
@@ -233,7 +225,7 @@ func resourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
@@ -284,7 +276,7 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
-	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition(ctx), bucket, key)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
@@ -302,6 +294,9 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
 	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
+	if output.SSEKMSKeyId != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set(names.AttrKMSKeyID, output.SSEKMSKeyId)
+	}
 	d.Set("metadata", output.Metadata)
 	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
 	d.Set("object_lock_mode", output.ObjectLockMode)
@@ -309,16 +304,12 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("server_side_encryption", output.ServerSideEncryption)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", types.ObjectStorageClassStandard)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
 	if output.StorageClass != "" {
-		d.Set("storage_class", output.StorageClass)
+		d.Set(names.AttrStorageClass, output.StorageClass)
 	}
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
-
-	if err := setObjectKMSKeyID(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
 
 	return diags
 }
@@ -561,11 +552,11 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 		input.ServerSideEncryption = types.ServerSideEncryption(v.(string))
 	}
 
-	if v, ok := d.GetOk("storage_class"); ok {
+	if v, ok := d.GetOk(names.AttrStorageClass); ok {
 		input.StorageClass = types.StorageClass(v.(string))
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	tags := tftags.New(ctx, getContextTags(ctx))
 	if ignoreProviderDefaultTags(ctx, d) {
 		tags = tags.RemoveDefaultConfig(defaultTagsConfig)
@@ -599,25 +590,6 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return append(diags, resourceObjectRead(ctx, d, meta)...)
-}
-
-func setObjectKMSKeyID(ctx context.Context, meta interface{}, d *schema.ResourceData, sseKMSKeyID string) error {
-	// Only set non-default KMS key ID (one that doesn't match default).
-	if sseKMSKeyID != "" {
-		// Read S3 KMS default master key.
-		keyMetadata, err := tfkms.FindKeyByID(ctx, meta.(*conns.AWSClient).KMSClient(ctx), defaultKMSKeyAlias)
-
-		if err != nil {
-			return fmt.Errorf("reading default S3 KMS key (%s): %s", defaultKMSKeyAlias, err)
-		}
-
-		if sseKMSKeyID != aws.ToString(keyMetadata.Arn) {
-			log.Printf("[DEBUG] S3 object is encrypted using a non-default KMS key: %s", sseKMSKeyID)
-			d.Set(names.AttrKMSKeyID, sseKMSKeyID)
-		}
-	}
-
-	return nil
 }
 
 func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors []error) {
@@ -662,7 +634,7 @@ func hasObjectContentChanges(d sdkv2.ResourceDiffer) bool {
 		"server_side_encryption",
 		names.AttrSource,
 		"source_hash",
-		"storage_class",
+		names.AttrStorageClass,
 		"website_redirect",
 	} {
 		if d.HasChange(key) {

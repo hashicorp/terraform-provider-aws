@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_opensearchserverless_security_policy")
+// @SDKDataSource("aws_opensearchserverless_security_policy", name="Security Policy")
 func DataSourceSecurityPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecurityPolicyRead,

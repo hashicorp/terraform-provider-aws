@@ -126,7 +126,7 @@ func resourceDomain() *schema.Resource {
 						"source_fields": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`score`), "Cannot be set to reserved field score"),
+							ValidateFunc: validation.StringDoesNotMatch(scoreRegex, "Cannot be set to reserved field score"),
 						},
 						names.AttrType: {
 							Type:             schema.TypeString,
@@ -145,7 +145,7 @@ func resourceDomain() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z]([0-9a-z-]){2,27}$`), "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
+				ValidateFunc: validation.StringMatch(nameRegex, "Search domain names must start with a lowercase letter (a-z) and be at least 3 and no more than 28 lower-case letters, digits or hyphens"),
 			},
 			"scaling_parameters": {
 				Type:     schema.TypeList,
@@ -180,6 +180,12 @@ func resourceDomain() *schema.Resource {
 		},
 	}
 }
+
+var (
+	indexNameRegex = regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{0,63}\*?)$`)
+	nameRegex      = regexache.MustCompile(`^[a-z]([0-9a-z-]){2,27}$`)
+	scoreRegex     = regexache.MustCompile(`score`)
+)
 
 func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -485,9 +491,9 @@ func resourceDomainDelete(ctx context.Context, d *schema.ResourceData, meta inte
 func validateIndexName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 
-	if !regexache.MustCompile(`^(\*?[a-z][0-9a-z_]{2,63}|[a-z][0-9a-z_]{2,63}\*?)$`).MatchString(value) {
+	if !indexNameRegex.MatchString(value) {
 		es = append(es, fmt.Errorf(
-			"%q must begin with a letter and be at least 3 and no more than 64 characters long", k))
+			"%q must begin with a letter and be at least 1 and no more than 64 characters long", k))
 	}
 
 	if value == "score" {

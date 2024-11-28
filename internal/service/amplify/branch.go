@@ -30,6 +30,7 @@ import (
 
 // @SDKResource("aws_amplify_branch", name="Branch")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/amplify/types;types.Branch", serialize=true, serializeDelay=true)
 func resourceBranch() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBranchCreate,

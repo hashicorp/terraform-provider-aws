@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_cloudwatch_metric_alarm", name="Metric Alarm")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cloudwatch/types;awstypes;awstypes.MetricAlarm")
 func resourceMetricAlarm() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -328,7 +329,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.PutMetricAlarm(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 		input.Tags = nil
 
 		_, err = conn.PutMetricAlarm(ctx, input)
@@ -351,7 +352,7 @@ func resourceMetricAlarmCreate(ctx context.Context, d *schema.ResourceData, meta
 		err = createTags(ctx, conn, aws.ToString(alarm.AlarmArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return append(diags, resourceMetricAlarmRead(ctx, d, meta)...)
 		}
 

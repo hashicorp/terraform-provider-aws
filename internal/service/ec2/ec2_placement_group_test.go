@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccEC2PlacementGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pg ec2.PlacementGroup
+	var pg awstypes.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -35,7 +35,7 @@ func TestAccEC2PlacementGroup_basic(t *testing.T) {
 				Config: testAccPlacementGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", fmt.Sprintf("placement-group/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", fmt.Sprintf("placement-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "spread_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "strategy", "cluster"),
@@ -52,7 +52,7 @@ func TestAccEC2PlacementGroup_basic(t *testing.T) {
 
 func TestAccEC2PlacementGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pg ec2.PlacementGroup
+	var pg awstypes.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -76,7 +76,7 @@ func TestAccEC2PlacementGroup_disappears(t *testing.T) {
 
 func TestAccEC2PlacementGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pg ec2.PlacementGroup
+	var pg awstypes.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -90,7 +90,7 @@ func TestAccEC2PlacementGroup_tags(t *testing.T) {
 				Config: testAccPlacementGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -103,7 +103,7 @@ func TestAccEC2PlacementGroup_tags(t *testing.T) {
 				Config: testAccPlacementGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -112,7 +112,7 @@ func TestAccEC2PlacementGroup_tags(t *testing.T) {
 				Config: testAccPlacementGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlacementGroupExists(ctx, resourceName, &pg),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2)),
 			},
 		},
@@ -121,7 +121,7 @@ func TestAccEC2PlacementGroup_tags(t *testing.T) {
 
 func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pg ec2.PlacementGroup
+	var pg awstypes.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -151,7 +151,7 @@ func TestAccEC2PlacementGroup_partitionCount(t *testing.T) {
 
 func TestAccEC2PlacementGroup_defaultSpreadLevel(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pg ec2.PlacementGroup
+	var pg awstypes.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -181,7 +181,7 @@ func TestAccEC2PlacementGroup_defaultSpreadLevel(t *testing.T) {
 
 func TestAccEC2PlacementGroup_spreadLevel(t *testing.T) {
 	ctx := acctest.Context(t)
-	var pg ec2.PlacementGroup
+	var pg awstypes.PlacementGroup
 	resourceName := "aws_placement_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -211,7 +211,7 @@ func TestAccEC2PlacementGroup_spreadLevel(t *testing.T) {
 
 func testAccCheckPlacementGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_placement_group" {
@@ -235,7 +235,7 @@ func testAccCheckPlacementGroupDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckPlacementGroupExists(ctx context.Context, n string, v *ec2.PlacementGroup) resource.TestCheckFunc {
+func testAccCheckPlacementGroupExists(ctx context.Context, n string, v *awstypes.PlacementGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -246,7 +246,7 @@ func testAccCheckPlacementGroupExists(ctx context.Context, n string, v *ec2.Plac
 			return fmt.Errorf("No EC2 Placement Group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		output, err := tfec2.FindPlacementGroupByName(ctx, conn, rs.Primary.ID)
 

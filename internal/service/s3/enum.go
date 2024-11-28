@@ -9,8 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 
-const defaultKMSKeyAlias = "alias/aws/s3"
-
 type bucketNameType int
 
 const (

@@ -197,7 +197,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("qualifier", qualifier)
 
 	// Save Lambda function name in the same format
-	if strings.HasPrefix(functionName, "arn:"+meta.(*conns.AWSClient).Partition+":lambda:") {
+	if strings.HasPrefix(functionName, "arn:"+meta.(*conns.AWSClient).Partition(ctx)+":lambda:") {
 		// Strip qualifier off
 		trimmed := strings.TrimSuffix(statement.Resource, ":"+qualifier)
 		d.Set("function_name", trimmed)
@@ -309,7 +309,7 @@ func resourcePermissionImport(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	d.SetId(statementID)
-	d.Set("function_name", output.Configuration.FunctionArn)
+	d.Set("function_name", output.Configuration.FunctionName)
 	if qualifier != "" {
 		d.Set("qualifier", qualifier)
 	}

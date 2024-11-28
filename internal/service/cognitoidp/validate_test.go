@@ -119,7 +119,7 @@ func TestValidUserPoolID(t *testing.T) {
 	}
 
 	for _, s := range validValues {
-		_, errors := validUserPoolID(s, "user_pool_id")
+		_, errors := validUserPoolID(s, names.AttrUserPoolID)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid Cognito User Pool Id: %v", s, errors)
 		}
@@ -133,7 +133,7 @@ func TestValidUserPoolID(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		_, errors := validUserPoolID(s, "user_pool_id")
+		_, errors := validUserPoolID(s, names.AttrUserPoolID)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid Cognito User Pool Id: %v", s, errors)
 		}

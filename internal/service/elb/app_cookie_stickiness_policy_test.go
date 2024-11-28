@@ -103,7 +103,7 @@ func TestAccELBAppCookieStickinessPolicy_Disappears_elb(t *testing.T) {
 
 func testAccCheckAppCookieStickinessPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_app_cookie_stickiness_policy" {
@@ -111,7 +111,6 @@ func testAccCheckAppCookieStickinessPolicyDestroy(ctx context.Context) resource.
 			}
 
 			lbName, lbPort, policyName, err := tfelb.AppCookieStickinessPolicyParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -140,17 +139,12 @@ func testAccCheckAppCookieStickinessPolicyExists(ctx context.Context, n string) 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ELB Classic App Cookie Stickiness Policy ID is set")
-		}
-
 		lbName, lbPort, policyName, err := tfelb.AppCookieStickinessPolicyParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBClient(ctx)
 
 		_, err = tfelb.FindLoadBalancerListenerPolicyByThreePartKey(ctx, conn, lbName, lbPort, policyName)
 

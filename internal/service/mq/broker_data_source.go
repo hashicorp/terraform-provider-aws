@@ -260,7 +260,7 @@ func dataSourceBrokerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).MQClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &mq.ListBrokersInput{}
 	broker, err := findBroker(ctx, conn, input, func(b *types.BrokerSummary) bool {

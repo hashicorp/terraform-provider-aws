@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_cluster"
 description: |-
@@ -133,4 +133,4 @@ Using `terraform import`, import a cluster using the `name`. For example:
 % terraform import aws_memorydb_cluster.example my-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d6818a9008412346bdaa4fa4b26d098dea2f660a578683a93af8623986328ed6 -->
+<!-- cache-key: cdktf-0.20.8 input-d6818a9008412346bdaa4fa4b26d098dea2f660a578683a93af8623986328ed6 -->

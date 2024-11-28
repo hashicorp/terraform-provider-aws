@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -36,7 +37,8 @@ const (
 )
 
 // @SDKResource("aws_dynamodb_table_replica", name="Table Replica")
-// @Tags
+// @Tags(identifierAttribute="arn")
+// @Testing(altRegionProvider=true)
 func resourceTableReplica() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -90,10 +92,6 @@ func resourceTableReplica() *schema.Resource {
 				ForceNew:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.TableClass](),
 			},
-			"deletion_protection_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
 			names.AttrTags:    tftags.TagsSchema(),         // direct to replica
 			names.AttrTagsAll: tftags.TagsSchemaComputed(), // direct to replica
 		},
@@ -104,7 +102,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	replicaRegion := meta.(*conns.AWSClient).Region
+	replicaRegion := meta.(*conns.AWSClient).Region(ctx)
 
 	mainRegion, err := regionFromARN(d.Get("global_table_arn").(string))
 	if err != nil {
@@ -170,7 +168,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
-	if _, err := waitReplicaActive(ctx, conn, tableName, meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutCreate), optFn); err != nil {
+	if _, err := waitReplicaActive(ctx, conn, tableName, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate), optFn); err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
@@ -182,6 +180,10 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	d.Set(names.AttrARN, repARN)
+
+	if err := createTags(ctx, conn, repARN, getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting DynamoDB Table Replica (%s) tags: %s", d.Id(), err)
+	}
 
 	return append(diags, resourceTableReplicaUpdate(ctx, d, meta)...)
 }
@@ -196,7 +198,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	replicaRegion := meta.(*conns.AWSClient).Region
+	replicaRegion := meta.(*conns.AWSClient).Region(ctx)
 
 	tableName, mainRegion, err := tableReplicaParseResourceID(d.Id())
 	if err != nil {
@@ -204,8 +206,8 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	globalTableARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    mainRegion,
 		Resource:  fmt.Sprintf("table/%s", tableName),
 		Service:   "dynamodb",
@@ -311,16 +313,6 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 		d.Set("point_in_time_recovery", false)
 	}
 
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
-	if err != nil && !(tfawserr.ErrMessageContains(err, errCodeUnknownOperationException, "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
-		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), fmt.Errorf("tags: %w", err))
-	}
-
-	setTagsOut(ctx, Tags(tags))
-
-	d.Set("deletion_protection_enabled", table.DeletionProtectionEnabled)
-
 	return diags
 }
 
@@ -339,7 +331,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 	}
 
-	replicaRegion := meta.(*conns.AWSClient).Region
+	replicaRegion := meta.(*conns.AWSClient).Region(ctx)
 
 	if mainRegion == replicaRegion {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), errors.New("replica cannot be in same region as main table"))
@@ -408,36 +400,9 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	// handled direct to replica
 	// * point_in_time_recovery
-	// * tags
-	// * deletion_protection_enabled
-	if d.HasChanges("point_in_time_recovery", names.AttrTagsAll, "deletion_protection_enabled") {
-		if d.HasChange(names.AttrTagsAll) {
-			o, n := d.GetChange(names.AttrTagsAll)
-			if err := updateTags(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
-				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
-			}
-		}
-
-		if d.HasChange("point_in_time_recovery") {
-			if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
-			}
-		}
-
-		if d.HasChange("deletion_protection_enabled") {
-			log.Printf("[DEBUG] Updating DynamoDB Table Replica deletion protection: %v", d.Get("deletion_protection_enabled").(bool))
-			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
-				TableName:                 aws.String(tableName),
-				DeletionProtectionEnabled: aws.Bool(d.Get("deletion_protection_enabled").(bool)),
-			})
-			if err != nil {
-				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
-			}
-			// Deletion protection change is reflected only on table status, and not in replicas status field
-			// There is certain lag after attr update and table status change so doing it with delay
-			if _, err := waitTableActiveAfterDeletionProtectionChange(ctx, conn, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTable, d.Id(), err)
-			}
+	if d.HasChange("point_in_time_recovery") {
+		if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 		}
 
 		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
@@ -457,7 +422,7 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTableReplica, d.Id(), err)
 	}
 
-	replicaRegion := meta.(*conns.AWSClient).Region
+	replicaRegion := meta.(*conns.AWSClient).Region(ctx)
 
 	// now main table region.
 	optFn := func(o *dynamodb.Options) {

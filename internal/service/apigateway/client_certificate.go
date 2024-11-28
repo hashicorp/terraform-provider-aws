@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_api_gateway_client_certificate", name="Client Certificate")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetClientCertificateOutput", generator=false)
 func resourceClientCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientCertificateCreate,
@@ -106,9 +107,9 @@ func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("/clientcertificates/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)
