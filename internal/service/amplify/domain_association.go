@@ -74,12 +74,12 @@ func resourceDomainAssociation() *schema.Resource {
 					},
 				},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// Ignore Certificate Settings diff, unless it's not AMPLIFY_MANAGED
-					if types.CertificateType(d.Get("certificate_settings.0.type").(string)) != types.CertificateTypeAmplifyManaged {
-						return old == new
+					// Ignore Certificate Settings diff if AMPLIFY_MANAGED certificate is used
+					if types.CertificateType(d.Get("certificate_settings.0.type").(string)) == types.CertificateTypeAmplifyManaged {
+						return true
 					}
 
-					return true
+					return old == new
 				},
 			},
 			"certificate_verification_dns_record": {
