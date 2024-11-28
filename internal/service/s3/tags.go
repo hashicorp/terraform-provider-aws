@@ -12,8 +12,10 @@ import (
 	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -167,9 +169,11 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 		tags tftags.KeyValueTags
 		err  error
 	)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
+
 	switch resourceType {
 	case "Bucket":
-		tags, err = bucketListTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), identifier)
+		tags, err = bucketListTags(ctx, conn, identifier)
 
 	case "Object", "ObjectCopy", "BucketObject":
 		var objectARN objectARN
@@ -177,7 +181,14 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 		if err != nil {
 			return err
 		}
-		tags, err = objectListTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), objectARN.Bucket, objectARN.Key)
+
+		var optFns []func(*s3.Options)
+		// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+		if arn.IsARN(identifier) && conn.Options().Region == endpoints.AwsGlobalRegionID {
+			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+		}
+
+		tags, err = objectListTags(ctx, conn, objectARN.Bucket, objectARN.Key, optFns...)
 
 	default:
 		return nil
@@ -197,16 +208,25 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 // UpdateTags updates s3 service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
+
 	switch resourceType {
 	case "Bucket":
-		return bucketUpdateTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), identifier, oldTags, newTags)
+		return bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
 
 	case "Object", "ObjectCopy", "BucketObject":
 		objectARN, err := parseObjectARN(identifier)
 		if err != nil {
 			return err
 		}
-		return objectUpdateTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), objectARN.Bucket, objectARN.Key, oldTags, newTags)
+
+		var optFns []func(*s3.Options)
+		// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+		if arn.IsARN(identifier) && conn.Options().Region == endpoints.AwsGlobalRegionID {
+			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+		}
+
+		return objectUpdateTags(ctx, conn, objectARN.Bucket, objectARN.Key, oldTags, newTags, optFns...)
 
 	default:
 		return nil
