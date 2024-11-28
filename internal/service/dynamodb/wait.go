@@ -20,6 +20,7 @@ const (
 	kinesisStreamingDestinationDisabledTimeout = 5 * time.Minute
 	pitrUpdateTimeout                          = 30 * time.Second
 	replicaUpdateTimeout                       = 30 * time.Minute
+	replicateUpdateDelay                       = 5 * time.Second
 	ttlUpdateTimeout                           = 30 * time.Second
 	updateTableContinuousBackupsTimeout        = 20 * time.Minute
 	updateTableTimeout                         = 20 * time.Minute
@@ -79,6 +80,24 @@ func waitImportComplete(ctx context.Context, conn *dynamodb.Client, importARN st
 
 func waitReplicaActive(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ReplicaStatusCreating, awstypes.ReplicaStatusUpdating, awstypes.ReplicaStatusDeleting),
+		Target:  enum.Slice(awstypes.ReplicaStatusActive),
+		Refresh: statusReplicaUpdate(ctx, conn, tableName, region, optFns...),
+		Timeout: max(replicaUpdateTimeout, timeout),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.TableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicaActiveWithDelay(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Delay:   delay,
 		Pending: enum.Slice(awstypes.ReplicaStatusCreating, awstypes.ReplicaStatusUpdating, awstypes.ReplicaStatusDeleting),
 		Target:  enum.Slice(awstypes.ReplicaStatusActive),
 		Refresh: statusReplicaUpdate(ctx, conn, tableName, region, optFns...),
@@ -233,24 +252,6 @@ func waitReplicaSSEUpdated(ctx context.Context, conn *dynamodb.Client, region, t
 		Timeout:                   max(updateTableTimeout, timeout),
 		ContinuousTargetOccurence: 2,
 		Delay:                     30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.TableDescription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitTableActiveAfterDeletionProtectionChange(ctx context.Context, conn *dynamodb.Client, tableName string, timeout time.Duration) (*awstypes.TableDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Delay:   5 * time.Second,
-		Pending: enum.Slice(awstypes.TableStatusCreating, awstypes.TableStatusUpdating),
-		Target:  enum.Slice(awstypes.TableStatusActive),
-		Timeout: max(createTableTimeout, timeout),
-		Refresh: statusTable(ctx, conn, tableName),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
