@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -530,7 +531,7 @@ func testAccCheckObjectCopyDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			var optFns []func(*s3.Options)
-			if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
+			if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 				optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 			}
 
@@ -564,7 +565,7 @@ func testAccCheckObjectCopyExists(ctx context.Context, n string) resource.TestCh
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 

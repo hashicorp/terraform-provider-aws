@@ -29,9 +29,9 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 				// See https://github.com/hashicorp/terraform-provider-aws/issues/33028.
 				tflog.Info(ctx, "overriding region", map[string]any{
 					"original_region": cfg.Region,
-					"override_region": names.GlobalRegionID,
+					"override_region": endpoints.AwsGlobalRegionID,
 				})
-				o.Region = names.GlobalRegionID
+				o.Region = endpoints.AwsGlobalRegionID
 			}
 			o.UsePathStyle = config["s3_use_path_style"].(bool)
 
