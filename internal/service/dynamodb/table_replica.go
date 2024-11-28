@@ -173,6 +173,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
+	// Some attributes take time to propagate to the table replica, so we need to wait a bit longer.
 	waitReplicaActiveFunc := waitReplicaActive
 	if _, ok := d.GetOk("deletion_protection_enabled"); ok {
 		waitReplicaActiveFunc = waitReplicaActiveWithDelay
