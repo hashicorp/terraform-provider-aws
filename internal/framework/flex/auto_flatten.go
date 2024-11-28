@@ -1688,14 +1688,8 @@ func flattenPrePopulate(ctx context.Context, toVal reflect.Value) diag.Diagnosti
 		toVal = toVal.Elem()
 	}
 
-	typeTo := toVal.Type()
-	for i := 0; i < typeTo.NumField(); i++ {
-		field := typeTo.Field(i)
-		if !field.IsExported() {
-			continue // Skip unexported fields.
-		}
-
-		fieldVal := toVal.Field(i)
+	for field := range tfreflect.ExportedStructFields(toVal.Type()) {
+		fieldVal := toVal.FieldByIndex(field.Index)
 		if !fieldVal.CanSet() {
 			diags.AddError(
 				"Incompatible Types",
