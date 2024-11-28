@@ -14,13 +14,13 @@ import (
 type ExampleStruct struct {
 	Field1          string
 	Field2          int
-	unexportedField string
+	unexportedField string //nolint:unused // Used for testing unexported fields
 }
 
 type unexportedStruct struct {
 	Field1          string
 	Field2          int
-	unexportedField string
+	unexportedField string //nolint:unused // Used for testing unexported fields
 }
 
 type NestedEmbedStruct struct {

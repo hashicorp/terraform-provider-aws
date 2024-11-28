@@ -1601,17 +1601,12 @@ func setMapBlockKey(ctx context.Context, to any, key reflect.Value) diag.Diagnos
 		return diags
 	}
 
-	for i, typTo := 0, valTo.Type(); i < typTo.NumField(); i++ {
-		field := typTo.Field(i)
-		if !field.IsExported() {
-			continue // Skip unexported fields.
-		}
-
+	for field := range tfreflect.ExportedStructFields(valTo.Type()) {
 		if field.Name != mapBlockKeyFieldName {
 			continue
 		}
 
-		fieldVal := valTo.Field(i)                            // vTo
+		fieldVal := valTo.FieldByIndex(field.Index)           // vTo
 		fieldAttrVal, ok := fieldVal.Interface().(attr.Value) // valTo
 		if !ok {
 			tflog.SubsystemError(ctx, subsystemName, "Target does not implement attr.Value")
