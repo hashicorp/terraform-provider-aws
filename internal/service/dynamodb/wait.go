@@ -20,7 +20,7 @@ const (
 	kinesisStreamingDestinationDisabledTimeout = 5 * time.Minute
 	pitrUpdateTimeout                          = 30 * time.Second
 	replicaUpdateTimeout                       = 30 * time.Minute
-	replicateUpdateDelay                       = 5 * time.Second
+	replicateUpdateDelay                       = 1*time.Minute + 30*time.Second // Some attributes take time to propagate to the table replica.
 	ttlUpdateTimeout                           = 30 * time.Second
 	updateTableContinuousBackupsTimeout        = 20 * time.Minute
 	updateTableTimeout                         = 20 * time.Minute
@@ -95,6 +95,7 @@ func waitReplicaActive(ctx context.Context, conn *dynamodb.Client, tableName, re
 	return nil, err
 }
 
+// Used only when deletion_protection_enabled is true, to allow propagation to the replica.
 func waitReplicaActiveWithDelay(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Delay:   replicateUpdateDelay,

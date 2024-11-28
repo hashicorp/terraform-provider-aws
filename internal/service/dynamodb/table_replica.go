@@ -173,7 +173,12 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
-	if _, err := waitReplicaActive(ctx, conn, tableName, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate), optFn); err != nil {
+	waitReplicaActiveFunc := waitReplicaActive
+	if _, ok := d.GetOk("deletion_protection_enabled"); ok {
+		waitReplicaActiveFunc = waitReplicaActiveWithDelay
+	}
+
+	if _, err := waitReplicaActiveFunc(ctx, conn, tableName, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate), optFn); err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
@@ -412,15 +417,21 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if d.HasChange("deletion_protection_enabled") {
 			log.Printf("[DEBUG] Updating DynamoDB Table Replica deletion protection: %v", d.Get("deletion_protection_enabled").(bool))
+
 			if _, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
 				TableName:                 aws.String(tableName),
 				DeletionProtectionEnabled: aws.Bool(d.Get("deletion_protection_enabled").(bool)),
 			}); err != nil {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 			}
+
+			// Wait for deletion protection to propagate to the table replica.
+			if _, err := waitReplicaActiveWithDelay(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTableReplica, d.Id(), err)
+			}
 		}
 
-		if _, err := waitReplicaActiveWithDelay(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
+		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTableReplica, d.Id(), err)
 		}
 	}
