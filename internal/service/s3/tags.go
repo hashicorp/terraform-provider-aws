@@ -184,7 +184,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 
 		var optFns []func(*s3.Options)
 		// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
-		if arn.IsARN(identifier) && conn.Options().Region == endpoints.AwsGlobalRegionID {
+		if arn.IsARN(objectARN.Bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
@@ -222,7 +222,7 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, r
 
 		var optFns []func(*s3.Options)
 		// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
-		if arn.IsARN(identifier) && conn.Options().Region == endpoints.AwsGlobalRegionID {
+		if arn.IsARN(objectARN.Bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
