@@ -294,6 +294,11 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set(names.AttrARN, table.TableArn)
+	d.Set("deletion_protection_enabled", table.DeletionProtectionEnabled)
+
+	if table.SSEDescription != nil && table.SSEDescription.KMSMasterKeyArn != nil {
+		d.Set(names.AttrKMSKeyARN, table.SSEDescription.KMSMasterKeyArn)
+	}
 
 	pitrOut, err := conn.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
@@ -301,10 +306,6 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), fmt.Errorf("continuous backups: %w", err))
-	}
-
-	if table.SSEDescription != nil && table.SSEDescription.KMSMasterKeyArn != nil {
-		d.Set(names.AttrKMSKeyARN, table.SSEDescription.KMSMasterKeyArn)
 	}
 
 	if pitrOut != nil && pitrOut.ContinuousBackupsDescription != nil && pitrOut.ContinuousBackupsDescription.PointInTimeRecoveryDescription != nil {
@@ -398,14 +399,34 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	// handled direct to replica
+	// handle replica specific changes
 	// * point_in_time_recovery
-	if d.HasChange("point_in_time_recovery") {
-		if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
+	// * deletion_protection_enabled
+	if d.HasChanges("point_in_time_recovery", "deletion_protection_enabled", names.AttrTagsAll) {
+		if d.HasChange(names.AttrTagsAll) {
+			o, n := d.GetChange(names.AttrTagsAll)
+			if err := updateTags(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
+			}
 		}
 
-		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
+		if d.HasChange("point_in_time_recovery") {
+			if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
+			}
+		}
+
+		if d.HasChange("deletion_protection_enabled") {
+			log.Printf("[DEBUG] Updating DynamoDB Table Replica deletion protection: %v", d.Get("deletion_protection_enabled").(bool))
+			if _, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+				TableName:                 aws.String(tableName),
+				DeletionProtectionEnabled: aws.Bool(d.Get("deletion_protection_enabled").(bool)),
+			}); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
+			}
+		}
+
+		if _, err := waitReplicaActiveWithDelay(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTableReplica, d.Id(), err)
 		}
 	}
