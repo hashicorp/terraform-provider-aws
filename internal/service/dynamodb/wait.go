@@ -95,7 +95,7 @@ func waitReplicaActive(ctx context.Context, conn *dynamodb.Client, tableName, re
 	return nil, err
 }
 
-// Used only when deletion_protection_enabled is true, to allow propagation to the replica.
+// Some attributes take time to propagate to the table replica, so we need to wait a bit longer.
 func waitReplicaActiveWithDelay(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Delay:   replicateUpdateDelay,
