@@ -52,6 +52,7 @@ func resourceDomainAssociation() *schema.Resource {
 			"certificate_settings": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -61,7 +62,8 @@ func resourceDomainAssociation() *schema.Resource {
 						},
 						names.AttrType: {
 							Type:             schema.TypeString,
-							Required:         true,
+							Optional:         true,
+							Default:          types.CertificateTypeAmplifyManaged,
 							ValidateDiagFunc: enum.Validate[types.CertificateType](),
 						},
 						"custom_certificate_arn": {
@@ -70,6 +72,14 @@ func resourceDomainAssociation() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 					},
+				},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Ignore Certificate Settings diff, unless it's not AMPLIFY_MANAGED
+					if types.CertificateType(d.Get("certificate_settings.0.type").(string)) != types.CertificateTypeAmplifyManaged {
+						return old == new
+					}
+
+					return true
 				},
 			},
 			"certificate_verification_dns_record": {
@@ -190,8 +200,10 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set("sub_domain", flattenSubDomains(domainAssociation.SubDomains)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sub_domain: %s", err)
 	}
-	if err := d.Set("certificate_settings", flattenCertificateSettings(domainAssociation.Certificate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting certificate_settings: %s", err)
+	if domainAssociation.Certificate != nil {
+		if err := d.Set("certificate_settings", flattenCertificateSettings(domainAssociation.Certificate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting certificate_settings: %s", err)
+		}
 	}
 
 	return diags
