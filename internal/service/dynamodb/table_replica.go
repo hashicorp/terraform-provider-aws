@@ -273,14 +273,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var
-	// handled direct to replica
-	// * arn
-	// * kms_key_arn
-	// * deletion_protection_enabled
-	// * point_in_time_recovery
-	// * tags
-	diags diag.Diagnostics
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	tableName, _, err := tableReplicaParseResourceID(d.Id())
@@ -325,13 +318,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var
-	// handled through main table (main)
-	// * global_secondary_index
-	// * kms_key_arn
-	// * read_capacity_override
-	// * table_class_override
-	diags diag.Diagnostics
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	tableName, mainRegion, err := tableReplicaParseResourceID(d.Id())
