@@ -1,0 +1,9 @@
+```release-note:enhancement
+resource/aws_amplify_domain_association: Added `AMPLIFY_MANAGED` as the default value for `certificate_settings.type`
+```
+```release-note:enhancement
+resource/aws_amplify_domain_association: Fixed validation error when `certificate_settings.custom_certificate_arn` is not set
+```
+```release-note:enhancement
+resource/aws_amplify_domain_association: Fixed `certificate_settings` diff, when `certificate_settings` is not set
+```
