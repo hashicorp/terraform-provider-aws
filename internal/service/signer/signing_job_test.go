@@ -130,7 +130,7 @@ func TestAccSignerSigningJob_profileOwner(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
 					resource.TestCheckResourceAttr(resourceName, "platform_display_name", "AWS Lambda"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Succeeded"),
-					resource.TestCheckResourceAttrPair(resourceName, "profile_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "profile_owner", "data.aws_caller_identity.current", names.AttrAccountID),
 				),
 			},
 		},
