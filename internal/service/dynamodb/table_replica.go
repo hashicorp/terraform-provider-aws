@@ -85,6 +85,11 @@ func resourceTableReplica() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"deletion_protection_enabled": { // direct to replica
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			// read_capacity_override can be set but requires table write_capacity to be autoscaled which is not yet supported in the provider
 			"table_class_override": { // through main table
 				Type:             schema.TypeString,
