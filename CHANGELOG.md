@@ -5,6 +5,11 @@ FEATURES:
 * **New Resource:** `aws_vpc_block_public_access_exclusion` ([#40235](https://github.com/hashicorp/terraform-provider-aws/issues/40235))
 * **New Resource:** `aws_vpc_block_public_access_options` ([#40233](https://github.com/hashicorp/terraform-provider-aws/issues/40233))
 
+ENHANCEMENTS:
+
+* resource/aws_lambda_event_source_mapping: Add `metrics_config` argument ([#40322](https://github.com/hashicorp/terraform-provider-aws/issues/40322))
+* resource/aws_lambda_event_source_mapping: Add `provisioned_poller_config` argument ([#40303](https://github.com/hashicorp/terraform-provider-aws/issues/40303))
+
 ## 5.78.0 (November 26, 2024)
 
 NOTES:
