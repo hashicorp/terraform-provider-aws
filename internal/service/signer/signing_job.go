@@ -39,7 +39,7 @@ func ResourceSigningJob() *schema.Resource {
 			},
 			"profile_owner": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 			},
 			names.AttrSource: {
