@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
 type fieldNamePrefixCtxKey string
@@ -87,11 +88,7 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, typeFrom reflect.
 
 	// second precedence is exact match (case insensitive)
 	opts := flexer.getOptions()
-	for i := 0; i < typeTo.NumField(); i++ {
-		field := typeTo.Field(i)
-		if !field.IsExported() {
-			continue // Skip unexported fields.
-		}
+	for field := range tfreflect.ExportedStructFields(typeTo) {
 		fieldNameTo := field.Name
 		if opts.isIgnoredField(fieldNameTo) {
 			continue
