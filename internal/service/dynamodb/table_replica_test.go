@@ -299,7 +299,7 @@ func TestAccDynamoDBTableReplica_deletionProtection(t *testing.T) {
 				Config: testAccTableReplicaConfig_deletionProtection(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -312,7 +312,7 @@ func TestAccDynamoDBTableReplica_deletionProtection(t *testing.T) {
 				Config: testAccTableReplicaConfig_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
 				),
 			},
 		},
