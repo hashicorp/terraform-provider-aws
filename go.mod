@@ -43,7 +43,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.6
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.22.4
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.28.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/chime v1.34.6
@@ -75,7 +75,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.35.6
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.40.0
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.50.6
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/connect v1.118.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.20.0
@@ -121,7 +121,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/fis v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/fms v1.38.4
-	github.com/aws/aws-sdk-go-v2/service/fsx v1.49.6
+	github.com/aws/aws-sdk-go-v2/service/fsx v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.29.6
@@ -243,7 +243,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.29.6
 	github.com/aws/aws-sdk-go-v2/service/storagegateway v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.1
-	github.com/aws/aws-sdk-go-v2/service/swf v1.27.6
+	github.com/aws/aws-sdk-go-v2/service/swf v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.6.6
