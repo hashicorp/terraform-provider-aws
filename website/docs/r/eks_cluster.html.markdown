@@ -310,7 +310,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `endpoint` - Endpoint for your Kubernetes API server.
 * `id` - Name of the cluster.
 * `identity` - Attribute block containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. Detailed below.
-* `kubernetes_network_config.service_ipv6_cidr` - The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specified `ipv6` for ipFamily when you created the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
 * `platform_version` - Platform version for the cluster.
 * `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -323,6 +322,10 @@ This resource exports the following attributes in addition to the arguments abov
 ### identity
 
 * `oidc` - Nested block containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster. Detailed below.
+
+### kubernetes_network_config
+
+* `service_ipv6_cidr` - The CIDR block that Kubernetes pod and service IP addresses are assigned from if you specified `ipv6` for `ip_family` when you created the cluster. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
 
 ### oidc
 
