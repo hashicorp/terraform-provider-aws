@@ -258,10 +258,10 @@ func sweepONTAPVolumes(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.FSxClient(ctx)
-	input := &fsx.DescribeVolumesInput{}
+	input := fsx.DescribeVolumesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := fsx.NewDescribeVolumesPaginator(conn, input)
+	pages := fsx.NewDescribeVolumesPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -278,14 +278,20 @@ func sweepONTAPVolumes(region string) error {
 			if v.VolumeType != awstypes.VolumeTypeOntap {
 				continue
 			}
+			// Skip root volumes
 			if v.OntapConfiguration != nil && aws.ToBool(v.OntapConfiguration.StorageVirtualMachineRoot) {
 				continue
+			}
+
+			var bypassSnaplock bool
+			if v.OntapConfiguration != nil && v.OntapConfiguration.SnaplockConfiguration != nil {
+				bypassSnaplock = true
 			}
 
 			r := resourceONTAPVolume()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VolumeId))
-			d.Set("bypass_snaplock_enterprise_retention", true)
+			d.Set("bypass_snaplock_enterprise_retention", bypassSnaplock)
 			d.Set("skip_final_backup", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
