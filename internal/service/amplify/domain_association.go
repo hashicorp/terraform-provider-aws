@@ -213,7 +213,9 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("certificate_settings") {
-			input.CertificateSettings = expandCertificateSettings(d.Get("certificate_settings").([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("certificate_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.CertificateSettings = expandCertificateSettings(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		if d.HasChange("enable_auto_sub_domain") {
@@ -429,7 +431,7 @@ func expandCertificateSettings(tfMap map[string]interface{}) *types.CertificateS
 		Type: types.CertificateType(tfMap[names.AttrType].(string)),
 	}
 
-	if v, ok := tfMap["custom_certificate_arn"].(string); ok {
+	if v, ok := tfMap["custom_certificate_arn"].(string); ok && v != "" {
 		apiObject.CustomCertificateArn = aws.String(v)
 	}
 
