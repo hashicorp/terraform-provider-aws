@@ -948,7 +948,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_BotControl(t *te
 						"statement.0.managed_rule_group_statement.0.name":        "AWSManagedRulesBotControlRuleSet",
 						"statement.0.managed_rule_group_statement.0.vendor_name": "AWS",
 						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.inspection_level":        "TARGETED",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.enable_machine_learning": acctest.CtFalse,
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.enable_machine_learning": acctest.CtTrue,
 					}),
 				),
 			},
@@ -2285,7 +2285,6 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 
 						return !lastPage
 					})
-
 					if err != nil {
 						t.Fatalf("finding WebACL (%s): %s", webACLName, err)
 					}
@@ -2315,7 +2314,6 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 
 						return !lastPage
 					})
-
 					if err != nil {
 						t.Fatalf("finding rule group (%s): %s", webACLName, err)
 					}
@@ -3178,7 +3176,6 @@ func testAccCheckWebACLExists(ctx context.Context, n string, v *awstypes.WebACL)
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFV2Client(ctx)
 
 		output, err := tfwafv2.FindWebACLByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes[names.AttrName], rs.Primary.Attributes[names.AttrScope])
-
 		if err != nil {
 			return err
 		}
@@ -4724,7 +4721,7 @@ resource "aws_wafv2_web_acl" "test" {
         managed_rule_group_configs {
           aws_managed_rules_bot_control_rule_set {
             inspection_level        = "TARGETED"
-            enable_machine_learning = false
+            enable_machine_learning = true
           }
         }
       }
