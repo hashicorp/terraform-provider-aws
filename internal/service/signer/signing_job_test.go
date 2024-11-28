@@ -105,40 +105,40 @@ resource "aws_signer_signing_job" "test" {
 }
 
 func TestAccSignerSigningJob_profileOwner(t *testing.T) {
-    ctx := acctest.Context(t)
-    rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-    resourceName := "aws_signer_signing_job.test"
-    profileResourceName := "aws_signer_signing_profile.test"
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_signer_signing_job.test"
+	profileResourceName := "aws_signer_signing_profile.test"
 
-    var job signer.DescribeSigningJobOutput
-    var conf signer.GetSigningProfileOutput
+	var job signer.DescribeSigningJobOutput
+	var conf signer.GetSigningProfileOutput
 
-    resource.ParallelTest(t, resource.TestCase{
-        PreCheck: func() {
-            acctest.PreCheck(ctx, t)
-            testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
-        },
-        ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
-        ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-        CheckDestroy:             nil,
-        Steps: []resource.TestStep{
-            {
-                Config: testAccSigningJobConfig_profileOwner(rName),
-                Check: resource.ComposeTestCheckFunc(
-                    testAccCheckSigningProfileExists(ctx, profileResourceName, &conf),
-                    testAccCheckSigningJobExists(ctx, resourceName, &job),
-                    resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
-                    resource.TestCheckResourceAttr(resourceName, "platform_display_name", "AWS Lambda"),
-                    resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Succeeded"),
-                    resource.TestCheckResourceAttrPair(resourceName, "profile_owner", "data.aws_caller_identity.current", "account_id"),
-                ),
-            },
-        },
-    })
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSigningJobConfig_profileOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSigningProfileExists(ctx, profileResourceName, &conf),
+					testAccCheckSigningJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
+					resource.TestCheckResourceAttr(resourceName, "platform_display_name", "AWS Lambda"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Succeeded"),
+					resource.TestCheckResourceAttrPair(resourceName, "profile_owner", "data.aws_caller_identity.current", "account_id"),
+				),
+			},
+		},
+	})
 }
 
 func testAccSigningJobConfig_profileOwner(rName string) string {
-    return fmt.Sprintf(`
+	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource "aws_signer_signing_profile" "test" {
