@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_apigateway_domain_name: Add support for `policy` argument
+```
+
+```release-note:enhancement
+resource/aws_apigateway_domain_name: Add support for value `PRIVATE` for the `endpoint_configuration.types` argument
+```
+
+```release-note:enhancement
+resource/aws_apigateway_domain_name: Add support for `domain_name_id` attribute
+```
+
+```release-note:enhancement
+data-source/aws_apigateway_domain_name: Add support for `policy` and `domain_name_id` attributes
+```
