@@ -54,6 +54,10 @@ func dataSourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"domain_name_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"endpoint_configuration": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -66,6 +70,10 @@ func dataSourceDomainName() *schema.Resource {
 						},
 					},
 				},
+			},
+			names.AttrPolicy: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"regional_certificate_arn": {
 				Type:     schema.TypeString,
@@ -96,8 +104,12 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
+	var domainNameId string
 	domainName := d.Get(names.AttrDomainName).(string)
-	output, err := findDomainByName(ctx, conn, domainName)
+	if v, ok := d.GetOk("domain_name_id"); ok {
+		domainNameId = v.(string)
+	}
+	output, err := findDomainByName(ctx, conn, domainName, domainNameId)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", domainName, err)
@@ -116,6 +128,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
+	d.Set("policy", output.Policy)
 	d.Set("regional_certificate_arn", output.RegionalCertificateArn)
 	d.Set("regional_certificate_name", output.RegionalCertificateName)
 	d.Set("regional_domain_name", output.RegionalDomainName)
