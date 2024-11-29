@@ -97,7 +97,13 @@ func (r *resourceApplicationAttributeGroupAssociation) Create(ctx context.Contex
 		)
 		return
 	}
-	plan.setId()
+	id, err := plan.setId()
+	if err != nil {
+		resp.Diagnostics.AddError("flattening resource ID Application AttributeGroup Association", err.Error())
+		return
+	}
+
+	plan.ID = types.StringValue(id)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -151,8 +157,8 @@ func (r *resourceApplicationAttributeGroupAssociation) Delete(ctx context.Contex
 	}
 
 	in := &servicecatalogappregistry.DisassociateAttributeGroupInput{
-		Application:    aws.String(state.Application.ValueString()),
-		AttributeGroup: aws.String(state.AttributeGroup.ValueString()),
+		Application:    state.Application.ValueStringPointer(),
+		AttributeGroup: state.AttributeGroup.ValueStringPointer(),
 	}
 
 	_, err := conn.DisassociateAttributeGroup(ctx, in)
@@ -203,8 +209,8 @@ type resourceApplicationAttributeGroupAssociationData struct {
 	AttributeGroup types.String `tfsdk:"attribute_group_id"`
 }
 
-func (data *resourceApplicationAttributeGroupAssociationData) setId() {
-	data.ID = types.StringValue(errs.Must(flex2.FlattenResourceId([]string{data.Application.ValueString(), data.AttributeGroup.ValueString()}, applicationAttributeGroupAssociationIDParts, false)))
+func (data *resourceApplicationAttributeGroupAssociationData) setId() (string, error) {
+	return flex2.FlattenResourceId([]string{data.Application.ValueString(), data.AttributeGroup.ValueString()}, applicationAttributeGroupAssociationIDParts, false)
 }
 
 func (data *resourceApplicationAttributeGroupAssociationData) parseId() error {
