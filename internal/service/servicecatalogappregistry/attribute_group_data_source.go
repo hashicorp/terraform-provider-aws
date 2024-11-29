@@ -101,7 +101,7 @@ func (d *dataSourceAttributeGroup) Read(ctx context.Context, req datasource.Read
 	}
 
 	// Transparent tagging doesn't work for DataSource yet
-	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.Tags = tftags.NewMapFromMapValue(flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -112,5 +112,5 @@ type dataSourceAttributeGroupData struct {
 	Description types.String         `tfsdk:"description"`
 	ID          types.String         `tfsdk:"id"`
 	Name        types.String         `tfsdk:"name"`
-	Tags        types.Map            `tfsdk:"tags"`
+	Tags        tftags.Map           `tfsdk:"tags"`
 }
