@@ -57,17 +57,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
-		{
-			Factory: newResourceApplicationAttributeGroupAssociation,
-			Name:    "Application Attribute Group Association",
-		},
-		{
-			Factory: newResourceAttributeGroup,
-			Name:    "Attribute Group",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
 	}
 }
 
