@@ -128,7 +128,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
-	d.Set("policy", output.Policy)
+	d.Set(names.AttrPolicy, output.Policy)
 	d.Set("regional_certificate_arn", output.RegionalCertificateArn)
 	d.Set("regional_certificate_name", output.RegionalCertificateName)
 	d.Set("regional_domain_name", output.RegionalDomainName)

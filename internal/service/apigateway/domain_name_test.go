@@ -278,7 +278,7 @@ func TestAccAPIGatewayDomainName_privatePolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_name_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 				),
 			},
 			{
