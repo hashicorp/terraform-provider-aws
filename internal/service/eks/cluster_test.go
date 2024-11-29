@@ -1607,10 +1607,10 @@ resource "aws_eks_cluster" "test" {
 
   remote_network_config {
     remote_node_networks {
-      cidrs = ["10.90.0.0/22"]
+      cidrs = [%[2]q]
     }
     remote_pod_networks {
-      cidrs = ["10.80.0.0/22"]
+      cidrs = [%[3]q]
     }
   }
 
