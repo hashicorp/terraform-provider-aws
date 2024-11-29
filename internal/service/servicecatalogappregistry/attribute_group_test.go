@@ -49,7 +49,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_basic(t *testing.T) {
 				Config: testAccAttributeGroupConfig_basic(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
 				),
@@ -90,7 +90,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
 				Config: testAccAttributeGroupConfig_basic(rName, rDesc),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAttributes, expectJsonV1),
@@ -101,7 +101,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup2),
 					testAccCheckAttributeGroupNotRecreated(&attributegroup1, &attributegroup2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAttributes, expectJsonV2),
