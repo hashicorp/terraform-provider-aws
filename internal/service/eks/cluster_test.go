@@ -922,7 +922,7 @@ func TestAccEKSCluster_RemoteNodeNetwork(t *testing.T) {
 	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
-	remoteNodeNetwork := "10.90.0.0/22"
+	remoteNodeCIDR := "10.90.0.0/22"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -931,13 +931,13 @@ func TestAccEKSCluster_RemoteNodeNetwork(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_remoteNodeNetwork(rName, remoteNodeNetwork),
+				Config: testAccClusterConfig_remoteNodeNetwork(rName, remoteNodeCIDR),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.0", remoteNodeNetwork),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.0", remoteNodeCIDR),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.#", "0"),
 				),
 			},
@@ -956,8 +956,8 @@ func TestAccEKSCluster_RemotePodNetwork(t *testing.T) {
 	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
-	remoteNodeNetwork := "10.90.0.0/22"
-	remotePodNetwork := "10.80.0.0/22"
+	remoteNodeCIDR := "10.90.0.0/22"
+	remotePodCIDR := "10.80.0.0/22"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -966,16 +966,16 @@ func TestAccEKSCluster_RemotePodNetwork(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_remotePodNetwork(rName, remoteNodeNetwork, remotePodNetwork),
+				Config: testAccClusterConfig_remotePodNetwork(rName, remoteNodeCIDR, remotePodCIDR),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.0", remoteNodeNetwork),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.0", remoteNodeCIDR),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.0", remotePodNetwork),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.0", remotePodCIDR),
 				),
 			},
 			{
