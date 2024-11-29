@@ -57,7 +57,7 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 }
 func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ServiceCatalogAppRegistryClient(ctx)
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 
 	var data dataSourceApplicationData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -77,7 +77,7 @@ func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 
 	// Transparent tagging doesn't work for DataSource yet
-	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	data.Tags = tftags.NewMapFromMapValue(flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -88,5 +88,5 @@ type dataSourceApplicationData struct {
 	ID             types.String `tfsdk:"id"`
 	Name           types.String `tfsdk:"name"`
 	ApplicationTag types.Map    `tfsdk:"application_tag"`
-	Tags           types.Map    `tfsdk:"tags"`
+	Tags           tftags.Map   `tfsdk:"tags"`
 }
