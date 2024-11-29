@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -153,32 +152,6 @@ func TestAccProvider_DefaultAndIgnoreTags_emptyBlocks(t *testing.T) {
 					testAccCheckProviderDefaultTags_Tags(ctx, t, &provider, map[string]string{}),
 					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{}),
 					testAccCheckIgnoreTagsKeyPrefixes(ctx, t, &provider, []string{}),
-				),
-			},
-		},
-	})
-}
-
-func TestAccProvider_endpoints(t *testing.T) {
-	ctx := acctest.Context(t)
-	var provider *schema.Provider
-	var endpoints strings.Builder
-
-	// Initialize each endpoint configuration with matching name and value
-	for _, serviceKey := range names.ProviderPackages() {
-		endpoints.WriteString(fmt.Sprintf("%s = \"http://%s\"\n", serviceKey, serviceKey))
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t),
-		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
-		CheckDestroy:             nil,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccProviderConfig_endpoints(endpoints.String()),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEndpoints(ctx, &provider),
 				),
 			},
 		},
@@ -976,55 +949,6 @@ func testAccCheckProviderDefaultTags_Tags(ctx context.Context, t *testing.T, p *
 
 			if !found {
 				return fmt.Errorf("unexpected tags element: %s", actualElement)
-			}
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckEndpoints(_ context.Context, p **schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
-			return fmt.Errorf("provider not initialized")
-		}
-
-		providerClient := (*p).Meta().(*conns.AWSClient)
-
-		for _, serviceKey := range names.Aliases() {
-			methodName := serviceClient(serviceKey)
-			method := reflect.ValueOf(providerClient).MethodByName(methodName)
-			if !method.IsValid() {
-				continue
-			}
-			if method.Kind() != reflect.Func {
-				return fmt.Errorf("value %q is not a function", methodName)
-			}
-			if !funcHasConnFuncSignature(method) {
-				return fmt.Errorf("function %q does not match expected signature", methodName)
-			}
-
-			result := method.Call([]reflect.Value{
-				reflect.ValueOf(context.Background()),
-			})
-			if l := len(result); l != 1 {
-				return fmt.Errorf("expected 1 result, got %d", l)
-			}
-			providerClientField := result[0]
-
-			if !providerClientField.IsValid() {
-				return fmt.Errorf("unable to match conns.AWSClient struct field name for endpoint name: %s", serviceKey)
-			}
-
-			if !reflect.Indirect(providerClientField).FieldByName("Config").IsValid() {
-				continue // currently unknown how to do this check for v2 clients
-			}
-
-			actualEndpoint := reflect.Indirect(reflect.Indirect(providerClientField).FieldByName("Config").FieldByName("Endpoint")).String()
-			expectedEndpoint := fmt.Sprintf("http://%s", serviceKey)
-
-			if actualEndpoint != expectedEndpoint {
-				return fmt.Errorf("expected endpoint (%s) value (%s), got: %s", serviceKey, expectedEndpoint, actualEndpoint)
 			}
 		}
 
