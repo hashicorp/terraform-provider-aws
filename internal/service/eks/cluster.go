@@ -129,7 +129,8 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
-								Type: schema.TypeString,
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(nodePoolType_Values(), false),
 							},
 						},
 						"node_role_arn": {

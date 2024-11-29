@@ -42,3 +42,15 @@ func accessEntryType_Values() []string {
 		accessEntryTypeStandard,
 	}
 }
+
+const (
+	nodePoolGeneralPurpose = "general-purpose"
+	nodePoolSystem         = "system"
+)
+
+func nodePoolType_Values() []string {
+	return []string{
+		nodePoolGeneralPurpose,
+		nodePoolSystem,
+	}
+}
