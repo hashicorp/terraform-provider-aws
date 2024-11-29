@@ -481,6 +481,9 @@ func TestAccProvider_IgnoreTagsKeyPrefixes_envVarMerged(t *testing.T) {
 }
 
 func TestAccProvider_Region_c2s(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -504,6 +507,9 @@ func TestAccProvider_Region_c2s(t *testing.T) {
 }
 
 func TestAccProvider_Region_china(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -527,6 +533,9 @@ func TestAccProvider_Region_china(t *testing.T) {
 }
 
 func TestAccProvider_Region_commercial(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -550,6 +559,9 @@ func TestAccProvider_Region_commercial(t *testing.T) {
 }
 
 func TestAccProvider_Region_govCloud(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -573,6 +585,9 @@ func TestAccProvider_Region_govCloud(t *testing.T) {
 }
 
 func TestAccProvider_Region_sc2s(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
@@ -596,6 +611,9 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 }
 
 func TestAccProvider_Region_stsRegion(t *testing.T) {
+	// When using `AWS_PROFILE` for authentication, `skip_credentials_validation` is ignored
+	// https://github.com/hashicorp/aws-sdk-go-base/issues/453
+	t.Skip()
 	ctx := acctest.Context(t)
 	var provider *schema.Provider
 
