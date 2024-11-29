@@ -936,8 +936,10 @@ func TestAccEKSCluster_RemoteNetwork(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.0", "10.90.0.0/22"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.0", "10.80.0.0/22"),
 				),
 			},
 			{
