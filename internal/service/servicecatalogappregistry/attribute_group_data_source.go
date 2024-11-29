@@ -68,7 +68,7 @@ func (d *dataSourceAttributeGroup) Schema(ctx context.Context, req datasource.Sc
 
 func (d *dataSourceAttributeGroup) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ServiceCatalogAppRegistryClient(ctx)
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 
 	var data dataSourceAttributeGroupData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
