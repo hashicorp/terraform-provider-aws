@@ -215,7 +215,7 @@ func (r *resourceAttributeGroup) Delete(ctx context.Context, req resource.Delete
 	}
 
 	in := &servicecatalogappregistry.DeleteAttributeGroupInput{
-		AttributeGroup: aws.String(state.ID.ValueString()),
+		AttributeGroup: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteAttributeGroup(ctx, in)
