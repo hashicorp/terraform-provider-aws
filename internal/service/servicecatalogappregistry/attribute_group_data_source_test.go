@@ -44,7 +44,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_basic(t *testing.T
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, rDesc),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrAttributes, expectJsonV1),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 				),
 			},
 		},
