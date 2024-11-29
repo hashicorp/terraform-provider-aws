@@ -917,11 +917,12 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 	})
 }
 
-func TestAccEKSCluster_RemoteNetwork(t *testing.T) {
+func TestAccEKSCluster_RemoteNodeNetwork(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
+	remoteNodeNetwork := "10.90.0.0/22"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -930,16 +931,51 @@ func TestAccEKSCluster_RemoteNetwork(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_remoteNetwork(rName, `"10.90.0.0/22"`, `"10.80.0.0/22"`),
+				Config: testAccClusterConfig_remoteNodeNetwork(rName, remoteNodeNetwork),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.0", "10.90.0.0/22"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.0", remoteNodeNetwork),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.#", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
+			},
+		},
+	})
+}
+
+func TestAccEKSCluster_RemotePodNetwork(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster types.Cluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_cluster.test"
+	remoteNodeNetwork := "10.90.0.0/22"
+	remotePodNetwork := "10.80.0.0/22"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_remotePodNetwork(rName, remoteNodeNetwork, remotePodNetwork),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.0.cidrs.0", remoteNodeNetwork),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.0", "10.80.0.0/22"),
+					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_pod_networks.0.cidrs.0", remotePodNetwork),
 				),
 			},
 			{
@@ -1595,7 +1631,34 @@ resource "aws_eks_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_remoteNetwork(rName, nodeCIDR, podCIDR string) string {
+func testAccClusterConfig_remoteNodeNetwork(rName, nodeCIDR string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+
+  access_config {
+    # Either "API" or "API_AND_CONFIG_MAP" is required with remote network config
+    authentication_mode                         = "API"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+
+  remote_network_config {
+    remote_node_networks {
+      cidrs = [%[2]q]
+    }
+  }
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy]
+}
+`, rName, nodeCIDR))
+}
+
+func testAccClusterConfig_remotePodNetwork(rName, nodeCIDR, podCIDR string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
