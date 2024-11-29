@@ -9,7 +9,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
@@ -203,7 +202,7 @@ func resourceCluster() *schema.Resource {
 							ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.IsCIDRNetwork(12, 24),
-								validation.StringMatch(regexache.MustCompile(`^(10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168)\..*`), "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16"),
+								validateIPv4CIDRPrivateRange,
 							),
 						},
 						"service_ipv6_cidr": {
@@ -284,7 +283,7 @@ func resourceCluster() *schema.Resource {
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
 												verify.ValidIPv4CIDRNetworkAddress,
-												validation.StringMatch(regexache.MustCompile(`^(10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168)\..*`), "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16"),
+												validateIPv4CIDRPrivateRange,
 											),
 										},
 									},
@@ -307,7 +306,7 @@ func resourceCluster() *schema.Resource {
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
 												verify.ValidIPv4CIDRNetworkAddress,
-												validation.StringMatch(regexache.MustCompile(`^(10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168)\..*`), "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16"),
+												validateIPv4CIDRPrivateRange,
 											),
 										},
 									},
