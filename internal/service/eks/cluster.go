@@ -263,7 +263,6 @@ func resourceCluster() *schema.Resource {
 			"remote_network_config": {
 				Type:          schema.TypeList,
 				Optional:      true,
-				Computed:      true,
 				ForceNew:      true,
 				MaxItems:      1,
 				ConflictsWith: []string{"outpost_config"},
@@ -279,7 +278,7 @@ func resourceCluster() *schema.Resource {
 									"cidrs": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										Computed: true,
+										ForceNew: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
@@ -302,7 +301,7 @@ func resourceCluster() *schema.Resource {
 									"cidrs": {
 										Type:     schema.TypeSet,
 										Optional: true,
-										Computed: true,
+										ForceNew: true,
 										MinItems: 1,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
