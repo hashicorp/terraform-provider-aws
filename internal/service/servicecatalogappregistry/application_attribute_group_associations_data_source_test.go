@@ -37,7 +37,7 @@ func TestAccServiceCatalogAppRegistryApplicationAttributeGroupAssociationsDataSo
 				Config: testAccApplicationAttributeGroupAssociationsDataSourceConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationAttributeGroupAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(dataSourceName, "attribute_group_ids.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(dataSourceName, "attribute_group_ids.#", "1"),
 				),
 			},
 		},
