@@ -313,7 +313,6 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	if err := d.Set("upgrade_policy", flattenUpgradePolicy(cluster.UpgradePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting upgrade_policy: %s", err)
 	}
-
 	d.Set(names.AttrVersion, cluster.Version)
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
