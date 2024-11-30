@@ -157,9 +157,9 @@ func (r *cloudfrontVPCOriginResource) Create(ctx context.Context, request resour
 	output, err := conn.CreateVpcOrigin(ctx, &input)
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	if _, err = waitVPCOriginUpdated(ctx, conn, data.Id.ValueString(), createTimeout); err != nil {
+	if _, err = waitVPCOriginDeployed(ctx, conn, data.Id.ValueString(), createTimeout); err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage("Cloudfront VPC Origin", create.ErrActionWaitingForCreation, names.AttrStatus, data.Id.String(), err),
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForCreation, "VPC Origin", data.Id.String(), err),
 			err.Error(),
 		)
 		return
@@ -244,9 +244,9 @@ func (r *cloudfrontVPCOriginResource) Update(ctx context.Context, request resour
 	output, err := conn.UpdateVpcOrigin(ctx, input)
 
 	updateTimeout := r.UpdateTimeout(ctx, old.Timeouts)
-	if _, err = waitVPCOriginUpdated(ctx, conn, old.Id.ValueString(), updateTimeout); err != nil {
+	if _, err = waitVPCOriginDeployed(ctx, conn, old.Id.ValueString(), updateTimeout); err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage("Cloudfront VPC Origin", create.ErrActionWaitingForUpdate, names.AttrStatus, old.Id.String(), err),
+			create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForUpdate, "VPC Origin", old.Id.String(), err),
 			err.Error(),
 		)
 		return
@@ -316,7 +316,7 @@ func VPCOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) re
 	}
 }
 
-func waitVPCOriginUpdated(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.VpcOrigin, error) {
+func waitVPCOriginDeployed(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.VpcOrigin, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"Deploying"},
 		Target:  []string{"Deployed"},
@@ -335,7 +335,7 @@ func waitVPCOriginUpdated(ctx context.Context, conn *cloudfront.Client, id strin
 
 func waitVPCOriginDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.VpcOrigin, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"Deleting"},
+		Pending: []string{"Deploying"},
 		Target:  []string{},
 		Refresh: VPCOriginStatus(ctx, conn, id),
 		Timeout: timeout,
