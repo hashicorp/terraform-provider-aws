@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
@@ -14,13 +15,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	fwdiag "github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"time"
+)
+
+const (
+	deleteVPCOriginTimeout = 15 * time.Minute
+	updateVPCOriginTimeout = 15 * time.Minute
 )
 
 // @FrameworkResource("aws_cloudfront_vpc_origin", name="VPC Origin")
@@ -31,6 +42,7 @@ func newCloudfrontVPCOriginResource(_ context.Context) (resource.ResourceWithCon
 
 type cloudfrontVPCOriginResource struct {
 	framework.ResourceWithConfigure
+	framework.WithTimeouts
 }
 
 func (r *cloudfrontVPCOriginResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -216,13 +228,32 @@ func (r *cloudfrontVPCOriginResource) Update(ctx context.Context, request resour
 		return
 	}
 
-	output, err := conn.UpdateVpcOrigin(ctx, input)
+	var output *cloudfront.UpdateVpcOriginOutput
+	err := retry.RetryContext(ctx, deleteVPCOriginTimeout, func() *retry.RetryError {
+		output, err := conn.UpdateVpcOrigin(ctx, input)
+		if err != nil {
+			tflog.Info(ctx, *output.VpcOrigin.Status)
+			if errs.IsA[*awstypes.IllegalUpdate](err) {
+				return retry.RetryableError(err)
+			}
 
-	// TODO: Handle "IllegalUpdate" error
-	// TODO: Add Timeouts
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if tfresource.TimedOut(err) {
+		_, err = conn.UpdateVpcOrigin(ctx, input)
+	}
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("Updating Cloudfront VPC Origin (%s)", old.Id.ValueString()), err.Error())
+		return
+	}
+
+	if output == nil {
+		response.Diagnostics.AddError(fmt.Sprintf("Updating Cloudfront VPC Origin (%s): empty response", old.Id.ValueString()), err.Error())
 		return
 	}
 
@@ -251,13 +282,72 @@ func (r *cloudfrontVPCOriginResource) Delete(ctx context.Context, request resour
 
 	_, err := conn.DeleteVpcOrigin(ctx, input)
 
-	// TODO: Handle "IllegalDelete" error
-	// TODO: Add Timeouts
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
+	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
+	if _, err = waitVPCOriginDeleted(ctx, conn, data.Id.ValueString(), deleteTimeout); err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage("Cloudfront VPC Origin", create.ErrActionWaitingForDeletion, names.AttrStatus, data.Id.String(), err),
+			err.Error(),
+		)
 		return
 	}
+}
+
+func VPCOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &cloudfront.GetVpcOriginInput{
+			Id: &id,
+		}
+
+		output, err := conn.GetVpcOrigin(ctx, input)
+
+		if errs.IsA[*awstypes.EntityNotFound](err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil {
+			return nil, "", nil
+		}
+
+		return output, aws.ToString(output.VpcOrigin.Status), nil
+	}
+}
+
+func waitVPCOriginUpdated(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.VpcOrigin, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"Deploying"},
+		Target:  []string{"Deployed"},
+		Refresh: VPCOriginStatus(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcOrigin); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCOriginDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.VpcOrigin, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{"Deleting"},
+		Target:  []string{},
+		Refresh: VPCOriginStatus(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.VpcOrigin); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func findVPCOriginByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetVpcOriginOutput, error) {
@@ -287,6 +377,7 @@ type vpcOriginModel struct {
 	Status                  types.String                                        `tfsdk:"status"`
 	VpcOriginEndpointConfig fwtypes.ObjectValueOf[vpcOriginEndpointConfigModel] `tfsdk:"vpc_origin_endpoint_config"`
 	Tags                    tftags.Map                                          `tfsdk:"tags"`
+	Timeouts                timeouts.Value                                      `tfsdk:"timeouts"`
 }
 
 type vpcOriginEndpointConfigModel struct {
