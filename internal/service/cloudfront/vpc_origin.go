@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -126,6 +125,11 @@ func (r *cloudfrontVPCOriginResource) Schema(ctx context.Context, request resour
 					},
 				},
 			},
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -147,8 +151,12 @@ func (r *cloudfrontVPCOriginResource) Create(ctx context.Context, request resour
 
 	output, err := conn.CreateVpcOrigin(ctx, &input)
 
-	if err != nil {
-		response.Diagnostics.AddError("Creating VPC Cloudfront Origin", err.Error())
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	if _, err = waitVPCOriginUpdated(ctx, conn, data.Id.ValueString(), createTimeout); err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage("Cloudfront VPC Origin", create.ErrActionWaitingForCreation, names.AttrStatus, data.Id.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
@@ -228,27 +236,14 @@ func (r *cloudfrontVPCOriginResource) Update(ctx context.Context, request resour
 		return
 	}
 
-	var output *cloudfront.UpdateVpcOriginOutput
-	err := retry.RetryContext(ctx, deleteVPCOriginTimeout, func() *retry.RetryError {
-		output, err := conn.UpdateVpcOrigin(ctx, input)
-		if err != nil {
-			tflog.Info(ctx, *output.VpcOrigin.Status)
-			if errs.IsA[*awstypes.IllegalUpdate](err) {
-				return retry.RetryableError(err)
-			}
+	output, err := conn.UpdateVpcOrigin(ctx, input)
 
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateVpcOrigin(ctx, input)
-	}
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("Updating Cloudfront VPC Origin (%s)", old.Id.ValueString()), err.Error())
+	updateTimeout := r.UpdateTimeout(ctx, old.Timeouts)
+	if _, err = waitVPCOriginUpdated(ctx, conn, old.Id.ValueString(), updateTimeout); err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage("Cloudfront VPC Origin", create.ErrActionWaitingForUpdate, names.AttrStatus, old.Id.String(), err),
+			err.Error(),
+		)
 		return
 	}
 
