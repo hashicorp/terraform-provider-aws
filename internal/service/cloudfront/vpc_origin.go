@@ -36,6 +36,11 @@ const (
 // @FrameworkResource("aws_cloudfront_vpc_origin", name="VPC Origin")
 func newCloudfrontVPCOriginResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &cloudfrontVPCOriginResource{}
+
+	r.SetDefaultCreateTimeout(15 * time.Minute)
+	r.SetDefaultUpdateTimeout(15 * time.Minute)
+	r.SetDefaultDeleteTimeout(15 * time.Minute)
+
 	return r, nil
 }
 
