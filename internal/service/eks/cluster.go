@@ -5,6 +5,7 @@ package eks
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -53,6 +54,7 @@ func resourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
+			validateAutoModeCustsomizeDiff,
 			customdiff.ForceNewIfChange("encryption_config", func(_ context.Context, old, new, meta interface{}) bool {
 				// You cannot disable envelope encryption after enabling it. This action is irreversible.
 				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
@@ -528,15 +530,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("zonal_shift_config"); ok {
 		input.ZonalShiftConfig = expandZonalShiftConfig(v.([]interface{}))
 	}
-
-	// // ToDo - this doesn't seem to work as intended
-	// if aws.ToBool(input.ComputeConfig.Enabled) {
-	// 	input.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled = aws.Bool(true)
-	// 	input.StorageConfig.BlockStorage.Enabled = aws.Bool(true)
-	// } else {
-	// 	input.KubernetesNetworkConfig.ElasticLoadBalancing.Enabled = aws.Bool(false)
-	// 	input.StorageConfig.BlockStorage.Enabled = aws.Bool(false)
-	// }
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
@@ -1763,4 +1756,20 @@ func flattenZonalShiftConfig(apiObject *types.ZonalShiftConfigResponse) []interf
 	}
 
 	return []interface{}{tfMap}
+}
+
+// EKS Auto Mode is comprised of `compute_config`, `kubernetes_networking.elastic_load_balancing`, and `storage_config` attributes.
+// All three `enabled` fields need to be set to either `true` or `false`
+func validateAutoModeCustsomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if d.HasChanges("compute_config", "kubernetes_network_config", "storage_config") {
+		computeConfig := expandComputeConfigRequest(d.Get("compute_config").([]interface{}))
+		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
+		storageConfig := expandStorageConfigRequest(d.Get("storage_config").([]interface{}))
+
+		if computeConfig.Enabled != kubernetesNetworkConfig.ElasticLoadBalancing.Enabled || computeConfig.Enabled != storageConfig.BlockStorage.Enabled {
+			return errors.New("compute_config.enabled, kubernetes_networking_config.elastic_load_balancing.enabled, and storage_config.block_storage.enabled must all be set to either true or false")
+		}
+	}
+
+	return nil
 }
