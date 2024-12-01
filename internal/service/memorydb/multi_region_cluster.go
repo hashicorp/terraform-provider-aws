@@ -114,10 +114,11 @@ func resourceMultiRegionClusterCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), "")
+	name := create.Name(d.Get("multi_region_cluster_name").(string), "")
 	input := &memorydb.CreateMultiRegionClusterInput{
-		NodeType:                     aws.String(d.Get("node_type").(string)),
+		MultiRegionClusterName:       aws.String(name),
 		MultiRegionClusterNameSuffix: aws.String(d.Get("multi_region_cluster_name_suffix").(string)),
+		NodeType:                     aws.String(d.Get("node_type").(string)),
 		TLSEnabled:                   aws.Bool(d.Get("tls_enabled").(bool)),
 		Tags:                         getTagsIn(ctx),
 	}
