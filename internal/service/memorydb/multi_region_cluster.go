@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -113,6 +112,11 @@ func resourceMultiRegionCluster() *schema.Resource {
 				},
 				"num_shards": {
 					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+				},
+				"update_strategy": {
+					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
 				},
@@ -219,42 +223,17 @@ func resourceMultiRegionClusterUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	if d.HasChangesExcept("final_snapshot_name", names.AttrTags, names.AttrTagsAll) {
-		waitParameterGroupInSync := false
-		waitSecurityGroupsActive := false
-
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &memorydb.UpdateMultiRegionClusterInput{
 			MultiRegionClusterName: aws.String(d.Id()),
-		}
-
-		if d.HasChange("acl_name") {
-			input.ACLName = aws.String(d.Get("acl_name").(string))
 		}
 
 		if d.HasChange(names.AttrDescription) {
 			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange(names.AttrEngine) {
-			input.Engine = aws.String(d.Get(names.AttrEngine).(string))
-		}
-
 		if d.HasChange(names.AttrEngineVersion) {
 			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
-		}
-
-		if d.HasChange("maintenance_window") {
-			input.MaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
-		}
-
-		if d.HasChange("node_type") {
-			input.NodeType = aws.String(d.Get("node_type").(string))
-		}
-
-		if d.HasChange("num_replicas_per_shard") {
-			input.ReplicaConfiguration = &awstypes.ReplicaConfigurationRequest{
-				ReplicaCount: int32(d.Get("num_replicas_per_shard").(int)),
-			}
 		}
 
 		if d.HasChange("num_shards") {
@@ -263,64 +242,26 @@ func resourceMultiRegionClusterUpdate(ctx context.Context, d *schema.ResourceDat
 			}
 		}
 
-		if d.HasChange(names.AttrParameterGroupName) {
-			input.ParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
-			waitParameterGroupInSync = true
+		if d.HasChange("node_type") {
+			input.NodeType = aws.String(d.Get("node_type").(string))
 		}
 
-		if d.HasChange(names.AttrSecurityGroupIDs) {
-			// UpdateMultiRegionCluster reads null and empty slice as "no change", so once
-			// at least one security group is present, it's no longer possible
-			// to remove all of them.
-
-			v := d.Get(names.AttrSecurityGroupIDs).(*schema.Set)
-
-			if v.Len() == 0 {
-				return sdkdiag.AppendErrorf(diags, "unable to update MemoryDB MultiRegionCluster (%s): removing all security groups is not possible", d.Id())
-			}
-
-			input.SecurityGroupIds = flex.ExpandStringValueSet(v)
-			waitSecurityGroupsActive = true
+		if d.HasChange("node_type") {
+			input.NodeType = aws.String(d.Get("node_type").(string))
 		}
 
-		if d.HasChange("snapshot_retention_limit") {
-			input.SnapshotRetentionLimit = aws.Int32(int32(d.Get("snapshot_retention_limit").(int)))
-		}
-
-		if d.HasChange("snapshot_window") {
-			input.SnapshotWindow = aws.String(d.Get("snapshot_window").(string))
-		}
-
-		if d.HasChange(names.AttrSNSTopicARN) {
-			v := d.Get(names.AttrSNSTopicARN).(string)
-			input.SnsTopicArn = aws.String(v)
-			if v == "" {
-				input.SnsTopicStatus = aws.String(clusterSNSTopicStatusInactive)
-			} else {
-				input.SnsTopicStatus = aws.String(clusterSNSTopicStatusActive)
-			}
+		if d.HasChange("multi_region_parameter_group_name") {
+			input.MultiRegionParameterGroupName = aws.String(d.Get("multi_region_parameter_group_name").(string))
 		}
 
 		_, err := conn.UpdateMultiRegionCluster(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating MemoryDB MultiRegionCluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MemoryDB Multi Region Cluster (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitMultiRegionClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB MultiRegionCluster (%s) update: %s", d.Id(), err)
-		}
-
-		if waitParameterGroupInSync {
-			if _, err := waitMultiRegionClusterParameterGroupInSync(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB MultiRegionCluster (%s) parameter group: %s", d.Id(), err)
-			}
-		}
-
-		if waitSecurityGroupsActive {
-			if _, err := waitMultiRegionClusterSecurityGroupsActive(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB MultiRegionCluster (%s) security groups: %s", d.Id(), err)
-			}
+			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi Region Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -335,11 +276,7 @@ func resourceMultiRegionClusterDelete(ctx context.Context, d *schema.ResourceDat
 		MultiRegionClusterName: aws.String(d.Id()),
 	}
 
-	if v := d.Get("final_snapshot_name"); v != nil && len(v.(string)) > 0 {
-		input.FinalSnapshotName = aws.String(v.(string))
-	}
-
-	log.Printf("[DEBUG] Deleting MemoryDB MultiRegionCluster: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting MemoryDB Multi Region Cluster: (%s)", d.Id())
 	_, err := conn.DeleteMultiRegionCluster(ctx, input)
 
 	if errs.IsA[*awstypes.MultiRegionClusterNotFoundFault](err) {
@@ -347,11 +284,11 @@ func resourceMultiRegionClusterDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB MultiRegionCluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB Multi Region Cluster (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitMultiRegionClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB MultiRegionCluster (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi Region Cluster (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -435,22 +372,6 @@ func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name s
 	}
 }
 
-func statusMultiRegionClusterParameterGroup(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findMultiRegionClusterByName(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.ToString(output.ParameterGroupStatus), nil
-	}
-}
-
 func waitMultiRegionClusterAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.MultiRegionCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
@@ -473,26 +394,6 @@ func waitMultiRegionClusterDeleted(ctx context.Context, conn *memorydb.Client, n
 		Pending: []string{clusterStatusDeleting},
 		Target:  []string{},
 		Refresh: statusMultiRegionCluster(ctx, conn, name),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.MultiRegionCluster); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitMultiRegionClusterParameterGroupInSync(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.MultiRegionCluster, error) {
-	const (
-		timeout = 60 * time.Minute
-	)
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{clusterParameterGroupStatusApplying},
-		Target:  []string{clusterParameterGroupStatusInSync},
-		Refresh: statusMultiRegionClusterParameterGroup(ctx, conn, name),
 		Timeout: timeout,
 	}
 
