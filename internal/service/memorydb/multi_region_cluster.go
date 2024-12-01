@@ -375,39 +375,6 @@ func flattenClusters(apiObject *awstypes.Clusters) []interface{} {
 
 	return tfList
 }
-func expandCluster(tfMap map[string]interface{}) *awstypes.Cluster {
-	if tfMap == nil {
-		return nil
-	}
-
-	return &awstypes.Cluster{
-		Arn:    aws.String(tfMap[names.AttrARN].(string)),
-		Name:   aws.String(tfMap["cluster_name"].(string)),
-		Region: aws.String(tfMap[names.AttrRegion].(string)),
-		Status: aws.String(tfMap[names.AttrStatus].(string)),
-	}
-}
-
-func expandClusters(tfList []interface{}) *awstypes.Clusters {
-	var clusters []awstypes.Cluster
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		apiObject := expandCluster(tfMap)
-
-		if apiObject != nil {
-			clusters = append(clusters, *apiObject)
-		}
-	}
-
-	return &awstypes.Clusters{
-		RegionalClusters: clusters,
-	}
-}
 
 func findMultiRegionClusterByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.MultiRegionCluster, error) {
 	input := &memorydb.DescribeMultiRegionClustersInput{
