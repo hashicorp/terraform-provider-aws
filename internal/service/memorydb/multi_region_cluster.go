@@ -52,6 +52,11 @@ func resourceMultiRegionCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				names.AttrName: {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
 				names.AttrDescription: {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -88,11 +93,6 @@ func resourceMultiRegionCluster() *schema.Resource {
 					ValidateDiagFunc: enum.Validate[clusterEngine](),
 				},
 				names.AttrEngineVersion: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"multi_region_cluster_name": {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
@@ -142,7 +142,7 @@ func resourceMultiRegionClusterCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	name := create.Name(d.Get("multi_region_cluster_name").(string), "")
+	name := create.Name(d.Get(names.AttrName).(string), "")
 	input := &memorydb.CreateMultiRegionClusterInput{
 		MultiRegionClusterName:       aws.String(name),
 		MultiRegionClusterNameSuffix: aws.String(d.Get("multi_region_cluster_name_suffix").(string)),
@@ -203,13 +203,13 @@ func resourceMultiRegionClusterRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	d.Set(names.AttrARN, cluster.ARN)
+	d.Set(names.AttrName, cluster.MultiRegionClusterName)
 	d.Set(names.AttrDescription, cluster.Description)
 	if err := d.Set("clusters", flattenClusters(cluster.Clusters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting clusters: %s", err)
 	}
 	d.Set(names.AttrEngine, cluster.Engine)
 	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
-	d.Set("multi_region_cluster_name", cluster.MultiRegionClusterName)
 	d.Set("node_type", cluster.NodeType)
 	d.Set("num_shards", cluster.NumberOfShards)
 	d.Set("multi_region_parameter_group_name", cluster.MultiRegionParameterGroupName)
