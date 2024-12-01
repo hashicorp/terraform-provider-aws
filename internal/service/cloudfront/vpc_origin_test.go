@@ -79,19 +79,55 @@ func testAccCheckVPCOriginDestroy(ctx context.Context) resource.TestCheckFunc {
 // FIXME: This resource has the right parts and the wrong configuration.
 func testAccVPCOriginConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "a" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.0.1.0/24"
+  availability_zone = "ap-southeast-1a"
+}
+
+resource "aws_subnet" "b" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.0.2.0/24"
+  availability_zone = "ap-southeast-1b"
+}
+
+resource "aws_subnet" "c" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.0.3.0/24"
+  availability_zone = "ap-southeast-1c"
+}
+
+
 resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.main.id
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group" "allow_tls" {
-  name        = "allow_tls"
+  rName        = "allow_tls"
   description = "Allow TLS inbound traffic and all outbound traffic"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_vpc_security_group_ingress_rule" "allow_tls_ipv4" {
   security_group_id = aws_security_group.allow_tls.id
-  cidr_ipv4         = aws_vpc.main.cidr_block
+  cidr_ipv4         = aws_vpc.test.cidr_block
   from_port         = 443
   ip_protocol       = "tcp"
   to_port           = 443
@@ -104,16 +140,20 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 }
 
 resource "aws_lb" "this" {
-  name               = "test-lb-tf"
+  rName               =  %[1]q
   internal           = true
   load_balancer_type = "application"
   security_groups    = [aws_security_group.allow_tls.id]
   subnets            = [aws_subnet.a.id, aws_subnet.b.id, aws_subnet.c.id]
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_cloudfront_vpc_origin" "this" {
   vpc_origin_endpoint_config {
-    name = "test2"
+    rName = %[1]q
     origin_arn = aws_lb.this.arn
     http_port = 8080
     https_port = 8443
@@ -122,6 +162,10 @@ resource "aws_cloudfront_vpc_origin" "this" {
       items = ["TLSv1.2"]
       quantity = 1
     }
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName)
