@@ -200,7 +200,7 @@ func resourceMultiRegionClusterRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set(names.AttrARN, cluster.ARN)
 	d.Set(names.AttrDescription, cluster.Description)
-	if err := d.Set("clusters", flattenClusterConfiguration(cluster.Clusters)); err != nil {
+	if err := d.Set("clusters", flattenClusters(cluster.Clusters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting clusters: %s", err)
 	}
 	d.Set(names.AttrEngine, cluster.Engine)
