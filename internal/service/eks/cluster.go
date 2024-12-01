@@ -118,7 +118,6 @@ func resourceCluster() *schema.Resource {
 			"compute_config": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -711,16 +710,6 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		computeConfig := expandComputeConfigRequest(d.Get("compute_config").([]interface{}))
 		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
 		storageConfig := expandStorageConfigRequest(d.Get("storage_config").([]interface{}))
-
-		// InvalidParameterException: For EKS Auto Mode, please ensure that all required configs,
-		// including computeConfig, kubernetesNetworkConfig, and blockStorage are all either fully enabled or fully disabled.
-		if computeConfig != nil && aws.ToBool(computeConfig.Enabled) {
-			kubernetesNetworkConfig.ElasticLoadBalancing.Enabled = aws.Bool(true)
-			storageConfig.BlockStorage.Enabled = aws.Bool(true)
-		} else {
-			kubernetesNetworkConfig.ElasticLoadBalancing.Enabled = aws.Bool(false)
-			storageConfig.BlockStorage.Enabled = aws.Bool(false)
-		}
 
 		input := &eks.UpdateClusterConfigInput{
 			Name:                    aws.String(d.Id()),
@@ -1758,15 +1747,15 @@ func flattenZonalShiftConfig(apiObject *types.ZonalShiftConfigResponse) []interf
 	return []interface{}{tfMap}
 }
 
-// EKS Auto Mode is comprised of `compute_config`, `kubernetes_networking.elastic_load_balancing`, and `storage_config` attributes.
-// All three `enabled` fields need to be set to either `true` or `false`
+// InvalidParameterException: For EKS Auto Mode, please ensure that all required configs,
+// including computeConfig, kubernetesNetworkConfig, and blockStorage are all either fully enabled or fully disabled.
 func validateAutoModeCustsomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
 	if d.HasChanges("compute_config", "kubernetes_network_config", "storage_config") {
 		computeConfig := expandComputeConfigRequest(d.Get("compute_config").([]interface{}))
 		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
 		storageConfig := expandStorageConfigRequest(d.Get("storage_config").([]interface{}))
 
-		if computeConfig.Enabled != kubernetesNetworkConfig.ElasticLoadBalancing.Enabled || computeConfig.Enabled != storageConfig.BlockStorage.Enabled {
+		if aws.ToBool(computeConfig.Enabled) != aws.ToBool(kubernetesNetworkConfig.ElasticLoadBalancing.Enabled) || aws.ToBool(computeConfig.Enabled) != aws.ToBool(storageConfig.BlockStorage.Enabled) {
 			return errors.New("compute_config.enabled, kubernetes_networking_config.elastic_load_balancing.enabled, and storage_config.block_storage.enabled must all be set to either true or false")
 		}
 	}
