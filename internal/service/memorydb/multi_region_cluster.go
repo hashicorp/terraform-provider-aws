@@ -58,6 +58,30 @@ func resourceMultiRegionCluster() *schema.Resource {
 					Optional: true,
 					Default:  "Managed by Terraform",
 				},
+				"clusters": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							names.AttrARN: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"cluster_name": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrRegion: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							names.AttrStatus: {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+						},
+					},
+				},
 				names.AttrEngine: {
 					Type:             schema.TypeString,
 					Optional:         true,
@@ -176,6 +200,9 @@ func resourceMultiRegionClusterRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set(names.AttrARN, cluster.ARN)
 	d.Set(names.AttrDescription, cluster.Description)
+	if err := d.Set("clusters", flattenClusterConfiguration(cluster.Clusters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting clusters: %s", err)
+	}
 	d.Set(names.AttrEngine, cluster.Engine)
 	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
 	d.Set("multi_region_cluster_name", cluster.MultiRegionClusterName)
@@ -328,6 +355,58 @@ func resourceMultiRegionClusterDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return diags
+}
+
+func flattenClusters(apiObject *awstypes.Clusters) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	var tfList []interface{}
+
+	for k, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]interface{}{
+			names.AttrARN:    aws.ToString(apiObject.Arn),
+			"cluster_name":   aws.ToString(apiObject.Name),
+			names.AttrRegion: aws.ToString(apiObject.Region),
+			names.AttrStatus: aws.ToString(apiObject.Status),
+		})
+	}
+
+	return tfList
+}
+func expandCluster(tfMap map[string]interface{}) *awstypes.Cluster {
+	if tfMap == nil {
+		return nil
+	}
+
+	return &awstypes.Cluster{
+		Arn:    aws.String(tfMap[names.AttrARN].(string)),
+		Name:   aws.String(tfMap["cluster_name"].(string)),
+		Region: aws.String(tfMap[names.AttrRegion].(string)),
+		Status: aws.String(tfMap[names.AttrStatus].(string)),
+	}
+}
+
+func expandClusters(tfList []interface{}) *awstypes.Clusters {
+	var clusters []awstypes.Cluster
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := expandCluster(tfMap)
+
+		if apiObject != nil {
+			clusters = append(clusters, *apiObject)
+		}
+	}
+
+	return &awstypes.Clusters{
+		RegionalClusters: clusters,
+	}
 }
 
 func findMultiRegionClusterByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.MultiRegionCluster, error) {
