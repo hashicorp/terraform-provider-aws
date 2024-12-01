@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_memorydb_cluster", name="MultiRegionCluster")
+// @SDKResource("aws_memorydb_multi_region_cluster", name="MultiRegionCluster")
 // @Tags(identifierAttribute="arn")
 func resourceMultiRegionCluster() *schema.Resource {
 	return &schema.Resource{
