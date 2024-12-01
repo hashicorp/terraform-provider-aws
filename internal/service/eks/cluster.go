@@ -123,7 +123,6 @@ func resourceCluster() *schema.Resource {
 						"enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							Default:  false,
 						},
 						"node_pools": {
 							Type:     schema.TypeSet,
