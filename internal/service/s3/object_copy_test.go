@@ -506,7 +506,7 @@ func TestAccS3ObjectCopy_basicViaAccessPoint(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_algorithm"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key_md5"),
-					resource.TestCheckResourceAttr(resourceName, "source_version_id", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "source_version_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "STANDARD"),
 					resource.TestCheckNoResourceAttr(resourceName, "tagging_directive"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
@@ -848,7 +848,7 @@ resource "aws_s3_access_point" "target" {
 }
 
 resource "aws_s3_object" "source" {
-  bucket  = aws_s3_bucket.source.bucket
+  bucket  = aws_s3_bucket_versioning.source.bucket
   key     = %[2]q
   content = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 }
