@@ -30,7 +30,7 @@ import (
 
 var (
 	// e.g. example--usw2-az2--x-s3
-	directoryBucketNameRegex = regexache.MustCompile(`^([0-9a-z.-]+)--([a-z]+\d+-az\d+)--x-s3$`)
+	directoryBucketNameRegex = regexache.MustCompile(`^(?:[0-9a-z.-]+)--(?:[0-9a-za-z]+(?:-[0-9a-za-z]+)+)--x-s3$`)
 )
 
 func isDirectoryBucket(bucket string) bool {

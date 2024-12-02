@@ -25,11 +25,16 @@ func TestBucketNameTypeFor(t *testing.T) {
 			bucket:       "tf-acc-test-5488849387206835662--use1-az6--x-s3",
 			expectedType: bucketNameTypeDirectoryBucket,
 		},
-		// {
-		// 	testName:     "Directory bucket name (DLZ)",
-		// 	bucket:       "mybucket--test1-long1-zone-ab1--x-s3",
-		// 	expectedType: bucketNameTypeDirectoryBucket,
-		// },
+		{
+			testName:     "Directory bucket name (medium DLZ)",
+			bucket:       "mybucket--test1-zone-ab1--x-s3",
+			expectedType: bucketNameTypeDirectoryBucket,
+		},
+		{
+			testName:     "Directory bucket name (long DLZ)",
+			bucket:       "mybucket--test1-long1-zone-ab1--x-s3",
+			expectedType: bucketNameTypeDirectoryBucket,
+		},
 		{
 			testName:     "Multi-Region access point ARN",
 			bucket:       "arn:aws:s3::111122223333:accesspoint/MultiRegionAccessPoint_alias",
