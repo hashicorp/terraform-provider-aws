@@ -414,7 +414,7 @@ func TestAccS3ObjectCopy_directoryBucket(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "customer_key_md5", ""),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrExpectedBucketOwner),
 					resource.TestCheckNoResourceAttr(resourceName, "expected_source_bucket_owner"),
-					resource.TestCheckResourceAttr(resourceName, "expiration", ""),
+					resource.TestCheckResourceAttr(resourceName, "expiration", "NotImplemented"),
 					resource.TestCheckNoResourceAttr(resourceName, "expires"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "grant.#", "0"),
