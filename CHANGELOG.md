@@ -9,6 +9,7 @@ ENHANCEMENTS:
 
 * resource/aws_lambda_event_source_mapping: Add `metrics_config` argument ([#40322](https://github.com/hashicorp/terraform-provider-aws/issues/40322))
 * resource/aws_lambda_event_source_mapping: Add `provisioned_poller_config` argument ([#40303](https://github.com/hashicorp/terraform-provider-aws/issues/40303))
+* resource/aws_vpc_endpoint_service: Add `supported_regions` argument ([#40346](https://github.com/hashicorp/terraform-provider-aws/issues/40346))
 
 ## 5.78.0 (November 26, 2024)
 
