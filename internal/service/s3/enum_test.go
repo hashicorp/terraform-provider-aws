@@ -55,6 +55,16 @@ func TestBucketNameTypeFor(t *testing.T) {
 			bucket:       "arn:aws:s3-object-lambda:us-east-1:111122223333:accesspoint/my-object-lambda-access-point",
 			expectedType: bucketNameTypeObjectLambdaAccessPointARN,
 		},
+		{
+			testName:     "S3 on Outposts access point alias",
+			bucket:       "my-access-po-o01ac5d28a6a232904e8xz5w8ijx1qzlbp3i3kuse10--op-s3",
+			expectedType: bucketNameTypeS3OnOutpostsAccessPointAlias,
+		},
+		{
+			testName:     "S3 on Outposts access point ARN",
+			bucket:       "arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-01ac5d28a6a232904/accesspoint/my-access-point",
+			expectedType: bucketNameTypeS3OnOutpostsAccessPointARN,
+		},
 	}
 
 	for _, testCase := range testCases {

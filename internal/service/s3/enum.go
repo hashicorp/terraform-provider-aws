@@ -19,6 +19,8 @@ const (
 	bucketNameTypeObjectLambdaAccessPointAlias
 	bucketNameTypeObjectLambdaAccessPointARN
 	bucketNameTypeMultiRegionAccessPointARN
+	bucketNameTypeS3OnOutpostsAccessPointAlias
+	bucketNameTypeS3OnOutpostsAccessPointARN
 )
 
 func bucketNameTypeFor(bucket string) bucketNameType {
@@ -36,6 +38,11 @@ func bucketNameTypeFor(bucket string) bucketNameType {
 			case "s3-object-lambda":
 				return bucketNameTypeObjectLambdaAccessPointARN
 			}
+		case strings.HasPrefix(v.Resource, "outpost/"):
+			switch v.Service {
+			case "s3-outposts":
+				return bucketNameTypeS3OnOutpostsAccessPointARN
+			}
 		}
 	case directoryBucketNameRegex.MatchString(bucket):
 		return bucketNameTypeDirectoryBucket
@@ -43,6 +50,8 @@ func bucketNameTypeFor(bucket string) bucketNameType {
 		return bucketNameTypeAccessPointAlias
 	case strings.HasSuffix(bucket, "--ol-s3"):
 		return bucketNameTypeObjectLambdaAccessPointAlias
+	case strings.HasSuffix(bucket, "--op-s3"):
+		return bucketNameTypeS3OnOutpostsAccessPointAlias
 	}
 
 	return bucketNameTypeGeneralPurposeBucket
