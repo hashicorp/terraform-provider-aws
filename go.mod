@@ -92,7 +92,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dax v1.23.7
 	github.com/aws/aws-sdk-go-v2/service/detective v1.31.7
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.28.7
-	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.34.6
+	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.34.7
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/dlm v1.28.7
