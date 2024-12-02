@@ -21,7 +21,7 @@
    Please include specific questions or items you'd like feedback on.
 
 1. Pull Request Best Practice
-    - When creating a Pull Request, ensure it has a descriptive title highlighting the primary change in the PR. Include the resource/data source name if the change is related to one.
+    - When creating a pull request, ensure it has a descriptive title highlighting the primary change in the PR. Include the resource/data source name if the change is related to one.
     - Ensure the description includes the reasoning for the change, what was changed and how UX is expected to be altered (if applicable).
     - Keep Pull Requests as small as possible and focused on a single change. When adding resources or data sources a pull request should only contain a single item (and its tests).  Pull Requests containing multiple resources, or code to add both the service client and resources are much more difficult and time consuming for maintainers to review.
 
