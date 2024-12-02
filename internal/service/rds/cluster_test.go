@@ -1319,16 +1319,16 @@ func TestAccRDSCluster_ReplicationSourceIdentifier_promote(t *testing.T) {
 			{
 				Config: testAccClusterConfig_replicationSource_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(ctx, resourceName, &primaryCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(ctx, resourceName2, &replicaCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceName, &primaryCluster, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceName2, &replicaCluster, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttrSet(resourceName2, "replication_source_identifier"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_replicationSource_promote(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsWithProvider(ctx, resourceName, &primaryCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsWithProvider(ctx, resourceName2, &replicaCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceName, &primaryCluster, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsWithProvider(ctx, resourceName2, &replicaCluster, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttr(resourceName2, "replication_source_identifier", ""),
 				),
 			},
