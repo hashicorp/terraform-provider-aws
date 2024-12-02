@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -330,9 +331,24 @@ func TestAccVPCEndpointService_crossRegion(t *testing.T) {
 	var svcCfg awstypes.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
+	supportedRegions := []string{
+		endpoints.ApNortheast1RegionID,
+		endpoints.ApSoutheast1RegionID,
+		endpoints.ApSoutheast2RegionID,
+		endpoints.EuWest1RegionID,
+		endpoints.SaEast1RegionID,
+		endpoints.UsEast1RegionID,
+		endpoints.UsWest2RegionID,
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 3) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+			acctest.PreCheckRegion(t, supportedRegions...)
+			acctest.PreCheckAlternateRegion(t, supportedRegions...)
+			acctest.PreCheckThirdRegion(t, supportedRegions...)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
