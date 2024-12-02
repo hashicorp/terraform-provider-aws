@@ -24,8 +24,9 @@ const (
 func bucketNameTypeFor(bucket string) bucketNameType {
 	switch {
 	case arn.IsARN(bucket):
-		switch v, _ := arn.Parse(bucket); v.Resource {
-		case "accesspoint":
+		v, _ := arn.Parse(bucket)
+		switch {
+		case strings.HasPrefix(v.Resource, "accesspoint/"):
 			switch v.Service {
 			case "s3":
 				if v.Region == "" {
@@ -44,5 +45,5 @@ func bucketNameTypeFor(bucket string) bucketNameType {
 		return bucketNameTypeObjectLambdaAccessPointAlias
 	}
 
-	return bucketNameTypeDirectoryBucket
+	return bucketNameTypeGeneralPurposeBucket
 }
