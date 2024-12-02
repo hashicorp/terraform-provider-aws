@@ -35,6 +35,7 @@ This resource supports the following arguments:
 * `expected_bucket_owner` - (Optional) AWS account ID that you expect to be the owner of the Amazon S3 bucket.
 * `force_destroy` - (Optional, Default: false) Boolean that indicates all tables should be deleted from the database so that the database can be destroyed without error. The tables are *not* recoverable.
 * `properties` - (Optional) Key-value map of custom metadata properties for the database definition.
+* `workgroup` - (Optional) Name of the workgroup where to execute database creation and deletion queries
 
 ### ACL Configuration
 
