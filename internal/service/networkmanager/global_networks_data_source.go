@@ -57,7 +57,7 @@ func dataSourceGlobalNetworksRead(ctx context.Context, d *schema.ResourceData, m
 		globalNetworkIDs = append(globalNetworkIDs, aws.ToString(v.GlobalNetworkId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, globalNetworkIDs)
 
 	return diags

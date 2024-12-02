@@ -88,7 +88,7 @@ func (d *foundationModelsDataSource) Read(ctx context.Context, request datasourc
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

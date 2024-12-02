@@ -43,9 +43,9 @@ func TestAccRDSClusterEndpoint_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterEndpointExists(ctx, readerResourceName, &customReaderEndpoint),
 					testAccCheckClusterEndpointExists(ctx, defaultResourceName, &customEndpoint),
-					acctest.MatchResourceAttrRegionalARN(readerResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, readerResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(readerResourceName, names.AttrEndpoint),
-					acctest.MatchResourceAttrRegionalARN(defaultResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, defaultResourceName, names.AttrARN, "rds", regexache.MustCompile(`cluster-endpoint:.+`)),
 					resource.TestCheckResourceAttrSet(defaultResourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(defaultResourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(readerResourceName, acctest.CtTagsPercent, "0"),

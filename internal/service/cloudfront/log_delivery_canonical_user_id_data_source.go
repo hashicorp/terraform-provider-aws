@@ -39,7 +39,7 @@ func dataSourceLogDeliveryCanonicalUserIDRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	canonicalUserID := defaultLogDeliveryCanonicalUserID
 
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}

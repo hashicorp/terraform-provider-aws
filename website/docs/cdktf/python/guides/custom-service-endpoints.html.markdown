@@ -259,7 +259,7 @@ class MyConvertedCode(TerraformStack):
 |Elemental MediaPackage|`mediapackage`|`AWS_ENDPOINT_URL_MEDIAPACKAGE`|`mediapackage`|
 |Elemental MediaPackage Version 2|`mediapackagev2`|`AWS_ENDPOINT_URL_MEDIAPACKAGEV2`|`mediapackagev2`|
 |Elemental MediaStore|`mediastore`|`AWS_ENDPOINT_URL_MEDIASTORE`|`mediastore`|
-|MemoryDB for Redis|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
+|MemoryDB|`memorydb`|`AWS_ENDPOINT_URL_MEMORYDB`|`memorydb`|
 |MQ|`mq`|`AWS_ENDPOINT_URL_MQ`|`mq`|
 |MWAA (Managed Workflows for Apache Airflow)|`mwaa`|`AWS_ENDPOINT_URL_MWAA`|`mwaa`|
 |Neptune|`neptune`|`AWS_ENDPOINT_URL_NEPTUNE`|`neptune`|
@@ -451,4 +451,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-700d24e32436a3ee4a58a01b04c6c9d73513eb5022f6c37b8cdb2d1e7a3126f0 -->
+<!-- cache-key: cdktf-0.20.8 input-4e3fa62dd773273a2b02044c92ecc0e94efa9d4d45dea76809ef87786f83e533 -->

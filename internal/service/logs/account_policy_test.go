@@ -36,7 +36,7 @@ func TestAccLogsAccountPolicy_basicSubscriptionFilter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccountPolicyExists(ctx, resourceName, &accountPolicy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
-					testAccCheckAccountHasSubscriptionFilterPolicy(resourceName, rName),
+					testAccCheckAccountHasSubscriptionFilterPolicy(ctx, resourceName, rName),
 				),
 			},
 			{
@@ -226,14 +226,14 @@ func testAccCheckAccountPolicyDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckAccountHasSubscriptionFilterPolicy(resourceName string, rName string) resource.TestCheckFunc {
+func testAccCheckAccountHasSubscriptionFilterPolicy(ctx context.Context, resourceName string, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		expectedJSONTemplate := `{
 			"DestinationArn": "arn:%s:lambda:%s:%s:function:%s",
 			"FilterPattern" : " ",
 			"Distribution" : "Random"
 		  }`
-		expectedJSON := fmt.Sprintf(expectedJSONTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(), rName)
+		expectedJSON := fmt.Sprintf(expectedJSONTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(ctx), rName)
 		return acctest.CheckResourceAttrEquivalentJSON(resourceName, "policy_document", expectedJSON)(s)
 	}
 }

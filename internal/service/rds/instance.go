@@ -860,7 +860,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
 				}
-				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region
+				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region(ctx)
 			}
 			if crossRegion {
 				input.DBParameterGroupName = aws.String(v.(string))
@@ -2587,9 +2587,15 @@ func dbInstancePopulateModify(input *rds.ModifyDBInstanceInput, d *schema.Resour
 		needsModify = true
 		input.StorageType = aws.String(d.Get(names.AttrStorageType).(string))
 
-		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.ToString(input.StorageType)) {
-			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
+		// Need to send the iops and allocated_size if migrating to a gp3 volume that's larger than the threshold.
+		if aws.ToString(input.StorageType) == storageTypeGP3 && !isStorageTypeGP3BelowAllocatedStorageThreshold(d) {
 			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
+			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
+		}
+
+		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.ToString(input.StorageType)) {
+			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
+			input.Iops = aws.Int32(int32(d.Get(names.AttrIOPS).(int)))
 		}
 	}
 

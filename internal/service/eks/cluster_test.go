@@ -47,7 +47,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("cluster/%s$", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("cluster/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_authority.0.data"),

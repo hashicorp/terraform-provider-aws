@@ -91,7 +91,7 @@ func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schem
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	peerAccountID := meta.(*conns.AWSClient).AccountID
+	peerAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk("peer_account_id"); ok {
 		peerAccountID = v.(string)
 	}

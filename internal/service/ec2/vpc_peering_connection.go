@@ -174,7 +174,7 @@ func resourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("accept_status", vpcPeeringConnection.Status.Code)
 	d.Set("peer_region", vpcPeeringConnection.AccepterVpcInfo.Region)
 
-	if accountID := meta.(*conns.AWSClient).AccountID; accountID == aws.ToString(vpcPeeringConnection.AccepterVpcInfo.OwnerId) && accountID != aws.ToString(vpcPeeringConnection.RequesterVpcInfo.OwnerId) {
+	if accountID := meta.(*conns.AWSClient).AccountID(ctx); accountID == aws.ToString(vpcPeeringConnection.AccepterVpcInfo.OwnerId) && accountID != aws.ToString(vpcPeeringConnection.RequesterVpcInfo.OwnerId) {
 		// We're the accepter.
 		d.Set("peer_owner_id", vpcPeeringConnection.RequesterVpcInfo.OwnerId)
 		d.Set("peer_vpc_id", vpcPeeringConnection.RequesterVpcInfo.VpcId)

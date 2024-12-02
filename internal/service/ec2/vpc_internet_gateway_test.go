@@ -35,8 +35,8 @@ func TestAccVPCInternetGateway_basic(t *testing.T) {
 				Config: testAccVPCInternetGatewayConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInternetGatewayExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`internet-gateway/igw-.+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`internet-gateway/igw-.+`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVPCID, ""),
 				),

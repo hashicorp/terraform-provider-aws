@@ -102,7 +102,7 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 				Config: testAccProjectConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codebuild", fmt.Sprintf("project/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "badge_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "build_batch_config.#", "0"),
@@ -111,7 +111,7 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache.0.type", string(types.CacheTypeNoCache)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "encryption_key", "kms", "alias/aws/s3"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "encryption_key", "kms", "alias/aws/s3"),
 					resource.TestCheckResourceAttr(resourceName, "environment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildGeneral1Small)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
@@ -2884,7 +2884,7 @@ func TestAccCodeBuildProject_fleet(t *testing.T) {
 				Config: testAccProjectConfig_fleet(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codebuild", fmt.Sprintf("project/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codebuild", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", string(types.ComputeTypeBuildGeneral1Small)),
 					resource.TestCheckResourceAttr(resourceName, "environment.0.fleet.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "environment.0.fleet.0.fleet_arn", fleetResourceName, names.AttrARN),

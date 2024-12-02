@@ -223,8 +223,8 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codedeploy",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "deploymentconfig:" + deploymentConfigName,
 	}.String()
 	d.Set(names.AttrARN, arn)
