@@ -8,10 +8,10 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssmincidents"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -23,7 +23,7 @@ func RegisterSweepers() {
 
 func sweepReplicationSets(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID {
 		log.Printf("[WARN] Skipping SSMIncidents Replication Sets sweep for region: %s", region)
 		return nil
 	}

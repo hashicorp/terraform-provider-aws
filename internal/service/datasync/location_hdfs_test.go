@@ -37,7 +37,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SIMPLE"),
 					resource.TestCheckResourceAttr(resourceName, "block_size", "134217728"),
 					resource.TestCheckNoResourceAttr(resourceName, "kerberos_keytab"),
@@ -155,7 +155,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "KERBEROS"),
 					resource.TestCheckResourceAttr(resourceName, "block_size", "134217728"),
 					resource.TestCheckNoResourceAttr(resourceName, "kerberos_keytab"),

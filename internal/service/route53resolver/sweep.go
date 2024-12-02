@@ -567,7 +567,7 @@ func sweepRules(region string) error {
 		}
 
 		for _, v := range page.ResolverRules {
-			if aws.ToString(v.OwnerId) != client.AccountID {
+			if aws.ToString(v.OwnerId) != client.AccountID(ctx) {
 				continue
 			}
 

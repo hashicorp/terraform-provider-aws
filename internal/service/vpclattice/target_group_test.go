@@ -43,7 +43,7 @@ func TestAccVPCLatticeTargetGroup_basic(t *testing.T) {
 				Config: testAccTargetGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", acctest.CtTrue),
@@ -171,7 +171,7 @@ func TestAccVPCLatticeTargetGroup_lambda(t *testing.T) {
 				Config: testAccTargetGroupConfig_lambda(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "ACTIVE"),
@@ -208,7 +208,7 @@ func TestAccVPCLatticeTargetGroup_lambdaEventStructureVersion(t *testing.T) {
 				Config: testAccTargetGroupConfig_lambdaEventStructureVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.lambda_event_structure_version", "V2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -245,7 +245,7 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 				Config: testAccTargetGroupConfig_ip(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", acctest.CtTrue),
@@ -278,7 +278,7 @@ func TestAccVPCLatticeTargetGroup_ip(t *testing.T) {
 				Config: testAccTargetGroupConfig_ipUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.0.enabled", acctest.CtTrue),
@@ -326,7 +326,7 @@ func TestAccVPCLatticeTargetGroup_alb(t *testing.T) {
 				Config: testAccTargetGroupConfig_alb(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "vpc-lattice", regexache.MustCompile("targetgroup/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.health_check.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "config.0.ip_address_type", ""),

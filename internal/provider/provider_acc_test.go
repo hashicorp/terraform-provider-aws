@@ -518,7 +518,7 @@ func TestAccProvider_Region_c2s(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.USISOEast1RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsIsoEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "c2s.ic.gov"),
 					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoPartitionID),
@@ -541,7 +541,7 @@ func TestAccProvider_Region_china(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.CNNorthwest1RegionID),
+				Config: testAccProviderConfig_region(endpoints.CnNorthwest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com.cn"),
 					testAccCheckPartition(ctx, t, &provider, endpoints.AwsCnPartitionID),
@@ -564,7 +564,7 @@ func TestAccProvider_Region_commercial(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.USWest2RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
 					testAccCheckPartition(ctx, t, &provider, endpoints.AwsPartitionID),
@@ -587,7 +587,7 @@ func TestAccProvider_Region_govCloud(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.USGovWest1RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsGovWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "amazonaws.com"),
 					testAccCheckPartition(ctx, t, &provider, endpoints.AwsUsGovPartitionID),
@@ -610,7 +610,7 @@ func TestAccProvider_Region_sc2s(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_region(names.USISOBEast1RegionID),
+				Config: testAccProviderConfig_region(endpoints.UsIsobEast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSuffix(ctx, t, &provider, "sc2s.sgov.gov"),
 					testAccCheckPartition(ctx, t, &provider, endpoints.AwsIsoBPartitionID),
@@ -633,10 +633,10 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProviderConfig_stsRegion(names.USEast1RegionID, names.USWest2RegionID),
+				Config: testAccProviderConfig_stsRegion(endpoints.UsEast1RegionID, endpoints.UsWest2RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRegion(ctx, t, &provider, names.USEast1RegionID),
-					testAccCheckSTSRegion(ctx, t, &provider, names.USWest2RegionID),
+					testAccCheckRegion(ctx, t, &provider, endpoints.UsEast1RegionID),
+					testAccCheckSTSRegion(ctx, t, &provider, endpoints.UsWest2RegionID),
 				),
 				PlanOnly: true,
 			},
@@ -647,6 +647,7 @@ func TestAccProvider_Region_stsRegion(t *testing.T) {
 // For historical reasons, ignore a single empty `assume_role` block
 func TestAccProvider_AssumeRole_empty(t *testing.T) {
 	ctx := acctest.Context(t)
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t),
@@ -656,7 +657,7 @@ func TestAccProvider_AssumeRole_empty(t *testing.T) {
 			{
 				Config: testAccProviderConfig_assumeRoleEmpty,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
+					acctest.CheckCallerIdentityAccountID(ctx, "data.aws_caller_identity.current"),
 				),
 			},
 		},
@@ -718,7 +719,7 @@ func testAccCheckRegion(ctx context.Context, t *testing.T, p **schema.Provider, 
 			return fmt.Errorf("provider not initialized")
 		}
 
-		if got := (*p).Meta().(*conns.AWSClient).Region; got != expectedRegion {
+		if got := (*p).Meta().(*conns.AWSClient).Region(ctx); got != expectedRegion {
 			return fmt.Errorf("expected Region (%s), got: %s", expectedRegion, got)
 		}
 

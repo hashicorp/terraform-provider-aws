@@ -179,7 +179,7 @@ func resourceVaultRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("access_policy", nil)
 	d.Set(names.AttrARN, output.VaultARN)
-	d.Set(names.AttrLocation, fmt.Sprintf("/%s/vaults/%s", meta.(*conns.AWSClient).AccountID, d.Id()))
+	d.Set(names.AttrLocation, fmt.Sprintf("/%s/vaults/%s", meta.(*conns.AWSClient).AccountID(ctx), d.Id()))
 	d.Set(names.AttrName, output.VaultName)
 	d.Set("notification", nil)
 
