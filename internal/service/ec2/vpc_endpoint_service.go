@@ -397,6 +397,10 @@ func flattenSupportedRegionDetails(apiObjects []awstypes.SupportedRegionDetail) 
 		return nil
 	}
 
+	apiObjects = tfslices.Filter(apiObjects, func(v awstypes.SupportedRegionDetail) bool {
+		return aws.ToString(v.ServiceState) == supportedRegionServiceStateAvailable
+	})
+
 	return tfslices.ApplyToAll(apiObjects, func(v awstypes.SupportedRegionDetail) string {
 		return aws.ToString(v.Region)
 	})
