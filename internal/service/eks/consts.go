@@ -29,6 +29,7 @@ const (
 	accessEntryTypeEC2Linux     = "EC2_LINUX"
 	accessEntryTypeEC2Windows   = "EC2_WINDOWS"
 	accessEntryTypeFargateLinux = "FARGATE_LINUX"
+	accessEntryTypeHybridLinux  = "HYBRID_LINUX"
 	accessEntryTypeStandard     = "STANDARD"
 )
 
@@ -37,6 +38,7 @@ func accessEntryType_Values() []string {
 		accessEntryTypeEC2Linux,
 		accessEntryTypeEC2Windows,
 		accessEntryTypeFargateLinux,
+		accessEntryTypeHybridLinux,
 		accessEntryTypeStandard,
 	}
 }
