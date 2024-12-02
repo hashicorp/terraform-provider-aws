@@ -24,11 +24,6 @@ output "endpoint" {
 output "kubeconfig-certificate-authority-data" {
   value = data.aws_eks_cluster.example.certificate_authority[0].data
 }
-
-# Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019.
-output "identity-oidc-issuer" {
-  value = data.aws_eks_cluster.example.identity[0].oidc[0].issuer
-}
 ```
 
 ## Argument Reference
@@ -63,11 +58,16 @@ This data source exports the following attributes in addition to the arguments a
         * `group_name` - The name of the placement group for the Kubernetes control plane instances.
     * `outpost_arns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.
 * `platform_version` - Platform version for the cluster.
+* `remote_network_config` - Contains remote network configuration for EKS Hybrid Nodes.
+    * `remote_node_networks` - The networks that can contain hybrid nodes.
+        * `cidrs` - List of network CIDRs that can contain hybrid nodes.
+    * `remote_pod_networks` - The networks that can contain pods that run Kubernetes webhooks on hybrid nodes.
+        * `cidrs` - List of network CIDRs that can contain pods that run Kubernetes webhooks on hybrid nodes.
 * `role_arn` - ARN of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
 * `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `tags` - Key-value map of resource tags.
-* `upgrade_policy` - (Optional) Configuration block for the support policy to use for the cluster.
-    * `support_type` - (Optional) Support type to use for the cluster.
+* `upgrade_policy` - Configuration block for the support policy to use for the cluster.
+    * `support_type` - Support type to use for the cluster.
 * `version` - Kubernetes server version for the cluster.
 * `vpc_config` - Nested list containing VPC configuration for the cluster.
     * `cluster_security_group_id` - The cluster security group that was created by Amazon EKS for the cluster.
