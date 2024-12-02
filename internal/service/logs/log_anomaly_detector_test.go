@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package cloudwatch_test
+package logs_test
 // **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
 //
 // TIP: ==== INTRODUCTION ====
@@ -29,7 +29,7 @@ import (
 	// standard library (i.e., "fmt" or "strings"), second, everything else.
 	//
 	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/cloudwatch/types package. If so, you'll
+	// using the services/logs/types package. If so, you'll
 	// need to import types and reference the nested types, e.g., as
 	// types.<Type Name>.
 	"context"
@@ -39,8 +39,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
+	"github.com/aws/aws-sdk-go-v2/service/logs"
+	"github.com/aws/aws-sdk-go-v2/service/logs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -53,7 +53,7 @@ import (
 	// TIP: You will often need to import the package that this test file lives
 	// in. Since it is in the "test" context, it must import the package to use
 	// any normal context constants, variables, or functions.
-	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
+	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 )
 
 // TIP: File Structure. The basic outline for all test files should be as
@@ -116,7 +116,7 @@ func TestLogAnomalyDetectorExampleUnitTest(t *testing.T) {
 		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
 			t.Parallel()
-			got, err := tfcloudwatch.FunctionFromResource(testCase.Input)
+			got, err := tflogs.FunctionFromResource(testCase.Input)
 
 			if err != nil && !testCase.Error {
 				t.Errorf("got error (%s), expected no error", err)
@@ -140,7 +140,7 @@ func TestLogAnomalyDetectorExampleUnitTest(t *testing.T) {
 // resource name.
 //
 // Acceptance test access AWS and cost money to run.
-func TestAccCloudWatchLogAnomalyDetector_basic(t *testing.T) {
+func TestAccLogsLogAnomalyDetector_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	// TIP: This is a long-running test guard for tests that run longer than
 	// 300s (5 min) generally.
@@ -148,17 +148,17 @@ func TestAccCloudWatchLogAnomalyDetector_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var loganomalydetector cloudwatch.DescribeLogAnomalyDetectorResponse
+	var loganomalydetector logs.DescribeLogAnomalyDetectorResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
+	resourceName := "aws_logs_log_anomaly_detector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.LogsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLogAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -174,7 +174,7 @@ func TestAccCloudWatchLogAnomalyDetector_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cloudwatch", regexache.MustCompile(`loganomalydetector:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "logs", regexache.MustCompile(`loganomalydetector:+.`)),
 				),
 			},
 			{
@@ -187,23 +187,23 @@ func TestAccCloudWatchLogAnomalyDetector_basic(t *testing.T) {
 	})
 }
 
-func TestAccCloudWatchLogAnomalyDetector_disappears(t *testing.T) {
+func TestAccLogsLogAnomalyDetector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var loganomalydetector cloudwatch.DescribeLogAnomalyDetectorResponse
+	var loganomalydetector logs.DescribeLogAnomalyDetectorResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
+	resourceName := "aws_logs_log_anomaly_detector.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.LogsEndpointID)
 			testAccPreCheck(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLogAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -217,7 +217,7 @@ func TestAccCloudWatchLogAnomalyDetector_disappears(t *testing.T) {
 					// to exports_test.go:
 					//
 					//   var ResourceLogAnomalyDetector = newResourceLogAnomalyDetector
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudwatch.ResourceLogAnomalyDetector, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceLogAnomalyDetector, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -227,51 +227,51 @@ func TestAccCloudWatchLogAnomalyDetector_disappears(t *testing.T) {
 
 func testAccCheckLogAnomalyDetectorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_cloudwatch_log_anomaly_detector" {
+			if rs.Type != "aws_logs_log_anomaly_detector" {
 				continue
 			}
 
-			input := &cloudwatch.DescribeLogAnomalyDetectorInput{
+			input := &logs.DescribeLogAnomalyDetectorInput{
 				LogAnomalyDetectorId: aws.String(rs.Primary.ID),
 			}
-			_, err := conn.DescribeLogAnomalyDetector(ctx, &cloudwatch.DescribeLogAnomalyDetectorInput{
+			_, err := conn.DescribeLogAnomalyDetector(ctx, &logs.DescribeLogAnomalyDetectorInput{
 				LogAnomalyDetectorId: aws.String(rs.Primary.ID),
 			})
 			if errs.IsA[*types.ResourceNotFoundException](err){
 				return nil
 			}
 			if err != nil {
-			        return create.Error(names.CloudWatch, create.ErrActionCheckingDestroyed, tfcloudwatch.ResNameLogAnomalyDetector, rs.Primary.ID, err)
+			        return create.Error(names.Logs, create.ErrActionCheckingDestroyed, tflogs.ResNameLogAnomalyDetector, rs.Primary.ID, err)
 			}
 
-			return create.Error(names.CloudWatch, create.ErrActionCheckingDestroyed, tfcloudwatch.ResNameLogAnomalyDetector, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.Logs, create.ErrActionCheckingDestroyed, tflogs.ResNameLogAnomalyDetector, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckLogAnomalyDetectorExists(ctx context.Context, name string, loganomalydetector *cloudwatch.DescribeLogAnomalyDetectorResponse) resource.TestCheckFunc {
+func testAccCheckLogAnomalyDetectorExists(ctx context.Context, name string, loganomalydetector *logs.DescribeLogAnomalyDetectorResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.CloudWatch, create.ErrActionCheckingExistence, tfcloudwatch.ResNameLogAnomalyDetector, name, errors.New("not found"))
+			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameLogAnomalyDetector, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.CloudWatch, create.ErrActionCheckingExistence, tfcloudwatch.ResNameLogAnomalyDetector, name, errors.New("not set"))
+			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameLogAnomalyDetector, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
-		resp, err := conn.DescribeLogAnomalyDetector(ctx, &cloudwatch.DescribeLogAnomalyDetectorInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		resp, err := conn.DescribeLogAnomalyDetector(ctx, &logs.DescribeLogAnomalyDetectorInput{
 			LogAnomalyDetectorId: aws.String(rs.Primary.ID),
 		})
 
 		if err != nil {
-			return create.Error(names.CloudWatch, create.ErrActionCheckingExistence, tfcloudwatch.ResNameLogAnomalyDetector, rs.Primary.ID, err)
+			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameLogAnomalyDetector, rs.Primary.ID, err)
 		}
 
 		*loganomalydetector = *resp
@@ -281,9 +281,9 @@ func testAccCheckLogAnomalyDetectorExists(ctx context.Context, name string, loga
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-	input := &cloudwatch.ListLogAnomalyDetectorsInput{}
+	input := &logs.ListLogAnomalyDetectorsInput{}
 	_, err := conn.ListLogAnomalyDetectors(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
@@ -294,10 +294,10 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckLogAnomalyDetectorNotRecreated(before, after *cloudwatch.DescribeLogAnomalyDetectorResponse) resource.TestCheckFunc {
+func testAccCheckLogAnomalyDetectorNotRecreated(before, after *logs.DescribeLogAnomalyDetectorResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.LogAnomalyDetectorId), aws.ToString(after.LogAnomalyDetectorId); before != after {
-			return create.Error(names.CloudWatch, create.ErrActionCheckingNotRecreated, tfcloudwatch.ResNameLogAnomalyDetector, aws.ToString(before.LogAnomalyDetectorId), errors.New("recreated"))
+			return create.Error(names.Logs, create.ErrActionCheckingNotRecreated, tflogs.ResNameLogAnomalyDetector, aws.ToString(before.LogAnomalyDetectorId), errors.New("recreated"))
 		}
 
 		return nil
@@ -310,11 +310,11 @@ resource "aws_security_group" "test" {
   name = %[1]q
 }
 
-resource "aws_cloudwatch_log_anomaly_detector" "test" {
+resource "aws_logs_log_anomaly_detector" "test" {
   log_anomaly_detector_name             = %[1]q
-  engine_type             = "ActiveCloudWatch"
+  engine_type             = "ActiveLogs"
   engine_version          = %[2]q
-  host_instance_type      = "cloudwatch.t2.micro"
+  host_instance_type      = "logs.t2.micro"
   security_groups         = [aws_security_group.test.id]
   authentication_strategy = "simple"
   storage_type            = "efs"

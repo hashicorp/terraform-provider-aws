@@ -1,9 +1,9 @@
 ---
-subcategory: "CloudWatch"
+subcategory: "CloudWatch Logs"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_log_anomaly_detector"
+page_title: "AWS: aws_logs_log_anomaly_detector"
 description: |-
-  Terraform resource for managing an AWS CloudWatch Log Anomaly Detector.
+  Terraform resource for managing an AWS CloudWatch Logs Log Anomaly Detector.
 ---
 <!---
 TIP: A few guiding principles for writing documentation:
@@ -13,16 +13,16 @@ TIP: A few guiding principles for writing documentation:
 4. Document your feature as it exists now; do not mention the future or past if you can help it.
 5. Use accessible and inclusive language.
 --->`
-# Resource: aws_cloudwatch_log_anomaly_detector
+# Resource: aws_logs_log_anomaly_detector
 
-Terraform resource for managing an AWS CloudWatch Log Anomaly Detector.
+Terraform resource for managing an AWS CloudWatch Logs Log Anomaly Detector.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_cloudwatch_log_anomaly_detector" "example" {
+resource "aws_logs_log_anomaly_detector" "example" {
 }
 ```
 
@@ -53,17 +53,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Log Anomaly Detector using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Log Anomaly Detector using the `example_id_arg`. For example:
 
 ```terraform
 import {
-  to = aws_cloudwatch_log_anomaly_detector.example
+  to = aws_logs_log_anomaly_detector.example
   id = "log_anomaly_detector-id-12345678"
 }
 ```
 
-Using `terraform import`, import CloudWatch Log Anomaly Detector using the `example_id_arg`. For example:
+Using `terraform import`, import CloudWatch Logs Log Anomaly Detector using the `example_id_arg`. For example:
 
 ```console
-% terraform import aws_cloudwatch_log_anomaly_detector.example log_anomaly_detector-id-12345678
+% terraform import aws_logs_log_anomaly_detector.example log_anomaly_detector-id-12345678
 ```
