@@ -181,7 +181,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.17.4
 	github.com/aws/aws-sdk-go-v2/service/opsworks v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/organizations v1.36.0
-	github.com/aws/aws-sdk-go-v2/service/osis v1.14.6
+	github.com/aws/aws-sdk-go-v2/service/osis v1.14.7
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.47.1
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.9.6
