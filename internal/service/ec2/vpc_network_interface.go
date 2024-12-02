@@ -1078,7 +1078,7 @@ func attachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 
 func deleteNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID string) error {
 	tflog.Info(ctx, "Deleting EC2 Network Interface", map[string]any{
-		"network_interface_id": networkInterfaceID,
+		names.AttrNetworkInterfaceID: networkInterfaceID,
 	})
 	_, err := conn.DeleteNetworkInterface(ctx, &ec2.DeleteNetworkInterfaceInput{
 		NetworkInterfaceId: aws.String(networkInterfaceID),
@@ -1097,7 +1097,7 @@ func deleteNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 
 func detachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID, attachmentID string, timeout time.Duration) error {
 	tflog.Info(ctx, "Detaching EC2 Network Interface", map[string]any{
-		"network_interface_id": networkInterfaceID,
+		names.AttrNetworkInterfaceID: networkInterfaceID,
 	})
 	_, err := conn.DetachNetworkInterface(ctx, &ec2.DetachNetworkInterfaceInput{
 		AttachmentId: aws.String(attachmentID),
