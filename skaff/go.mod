@@ -18,7 +18,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/zclconf/go-cty v1.15.0 // indirect
+	github.com/zclconf/go-cty v1.15.1 // indirect
 	golang.org/x/mod v0.22.0 // indirect
 	golang.org/x/sync v0.9.0 // indirect
 	golang.org/x/text v0.20.0 // indirect
