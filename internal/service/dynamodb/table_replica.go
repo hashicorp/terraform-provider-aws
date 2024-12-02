@@ -66,6 +66,11 @@ func resourceTableReplica() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"deletion_protection_enabled": { // direct to replica
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			// global_secondary_index read capacity override can be set but not return by aws atm either through main/replica nor directly
 			"global_table_arn": {
 				Type:         schema.TypeString,
@@ -81,11 +86,6 @@ func resourceTableReplica() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"point_in_time_recovery": { // direct to replica
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"deletion_protection_enabled": { // direct to replica
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,

@@ -302,38 +302,11 @@ func TestAccDynamoDBTableReplica_deletionProtection(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
 				),
 			},
-			// disable deletion protection for the sweeper to work
-			{
-				Config: testAccTableReplicaConfig_deletionProtection(rName, false),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
-				),
-			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-		},
-	})
-}
-
-func TestAccDynamoDBTableReplica_deletionProtectionDefault(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	resourceName := "aws_dynamodb_table_replica.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
-		CheckDestroy:             testAccCheckTableReplicaDestroy(ctx),
-		Steps: []resource.TestStep{
 			{
 				Config: testAccTableReplicaConfig_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -348,18 +321,13 @@ func TestAccDynamoDBTableReplica_deletionProtectionDefault(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtTrue),
 				),
 			},
-			// disable deletion protection for the sweeper to work
+			// disable deletion protection to allow acceptance test cleanup to complete
 			{
 				Config: testAccTableReplicaConfig_deletionProtection(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "deletion_protection_enabled", acctest.CtFalse),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
