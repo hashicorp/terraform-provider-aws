@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_fsx_openzfs_file_system: Increase max IOPS to 400000 for SINGLE_AZ_2
+resource/aws_fsx_openzfs_file_system: Increase maximum value of `disk_iops_configuration.iops` from `350000` to `400000` for `deployment_type = "SINGLE_AZ_2"`
 ```
