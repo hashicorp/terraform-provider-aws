@@ -50,6 +50,8 @@ func TestAccVPCEndpointService_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "service_type", "Interface"),
 					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "supported_regions.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_regions.*", acctest.Region()),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
@@ -330,7 +332,7 @@ func TestAccVPCEndpointService_crossRegion(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 3) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointServiceDestroy(ctx),
@@ -353,16 +355,25 @@ func TestAccVPCEndpointService_crossRegion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "service_type", "Interface"),
 					resource.TestCheckResourceAttr(resourceName, "supported_ip_address_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_ip_address_types.*", "ipv4"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "supported_regions.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_regions.*", acctest.Region()),
 					resource.TestCheckTypeSetElemAttr(resourceName, "supported_regions.*", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccVPCEndpointServiceConfig_crossRegion(rName, acctest.Region(), acctest.ThirdRegion()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVPCEndpointServiceExists(ctx, resourceName, &svcCfg),
+					resource.TestCheckResourceAttr(resourceName, "supported_regions.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_regions.*", acctest.Region()),
+					resource.TestCheckTypeSetElemAttr(resourceName, "supported_regions.*", acctest.ThirdRegion()),
+				),
 			},
 		},
 	})

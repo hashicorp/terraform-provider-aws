@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -190,7 +191,6 @@ func resourceVPCEndpointServiceCreate(ctx context.Context, d *schema.ResourceDat
 		input.SupportedRegions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPC Endpoint Service: %v", input)
 	output, err := conn.CreateVpcEndpointServiceConfiguration(ctx, input)
 
 	if err != nil {
@@ -264,7 +264,7 @@ func resourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceData,
 	}
 	d.Set(names.AttrState, svcCfg.ServiceState)
 	d.Set("supported_ip_address_types", svcCfg.SupportedIpAddressTypes)
-	d.Set("supported_regions", flattenSupportedRegions(svcCfg.SupportedRegions))
+	d.Set("supported_regions", flattenSupportedRegionDetails(svcCfg.SupportedRegions))
 
 	setTagsOut(ctx, svcCfg.Tags)
 
@@ -299,11 +299,9 @@ func resourceVPCEndpointServiceUpdate(ctx context.Context, d *schema.ResourceDat
 			input.PrivateDnsName = aws.String(d.Get("private_dns_name").(string))
 		}
 
+		input.AddSupportedIpAddressTypes, input.RemoveSupportedIpAddressTypes = flattenAddAndRemoveStringValueLists(d, "supported_ip_address_types")
 		input.AddSupportedRegions, input.RemoveSupportedRegions = flattenAddAndRemoveStringValueLists(d, "supported_regions")
 
-		input.AddSupportedIpAddressTypes, input.RemoveSupportedIpAddressTypes = flattenAddAndRemoveStringValueLists(d, "supported_ip_address_types")
-
-		log.Printf("[DEBUG] Updating EC2 VPC Endpoint Service: %v", input)
 		_, err := conn.ModifyVpcEndpointServiceConfiguration(ctx, input)
 
 		if err != nil {
@@ -358,18 +356,14 @@ func resourceVPCEndpointServiceDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func flattenAllowedPrincipals(apiObjects []awstypes.AllowedPrincipal) []*string {
+func flattenAllowedPrincipals(apiObjects []awstypes.AllowedPrincipal) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []*string
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, apiObject.Principal)
-	}
-
-	return tfList
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.AllowedPrincipal) string {
+		return aws.ToString(v.Principal)
+	})
 }
 
 func flattenPrivateDNSNameConfiguration(apiObject *awstypes.PrivateDnsNameConfiguration) map[string]interface{} {
@@ -398,16 +392,12 @@ func flattenPrivateDNSNameConfiguration(apiObject *awstypes.PrivateDnsNameConfig
 	return tfMap
 }
 
-func flattenSupportedRegions(apiObjects []awstypes.SupportedRegionDetail) []*string {
+func flattenSupportedRegionDetails(apiObjects []awstypes.SupportedRegionDetail) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var tfList []*string
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, apiObject.Region)
-	}
-
-	return tfList
+	return tfslices.ApplyToAll(apiObjects, func(v awstypes.SupportedRegionDetail) string {
+		return aws.ToString(v.Region)
+	})
 }
