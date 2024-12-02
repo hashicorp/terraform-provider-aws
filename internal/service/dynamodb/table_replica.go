@@ -403,13 +403,6 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	// * point_in_time_recovery
 	// * deletion_protection_enabled
 	if d.HasChanges("point_in_time_recovery", "deletion_protection_enabled") {
-		if d.HasChange(names.AttrTagsAll) {
-			o, n := d.GetChange(names.AttrTagsAll)
-			if err := updateTags(ctx, conn, d.Get(names.AttrARN).(string), o, n); err != nil {
-				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
-			}
-		}
-
 		if d.HasChange("point_in_time_recovery") {
 			if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
