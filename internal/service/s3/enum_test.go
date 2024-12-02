@@ -37,12 +37,12 @@ func TestBucketNameTypeFor(t *testing.T) {
 		},
 		{
 			testName:     "Multi-Region access point ARN",
-			bucket:       "arn:aws:s3::111122223333:accesspoint/MultiRegionAccessPoint_alias",
+			bucket:       "arn:aws:s3::111122223333:accesspoint/MultiRegionAccessPoint_alias", //lintignore:AWSAT003,AWSAT005
 			expectedType: bucketNameTypeMultiRegionAccessPointARN,
 		},
 		{
 			testName:     "Access point ARN",
-			bucket:       "arn:aws:s3:us-east-1:111122223333:accesspoint/my-access-point",
+			bucket:       "arn:aws:s3:us-east-1:111122223333:accesspoint/my-access-point", //lintignore:AWSAT003,AWSAT005
 			expectedType: bucketNameTypeAccessPointARN,
 		},
 		{
@@ -57,7 +57,7 @@ func TestBucketNameTypeFor(t *testing.T) {
 		},
 		{
 			testName:     "Object lambda access point ARN",
-			bucket:       "arn:aws:s3-object-lambda:us-east-1:111122223333:accesspoint/my-object-lambda-access-point",
+			bucket:       "arn:aws:s3-object-lambda:us-east-1:111122223333:accesspoint/my-object-lambda-access-point", //lintignore:AWSAT003,AWSAT005
 			expectedType: bucketNameTypeObjectLambdaAccessPointARN,
 		},
 		{
@@ -67,7 +67,7 @@ func TestBucketNameTypeFor(t *testing.T) {
 		},
 		{
 			testName:     "S3 on Outposts access point ARN",
-			bucket:       "arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-01ac5d28a6a232904/accesspoint/my-access-point",
+			bucket:       "arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-01ac5d28a6a232904/accesspoint/my-access-point", //lintignore:AWSAT003,AWSAT005
 			expectedType: bucketNameTypeS3OnOutpostsAccessPointARN,
 		},
 	}
