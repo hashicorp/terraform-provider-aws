@@ -1059,21 +1059,6 @@ data "aws_service" "provider_test" {
 }
 `
 
-func testAccProviderConfig_endpoints(endpoints string) string {
-	//lintignore:AT004
-	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
-provider "aws" {
-  skip_credentials_validation = true
-  skip_metadata_api_check     = true
-  skip_requesting_account_id  = true
-
-  endpoints {
-    %[1]s
-  }
-}
-`, endpoints))
-}
-
 func testAccProviderConfig_customS3Endpoint(endpoint, rName string) string {
 	//lintignore:AT004
 	return acctest.ConfigCompose(testAccProviderConfig_base, fmt.Sprintf(`
