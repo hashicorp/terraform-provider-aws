@@ -422,7 +422,6 @@ resource "aws_dynamodb_table_replica" "test" {
 
   tags = {
     Name = %[1]q
-    Pozo = "Amargo"
   }
 }
 `, rName))
@@ -667,7 +666,6 @@ resource "aws_dynamodb_table_replica" "test" {
 
   tags = {
     Name = %[1]q
-    Pozo = "Amargo"
   }
 }
 `, rName, deletionProtection))
