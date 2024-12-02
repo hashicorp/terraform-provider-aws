@@ -349,11 +349,8 @@ The following arguments are optional:
 * `encryption_config` - (Optional) Configuration block with encryption configuration for the cluster. Detailed below.
 * `kubernetes_network_config` - (Optional) Configuration block with kubernetes network configuration for the cluster. Detailed below. If removed, Terraform will only perform drift detection if a configuration value is provided.
 * `outpost_config` - (Optional) Configuration block representing the configuration of your local Amazon EKS cluster on an AWS Outpost. This block isn't available for creating Amazon EKS clusters on the AWS cloud.
-<<<<<<< HEAD
 * `remote_network_config` - (Optional) Configuration block with remote network configuration for EKS Hybrid Nodes. Detailed below.
-=======
 * `storage_config` - (Optional) Configuration block with storage configuration for EKS Auto Mode. Detailed below.
->>>>>>> e8e205cf10 (r/aws_eks_cluster: Add support for EKS Auto Mode)
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `upgrade_policy` - (Optional) Configuration block for the support policy to use for the cluster.  See [upgrade_policy](#upgrade_policy) for details.
 * `version` – (Optional) Desired Kubernetes master version. If you do not specify a value, the latest available version at resource creation is used and no upgrades will occur except those automatically triggered by EKS. The value must be configured and increased to upgrade the version when desired. Downgrades are not supported by EKS.
@@ -387,7 +384,6 @@ The `provider` configuration block supports the following arguments:
 
 * `key_arn` - (Required) ARN of the Key Management Service (KMS) customer master key (CMK). The CMK must be symmetric, created in the same region as the cluster, and if the CMK was created in a different account, the user must have access to the CMK. For more information, see [Allowing Users in Other Accounts to Use a CMK in the AWS Key Management Service Developer Guide](https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-modifying-external-accounts.html).
 
-<<<<<<< HEAD
 ### remote_network_config
 
 The `remote_network_config` configuration block supports the following arguments:
@@ -406,19 +402,6 @@ The `remote_node_networks` configuration block supports the following arguments:
 The `remote_pod_networks` configuration block supports the following arguments:
 
 * `cidrs` - (Required) List of network CIDRs that can contain pods that run Kubernetes webhooks on hybrid nodes.
-=======
-### storage_config
-
-The `storage_config` configuration block supports the following arguments:
-
-* `block_storage` - (Optional) Configuration block with block storage configuration for EKS Auto Mode. Detailed below.
-
-#### block_storage
-
-The `block_storage` configuration block supports the following arguments:
-
-* `enabled` - (Optional) Indicates if the block storage capability is enabled on your EKS Auto Mode cluster. If the block storage capability is enabled, EKS Auto Mode will create and delete EBS volumes in your Amazon Web Services account.
->>>>>>> e8e205cf10 (r/aws_eks_cluster: Add support for EKS Auto Mode)
 
 ### vpc_config Arguments
 
