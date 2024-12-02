@@ -917,7 +917,7 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 	})
 }
 
-func TestAccEKSCluster_RemoteNodeNetwork(t *testing.T) {
+func TestAccEKSCluster_RemoteNetwork_Node(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -951,7 +951,7 @@ func TestAccEKSCluster_RemoteNodeNetwork(t *testing.T) {
 	})
 }
 
-func TestAccEKSCluster_RemotePodNetwork(t *testing.T) {
+func TestAccEKSCluster_RemoteNetwork_Pod(t *testing.T) {
 	ctx := acctest.Context(t)
 	var cluster types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
