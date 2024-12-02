@@ -121,7 +121,7 @@ func resourceCluster() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
@@ -223,7 +223,7 @@ func resourceCluster() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
@@ -380,7 +380,7 @@ func resourceCluster() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
@@ -1124,7 +1124,7 @@ func expandComputeConfigRequest(tfList []interface{}) *types.ComputeConfigReques
 
 	apiObject := &types.ComputeConfigRequest{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -1216,7 +1216,7 @@ func expandBlockStorage(tfList []interface{}) *types.BlockStorage {
 
 	apiObject := &types.BlockStorage{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -1332,7 +1332,7 @@ func expandKubernetesNetworkConfigElasticLoadBalancing(tfList []interface{}) *ty
 
 	apiObject := &types.ElasticLoadBalancing{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -1480,9 +1480,9 @@ func flattenComputeConfigResponse(apiObject *types.ComputeConfigResponse) []map[
 	}
 
 	m := map[string]interface{}{
-		"enabled":       aws.ToBool(apiObject.Enabled),
-		"node_pools":    flex.FlattenStringValueList(apiObject.NodePools),
-		"node_role_arn": aws.ToString(apiObject.NodeRoleArn),
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+		"node_pools":      flex.FlattenStringValueList(apiObject.NodePools),
+		"node_role_arn":   aws.ToString(apiObject.NodeRoleArn),
 	}
 
 	return []map[string]interface{}{m}
@@ -1618,7 +1618,7 @@ func flattenKubernetesNetworkConfigElasticLoadBalancing(apiObjects *types.Elasti
 	}
 
 	tfMap := map[string]interface{}{
-		"enabled": aws.ToBool(apiObjects.Enabled),
+		names.AttrEnabled: aws.ToBool(apiObjects.Enabled),
 	}
 
 	return []interface{}{tfMap}
@@ -1717,7 +1717,7 @@ func flattenBlockStorage(apiObject *types.BlockStorage) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{
-		"enabled": aws.ToBool(apiObject.Enabled),
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
 	}
 
 	return []interface{}{tfMap}
