@@ -310,7 +310,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `endpoint` - Endpoint for your Kubernetes API server.
 * `id` - Name of the cluster.
 * `identity` - Attribute block containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. Detailed below.
-* `kubernetes_network_config` - Attribute block containing Kubernetes network configuration for your cluster. Detailed below.
+* `kubernetes_network_config` - Attribute block containing Kubernetes network configuration for the cluster. Detailed below.
 * `platform_version` - Platform version for the cluster.
 * `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
