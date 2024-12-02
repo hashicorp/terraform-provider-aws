@@ -173,13 +173,13 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
-	// Some attributes take time to propagate to the table replica, so we need to wait a bit longer.
-	waitReplicaActiveFunc := waitReplicaActive
+	// Some attributes take time to propagate to the table replica, so set a delay
+	delay := replicaDelayDefault
 	if _, ok := d.GetOk("deletion_protection_enabled"); ok {
-		waitReplicaActiveFunc = waitReplicaPropagationActive
+		delay = replicaPropagationDelay
 	}
 
-	if _, err := waitReplicaActiveFunc(ctx, conn, tableName, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate), optFn); err != nil {
+	if _, err := waitReplicaActive(ctx, conn, tableName, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate), delay, optFn); err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
@@ -200,13 +200,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var
-	// handled through main table (global table)
-	// * global_secondary_index
-	// * kms_key_arn
-	// * read_capacity_override
-	// * table_class_override
-	diags diag.Diagnostics
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	replicaRegion := meta.(*conns.AWSClient).Region(ctx)
@@ -394,7 +388,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 		}
 
-		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
+		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), replicaDelayDefault, optFn); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTableReplica, d.Id(), err)
 		}
 	}
@@ -409,6 +403,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
+		delay := replicaDelayDefault
 		if d.HasChange("deletion_protection_enabled") {
 			log.Printf("[DEBUG] Updating DynamoDB Table Replica deletion protection: %v", d.Get("deletion_protection_enabled").(bool))
 
@@ -420,12 +415,10 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 
 			// Wait for deletion protection to propagate to the table replica.
-			if _, err := waitReplicaPropagationActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
-				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTableReplica, d.Id(), err)
-			}
+			delay = replicaPropagationDelay
 		}
 
-		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
+		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), delay, optFn); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTableReplica, d.Id(), err)
 		}
 	}

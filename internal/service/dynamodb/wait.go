@@ -20,7 +20,8 @@ const (
 	kinesisStreamingDestinationDisabledTimeout = 5 * time.Minute
 	pitrUpdateTimeout                          = 30 * time.Second
 	replicaUpdateTimeout                       = 30 * time.Minute
-	replicaPropagationDelay                    = 1*time.Minute + 30*time.Second
+	replicaDelayDefault                        = 0 * time.Second
+	replicaPropagationDelay                    = 90 * time.Second
 	ttlUpdateTimeout                           = 30 * time.Second
 	updateTableContinuousBackupsTimeout        = 20 * time.Minute
 	updateTableTimeout                         = 20 * time.Minute
@@ -78,27 +79,9 @@ func waitImportComplete(ctx context.Context, conn *dynamodb.Client, importARN st
 	return nil, err
 }
 
-func waitReplicaActive(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) { //nolint:unparam
+func waitReplicaActive(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, delay time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ReplicaStatusCreating, awstypes.ReplicaStatusUpdating, awstypes.ReplicaStatusDeleting),
-		Target:  enum.Slice(awstypes.ReplicaStatusActive),
-		Refresh: statusReplicaUpdate(ctx, conn, tableName, region, optFns...),
-		Timeout: max(replicaUpdateTimeout, timeout),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.TableDescription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-// Some attributes take time to propagate to the table replica, so we need to wait a bit longer.
-func waitReplicaPropagationActive(ctx context.Context, conn *dynamodb.Client, tableName, region string, timeout time.Duration, optFns ...func(*dynamodb.Options)) (*awstypes.TableDescription, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Delay:   replicaPropagationDelay,
+		Delay:   delay,
 		Pending: enum.Slice(awstypes.ReplicaStatusCreating, awstypes.ReplicaStatusUpdating, awstypes.ReplicaStatusDeleting),
 		Target:  enum.Slice(awstypes.ReplicaStatusActive),
 		Refresh: statusReplicaUpdate(ctx, conn, tableName, region, optFns...),
