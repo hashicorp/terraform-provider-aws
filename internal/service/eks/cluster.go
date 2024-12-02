@@ -1755,7 +1755,11 @@ func validateAutoModeCustsomizeDiff(_ context.Context, d *schema.ResourceDiff, _
 		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
 		storageConfig := expandStorageConfigRequest(d.Get("storage_config").([]interface{}))
 
-		if aws.ToBool(computeConfig.Enabled) != aws.ToBool(kubernetesNetworkConfig.ElasticLoadBalancing.Enabled) || aws.ToBool(computeConfig.Enabled) != aws.ToBool(storageConfig.BlockStorage.Enabled) {
+		computeConfigEnabled := computeConfig != nil && computeConfig.Enabled != nil && aws.ToBool(computeConfig.Enabled)
+		kubernetesNetworkConfigEnabled := kubernetesNetworkConfig != nil && kubernetesNetworkConfig.ElasticLoadBalancing != nil && kubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil && aws.ToBool(kubernetesNetworkConfig.ElasticLoadBalancing.Enabled)
+		storageConfigEnabled := storageConfig != nil && storageConfig.BlockStorage != nil && storageConfig.BlockStorage.Enabled != nil && aws.ToBool(storageConfig.BlockStorage.Enabled)
+
+		if computeConfigEnabled != kubernetesNetworkConfigEnabled || computeConfigEnabled != storageConfigEnabled {
 			return errors.New("compute_config.enabled, kubernetes_networking_config.elastic_load_balancing.enabled, and storage_config.block_storage.enabled must all be set to either true or false")
 		}
 	}
