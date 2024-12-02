@@ -200,6 +200,10 @@ func resourceNetworkInterface() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"associate_public_ip_address": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Required: true,
@@ -476,6 +480,18 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if v, ok := d.GetOkExists("associate_public_ip_address"); ok {
+		input := &ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId:       aws.String(d.Id()),
+			AssociatePublicIpAddress: aws.Bool(v.(bool)),
+		}
+		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) AssociatePublicIpAddress: %s", d.Id(), err)
+		}
+	}
+
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 
@@ -558,6 +574,14 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "setting security_groups: %s", err)
 	}
 	d.Set("source_dest_check", eni.SourceDestCheck)
+	attribute, err := conn.DescribeNetworkInterfaceAttribute(ctx, &ec2.DescribeNetworkInterfaceAttributeInput{
+		NetworkInterfaceId: aws.String(d.Id()),
+		Attribute:          types.NetworkInterfaceAttributeAssociatePublicIpAddress,
+	})
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface (%s) AssociatePublicIpAddress: %s", d.Id(), err)
+	}
+	d.Set("associate_public_ip_address", attribute.AssociatePublicIpAddress)
 	d.Set(names.AttrSubnetID, eni.SubnetId)
 
 	setTagsOut(ctx, eni.TagSet)
@@ -1004,6 +1028,19 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) SourceDestCheck: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("associate_public_ip_address") {
+		input := &ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId:       aws.String(d.Id()),
+			AssociatePublicIpAddress: aws.Bool(d.Get("associate_public_ip_address").(bool)),
+		}
+
+		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) AssociatePublicIpAddress: %s", d.Id(), err)
 		}
 	}
 
