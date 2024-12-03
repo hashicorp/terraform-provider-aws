@@ -2,822 +2,809 @@ package dataexchange
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"strings"
-	"time"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"regexp"
+
 	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dataexchange/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Attributes
 const (
-	ResNameJob = "Job"
+	attrDataSetId                             = "data_set_id"
+	attrStartOnCreation                       = "start_on_creation"
+	attrRevisionId                            = "revision_id"
+	attrAssetId                               = "asset_id"
+	attrS3AccessAssetSourceBucket             = "s3_access_asset_source_bucket"
+	attrS3AccessAssetSourceKeyPrefixes        = "s3_access_asset_source_key_prefixes"
+	attrS3AccessAssetSourceKeys               = "s3_access_asset_source_keys"
+	attrS3AccessAssetSourceKmsKeysToGrant     = "s3_access_asset_source_kms_keys_to_grant"
+	attrS3AssetDestinations                   = "s3_asset_destinations"
+	attrS3AssetDestinationEncryptionKMSKeyArn = "s3_asset_destination_encryption_kms_key_arn"
+	attrS3AssetDestinationEncryptionType      = "s3_asset_destination_encryption_type"
+	attrSignedUrl                             = "signed_url"
+	attrSignedUrlExpiresAt                    = "signed_url_expires_at"
+	attrS3RevisionDestinations                = "s3_revision_destinations"
+	attrS3EventActionArn                      = "s3_event_action_arn"
+	attrApiGtwDescription                     = "api_gtw_description"
+	attrApiGtwId                              = "api_gtw_id"
+	attrApiGtwKey                             = "api_gtw_key"
+	attrApiGtwName                            = "api_gtw_name"
+	attrApiGtwSpecMd5Hash                     = "api_gtw_spec_md5_hash"
+	attrApiGtwProtoType                       = "api_gtw_proto_type"
+	attrApiGtwStage                           = "api_gtw_stage"
+	attrApiSpecUploadUrl                      = "api_specification_upload_url"
+	attrApiSPecUploadUrlExpAt                 = "api_specification_upload_url_expires_at"
+	attrUrlAssetName                          = "url_asset_name"
+	attrUrlMd5Hash                            = "url_md5_hash"
+	attrRedshiftAssetSources                  = "redshift_asset_sources"
+	attrS3AssetSources                        = "s3_asset_sources"
+	attrLakeFormationCatalogId                = "lake_formation_catalog_id"
+	attrLakeFormationDatabaseExpression       = "lake_formation_database_expression"
+	attrLakeFormationDatabasePermissions      = "lake_formation_database_permissions"
+	attrLakeFormationRoleArn                  = "lake_formation_role_arn"
+	attrLakeFormationTableExpression          = "lake_formation_table_expression"
+	attrLakeFormationTablePermissions         = "lake_formation_table_permissions"
+	attrBucket                                = "bucket"
+	attrKey                                   = "key"
+	attrKeyPattern                            = "key_pattern"
+	attrTagKey                                = "tag_key"
+	attrTagValue                              = "tag_value"
 )
 
-func ResourceJob(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceJob{}
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+// @SDKResource("aws_dataexchange_job", name="Job")
+func ResourceJob() *schema.Resource {
+	return &schema.Resource{
+		CreateWithoutTimeout: resourceJobCreate,
+		ReadWithoutTimeout:   resourceJobRead,
+		UpdateWithoutTimeout: resourceJobUpdate,
+		DeleteWithoutTimeout: resourceJobDelete,
 
-	return r, nil
-}
+		SchemaFunc: resourceJobSchema,
 
-type resourceJob struct {
-	framework.ResourceWithConfigure
-	framework.WithTimeouts
-}
-
-func (r *resourceJob) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_dataexchange_job"
-}
-
-func (r *resourceJob) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"created_at": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"id": framework.IDAttribute(),
-			"state": schema.StringAttribute{
-				Computed: true,
-			},
-			"type": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"updated_at": schema.StringAttribute{
-				Computed: true,
-			},
-			"details": schema.ObjectAttribute{
-				Required: true,
-				AttributeTypes: map[string]attr.Type{
-					"import_assets_from_s3": types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"data_set_id": types.StringType,
-							"revision_id": types.StringType,
-							"asset_sources": types.SetType{
-								ElemType: types.ObjectType{
-									AttrTypes: map[string]attr.Type{
-										"bucket": types.StringType,
-										"key":    types.StringType,
-									},
-								},
-							},
-						},
-					},
-					"export_assets_to_s3": types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"data_set_id": types.StringType,
-							"revision_id": types.StringType,
-							"asset_destinations": types.SetType{
-								ElemType: types.ObjectType{
-									AttrTypes: map[string]attr.Type{
-										"asset_id": types.StringType,
-										"bucket":   types.StringType,
-										"key":      types.StringType,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Delete: true,
-			}),
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 	}
 }
 
-type resourceJobModel struct {
-	ARN       types.String   `tfsdk:"arn"`
-	CreatedAt types.String   `tfsdk:"created_at"`
-	Details   types.Object   `tfsdk:"details"`
-	ID        types.String   `tfsdk:"id"`
-	State     types.String   `tfsdk:"state"`
-	Type      types.String   `tfsdk:"type"`
-	UpdatedAt types.String   `tfsdk:"updated_at"`
-	Timeouts  timeouts.Value `tfsdk:"timeouts"`
-}
+// CRUD
+func resourceJobCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
-type detailsModel struct {
-	ImportAssetsFromS3 *importAssetsFromS3Details `tfsdk:"import_assets_from_s3"`
-	ExportAssetsToS3   *exportAssetsToS3Details   `tfsdk:"export_assets_to_s3"`
-}
-
-type importAssetsFromS3Details struct {
-	DataSetId    types.String       `tfsdk:"data_set_id"`
-	RevisionId   types.String       `tfsdk:"revision_id"`
-	AssetSources []assetSourceEntry `tfsdk:"asset_sources"`
-}
-
-type exportAssetsToS3Details struct {
-	DataSetId         types.String            `tfsdk:"data_set_id"`
-	RevisionId        types.String            `tfsdk:"revision_id"`
-	AssetDestinations []assetDestinationEntry `tfsdk:"asset_destinations"`
-}
-
-type assetSourceEntry struct {
-	Bucket types.String `tfsdk:"bucket"`
-	Key    types.String `tfsdk:"key"`
-}
-
-type assetDestinationEntry struct {
-	AssetId types.String `tfsdk:"asset_id"`
-	Bucket  types.String `tfsdk:"bucket"`
-	Key     types.String `tfsdk:"key"`
-}
-
-func getImportAssetsFromS3Details(ctx context.Context, obj types.Object) (*importAssetsFromS3Details, error) {
-	if obj.IsNull() || obj.IsUnknown() {
-		return nil, nil
-	}
-
-	var detailsValue importAssetsFromS3Details
-
-	// Get the import_assets_from_s3 attribute
-	importAttr, ok := obj.Attributes()["import_assets_from_s3"]
-	if !ok || importAttr.IsNull() {
-		return nil, nil
-	}
-
-	importObj, ok := importAttr.(types.Object)
-	if !ok {
-		return nil, fmt.Errorf("unexpected type for import_assets_from_s3")
-	}
-
-	importAttrs := importObj.Attributes()
-
-	// Extract data_set_id and revision_id
-	if v, ok := importAttrs["data_set_id"].(types.String); ok {
-		detailsValue.DataSetId = v
-	}
-	if v, ok := importAttrs["revision_id"].(types.String); ok {
-		detailsValue.RevisionId = v
-	}
-
-	// Handle asset_sources which is a Set
-	if assetSourcesAttr, ok := importAttrs["asset_sources"].(types.Set); ok {
-		var assetSources []assetSourceEntry
-		diags := assetSourcesAttr.ElementsAs(ctx, &assetSources, false)
-		if diags.HasError() {
-			return nil, fmt.Errorf("error converting asset_sources: %s", diags.Errors())
-		}
-		detailsValue.AssetSources = assetSources
-	}
-
-	return &detailsValue, nil
-}
-
-func getExportAssetsToS3Details(ctx context.Context, obj types.Object) (*exportAssetsToS3Details, error) {
-	if obj.IsNull() || obj.IsUnknown() {
-		return nil, nil
-	}
-
-	var detailsValue exportAssetsToS3Details
-
-	// Get the export_assets_to_s3 attribute
-	exportAttr, ok := obj.Attributes()["export_assets_to_s3"]
-	if !ok || exportAttr.IsNull() {
-		return nil, nil
-	}
-
-	exportObj, ok := exportAttr.(types.Object)
-	if !ok {
-		return nil, fmt.Errorf("unexpected type for export_assets_to_s3")
-	}
-
-	exportAttrs := exportObj.Attributes()
-
-	// Extract data_set_id and revision_id
-	if v, ok := exportAttrs["data_set_id"].(types.String); ok {
-		detailsValue.DataSetId = v
-	}
-	if v, ok := exportAttrs["revision_id"].(types.String); ok {
-		detailsValue.RevisionId = v
-	}
-
-	// Handle asset_destinations which is a Set
-	if assetDestinationsAttr, ok := exportAttrs["asset_destinations"].(types.Set); ok {
-		var assetDestinations []assetDestinationEntry
-		diags := assetDestinationsAttr.ElementsAs(ctx, &assetDestinations, false)
-		if diags.HasError() {
-			return nil, fmt.Errorf("error converting asset_destinations: %s", diags.Errors())
-		}
-		detailsValue.AssetDestinations = assetDestinations
-	}
-
-	return &detailsValue, nil
-}
-
-func (r *resourceJob) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceJobModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	importDetails, err := getImportAssetsFromS3Details(ctx, plan.Details)
+	input := buildCreateJobInput(d)
+	output, err := conn.CreateJob(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error parsing import details",
-			err.Error(),
-		)
-		return
+		return sdkdiag.AppendErrorf(diags, "creating Dataexchange Job: %s", err)
 	}
 
-	exportDetails, err := getExportAssetsToS3Details(ctx, plan.Details)
+	if output.Errors != nil {
+		for _, jobError := range output.Errors {
+			diags = sdkdiag.AppendErrorf(diags, "creating Dataexchange Job: %s", *jobError.Message)
+		}
+	}
+
+	if startOnCreation := d.Get(attrStartOnCreation).(bool); startOnCreation {
+		_, err := conn.StartJob(ctx, &dataexchange.StartJobInput{
+			JobId: output.Id,
+		})
+
+		if err != nil {
+			// to confirm
+			resourceJobDelete(ctx, d, meta)
+			return sdkdiag.AppendErrorf(diags, "creating Dataexchange Job: %s", err)
+		}
+	}
+
+	d.SetId(*output.Id)
+	return append(diags, resourceJobRead(ctx, d, meta)...)
+}
+
+func resourceJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
+
+	jobId := d.Get(names.AttrID).(string)
+	output, err := conn.GetJob(ctx, &dataexchange.GetJobInput{
+		JobId: aws.String(jobId),
+	})
 	if err != nil {
-		resp.Diagnostics.AddError(
-			"Error parsing export details",
-			err.Error(),
-		)
-		return
+		return sdkdiag.AppendErrorf(diags, "reading Dataexchange Job: %s", err)
+	}
+	if output.Errors != nil {
+		for _, jobError := range output.Errors {
+			diags = sdkdiag.AppendErrorf(diags, "reading Dataexchange Job: %s", *jobError.Message)
+		}
 	}
 
-	// Validate job type and required blocks
-	switch plan.Type.ValueString() {
-	case string(awstypes.TypeImportAssetsFromS3):
-		if importDetails == nil {
-			resp.Diagnostics.AddError(
-				"Missing Required Configuration",
-				"When type is IMPORT_ASSETS_FROM_S3, the details.import_assets_from_s3 block is required",
-			)
-			return
-		}
-		if exportDetails != nil {
-			resp.Diagnostics.AddError(
-				"Invalid Configuration",
-				"When type is IMPORT_ASSETS_FROM_S3, the details.export_assets_to_s3 block must not be present",
-			)
-			return
-		}
-		// Validate asset sources
-		if len(importDetails.AssetSources) == 0 {
-			resp.Diagnostics.AddError(
-				"Missing Required Configuration",
-				"At least one asset_sources block is required in details.import_assets_from_s3",
-			)
-			return
-		}
+	buildResourceData(output, d)
+	return diags
+}
 
-	case string(awstypes.TypeExportAssetsToS3):
-		if exportDetails == nil {
-			resp.Diagnostics.AddError(
-				"Missing Required Configuration",
-				"When type is EXPORT_ASSETS_TO_S3, the details.export_assets_to_s3 block is required",
-			)
-			return
-		}
-		if importDetails != nil {
-			resp.Diagnostics.AddError(
-				"Invalid Configuration",
-				"When type is EXPORT_ASSETS_TO_S3, the details.import_assets_from_s3 block must not be present",
-			)
-			return
-		}
-		// Validate asset destinations
-		if len(exportDetails.AssetDestinations) == 0 {
-			resp.Diagnostics.AddError(
-				"Missing Required Configuration",
-				"At least one asset_destinations block is required in details.export_assets_to_s3",
-			)
-			return
-		}
+func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	if d.HasChange(attrStartOnCreation) && !d.HasChangeExcept(attrStartOnCreation) {
+		if startOnCreation := d.Get(attrStartOnCreation).(bool); startOnCreation {
+			var diags diag.Diagnostics
+			conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
+			_, err := conn.StartJob(ctx, &dataexchange.StartJobInput{
+				JobId: aws.String(d.Get(names.AttrID).(string)),
+			})
 
-	default:
-		resp.Diagnostics.AddError(
-			"Invalid Type Configuration",
-			fmt.Sprintf("Type must be either IMPORT_ASSETS_FROM_S3 or EXPORT_ASSETS_TO_S3, got: %s", plan.Type.ValueString()),
-		)
-		return
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "starting Dataexchange Job: %s", err)
+			}
+
+			return append(diags, resourceJobRead(ctx, d, meta)...)
+		}
+	}
+	resourceJobDelete(ctx, d, meta)
+	return resourceJobCreate(ctx, d, meta)
+}
+
+func resourceJobDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	if d.Get(names.AttrState).(string) != string(awstypes.StateWaiting) {
+		return diags
+	}
+	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
+	jobId := d.Get(names.AttrID).(string)
+	_, err := conn.CancelJob(ctx, &dataexchange.CancelJobInput{
+		JobId: aws.String(jobId),
+	})
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "canceling Dataexchange Job: %s", err)
 	}
 
-	conn := r.Meta().DataExchangeClient(ctx)
+	return diags
+}
 
-	input := &dataexchange.CreateJobInput{
-		Type:    awstypes.Type(plan.Type.ValueString()),
+// Builders
+func buildResourceData(out *dataexchange.GetJobOutput, d *schema.ResourceData) {
+	d.SetId(*out.Id)
+	d.Set(names.AttrARN, out.Arn)
+	d.Set(names.AttrType, out.Type)
+	d.Set(names.AttrCreatedAt, out.CreatedAt.String())
+	d.Set(names.AttrLastUpdatedTime, out.UpdatedAt.String())
+	d.Set(names.AttrState, out.State)
+
+	if out.Details != nil {
+		switch out.Type {
+		case awstypes.TypeExportAssetsToS3:
+			if out.Details.ExportAssetsToS3 != nil {
+				d.Set(attrDataSetId, out.Details.ExportAssetsToS3.DataSetId)
+				if out.Details.ExportAssetsToS3.Encryption != nil {
+					d.Set(attrS3AssetDestinationEncryptionType, out.Details.ExportAssetsToS3.Encryption.Type)
+					d.Set(attrS3AssetDestinationEncryptionKMSKeyArn, out.Details.ExportAssetsToS3.Encryption.KmsKeyArn)
+				}
+				d.Set(attrS3AssetDestinations, buildS3AssetsDestinationsAttr(out.Details.ExportAssetsToS3.AssetDestinations))
+			}
+		case awstypes.TypeExportAssetToSignedUrl:
+			if out.Details.ExportAssetToSignedUrl != nil {
+				d.Set(attrAssetId, out.Details.ExportAssetToSignedUrl.AssetId)
+				d.Set(attrSignedUrl, out.Details.ExportAssetToSignedUrl.SignedUrl)
+				d.Set(attrSignedUrlExpiresAt, out.Details.ExportAssetToSignedUrl.SignedUrlExpiresAt)
+				d.Set(attrDataSetId, out.Details.ExportAssetToSignedUrl.DataSetId)
+				d.Set(attrRevisionId, out.Details.ExportAssetToSignedUrl.RevisionId)
+			}
+			break
+		case awstypes.TypeExportRevisionsToS3:
+			if out.Details.ExportRevisionsToS3 != nil {
+				if out.Details.ExportAssetsToS3.Encryption != nil {
+					d.Set(attrS3AssetDestinationEncryptionType, out.Details.ExportRevisionsToS3.Encryption.Type)
+					d.Set(attrS3AssetDestinationEncryptionKMSKeyArn, out.Details.ExportRevisionsToS3.Encryption.KmsKeyArn)
+				}
+				d.Set(attrDataSetId, out.Details.ExportRevisionsToS3.DataSetId)
+				d.Set(attrS3RevisionDestinations, buildS3RevisionDestinationsAttr(out.Details.ExportRevisionsToS3.RevisionDestinations))
+				d.Set(attrS3EventActionArn, out.Details.ExportRevisionsToS3.EventActionArn)
+			}
+			break
+		case awstypes.TypeCreateS3DataAccessFromS3Bucket:
+			if out.Details.CreateS3DataAccessFromS3Bucket != nil {
+				d.Set(attrRevisionId, out.Details.CreateS3DataAccessFromS3Bucket.DataSetId)
+				d.Set(attrDataSetId, out.Details.CreateS3DataAccessFromS3Bucket.DataSetId)
+				if out.Details.CreateS3DataAccessFromS3Bucket.AssetSource != nil {
+					d.Set(attrS3AccessAssetSourceBucket, out.Details.CreateS3DataAccessFromS3Bucket.AssetSource.Bucket)
+					d.Set(attrS3AccessAssetSourceKeyPrefixes, out.Details.CreateS3DataAccessFromS3Bucket.AssetSource.KeyPrefixes)
+					d.Set(attrS3AccessAssetSourceKeys, out.Details.CreateS3DataAccessFromS3Bucket.AssetSource.Keys)
+					d.Set(attrS3AccessAssetSourceKmsKeysToGrant, buildKmsKeysToGrantAttr(out.Details.CreateS3DataAccessFromS3Bucket.AssetSource.KmsKeysToGrant))
+				}
+			}
+			break
+		case awstypes.TypeImportAssetsFromLakeFormationTagPolicy:
+			if out.Details.ImportAssetsFromLakeFormationTagPolicy != nil {
+				d.Set(attrLakeFormationCatalogId, out.Details.ImportAssetsFromLakeFormationTagPolicy.CatalogId)
+				d.Set(attrDataSetId, out.Details.ImportAssetsFromLakeFormationTagPolicy.DataSetId)
+				d.Set(attrRevisionId, out.Details.ImportAssetsFromLakeFormationTagPolicy.RevisionId)
+				d.Set(attrLakeFormationRoleArn, out.Details.ImportAssetsFromLakeFormationTagPolicy.RoleArn)
+				if out.Details.ImportAssetsFromLakeFormationTagPolicy.Table != nil {
+					d.Set(attrLakeFormationTablePermissions, out.Details.ImportAssetsFromLakeFormationTagPolicy.Table.Permissions)
+					d.Set(attrLakeFormationTableExpression, buildLFTagAttr(out.Details.ImportAssetsFromLakeFormationTagPolicy.Table.Expression))
+				}
+				if out.Details.ImportAssetsFromLakeFormationTagPolicy.Database != nil {
+					d.Set(attrLakeFormationDatabasePermissions, out.Details.ImportAssetsFromLakeFormationTagPolicy.Database.Expression)
+					d.Set(attrLakeFormationDatabaseExpression, buildLFTagAttr(out.Details.ImportAssetsFromLakeFormationTagPolicy.Database.Expression))
+				}
+			}
+			break
+		case awstypes.TypeImportAssetFromSignedUrl:
+			if out.Details.ImportAssetFromSignedUrl != nil {
+				d.Set(attrUrlAssetName, out.Details.ImportAssetFromSignedUrl.AssetName)
+				d.Set(attrSignedUrl, out.Details.ImportAssetFromSignedUrl.SignedUrl)
+				d.Set(attrSignedUrlExpiresAt, out.Details.ImportAssetFromSignedUrl.SignedUrlExpiresAt.String())
+				d.Set(attrUrlMd5Hash, out.Details.ImportAssetFromSignedUrl.Md5Hash)
+				d.Set(attrDataSetId, out.Details.ImportAssetFromSignedUrl.DataSetId)
+				d.Set(attrRevisionId, out.Details.ImportAssetFromSignedUrl.RevisionId)
+			}
+			break
+		case awstypes.TypeImportAssetFromApiGatewayApi:
+			if out.Details.ImportAssetFromApiGatewayApi != nil {
+				d.Set(attrDataSetId, out.Details.ImportAssetFromApiGatewayApi.DataSetId)
+				d.Set(attrRevisionId, out.Details.ImportAssetFromApiGatewayApi.RevisionId)
+				d.Set(attrApiGtwId, out.Details.ImportAssetFromApiGatewayApi.ApiId)
+				d.Set(attrApiGtwName, out.Details.ImportAssetFromApiGatewayApi.ApiName)
+				d.Set(attrApiGtwProtoType, out.Details.ImportAssetFromApiGatewayApi.ProtocolType)
+				d.Set(attrApiGtwKey, out.Details.ImportAssetFromApiGatewayApi.ApiKey)
+				d.Set(attrApiGtwDescription, out.Details.ImportAssetFromApiGatewayApi.ApiDescription)
+				d.Set(attrApiGtwStage, out.Details.ImportAssetFromApiGatewayApi.Stage)
+				d.Set(attrApiGtwSpecMd5Hash, out.Details.ImportAssetFromApiGatewayApi.ApiSpecificationMd5Hash)
+				d.Set(attrApiSpecUploadUrl, out.Details.ImportAssetFromApiGatewayApi.ApiSpecificationUploadUrl)
+				d.Set(attrApiSPecUploadUrlExpAt, out.Details.ImportAssetFromApiGatewayApi.ApiSpecificationUploadUrlExpiresAt.String())
+			}
+			break
+		case awstypes.TypeImportAssetsFromRedshiftDataShares:
+			if out.Details.ImportAssetsFromRedshiftDataShares != nil {
+				d.Set(attrDataSetId, out.Details.ImportAssetsFromRedshiftDataShares.DataSetId)
+				d.Set(attrRevisionId, out.Details.ImportAssetsFromRedshiftDataShares.RevisionId)
+				d.Set(attrRedshiftAssetSources, buildRedshiftDataSharesAssetsAttr(out.Details.ImportAssetsFromRedshiftDataShares.AssetSources))
+			}
+			break
+		case awstypes.TypeImportAssetsFromS3:
+			if out.Details.ImportAssetsFromS3 != nil {
+				d.Set(attrDataSetId, out.Details.ImportAssetsFromS3.DataSetId)
+				d.Set(attrRevisionId, out.Details.ImportAssetsFromS3.RevisionId)
+				d.Set(attrS3AssetSources, buildS3AssetsSourceAttr(out.Details.ImportAssetsFromS3.AssetSources))
+			}
+			break
+		}
+	}
+}
+
+func buildS3AssetsDestinationsAttr(out []awstypes.AssetDestinationEntry) []map[string]any {
+	res := make([]map[string]any, len(out))
+	for i, entry := range out {
+		res[i] = map[string]any{
+			attrBucket:  entry.Bucket,
+			attrAssetId: entry.AssetId,
+			attrKey:     entry.Key,
+		}
+	}
+
+	return res
+}
+
+func buildS3AssetsSourceAttr(out []awstypes.AssetSourceEntry) []map[string]any {
+	res := make([]map[string]any, len(out))
+	for i, entry := range out {
+		res[i] = map[string]any{
+			attrBucket: entry.Bucket,
+			attrKey:    entry.Key,
+		}
+	}
+
+	return res
+}
+
+func buildS3RevisionDestinationsAttr(out []awstypes.RevisionDestinationEntry) []map[string]any {
+	res := make([]map[string]any, len(out))
+	for i, entry := range out {
+		res[i] = map[string]any{
+			attrBucket:     entry.Bucket,
+			attrRevisionId: entry.RevisionId,
+			attrKeyPattern: entry.KeyPattern,
+		}
+	}
+
+	return res
+}
+
+func buildKmsKeysToGrantAttr(out []awstypes.KmsKeyToGrant) []string {
+	res := make([]string, len(out))
+	for i, entry := range out {
+		if entry.KmsKeyArn != nil {
+			res[i] = *entry.KmsKeyArn
+		}
+	}
+
+	return res
+}
+
+func buildLFTagAttr(out []awstypes.LFTag) []map[string]any {
+	res := make([]map[string]any, len(out))
+	for i, entry := range out {
+		res[i] = map[string]any{
+			attrTagKey:   entry.TagKey,
+			attrTagValue: entry.TagValues,
+		}
+	}
+
+	return res
+}
+
+func buildRedshiftDataSharesAssetsAttr(out []awstypes.RedshiftDataShareAssetSourceEntry) []string {
+	res := make([]string, len(out))
+	for i, entry := range out {
+		if entry.DataShareArn != nil {
+			res[i] = *entry.DataShareArn
+		}
+	}
+
+	return res
+}
+
+func buildCreateJobInput(d *schema.ResourceData) *dataexchange.CreateJobInput {
+	in := &dataexchange.CreateJobInput{
+		Type:    awstypes.Type(d.Get(names.AttrType).(string)),
 		Details: &awstypes.RequestDetails{},
 	}
 
-	switch input.Type {
-	case awstypes.TypeImportAssetsFromS3:
-		var assetSources []awstypes.AssetSourceEntry
-		for _, source := range importDetails.AssetSources {
-			assetSources = append(assetSources, awstypes.AssetSourceEntry{
-				Bucket: aws.String(source.Bucket.ValueString()),
-				Key:    aws.String(source.Key.ValueString()),
-			})
-		}
-
-		// For API calls, we need just the revision ID
-		revisionID := importDetails.RevisionId.ValueString()
-		if parts := strings.Split(revisionID, ":"); len(parts) > 1 {
-			revisionID = parts[1]
-		}
-
-		input.Details.ImportAssetsFromS3 = &awstypes.ImportAssetsFromS3RequestDetails{
-			AssetSources: assetSources,
-			DataSetId:    aws.String(importDetails.DataSetId.ValueString()),
-			RevisionId:   aws.String(revisionID),
-		}
-
+	switch in.Type {
 	case awstypes.TypeExportAssetsToS3:
-		var assetDestinations []awstypes.AssetDestinationEntry
-		for _, dest := range exportDetails.AssetDestinations {
-			assetDestinations = append(assetDestinations, awstypes.AssetDestinationEntry{
-				AssetId: aws.String(dest.AssetId.ValueString()),
-				Bucket:  aws.String(dest.Bucket.ValueString()),
-				Key:     aws.String(dest.Key.ValueString()),
-			})
+		in.Details.ExportAssetsToS3 = &awstypes.ExportAssetsToS3RequestDetails{
+			DataSetId:  aws.String(d.Get(attrDataSetId).(string)),
+			RevisionId: aws.String(d.Get(attrRevisionId).(string)),
 		}
-		input.Details.ExportAssetsToS3 = &awstypes.ExportAssetsToS3RequestDetails{
-			AssetDestinations: assetDestinations,
-			DataSetId:         aws.String(exportDetails.DataSetId.ValueString()),
-			RevisionId:        aws.String(exportDetails.RevisionId.ValueString()),
+
+		if v, ok := d.GetOk(attrS3AssetDestinations); ok {
+			dest := make([]awstypes.AssetDestinationEntry, len(v.([]any)))
+			for i, values := range v.([]any) {
+				valuesM := values.(map[string]any)
+				dest[i] = awstypes.AssetDestinationEntry{
+					AssetId: aws.String(valuesM[attrAssetId].(string)),
+					Bucket:  aws.String(valuesM[attrBucket].(string)),
+					Key:     aws.String(valuesM[attrKey].(string)),
+				}
+			}
+			in.Details.ExportAssetsToS3.AssetDestinations = dest
+		}
+
+		if _, ok := d.GetOk(attrS3AssetDestinationEncryptionType); ok {
+			in.Details.ExportAssetsToS3.Encryption = &awstypes.ExportServerSideEncryption{
+				Type:      awstypes.ServerSideEncryptionTypes(d.Get(attrS3AssetDestinationEncryptionType).(string)),
+				KmsKeyArn: aws.String(d.Get(attrS3AssetDestinationEncryptionKMSKeyArn).(string)),
+			}
+		}
+		break
+	case awstypes.TypeExportAssetToSignedUrl:
+		in.Details.ExportAssetToSignedUrl = &awstypes.ExportAssetToSignedUrlRequestDetails{
+			AssetId:    aws.String(d.Get(attrAssetId).(string)),
+			DataSetId:  aws.String(d.Get(attrDataSetId).(string)),
+			RevisionId: aws.String(d.Get(attrRevisionId).(string)),
+		}
+		break
+	case awstypes.TypeExportRevisionsToS3:
+		in.Details.ExportRevisionsToS3 = &awstypes.ExportRevisionsToS3RequestDetails{
+			DataSetId: aws.String(d.Get(attrDataSetId).(string)),
+		}
+
+		if v, ok := d.GetOk(attrS3RevisionDestinations); ok {
+			dest := make([]awstypes.RevisionDestinationEntry, len(v.([]any)))
+			for i, values := range v.([]interface{}) {
+				valuesM := values.(map[string]any)
+				dest[i] = awstypes.RevisionDestinationEntry{
+					RevisionId: aws.String(valuesM[attrRevisionId].(string)),
+					Bucket:     aws.String(valuesM[attrBucket].(string)),
+					KeyPattern: aws.String(valuesM[attrKeyPattern].(string)),
+				}
+			}
+			in.Details.ExportRevisionsToS3.RevisionDestinations = dest
+		}
+
+		if _, ok := d.GetOk(attrS3AssetDestinationEncryptionType); ok {
+			in.Details.ExportRevisionsToS3.Encryption = &awstypes.ExportServerSideEncryption{
+				Type:      awstypes.ServerSideEncryptionTypes(d.Get(attrS3AssetDestinationEncryptionType).(string)),
+				KmsKeyArn: aws.String(d.Get(attrS3AssetDestinationEncryptionKMSKeyArn).(string)),
+			}
+		}
+		break
+	case awstypes.TypeCreateS3DataAccessFromS3Bucket:
+		in.Details.CreateS3DataAccessFromS3Bucket = &awstypes.CreateS3DataAccessFromS3BucketRequestDetails{
+			DataSetId:  aws.String(d.Get(attrDataSetId).(string)),
+			RevisionId: aws.String(d.Get(attrRevisionId).(string)),
+			AssetSource: &awstypes.S3DataAccessAssetSourceEntry{
+				Bucket:      aws.String(d.Get(attrS3AccessAssetSourceBucket).(string)),
+				KeyPrefixes: d.Get(attrS3AccessAssetSourceKeyPrefixes).([]string),
+				Keys:        d.Get(attrS3AccessAssetSourceKeys).([]string),
+			},
+		}
+
+		if kmsKeys, ok := d.GetOk(attrS3AccessAssetSourceKmsKeysToGrant); ok {
+			keyIn := make([]awstypes.KmsKeyToGrant, len(kmsKeys.([]string)))
+			for i, key := range kmsKeys.([]string) {
+				keyIn[i] = awstypes.KmsKeyToGrant{
+					KmsKeyArn: &key,
+				}
+			}
+			in.Details.CreateS3DataAccessFromS3Bucket.AssetSource.KmsKeysToGrant = keyIn
+		}
+		break
+	case awstypes.TypeImportAssetsFromS3:
+		in.Details.ImportAssetsFromS3 = &awstypes.ImportAssetsFromS3RequestDetails{
+			DataSetId:  aws.String(d.Get(attrDataSetId).(string)),
+			RevisionId: aws.String(d.Get(attrRevisionId).(string)),
+		}
+
+		if sources, ok := d.GetOk(attrS3AssetSources); ok {
+			sourcesIn := make([]awstypes.AssetSourceEntry, len(sources.([]any)))
+			for i, source := range sources.([]any) {
+				sourceM := source.(map[string]any)
+				sourcesIn[i] = awstypes.AssetSourceEntry{
+					Bucket: aws.String(sourceM[attrBucket].(string)),
+					Key:    aws.String(sourceM[attrKey].(string)),
+				}
+			}
+			in.Details.ImportAssetsFromS3.AssetSources = sourcesIn
+		}
+		break
+	case awstypes.TypeImportAssetFromSignedUrl:
+		in.Details.ImportAssetFromSignedUrl = &awstypes.ImportAssetFromSignedUrlRequestDetails{
+			AssetName:  aws.String(d.Get(attrUrlAssetName).(string)),
+			DataSetId:  aws.String(d.Get(attrDataSetId).(string)),
+			Md5Hash:    aws.String(d.Get(attrUrlMd5Hash).(string)),
+			RevisionId: aws.String(d.Get(attrRevisionId).(string)),
+		}
+		break
+	case awstypes.TypeImportAssetFromApiGatewayApi:
+		in.Details.ImportAssetFromApiGatewayApi = &awstypes.ImportAssetFromApiGatewayApiRequestDetails{
+			ApiId:                   aws.String(d.Get(attrApiGtwId).(string)),
+			ApiName:                 aws.String(d.Get(attrApiGtwName).(string)),
+			ApiSpecificationMd5Hash: aws.String(d.Get(attrApiGtwSpecMd5Hash).(string)),
+			DataSetId:               aws.String(d.Get(attrDataSetId).(string)),
+			ProtocolType:            awstypes.ProtocolType(d.Get(attrApiGtwProtoType).(string)),
+			RevisionId:              aws.String(d.Get(attrRevisionId).(string)),
+			Stage:                   aws.String(d.Get(attrApiGtwStage).(string)),
+			ApiDescription:          aws.String(d.Get(attrApiGtwDescription).(string)),
+			ApiKey:                  aws.String(d.Get(attrApiGtwKey).(string)),
+		}
+		break
+	case awstypes.TypeImportAssetsFromRedshiftDataShares:
+		in.Details.ImportAssetsFromRedshiftDataShares = &awstypes.ImportAssetsFromRedshiftDataSharesRequestDetails{
+			DataSetId:  aws.String(d.Get(attrDataSetId).(string)),
+			RevisionId: aws.String(d.Get(attrRevisionId).(string)),
+		}
+
+		if v, ok := d.GetOk(attrRedshiftAssetSources); ok {
+			redshiftSrcIn := make([]awstypes.RedshiftDataShareAssetSourceEntry, len(v.([]any)))
+			for i, redshiftSrcAttr := range v.([]string) {
+				redshiftSrcIn[i] = awstypes.RedshiftDataShareAssetSourceEntry{
+					DataShareArn: &redshiftSrcAttr,
+				}
+			}
+			in.Details.ImportAssetsFromRedshiftDataShares.AssetSources = redshiftSrcIn
+		}
+		break
+	case awstypes.TypeImportAssetsFromLakeFormationTagPolicy:
+		in.Details.ImportAssetsFromLakeFormationTagPolicy = &awstypes.ImportAssetsFromLakeFormationTagPolicyRequestDetails{
+			CatalogId:  aws.String(d.Get(attrLakeFormationCatalogId).(string)),
+			DataSetId:  aws.String(d.Get(attrDataSetId).(string)),
+			RevisionId: aws.String(d.Get(attrRevisionId).(string)),
+			RoleArn:    aws.String(d.Get(attrLakeFormationRoleArn).(string)),
+		}
+
+		if _, ok := d.GetOk(attrLakeFormationDatabaseExpression); ok {
+			in.Details.ImportAssetsFromLakeFormationTagPolicy.Database = &awstypes.DatabaseLFTagPolicyAndPermissions{
+				Expression:  buildLFTagInput(d.Get(attrLakeFormationDatabaseExpression).([]any)),
+				Permissions: d.Get(attrLakeFormationDatabasePermissions).([]awstypes.DatabaseLFTagPolicyPermission),
+			}
+		}
+
+		if _, ok := d.GetOk(attrLakeFormationTableExpression); ok {
+			in.Details.ImportAssetsFromLakeFormationTagPolicy.Table = &awstypes.TableLFTagPolicyAndPermissions{
+				Expression:  buildLFTagInput(d.Get(attrLakeFormationTableExpression).([]any)),
+				Permissions: d.Get(attrLakeFormationTablePermissions).([]awstypes.TableTagPolicyLFPermission),
+			}
 		}
 	}
 
-	tflog.Debug(ctx, fmt.Sprintf("[DEBUG] Creating DataExchange Job with input: %#v", input))
-
-	out, err := conn.CreateJob(ctx, input)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameJob, plan.Type.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataExchange, create.ErrActionCreating, ResNameJob, plan.Type.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	plan.ID = types.StringValue(aws.ToString(out.Id))
-	plan.ARN = types.StringValue(aws.ToString(out.Arn))
-	plan.State = types.StringValue(string(out.State))
-	plan.CreatedAt = types.StringValue(out.CreatedAt.Format(time.RFC3339))
-	plan.UpdatedAt = types.StringValue(out.UpdatedAt.Format(time.RFC3339))
-
-	// Start the job
-	startInput := &dataexchange.StartJobInput{
-		JobId: aws.String(plan.ID.ValueString()),
-	}
-
-	_, err = conn.StartJob(ctx, startInput)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataExchange, "starting", ResNameJob, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitJobCompleted(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataExchange, create.ErrActionWaitingForCreation, ResNameJob, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	return in
 }
 
-func waitJobCompleted(ctx context.Context, conn *dataexchange.Client, id string, timeout time.Duration) (*dataexchange.GetJobOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.StateInProgress),
-			string(awstypes.StateWaiting),
+func buildLFTagInput(attr []any) []awstypes.LFTag {
+	res := make([]awstypes.LFTag, len(attr))
+	for i, aEl := range attr {
+		aM := aEl.(map[string]any)
+		res[i] = awstypes.LFTag{
+			TagKey:    aws.String(aM[attrTagKey].(string)),
+			TagValues: aM[attrTagValue].([]string),
+		}
+	}
+	return res
+}
+
+// Schema
+func resourceJobSchema() map[string]*schema.Schema {
+	return map[string]*schema.Schema{
+		names.AttrARN: {
+			Type:     schema.TypeString,
+			Computed: true,
 		},
-		Target:  []string{string(awstypes.StateCompleted)},
-		Refresh: statusJob(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*dataexchange.GetJobOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func (r *resourceJob) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state resourceJobModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().DataExchangeClient(ctx)
-
-	out, err := FindJobById(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataExchange, create.ErrActionReading, ResNameJob, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	state.ARN = types.StringValue(aws.ToString(out.Arn))
-	state.CreatedAt = types.StringValue(out.CreatedAt.Format(time.RFC3339))
-	state.State = types.StringValue(string(out.State))
-	state.Type = types.StringValue(string(out.Type))
-	state.UpdatedAt = types.StringValue(out.UpdatedAt.Format(time.RFC3339))
-
-	// Handle details based on job type
-	detailsAttrs := make(map[string]attr.Value)
-	if out.Type == awstypes.TypeImportAssetsFromS3 && out.Details.ImportAssetsFromS3 != nil {
-		importDetails := out.Details.ImportAssetsFromS3
-
-		// Try to preserve the revision ID format from state
-		var revisionID string
-		var oldState resourceJobModel
-		req.State.Get(ctx, &oldState)
-		if !oldState.Details.IsNull() {
-			importDetailsFromState, err := getImportAssetsFromS3Details(ctx, oldState.Details)
-			if err == nil && importDetailsFromState != nil {
-				revisionID = importDetailsFromState.RevisionId.ValueString()
-			}
-		}
-		// If we couldn't get it from state, construct the compound ID
-		if revisionID == "" {
-			revisionID = fmt.Sprintf("%s:%s",
-				aws.ToString(importDetails.DataSetId),
-				aws.ToString(importDetails.RevisionId))
-		}
-
-		assetSources := make([]attr.Value, 0)
-		for _, source := range importDetails.AssetSources {
-			sourceAttrs := map[string]attr.Value{
-				"bucket": types.StringValue(aws.ToString(source.Bucket)),
-				"key":    types.StringValue(aws.ToString(source.Key)),
-			}
-			sourceObj, diags := types.ObjectValue(
-				map[string]attr.Type{
-					"bucket": types.StringType,
-					"key":    types.StringType,
-				},
-				sourceAttrs,
-			)
-			resp.Diagnostics.Append(diags...)
-			if diags.HasError() {
-				return
-			}
-			assetSources = append(assetSources, sourceObj)
-		}
-
-		assetSourcesSet, diags := types.SetValue(
-			types.ObjectType{
-				AttrTypes: map[string]attr.Type{
-					"bucket": types.StringType,
-					"key":    types.StringType,
-				},
-			},
-			assetSources,
-		)
-		resp.Diagnostics.Append(diags...)
-		if diags.HasError() {
-			return
-		}
-
-		importAttrs := map[string]attr.Value{
-			"data_set_id":   types.StringValue(aws.ToString(importDetails.DataSetId)),
-			"revision_id":   types.StringValue(revisionID),
-			"asset_sources": assetSourcesSet,
-		}
-
-		importObj, diags := types.ObjectValue(
-			map[string]attr.Type{
-				"data_set_id": types.StringType,
-				"revision_id": types.StringType,
-				"asset_sources": types.SetType{
-					ElemType: types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"bucket": types.StringType,
-							"key":    types.StringType,
-						},
-					},
-				},
-			},
-			importAttrs,
-		)
-		resp.Diagnostics.Append(diags...)
-		if diags.HasError() {
-			return
-		}
-
-		detailsAttrs["import_assets_from_s3"] = importObj
-		detailsAttrs["export_assets_to_s3"] = types.ObjectNull(
-			map[string]attr.Type{
-				"data_set_id": types.StringType,
-				"revision_id": types.StringType,
-				"asset_destinations": types.SetType{
-					ElemType: types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"asset_id": types.StringType,
-							"bucket":   types.StringType,
-							"key":      types.StringType,
-						},
-					},
-				},
-			},
-		)
-	} else if out.Type == awstypes.TypeExportAssetsToS3 && out.Details.ExportAssetsToS3 != nil {
-		exportDetails := out.Details.ExportAssetsToS3
-
-		assetDestinations := make([]attr.Value, 0)
-		for _, dest := range exportDetails.AssetDestinations {
-			destAttrs := map[string]attr.Value{
-				"asset_id": types.StringValue(aws.ToString(dest.AssetId)),
-				"bucket":   types.StringValue(aws.ToString(dest.Bucket)),
-				"key":      types.StringValue(aws.ToString(dest.Key)),
-			}
-			destObj, diags := types.ObjectValue(
-				map[string]attr.Type{
-					"asset_id": types.StringType,
-					"bucket":   types.StringType,
-					"key":      types.StringType,
-				},
-				destAttrs,
-			)
-			resp.Diagnostics.Append(diags...)
-			if diags.HasError() {
-				return
-			}
-			assetDestinations = append(assetDestinations, destObj)
-		}
-
-		assetDestinationsSet, diags := types.SetValue(
-			types.ObjectType{
-				AttrTypes: map[string]attr.Type{
-					"asset_id": types.StringType,
-					"bucket":   types.StringType,
-					"key":      types.StringType,
-				},
-			},
-			assetDestinations,
-		)
-		resp.Diagnostics.Append(diags...)
-		if diags.HasError() {
-			return
-		}
-
-		exportAttrs := map[string]attr.Value{
-			"data_set_id":        types.StringValue(aws.ToString(exportDetails.DataSetId)),
-			"revision_id":        types.StringValue(aws.ToString(exportDetails.RevisionId)),
-			"asset_destinations": assetDestinationsSet,
-		}
-
-		exportObj, diags := types.ObjectValue(
-			map[string]attr.Type{
-				"data_set_id": types.StringType,
-				"revision_id": types.StringType,
-				"asset_destinations": types.SetType{
-					ElemType: types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"asset_id": types.StringType,
-							"bucket":   types.StringType,
-							"key":      types.StringType,
-						},
-					},
-				},
-			},
-			exportAttrs,
-		)
-		resp.Diagnostics.Append(diags...)
-		if diags.HasError() {
-			return
-		}
-
-		detailsAttrs["export_assets_to_s3"] = exportObj
-		detailsAttrs["import_assets_from_s3"] = types.ObjectNull(
-			map[string]attr.Type{
-				"data_set_id": types.StringType,
-				"revision_id": types.StringType,
-				"asset_sources": types.SetType{
-					ElemType: types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"bucket": types.StringType,
-							"key":    types.StringType,
-						},
-					},
-				},
-			},
-		)
-	}
-
-	detailsObj, diags := types.ObjectValue(
-		map[string]attr.Type{
-			"import_assets_from_s3": types.ObjectType{
-				AttrTypes: map[string]attr.Type{
-					"data_set_id": types.StringType,
-					"revision_id": types.StringType,
-					"asset_sources": types.SetType{
-						ElemType: types.ObjectType{
-							AttrTypes: map[string]attr.Type{
-								"bucket": types.StringType,
-								"key":    types.StringType,
-							},
-						},
-					},
-				},
-			},
-			"export_assets_to_s3": types.ObjectType{
-				AttrTypes: map[string]attr.Type{
-					"data_set_id": types.StringType,
-					"revision_id": types.StringType,
-					"asset_destinations": types.SetType{
-						ElemType: types.ObjectType{
-							AttrTypes: map[string]attr.Type{
-								"asset_id": types.StringType,
-								"bucket":   types.StringType,
-								"key":      types.StringType,
-							},
-						},
-					},
-				},
-			},
+		names.AttrID: {
+			Type:     schema.TypeString,
+			Computed: true,
 		},
-		detailsAttrs,
-	)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
-		return
-	}
-	state.Details = detailsObj
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceJob) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	resp.Diagnostics.AddError(
-		"Update not supported",
-		"AWS DataExchange Jobs cannot be updated after creation. All changes require replacement.",
-	)
-}
-
-func (r *resourceJob) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceJobModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	conn := r.Meta().DataExchangeClient(ctx)
-
-	// Only try to cancel if job is in WAITING state
-	out, err := FindJobById(ctx, conn, state.ID.ValueString())
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DataExchange, create.ErrActionDeleting, ResNameJob, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	if out.State == awstypes.StateWaiting {
-		input := &dataexchange.CancelJobInput{
-			JobId: aws.String(state.ID.ValueString()),
-		}
-
-		_, err = conn.CancelJob(ctx, input)
-		if err != nil {
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				return
-			}
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataExchange, create.ErrActionDeleting, ResNameJob, state.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-
-		deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-		_, err = waitJobDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.DataExchange, create.ErrActionWaitingForDeletion, ResNameJob, state.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-	}
-	// For completed or other state jobs, just remove from state
-}
-
-func (r *resourceJob) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func waitJobDeleted(ctx context.Context, conn *dataexchange.Client, id string, timeout time.Duration) (*dataexchange.GetJobOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.StateInProgress),
-			string(awstypes.StateWaiting),
+		names.AttrCreatedAt: {
+			Type:     schema.TypeString,
+			Computed: true,
 		},
-		Target: []string{
-			string(awstypes.StateCancelled),
-			string(awstypes.StateCompleted),
-			string(awstypes.StateError),
+		names.AttrLastUpdatedTime: {
+			Type:     schema.TypeString,
+			Computed: true,
 		},
-		Refresh: statusJob(ctx, conn, id),
-		Timeout: timeout,
+		names.AttrState: {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		names.AttrType: {
+			Type:             schema.TypeString,
+			Required:         true,
+			ValidateDiagFunc: enum.Validate[awstypes.Type](),
+		},
+		attrDataSetId: {
+			Type:     schema.TypeString,
+			Required: true,
+		},
+		attrStartOnCreation: {
+			Type:     schema.TypeBool,
+			Default:  false,
+			Optional: true,
+		},
+		attrRevisionId: { // todo: validation
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		attrS3AccessAssetSourceBucket: {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		attrS3AccessAssetSourceKeyPrefixes: {
+			Type:     schema.TypeSet,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+			Optional: true,
+		},
+		attrS3AccessAssetSourceKeys: {
+			Type:     schema.TypeSet,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+			Optional: true,
+		},
+		attrS3AccessAssetSourceKmsKeysToGrant: {
+			Type: schema.TypeSet,
+			Elem: &schema.Schema{
+				Type:         schema.TypeString,
+				ValidateFunc: validation.StringLenBetween(1, 2048),
+			},
+			Optional: true,
+		},
+		attrS3AssetDestinations: {
+			Type: schema.TypeList,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					attrAssetId: {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					attrBucket: {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					attrKey: {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
+			Optional: true,
+		},
+		attrS3AssetDestinationEncryptionKMSKeyArn: {
+			Type:         schema.TypeString,
+			Optional:     true,
+			ValidateFunc: verify.ValidARN,
+			RequiredWith: []string{attrS3AssetDestinationEncryptionType},
+		},
+		attrS3AssetDestinationEncryptionType: {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateDiagFunc: enum.Validate[awstypes.ServerSideEncryptionTypes](),
+			RequiredWith:     []string{attrS3AssetDestinationEncryptionKMSKeyArn},
+		},
+		attrAssetId: {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		attrSignedUrl: {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		attrSignedUrlExpiresAt: {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		attrS3RevisionDestinations: {
+			Type: schema.TypeList,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					attrBucket: {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					attrRevisionId: {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					attrKeyPattern: {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
+			Optional: true,
+		},
+		attrS3EventActionArn: {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		attrApiGtwDescription: {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		attrApiGtwId: {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		attrApiGtwKey: {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		attrApiGtwName: {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		attrApiGtwSpecMd5Hash: {
+			Type:     schema.TypeString,
+			Optional: true,
+			ValidateFunc: validation.StringMatch(
+				regexp.MustCompile("(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?"),
+				"must be base64 encrypted md5 hash",
+			),
+		},
+		attrApiGtwProtoType: {
+			Type:             schema.TypeString,
+			Optional:         true,
+			ValidateDiagFunc: enum.Validate[awstypes.ProtocolType](),
+		},
+		attrApiGtwStage: {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		attrApiSpecUploadUrl: {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		attrApiSPecUploadUrlExpAt: {
+			Type:     schema.TypeBool,
+			Computed: true,
+		},
+		attrUrlAssetName: {
+			Type:     schema.TypeString,
+			Optional: true,
+		},
+		attrUrlMd5Hash: {
+			Type:     schema.TypeString,
+			Optional: true,
+			ValidateFunc: validation.StringMatch(
+				regexp.MustCompile("(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?"),
+				"must be base64 encrypted md5 hash",
+			),
+		},
+		attrRedshiftAssetSources: {
+			Type: schema.TypeSet,
+			Elem: &schema.Schema{
+				Type:         schema.TypeString,
+				ValidateFunc: verify.ValidARN,
+			},
+			Optional: true,
+		},
+		attrS3AssetSources: {
+			Type: schema.TypeList,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					attrBucket: {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					attrKey: {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
+			Optional: true,
+		},
+		attrLakeFormationCatalogId: {
+			Type:     schema.TypeString,
+			Optional: true,
+			ValidateFunc: validation.StringMatch(
+				regexp.MustCompile(".*/^[\\d]{12}$/.*"),
+				"must be valid catalog id",
+			),
+		},
+		attrLakeFormationDatabaseExpression: {
+			Type: schema.TypeList,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					attrTagKey: {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					attrTagValue: {
+						Type:     schema.TypeSet,
+						Elem:     &schema.Schema{Type: schema.TypeString},
+						Required: true,
+					},
+				},
+			},
+			Optional:     true,
+			RequiredWith: []string{attrLakeFormationDatabasePermissions},
+		},
+		attrLakeFormationDatabasePermissions: {
+			Type: schema.TypeSet,
+			Elem: &schema.Schema{
+				Type:             schema.TypeString,
+				ValidateDiagFunc: enum.Validate[awstypes.DatabaseLFTagPolicyPermission](),
+			},
+			Optional:     true,
+			RequiredWith: []string{attrLakeFormationDatabaseExpression},
+		},
+		attrLakeFormationRoleArn: {
+			Type:     schema.TypeString,
+			Optional: true,
+			ValidateFunc: validation.StringMatch(
+				regexp.MustCompile("arn:aws:iam::(\\d{12}):role\\/.+"),
+				"must be valid IAM Role ARN",
+			),
+		},
+		attrLakeFormationTableExpression: {
+			Type: schema.TypeList,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					attrTagKey: {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+					attrTagValue: {
+						Type:     schema.TypeString,
+						Required: true,
+					},
+				},
+			},
+			Optional:     true,
+			RequiredWith: []string{attrLakeFormationTablePermissions},
+		},
+		attrLakeFormationTablePermissions: {
+			Type: schema.TypeSet,
+			Elem: &schema.Schema{
+				Type:             schema.TypeString,
+				ValidateDiagFunc: enum.Validate[awstypes.TableTagPolicyLFPermission](),
+			},
+			Optional:     true,
+			RequiredWith: []string{attrLakeFormationTableExpression},
+		},
 	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*dataexchange.GetJobOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusJob(ctx context.Context, conn *dataexchange.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := FindJobById(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.State), nil
-	}
-}
-
-func FindJobById(ctx context.Context, conn *dataexchange.Client, id string) (*dataexchange.GetJobOutput, error) {
-	input := &dataexchange.GetJobInput{
-		JobId: aws.String(id),
-	}
-
-	output, err := conn.GetJob(ctx, input)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
-func JobParseRevisionID(id string) (string, string, error) {
-	parts := strings.Split(id, ":")
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-	return "", "", fmt.Errorf("unexpected format for revision ID (%s), expected DATA-SET_ID:REVISION-ID", id)
 }
