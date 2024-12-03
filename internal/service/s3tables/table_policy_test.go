@@ -181,7 +181,7 @@ data "aws_iam_policy_document" "test" {
       type        = "AWS"
       identifiers = [data.aws_caller_identity.current.account_id]
     }
-    resources = ["${aws_s3tables_table.test.arn}"]
+    resources = [aws_s3tables_table.test.arn]
   }
 }
 
