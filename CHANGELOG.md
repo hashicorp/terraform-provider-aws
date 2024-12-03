@@ -8,6 +8,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_dynamodb_table_replica: Add `deletion_protection_enabled` argument ([#35359](https://github.com/hashicorp/terraform-provider-aws/issues/35359))
+* resource/aws_s3_directory_bucket: Support `LocalZone` as a valid value for `location.type`, enabling support for [Amazon S3 Express One Zone in AWS Dedicated Local Zones](https://docs.aws.amazon.com/AmazonS3/latest/userguide/directory-bucket-data-residency.html) ([#40339](https://github.com/hashicorp/terraform-provider-aws/issues/40339))
 
 BUG FIXES:
 
