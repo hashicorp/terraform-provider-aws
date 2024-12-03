@@ -173,6 +173,9 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 
 	switch resourceType {
 	case "Bucket":
+		if isDirectoryBucket(identifier) {
+			conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 		tags, err = bucketListTags(ctx, conn, identifier)
 
 	case "Object", "ObjectCopy", "BucketObject":
@@ -180,6 +183,10 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 		objectARN, err = parseObjectARN(identifier)
 		if err != nil {
 			return err
+		}
+
+		if isDirectoryBucket(objectARN.Bucket) {
+			conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
 		var optFns []func(*s3.Options)
@@ -212,12 +219,19 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, r
 
 	switch resourceType {
 	case "Bucket":
+		if isDirectoryBucket(identifier) {
+			conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 		return bucketUpdateTags(ctx, conn, identifier, oldTags, newTags)
 
 	case "Object", "ObjectCopy", "BucketObject":
 		objectARN, err := parseObjectARN(identifier)
 		if err != nil {
 			return err
+		}
+
+		if isDirectoryBucket(objectARN.Bucket) {
+			conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 		}
 
 		var optFns []func(*s3.Options)
