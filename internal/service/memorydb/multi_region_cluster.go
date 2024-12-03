@@ -126,7 +126,6 @@ func resourceMultiRegionCluster() *schema.Resource {
 				"tls_enabled": {
 					Type:     schema.TypeBool,
 					Optional: true,
-					Computed: true,
 					Default:  true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
@@ -170,7 +169,7 @@ func resourceMultiRegionClusterCreate(ctx context.Context, d *schema.ResourceDat
 	output, err := conn.CreateMultiRegionCluster(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Multi Region cluster (%s): %s", *output.MultiRegionCluster.MultiRegionClusterName, err)
+		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Multi Region cluster: %s", err)
 	}
 
 	d.SetId(*output.MultiRegionCluster.MultiRegionClusterName)
@@ -212,7 +211,8 @@ func resourceMultiRegionClusterRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("tls_enabled", cluster.TLSEnabled)
 	d.Set(names.AttrStatus, cluster.Status)
 
-	// Update strategy isn’t returned by the API, so we retain the current value
+	// These attributes aren't returned by the API, so we retain the current value.
+	d.Set("suffix", d.Get("suffix"))
 	d.Set("update_strategy", d.Get("update_strategy"))
 
 	return diags
