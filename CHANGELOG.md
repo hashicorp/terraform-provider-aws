@@ -1,4 +1,5 @@
-## 5.79.0 (Unreleased)
+## 5.80.0 (Unreleased)
+## 5.79.0 (December  3, 2024)
 
 FEATURES:
 
