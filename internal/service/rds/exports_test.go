@@ -13,6 +13,7 @@ var (
 	ResourceClusterParameterGroup               = resourceClusterParameterGroup
 	ResourceClusterRoleAssociation              = resourceClusterRoleAssociation
 	ResourceClusterSnapshot                     = resourceClusterSnapshot
+	ResourceClusterSnapshotCopy                 = resourceClusterSnapshotCopy
 	ResourceCustomDBEngineVersion               = resourceCustomDBEngineVersion
 	ResourceEventSubscription                   = resourceEventSubscription
 	ResourceGlobalCluster                       = resourceGlobalCluster
