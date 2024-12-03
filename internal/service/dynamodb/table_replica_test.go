@@ -39,7 +39,7 @@ func TestAccDynamoDBTableReplica_basic(t *testing.T) {
 				Config: testAccTableReplicaConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTableReplicaExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "global_table_arn", tableResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "global_table_arn", tableResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 				),
 			},
