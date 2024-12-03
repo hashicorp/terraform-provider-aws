@@ -326,11 +326,11 @@ func testAccCheckBucketPublicAccessBlockExists(ctx context.Context, n string, v 
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
-		output, err := tfs3.FindPublicAccessBlockConfiguration(ctx, conn, rs.Primary.ID)
 		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
 			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 		}
+
+		output, err := tfs3.FindPublicAccessBlockConfiguration(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
