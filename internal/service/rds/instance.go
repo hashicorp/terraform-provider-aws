@@ -688,7 +688,7 @@ func resourceInstance() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil
 				}
@@ -699,7 +699,7 @@ func resourceInstance() *schema.Resource {
 				}
 				return nil
 			},
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil
 				}
@@ -707,6 +707,20 @@ func resourceInstance() *schema.Resource {
 				source := d.Get("replicate_source_db").(string)
 				if source != "" {
 					return errors.New(`"blue_green_update.enabled" cannot be set when "replicate_source_db" is set.`)
+				}
+				return nil
+			},
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
+				source := d.Get("replicate_source_db").(string)
+				if source == "" {
+					return nil
+				}
+
+				rawConfig := d.GetRawConfig()
+				if v := rawConfig.GetAttr("db_subnet_group_name"); v.IsKnown() && !v.IsNull() && v.AsString() != "" {
+					if !arn.IsARN(source) {
+						return errors.New(`"replicate_source_db" must be an ARN when "db_subnet_group_name" is set.`)
+					}
 				}
 				return nil
 			},
