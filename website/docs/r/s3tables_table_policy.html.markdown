@@ -58,6 +58,10 @@ The following arguments are required:
   Can consist of lowercase letters, numbers, and underscores, and must begin and end with a lowercase letter or number.
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that contains this Namespace.
 
+## Attribute Reference
+
+This resource exports no additional attributes.
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Tables Table Policy using the `table_bucket_arn`, the value of `namespace`, and the value of `name`, separated by a semicolon (`;`). For example:

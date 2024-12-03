@@ -61,7 +61,7 @@ The `iceberg_unreferenced_file_removal.settings` configuration block supports th
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the argument above:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the table bucket.
 * `created_at` - Date and time when the bucket was created.

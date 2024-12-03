@@ -38,6 +38,10 @@ The following arguments are required:
 * `resource_policy` - (Required) Amazon Web Services resource-based policy document in JSON format.
 * `table_bucket_arn` - (Required, Forces new resource) ARN referencing the Table Bucket that owns this policy.
 
+## Attribute Reference
+
+This resource exports no additional attributes.
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Tables Table Bucket Policy using the `table_bucket_arn`. For example:
