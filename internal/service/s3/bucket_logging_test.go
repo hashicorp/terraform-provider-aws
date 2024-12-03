@@ -465,9 +465,9 @@ func TestAccS3BucketLogging_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketLoggingDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_logging" {
 				continue
 			}
@@ -475,6 +475,10 @@ func testAccCheckBucketLoggingDestroy(ctx context.Context) resource.TestCheckFun
 			bucket, expectedBucketOwner, err := tfs3.ParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
@@ -507,6 +511,9 @@ func testAccCheckBucketLoggingExists(ctx context.Context, n string) resource.Tes
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		_, err = tfs3.FindLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
 
