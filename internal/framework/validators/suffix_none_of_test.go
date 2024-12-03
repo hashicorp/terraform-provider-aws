@@ -63,8 +63,6 @@ func TestSuffixNoneOfValidator(t *testing.T) {
 	}
 
 	for name, test := range testCases {
-		name, test := name, test
-
 		t.Run(fmt.Sprintf("ValidateString - %s", name), func(t *testing.T) {
 			t.Parallel()
 			req := validator.StringRequest{
@@ -100,7 +98,6 @@ func TestSuffixNoneOfValidator_Description(t *testing.T) {
 	}
 
 	for name, test := range testCases {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
