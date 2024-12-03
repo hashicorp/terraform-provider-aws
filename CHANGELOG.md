@@ -7,9 +7,11 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_eks_cluster: Add `compute_config`, `storage_config`, and `kubernetes_network_config.elastic_load_balancing` arguments for EKS Auto Mode ([#40370](https://github.com/hashicorp/terraform-provider-aws/issues/40370))
 * resource/aws_eks_cluster: Add `remote_network_config` argument for EKS Auto Mode ([#40371](https://github.com/hashicorp/terraform-provider-aws/issues/40371))
 * resource/aws_lambda_event_source_mapping: Add `metrics_config` argument ([#40322](https://github.com/hashicorp/terraform-provider-aws/issues/40322))
 * resource/aws_lambda_event_source_mapping: Add `provisioned_poller_config` argument ([#40303](https://github.com/hashicorp/terraform-provider-aws/issues/40303))
+* resource/aws_rds_cluster: Add ability to promote read replica cluster to standalone ([#40337](https://github.com/hashicorp/terraform-provider-aws/issues/40337))
 * resource/aws_vpc_endpoint_service: Add `supported_regions` argument ([#40346](https://github.com/hashicorp/terraform-provider-aws/issues/40346))
 
 BUG FIXES:
