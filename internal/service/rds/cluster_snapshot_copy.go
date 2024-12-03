@@ -48,10 +48,6 @@ func resourceClusterSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			names.AttrAvailabilityZones: {
-				Type:     schema.TypeList,
-				Computed: true,
-			},
 			"copy_tags": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -144,6 +140,7 @@ func resourceClusterSnapshotCopyCreate(ctx context.Context, d *schema.ResourceDa
 		SourceDBClusterSnapshotIdentifier: aws.String(d.Get("source_db_cluster_snapshot_identifier").(string)),
 		Tags:                              getTagsIn(ctx),
 		TargetDBClusterSnapshotIdentifier: aws.String(targetDBClusterSnapshotID),
+		CopyTags:                          aws.Bool(d.Get("copy_tags").(bool)),
 	}
 
 	if v, ok := d.GetOk("copy_tags"); ok {
@@ -217,7 +214,6 @@ func resourceClusterSnapshotCopyRead(ctx context.Context, d *schema.ResourceData
 
 	arn := aws.ToString(snapshot.DBClusterSnapshotArn)
 	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
-	d.Set(names.AttrAvailabilityZones, snapshot.AvailabilityZones)
 	d.Set("db_cluster_snapshot_arn", arn)
 	d.Set(names.AttrStorageEncrypted, snapshot.StorageEncrypted)
 	d.Set(names.AttrEngine, snapshot.Engine)
@@ -225,7 +221,7 @@ func resourceClusterSnapshotCopyRead(ctx context.Context, d *schema.ResourceData
 	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
 	d.Set("license_model", snapshot.LicenseModel)
 	d.Set("snapshot_type", snapshot.SnapshotType)
-	d.Set("source_db_cluster_snapshot_identifier", d.Get("source_db_cluster_snapshot_identifier"))
+	d.Set("source_db_cluster_snapshot_identifier", snapshot.SourceDBClusterSnapshotArn)
 	d.Set(names.AttrStorageType, snapshot.StorageType)
 	d.Set("target_db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
