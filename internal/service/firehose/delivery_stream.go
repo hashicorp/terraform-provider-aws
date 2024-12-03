@@ -1594,6 +1594,9 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	} else if v, ok := d.GetOk("msk_source_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.DeliveryStreamType = types.DeliveryStreamTypeMSKAsSource
 		input.MSKSourceConfiguration = expandMSKSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
+	} else if v, ok := d.GetOk("database_source_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.DeliveryStreamType = types.DeliveryStreamTypeDatabaseAsSource
+		input.DatabaseSourceConfiguration = expandDatabaseSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	switch v := destinationType(d.Get(names.AttrDestination).(string)); v {
@@ -3623,6 +3626,190 @@ func expandAuthenticationConfiguration(tfMap map[string]interface{}) *types.Auth
 	}
 
 	return apiObject
+}
+
+func expandDatabaseSourceConfiguration(tfMap map[string]interface{}) *types.DatabaseSourceConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.DatabaseSourceConfiguration{}
+
+	// Handle required authentication configuration
+	if v, ok := tfMap["authentication_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DatabaseSourceAuthenticationConfiguration = expandDatabaseSourceAuthenticationConfiguration(v[0].(map[string]interface{}))
+	}
+
+	// Handle required VPC configuration
+	if v, ok := tfMap["vpc_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.DatabaseSourceVPCConfiguration = expandDatabaseSourceVPCConfiguration(v[0].(map[string]interface{}))
+	}
+
+	// Handle required databases list
+	if v, ok := tfMap["databases"].([]interface{}); ok && len(v) > 0 {
+		databases := make([]string, 0, len(v))
+		for _, d := range v {
+			if d != nil {
+				databases = append(databases, d.(string))
+			}
+		}
+		apiObject.Databases = &databases
+	}
+
+	// Handle required endpoint
+	if v, ok := tfMap["endpoint"].(string); ok && v != "" {
+		apiObject.Endpoint = aws.String(v)
+	}
+
+	// Handle required port
+	if v, ok := tfMap["port"].(int); ok {
+		apiObject.Port = aws.Int32(int32(v))
+	}
+
+	// Handle required snapshot watermark table
+	if v, ok := tfMap["snapshot_watermark_table"].(string); ok && v != "" {
+		apiObject.SnapshotWatermarkTable = aws.String(v)
+	}
+
+	// Handle required tables list
+	if v, ok := tfMap["tables"].([]interface{}); ok && len(v) > 0 {
+		tables := make([]string, 0, len(v))
+		for _, t := range v {
+			if t != nil {
+				tables = append(tables, t.(string))
+			}
+		}
+		apiObject.Tables = &tables
+	}
+
+	// Handle required type
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = types.DatabaseType(v)
+	}
+
+	// Handle optional columns
+	if v, ok := tfMap["columns"].([]interface{}); ok && len(v) > 0 {
+		columns := make([]string, 0, len(v))
+		for _, c := range v {
+			if c != nil {
+				columns = append(columns, c.(string))
+			}
+		}
+		apiObject.Columns = &columns
+	}
+
+	// Handle optional SSL mode
+	if v, ok := tfMap["ssl_mode"].(string); ok && v != "" {
+		apiObject.SSLMode = types.SSLMode(v)
+	}
+
+	// Handle optional surrogate keys
+	if v, ok := tfMap["surrogate_keys"].([]interface{}); ok && len(v) > 0 {
+		surrogateKeys := make([]string, 0, len(v))
+		for _, k := range v {
+			if k != nil {
+				surrogateKeys = append(surrogateKeys, k.(string))
+			}
+		}
+		apiObject.SurrogateKeys = surrogateKeys
+	}
+
+	return apiObject
+}
+
+func expandDatabaseSourceAuthenticationConfiguration(tfMap map[string]interface{}) *types.DatabaseSourceAuthenticationConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.DatabaseSourceAuthenticationConfiguration{}
+
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		apiObject.RoleARN = aws.String(v)
+	}
+	if v, ok := tfMap["secret_manager_arn"].(string); ok && v != "" {
+		apiObject.SecretManagerARN = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandDatabaseSourceVPCConfiguration(tfMap map[string]interface{}) *types.DatabaseSourceVPCConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.DatabaseSourceVPCConfiguration{}
+
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		apiObject.RoleARN = aws.String(v)
+	}
+	if v, ok := tfMap["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SecurityGroupIds = flex.ExpandStringSet(v)
+	}
+	if v, ok := tfMap["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.SubnetIds = flex.ExpandStringSet(v)
+	}
+
+	return apiObject
+}
+
+func flattenDatabaseSourceConfiguration(apiObject *types.DatabaseSourceConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"authentication_configuration": flattenDatabaseSourceAuthenticationConfiguration(apiObject.DatabaseSourceAuthenticationConfiguration),
+		"vpc_configuration":            flattenDatabaseSourceVPCConfiguration(apiObject.DatabaseSourceVPCConfiguration),
+		"databases":                    aws.ToStringSlice(apiObject.Databases),
+		"endpoint":                     aws.ToString(apiObject.Endpoint),
+		"port":                         aws.ToInt32(apiObject.Port),
+		"snapshot_watermark_table":     aws.ToString(apiObject.SnapshotWatermarkTable),
+		"tables":                       aws.ToStringSlice(apiObject.Tables),
+		"type":                         string(apiObject.Type),
+	}
+
+	if apiObject.Columns != nil {
+		tfMap["columns"] = aws.ToStringSlice(apiObject.Columns)
+	}
+
+	if apiObject.SSLMode != "" {
+		tfMap["ssl_mode"] = string(apiObject.SSLMode)
+	}
+
+	if len(apiObject.SurrogateKeys) > 0 {
+		tfMap["surrogate_keys"] = apiObject.SurrogateKeys
+	}
+
+	return []interface{}{m}
+}
+
+func flattenDatabaseSourceAuthenticationConfiguration(apiObject *types.DatabaseSourceAuthenticationConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"role_arn":           aws.ToString(apiObject.RoleARN),
+		"secret_manager_arn": aws.ToString(apiObject.SecretManagerARN),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenDatabaseSourceVPCConfiguration(apiObject *types.DatabaseSourceVPCConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"role_arn":           aws.ToString(apiObject.RoleARN),
+		"security_group_ids": flex.FlattenStringSet(apiObject.SecurityGroupIds),
+		"subnet_ids":         flex.FlattenStringSet(apiObject.SubnetIds),
+	}
+
+	return []interface{}{tfMap}
 }
 
 func flattenMSKSourceDescription(apiObject *types.MSKSourceDescription) map[string]interface{} {
