@@ -13,15 +13,10 @@ Manages an RDS database cluster snapshot copy. For managing RDS database instanc
 ## Example Usage
 
 ```terraform
-data "aws_rds_engine_version" "default" {
-  engine = "mysql"
-}
-
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = "aurora-cluster-demo"
   database_name       = "test"
-  engine              = data.aws_rds_engine_version.default.engine
-  engine_version      = data.aws_rds_engine_version.default.version
+  engine              = "aurora-mysql"
   master_username     = "tfacctest"
   master_password     = "avoid-plaintext-passwords"
   skip_final_snapshot = true
