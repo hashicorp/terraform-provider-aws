@@ -5693,7 +5693,7 @@ service "memorydb" {
 
   names {
     provider_name_upper = "MemoryDB"
-    human_friendly      = "MemoryDB for Redis"
+    human_friendly      = "MemoryDB"
   }
 
   client {
@@ -5710,7 +5710,7 @@ service "memorydb" {
 
   provider_package_correct = "memorydb"
   doc_prefix               = ["memorydb_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "meta" {
@@ -9454,7 +9454,7 @@ service "ec2" {
 
     split_package       = "ec2"
     file_prefix         = "vpc_"
-    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\."]
+    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\.", "vpc_block_public_access_"]
     brand               = "Amazon"
     exclude             = true
     allowed_subcategory = true

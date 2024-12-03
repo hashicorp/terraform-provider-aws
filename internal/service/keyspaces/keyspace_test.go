@@ -39,7 +39,7 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 				Config: testAccKeyspaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyspaceExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cassandra", "/keyspace/"+rName+"/"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cassandra", "/keyspace/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
@@ -70,7 +70,7 @@ func TestAccKeyspacesKeyspace_replicationSpecificationMulti(t *testing.T) {
 				Config: testAccKeyspaceConfig_replicationSpecification(rName, string(types.RsSingleRegion)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyspaceExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cassandra", "/keyspace/"+rName+"/"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cassandra", "/keyspace/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "replication_specification.0.replication_strategy", string(types.RsSingleRegion)),
@@ -80,7 +80,7 @@ func TestAccKeyspacesKeyspace_replicationSpecificationMulti(t *testing.T) {
 				Config: testAccKeyspaceConfig_multiReplicationSpecification(rName, string(types.RsMultiRegion), region1, region2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyspaceExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cassandra", "/keyspace/"+rName+"/"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cassandra", "/keyspace/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "replication_specification.0.replication_strategy", string(types.RsMultiRegion)),

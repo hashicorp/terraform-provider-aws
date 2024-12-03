@@ -81,7 +81,7 @@ func (d *directoryBucketsDataSource) Read(ctx context.Context, request datasourc
 		return d.Meta().RegionalARN(ctx, "s3express", fmt.Sprintf("bucket/%s", v))
 	}))
 	data.Buckets = flex.FlattenFrameworkStringValueList(ctx, buckets)
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

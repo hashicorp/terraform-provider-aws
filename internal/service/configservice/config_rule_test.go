@@ -119,7 +119,7 @@ func testAccConfigRule_ownerAWS(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 				Config: testAccConfigRuleConfig_ownerAWS(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestMatchResourceAttr(resourceName, "rule_id", regexache.MustCompile("config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Terraform Acceptance tests"),
@@ -158,7 +158,7 @@ func testAccConfigRule_customlambda(t *testing.T) {
 				Config: testAccConfigRuleConfig_customLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestMatchResourceAttr(resourceName, "rule_id", regexache.MustCompile("config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Terraform Acceptance tests"),
@@ -202,7 +202,7 @@ func testAccConfigRule_ownerPolicy(t *testing.T) {
 				Config: testAccConfigRuleConfig_ownerPolicy(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestMatchResourceAttr(resourceName, "rule_id", regexache.MustCompile("config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
@@ -225,7 +225,7 @@ func testAccConfigRule_ownerPolicy(t *testing.T) {
 				Config: testAccConfigRuleConfig_ownerPolicy(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestMatchResourceAttr(resourceName, "rule_id", regexache.MustCompile("config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),

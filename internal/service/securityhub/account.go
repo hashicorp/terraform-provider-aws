@@ -95,7 +95,7 @@ func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "creating Security Hub Account: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	autoEnableControls := d.Get("auto_enable_controls").(bool)
 	inputU := &securityhub.UpdateSecurityHubConfigurationInput{

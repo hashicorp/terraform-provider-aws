@@ -63,7 +63,7 @@ func dataSourceTransitGatewayVPCAttachmentsRead(ctx context.Context, d *schema.R
 		attachmentIDs = append(attachmentIDs, aws.ToString(v.TransitGatewayAttachmentId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, attachmentIDs)
 
 	return diags

@@ -38,8 +38,8 @@ func TestAccCodeConnectionsConnection_basic(t *testing.T) {
 				Config: testAccConnectionConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrID, "codeconnections", regexache.MustCompile("connection/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codeconnections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeconnections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeconnections", regexache.MustCompile("connection/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", string(types.ProviderTypeBitbucket)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", string(types.ConnectionStatusPending)),
@@ -72,9 +72,9 @@ func TestAccCodeConnectionsConnection_hostARN(t *testing.T) {
 				Config: testAccConnectionConfig_hostARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrID, "codeconnections", regexache.MustCompile("connection/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "codeconnections", regexache.MustCompile("connection/.+")),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "host_arn", "codeconnections", regexache.MustCompile("host/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrID, "codeconnections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codeconnections", regexache.MustCompile("connection/.+")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "host_arn", "codeconnections", regexache.MustCompile("host/.+")),
 					resource.TestCheckResourceAttr(resourceName, "provider_type", string(types.ProviderTypeGithubEnterpriseServer)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "connection_status", string(types.ConnectionStatusPending)),

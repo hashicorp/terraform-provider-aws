@@ -34,7 +34,7 @@ func TestAccIAMOpenIDConnectProvider_basic(t *testing.T) {
 				Config: testAccOpenIDConnectProviderConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOpenIDConnectProviderExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("oidc-provider/%s", url)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrURL, url),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "client_id_list.0",

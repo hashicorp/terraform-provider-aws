@@ -41,7 +41,7 @@ func TestAccCognitoIdentityPool_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "identity_pool_name", fmt.Sprintf("identity pool %s", name)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cognito-identity", regexache.MustCompile(`identitypool/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cognito-identity", regexache.MustCompile(`identitypool/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "allow_unauthenticated_identities", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "developer_provider_name", ""),
 				),

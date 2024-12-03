@@ -52,7 +52,7 @@ func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading License Manager Distributed Grants: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, tfslices.ApplyToAll(grants, func(v awstypes.Grant) string {
 		return aws.ToString(v.GrantArn)
 	}))

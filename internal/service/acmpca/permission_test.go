@@ -40,7 +40,7 @@ func TestAccACMPCAPermission_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttr(resourceName, "actions.*", "ListPermissions"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrPolicy),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, "acm.amazonaws.com"),
-					acctest.CheckResourceAttrAccountID(resourceName, "source_account"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "source_account"),
 				),
 			},
 		},
@@ -87,7 +87,7 @@ func TestAccACMPCAPermission_sourceAccount(t *testing.T) {
 				Config: testAccPermissionConfig_sourceAccount(commonName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPermissionExists(ctx, resourceName, &permission),
-					acctest.CheckResourceAttrAccountID(resourceName, "source_account"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "source_account"),
 				),
 			},
 		},

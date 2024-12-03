@@ -55,7 +55,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					testAccCheckInstanceAttributes(&v),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "10"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZone),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "0"),
@@ -234,7 +234,7 @@ func TestAccRDSInstance_engineLifecycleSupport_disabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDBInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, tfrds.InstanceEngineMySQL),
 					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support-disabled"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
@@ -2266,9 +2266,9 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNameEquivale
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_CrossRegion_ParameterGroupName_equivalent(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExistsWithProvider(ctx, sourceResourceName, &sourceDbInstance, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckDBInstanceExistsWithProvider(ctx, sourceResourceName, &sourceDbInstance, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttr(sourceResourceName, names.AttrParameterGroupName, fmt.Sprintf("%s-source", rName)),
-					testAccCheckDBInstanceExistsWithProvider(ctx, resourceName, &dbInstance, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckDBInstanceExistsWithProvider(ctx, resourceName, &dbInstance, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, "aws_db_parameter_group.test", names.AttrName),
 					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
@@ -2310,9 +2310,9 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNamePostgres
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_CrossRegion_ParameterGroupName_postgres(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExistsWithProvider(ctx, sourceResourceName, &sourceDbInstance, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckDBInstanceExistsWithProvider(ctx, sourceResourceName, &sourceDbInstance, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttr(sourceResourceName, names.AttrParameterGroupName, fmt.Sprintf("%s-source", rName)),
-					testAccCheckDBInstanceExistsWithProvider(ctx, resourceName, &dbInstance, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckDBInstanceExistsWithProvider(ctx, resourceName, &dbInstance, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrParameterGroupName, "aws_db_parameter_group.test", names.AttrName),
 					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
@@ -2355,9 +2355,9 @@ func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_characterSet(t *testing.T)
 			{
 				Config: testAccInstanceConfig_ReplicateSourceDB_CrossRegion_CharacterSet(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDBInstanceExistsWithProvider(ctx, sourceResourceName, &sourceDbInstance, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckDBInstanceExistsWithProvider(ctx, sourceResourceName, &sourceDbInstance, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttr(sourceResourceName, "character_set_name", "WE8ISO8859P15"),
-					testAccCheckDBInstanceExistsWithProvider(ctx, resourceName, &dbInstance, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					testAccCheckDBInstanceExistsWithProvider(ctx, resourceName, &dbInstance, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "character_set_name", "WE8ISO8859P15"),
 				),

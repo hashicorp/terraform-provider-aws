@@ -42,7 +42,7 @@ func TestAccCloudTrailEventDataStore_basic(t *testing.T) {
 						names.AttrField: "eventCategory",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "advanced_event_selector.0.name", "Default management events"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudtrail", regexache.MustCompile(`eventdatastore/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudtrail", regexache.MustCompile(`eventdatastore/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "billing_mode", "EXTENDABLE_RETENTION_PRICING"),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -113,7 +113,7 @@ func TestAccCloudTrailEventDataStore_kmsKeyId(t *testing.T) {
 				Config: testAccEventDataStoreConfig_kmsKeyId(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventDataStoreExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudtrail", regexache.MustCompile(`eventdatastore/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudtrail", regexache.MustCompile(`eventdatastore/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "multi_region_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "organization_enabled", acctest.CtFalse),

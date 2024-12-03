@@ -102,7 +102,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	replicaRegion := meta.(*conns.AWSClient).Region
+	replicaRegion := meta.(*conns.AWSClient).Region(ctx)
 
 	mainRegion, err := regionFromARN(d.Get("global_table_arn").(string))
 	if err != nil {
@@ -168,7 +168,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
-	if _, err := waitReplicaActive(ctx, conn, tableName, meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutCreate), optFn); err != nil {
+	if _, err := waitReplicaActive(ctx, conn, tableName, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate), optFn); err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
@@ -198,7 +198,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
-	replicaRegion := meta.(*conns.AWSClient).Region
+	replicaRegion := meta.(*conns.AWSClient).Region(ctx)
 
 	tableName, mainRegion, err := tableReplicaParseResourceID(d.Id())
 	if err != nil {
@@ -206,7 +206,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	globalTableARN := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Region:    mainRegion,
 		Resource:  fmt.Sprintf("table/%s", tableName),
@@ -331,7 +331,7 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 	}
 
-	replicaRegion := meta.(*conns.AWSClient).Region
+	replicaRegion := meta.(*conns.AWSClient).Region(ctx)
 
 	if mainRegion == replicaRegion {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), errors.New("replica cannot be in same region as main table"))
@@ -422,7 +422,7 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, resNameTableReplica, d.Id(), err)
 	}
 
-	replicaRegion := meta.(*conns.AWSClient).Region
+	replicaRegion := meta.(*conns.AWSClient).Region(ctx)
 
 	// now main table region.
 	optFn := func(o *dynamodb.Options) {
