@@ -221,6 +221,46 @@ func TestAccRDSCluster_tags(t *testing.T) {
 	})
 }
 
+// Test case for verifying that the security groups can be destroyed, recreated,
+// and number changed whilst Terraform handles it correctly.
+// https://github.com/hashicorp/terraform-provider-aws/issues/9692
+func TestAccRDSCluster_securityGroupUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster1, dbCluster2 types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sgName1, sgName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_securityGroup(rName, sgName1, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+				),
+			},
+			{
+				Config: testAccClusterConfig_securityGroup(rName, sgName2, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+				),
+			},
+			{
+				Config: testAccClusterConfig_securityGroup(rName, sgName2, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_allowMajorVersionUpgrade(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -3134,6 +3174,32 @@ resource "aws_rds_cluster" "test" {
 `, identifierPrefix, tfrds.ClusterEngineAuroraMySQL)
 }
 
+func testAccClusterConfig_securityGroup(rName, sgName string, sgCt int) string {
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  count       = %[4]d
+  name_prefix = %[2]q
+  vpc_id      = aws_vpc.test.id
+
+  tags = {
+    Name = %[2]q
+  }
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier     = %[1]q
+  engine                 = %[3]q
+  master_username        = "tfacctest"
+  master_password        = "avoid-plaintext-passwords"
+  skip_final_snapshot    = true
+  vpc_security_group_ids = aws_security_group.test[*].id
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+}
+`, rName, sgName, tfrds.ClusterEngineAuroraMySQL, sgCt))
+}
+
 func testAccClusterConfig_managedMasterPassword(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
@@ -5650,7 +5716,7 @@ resource "aws_iam_role" "role" {
 		"Action": "sts:AssumeRole",
 		"Principal": {
 			"Service": [
-				"directoryservice.rds.${data.aws_partition.current.dns_suffix}",				
+				"directoryservice.rds.${data.aws_partition.current.dns_suffix}",
 				"rds.${data.aws_partition.current.dns_suffix}"
 			]
 		},
