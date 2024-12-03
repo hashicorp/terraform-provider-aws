@@ -161,7 +161,7 @@ func resourceClusterSnapshotCopyCreate(ctx context.Context, d *schema.ResourceDa
 		}).PresignCopyDBClusterSnapshot(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "presigning RDS DB Snapshot Copy (%s) request: %s", targetDBClusterSnapshotID, err)
+			return sdkdiag.AppendErrorf(diags, "presigning RDS DB Cluster Snapshot Copy (%s) request: %s", targetDBClusterSnapshotID, err)
 		}
 
 		input.PreSignedUrl = aws.String(output.URL)
@@ -170,7 +170,7 @@ func resourceClusterSnapshotCopyCreate(ctx context.Context, d *schema.ResourceDa
 	output, err := conn.CopyDBClusterSnapshot(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating RDS DB Snapshot Copy (%s): %s", targetDBClusterSnapshotID, err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS DB Cluster Snapshot Copy (%s): %s", targetDBClusterSnapshotID, err)
 	}
 
 	d.SetId(aws.ToString(output.DBClusterSnapshot.DBClusterSnapshotIdentifier))
@@ -193,7 +193,7 @@ func resourceClusterSnapshotCopyCreate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	return append(diags, resourceSnapshotCopyRead(ctx, d, meta)...)
+	return append(diags, resourceClusterSnapshotCopyRead(ctx, d, meta)...)
 }
 
 func resourceClusterSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -209,7 +209,7 @@ func resourceClusterSnapshotCopyRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot Copy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshot Copy (%s): %s", d.Id(), err)
 	}
 
 	arn := aws.ToString(snapshot.DBClusterSnapshotArn)
@@ -226,13 +226,13 @@ func resourceClusterSnapshotCopyRead(ctx context.Context, d *schema.ResourceData
 	d.Set("target_db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
 	d.Set(names.AttrVPCID, snapshot.VpcId)
 
-	attribute, err := findDBSnapshotAttributeByTwoPartKey(ctx, conn, d.Id(), dbSnapshotAttributeNameRestore)
+	attribute, err := findDBClusterSnapshotAttributeByTwoPartKey(ctx, conn, d.Id(), dbSnapshotAttributeNameRestore)
 	switch {
 	case err == nil:
 		d.Set("shared_accounts", attribute.AttributeValues)
 	case tfresource.NotFound(err):
 	default:
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
 	}
 
 	return diags
@@ -260,7 +260,7 @@ func resourceClusterSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 	}
 
-	return append(diags, resourceSnapshotCopyRead(ctx, d, meta)...)
+	return append(diags, resourceClusterSnapshotCopyRead(ctx, d, meta)...)
 }
 
 func resourceClusterSnapshotCopyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
