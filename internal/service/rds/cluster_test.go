@@ -246,13 +246,14 @@ func TestAccRDSCluster_securityGroupUpdate(t *testing.T) {
 			{
 				Config: testAccClusterConfig_securityGroup(rName, sgName2, 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
 				),
 			},
 			{
 				Config: testAccClusterConfig_securityGroup(rName, sgName2, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &dbCluster2),
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster1),
 					testAccCheckClusterNotRecreated(&dbCluster1, &dbCluster2),
 				),
 			},
