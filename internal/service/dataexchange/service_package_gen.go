@@ -43,6 +43,16 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceEventAction,
+			TypeName: "aws_dataexchange_event_action",
+			Name:     "Event Action",
+		},
+		{
+			Factory:  ResourceJob,
+			TypeName: "aws_dataexchange_job",
+			Name:     "Job",
+		},
+		{
 			Factory:  ResourceRevision,
 			TypeName: "aws_dataexchange_revision",
 			Name:     "Revision",
