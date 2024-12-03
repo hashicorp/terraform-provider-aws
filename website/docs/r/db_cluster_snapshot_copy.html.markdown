@@ -23,7 +23,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_db_cluser_snapshot" "backup" {
-  db_cluster_identifier = aws_db_cluster.default.identifier
+  db_cluster_identifier          = aws_db_cluster.default.identifier
   db_cluster_snapshot_identifier = "cluster-snapshot-source"
 }
 

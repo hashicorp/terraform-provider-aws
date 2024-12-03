@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -296,7 +299,7 @@ resource "aws_rds_cluster" "test" {
 }
 
 resource "aws_db_cluster_snapshot" "test" {
-  db_cluster_identifier = aws_rds_cluster.test.cluster_identifier
+  db_cluster_identifier          = aws_rds_cluster.test.cluster_identifier
   db_cluster_snapshot_identifier = "%[1]s-source"
 }`, rName)
 }
@@ -304,18 +307,18 @@ resource "aws_db_cluster_snapshot" "test" {
 func testAccClusterSnapshotCopyConfig_encryptedBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "encrypted" {
-	cluster_identifier  = %[1]q
-	database_name       = "test"
-	engine              = "aurora-mysql"
-	master_username     = "tfacctest"
-	master_password     = "avoid-plaintext-passwords"
-	skip_final_snapshot = true
-	storage_encrypted   = true
+  cluster_identifier  = %[1]q
+  database_name       = "test"
+  engine              = "aurora-mysql"
+  master_username     = "tfacctest"
+  master_password     = "avoid-plaintext-passwords"
+  skip_final_snapshot = true
+  storage_encrypted   = true
 }
 
 resource "aws_db_cluster_snapshot" "encrypted" {
-	db_cluster_identifier = aws_rds_cluster.encrypted.cluster_identifier
-	db_cluster_snapshot_identifier = "%[1]s-source"
+  db_cluster_identifier          = aws_rds_cluster.encrypted.cluster_identifier
+  db_cluster_snapshot_identifier = "%[1]s-source"
 }`, rName)
 }
 
@@ -357,7 +360,7 @@ func testAccClusterSnapshotCopyConfig_share(rName string) string {
 resource "aws_db_cluster_snapshot_copy" "test" {
   source_db_cluster_snapshot_identifier = aws_db_cluster_snapshot.test.db_cluster_snapshot_arn
   target_db_cluster_snapshot_identifier = "%[1]s-target"
-  shared_accounts               = ["all"]
+  shared_accounts                       = ["all"]
 }
 `, rName))
 }
@@ -367,19 +370,19 @@ func testAccClusterSnapshotCopyConfig_destinationRegion(rName string) string {
 resource "aws_db_cluster_snapshot_copy" "test" {
   source_db_cluster_snapshot_identifier = aws_db_cluster_snapshot.test.db_cluster_snapshot_arn
   target_db_cluster_snapshot_identifier = "%[1]s-target"
-  destination_region            = %[2]q
+  destination_region                    = %[2]q
 }`, rName, acctest.AlternateRegion()))
 }
 
 func testAccClusterSnapshotCopyConfig_kms(rName string) string {
 	return acctest.ConfigCompose(testAccClusterSnapshotCopyConfig_encryptedBase(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-	description = "test"
+  description = "test"
 }
 
 resource "aws_db_cluster_snapshot_copy" "test" {
-	source_db_cluster_snapshot_identifier = aws_db_cluster_snapshot.encrypted.db_cluster_snapshot_arn
-	target_db_cluster_snapshot_identifier = "%[1]s-target"
-	kms_key_id = aws_kms_key.test.arn
+  source_db_cluster_snapshot_identifier = aws_db_cluster_snapshot.encrypted.db_cluster_snapshot_arn
+  target_db_cluster_snapshot_identifier = "%[1]s-target"
+  kms_key_id                            = aws_kms_key.test.arn
 }`, rName))
 }
