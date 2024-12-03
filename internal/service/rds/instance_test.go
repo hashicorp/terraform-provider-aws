@@ -1031,6 +1031,7 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, names.AttrIdentifier),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", sourceResourceName, "db_subnet_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "dedicated_log_volume", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrUsername, sourceResourceName, names.AttrUsername),
 
