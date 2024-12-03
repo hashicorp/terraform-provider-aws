@@ -129,6 +129,11 @@ func resourceClusterInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrForceDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			names.AttrIdentifier: {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -543,7 +548,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 		},
 		"Delete the replica cluster before deleting")
 
-	if errs.IsAErrorMessageContains[*types.InvalidDBClusterStateFault](err, "Cannot delete the last instance of the read replica DB cluster") {
+	if errs.IsAErrorMessageContains[*types.InvalidDBClusterStateFault](err, "Cannot delete the last instance of the read replica DB cluster") && d.Get(names.AttrForceDestroy).(bool) {
 		_, err = conn.PromoteReadReplicaDBCluster(ctx, &rds.PromoteReadReplicaDBClusterInput{
 			DBClusterIdentifier: aws.String(d.Get(names.AttrClusterIdentifier).(string)),
 		})

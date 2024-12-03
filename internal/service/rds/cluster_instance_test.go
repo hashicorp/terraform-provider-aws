@@ -66,6 +66,7 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -137,6 +138,7 @@ func TestAccRDSClusterInstance_identifierGenerated(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -173,6 +175,7 @@ func TestAccRDSClusterInstance_identifierPrefix(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -209,6 +212,7 @@ func TestAccRDSClusterInstance_tags(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -304,6 +308,7 @@ func TestAccRDSClusterInstance_az(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -340,6 +345,7 @@ func TestAccRDSClusterInstance_kmsKey(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -375,6 +381,7 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -390,6 +397,7 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -432,6 +440,7 @@ func TestAccRDSClusterInstance_copyTagsToSnapshot(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -475,6 +484,7 @@ func TestAccRDSClusterInstance_caCertificateIdentifier(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -510,6 +520,7 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -567,6 +578,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T)
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -610,6 +622,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) 
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -651,6 +664,7 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) 
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -694,6 +708,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL1(t *testin
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -730,6 +745,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraPostgresql(t *te
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -768,6 +784,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL1(t *testi
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -804,6 +821,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL1_defaultKe
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -847,6 +865,7 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -901,6 +920,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraPostgresql(t *t
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 		},
@@ -937,6 +957,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					names.AttrApplyImmediately,
+					names.AttrForceDestroy,
 				},
 			},
 			{
@@ -1657,6 +1678,8 @@ resource "aws_rds_cluster_instance" "alternate" {
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
   engine             = aws_rds_cluster.alternate.engine
   engine_version     = aws_rds_cluster.alternate.engine_version
+
+  force_destroy = true
 }
 `, rName, tfrds.ClusterEngineAuroraMySQL))
 }
