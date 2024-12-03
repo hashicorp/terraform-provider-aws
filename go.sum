@@ -225,8 +225,8 @@ github.com/aws/aws-sdk-go-v2/service/eks v1.53.0 h1:ACTxnLwL6YNmuYbxtp/VR3HGL9SW
 github.com/aws/aws-sdk-go-v2/service/eks v1.53.0/go.mod h1:ZzOjZXGGUQxOq+T3xmfPLKCZe4OaB5vm1LdGaC8IPn4=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.1 h1:Dch9DIcyrHf6OTEhgzz7wIFKrHZAWfcZ1BCAlZtwpYo=
 github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.1/go.mod h1:gzplo968xB24VkeHC4wKfDbSERguKL2xKPL1Csd/mH4=
-github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.28.6 h1:QMEpOzwWVIfi6V1vWA4ONGZictI9Ch/ZNiveQTgYq2M=
-github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.28.6/go.mod h1:U47A7lAuy5QYMD7lnRHA8WJCzV/W0POLZrUfjZ7HLro=
+github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.28.7 h1:ieY1UqWTqjb83Rx1KiUO2pxFRdebobkKxHKDXIlIMhM=
+github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.28.7/go.mod h1:U47A7lAuy5QYMD7lnRHA8WJCzV/W0POLZrUfjZ7HLro=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.6 h1:uQFPQNvc9hIaF7SyHQyg2vRtTcWONaa1LUUy+8LEzT8=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.6/go.mod h1:KkaWcwL6GJtS/TNn1+fVJPAR+6G7Bs7kEm8E3MlgbhQ=
 github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.43.1 h1:L9Wt9zgtoYKIlaeFTy+EztGjL4oaXBBGtVXA+jaeYko=
@@ -449,8 +449,8 @@ github.com/aws/aws-sdk-go-v2/service/rum v1.21.7 h1:AEl97eESj/H7fjtDH1dNyUCXHH2D
 github.com/aws/aws-sdk-go-v2/service/rum v1.21.7/go.mod h1:D54Xit4pURxcusZV7N1/J9U+/1LSTA2wmrAb2zAJhdA=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.70.0 h1:HrHFR8RoS4l4EvodRMFcJMYQ8o3UhmALn2nbInXaxZA=
 github.com/aws/aws-sdk-go-v2/service/s3 v1.70.0/go.mod h1:sT/iQz8JK3u/5gZkT+Hmr7GzVZehUMkRZpOaAwYXeGY=
-github.com/aws/aws-sdk-go-v2/service/s3control v1.51.0 h1:1Kpbjv27QmQHXZ2wv7Tuikz3syVONMghb9CvfTEWNoQ=
-github.com/aws/aws-sdk-go-v2/service/s3control v1.51.0/go.mod h1:sAOVMYapLSs3nCfdQo63qfVkKHlu97oqHDPrRbqayNg=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.52.0 h1:tH6HJdKj1O5N8Uti8D2X20JYoDe9ZdC827iY92U+Ooo=
+github.com/aws/aws-sdk-go-v2/service/s3control v1.52.0/go.mod h1:sAOVMYapLSs3nCfdQo63qfVkKHlu97oqHDPrRbqayNg=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.7 h1:yUuN4xIlI/2bUqniq5OdIw13FIGtUdPhzU4dzl2v6fM=
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.7/go.mod h1:yCIumXPHLHsjmrD8P9UvXFVT0R9R+Wlqut71bW5+ZY4=
 github.com/aws/aws-sdk-go-v2/service/sagemaker v1.168.1 h1:Sz0HMK2/8itHAb9ABnMOEHfpOAIxk2a+f6EMsw7jn54=
