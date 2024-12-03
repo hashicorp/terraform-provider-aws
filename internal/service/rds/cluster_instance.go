@@ -543,6 +543,21 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 		},
 		"Delete the replica cluster before deleting")
 
+	if errs.IsAErrorMessageContains[*types.InvalidDBClusterStateFault](err, "Cannot delete the last instance of the read replica DB cluster") {
+		_, err = conn.PromoteReadReplicaDBCluster(ctx, &rds.PromoteReadReplicaDBClusterInput{
+			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
+		})
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "promoting read replica to primary for RDS Cluster (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitDBClusterAvailable(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutDelete)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+		}
+
+		_, err = conn.DeleteDBInstance(ctx, input)
+	}
+
 	if errs.IsA[*types.DBInstanceNotFoundFault](err) {
 		return diags
 	}

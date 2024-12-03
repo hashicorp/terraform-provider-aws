@@ -947,7 +947,7 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 	})
 }
 
-func TestAccRDSClusterInstance_ReplicationSourceIdentifier_basic(t *testing.T) {
+func TestAccRDSClusterInstance_Replica_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
