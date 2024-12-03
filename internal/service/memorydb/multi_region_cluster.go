@@ -95,11 +95,11 @@ func resourceMultiRegionCluster() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				"multi_region_cluster_name_suffix": {
+				"suffix": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
-				"multi_region_parameter_group_name": {
+				names.AttrParameterGroupName: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
@@ -141,7 +141,7 @@ func resourceMultiRegionClusterCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	input := &memorydb.CreateMultiRegionClusterInput{
-		MultiRegionClusterNameSuffix: aws.String(d.Get("multi_region_cluster_name_suffix").(string)),
+		MultiRegionClusterNameSuffix: aws.String(d.Get("suffix").(string)),
 		NodeType:                     aws.String(d.Get("node_type").(string)),
 		TLSEnabled:                   aws.Bool(d.Get("tls_enabled").(bool)),
 		Tags:                         getTagsIn(ctx),
@@ -159,7 +159,7 @@ func resourceMultiRegionClusterCreate(ctx context.Context, d *schema.ResourceDat
 		input.EngineVersion = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("multi_region_parameter_group_name"); ok {
+	if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 		input.MultiRegionParameterGroupName = aws.String(v.(string))
 	}
 
@@ -208,7 +208,7 @@ func resourceMultiRegionClusterRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
 	d.Set("node_type", cluster.NodeType)
 	d.Set("num_shards", cluster.NumberOfShards)
-	d.Set("multi_region_parameter_group_name", cluster.MultiRegionParameterGroupName)
+	d.Set(names.AttrParameterGroupName, cluster.MultiRegionParameterGroupName)
 	d.Set("tls_enabled", cluster.TLSEnabled)
 	d.Set(names.AttrStatus, cluster.Status)
 
@@ -249,8 +249,8 @@ func resourceMultiRegionClusterUpdate(ctx context.Context, d *schema.ResourceDat
 			input.NodeType = aws.String(d.Get("node_type").(string))
 		}
 
-		if d.HasChange("multi_region_parameter_group_name") {
-			input.MultiRegionParameterGroupName = aws.String(d.Get("multi_region_parameter_group_name").(string))
+		if d.HasChange(names.AttrParameterGroupName) {
+			input.MultiRegionParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
 		}
 
 		if d.HasChange("update_strategy") {
