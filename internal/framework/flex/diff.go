@@ -11,6 +11,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	tfreflect "github.com/hashicorp/terraform-provider-aws/internal/reflect"
 )
 
 type Results struct {
@@ -56,24 +57,20 @@ func Diff(ctx context.Context, plan, state any, options ...ChangeOption) (*Resul
 	}
 
 	var hasChanges bool
-	for i := 0; i < planValue.NumField(); i++ {
-		fieldName := planType.Field(i).Name
+	for field := range tfreflect.ExportedStructFields(planValue.Type()) {
+		fieldName := field.Name
 
 		if shouldSkipField(fieldName, opts.IgnoredFields) {
 			ignoredFields = append(ignoredFields, fieldName)
 			continue
 		}
 
-		if !fieldExistsInState(stateType, fieldName) {
+		if !implementsAttrValue(planValue.FieldByIndex(field.Index)) || !implementsAttrValue(stateValue.FieldByIndex(field.Index)) {
 			continue
 		}
 
-		if !implementsAttrValue(planValue.FieldByName(fieldName)) || !implementsAttrValue(stateValue.FieldByName(fieldName)) {
-			continue
-		}
-
-		planFieldValue := planValue.FieldByName(fieldName).Interface().(attr.Value)
-		stateFieldValue := stateValue.FieldByName(fieldName).Interface().(attr.Value)
+		planFieldValue := planValue.FieldByIndex(field.Index).Interface().(attr.Value)
+		stateFieldValue := stateValue.FieldByIndex(field.Index).Interface().(attr.Value)
 
 		if !planFieldValue.Type(ctx).Equal(stateFieldValue.Type(ctx)) {
 			continue
@@ -101,11 +98,6 @@ func dereferencePointer(value reflect.Value) reflect.Value {
 
 func shouldSkipField(fieldName string, ignoredFieldNames []string) bool {
 	return slices.Contains(skippedFields(), fieldName) || slices.Contains(ignoredFieldNames, fieldName)
-}
-
-func fieldExistsInState(stateType reflect.Type, fieldName string) bool {
-	_, exists := stateType.FieldByName(fieldName)
-	return exists
 }
 
 func implementsAttrValue(field reflect.Value) bool {
