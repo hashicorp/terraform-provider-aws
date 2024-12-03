@@ -545,7 +545,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 
 	if errs.IsAErrorMessageContains[*types.InvalidDBClusterStateFault](err, "Cannot delete the last instance of the read replica DB cluster") {
 		_, err = conn.PromoteReadReplicaDBCluster(ctx, &rds.PromoteReadReplicaDBClusterInput{
-			DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
+			DBClusterIdentifier: aws.String(d.Get(names.AttrClusterIdentifier).(string)),
 		})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "promoting read replica to primary for RDS Cluster (%s): %s", d.Id(), err)
