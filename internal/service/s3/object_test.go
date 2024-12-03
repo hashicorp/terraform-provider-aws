@@ -2035,11 +2035,12 @@ func testAccCheckObjectVersionIDEquals(first, second *s3.GetObjectOutput) resour
 func testAccCheckObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_object" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 			if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
 				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}

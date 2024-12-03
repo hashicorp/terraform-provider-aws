@@ -337,16 +337,18 @@ func resourceObjectCopyCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
-	var optFns []func(*s3.Options)
 
 	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
+
+	var optFns []func(*s3.Options)
 	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
 	if arn.IsARN(bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
+
 	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", d.Get("checksum_algorithm").(string), optFns...)
 
@@ -460,16 +462,18 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceObjectCopyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
-	var optFns []func(*s3.Options)
 
 	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
+
+	var optFns []func(*s3.Options)
 	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
 	if arn.IsARN(bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
+
 	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
 
 	var err error
@@ -488,12 +492,13 @@ func resourceObjectCopyDelete(ctx context.Context, d *schema.ResourceData, meta 
 func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
-	var optFns []func(*s3.Options)
 
 	bucket := d.Get(names.AttrBucket).(string)
 	if isDirectoryBucket(bucket) {
 		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
+
+	var optFns []func(*s3.Options)
 	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
 	if arn.IsARN(bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
