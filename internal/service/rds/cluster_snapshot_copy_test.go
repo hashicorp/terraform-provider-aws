@@ -188,15 +188,14 @@ func TestAccRDSClusterSnapshotCopy_destinationRegion(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterSnapshotCopyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAllocatedStorage),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrAvailabilityZones),
 					resource.TestCheckResourceAttr(resourceName, "destination_region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageEncrypted, acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, "license_model"),
 					resource.TestCheckResourceAttrSet(resourceName, "snapshot_type"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStorageType),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrVPCID),
 				),
 			},
@@ -205,6 +204,35 @@ func TestAccRDSClusterSnapshotCopy_destinationRegion(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"destination_region"},
+			},
+		},
+	})
+}
+
+func TestAccRDSClusterSnapshotCopy_kmsKeyID(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v types.DBClusterSnapshot
+	resourceName := "aws_db_cluster_snapshot_copy.test"
+	keyResourceName := "aws_kms_key.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotCopyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterSnapshotCopyConfig_kms(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotCopyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, keyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", acctest.CtTrue),
+				),
 			},
 		},
 	})
@@ -258,39 +286,52 @@ func testAccCheckClusterSnapshotCopyExists(ctx context.Context, n string, v *typ
 
 func testAccClusterSnapshotCopyConfig_base(rName string) string {
 	return fmt.Sprintf(`
-data "aws_rds_engine_version" "default" {
-  engine = "mysql"
-}
-
 resource "aws_rds_cluster" "test" {
   cluster_identifier  = %[1]q
   database_name       = "test"
-  engine              = data.aws_rds_engine_version.default.engine
-  engine_version      = data.aws_rds_engine_version.default.version
+  engine              = "aurora-mysql"
   master_username     = "tfacctest"
   master_password     = "avoid-plaintext-passwords"
   skip_final_snapshot = true
 }
 
-resource "aws_db_cluser_snapshot" "test" {
-  db_cluster_identifier = aws_db_cluster.test.identifier
+resource "aws_db_cluster_snapshot" "test" {
+  db_cluster_identifier = aws_rds_cluster.test.cluster_identifier
   db_cluster_snapshot_identifier = "%[1]s-source"
+}`, rName)
+}
+
+func testAccClusterSnapshotCopyConfig_encryptedBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "encrypted" {
+	cluster_identifier  = %[1]q
+	database_name       = "test"
+	engine              = "aurora-mysql"
+	master_username     = "tfacctest"
+	master_password     = "avoid-plaintext-passwords"
+	skip_final_snapshot = true
+	storage_encrypted   = true
+}
+
+resource "aws_db_cluster_snapshot" "encrypted" {
+	db_cluster_identifier = aws_rds_cluster.encrypted.cluster_identifier
+	db_cluster_snapshot_identifier = "%[1]s-source"
 }`, rName)
 }
 
 func testAccClusterSnapshotCopyConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterSnapshotCopyConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_cluster_snapshot_copy" "test" {
-  source_db_snapshot_identifier = aws_db_cluster_snapshot.test.db_cluster_snapshot_arn
-  target_db_snapshot_identifier = "%[1]s-target"
+  source_db_cluster_snapshot_identifier = aws_db_cluster_snapshot.test.db_cluster_snapshot_arn
+  target_db_cluster_snapshot_identifier = "%[1]s-target"
 }`, rName))
 }
 
 func testAccClusterSnapshotCopyConfig_tags1(rName, tagKey, tagValue string) string {
 	return acctest.ConfigCompose(testAccClusterSnapshotCopyConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_cluster_snapshot_copy" "test" {
-  source_db_snapshot_identifier = aws_db_cluster_snapshot.test.db_cluster_snapshot_arn
-  target_db_snapshot_identifier = "%[1]s-target"
+  source_db_cluster_snapshot_identifier = aws_db_cluster_snapshot.test.db_cluster_snapshot_arn
+  target_db_cluster_snapshot_identifier = "%[1]s-target"
 
   tags = {
     %[2]q = %[3]q
@@ -301,8 +342,8 @@ resource "aws_db_cluster_snapshot_copy" "test" {
 func testAccClusterSnapshotCopyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccClusterSnapshotCopyConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_cluster_snapshot_copy" "test" {
-  source_db_snapshot_identifier = aws_db_cluster_snapshot.test.db_cluster_snapshot_arn
-  target_db_snapshot_identifier = "%[1]s-target"
+  source_db_cluster_snapshot_identifier = aws_db_cluster_snapshot.test.db_cluster_snapshot_arn
+  target_db_cluster_snapshot_identifier = "%[1]s-target"
 
   tags = {
     %[2]q = %[3]q
@@ -313,9 +354,9 @@ resource "aws_db_cluster_snapshot_copy" "test" {
 
 func testAccClusterSnapshotCopyConfig_share(rName string) string {
 	return acctest.ConfigCompose(testAccClusterSnapshotCopyConfig_base(rName), fmt.Sprintf(`
-resource "aws_db_snapshot_copy" "test" {
-  source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
-  target_db_snapshot_identifier = "%[1]s-target"
+resource "aws_db_cluster_snapshot_copy" "test" {
+  source_db_cluster_snapshot_identifier = aws_db_cluster_snapshot.test.db_cluster_snapshot_arn
+  target_db_cluster_snapshot_identifier = "%[1]s-target"
   shared_accounts               = ["all"]
 }
 `, rName))
@@ -324,8 +365,21 @@ resource "aws_db_snapshot_copy" "test" {
 func testAccClusterSnapshotCopyConfig_destinationRegion(rName string) string {
 	return acctest.ConfigCompose(testAccClusterSnapshotCopyConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_cluster_snapshot_copy" "test" {
-  source_db_snapshot_identifier = aws_db_cluster_snapshot.test.db_cluster_snapshot_arn
-  target_db_snapshot_identifier = "%[1]s-target"
+  source_db_cluster_snapshot_identifier = aws_db_cluster_snapshot.test.db_cluster_snapshot_arn
+  target_db_cluster_snapshot_identifier = "%[1]s-target"
   destination_region            = %[2]q
 }`, rName, acctest.AlternateRegion()))
+}
+
+func testAccClusterSnapshotCopyConfig_kms(rName string) string {
+	return acctest.ConfigCompose(testAccClusterSnapshotCopyConfig_encryptedBase(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+	description = "test"
+}
+
+resource "aws_db_cluster_snapshot_copy" "test" {
+	source_db_cluster_snapshot_identifier = aws_db_cluster_snapshot.encrypted.db_cluster_snapshot_arn
+	target_db_cluster_snapshot_identifier = "%[1]s-target"
+	kms_key_id = aws_kms_key.test.arn
+}`, rName))
 }
