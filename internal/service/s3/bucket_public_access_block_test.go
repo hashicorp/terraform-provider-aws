@@ -290,11 +290,15 @@ func TestAccS3BucketPublicAccessBlock_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketPublicAccessBlockDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_public_access_block" {
 				continue
+			}
+
+			if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err := tfs3.FindPublicAccessBlockConfiguration(ctx, conn, rs.Primary.ID)
@@ -324,6 +328,9 @@ func testAccCheckBucketPublicAccessBlockExists(ctx context.Context, n string, v 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
 		output, err := tfs3.FindPublicAccessBlockConfiguration(ctx, conn, rs.Primary.ID)
+		if tfs3.IsDirectoryBucket(rs.Primary.ID) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		if err != nil {
 			return err
