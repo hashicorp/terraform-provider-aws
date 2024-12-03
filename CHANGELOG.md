@@ -12,6 +12,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_bedrock_provisioned_model_throughput: Properly manages `tags_all` when planning. ([#40305](https://github.com/hashicorp/terraform-provider-aws/issues/40305))
+* resource/aws_connect_contact_flow: Fix `deserialization failed, failed to decode response body with invalid JSON` errors on Read ([#40419](https://github.com/hashicorp/terraform-provider-aws/issues/40419))
 
 ## 5.79.0 (December  3, 2024)
 
