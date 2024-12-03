@@ -3,12 +3,12 @@ subcategory: "S3 Tables"
 layout: "aws"
 page_title: "AWS: aws_s3tables_table_bucket_policy"
 description: |-
-  Terraform resource for managing an AWS S3 Tables Table Bucket Policy.
+  Terraform resource for managing an Amazon S3 Tables Table Bucket Policy.
 ---
 
 # Resource: aws_s3tables_table_bucket_policy
 
-Terraform resource for managing an AWS S3 Tables Table Bucket Policy.
+Terraform resource for managing an Amazon S3 Tables Table Bucket Policy.
 
 ## Example Usage
 

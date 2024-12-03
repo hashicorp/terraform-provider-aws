@@ -3,12 +3,12 @@ subcategory: "S3 Tables"
 layout: "aws"
 page_title: "AWS: aws_s3tables_table_bucket"
 description: |-
-  Terraform resource for managing an AWS S3 Tables Table Bucket.
+  Terraform resource for managing an Amazon S3 Tables Table Bucket.
 ---
 
 # Resource: aws_s3tables_table_bucket
 
-Terraform resource for managing an AWS S3 Tables Table Bucket.
+Terraform resource for managing an Amazon S3 Tables Table Bucket.
 
 ## Example Usage
 

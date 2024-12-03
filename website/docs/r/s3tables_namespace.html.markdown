@@ -3,12 +3,12 @@ subcategory: "S3 Tables"
 layout: "aws"
 page_title: "AWS: aws_s3tables_namespace"
 description: |-
-  Terraform resource for managing an AWS S3 Tables Namespace.
+  Terraform resource for managing an Amazon S3 Tables Namespace.
 ---
 
 # Resource: aws_s3tables_namespace
 
-Terraform resource for managing an AWS S3 Tables Namespace.
+Terraform resource for managing an Amazon S3 Tables Namespace.
 
 ## Example Usage
 
