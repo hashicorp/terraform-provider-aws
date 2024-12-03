@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -54,7 +53,6 @@ func resourceMultiRegionCluster() *schema.Resource {
 				},
 				names.AttrName: {
 					Type:     schema.TypeString,
-					Optional: true,
 					Computed: true,
 				},
 				names.AttrDescription: {
@@ -116,9 +114,9 @@ func resourceMultiRegionCluster() *schema.Resource {
 					Computed: true,
 				},
 				"update_strategy": {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: enum.Validate[awstypes.UpdateStrategy](),
 				},
 				"status": {
 					Type:     schema.TypeString,
@@ -142,9 +140,7 @@ func resourceMultiRegionClusterCreate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	name := create.Name(d.Get(names.AttrName).(string), "")
 	input := &memorydb.CreateMultiRegionClusterInput{
-		MultiRegionClusterName:       aws.String(name),
 		MultiRegionClusterNameSuffix: aws.String(d.Get("multi_region_cluster_name_suffix").(string)),
 		NodeType:                     aws.String(d.Get("node_type").(string)),
 		TLSEnabled:                   aws.Bool(d.Get("tls_enabled").(bool)),
@@ -168,16 +164,16 @@ func resourceMultiRegionClusterCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("num_shards"); ok {
-		input.Port = aws.Int32(int32(v.(int)))
+		input.NumShards = aws.Int32(int32(v.(int)))
 	}
 
-	_, err := conn.CreateMultiRegionCluster(ctx, input)
+	output, err := conn.CreateMultiRegionCluster(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Multi Region cluster (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Multi Region cluster (%s): %s", *output.MultiRegionCluster.MultiRegionClusterName, err)
 	}
 
-	d.SetId(name)
+	d.SetId(*output.MultiRegionCluster.MultiRegionClusterName)
 
 	if _, err := waitMultiRegionClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi Region cluster (%s) create: %s", d.Id(), err)
@@ -205,7 +201,7 @@ func resourceMultiRegionClusterRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrARN, cluster.ARN)
 	d.Set(names.AttrName, cluster.MultiRegionClusterName)
 	d.Set(names.AttrDescription, cluster.Description)
-	if err := d.Set("clusters", flattenClusters(cluster.Clusters)); err != nil {
+	if err := d.Set("clusters", flattenClusters(&cluster.Clusters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting clusters: %s", err)
 	}
 	d.Set(names.AttrEngine, cluster.Engine)
@@ -215,6 +211,9 @@ func resourceMultiRegionClusterRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("multi_region_parameter_group_name", cluster.MultiRegionParameterGroupName)
 	d.Set("tls_enabled", cluster.TLSEnabled)
 	d.Set(names.AttrStatus, cluster.Status)
+
+	// Update strategy isn’t returned by the API, so we retain the current value
+	d.Set("update_strategy", d.Get("update_strategy"))
 
 	return diags
 }
@@ -252,6 +251,10 @@ func resourceMultiRegionClusterUpdate(ctx context.Context, d *schema.ResourceDat
 
 		if d.HasChange("multi_region_parameter_group_name") {
 			input.MultiRegionParameterGroupName = aws.String(d.Get("multi_region_parameter_group_name").(string))
+		}
+
+		if d.HasChange("update_strategy") {
+			input.UpdateStrategy = awstypes.UpdateStrategy(d.Get("update_strategy").(string))
 		}
 
 		_, err := conn.UpdateMultiRegionCluster(ctx, input)
@@ -294,17 +297,17 @@ func resourceMultiRegionClusterDelete(ctx context.Context, d *schema.ResourceDat
 	return diags
 }
 
-func flattenClusters(apiObject *awstypes.Clusters) []interface{} {
-	if apiObject == nil {
+func flattenClusters(apiObjects *[]awstypes.RegionalCluster) []interface{} {
+	if apiObjects == nil {
 		return []interface{}{}
 	}
 
 	var tfList []interface{}
 
-	for k, apiObject := range apiObjects {
+	for _, apiObject := range *apiObjects {
 		tfList = append(tfList, map[string]interface{}{
-			names.AttrARN:    aws.ToString(apiObject.Arn),
-			"cluster_name":   aws.ToString(apiObject.Name),
+			names.AttrARN:    aws.ToString(apiObject.ARN),
+			"cluster_name":   aws.ToString(apiObject.ClusterName),
 			names.AttrRegion: aws.ToString(apiObject.Region),
 			names.AttrStatus: aws.ToString(apiObject.Status),
 		})
