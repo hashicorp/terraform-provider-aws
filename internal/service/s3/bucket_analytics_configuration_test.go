@@ -483,7 +483,6 @@ func TestAccS3BucketAnalyticsConfiguration_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketAnalyticsConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-
 		for _, rs := range s.RootModule().Resources {
 			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
