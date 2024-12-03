@@ -3401,7 +3401,7 @@ data "aws_rds_orderable_db_instance" "test" {
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
   db_subnet_group_name      = aws_db_subnet_group.test.name
-  ca_certificate_identifier = "rds-ca-2019"
+  ca_certificate_identifier = "rds-ca-rsa2048-g1"
   cluster_identifier        = %[1]q
   engine                    = data.aws_rds_orderable_db_instance.test.engine
   engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
