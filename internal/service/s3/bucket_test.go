@@ -45,6 +45,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
 		"Number of distinct destination bucket ARNs cannot exceed",
 		"destination is not allowed",
+		"blocked by the BlockPublicAcls block public access setting",
 	)
 }
 
