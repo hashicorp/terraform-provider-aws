@@ -3136,7 +3136,7 @@ func testAccClusterConfig_securityGroup(rName, sgName string, sgCt int) string {
 resource "aws_security_group" "test" {
   count       = %[4]d
   name_prefix = %[2]q
-  vpc_id = aws_vpc.test.id
+  vpc_id      = aws_vpc.test.id
 
   tags = {
     Name = %[2]q
@@ -5504,7 +5504,7 @@ resource "aws_iam_role" "role" {
 		"Action": "sts:AssumeRole",
 		"Principal": {
 			"Service": [
-				"directoryservice.rds.${data.aws_partition.current.dns_suffix}",				
+				"directoryservice.rds.${data.aws_partition.current.dns_suffix}",
 				"rds.${data.aws_partition.current.dns_suffix}"
 			]
 		},
