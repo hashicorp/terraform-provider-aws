@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -422,7 +423,7 @@ func findBucketNotificationConfiguration(ctx context.Context, conn *s3.Client, b
 		return nil, err
 	}
 
-	if output == nil {
+	if itypes.IsZero(output) {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
