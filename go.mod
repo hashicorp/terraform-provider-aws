@@ -15,7 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.28.6
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.47
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.21
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.42
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.17.43
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/account v1.21.7
 	github.com/aws/aws-sdk-go-v2/service/acm v1.30.7
@@ -42,8 +42,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.39.8
 	github.com/aws/aws-sdk-go-v2/service/batch v1.48.2
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.7
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.23.0
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.30.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.24.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/chime v1.34.7
@@ -99,7 +99,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.7
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.37.2
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.195.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.7
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.7
@@ -151,7 +151,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.31.8
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/kms v1.37.7
-	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.38.4
+	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.1
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.8.7
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.28.7
@@ -191,13 +191,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.18.5
 	github.com/aws/aws-sdk-go-v2/service/polly v1.45.8
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.32.7
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.17.0
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.18.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.25.7
-	github.com/aws/aws-sdk-go-v2/service/quicksight v1.80.1
+	github.com/aws/aws-sdk-go-v2/service/quicksight v1.81.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.29.7
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.92.0
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.52.2
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.45.8
@@ -213,7 +213,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.21.7
 	github.com/aws/aws-sdk-go-v2/service/route53resolver v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/rum v1.21.7
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.70.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.71.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.168.1
