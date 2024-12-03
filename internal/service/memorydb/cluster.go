@@ -85,6 +85,11 @@ func resourceCluster() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"multi_region_cluster_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
 				names.AttrEngine: {
 					Type:             schema.TypeString,
 					Optional:         true,
@@ -324,6 +329,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.MaintenanceWindow = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("multi_region_cluster_name"); ok {
+		input.MaintenanceWindow = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
 		input.ParameterGroupName = aws.String(v.(string))
 	}
@@ -408,6 +417,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set(names.AttrDescription, cluster.Description)
 	d.Set("engine_patch_version", cluster.EnginePatchVersion)
+	d.Set("multi_region_cluster_name", cluster.MultiRegionClusterName)
 	d.Set(names.AttrEngine, cluster.Engine)
 	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
 	d.Set(names.AttrKMSKeyARN, cluster.KmsKeyId) // KmsKeyId is actually an ARN here.
