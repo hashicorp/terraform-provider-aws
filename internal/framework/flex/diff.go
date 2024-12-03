@@ -101,7 +101,7 @@ func shouldSkipField(fieldName string, ignoredFieldNames []string) bool {
 }
 
 func implementsAttrValue(field reflect.Value) bool {
-	return field.Type().Implements(reflect.TypeOf((*attr.Value)(nil)).Elem())
+	return field.Type().Implements(reflect.TypeFor[attr.Value]())
 }
 
 func skippedFields() []string {
