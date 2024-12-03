@@ -1844,6 +1844,10 @@ func TestAccS3Object_prefix(t *testing.T) {
 func TestAccS3Object_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	errorPattern := `PermanentRedirect`
+	if acctest.Region() == endpoints.UsEast1RegionID {
+		errorPattern = `No AWSAccessKey was presented`
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -1856,7 +1860,7 @@ func TestAccS3Object_crossRegion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccObjectConfig_crossRegion(rName),
-				ExpectError: regexache.MustCompile(`PermanentRedirect`),
+				ExpectError: regexache.MustCompile(errorPattern),
 			},
 		},
 	})
