@@ -44,8 +44,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Tables Namespace using the `table_bucket_arn` and the value of `namespace`, separated by a semicolon (`;`).
-For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 Tables Namespace using the `table_bucket_arn` and the value of `namespace`, separated by a semicolon (`;`). For example:
 
 ```terraform
 import {
@@ -54,8 +53,7 @@ import {
 }
 ```
 
-Using `terraform import`, import S3 Tables Namespace using the `table_bucket_arn` and the value of `namespace`, separated by a semicolon (`;`).
-For example:
+Using `terraform import`, import S3 Tables Namespace using the `table_bucket_arn` and the value of `namespace`, separated by a semicolon (`;`). For example:
 
 ```console
 % terraform import aws_s3tables_namespace.example 'arn:aws:s3tables:us-west-2:123456789012:bucket/example-bucket;example-namespace'
