@@ -87,6 +87,9 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketEncryptionInput{
 		Bucket: aws.String(bucket),
@@ -128,6 +131,10 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	sse, err := findServerSideEncryptionConfiguration(ctx, conn, bucket, expectedBucketOwner)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -158,6 +165,10 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	input := &s3.PutBucketEncryptionInput{
 		Bucket: aws.String(bucket),
 		ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
@@ -186,6 +197,10 @@ func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.DeleteBucketEncryptionInput{
