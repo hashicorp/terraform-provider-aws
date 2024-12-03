@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Custom Models")
+// @FrameworkDataSource("aws_bedrock_custom_models", name="Custom Models")
 func newCustomModelsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &customModelsDataSource{}, nil
 }

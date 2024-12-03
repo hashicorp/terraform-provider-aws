@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Foundation Models")
+// @FrameworkDataSource("aws_bedrock_foundation_models", name="Foundation Models")
 func newFoundationModelsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &foundationModelsDataSource{}, nil
 }

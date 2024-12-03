@@ -138,44 +138,6 @@ func TestAccBedrockGuardrail_kmsKey(t *testing.T) {
 	})
 }
 
-func TestAccBedrockGuardrail_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrock_guardrail.test"
-	var guardrail bedrock.GetGuardrailOutput
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGuardrailDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGuardrailConfig_tags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccGuardrailConfig_tags(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue1Updated),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGuardrailExists(ctx, resourceName, &guardrail),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue1Updated),
-				),
-			},
-		},
-	})
-}
-
 func TestAccBedrockGuardrail_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -414,52 +376,6 @@ resource "aws_bedrock_guardrail" "test" {
   }
 }
 `, rName))
-}
-
-func testAccGuardrailConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccCustomModelConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_kms_key" "test" {
-  description             = %[1]q
-  deletion_window_in_days = 7
-}
-
-resource "aws_bedrock_guardrail" "test" {
-  name                      = %[1]q
-  blocked_input_messaging   = "test"
-  blocked_outputs_messaging = "test"
-  description               = "test"
-  kms_key_arn               = aws_kms_key.test.arn
-
-  content_policy_config {
-    filters_config {
-      input_strength  = "MEDIUM"
-      output_strength = "MEDIUM"
-      type            = "HATE"
-    }
-    filters_config {
-      input_strength  = "HIGH"
-      output_strength = "HIGH"
-      type            = "VIOLENCE"
-    }
-  }
-
-  word_policy_config {
-    managed_word_lists_config {
-      type = "PROFANITY"
-    }
-    words_config {
-      text = "HATE"
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccGuardrailConfig_update(rName, blockedInputMessaging, blockedOutputMessaging, inputStrength, regexPattern, piiType, topicName, wordConfig string) string {
