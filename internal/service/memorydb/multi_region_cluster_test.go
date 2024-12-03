@@ -92,10 +92,8 @@ func testAccCheckMultiRegionClusterDestroy(ctx context.Context) resource.TestChe
 func testAccMultiRegionClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  name                       = %[1]q
-  suffix
-  node_type                  = "db.t4g.small"
-  num_shards                 = 2
+  suffix     = %[1]q
+  node_type  = "db.t4g.small"
 
   tags = {
     Test = "test"
