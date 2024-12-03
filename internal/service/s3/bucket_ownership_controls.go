@@ -66,6 +66,9 @@ func resourceBucketOwnershipControlsCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	input := &s3.PutBucketOwnershipControlsInput{
 		Bucket: aws.String(bucket),
 		OwnershipControls: &types.OwnershipControls{
@@ -86,7 +89,7 @@ func resourceBucketOwnershipControlsCreate(ctx context.Context, d *schema.Resour
 	d.SetId(bucket)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-		return findOwnershipControls(ctx, conn, d.Id())
+		return findOwnershipControls(ctx, conn, bucket)
 	})
 
 	if err != nil {
@@ -100,7 +103,12 @@ func resourceBucketOwnershipControlsRead(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	oc, err := findOwnershipControls(ctx, conn, d.Id())
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
+	oc, err := findOwnershipControls(ctx, conn, bucket)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Ownership Controls (%s) not found, removing from state", d.Id())
@@ -112,7 +120,7 @@ func resourceBucketOwnershipControlsRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Ownership Controls (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, d.Id())
+	d.Set(names.AttrBucket, bucket)
 	if err := d.Set(names.AttrRule, flattenOwnershipControlsRules(oc.Rules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
@@ -124,8 +132,13 @@ func resourceBucketOwnershipControlsUpdate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	input := &s3.PutBucketOwnershipControlsInput{
-		Bucket: aws.String(d.Id()),
+		Bucket: aws.String(bucket),
 		OwnershipControls: &types.OwnershipControls{
 			Rules: expandOwnershipControlsRules(d.Get(names.AttrRule).([]interface{})),
 		},
@@ -144,10 +157,15 @@ func resourceBucketOwnershipControlsDelete(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	log.Printf("[DEBUG] Deleting S3 Bucket Ownership Controls: %s", d.Id())
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 5*time.Minute, func() (interface{}, error) {
 		return conn.DeleteBucketOwnershipControls(ctx, &s3.DeleteBucketOwnershipControlsInput{
-			Bucket: aws.String(d.Id()),
+			Bucket: aws.String(bucket),
 		})
 	}, errCodeOperationAborted)
 
@@ -160,7 +178,7 @@ func resourceBucketOwnershipControlsDelete(ctx context.Context, d *schema.Resour
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-		return findOwnershipControls(ctx, conn, d.Id())
+		return findOwnershipControls(ctx, conn, bucket)
 	})
 
 	if err != nil {
