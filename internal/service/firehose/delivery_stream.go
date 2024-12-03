@@ -366,6 +366,112 @@ func resourceDeliveryStream() *schema.Resource {
 					},
 					ValidateDiagFunc: enum.Validate[destinationType](),
 				},
+				"database_source_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ConflictsWith: []string{
+						"kinesis_source_configuration",
+						"msk_source_configuration",
+					},
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"authentication_configuration": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"role_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"secret_manager_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+									},
+								},
+							},
+							"vpc_configuration": {
+								Type:     schema.TypeList,
+								Required: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"role_arn": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: verify.ValidARN,
+										},
+										"security_group_ids": {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"subnet_ids": {
+											Type:     schema.TypeSet,
+											Required: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"databases": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"endpoint": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"port": {
+								Type:     schema.TypeInt,
+								Required: true,
+							},
+							"snapshot_watermark_table": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"tables": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"type": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									string(types.DatabaseTypeRedshift),
+									string(types.DatabaseTypeRds),
+								}, false),
+							},
+							"columns": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"ssl_mode": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.StringInSlice([]string{
+									string(types.SSLModeNone),
+									string(types.SSLModeRequire),
+									string(types.SSLModeVerifyCa),
+									string(types.SSLModeVerifyFull),
+								}, false),
+							},
+							"surrogate_keys": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
 				"destination_id": {
 					Type:     schema.TypeString,
 					Optional: true,
