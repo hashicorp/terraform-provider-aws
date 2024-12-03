@@ -93,7 +93,7 @@ func testAccMultiRegionClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   suffix     = %[1]q
-  node_type  = "db.t4g.small"
+  node_type  = "db.r7g.xlarge"
 
   tags = {
     Test = "test"
