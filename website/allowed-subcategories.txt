@@ -203,6 +203,7 @@ Route 53 Resolver
 S3 (Simple Storage)
 S3 Control
 S3 Glacier
+S3 Tables
 S3 on Outposts
 SDB (SimpleDB)
 SES (Simple Email)
