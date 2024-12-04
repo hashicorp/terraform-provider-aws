@@ -5,7 +5,6 @@ package rds
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -1671,16 +1670,6 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil && !errs.IsA[*types.GlobalClusterNotFoundFault](err) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
 			return sdkdiag.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster (%s): %s", d.Id(), globalClusterID, err)
-		}
-
-		_, err = waitGlobalClusterMemberRemoved(ctx, conn, clusterARN, d.Timeout(schema.TimeoutDelete))
-
-		switch {
-		case errors.Is(err, tfresource.ErrFoundResource):
-			// The DeleteDBCluster retry below will handle the removal from the global cluster.
-			break
-		case err != nil:
-			return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster (%s) removal from RDS Global Cluster (%s): %s", d.Id(), globalClusterID, err)
 		}
 
 		if _, err := waitDBClusterAvailable(ctx, conn, d.Id(), true, d.Timeout(schema.TimeoutCreate)); err != nil {
