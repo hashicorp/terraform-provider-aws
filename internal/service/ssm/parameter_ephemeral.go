@@ -37,7 +37,8 @@ func (e *ephemeralParameter) Schema(ctx context.Context, _ ephemeral.SchemaReque
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.ARNType,
+				Required:   true,
 			},
 			names.AttrName: schema.StringAttribute{
 				Computed: true,
