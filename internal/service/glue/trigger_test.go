@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/glue/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -37,19 +38,19 @@ func TestAccGlueTrigger_basic(t *testing.T) {
 				Config: testAccTriggerConfig_onDemand(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", acctest.Ct0),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "glue", fmt.Sprintf("trigger/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "0"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "glue", fmt.Sprintf("trigger/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrSchedule, ""),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "ON_DEMAND"),
 					resource.TestCheckResourceAttr(resourceName, "workflow_name", ""),
-					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", "0"),
 				),
 			},
 			{
@@ -79,10 +80,10 @@ func TestAccGlueTrigger_crawler(t *testing.T) {
 				Config: testAccTriggerConfig_crawler(rName, "SUCCEEDED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.crawler_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.crawler_name", fmt.Sprintf("%scrawl2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.crawl_state", "SUCCEEDED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CONDITIONAL"),
@@ -92,10 +93,10 @@ func TestAccGlueTrigger_crawler(t *testing.T) {
 				Config: testAccTriggerConfig_crawler(rName, "FAILED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.crawler_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.crawler_name", fmt.Sprintf("%scrawl2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.crawl_state", "FAILED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CONDITIONAL"),
@@ -209,8 +210,8 @@ func TestAccGlueTrigger_predicate(t *testing.T) {
 				Config: testAccTriggerConfig_predicate(rName, "SUCCEEDED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.state", "SUCCEEDED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CONDITIONAL"),
@@ -220,8 +221,8 @@ func TestAccGlueTrigger_predicate(t *testing.T) {
 				Config: testAccTriggerConfig_predicate(rName, "FAILED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "predicate.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.0.conditions.0.state", "FAILED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CONDITIONAL"),
@@ -321,7 +322,7 @@ func TestAccGlueTrigger_tags(t *testing.T) {
 				Config: testAccTriggerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -335,7 +336,7 @@ func TestAccGlueTrigger_tags(t *testing.T) {
 				Config: testAccTriggerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -344,7 +345,7 @@ func TestAccGlueTrigger_tags(t *testing.T) {
 				Config: testAccTriggerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger3),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -399,10 +400,10 @@ func TestAccGlueTrigger_Actions_notify(t *testing.T) {
 				Config: testAccTriggerConfig_actionsNotification(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", "1"),
 				),
 			},
 			{
@@ -415,20 +416,20 @@ func TestAccGlueTrigger_Actions_notify(t *testing.T) {
 				Config: testAccTriggerConfig_actionsNotification(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", "2"),
 				),
 			},
 			{
 				Config: testAccTriggerConfig_actionsNotification(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "actions.0.notification_property.0.notify_delay_after", "1"),
 				),
 			},
 		},
@@ -452,7 +453,7 @@ func TestAccGlueTrigger_Actions_security(t *testing.T) {
 				Config: testAccTriggerConfig_actionsSecurityConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "actions.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "actions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.job_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.security_configuration", rName),
 				),
@@ -462,6 +463,27 @@ func TestAccGlueTrigger_Actions_security(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{names.AttrEnabled},
+			},
+		},
+	})
+}
+
+// Ensure a null action does not trigger a panic
+// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/31213
+func TestAccGlueTrigger_Actions_null(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTriggerConfig_actionsNull(rName),
+				ExpectError: regexache.MustCompile(`InvalidInputException: Actions cannot be null or empty`),
 			},
 		},
 	})
@@ -531,8 +553,8 @@ func TestAccGlueTrigger_eventBatchingCondition(t *testing.T) {
 				Config: testAccTriggerConfig_event(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_size", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_window", "900"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EVENT"),
 				),
@@ -547,8 +569,8 @@ func TestAccGlueTrigger_eventBatchingCondition(t *testing.T) {
 				Config: testAccTriggerConfig_eventUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName, &trigger),
-					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_size", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_size", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_batching_condition.0.batch_window", "50"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "EVENT"),
 				),
@@ -939,6 +961,17 @@ resource "aws_glue_trigger" "test" {
     batch_size   = 1
     batch_window = 50
   }
+}
+`, rName))
+}
+
+func testAccTriggerConfig_actionsNull(rName string) string {
+	return acctest.ConfigCompose(testAccJobConfig_required(rName), fmt.Sprintf(`
+resource "aws_glue_trigger" "test" {
+  name = %[1]q
+  type = "ON_DEMAND"
+
+  actions {}
 }
 `, rName))
 }

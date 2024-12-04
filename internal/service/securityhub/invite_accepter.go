@@ -70,7 +70,7 @@ func resourceInviteAccepterCreate(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "accepting Security Hub Invitation (%s): %s", invitationID, err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
 	return append(diags, resourceInviteAccepterRead(ctx, d, meta)...)
 }

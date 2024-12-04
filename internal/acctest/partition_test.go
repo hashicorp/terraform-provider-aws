@@ -6,8 +6,8 @@ package acctest_test
 import (
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestIsIsolatedPartition(t *testing.T) {
@@ -18,37 +18,36 @@ func TestIsIsolatedPartition(t *testing.T) {
 		expected bool
 	}{
 		{
-			input:    names.StandardPartitionID,
+			input:    endpoints.AwsPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.ChinaPartitionID,
+			input:    endpoints.AwsCnPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.USGovCloudPartitionID,
+			input:    endpoints.AwsUsGovPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.ISOPartitionID,
+			input:    endpoints.AwsIsoPartitionID,
 			expected: true,
 		},
 		{
-			input:    names.ISOBPartitionID,
+			input:    endpoints.AwsIsoBPartitionID,
 			expected: true,
 		},
 		{
-			input:    names.ISOEPartitionID,
+			input:    endpoints.AwsIsoEPartitionID,
 			expected: true,
 		},
 		{
-			input:    names.ISOFPartitionID,
+			input:    endpoints.AwsIsoFPartitionID,
 			expected: true,
 		},
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.input, func(t *testing.T) {
 			t.Parallel()
 
@@ -67,33 +66,32 @@ func TestIsIsolatedRegion(t *testing.T) {
 		expected bool
 	}{
 		{
-			input:    names.USEast1RegionID,
+			input:    endpoints.UsEast1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.CNNorth1RegionID,
+			input:    endpoints.CnNorth1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.USGovEast1RegionID,
+			input:    endpoints.UsGovEast1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.USISOEast1RegionID,
+			input:    endpoints.UsIsoEast1RegionID,
 			expected: true,
 		},
 		{
-			input:    names.USISOBEast1RegionID,
+			input:    endpoints.UsIsobEast1RegionID,
 			expected: true,
 		},
 		{
-			input:    names.EUISOEWest1RegionID,
+			input:    endpoints.EuIsoeWest1RegionID,
 			expected: true,
 		},
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.input, func(t *testing.T) {
 			t.Parallel()
 
@@ -112,37 +110,36 @@ func TestIsStandardPartition(t *testing.T) {
 		expected bool
 	}{
 		{
-			input:    names.StandardPartitionID,
+			input:    endpoints.AwsPartitionID,
 			expected: true,
 		},
 		{
-			input:    names.ChinaPartitionID,
+			input:    endpoints.AwsCnPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.USGovCloudPartitionID,
+			input:    endpoints.AwsUsGovPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.ISOPartitionID,
+			input:    endpoints.AwsIsoPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.ISOBPartitionID,
+			input:    endpoints.AwsIsoBPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.ISOEPartitionID,
+			input:    endpoints.AwsIsoEPartitionID,
 			expected: false,
 		},
 		{
-			input:    names.ISOFPartitionID,
+			input:    endpoints.AwsIsoFPartitionID,
 			expected: false,
 		},
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.input, func(t *testing.T) {
 			t.Parallel()
 
@@ -161,33 +158,32 @@ func TestIsStandardRegion(t *testing.T) {
 		expected bool
 	}{
 		{
-			input:    names.USEast1RegionID,
+			input:    endpoints.UsEast1RegionID,
 			expected: true,
 		},
 		{
-			input:    names.CNNorth1RegionID,
+			input:    endpoints.CnNorth1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.USGovEast1RegionID,
+			input:    endpoints.UsGovEast1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.USISOEast1RegionID,
+			input:    endpoints.UsIsoEast1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.USISOBEast1RegionID,
+			input:    endpoints.UsIsobEast1RegionID,
 			expected: false,
 		},
 		{
-			input:    names.EUISOEWest1RegionID,
+			input:    endpoints.EuIsoeWest1RegionID,
 			expected: false,
 		},
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.input, func(t *testing.T) {
 			t.Parallel()
 

@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -45,6 +46,7 @@ import (
 // @Tags(identifierAttribute="id")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ec2/types;awstypes;awstypes.Instance")
 // @Testing(importIgnore="user_data_replace_on_change")
+// @Testing(generator=false)
 func resourceInstance() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -972,7 +974,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	tagSpecifications := getTagSpecificationsIn(ctx, awstypes.ResourceTypeInstance)
 
 	// block devices
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
 	tagSpecifications = append(tagSpecifications,
 		tagSpecificationsFromKeyValue(
 			defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("volume_tags").(map[string]interface{}))),
@@ -1330,11 +1332,11 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
 
-		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+		defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
+		ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 		tags := keyValueTags(ctx, volumeTags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-		if err := d.Set("volume_tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
+		if err := d.Set("volume_tags", tags.ResolveDuplicates(ctx, defaultTagsConfig, ignoreTagsConfig, d, "volume_tags", nil).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting volume_tags: %s", err)
 		}
 	}
@@ -1359,10 +1361,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// ARN
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   names.EC2,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
@@ -1373,10 +1375,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			Attribute:  awstypes.InstanceAttributeNameDisableApiStop,
 			InstanceId: aws.String(d.Id()),
 		})
-		if err != nil && !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if err != nil && !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", awstypes.InstanceAttributeNameDisableApiStop, err)
 		}
-		if !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		if !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 			d.Set("disable_api_stop", attr.DisableApiStop.Value)
 		}
 	}
@@ -2318,8 +2320,8 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 		return nil, err
 	}
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	for _, vol := range volResp.Volumes {
 		instanceBd := instanceBlockDevices[aws.ToString(vol.VolumeId)]
@@ -2351,13 +2353,36 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 		if instanceBd.DeviceName != nil {
 			bd[names.AttrDeviceName] = aws.ToString(instanceBd.DeviceName)
 		}
-		if v, ok := d.GetOk("volume_tags"); !ok || v == nil || len(v.(map[string]interface{})) == 0 {
-			if ds {
-				bd[names.AttrTags] = keyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
-			} else {
-				tags := keyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-				bd[names.AttrTags] = tags.RemoveDefaultConfig(defaultTagsConfig).Map()
-				bd[names.AttrTagsAll] = tags.Map()
+		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]interface{})) == 0) && ds {
+			bd[names.AttrTags] = keyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+		}
+
+		if v, ok := d.GetOk("volume_tags"); (!ok || v == nil || len(v.(map[string]interface{})) == 0) && !ds {
+			tags := keyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+
+			// default setup, in case we don't find config for the block device (don't resolve duplicates)
+			bd[names.AttrTags] = tags.Map()
+			bd[names.AttrTagsAll] = tags.Map()
+
+			if v, ok := d.GetOk("ebs_block_device"); ok && v.(*schema.Set).Len() > 0 {
+				ebdList := v.(*schema.Set).List()
+				for _, ebd := range ebdList {
+					ebd, ok := ebd.(map[string]interface{})
+					if !ok {
+						continue
+					}
+
+					if ebd[names.AttrDeviceName] == aws.ToString(instanceBd.DeviceName) {
+						bd[names.AttrTags] = tags.ResolveDuplicates(ctx, defaultTagsConfig, ignoreTagsConfig, d, fmt.Sprintf("ebs_block_device[%s].tags", aws.ToString(instanceBd.DeviceName)), func(attr string, val cty.Value) bool {
+							return val.GetAttr(names.AttrDeviceName).AsString() == attr
+						}).Map()
+						break
+					}
+				}
+			}
+
+			if v, ok := d.GetOk("root_block_device"); ok && len(v.([]interface{})) > 0 && blockDeviceIsRoot(instanceBd, instance) {
+				bd[names.AttrTags] = tags.ResolveDuplicates(ctx, defaultTagsConfig, ignoreTagsConfig, d, "root_block_device[0].tags", nil).Map()
 			}
 		}
 

@@ -67,6 +67,9 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	input := &s3.PutPublicAccessBlockInput{
 		Bucket: aws.String(bucket),
 		PublicAccessBlockConfiguration: &types.PublicAccessBlockConfiguration{
@@ -92,7 +95,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 	d.SetId(bucket)
 
 	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-		return findPublicAccessBlockConfiguration(ctx, conn, d.Id())
+		return findPublicAccessBlockConfiguration(ctx, conn, bucket)
 	})
 
 	if err != nil {
@@ -106,7 +109,12 @@ func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	pabc, err := findPublicAccessBlockConfiguration(ctx, conn, d.Id())
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
+	pabc, err := findPublicAccessBlockConfiguration(ctx, conn, bucket)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Public Access Block (%s) not found, removing from state", d.Id())
@@ -118,7 +126,7 @@ func resourceBucketPublicAccessBlockRead(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrBucket, d.Id())
+	d.Set(names.AttrBucket, bucket)
 	d.Set("block_public_acls", pabc.BlockPublicAcls)
 	d.Set("block_public_policy", pabc.BlockPublicPolicy)
 	d.Set("ignore_public_acls", pabc.IgnorePublicAcls)
@@ -131,8 +139,13 @@ func resourceBucketPublicAccessBlockUpdate(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	input := &s3.PutPublicAccessBlockInput{
-		Bucket: aws.String(d.Id()),
+		Bucket: aws.String(bucket),
 		PublicAccessBlockConfiguration: &types.PublicAccessBlockConfiguration{
 			BlockPublicAcls:       aws.Bool(d.Get("block_public_acls").(bool)),
 			BlockPublicPolicy:     aws.Bool(d.Get("block_public_policy").(bool)),
@@ -164,9 +177,14 @@ func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
+	bucket := d.Id()
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	log.Printf("[DEBUG] Deleting S3 Bucket Ownership Controls: %s", d.Id())
 	_, err := conn.DeletePublicAccessBlock(ctx, &s3.DeletePublicAccessBlockInput{
-		Bucket: aws.String(d.Id()),
+		Bucket: aws.String(bucket),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchPublicAccessBlockConfiguration) {
@@ -178,7 +196,7 @@ func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.Resour
 	}
 
 	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
-		return findPublicAccessBlockConfiguration(ctx, conn, d.Id())
+		return findPublicAccessBlockConfiguration(ctx, conn, bucket)
 	})
 
 	if err != nil {

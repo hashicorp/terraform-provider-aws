@@ -278,7 +278,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).StorageGatewayClient(ctx)
 
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 	activationKey := d.Get("activation_key").(string)
 
 	// Perform one time fetch of activation key from gateway IP address.

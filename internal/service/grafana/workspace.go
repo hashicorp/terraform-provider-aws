@@ -285,10 +285,10 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("account_access_type", workspace.AccountAccessType)
 	// https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonmanagedgrafana.html#amazonmanagedgrafana-resources-for-iam-policies.
 	workspaceARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "grafana",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("/workspaces/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, workspaceARN)
@@ -550,7 +550,7 @@ func waitWorkspaceDeleted(ctx context.Context, conn *grafana.Client, id string, 
 }
 
 func expandVPCConfiguration(tfList []interface{}) *awstypes.VpcConfiguration {
-	if len(tfList) < 1 {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
@@ -581,7 +581,7 @@ func flattenVPCConfiguration(apiObject *awstypes.VpcConfiguration) []interface{}
 }
 
 func expandNetworkAccessControl(tfList []interface{}) *awstypes.NetworkAccessConfiguration {
-	if len(tfList) < 1 {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 

@@ -109,8 +109,6 @@ func sweepIdentities(region, identityType string) error {
 		}
 
 		for _, identity := range output.Identities {
-			identity := identity
-
 			log.Printf("[INFO] Deleting SES Identity: %s", identity)
 			_, err = conn.DeleteIdentity(ctx, &ses.DeleteIdentityInput{
 				Identity: aws.String(identity),

@@ -5,8 +5,8 @@ package memorydb
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	memorydb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/memorydb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,36 +25,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceACL,
-			TypeName: "aws_memorydb_acl",
-		},
-		{
-			Factory:  DataSourceCluster,
-			TypeName: "aws_memorydb_cluster",
-		},
-		{
-			Factory:  DataSourceParameterGroup,
-			TypeName: "aws_memorydb_parameter_group",
-		},
-		{
-			Factory:  DataSourceSnapshot,
-			TypeName: "aws_memorydb_snapshot",
-		},
-		{
-			Factory:  DataSourceSubnetGroup,
-			TypeName: "aws_memorydb_subnet_group",
-		},
-		{
-			Factory:  DataSourceUser,
-			TypeName: "aws_memorydb_user",
-		},
-	}
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
-		{
-			Factory:  ResourceACL,
+			Factory:  dataSourceACL,
 			TypeName: "aws_memorydb_acl",
 			Name:     "ACL",
 			Tags: &types.ServicePackageResourceTags{
@@ -62,7 +33,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCluster,
+			Factory:  dataSourceCluster,
 			TypeName: "aws_memorydb_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{
@@ -70,7 +41,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceParameterGroup,
+			Factory:  dataSourceParameterGroup,
 			TypeName: "aws_memorydb_parameter_group",
 			Name:     "Parameter Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -78,7 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSnapshot,
+			Factory:  dataSourceSnapshot,
 			TypeName: "aws_memorydb_snapshot",
 			Name:     "Snapshot",
 			Tags: &types.ServicePackageResourceTags{
@@ -86,7 +57,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSubnetGroup,
+			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_memorydb_subnet_group",
 			Name:     "Subnet Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -94,7 +65,60 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUser,
+			Factory:  dataSourceUser,
+			TypeName: "aws_memorydb_user",
+			Name:     "User",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+	}
+}
+
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceACL,
+			TypeName: "aws_memorydb_acl",
+			Name:     "ACL",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceCluster,
+			TypeName: "aws_memorydb_cluster",
+			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceParameterGroup,
+			TypeName: "aws_memorydb_parameter_group",
+			Name:     "Parameter Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceSnapshot,
+			TypeName: "aws_memorydb_snapshot",
+			Name:     "Snapshot",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceSubnetGroup,
+			TypeName: "aws_memorydb_subnet_group",
+			Name:     "Subnet Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceUser,
 			TypeName: "aws_memorydb_user",
 			Name:     "User",
 			Tags: &types.ServicePackageResourceTags{
@@ -109,11 +133,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*memorydb_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*memorydb.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return memorydb_sdkv2.NewFromConfig(cfg,
-		memorydb_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return memorydb.NewFromConfig(cfg,
+		memorydb.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

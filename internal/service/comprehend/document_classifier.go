@@ -404,7 +404,6 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 
 	var g multierror.Group
 	for _, v := range versions {
-		v := v
 		g.Go(func() error {
 			_, err = conn.DeleteDocumentClassifier(ctx, &comprehend.DeleteDocumentClassifierInput{
 				DocumentClassifierArn: v.DocumentClassifierArn,
@@ -431,7 +430,6 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 			}
 
 			for _, v := range networkInterfaces {
-				v := v
 				g.Go(func() error {
 					networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 

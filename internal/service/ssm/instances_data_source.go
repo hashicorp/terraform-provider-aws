@@ -73,7 +73,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		output = append(output, page.InstanceInformationList...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.InstanceInformation) string {
 		return aws.ToString(v.InstanceId)
 	}))

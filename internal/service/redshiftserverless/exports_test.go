@@ -19,4 +19,5 @@ var (
 	FindResourcePolicyByARN                 = findResourcePolicyByARN
 	FindSnapshotByName                      = findSnapshotByName
 	FindUsageLimitByName                    = findUsageLimitByName
+	FindWorkgroupByName                     = findWorkgroupByName
 )

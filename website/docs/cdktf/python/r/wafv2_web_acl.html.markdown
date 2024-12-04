@@ -67,7 +67,6 @@ class MyConvertedCode(TerraformStack):
                         "vendor_name": "AWS"
                     }
                 },
-                token_domains=["mywebsite.com", "myotherwebsite.com"],
                 visibility_config=Wafv2WebAclRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="friendly-rule-metric-name",
@@ -80,6 +79,7 @@ class MyConvertedCode(TerraformStack):
                 "Tag1": "Value1",
                 "Tag2": "Value2"
             },
+            token_domains=["mywebsite.com", "myotherwebsite.com"],
             visibility_config=Wafv2WebAclVisibilityConfig(
                 cloudwatch_metrics_enabled=False,
                 metric_name="friendly-metric-name",
@@ -429,22 +429,18 @@ class MyConvertedCode(TerraformStack):
         Wafv2WebAcl(self, "example",
             association_config=Wafv2WebAclAssociationConfig(
                 request_body=[Wafv2WebAclAssociationConfigRequestBody(
-                    api_gateway=[Wafv2WebAclAssociationConfigRequestBodyApiGateway(
+                    api_gateway=Wafv2WebAclAssociationConfigRequestBodyApiGateway(
+                        default_size_inspection_limit="KB_64"
+                    ),
+                    app_runner_service=Wafv2WebAclAssociationConfigRequestBodyAppRunnerService(
+                        default_size_inspection_limit="KB_64"
+                    ),
+                    cognito_user_pool=Wafv2WebAclAssociationConfigRequestBodyCognitoUserPool(
+                        default_size_inspection_limit="KB_64"
+                    ),
+                    verified_access_instance=Wafv2WebAclAssociationConfigRequestBodyVerifiedAccessInstance(
                         default_size_inspection_limit="KB_64"
                     )
-                    ],
-                    app_runner_service=[Wafv2WebAclAssociationConfigRequestBodyAppRunnerService(
-                        default_size_inspection_limit="KB_64"
-                    )
-                    ],
-                    cognito_user_pool=[Wafv2WebAclAssociationConfigRequestBodyCognitoUserPool(
-                        default_size_inspection_limit="KB_64"
-                    )
-                    ],
-                    verified_access_instance=[Wafv2WebAclAssociationConfigRequestBodyVerifiedAccessInstance(
-                        default_size_inspection_limit="KB_64"
-                    )
-                    ]
                 )
                 ]
             ),
@@ -1176,4 +1172,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-48a52b01c397501484ad1eb1e575b2a031945d330889d5d74260619a6a6712ef -->
+<!-- cache-key: cdktf-0.20.8 input-57d51ad71eebf49acf706848293755779d1b4ec3046c36ae586b0a36d118ffc6 -->

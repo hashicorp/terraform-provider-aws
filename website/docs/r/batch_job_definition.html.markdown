@@ -102,7 +102,7 @@ resource "aws_batch_job_definition" "test" {
 }
 ```
 
-### Job Definitionn of type EKS
+### Job Definition of type EKS
 
 ```terraform
 resource "aws_batch_job_definition" "test" {
@@ -191,6 +191,87 @@ resource "aws_batch_job_definition" "test" {
 }
 ```
 
+### Job definition of type container using `ecs_properties`
+
+```terraform
+resource "aws_batch_job_definition" "test" {
+  name = "tf_test_batch_job_definition"
+  type = "container"
+
+  platform_capabilities = ["FARGATE"]
+
+  ecs_properties = jsonencode({
+    taskProperties = [
+      {
+        executionRoleArn = aws_iam_role.ecs_task_execution_role.arn
+        containers = [
+          {
+            image   = "public.ecr.aws/amazonlinux/amazonlinux:1"
+            command = ["sleep", "60"]
+            dependsOn = [
+              {
+                containerName = "container_b"
+                condition     = "COMPLETE"
+              }
+            ]
+            secrets = [
+              {
+                name      = "TEST"
+                valueFrom = "DUMMY"
+              }
+            ]
+            environment = [
+              {
+                name  = "test"
+                value = "Environment Variable"
+              }
+            ]
+            essential = true
+            logConfiguration = {
+              logDriver = "awslogs"
+              options = {
+                "awslogs-group"         = "tf_test_batch_job"
+                "awslogs-region"        = "us-west-2"
+                "awslogs-stream-prefix" = "ecs"
+              }
+            }
+            name                   = "container_a"
+            privileged             = false
+            readonlyRootFilesystem = false
+            resourceRequirements = [
+              {
+                value = "1.0"
+                type  = "VCPU"
+              },
+              {
+                value = "2048"
+                type  = "MEMORY"
+              }
+            ]
+          },
+          {
+            image     = "public.ecr.aws/amazonlinux/amazonlinux:1"
+            command   = ["sleep", "360"]
+            name      = "container_b"
+            essential = false
+            resourceRequirements = [
+              {
+                value = "1.0"
+                type  = "VCPU"
+              },
+              {
+                value = "2048"
+                type  = "MEMORY"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  })
+}
+```
+
 ## Argument Reference
 
 The following arguments are required:
@@ -202,6 +283,7 @@ The following arguments are optional:
 
 * `container_properties` - (Optional) Valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
 * `deregister_on_new_revision` - (Optional) When updating a job definition a new revision is created. This parameter determines if the previous version is `deregistered` (`INACTIVE`) or left  `ACTIVE`. Defaults to `true`.
+* `ecs_properties` - (Optional) Valid [ECS properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
 * `eks_properties` - (Optional) Valid [eks properties](#eks_properties). This parameter is only valid if the `type` parameter is `container`.
 * `node_properties` - (Optional) Valid [node properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html) provided as a single valid JSON document. This parameter is required if the `type` parameter is `multinode`.
 * `parameters` - (Optional) Parameter substitution placeholders to set in the job definition.
@@ -221,9 +303,12 @@ The following arguments are optional:
 * `containers` - (Optional) Properties of the container that's used on the Amazon EKS pod. See [containers](#containers) below.
 * `dns_policy` - (Optional) DNS policy for the pod. The default value is `ClusterFirst`. If the `host_network` argument is not specified, the default is `ClusterFirstWithHostNet`. `ClusterFirst` indicates that any DNS query that does not match the configured cluster domain suffix is forwarded to the upstream nameserver inherited from the node. For more information, see Pod's DNS policy in the Kubernetes documentation.
 * `host_network` - (Optional) Whether the pod uses the hosts' network IP address. The default value is `true`. Setting this to `false` enables the Kubernetes pod networking model. Most AWS Batch workloads are egress-only and don't require the overhead of IP allocation for each pod for incoming connections.
+* `init_containers` - (Optional) Containers which run before application containers, always runs to completion, and must complete successfully before the next container starts. These containers are registered with the Amazon EKS Connector agent and persists the registration information in the Kubernetes backend data store. See [containers](#container) below.
 * `image_pull_secret` - (Optional) List of Kubernetes secret resources. See [`image_pull_secret`](#image_pull_secret) below.
 * `metadata` - (Optional) Metadata about the Kubernetes pod.
 * `service_account_name` - (Optional) Name of the service account that's used to run the pod.
+* `share_process_namespace` - (Optional) Indicates if the processes in a container are shared, or visible, to other containers in the same pod.
+* `metadata` - [Metadata](#eks_metadata) about the Kubernetes pod.
 * `volumes` - (Optional) Volumes for a job definition that uses Amazon EKS resources. AWS Batch supports [emptyDir](#eks_empty_dir), [hostPath](#eks_host_path), and [secret](#eks_secret) volume types.
 
 #### `containers`
@@ -255,6 +340,10 @@ The following arguments are optional:
 #### `eks_host_path`
 
 * `path` - (Optional) Path of the file or directory on the host to mount into containers on the pod.
+
+#### eks_metadata
+
+* `labels` - Key-value pairs used to identify, sort, and organize cube resources.
 
 #### `eks_secret`
 

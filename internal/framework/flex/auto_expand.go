@@ -102,12 +102,12 @@ func autoExpandConvert(ctx context.Context, from, to any, flexer autoFlexer) dia
 	}
 
 	// Anything else.
-	diags.Append(flexer.convert(ctx, sourcePath, valFrom, targetPath, valTo)...)
+	diags.Append(flexer.convert(ctx, sourcePath, valFrom, targetPath, valTo, fieldOpts{})...)
 	return diags
 }
 
 // convert converts a single Plugin Framework value to its AWS API equivalent.
-func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, valFrom reflect.Value, targetPath path.Path, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	ctx = tflog.SubsystemSetField(ctx, subsystemName, logAttrKeySourcePath, sourcePath.String())
@@ -156,19 +156,27 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 	switch vFrom := vFrom.(type) {
 	// Primitive types.
 	case basetypes.BoolValuable:
-		diags.Append(expander.bool(ctx, vFrom, vTo)...)
+		diags.Append(expander.bool(ctx, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.Float64Valuable:
-		diags.Append(expander.float64(ctx, vFrom, vTo)...)
+		diags.Append(expander.float64(ctx, vFrom, vTo, fieldOpts)...)
+		return diags
+
+	case basetypes.Float32Valuable:
+		diags.Append(expander.float32(ctx, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.Int64Valuable:
-		diags.Append(expander.int64(ctx, vFrom, vTo)...)
+		diags.Append(expander.int64(ctx, vFrom, vTo, fieldOpts)...)
+		return diags
+
+	case basetypes.Int32Valuable:
+		diags.Append(expander.int32(ctx, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	case basetypes.StringValuable:
-		diags.Append(expander.string(ctx, vFrom, vTo)...)
+		diags.Append(expander.string(ctx, vFrom, vTo, fieldOpts)...)
 		return diags
 
 	// Aggregate types.
@@ -198,7 +206,7 @@ func (expander autoExpander) convert(ctx context.Context, sourcePath path.Path, 
 }
 
 // bool copies a Plugin Framework Bool(ish) value to a compatible AWS API value.
-func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToBoolValue(ctx)
@@ -221,6 +229,12 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 			//
 			// types.Bool -> *bool.
 			//
+			if fieldOpts.legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				if !v.ValueBool() {
+					return diags
+				}
+			}
 			vTo.Set(reflect.ValueOf(v.ValueBoolPointer()))
 			return diags
 		}
@@ -235,7 +249,7 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 }
 
 // float64 copies a Plugin Framework Float64(ish) value to a compatible AWS API value.
-func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float64Valuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float64Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToFloat64Value(ctx)
@@ -259,6 +273,12 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 			// types.Float32/types.Float64 -> *float32.
 			//
 			to := float32(v.ValueFloat64())
+			if fieldOpts.legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				if to == 0 {
+					return diags
+				}
+			}
 			vTo.Set(reflect.ValueOf(&to))
 			return diags
 
@@ -266,6 +286,12 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 			//
 			// types.Float32/types.Float64 -> *float64.
 			//
+			if fieldOpts.legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				if v.ValueFloat64() == 0 {
+					return diags
+				}
+			}
 			vTo.Set(reflect.ValueOf(v.ValueFloat64Pointer()))
 			return diags
 		}
@@ -279,8 +305,48 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 	return diags
 }
 
+// float32 copies a Plugin Framework Float32(ish) value to a compatible AWS API value.
+func (expander autoExpander) float32(ctx context.Context, vFrom basetypes.Float32Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	v, d := vFrom.ToFloat32Value(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	switch tTo := vTo.Type(); vTo.Kind() {
+	case reflect.Float32:
+		//
+		// types.Float32 -> float32.
+		//
+		vTo.SetFloat(float64(v.ValueFloat32()))
+		return diags
+
+	case reflect.Pointer:
+		switch tElem := tTo.Elem(); tElem.Kind() {
+		case reflect.Float32:
+			//
+			// types.Float32 -> *float32.
+			//
+			if fieldOpts.legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				if v.ValueFloat32() == 0 {
+					return diags
+				}
+			}
+			vTo.Set(reflect.ValueOf(v.ValueFloat32Pointer()))
+			return diags
+		}
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+	diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
+	return diags
+}
+
 // int64 copies a Plugin Framework Int64(ish) value to a compatible AWS API value.
-func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Valuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToInt64Value(ctx)
@@ -304,6 +370,12 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 			// types.Int32/types.Int64 -> *int32.
 			//
 			to := int32(v.ValueInt64())
+			if fieldOpts.legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				if to == 0 {
+					return diags
+				}
+			}
 			vTo.Set(reflect.ValueOf(&to))
 			return diags
 
@@ -311,6 +383,12 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 			//
 			// types.Int32/types.Int64 -> *int64.
 			//
+			if fieldOpts.legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				if v.ValueInt64() == 0 {
+					return diags
+				}
+			}
 			vTo.Set(reflect.ValueOf(v.ValueInt64Pointer()))
 			return diags
 		}
@@ -324,8 +402,48 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 	return diags
 }
 
+// int32 copies a Plugin Framework Int32(ish) value to a compatible AWS API value.
+func (expander autoExpander) int32(ctx context.Context, vFrom basetypes.Int32Valuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	v, d := vFrom.ToInt32Value(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	switch tTo := vTo.Type(); vTo.Kind() {
+	case reflect.Int32:
+		//
+		// types.Int32 -> int32.
+		//
+		vTo.SetInt(int64(v.ValueInt32()))
+		return diags
+
+	case reflect.Pointer:
+		switch tElem := tTo.Elem(); tElem.Kind() {
+		case reflect.Int32:
+			//
+			// types.Int32 -> *int32.
+			//
+			if fieldOpts.legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				if v.ValueInt32() == 0 {
+					return diags
+				}
+			}
+			vTo.Set(reflect.ValueOf(v.ValueInt32Pointer()))
+			return diags
+		}
+	}
+
+	tflog.SubsystemError(ctx, subsystemName, "Expanding incompatible types")
+	diags.Append(diagExpandingIncompatibleTypes(reflect.TypeOf(vFrom), vTo.Type()))
+	return diags
+}
+
 // string copies a Plugin Framework String(ish) value to a compatible AWS API value.
-func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringValuable, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringValuable, vTo reflect.Value, fieldOpts fieldOpts) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	v, d := vFrom.ToStringValue(ctx)
@@ -341,6 +459,15 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 		//
 		vTo.SetString(v.ValueString())
 		return diags
+
+	case reflect.Slice:
+		if tTo.Elem().Kind() == reflect.Uint8 {
+			//
+			// types.String -> []byte (or []uint8).
+			//
+			vTo.Set(reflect.ValueOf([]byte(v.ValueString())))
+			return diags
+		}
 
 	case reflect.Struct:
 		//
@@ -375,6 +502,12 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 			//
 			// types.String -> *string.
 			//
+			if fieldOpts.legacy {
+				tflog.SubsystemDebug(ctx, subsystemName, "Using legacy expander")
+				if len(v.ValueString()) == 0 {
+					return diags
+				}
+			}
 			vTo.Set(reflect.ValueOf(v.ValueStringPointer()))
 			return diags
 
@@ -1184,5 +1317,15 @@ func diagExpandingNoMapBlockKey(sourceType reflect.Type) diag.ErrorDiagnostic {
 			"This is always an error in the provider. "+
 			"Please report the following to the provider developer:\n\n"+
 			fmt.Sprintf("Source type %q does not contain field %q", fullTypeName(sourceType), mapBlockKeyFieldName),
+	)
+}
+
+func diagExpandingIncompatibleTypes(sourceType, targetType reflect.Type) diag.ErrorDiagnostic {
+	return diag.NewErrorDiagnostic(
+		"Incompatible Types",
+		"An unexpected error occurred while expanding configuration. "+
+			"This is always an error in the provider. "+
+			"Please report the following to the provider developer:\n\n"+
+			fmt.Sprintf("Source type %q cannot be expanded to target type %q.", fullTypeName(sourceType), fullTypeName(targetType)),
 	)
 }

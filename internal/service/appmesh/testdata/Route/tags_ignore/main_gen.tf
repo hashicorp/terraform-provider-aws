@@ -59,7 +59,7 @@ resource "aws_appmesh_virtual_node" "test1" {
     listener {
       port_mapping {
         port     = 8080
-        protocol ="http"
+        protocol = "http"
       }
     }
 

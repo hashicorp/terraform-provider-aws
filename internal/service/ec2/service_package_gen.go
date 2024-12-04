@@ -19,6 +19,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "Capacity Block Offering",
 		},
 		{
+			Factory: newDataSourceSpotDataFeedSubscription,
+			Name:    "Spot Data Feed Subscription Data Source",
+		},
+		{
 			Factory: newSecurityGroupRuleDataSource,
 			Name:    "Security Group Rule",
 		},
@@ -58,6 +62,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Instance Metadata Defaults",
 		},
 		{
+			Factory: newResourceSecurityGroupVPCAssociation,
+			Name:    "Security Group VPC Association",
+		},
+		{
 			Factory: newSecurityGroupEgressRuleResource,
 			Name:    "Security Group Egress Rule",
 			Tags: &types.ServicePackageResourceTags{
@@ -70,6 +78,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrID,
 			},
+		},
+		{
+			Factory: newTransitGatewayDefaultRouteTableAssociationResource,
+			Name:    "Transit Gateway Default Route Table Association",
+		},
+		{
+			Factory: newTransitGatewayDefaultRouteTablePropagationResource,
+			Name:    "Transit Gateway Default Route Table Propagation",
+		},
+		{
+			Factory: newVPCBlockPublicAccessExclusionResource,
+			Name:    "VPC Block Public Access Exclusion",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrID,
+			},
+		},
+		{
+			Factory: newVPCBlockPublicAccessOptionsResource,
+			Name:    "VPC Block Public Access Options",
 		},
 		{
 			Factory: newVPCEndpointPrivateDNSResource,
@@ -460,6 +487,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceSubnet,
 			TypeName: "aws_subnet",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  dataSourceSubnets,

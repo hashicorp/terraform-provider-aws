@@ -6,16 +6,8 @@ import (
 	"context"
 
 {{ if .GenerateClient }}
-	{{- if .ClientSDKV1 }}
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
-	{{- end }}
-	{{- if .ClientSDKV2 }}
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
-	{{- end }}
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
 {{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -25,6 +17,21 @@ import (
 )
 
 type servicePackage struct {}
+
+{{- if .EphemeralResources }}
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
+	return []*types.ServicePackageEphemeralResource {
+{{- range .EphemeralResources }}
+		{
+			Factory: {{ .FactoryName }},
+			{{- if ne .Name "" }}
+			Name:    "{{ .Name }}",
+			{{- end }}
+		},
+{{- end }}
+	}
+}
+{{- end }}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource {
@@ -129,37 +136,15 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 {{- if .GenerateClient }}
-	{{ if .ClientSDKV1 }}
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}, error) {
-	sess := config[names.AttrSession].(*session_sdkv1.Session)
-
-	cfg := aws_sdkv1.Config{}
-
-	if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-		tflog.Debug(ctx, "setting endpoint", map[string]any{
-			"tf_aws.endpoint": endpoint,
-		})
-		cfg.Endpoint = aws_sdkv1.String(endpoint)
-	} else {
-		cfg.EndpointResolver = newEndpointResolverSDKv1(ctx)
-	}
-
-	return {{ .GoV1Package }}_sdkv1.New(sess.Copy(&cfg)), nil
-}
-	{{- end }}
-
-	{{ if .ClientSDKV2 }}
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*{{ .GoV2Package }}_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*{{ .GoV2Package }}.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return {{ .GoV2Package }}_sdkv2.NewFromConfig(cfg,
-		{{ .GoV2Package }}_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return {{ .GoV2Package }}.NewFromConfig(cfg,
+		{{ .GoV2Package }}.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }
-	{{- end }}
 {{- end }}
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

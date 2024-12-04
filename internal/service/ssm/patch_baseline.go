@@ -54,7 +54,7 @@ func resourcePatchBaseline() *schema.Resource {
 						"approve_after_days": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 100),
+							ValidateFunc: validation.IntBetween(0, 360),
 						},
 						"approve_until_date": {
 							Type:         schema.TypeString,
@@ -328,10 +328,10 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("approved_patches_compliance_level", output.ApprovedPatchesComplianceLevel)
 	d.Set("approved_patches_enable_non_security", output.ApprovedPatchesEnableNonSecurity)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "ssm",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "patchbaseline/" + strings.TrimPrefix(d.Id(), "/"),
 	}.String()
 	d.Set(names.AttrARN, arn)

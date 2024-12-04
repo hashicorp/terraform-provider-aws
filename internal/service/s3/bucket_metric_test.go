@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -39,7 +40,7 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrBucket, rName),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, metricName),
 				),
 			},
@@ -85,7 +86,7 @@ func TestAccS3BucketMetric_withFilterAccessPoint(t *testing.T) {
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
+	baseAccessPointArn := generateARN("aws:s3", endpoints.UsEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 
@@ -99,18 +100,18 @@ func TestAccS3BucketMetric_withFilterAccessPoint(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPoint(bucketName, metricName, accessPoint),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPoint),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
 			},
 			{
 				Config: testAccBucketMetricConfig_filterAccessPoint(bucketName, metricName, accessPointUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPointUpdate),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
 			},
 			{
@@ -129,7 +130,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndMultiTags(t *testing
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
+	baseAccessPointArn := generateARN("aws:s3", endpoints.UsEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
@@ -149,10 +150,10 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndMultiTags(t *testing
 				Config: testAccBucketMetricConfig_filterAccessPointAndPrefixAndMultipleTags(bucketName, metricName, accessPoint, prefix, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPoint),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2),
 				),
@@ -161,10 +162,10 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndMultiTags(t *testing
 				Config: testAccBucketMetricConfig_filterAccessPointAndPrefixAndMultipleTags(bucketName, metricName, accessPointUpdate, prefixUpdate, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPointUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2Update),
 				),
@@ -185,7 +186,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndSingleTag(t *testing
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
+	baseAccessPointArn := generateARN("aws:s3", endpoints.UsEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
@@ -203,10 +204,10 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndSingleTag(t *testing
 				Config: testAccBucketMetricConfig_filterAccessPointAndPrefixAndSingleTag(bucketName, metricName, accessPoint, prefix, tag1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPoint),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
 				),
 			},
@@ -214,10 +215,10 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndSingleTag(t *testing
 				Config: testAccBucketMetricConfig_filterAccessPointAndPrefixAndSingleTag(bucketName, metricName, accessPointUpdate, prefixUpdate, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPointUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 				),
 			},
@@ -237,7 +238,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefix(t *testing.T) {
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
+	baseAccessPointArn := generateARN("aws:s3", endpoints.UsEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
@@ -253,20 +254,20 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefix(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPointAndPrefix(bucketName, metricName, accessPoint, prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPoint),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
 			},
 			{
 				Config: testAccBucketMetricConfig_filterAccessPointAndPrefix(bucketName, metricName, accessPointUpdate, prefixUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPointUpdate),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
 			},
 			{
@@ -285,7 +286,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndMultipleTags(t *testing.T) {
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
+	baseAccessPointArn := generateARN("aws:s3", endpoints.UsEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	tag1 := fmt.Sprintf("tag1-%d", rInt)
@@ -303,9 +304,9 @@ func TestAccS3BucketMetric_withFilterAccessPointAndMultipleTags(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPointAndMultipleTags(bucketName, metricName, accessPoint, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPoint),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2),
 				),
@@ -314,9 +315,9 @@ func TestAccS3BucketMetric_withFilterAccessPointAndMultipleTags(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPointAndMultipleTags(bucketName, metricName, accessPointUpdate, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPointUpdate),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2Update),
 				),
@@ -337,7 +338,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndSingleTag(t *testing.T) {
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
+	baseAccessPointArn := generateARN("aws:s3", endpoints.UsEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	tag1 := fmt.Sprintf("tag-%d", rInt)
@@ -353,9 +354,9 @@ func TestAccS3BucketMetric_withFilterAccessPointAndSingleTag(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPointAndSingleTag(bucketName, metricName, accessPoint, tag1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPoint),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
 				),
 			},
@@ -363,9 +364,9 @@ func TestAccS3BucketMetric_withFilterAccessPointAndSingleTag(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterAccessPointAndSingleTag(bucketName, metricName, accessPointUpdate, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.access_point", accessPointUpdate),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 				),
 			},
@@ -398,18 +399,18 @@ func TestAccS3BucketMetric_withFilterPrefix(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterPrefix(bucketName, metricName, prefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
 			},
 			{
 				Config: testAccBucketMetricConfig_filterPrefix(bucketName, metricName, prefixUpdate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
 				),
 			},
 			{
@@ -445,9 +446,9 @@ func TestAccS3BucketMetric_withFilterPrefixAndMultipleTags(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterPrefixAndMultipleTags(bucketName, metricName, prefix, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2),
 				),
@@ -456,9 +457,9 @@ func TestAccS3BucketMetric_withFilterPrefixAndMultipleTags(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterPrefixAndMultipleTags(bucketName, metricName, prefixUpdate, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2Update),
 				),
@@ -494,9 +495,9 @@ func TestAccS3BucketMetric_withFilterPrefixAndSingleTag(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterPrefixAndSingleTag(bucketName, metricName, prefix, tag1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
 				),
 			},
@@ -504,9 +505,9 @@ func TestAccS3BucketMetric_withFilterPrefixAndSingleTag(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterPrefixAndSingleTag(bucketName, metricName, prefixUpdate, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 				),
 			},
@@ -541,9 +542,9 @@ func TestAccS3BucketMetric_withFilterMultipleTags(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterMultipleTags(bucketName, metricName, tag1, tag2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2),
 				),
@@ -552,9 +553,9 @@ func TestAccS3BucketMetric_withFilterMultipleTags(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterMultipleTags(bucketName, metricName, tag1Update, tag2Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag2", tag2Update),
 				),
@@ -588,9 +589,9 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterSingleTag(bucketName, metricName, tag1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1),
 				),
 			},
@@ -598,9 +599,9 @@ func TestAccS3BucketMetric_withFilterSingleTag(t *testing.T) {
 				Config: testAccBucketMetricConfig_filterSingleTag(bucketName, metricName, tag1Update),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "filter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.tag1", tag1Update),
 				),
 			},
@@ -634,9 +635,9 @@ func TestAccS3BucketMetric_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketMetricDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_metric" {
 				continue
 			}
@@ -644,6 +645,10 @@ func testAccCheckBucketMetricDestroy(ctx context.Context) resource.TestCheckFunc
 			bucket, name, err := tfs3.BucketMetricParseID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindMetricsConfiguration(ctx, conn, bucket, name)
@@ -676,6 +681,9 @@ func testAccCheckBucketMetricsExistsConfig(ctx context.Context, n string, v *typ
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		output, err := tfs3.FindMetricsConfiguration(ctx, conn, bucket, name)
 

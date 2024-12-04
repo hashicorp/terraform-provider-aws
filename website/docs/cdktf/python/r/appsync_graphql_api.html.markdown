@@ -319,15 +319,17 @@ class MyConvertedCode(TerraformStack):
 The following arguments are required:
 
 * `authentication_type` - (Required) Authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`, `AWS_LAMBDA`
-* `name` - (Required) User-supplied name for the GraphSQL API.
+* `name` - (Required) User-supplied name for the GraphQL API.
 
 The following arguments are optional:
 
-* `additional_authentication_provider` - (Optional) One or more additional authentication providers for the GraphSQL API. See [`additional_authentication_provider` Block](#additional_authentication_provider-block) for details.
+* `additional_authentication_provider` - (Optional) One or more additional authentication providers for the GraphQL API. See [`additional_authentication_provider` Block](#additional_authentication_provider-block) for details.
+* `api_type` - (Optional) API type. Valid values are `GRAPHQL` or `MERGED`. A `MERGED` type requires `merged_api_execution_role_arn` to be set.
 * `enhanced_metrics_config` - (Optional) Enables and controls the enhanced metrics feature. See [`enhanced_metrics_config` Block](#enhanced_metrics_config-block) for details.
 * `introspection_config` - (Optional) Sets the value of the GraphQL API to enable (`ENABLED`) or disable (`DISABLED`) introspection. If no value is provided, the introspection configuration will be set to ENABLED by default. This field will produce an error if the operation attempts to use the introspection feature while this field is disabled. For more information about introspection, see [GraphQL introspection](https://graphql.org/learn/introspection/).
 * `lambda_authorizer_config` - (Optional) Nested argument containing Lambda authorizer configuration. See [`lambda_authorizer_config` Block](#lambda_authorizer_config-block) for details.
 * `log_config` - (Optional) Nested argument containing logging configuration. See [`log_config` Block](#log_config-block) for details.
+* `merged_api_execution_role_arn` - (Optional) ARN of the execution role when `api_type` is set to `MERGED`.
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. See [`openid_connect_config` Block](#openid_connect_config-block) for details.
 * `query_depth_limit` - (Optional) The maximum depth a query can have in a single request. Depth refers to the amount of nested levels allowed in the body of query. The default value is `0` (or unspecified), which indicates there's no depth limit. If you set a limit, it can be between `1` and `75` nested levels. This field will produce a limit error if the operation falls out of bounds.
 
@@ -396,7 +398,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - API ID
 * `arn` - ARN
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `uris` - Map of URIs associated with the APIE.g., `uris["GRAPHQL"] = https://ID.appsync-api.REGION.amazonaws.com/graphql`
+* `uris` - Map of URIs associated with the API E.g., `uris["GRAPHQL"] = https://ID.appsync-api.REGION.amazonaws.com/graphql`
 
 ## Import
 
@@ -423,4 +425,4 @@ Using `terraform import`, import AppSync GraphQL API using the GraphQL API ID. F
 % terraform import aws_appsync_graphql_api.example 0123456789
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-b3fcf68bd77d14b1baaef5a4e768478cbfaee35f52b7747906b682db24ab94ac -->
+<!-- cache-key: cdktf-0.20.8 input-0a2d07c4ff9db43db137b148ef200a76363b1289e3df0b4fbfab4de199028271 -->

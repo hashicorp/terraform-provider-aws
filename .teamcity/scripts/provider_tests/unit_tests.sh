@@ -17,6 +17,7 @@ go test \
     ./internal/framework/... \
     ./internal/function/... \
     ./internal/generate/... \
+    ./internal/io/... \
     ./internal/json/... \
     ./internal/logging/... \
     ./internal/maps/... \

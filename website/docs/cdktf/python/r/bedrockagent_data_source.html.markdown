@@ -83,13 +83,17 @@ The `server_side_encryption_configuration` configuration block supports the foll
 The `vector_ingestion_configuration` configuration block supports the following arguments:
 
 * `chunking_configuration` - (Optional, Forces new resource) Details about how to chunk the documents in the data source. A chunk refers to an excerpt from a data source that is returned when the knowledge base that it belongs to is queried. See [`chunking_configuration` block](#chunking_configuration-block) for details.
+* `custom_transformation_configuration`- (Optional, Forces new resource) Configuration for custom transformation of data source documents.
+* `parsing_configuration` - (Optional, Forces new resource) Configuration for custom parsing of data source documents. See [`parsing_configuration` block](#parsing_configuration-block) for details.
 
 ### `chunking_configuration` block
 
  The `chunking_configuration` configuration block supports the following arguments:
 
-* `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIXED_SIZE`, `NONE`.
-* `fixed_size_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose fixed-size chunking. If you set the chunking_strategy as `NONE`, exclude this field. See [`fixed_size_chunking_configuration`](#fixed_size_chunking_configuration-block) for details.
+* `chunking_strategy` - (Required, Forces new resource) Option for chunking your source data, either in fixed-sized chunks or as one chunk. Valid values: `FIXED_SIZE`, `HIERARCHICAL`, `SEMANTIC`, `NONE`.
+* `fixed_size_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose fixed-size chunking. Requires chunking_strategy as `FIXED_SIZE`. See [`fixed_size_chunking_configuration`](#fixed_size_chunking_configuration-block) for details.
+* `hierarchical_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose hierarchical chunking. Requires chunking_strategy as `HIERARCHICAL`. See [`hierarchical_chunking_configuration`](#hierarchical_chunking_configuration-block) for details.
+* `semantic_chunking_configuration` - (Optional, Forces new resource) Configurations for when you choose semantic chunking. Requires chunking_strategy as `SEMANTIC`. See [`semantic_chunking_configuration`](#semantic_chunking_configuration-block) for details.
 
 ### `fixed_size_chunking_configuration` block
 
@@ -97,6 +101,85 @@ The `fixed_size_chunking_configuration` block supports the following arguments:
 
 * `max_tokens` - (Required, Forces new resource) Maximum number of tokens to include in a chunk.
 * `overlap_percentage` - (Optional, Forces new resource) Percentage of overlap between adjacent chunks of a data source.
+
+### `hierarchical_chunking_configuration` block
+
+The `hierarchical_chunking_configuration` block supports the following arguments:
+
+* `level_configuration` - (Required, Forces new resource) Maximum number of tokens to include in a chunk. Must contain two `level_configurations`. See [`level_configurations`](#level_configuration-block) for details.
+* `overlap_tokens` - (Required, Forces new resource) The number of tokens to repeat across chunks in the same layer.
+
+### `level_configuration` block
+
+The `level_configuration` block supports the following arguments:
+
+* `max_tokens` - (Required) The maximum number of tokens that a chunk can contain in this layer.
+
+### `semantic_chunking_configuration` block
+
+The `semantic_chunking_configuration` block supports the following arguments:
+
+* `breakpoint_percentile_threshold` - (Required, Forces new resource) The dissimilarity threshold for splitting chunks.
+* `buffer_size` - (Required, Forces new resource) The buffer size.
+* `max_token` - (Required, Forces new resource) The maximum number of tokens a chunk can contain.
+
+### `custom_transformation_configuration` block
+
+The `custom_transformation_configuration` block supports the following arguments:
+
+* `intermediate_storage` - (Required, Forces new resource) The intermediate storage for custom transformation.
+* `transformation` - (Required) A custom processing step for documents moving through the data source ingestion pipeline.
+
+### `intermediate_storage` block
+
+The `intermediate_storage` block supports the following arguments:
+
+* `s3_location` - (Required, Forces new resource) Configuration block for intermedia S3 storage.
+
+### `s3_location` block
+
+The `s3_location` block supports the following arguments:
+
+* `uri` - (Required, Forces new resource) S3 URI for intermediate storage.
+
+### `transformation` block
+
+The `transformation` block supports the following arguments:
+
+* `step_to_apply` - (Required, Forces new resource) When the service applies the transformation. Currently only `POST_CHUNKING` is supported.
+* `transformation_function` - (Required) The lambda function that processes documents.
+
+### `transformation_function` block
+
+The `transformation_function` block supports the following arguments:
+
+* `transformation_lambda_configuration` - (Required, Forces new resource) The configuration of the lambda function.
+
+### `transformation_lambda_configuration` block
+
+The `transformation_lambda_configuration` block supports the following arguments:
+
+* `lambda_arn` - (Required, Forces new resource) The ARN of the lambda to use for custom transformation.
+
+### `parsing_configuration` block
+
+The `parsing_configuration` configuration block supports the following arguments:
+
+* `parsing_strategy` - (Required) Currently only `BEDROCK_FOUNDATION_MODEL` is supported
+* `bedrock_foundation_model_configuration` - (Optional) Settings for a foundation model used to parse documents in a data source. See [`bedrock_foundation_model_configuration` block](#bedrock_foundation_model_configuration-block) for details.
+
+### `bedrock_foundation_model_configuration` block
+
+The `bedrock_foundation_model_configuration` configuration block supports the following arguments:
+
+* `model_arn` - (Required) The ARN of the model used to parse documents
+* `parsing_prompt` - (Optional) Instructions for interpreting the contents of the document. See [`parsing_prompt` block](#parsing_prompt-block) for details.
+
+### `parsing_prompt` block
+
+The `parsing_prompt` configuration block supports the following arguments:
+
+* `parsing_prompt_string` - (Required) Instructions for interpreting the contents of the document.
 
 ## Attribute Reference
 
@@ -137,4 +220,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Data Source using the
 % terraform import aws_bedrockagent_data_source.example GWCMFMQF6T,EMDPPAYPZI
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-f67618ecf6e1d1ae137807f97a96039325a6f9251e8adb1721eca36998dce190 -->
+<!-- cache-key: cdktf-0.20.8 input-a29b632aed73b2eb2bb1ee798a495964c54fc9897dab020469f9ebbf7fd83f31 -->

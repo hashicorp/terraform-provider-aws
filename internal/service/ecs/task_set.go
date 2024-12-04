@@ -276,7 +276,7 @@ func resourceTaskSet() *schema.Resource {
 func resourceTaskSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	cluster := d.Get("cluster").(string)
 	service := d.Get("service").(string)

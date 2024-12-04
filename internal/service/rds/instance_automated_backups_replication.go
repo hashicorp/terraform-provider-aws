@@ -288,7 +288,7 @@ func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.Client,
 	var output *types.DBInstance
 
 	_, err := tfresource.RetryUntilEqual(ctx, timeout, false, func() (bool, error) {
-		dbInstance, err := findDBInstanceByIDSDKv2(ctx, conn, dbInstanceID, optFns...)
+		dbInstance, err := findDBInstanceByID(ctx, conn, dbInstanceID, optFns...)
 
 		if tfresource.NotFound(err) {
 			return false, nil

@@ -15,11 +15,9 @@ import (
 	"strings"
 	"testing"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
-	batch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/batch"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go-v2/service/batch"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -236,32 +234,18 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	t.Run("v1", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, providerRegion, testcase, callServiceV1)
-			})
-		}
-	})
-
-	t.Run("v2", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, providerRegion, testcase, callServiceV2)
-			})
-		}
-	})
+	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+		t.Run(name, func(t *testing.T) {
+			testEndpointCase(t, providerRegion, testcase, callService)
+		})
+	}
 }
 
 func defaultEndpoint(region string) (url.URL, error) {
-	r := batch_sdkv2.NewDefaultEndpointResolverV2()
+	r := batch.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), batch_sdkv2.EndpointParameters{
-		Region: aws_sdkv2.String(region),
+	ep, err := r.ResolveEndpoint(context.Background(), batch.EndpointParameters{
+		Region: aws.String(region),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -275,11 +259,11 @@ func defaultEndpoint(region string) (url.URL, error) {
 }
 
 func defaultFIPSEndpoint(region string) (url.URL, error) {
-	r := batch_sdkv2.NewDefaultEndpointResolverV2()
+	r := batch.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.Background(), batch_sdkv2.EndpointParameters{
-		Region:  aws_sdkv2.String(region),
-		UseFIPS: aws_sdkv2.Bool(true),
+	ep, err := r.ResolveEndpoint(context.Background(), batch.EndpointParameters{
+		Region:  aws.String(region),
+		UseFIPS: aws.Bool(true),
 	})
 	if err != nil {
 		return url.URL{}, err
@@ -292,15 +276,15 @@ func defaultFIPSEndpoint(region string) (url.URL, error) {
 	return ep.URI, nil
 }
 
-func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
 	t.Helper()
 
 	client := meta.BatchClient(ctx)
 
 	var result apiCallParams
 
-	_, err := client.ListJobs(ctx, &batch_sdkv2.ListJobsInput{},
-		func(opts *batch_sdkv2.Options) {
+	_, err := client.ListJobs(ctx, &batch.ListJobsInput{},
+		func(opts *batch.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
 				addRetrieveRegionMiddleware(&result.region),
@@ -315,21 +299,6 @@ func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) api
 	}
 
 	return result
-}
-
-func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCallParams {
-	t.Helper()
-
-	client := meta.BatchConn(ctx)
-
-	req, _ := client.ListJobsRequest(&batch_sdkv1.ListJobsInput{})
-
-	req.HTTPRequest.URL.Path = "/"
-
-	return apiCallParams{
-		endpoint: req.HTTPRequest.URL.String(),
-		region:   aws_sdkv1.StringValue(client.Config.Region),
-	}
 }
 
 func withNoConfig(_ *caseSetup) {
@@ -477,14 +446,6 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, ca
 	}
 
 	expectedDiags := testcase.expected.diags
-	expectedDiags = append(
-		expectedDiags,
-		errs.NewWarningDiagnostic(
-			"AWS account ID not found for provider",
-			"See https://registry.terraform.io/providers/hashicorp/aws/latest/docs#skip_requesting_account_id for implications.",
-		),
-	)
-
 	diags := p.Configure(ctx, terraformsdk.NewResourceConfigRaw(config))
 
 	if diff := cmp.Diff(diags, expectedDiags, cmp.Comparer(sdkdiag.Comparer)); diff != "" {

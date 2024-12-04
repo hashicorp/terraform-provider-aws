@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -32,6 +33,8 @@ import (
 )
 
 const (
+	ResNameStackSetInstance = "Stack Set Instance"
+
 	stackSetInstanceResourceIDPartCount = 3
 )
 
@@ -227,7 +230,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
@@ -238,7 +241,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		StackSetName: aws.String(stackSetName),
 	}
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
@@ -249,7 +252,9 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		dt := expandDeploymentTargets(v.([]interface{}))
-		accountOrOrgID = strings.Join(dt.OrganizationalUnitIds, "/")
+		if len(dt.OrganizationalUnitIds) > 0 {
+			accountOrOrgID = strings.Join(dt.OrganizationalUnitIds, "/")
+		}
 		input.DeploymentTargets = dt
 	} else {
 		d.Set(names.AttrAccountID, accountID)
@@ -269,8 +274,12 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	id := errs.Must(flex.FlattenResourceId([]string{stackSetName, accountOrOrgID, region}, stackSetInstanceResourceIDPartCount, false))
-	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+	id, err := flex.FlattenResourceId([]string{stackSetName, accountOrOrgID, region}, stackSetInstanceResourceIDPartCount, false)
+	if err != nil {
+		return create.AppendDiagError(diags, names.CloudFormation, create.ErrActionFlatteningResourceId, ResNameStackSetInstance, id, err)
+	}
+
+	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			input.OperationId = aws.String(sdkid.UniqueId())
 
@@ -470,6 +479,10 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 		// the organizational unit must be provided;
 		input.Accounts = nil
 		input.DeploymentTargets = dt
+	}
+
+	if v, ok := d.GetOk("operation_preferences"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())

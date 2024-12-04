@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -15,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ecs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,10 +28,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -95,6 +95,7 @@ func resourceTaskDefinition() *schema.Resource {
 					containerDefinitions(orderedCDs).orderContainers()
 					containerDefinitions(orderedCDs).orderEnvironmentVariables()
 					containerDefinitions(orderedCDs).orderSecrets()
+					containerDefinitions(orderedCDs).compactArrays()
 					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
 					json, _ := structure.NormalizeJsonString(unnormalizedJson)
 					return json
@@ -105,7 +106,8 @@ func resourceTaskDefinition() *schema.Resource {
 					equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
 					return equal
 				},
-				ValidateFunc: validTaskDefinitionContainerDefinitions,
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validTaskDefinitionContainerDefinitions,
 			},
 			"cpu": {
 				Type:     schema.TypeString,
@@ -461,7 +463,7 @@ func resourceTaskDefinition() *schema.Resource {
 func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	definitions, err := expandContainerDefinitions(d.Get("container_definitions").(string))
 	if err != nil {
@@ -586,7 +588,6 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 		d.SetId("")
 		return diags
 	}
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", familyOrARN, err)
 	}
@@ -663,8 +664,9 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 	_, err := conn.DeregisterTaskDefinition(ctx, &ecs.DeregisterTaskDefinitionInput{
 		TaskDefinition: aws.String(d.Get(names.AttrARN).(string)),
 	})
-
-	if err != nil {
+	if tfawserr.ErrMessageContains(err, "ClientException", "in the process of being deleted") {
+		return diags
+	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Task Definition (%s): %s", d.Id(), err)
 	}
 
@@ -673,8 +675,12 @@ func resourceTaskDefinitionDelete(ctx context.Context, d *schema.ResourceData, m
 
 func findTaskDefinition(ctx context.Context, conn *ecs.Client, input *ecs.DescribeTaskDefinitionInput) (*awstypes.TaskDefinition, []awstypes.Tag, error) {
 	output, err := conn.DescribeTaskDefinition(ctx, input)
-
-	if err != nil {
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusBadRequest) {
+		return nil, nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	} else if err != nil {
 		return nil, nil, err
 	}
 
@@ -704,7 +710,7 @@ func findTaskDefinitionByFamilyOrARN(ctx context.Context, conn *ecs.Client, fami
 		return nil, nil, err
 	}
 
-	if status := taskDefinition.Status; status == awstypes.TaskDefinitionStatusInactive {
+	if status := taskDefinition.Status; status == awstypes.TaskDefinitionStatusInactive || status == awstypes.TaskDefinitionStatusDeleteInProgress {
 		return nil, nil, &retry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
@@ -1209,35 +1215,6 @@ func flattenFSxWinVolumeAuthorizationConfig(config *awstypes.FSxWindowsFileServe
 
 	items = append(items, m)
 	return items
-}
-
-func flattenContainerDefinitions(apiObjects []awstypes.ContainerDefinition) (string, error) {
-	json, err := tfjson.EncodeToBytes(apiObjects)
-	if err != nil {
-		return "", err
-	}
-
-	// Remove empty fields and convert first character of keys to lowercase.
-	json = tfjson.RemoveEmptyFields(json)
-	json = tfjson.KeyFirstLower(json)
-
-	return string(json), nil
-}
-
-func expandContainerDefinitions(tfString string) ([]awstypes.ContainerDefinition, error) {
-	var apiObjects []awstypes.ContainerDefinition
-
-	if err := tfjson.DecodeFromString(tfString, &apiObjects); err != nil {
-		return nil, err
-	}
-
-	for i, apiObject := range apiObjects {
-		if itypes.IsZero(&apiObject) {
-			return nil, fmt.Errorf("invalid container definition supplied at index (%d)", i)
-		}
-	}
-
-	return apiObjects, nil
 }
 
 func expandTaskDefinitionEphemeralStorage(config []interface{}) *awstypes.EphemeralStorage {

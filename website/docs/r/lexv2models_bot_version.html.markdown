@@ -16,7 +16,7 @@ Terraform resource for managing an AWS Lex V2 Models Bot Version.
 
 ```terraform
 resource "aws_lexv2models_bot_version" "test" {
-  bot_id = aws_lexv2models.test.id
+  bot_id = aws_lexv2models_bot.test.id
   locale_specification = {
     "en_US" = {
       source_bot_version = "DRAFT"

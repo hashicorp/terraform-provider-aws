@@ -77,7 +77,7 @@ func resourceContributorInsightsCreate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "creating DynamoDB Contributor Insights for table (%s): %s", tableName, err)
 	}
 
-	d.SetId(contributorInsightsCreateResourceID(tableName, indexName, meta.(*conns.AWSClient).AccountID))
+	d.SetId(contributorInsightsCreateResourceID(tableName, indexName, meta.(*conns.AWSClient).AccountID(ctx)))
 
 	if _, err := waitContributorInsightsCreated(ctx, conn, tableName, indexName, d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Contributor Insights (%s) create: %s", d.Id(), err)
