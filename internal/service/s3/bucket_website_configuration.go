@@ -211,6 +211,9 @@ func resourceBucketWebsiteConfigurationCreate(ctx context.Context, d *schema.Res
 	}
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketWebsiteInput{
 		Bucket:               aws.String(bucket),
@@ -252,6 +255,10 @@ func resourceBucketWebsiteConfigurationRead(ctx context.Context, d *schema.Resou
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	output, err := findBucketWebsite(ctx, conn, bucket, expectedBucketOwner)
@@ -308,6 +315,10 @@ func resourceBucketWebsiteConfigurationUpdate(ctx context.Context, d *schema.Res
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	websiteConfig := &types.WebsiteConfiguration{}
@@ -373,6 +384,10 @@ func resourceBucketWebsiteConfigurationDelete(ctx context.Context, d *schema.Res
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.DeleteBucketWebsiteInput{

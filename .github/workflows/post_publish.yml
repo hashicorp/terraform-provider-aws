@@ -65,7 +65,7 @@ jobs:
           for i in 1 2
           do
             LATEST_VERSION=$(curl -s "https://registry.terraform.io/v2/providers/323/provider-versions/latest" | jq -r '.data.attributes.version')
-            if [[ "${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}" != ${LATEST_VERSION} ]]; then
+            if [[ "${{ needs.on-success-or-workflow-dispatch.outputs.release-tag }}" != "v${LATEST_VERSION}" ]]; then
               sleep 1h
             else
               echo "Registry and Github Version matches"

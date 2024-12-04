@@ -24,15 +24,20 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		s3.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 		func(o *s3.Options) {
-			if o.Region == endpoints.UsEast1RegionID && config["s3_us_east_1_regional_endpoint"].(string) != "regional" {
-				// Maintain the AWS SDK for Go v1 default of using the global endpoint in us-east-1.
-				// See https://github.com/hashicorp/terraform-provider-aws/issues/33028.
-				tflog.Info(ctx, "overriding region", map[string]any{
-					"original_region": cfg.Region,
-					"override_region": names.GlobalRegionID,
-				})
-				o.Region = names.GlobalRegionID
+			switch region, s3USEast1RegionalEndpoint := o.Region, config["s3_us_east_1_regional_endpoint"].(string) == "regional"; region {
+			case endpoints.UsEast1RegionID:
+				if !s3USEast1RegionalEndpoint {
+					// Maintain the AWS SDK for Go v1 default of using the global endpoint in us-east-1.
+					// See https://github.com/hashicorp/terraform-provider-aws/issues/33028.
+					overrideRegion := endpoints.AwsGlobalRegionID
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": overrideRegion,
+					})
+					o.Region = overrideRegion
+				}
 			}
+
 			o.UsePathStyle = config["s3_use_path_style"].(bool)
 
 			o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws.RetryerV2), retry.IsErrorRetryableFunc(func(err error) aws.Ternary {

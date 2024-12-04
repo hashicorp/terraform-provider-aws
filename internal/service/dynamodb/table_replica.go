@@ -66,6 +66,11 @@ func resourceTableReplica() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"deletion_protection_enabled": { // direct to replica
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			// global_secondary_index read capacity override can be set but not return by aws atm either through main/replica nor directly
 			"global_table_arn": {
 				Type:         schema.TypeString,
@@ -168,7 +173,13 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
-	if _, err := waitReplicaActive(ctx, conn, tableName, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate), optFn); err != nil {
+	// Some attributes take time to propagate to the table replica, so set a delay
+	delay := replicaDelayDefault
+	if _, ok := d.GetOk("deletion_protection_enabled"); ok {
+		delay = replicaPropagationDelay
+	}
+
+	if _, err := waitReplicaActive(ctx, conn, tableName, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate), delay, optFn); err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, resNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
@@ -189,13 +200,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 }
 
 func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var
-	// handled through main table (global table)
-	// * global_secondary_index
-	// * kms_key_arn
-	// * read_capacity_override
-	// * table_class_override
-	diags diag.Diagnostics
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	replicaRegion := meta.(*conns.AWSClient).Region(ctx)
@@ -268,12 +273,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 }
 
 func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var
-	// handled direct to replica
-	// * arn
-	// * point_in_time_recovery
-	// * tags
-	diags diag.Diagnostics
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	tableName, _, err := tableReplicaParseResourceID(d.Id())
@@ -294,6 +294,11 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	}
 
 	d.Set(names.AttrARN, table.TableArn)
+	d.Set("deletion_protection_enabled", table.DeletionProtectionEnabled)
+
+	if table.SSEDescription != nil && table.SSEDescription.KMSMasterKeyArn != nil {
+		d.Set(names.AttrKMSKeyARN, table.SSEDescription.KMSMasterKeyArn)
+	}
 
 	pitrOut, err := conn.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(tableName),
@@ -301,10 +306,6 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, errCodeUnknownOperationException, errCodeTableNotFoundException) {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, resNameTableReplica, d.Id(), fmt.Errorf("continuous backups: %w", err))
-	}
-
-	if table.SSEDescription != nil && table.SSEDescription.KMSMasterKeyArn != nil {
-		d.Set(names.AttrKMSKeyARN, table.SSEDescription.KMSMasterKeyArn)
 	}
 
 	if pitrOut != nil && pitrOut.ContinuousBackupsDescription != nil && pitrOut.ContinuousBackupsDescription.PointInTimeRecoveryDescription != nil {
@@ -317,13 +318,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var
-	// handled through main table (main)
-	// * global_secondary_index
-	// * kms_key_arn
-	// * read_capacity_override
-	// * table_class_override
-	diags diag.Diagnostics
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBClient(ctx)
 
 	tableName, mainRegion, err := tableReplicaParseResourceID(d.Id())
@@ -393,19 +388,37 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
 		}
 
-		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
+		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), replicaDelayDefault, optFn); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTableReplica, d.Id(), err)
 		}
 	}
 
-	// handled direct to replica
+	// handle replica specific changes
 	// * point_in_time_recovery
-	if d.HasChange("point_in_time_recovery") {
-		if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
+	// * deletion_protection_enabled
+	if d.HasChanges("point_in_time_recovery", "deletion_protection_enabled") {
+		if d.HasChange("point_in_time_recovery") {
+			if err := updatePITR(ctx, conn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
+			}
 		}
 
-		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), optFn); err != nil {
+		delay := replicaDelayDefault
+		if d.HasChange("deletion_protection_enabled") {
+			log.Printf("[DEBUG] Updating DynamoDB Table Replica deletion protection: %v", d.Get("deletion_protection_enabled").(bool))
+
+			if _, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+				TableName:                 aws.String(tableName),
+				DeletionProtectionEnabled: aws.Bool(d.Get("deletion_protection_enabled").(bool)),
+			}); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTableReplica, d.Id(), err)
+			}
+
+			// Wait for deletion protection to propagate to the table replica.
+			delay = replicaPropagationDelay
+		}
+
+		if _, err := waitReplicaActive(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate), delay, optFn); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, resNameTableReplica, d.Id(), err)
 		}
 	}
