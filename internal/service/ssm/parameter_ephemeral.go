@@ -104,7 +104,7 @@ func (e *ephemeralParameter) Open(ctx context.Context, request ephemeral.OpenReq
 }
 
 type epParameterData struct {
-	ARN            types.String `tfsdk:"arn"`
+	ARN            fwtypes.ARN  `tfsdk:"arn"`
 	Name           types.String `tfsdk:"name"`
 	Type           types.String `tfsdk:"type"`
 	Value          types.String `tfsdk:"value"`
