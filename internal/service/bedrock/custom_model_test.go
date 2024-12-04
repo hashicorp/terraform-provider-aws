@@ -96,53 +96,6 @@ func testAccCustomModel_disappears(t *testing.T) {
 	})
 }
 
-func testAccCustomModel_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrock_custom_model.test"
-	var v bedrock.GetModelCustomizationJobOutput
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCustomModelConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"base_model_identifier"},
-			},
-			{
-				Config: testAccCustomModelConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-			{
-				Config: testAccCustomModelConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCustomModelExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-				),
-			},
-		},
-	})
-}
-
 func testAccCustomModel_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -495,67 +448,6 @@ resource "aws_bedrock_custom_model" "test" {
   }
 }
 `, rName))
-}
-
-func testAccCustomModelConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrock_custom_model" "test" {
-  custom_model_name     = %[1]q
-  job_name              = %[1]q
-  base_model_identifier = data.aws_bedrock_foundation_model.test.model_arn
-  role_arn              = aws_iam_role.test.arn
-
-  hyperparameters = {
-    "epochCount"              = "1"
-    "batchSize"               = "1"
-    "learningRate"            = "0.005"
-    "learningRateWarmupSteps" = "0"
-  }
-
-  output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
-  }
-
-  training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1))
-}
-
-func testAccCustomModelConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
-resource "aws_bedrock_custom_model" "test" {
-  custom_model_name     = %[1]q
-  job_name              = %[1]q
-  base_model_identifier = data.aws_bedrock_foundation_model.test.model_arn
-  role_arn              = aws_iam_role.test.arn
-
-  hyperparameters = {
-    "epochCount"              = "1"
-    "batchSize"               = "1"
-    "learningRate"            = "0.005"
-    "learningRateWarmupSteps" = "0"
-  }
-
-  output_data_config {
-    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
-  }
-
-  training_data_config {
-    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccCustomModelConfig_kmsKey(rName string) string {

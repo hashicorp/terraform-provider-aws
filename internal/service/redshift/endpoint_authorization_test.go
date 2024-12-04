@@ -42,7 +42,7 @@ func TestAccRedshiftEndpointAuthorization_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "account", "data.aws_caller_identity.test", names.AttrAccountID),
 					resource.TestCheckResourceAttr(resourceName, "allowed_all_vpcs", acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, "grantee", "data.aws_caller_identity.test", names.AttrAccountID),
-					acctest.CheckResourceAttrAccountID(resourceName, "grantor"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "grantor"),
 				),
 			},
 			{

@@ -43,7 +43,7 @@ func TestAccQuickSightRefreshSchedule_basic(t *testing.T) {
 				Config: testAccRefreshScheduleConfig_basic(rId, rName, sId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight",
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight",
 						fmt.Sprintf("dataset/%s/refresh-schedule/%s", rId, sId)),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "schedule.#", "1"),
@@ -111,7 +111,7 @@ func TestAccQuickSightRefreshSchedule_weeklyRefresh(t *testing.T) {
 				Config: testAccRefreshScheduleConfig_WeeklyRefresh(rId, rName, sId, awstypes.DayOfWeekMonday),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight",
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight",
 						fmt.Sprintf("dataset/%s/refresh-schedule/%s", rId, sId)),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.refresh_type", "FULL_REFRESH"),
@@ -134,7 +134,7 @@ func TestAccQuickSightRefreshSchedule_weeklyRefresh(t *testing.T) {
 				Config: testAccRefreshScheduleConfig_WeeklyRefresh(rId, rName, sId, awstypes.DayOfWeekWednesday),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight",
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight",
 						fmt.Sprintf("dataset/%s/refresh-schedule/%s", rId, sId)),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.refresh_type", "FULL_REFRESH"),
@@ -209,7 +209,7 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 				Config: testAccRefreshScheduleConfig_MonthlyRefresh(rId, rName, sId, "15"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight",
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight",
 						fmt.Sprintf("dataset/%s/refresh-schedule/%s", rId, sId)),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.refresh_type", "FULL_REFRESH"),
@@ -232,7 +232,7 @@ func TestAccQuickSightRefreshSchedule_monthlyRefresh(t *testing.T) {
 				Config: testAccRefreshScheduleConfig_MonthlyRefresh(rId, rName, sId, "21"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRefreshScheduleExists(ctx, resourceName, &schedule),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight",
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight",
 						fmt.Sprintf("dataset/%s/refresh-schedule/%s", rId, sId)),
 					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.refresh_type", "FULL_REFRESH"),

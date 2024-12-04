@@ -36,8 +36,8 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", regexache.MustCompile(`snapshot:.+`)),
-					acctest.CheckResourceAttrAccountID(resourceName, "owner_account"),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift", regexache.MustCompile(`snapshot:.+`)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "owner_account"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "-1"),
@@ -53,7 +53,7 @@ func TestAccRedshiftClusterSnapshot_basic(t *testing.T) {
 				Config: testAccClusterSnapshotConfig_retention(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterSnapshotExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift", regexache.MustCompile(`snapshot:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift", regexache.MustCompile(`snapshot:.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "1"),

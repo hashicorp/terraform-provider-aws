@@ -24,12 +24,12 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			if config["partition"].(string) == endpoints.AwsPartitionID {
 				// AWS Cost and Usage Reports is only available in AWS Commercial us-east-1 Region.
 				// https://docs.aws.amazon.com/general/latest/gr/billing.html.
-				if cfg.Region != names.USEast1RegionID {
+				if cfg.Region != endpoints.UsEast1RegionID {
 					tflog.Info(ctx, "overriding region", map[string]any{
 						"original_region": cfg.Region,
-						"override_region": names.USEast1RegionID,
+						"override_region": endpoints.UsEast1RegionID,
 					})
-					o.Region = names.USEast1RegionID
+					o.Region = endpoints.UsEast1RegionID
 				}
 			}
 		},
