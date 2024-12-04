@@ -557,7 +557,7 @@ func resourceCluster() *schema.Resource {
 						"seconds_until_auto_pause": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							Default:      300,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(300, 86400),
 						},
 					},
@@ -2150,7 +2150,7 @@ func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *types
 		apiObject.MinCapacity = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["seconds_until_auto_pause"].(int); ok {
+	if v, ok := tfMap["seconds_until_auto_pause"].(int); ok && v != 0 {
 		apiObject.SecondsUntilAutoPause = aws.Int32(int32(v))
 	}
 
