@@ -860,7 +860,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				if err != nil {
 					return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
 				}
-				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region
+				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region(ctx)
 			}
 			if crossRegion {
 				input.DBParameterGroupName = aws.String(v.(string))

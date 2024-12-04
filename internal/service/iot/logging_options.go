@@ -74,7 +74,7 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).Region)
+		d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	return append(diags, resourceLoggingOptionsRead(ctx, d, meta)...)

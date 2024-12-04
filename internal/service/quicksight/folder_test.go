@@ -44,7 +44,7 @@ func TestAccQuickSightFolder_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "folder_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "folder_type", string(awstypes.FolderTypeShared)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "quicksight", fmt.Sprintf("folder/%s", rId)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "quicksight", fmt.Sprintf("folder/%s", rId)),
 				),
 			},
 			{
@@ -171,7 +171,7 @@ func TestAccQuickSightFolder_parentFolder(t *testing.T) {
 				Config: testAccFolderConfig_parentFolder(rId, rName, parentId1, parentName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId1)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId1)),
 				),
 			},
 			{
@@ -183,7 +183,7 @@ func TestAccQuickSightFolder_parentFolder(t *testing.T) {
 				Config: testAccFolderConfig_parentFolder(rId, rName, parentId2, parentName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId2)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId2)),
 				),
 			},
 		},
@@ -214,7 +214,7 @@ func TestAccQuickSightFolder_parentFolderNested(t *testing.T) {
 				Config: testAccFolderConfig_parentFolder(rId, rName, parentId1, parentName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId1)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId1)),
 				),
 			},
 			{
@@ -226,7 +226,7 @@ func TestAccQuickSightFolder_parentFolderNested(t *testing.T) {
 				Config: testAccFolderConfig_parentFolder2(rId, rName, parentId1, parentName1, parentId2, parentName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFolderExists(ctx, resourceName, &folder),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId2)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "parent_folder_arn", "quicksight", fmt.Sprintf("folder/%s", parentId2)),
 				),
 			},
 		},

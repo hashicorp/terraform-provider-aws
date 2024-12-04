@@ -23,13 +23,13 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *route53domains.Options) {
 			if config["partition"].(string) == endpoints.AwsPartitionID {
 				// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
-				if cfg.Region != names.USEast1RegionID {
+				if cfg.Region != endpoints.UsEast1RegionID {
 					tflog.Info(ctx, "overriding region", map[string]any{
 						"original_region": cfg.Region,
-						"override_region": names.USEast1RegionID,
+						"override_region": endpoints.UsEast1RegionID,
 					})
 				}
-				o.Region = names.USEast1RegionID
+				o.Region = endpoints.UsEast1RegionID
 			}
 		},
 	), nil

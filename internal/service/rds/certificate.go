@@ -57,7 +57,7 @@ func resourceCertificatePut(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.IsNewResource() {
-		d.SetId(meta.(*conns.AWSClient).Region)
+		d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	}
 
 	return append(diags, resourceCertificateRead(ctx, d, meta)...)

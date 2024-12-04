@@ -78,7 +78,7 @@ func resourceLFTagCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		catalogID = v.(string)
 	} else {
-		catalogID = meta.(*conns.AWSClient).AccountID
+		catalogID = meta.(*conns.AWSClient).AccountID(ctx)
 	}
 	id := lfTagCreateResourceID(catalogID, tagKey)
 
