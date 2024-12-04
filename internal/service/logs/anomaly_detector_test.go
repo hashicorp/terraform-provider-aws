@@ -34,7 +34,6 @@ func TestAccLogsAnomalyDetector_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// 	acctest.PreCheckPartitionHasService(t, names.LogsServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -45,69 +44,11 @@ func TestAccLogsAnomalyDetector_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
-					// resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
 				),
 			},
-			// {
-			// 	ResourceName:            resourceName,
-			// 	ImportState:             true,
-			// 	ImportStateVerify:       true,
-			// 	ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
-			// },
 		},
 	})
 }
-
-// func TestAccAnomalyDetector_tagshere(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	var loganomalydetector cloudwatchlogs.GetLogAnomalyDetectorOutput
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccLogAnomalyDetectorConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
-// 					resource.TestCheckResourceAttr(resourceName, "detector_name", rName),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:      resourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 			{
-// 				Config: testAccLogAnomalyDetectorConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
-// 					resource.TestCheckResourceAttr(resourceName, "detector_name", rName),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-// 				),
-// 			},
-// 			{
-// 				Config: testAccLogAnomalyDetectorConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
-// 					resource.TestCheckResourceAttr(resourceName, "detector_name", rName),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-// 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
-// 				),
-// 			},
-// 		},
-// 	})
-// }
 
 func TestAccLogsAnomalyDetector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -216,69 +157,11 @@ data aws_cloudwatch_log_groups "test" {
 }
 
 resource "aws_cloudwatch_log_anomaly_detector" "test" {
-  detector_name        = %[1]q
-  log_group_arn_list   = [aws_cloudwatch_log_group.test[0].arn]
+  detector_name           = %[1]q
+  log_group_arn_list      = [aws_cloudwatch_log_group.test[0].arn]
   anomaly_visibility_time = 7
-  evaluation_frequency = "TEN_MIN"
-  enabled              = "false"
+  evaluation_frequency    = "TEN_MIN"
+  enabled                 = "false"
 }
 `, rName)
 }
-
-// func testAccLogAnomalyDetectorConfig_tags1(rName, tagKey1, tagValue1 string) string {
-// 	return fmt.Sprintf(`
-// 	resource aws_cloudwatch_log_group "test" {
-// 		count = 2
-
-// 		name = "%[1]s-${count.index}"
-// 	  }
-
-// 	  data aws_cloudwatch_log_groups "test" {
-// 		log_group_name_prefix = %[1]q
-
-// 		depends_on = [aws_cloudwatch_log_group.test[0], aws_cloudwatch_log_group.test[1]]
-// 	  }
-
-// 	  resource "aws_cloudwatch_log_anomaly_detector" "test" {
-// 		detector_name        = %[1]q
-// 		log_group_arn_list   = [aws_cloudwatch_log_group.test[0].arn]
-// 		anomaly_visibility_time = 7
-// 		evaluation_frequency = "TEN_MIN"
-// 		enabled              = "false"
-
-// 		  tags = {
-//     %[2]q = %[3]q
-//   }
-// 	  }
-// `, rName, tagKey1, tagValue1)
-// }
-
-// func testAccLogAnomalyDetectorConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-// 	return fmt.Sprintf(`
-// 	resource aws_cloudwatch_log_group "test" {
-// 		count = 2
-
-// 		name = "%[1]s-${count.index}"
-// 	  }
-
-// 	  data aws_cloudwatch_log_groups "test" {
-// 		log_group_name_prefix = %[1]q
-
-// 		depends_on = [aws_cloudwatch_log_group.test[0], aws_cloudwatch_log_group.test[1]]
-// 	  }
-
-// 	  resource "aws_cloudwatch_log_anomaly_detector" "test" {
-// 		detector_name        = %[1]q
-// 		log_group_arn_list   = [aws_cloudwatch_log_group.test[0].arn]
-// 		anomaly_visibility_time = 7
-// 		evaluation_frequency = "TEN_MIN"
-// 		enabled              = "false"
-
-// 		  tags = {
-//     %[2]q = %[3]q
-// 	    %[4]q = %[5]q
-//   }
-// 	  }
-// `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-
-// }
