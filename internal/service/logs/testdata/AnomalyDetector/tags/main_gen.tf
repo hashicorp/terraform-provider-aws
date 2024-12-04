@@ -1,8 +1,6 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-provider "null" {}
-
 resource aws_cloudwatch_log_group "test" {
   count = 2
 
@@ -15,26 +13,24 @@ data aws_cloudwatch_log_groups "test" {
   depends_on = [aws_cloudwatch_log_group.test[0], aws_cloudwatch_log_group.test[1]]
 }
 
-resource "aws_cloudwatch_log_log_anomaly_detector" "test" {
+resource "aws_cloudwatch_log_anomaly_detector" "test" {
   detector_name        = var.rName
   log_group_arn_list   = [aws_cloudwatch_log_group.test[0].arn]
   anomaly_visibility_time = 7
   evaluation_frequency = "TEN_MIN"
   enabled              = "false"
 
-  tags = {
-    (var.unknownTagKey) = null_resource.test.id
-  }
+  tags = var.resource_tags
 }
-resource "null_resource" "test" {}
-
 variable "rName" {
   description = "Name for resource"
   type        = string
   nullable    = false
 }
 
-variable "unknownTagKey" {
-  type     = string
-  nullable = false
+variable "resource_tags" {
+  description = "Tags to set on resource. To specify no tags, set to `null`"
+  # Not setting a default, so that this must explicitly be set to `null` to specify no tags
+  type     = map(string)
+  nullable = true
 }

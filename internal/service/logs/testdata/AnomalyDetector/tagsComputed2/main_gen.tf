@@ -15,7 +15,7 @@ data aws_cloudwatch_log_groups "test" {
   depends_on = [aws_cloudwatch_log_group.test[0], aws_cloudwatch_log_group.test[1]]
 }
 
-resource "aws_cloudwatch_log_log_anomaly_detector" "test" {
+resource "aws_cloudwatch_log_anomaly_detector" "test" {
   detector_name        = var.rName
   log_group_arn_list   = [aws_cloudwatch_log_group.test[0].arn]
   anomaly_visibility_time = 7
@@ -24,6 +24,7 @@ resource "aws_cloudwatch_log_log_anomaly_detector" "test" {
 
   tags = {
     (var.unknownTagKey) = null_resource.test.id
+    (var.knownTagKey)   = var.knownTagValue
   }
 }
 resource "null_resource" "test" {}
@@ -35,6 +36,16 @@ variable "rName" {
 }
 
 variable "unknownTagKey" {
+  type     = string
+  nullable = false
+}
+
+variable "knownTagKey" {
+  type     = string
+  nullable = false
+}
+
+variable "knownTagValue" {
   type     = string
   nullable = false
 }

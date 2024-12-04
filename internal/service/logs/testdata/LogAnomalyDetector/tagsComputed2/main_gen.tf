@@ -15,9 +15,10 @@ data aws_cloudwatch_log_groups "test" {
   depends_on = [aws_cloudwatch_log_group.test[0], aws_cloudwatch_log_group.test[1]]
 }
 
-resource "aws_logs_log_anomaly_detector" "test" {
+resource "aws_cloudwatch_log_log_anomaly_detector" "test" {
   detector_name        = var.rName
-  log_arn_group_list   = [aws_cloudwatch_log_group.test.arn]
+  log_group_arn_list   = [aws_cloudwatch_log_group.test[0].arn]
+  anomaly_visibility_time = 7
   evaluation_frequency = "TEN_MIN"
   enabled              = "false"
 

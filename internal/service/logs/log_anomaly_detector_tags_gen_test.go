@@ -17,20 +17,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLogsLogAnomalyDetector_tags(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy:             testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -38,7 +38,7 @@ func TestAccLogsLogAnomalyDetector_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -61,7 +61,7 @@ func TestAccLogsLogAnomalyDetector_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -73,7 +73,7 @@ func TestAccLogsLogAnomalyDetector_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -82,7 +82,7 @@ func TestAccLogsLogAnomalyDetector_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -109,7 +109,7 @@ func TestAccLogsLogAnomalyDetector_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -122,7 +122,7 @@ func TestAccLogsLogAnomalyDetector_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -130,7 +130,7 @@ func TestAccLogsLogAnomalyDetector_tags(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -153,7 +153,7 @@ func TestAccLogsLogAnomalyDetector_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -165,13 +165,13 @@ func TestAccLogsLogAnomalyDetector_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -186,7 +186,7 @@ func TestAccLogsLogAnomalyDetector_tags(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -199,20 +199,20 @@ func TestAccLogsLogAnomalyDetector_tags(t *testing.T) {
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_null(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_null(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy:             testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -220,7 +220,7 @@ func TestAccLogsLogAnomalyDetector_tags_null(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -243,7 +243,7 @@ func TestAccLogsLogAnomalyDetector_tags_null(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -261,26 +261,26 @@ func TestAccLogsLogAnomalyDetector_tags_null(t *testing.T) {
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_EmptyMap(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_EmptyMap(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy:             testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{})),
@@ -295,7 +295,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyMap(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{}),
@@ -311,26 +311,26 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyMap(t *testing.T) {
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_AddOnUpdate(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy:             testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -345,7 +345,7 @@ func TestAccLogsLogAnomalyDetector_tags_AddOnUpdate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -353,7 +353,7 @@ func TestAccLogsLogAnomalyDetector_tags_AddOnUpdate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -376,7 +376,7 @@ func TestAccLogsLogAnomalyDetector_tags_AddOnUpdate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -391,20 +391,20 @@ func TestAccLogsLogAnomalyDetector_tags_AddOnUpdate(t *testing.T) {
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy:             testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -412,7 +412,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnCreate(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -435,7 +435,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -447,13 +447,13 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnCreate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -468,7 +468,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -481,20 +481,20 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy:             testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -502,7 +502,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -525,7 +525,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -534,7 +534,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -561,7 +561,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -574,7 +574,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -582,7 +582,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -605,7 +605,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -620,20 +620,20 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy:             testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -641,7 +641,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -664,7 +664,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -672,7 +672,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -695,7 +695,7 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 				},
 			},
 			{
-				ConfigDirectory: config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory: config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -710,20 +710,20 @@ func TestAccLogsLogAnomalyDetector_tags_EmptyTag_OnUpdate_Replace(t *testing.T) 
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -732,7 +732,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -752,7 +752,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -766,7 +766,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -776,7 +776,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -798,7 +798,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -813,7 +813,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -822,7 +822,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -842,7 +842,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -856,13 +856,13 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -878,7 +878,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -891,20 +891,20 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -915,7 +915,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -941,7 +941,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -957,7 +957,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -969,7 +969,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T)
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -999,7 +999,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1016,13 +1016,13 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1038,7 +1038,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T)
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName:        config.StringVariable(rName),
 					acctest.CtResourceTags: nil,
@@ -1051,20 +1051,20 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T)
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1075,7 +1075,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1099,7 +1099,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1115,7 +1115,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1128,7 +1128,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1156,7 +1156,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1174,7 +1174,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1185,7 +1185,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1209,7 +1209,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1227,20 +1227,20 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1248,7 +1248,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_updateToProviderOnly(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1272,7 +1272,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_updateToProviderOnly(t *test
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1281,7 +1281,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_updateToProviderOnly(t *test
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1301,7 +1301,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_updateToProviderOnly(t *test
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1317,20 +1317,20 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_updateToProviderOnly(t *test
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1339,7 +1339,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_updateToResourceOnly(t *test
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1359,7 +1359,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_updateToResourceOnly(t *test
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1367,7 +1367,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_updateToResourceOnly(t *test
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1391,7 +1391,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_updateToResourceOnly(t *test
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1406,20 +1406,20 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_updateToResourceOnly(t *test
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1430,7 +1430,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_emptyResourceTag(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1454,7 +1454,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_emptyResourceTag(t *testing.
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1472,20 +1472,20 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_emptyResourceTag(t *testing.
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_DefaultTags_emptyProviderOnlyTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1494,7 +1494,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_emptyProviderOnlyTag(t *test
 					acctest.CtResourceTags: nil,
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -1514,7 +1514,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_emptyProviderOnlyTag(t *test
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1530,20 +1530,20 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_emptyProviderOnlyTag(t *test
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1554,7 +1554,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nullOverlappingResourceTag(t
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1578,7 +1578,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nullOverlappingResourceTag(t
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1599,20 +1599,20 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nullOverlappingResourceTag(t
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1623,7 +1623,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nullNonOverlappingResourceTa
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1649,7 +1649,7 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nullNonOverlappingResourceTa
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_defaults/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_defaults/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1670,26 +1670,26 @@ func TestAccLogsLogAnomalyDetector_tags_DefaultTags_nullNonOverlappingResourceTa
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnCreate(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_ComputedTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tagsComputed1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1712,7 +1712,7 @@ func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnCreate(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tagsComputed1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
@@ -1725,20 +1725,20 @@ func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1746,7 +1746,7 @@ func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1770,7 +1770,7 @@ func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tagsComputed2/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tagsComputed2/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
@@ -1778,7 +1778,7 @@ func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 					"knownTagValue": config.StringVariable(acctest.CtValue1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.computedkey1", "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1807,7 +1807,7 @@ func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tagsComputed2/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tagsComputed2/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable("computedkey1"),
@@ -1822,20 +1822,20 @@ func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_ComputedTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -1843,7 +1843,7 @@ func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnUpdate_Replace(t *testing.
 					}),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1867,13 +1867,13 @@ func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnUpdate_Replace(t *testing.
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tagsComputed1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsKey1, "null_resource.test", names.AttrID),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
@@ -1896,7 +1896,7 @@ func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnUpdate_Replace(t *testing.
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tagsComputed1/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tagsComputed1/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					"unknownTagKey": config.StringVariable(acctest.CtKey1),
@@ -1909,21 +1909,21 @@ func TestAccLogsLogAnomalyDetector_tags_ComputedTag_OnUpdate_Replace(t *testing.
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_IgnoreTags_Overlap_DefaultTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1937,7 +1937,7 @@ func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -1972,7 +1972,7 @@ func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 			// 2: Update ignored tag only
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -1986,7 +1986,7 @@ func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2021,7 +2021,7 @@ func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 			// 3: Update both tags
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtProviderTags: config.MapVariable(map[string]config.Variable{
@@ -2035,7 +2035,7 @@ func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2071,21 +2071,21 @@ func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_DefaultTag(t *testing
 	})
 }
 
-func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
+func TestAccLogsAnomalyDetector_tags_IgnoreTags_Overlap_ResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v cloudwatchlogs.GetLogAnomalyDetectorOutput
-	resourceName := "aws_cloudwatch_log_log_anomaly_detector.test"
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:   acctest.ErrorCheck(t, names.LogsServiceID),
-		CheckDestroy: testAccCheckLogAnomalyDetectorDestroy(ctx),
+		CheckDestroy: testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			// 1: Create
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -2097,7 +2097,7 @@ func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2143,7 +2143,7 @@ func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 			// 2: Update ignored tag
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -2155,7 +2155,7 @@ func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
@@ -2200,7 +2200,7 @@ func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 			// 3: Update both tags
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigDirectory:          config.StaticDirectory("testdata/LogAnomalyDetector/tags_ignore/"),
+				ConfigDirectory:          config.StaticDirectory("testdata/AnomalyDetector/tags_ignore/"),
 				ConfigVariables: config.Variables{
 					acctest.CtRName: config.StringVariable(rName),
 					acctest.CtResourceTags: config.MapVariable(map[string]config.Variable{
@@ -2212,7 +2212,7 @@ func TestAccLogsLogAnomalyDetector_tags_IgnoreTags_Overlap_ResourceTag(t *testin
 					),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLogAnomalyDetectorExists(ctx, resourceName, &v),
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &v),
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.MapExact(map[string]knownvalue.Check{
