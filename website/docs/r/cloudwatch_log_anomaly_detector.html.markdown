@@ -17,7 +17,6 @@ Terraform resource for managing an AWS CloudWatch Logs Log Anomaly Detector.
 ```terraform
 resource aws_cloudwatch_log_group "test" {
   count = 2
-
   name = "testing-${count.index}"
 }
 
@@ -56,17 +55,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Log Anomaly Detector using the `arn`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Anomaly Detector using the `arn`. For example:
 
 ```terraform
 import {
-  to = aws_logs_log_anomaly_detector.example
+  to = aws_cloudwatch_log_anomaly_detector.example
   id = "log_anomaly_detector-arn-12345678"
 }
 ```
 
-Using `terraform import`, import CloudWatch Logs Log Anomaly Detector using the `example_id_arg`. For example:
+Using `terraform import`, import CloudWatch Log Anomaly Detector using the `example_id_arg`. For example:
 
 ```console
-% terraform import aws_logs_log_anomaly_detector.example log_anomaly_detector-arn-12345678
+% terraform import aws_cloudwatch_log_anomaly_detector.example log_anomaly_detector-arn-12345678
 ```

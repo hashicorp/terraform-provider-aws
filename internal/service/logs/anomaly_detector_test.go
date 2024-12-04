@@ -146,7 +146,6 @@ func testAccLogAnomalyDetectorConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource aws_cloudwatch_log_group "test" {
   count = 2
-
   name = "%[1]s-${count.index}"
 }
 
