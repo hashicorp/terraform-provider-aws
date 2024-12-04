@@ -70,6 +70,7 @@ func TestAccLogsAnomalyDetector_tags(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -119,6 +120,7 @@ func TestAccLogsAnomalyDetector_tags(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -162,6 +164,7 @@ func TestAccLogsAnomalyDetector_tags(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -193,6 +196,7 @@ func TestAccLogsAnomalyDetector_tags(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -252,6 +256,7 @@ func TestAccLogsAnomalyDetector_tags_null(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
@@ -302,6 +307,7 @@ func TestAccLogsAnomalyDetector_tags_EmptyMap(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
@@ -385,6 +391,7 @@ func TestAccLogsAnomalyDetector_tags_AddOnUpdate(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -444,6 +451,7 @@ func TestAccLogsAnomalyDetector_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -475,6 +483,7 @@ func TestAccLogsAnomalyDetector_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -571,6 +580,7 @@ func TestAccLogsAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -614,6 +624,7 @@ func TestAccLogsAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -704,6 +715,7 @@ func TestAccLogsAnomalyDetector_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -762,6 +774,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -809,6 +822,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -852,6 +866,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -885,6 +900,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -953,6 +969,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -1012,6 +1029,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -1045,6 +1063,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1111,6 +1130,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -1170,6 +1190,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 			{
@@ -1221,6 +1242,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1311,6 +1333,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_updateToProviderOnly(t *testing
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1400,6 +1423,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_updateToResourceOnly(t *testing
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1466,6 +1490,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_emptyResourceTag(t *testing.T) 
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1524,6 +1549,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_emptyProviderOnlyTag(t *testing
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1590,6 +1616,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_nullOverlappingResourceTag(t *t
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					acctest.CtTagsKey1, // The canonical value returned by the AWS API is ""
@@ -1661,6 +1688,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_nullNonOverlappingResourceTag(t
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"tags.resourcekey1", // The canonical value returned by the AWS API is ""
@@ -1719,6 +1747,7 @@ func TestAccLogsAnomalyDetector_tags_ComputedTag_OnCreate(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1816,6 +1845,7 @@ func TestAccLogsAnomalyDetector_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -1903,6 +1933,7 @@ func TestAccLogsAnomalyDetector_tags_ComputedTag_OnUpdate_Replace(t *testing.T) 
 				},
 				ResourceName:      resourceName,
 				ImportState:       true,
+				ImportStateIdFunc: testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
