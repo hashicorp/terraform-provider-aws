@@ -34,7 +34,8 @@ import (
 // @FrameworkResource("aws_cloudwatch_log_anomaly_detector", name="Anomaly Detector")
 // @Tags(identifierAttribute="arn")
 // @Testing(importStateIdFunc="testAccAnomalyDetectorImportStateIDFunc")
-// @Testing(importStateVerifyIdentifierAttribute="arn")
+// @Testing(importStateIdAttribute="arn")
+// @Testing(importIgnore="enabled")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/logs;cloudwatchlogs.GetLogAnomalyDetectorOutput")
 func newResourceAnomalyDetector(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceAnomalyDetector{}
