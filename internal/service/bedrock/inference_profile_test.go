@@ -123,10 +123,10 @@ func TestAccBedrockInferenceProfile_description(t *testing.T) {
 		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInferenceProfileConfig_description(rName, foundationModelARN, "description"),
+				Config: testAccInferenceProfileConfig_description(rName, foundationModelARN, names.AttrDescription),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, names.AttrDescription),
 				),
 			},
 			{
@@ -228,16 +228,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckInferenceProfileNotRecreated(before, after *bedrock.GetInferenceProfileOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.InferenceProfileId), aws.ToString(after.InferenceProfileId); before != after {
-			return create.Error(names.Bedrock, create.ErrActionCheckingNotRecreated, tfbedrock.ResNameInferenceProfile, before, errors.New("recreated"))
-		}
-
-		return nil
 	}
 }
 
