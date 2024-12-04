@@ -99,7 +99,7 @@ func (e *ephemeralParameter) Open(ctx context.Context, request ephemeral.OpenReq
 	}
 
 	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
-	data.Value = flex.StringValueToFramework(ctx, string(*output.Value))
+	data.WithDecryption = flex.BoolToFramework(ctx, &withDecryption)
 	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 }
 
