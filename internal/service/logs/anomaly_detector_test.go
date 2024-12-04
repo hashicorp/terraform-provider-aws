@@ -46,6 +46,14 @@ func TestAccLogsAnomalyDetector_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
 				),
 			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{names.AttrEnabled},
+			},
 		},
 	})
 }
