@@ -81,9 +81,10 @@ If you are experiencing unexpected `update in-place` plan changes after running 
 
 See an example of this type of problem and solutions below.
 
-**Example of Problematic Configuration**
+#### Example of Problematic Configuration
 
 The following Terraform configuration includes a parameter that overlaps with an AWS default parameter, using the same `name` (`default_password_lifetime`) and `value` (`0`). However:
+
 - AWS sets the default `apply_method` for this parameter to `pending-reboot`.
 - The AWS Provider defaults all parameters' `apply_method` to `immediate`.
 
@@ -102,7 +103,8 @@ resource "aws_db_parameter_group" "test" {
 }
 ```
 
-**Solution 1: Remove the Default Parameter**
+#### Solution 1: Remove the Default Parameter
+
 Exclude the default parameter, such as `default_password_lifetime` in this example, from your configuration entirely. This ensures Terraform does not attempt to modify the parameter, leaving it with AWS's default settings.
 
 ```terraform
@@ -112,7 +114,8 @@ resource "aws_db_parameter_group" "test" {
 }
 ```
 
-**Solution 2: Modify the Parameter's Value Also**
+#### Solution 2: Modify the Parameter's Value Also
+
 Change the `value` of the parameter along with its `apply_method`. Since the AWS default `value` is `0`, selecting any other valid value (_e.g._, `1`) will resolve the issue.
 
 ```terraform
@@ -128,7 +131,8 @@ resource "aws_db_parameter_group" "test" {
 }
 ```
 
-**Solution 3: Align `apply_method` with AWS Defaults**
+#### Solution 3: Align `apply_method` with AWS Defaults
+
 Explicitly set the `apply_method` to match AWS's default value for this parameter (`pending-reboot`). This prevents conflicts between Terraform's default (`immediate`) and AWS's default where the `value` is not changing.
 
 ```terraform
