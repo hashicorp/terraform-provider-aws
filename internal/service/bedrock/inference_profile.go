@@ -165,7 +165,14 @@ func (r *resourceInferenceProfile) Create(ctx context.Context, req resource.Crea
 
 	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateInferenceProfile(ctx, &input)
+	out, err := tfresource.RetryGWhen(ctx, 2*time.Minute, func() (*bedrock.CreateInferenceProfileOutput, error) {
+		return conn.CreateInferenceProfile(ctx, &input)
+	}, func(err error) (bool, error) {
+		if errs.IsA[*awstypes.ConflictException](err) {
+			return true, err
+		}
+		return false, err
+	})
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Bedrock, create.ErrActionCreating, ResNameInferenceProfile, plan.Name.String(), err),
