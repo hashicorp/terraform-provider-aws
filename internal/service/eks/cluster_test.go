@@ -289,7 +289,7 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
 
 func TestAccEKSCluster_ComputeConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 types.Cluster
+	var cluster1, cluster2, cluster3 types.Cluster
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_cluster.test"
 
@@ -315,7 +315,7 @@ func TestAccEKSCluster_ComputeConfig(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bootstrap_self_managed_addons"},
 			},
 			{
-				Config: testAccClusterConfig_computeConfig(rName, true),
+				Config: testAccClusterConfig_computeConfig(rName, true, "aws_iam_role.node.arn"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
@@ -333,15 +333,33 @@ func TestAccEKSCluster_ComputeConfig(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccClusterConfig_computeConfig(rName, false),
+				Config: testAccClusterConfig_computeConfig(rName, true, "aws_iam_role.node2.arn"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
-					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
+					testAccCheckClusterRecreated(&cluster1, &cluster2),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.0", "general-purpose"),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_config.0.node_role_arn", "aws_iam_role2.node", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.0.enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_config.0.block_storage.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				Config: testAccClusterConfig_computeConfig(rName, false, "aws_iam_role.node2.arn"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster3),
+					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.node_pools.0", "general-purpose"),
-					resource.TestCheckResourceAttrPair(resourceName, "compute_config.0.node_role_arn", "aws_iam_role.node", names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "compute_config.0.node_role_arn", "aws_iam_role2.node", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.0.enabled", acctest.CtFalse),
@@ -1412,6 +1430,35 @@ resource "aws_iam_role_policy_attachment" "node_AmazonEC2ContainerRegistryPullOn
   role       = aws_iam_role.node.name
 }
 
+resource "aws_iam_role" "node2" {
+  name = "%[1]s-node2"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": ["sts:AssumeRole"]
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "node2_AmazonEKSWorkerNodeMinimalPolicy" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKSWorkerNodeMinimalPolicy"
+  role       = aws_iam_role.node2.name
+}
+
+resource "aws_iam_role_policy_attachment" "node2_AmazonEC2ContainerRegistryPullOnly" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEC2ContainerRegistryPullOnly"
+  role       = aws_iam_role.node2.name
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -1441,7 +1488,7 @@ resource "aws_subnet" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_computeConfig(rName string, enabled bool) string {
+func testAccClusterConfig_computeConfig(rName string, enabled bool, role string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_computeConfigBase(rName), fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
@@ -1458,7 +1505,7 @@ resource "aws_eks_cluster" "test" {
   compute_config {
     enabled       = %[2]t
     node_pools    = ["general-purpose"]
-    node_role_arn = aws_iam_role.node.arn
+    node_role_arn = %[3]v
   }
 
   kubernetes_network_config {
@@ -1485,7 +1532,7 @@ resource "aws_eks_cluster" "test" {
     aws_iam_role_policy_attachment.cluster_AmazonEKSNetworkingPolicy,
   ]
 }
-`, rName, enabled))
+`, rName, enabled, role))
 }
 
 func testAccClusterConfig_version(rName, version string) string {

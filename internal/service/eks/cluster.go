@@ -59,6 +59,19 @@ func resourceCluster() *schema.Resource {
 				// You cannot disable envelope encryption after enabling it. This action is irreversible.
 				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
 			}),
+			customdiff.ForceNewIfChange("compute_config", func(_ context.Context, old, new, meta interface{}) bool {
+				// Changing from one node role ARN to another requires a replacement.
+				// Enabling or disabling does not
+				oldComputeConfig := expandComputeConfigRequest(old.([]interface{}))
+				newComputeConfig := expandComputeConfigRequest(new.([]interface{}))
+
+				if newComputeConfig != nil && newComputeConfig.Enabled != nil && aws.ToBool(newComputeConfig.Enabled) {
+					if oldComputeConfig != nil && oldComputeConfig.NodeRoleArn != nil && newComputeConfig.NodeRoleArn != nil {
+						return *oldComputeConfig.NodeRoleArn != *newComputeConfig.NodeRoleArn
+					}
+				}
+				return false
+			}),
 		),
 
 		Timeouts: &schema.ResourceTimeout{
@@ -136,7 +149,6 @@ func resourceCluster() *schema.Resource {
 						"node_role_arn": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 					},
