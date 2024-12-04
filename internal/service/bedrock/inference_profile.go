@@ -36,6 +36,8 @@ import (
 
 // @FrameworkResource("aws_bedrock_inference_profile", name="Inference Profile")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bedrock;bedrock.GetInferenceProfileOutput")
+// @Testing(importIgnore="model_source.#;model_source.0.%;model_source.0.copy_from")
 func newResourceInferenceProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceInferenceProfile{}
 
