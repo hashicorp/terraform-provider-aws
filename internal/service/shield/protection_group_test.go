@@ -148,7 +148,7 @@ func TestAccShieldProtectionGroup_members(t *testing.T) {
 					testAccCheckProtectionGroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pattern", string(awstypes.ProtectionGroupPatternArbitrary)),
 					resource.TestCheckResourceAttr(resourceName, "members.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "members.0", "ec2", regexache.MustCompile(`eip-allocation/eipalloc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "members.0", "ec2", regexache.MustCompile(`eip-allocation/eipalloc-.+`)),
 				),
 			},
 			{

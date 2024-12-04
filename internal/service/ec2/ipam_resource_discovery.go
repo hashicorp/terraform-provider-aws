@@ -86,9 +86,9 @@ func resourceIPAMResourceDiscovery() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
 			// user must define authn region within `operating_regions {}`
-			func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
+			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 				if diff.Id() == "" { // Create.
-					currentRegion := meta.(*conns.AWSClient).Region
+					currentRegion := meta.(*conns.AWSClient).Region(ctx)
 
 					for _, v := range diff.Get("operating_regions").(*schema.Set).List() {
 						if v.(map[string]interface{})["region_name"].(string) == currentRegion {

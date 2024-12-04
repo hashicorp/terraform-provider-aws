@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -64,9 +65,9 @@ func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request 
 				Required: true,
 			},
 			"guardrail_policy_arns": schema.ListAttribute{
-				Optional:    true,
-				Computed:    true,
-				ElementType: types.StringType,
+				CustomType: fwtypes.ListOfStringType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.List{
 					listplanmodifier.UseStateForUnknown(),
 				},
@@ -95,12 +96,12 @@ func (r *slackChannelConfigurationResource) Schema(ctx context.Context, request 
 			"slack_team_name": schema.StringAttribute{
 				Computed: true,
 			},
-			"sns_topic_arns": schema.ListAttribute{
-				Optional:    true,
-				Computed:    true,
-				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
+			"sns_topic_arns": schema.SetAttribute{
+				CustomType: fwtypes.SetOfStringType,
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -201,6 +202,8 @@ func (r *slackChannelConfigurationResource) Read(ctx context.Context, request re
 		return
 	}
 
+	setTagsOut(ctx, output.Tags)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -218,7 +221,13 @@ func (r *slackChannelConfigurationResource) Update(ctx context.Context, request 
 
 	conn := r.Meta().ChatbotClient(ctx)
 
-	if slackChannelConfigurationHasChanges(ctx, new, old) {
+	diff, d := fwflex.Calculate(ctx, new, old)
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
 		input := &chatbot.UpdateSlackChannelConfigurationInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
@@ -398,20 +407,20 @@ func waitSlackChannelConfigurationDeleted(ctx context.Context, conn *chatbot.Cli
 }
 
 type slackChannelConfigurationResourceModel struct {
-	ChatConfigurationARN      types.String                     `tfsdk:"chat_configuration_arn"`
-	ConfigurationName         types.String                     `tfsdk:"configuration_name"`
-	GuardrailPolicyARNs       types.List                       `tfsdk:"guardrail_policy_arns"`
-	IAMRoleARN                types.String                     `tfsdk:"iam_role_arn"`
-	LoggingLevel              fwtypes.StringEnum[loggingLevel] `tfsdk:"logging_level"`
-	SlackChannelID            types.String                     `tfsdk:"slack_channel_id"`
-	SlackChannelName          types.String                     `tfsdk:"slack_channel_name"`
-	SlackTeamID               types.String                     `tfsdk:"slack_team_id"`
-	SlackTeamName             types.String                     `tfsdk:"slack_team_name"`
-	SNSTopicARNs              types.List                       `tfsdk:"sns_topic_arns"`
-	Tags                      tftags.Map                       `tfsdk:"tags"`
-	TagsAll                   tftags.Map                       `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value                   `tfsdk:"timeouts"`
-	UserAuthorizationRequired types.Bool                       `tfsdk:"user_authorization_required"`
+	ChatConfigurationARN      types.String                      `tfsdk:"chat_configuration_arn"`
+	ConfigurationName         types.String                      `tfsdk:"configuration_name"`
+	GuardrailPolicyARNs       fwtypes.ListValueOf[types.String] `tfsdk:"guardrail_policy_arns"`
+	IAMRoleARN                types.String                      `tfsdk:"iam_role_arn"`
+	LoggingLevel              fwtypes.StringEnum[loggingLevel]  `tfsdk:"logging_level"`
+	SlackChannelID            types.String                      `tfsdk:"slack_channel_id"`
+	SlackChannelName          types.String                      `tfsdk:"slack_channel_name"`
+	SlackTeamID               types.String                      `tfsdk:"slack_team_id"`
+	SlackTeamName             types.String                      `tfsdk:"slack_team_name"`
+	SNSTopicARNs              fwtypes.SetValueOf[types.String]  `tfsdk:"sns_topic_arns"`
+	Tags                      tftags.Map                        `tfsdk:"tags"`
+	TagsAll                   tftags.Map                        `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                    `tfsdk:"timeouts"`
+	UserAuthorizationRequired types.Bool                        `tfsdk:"user_authorization_required"`
 }
 
 func (data *slackChannelConfigurationResourceModel) InitFromID() error {
@@ -433,18 +442,4 @@ func (loggingLevel) Values() []loggingLevel {
 		loggingLevelInfo,
 		loggingLevelNone,
 	}
-}
-
-func slackChannelConfigurationHasChanges(_ context.Context, plan, state slackChannelConfigurationResourceModel) bool {
-	return !plan.ChatConfigurationARN.Equal(state.ChatConfigurationARN) ||
-		!plan.ConfigurationName.Equal(state.ConfigurationName) ||
-		!plan.GuardrailPolicyARNs.Equal(state.GuardrailPolicyARNs) ||
-		!plan.IAMRoleARN.Equal(state.IAMRoleARN) ||
-		!plan.LoggingLevel.Equal(state.LoggingLevel) ||
-		!plan.SlackChannelID.Equal(state.SlackChannelID) ||
-		!plan.SlackChannelName.Equal(state.SlackChannelName) ||
-		!plan.SlackTeamID.Equal(state.SlackTeamID) ||
-		!plan.SlackTeamName.Equal(state.SlackTeamName) ||
-		!plan.SNSTopicARNs.Equal(state.SNSTopicARNs) ||
-		!plan.UserAuthorizationRequired.Equal(state.UserAuthorizationRequired)
 }

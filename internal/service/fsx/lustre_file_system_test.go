@@ -42,7 +42,7 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 				Config: testAccLustreFileSystemConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "data_compression_type", string(awstypes.DataCompressionTypeNone)),
@@ -56,7 +56,7 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "2"),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "1200"),
@@ -692,7 +692,7 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent1(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "50"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.LustreDeploymentTypePersistent1)),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 					// We don't know the randomly generated mount_name ahead of time like for SCRATCH_1 deployment types.
 					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
 				),
@@ -774,7 +774,7 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent2(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "125"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.LustreDeploymentTypePersistent2)),
 					resource.TestCheckResourceAttr(resourceName, "automatic_backup_retention_days", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrKMSKeyID, "kms", regexache.MustCompile(`key/.+`)),
 					// We don't know the randomly generated mount_name ahead of time like for SCRATCH_1 deployment types.
 					resource.TestCheckResourceAttrSet(resourceName, "mount_name"),
 				),

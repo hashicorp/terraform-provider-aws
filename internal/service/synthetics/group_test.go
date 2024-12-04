@@ -36,7 +36,7 @@ func TestAccSyntheticsGroup_basic(t *testing.T) {
 				Config: testAccGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "synthetics", regexache.MustCompile(`group:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "synthetics", regexache.MustCompile(`group:.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "group_id"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),

@@ -37,7 +37,7 @@ func testAccAnalyzer_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
 					resource.TestCheckResourceAttr(resourceName, "analyzer_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "access-analyzer", fmt.Sprintf("analyzer/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.TypeAccount)),

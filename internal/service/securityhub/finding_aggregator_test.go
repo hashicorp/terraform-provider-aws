@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -145,7 +146,7 @@ resource "aws_securityhub_finding_aggregator" "test_aggregator" {
 
   depends_on = [aws_securityhub_account.example]
 }
-`, names.EUWest1RegionID, names.EUWest2RegionID, names.USEast1RegionID)
+`, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID, endpoints.UsEast1RegionID)
 }
 
 func testAccFindingAggregatorConfig_allRegionsExceptSpecified() string {
@@ -158,5 +159,5 @@ resource "aws_securityhub_finding_aggregator" "test_aggregator" {
 
   depends_on = [aws_securityhub_account.example]
 }
-`, names.EUWest1RegionID, names.EUWest2RegionID)
+`, endpoints.EuWest1RegionID, endpoints.EuWest2RegionID)
 }

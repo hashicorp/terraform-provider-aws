@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/opsworks"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -45,7 +46,7 @@ func TestAccOpsWorksStack_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_version"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`stack/.+/`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`stack/.+/`)),
 					resource.TestCheckResourceAttr(resourceName, "berkshelf_version", "3.2.0"),
 					resource.TestCheckResourceAttr(resourceName, "color", ""),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
@@ -257,8 +258,8 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 			// This test requires a very particular AWS Region configuration
 			// in order to exercise the OpsWorks classic endpoint functionality.
 			acctest.PreCheckMultipleRegion(t, 2)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
-			acctest.PreCheckAlternateRegionIs(t, names.USWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckAlternateRegion(t, endpoints.UsWest1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
@@ -273,7 +274,7 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 							Partition: acctest.Partition(),
 							Service:   names.OpsWorks,
 							Region:    acctest.AlternateRegion(),
-							AccountID: acctest.AccountID(),
+							AccountID: acctest.AccountID(ctx),
 							Resource:  `stack/.+/`,
 						}.String()).MatchString(value) {
 							return fmt.Errorf("%s doesn't match ARN pattern", value)
@@ -283,7 +284,7 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, names.AttrRegion, acctest.AlternateRegion()),
 					// "In this case, the actual API endpoint of the stack is in us-east-1."
-					resource.TestCheckResourceAttr(resourceName, "stack_endpoint", names.USEast1RegionID),
+					resource.TestCheckResourceAttr(resourceName, "stack_endpoint", endpoints.UsEast1RegionID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
@@ -337,7 +338,7 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_version", "4039-20200430042739"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`stack/.+/`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`stack/.+/`)),
 					resource.TestCheckResourceAttr(resourceName, "berkshelf_version", "3.2.0"),
 					resource.TestCheckResourceAttr(resourceName, "color", "rgb(186, 65, 50)"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
@@ -381,7 +382,7 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_version", "4038-20200305044341"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`stack/.+/`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`stack/.+/`)),
 					resource.TestCheckResourceAttr(resourceName, "berkshelf_version", "3.2.0"),
 					resource.TestCheckResourceAttr(resourceName, "color", "rgb(186, 65, 50)"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
@@ -417,7 +418,7 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_version", "4038-20200305044341"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`stack/.+/`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`stack/.+/`)),
 					resource.TestCheckResourceAttr(resourceName, "berkshelf_version", "3.2.0"),
 					resource.TestCheckResourceAttr(resourceName, "color", "rgb(209, 105, 41)"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),

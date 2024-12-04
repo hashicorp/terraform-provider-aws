@@ -28,31 +28,49 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceACL,
 			TypeName: "aws_memorydb_acl",
 			Name:     "ACL",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  dataSourceCluster,
 			TypeName: "aws_memorydb_cluster",
 			Name:     "Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  dataSourceParameterGroup,
 			TypeName: "aws_memorydb_parameter_group",
 			Name:     "Parameter Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  dataSourceSnapshot,
 			TypeName: "aws_memorydb_snapshot",
 			Name:     "Snapshot",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_memorydb_subnet_group",
 			Name:     "Subnet Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  dataSourceUser,
 			TypeName: "aws_memorydb_user",
 			Name:     "User",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }

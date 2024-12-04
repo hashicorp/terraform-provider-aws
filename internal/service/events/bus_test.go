@@ -40,7 +40,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 				Config: testAccBusConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
@@ -73,7 +73,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v4),
 					testAccCheckBusRecreated(&v3, &v4),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busNameModified)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busNameModified)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, busNameModified),
@@ -239,7 +239,7 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 				Config: testAccBusConfig_partnerSource(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &busOutput),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
 					resource.TestCheckResourceAttr(resourceName, "event_source_name", busName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

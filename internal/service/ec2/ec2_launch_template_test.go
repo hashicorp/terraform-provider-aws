@@ -37,7 +37,7 @@ func TestAccEC2LaunchTemplate_basic(t *testing.T) {
 				Config: testAccLaunchTemplateConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchTemplateExists(ctx, resourceName, &template),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`launch-template/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`launch-template/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_reservation_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cpu_options.#", "0"),
