@@ -35,7 +35,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.41.7
 	github.com/aws/aws-sdk-go-v2/service/appsync v1.40.1
-	github.com/aws/aws-sdk-go-v2/service/athena v1.48.5
+	github.com/aws/aws-sdk-go-v2/service/athena v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.37.7
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.51.1
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.24.7
@@ -58,7 +58,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.26.6
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.46.2
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.43.2
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.45.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.49.2
@@ -88,7 +88,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.33.5
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/datasync v1.43.5
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.24.1
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.23.7
 	github.com/aws/aws-sdk-go-v2/service/detective v1.31.7
 	github.com/aws/aws-sdk-go-v2/service/devicefarm v1.28.7
@@ -125,7 +125,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.29.7
-	github.com/aws/aws-sdk-go-v2/service/glue v1.102.1
+	github.com/aws/aws-sdk-go-v2/service/glue v1.103.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.31.7
@@ -199,7 +199,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rds v1.92.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.31.4
-	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.24.4
+	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.45.8
 	github.com/aws/aws-sdk-go-v2/service/resiliencehub v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.16.2
