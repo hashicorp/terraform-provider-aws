@@ -1703,6 +1703,11 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 				return sdkdiag.AppendErrorf(diags, "setting msk_source_configuration: %s", err)
 			}
 		}
+		if v := v.DatabaseSourceDescription; v != nil {
+			if err := d.Set("database_source_configuration", []interface{}{flattenDatabaseSourceDescription(v)}); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting database_source_configuration: %s", err)
+			}
+		}
 	}
 	d.Set(names.AttrName, s.DeliveryStreamName)
 	d.Set("version_id", s.VersionId)
@@ -3754,35 +3759,115 @@ func expandDatabaseSourceVPCConfiguration(tfMap map[string]interface{}) *types.D
 	return apiObject
 }
 
-func flattenDatabaseSourceConfiguration(apiObject *types.DatabaseSourceConfiguration) []interface{} {
+type IncludeExcludeList interface {
+	GetInclude() []string
+	GetExclude() []string
+}
+
+func (d *types.DatabaseColumnList) GetInclude() []string { return d.Include }
+func (d *types.DatabaseColumnList) GetExclude() []string { return d.Exclude }
+
+func (d *types.DatabaseList) GetInclude() []string { return d.Include }
+func (d *types.DatabaseList) GetExclude() []string { return d.Exclude }
+
+func (d *types.DatabaseTableList) GetInclude() []string { return d.Include }
+func (d *types.DatabaseTableList) GetExclude() []string { return d.Exclude }
+
+func flattenIncludeExcludeList(apiObject IncludeExcludeList) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{
-		"authentication_configuration": flattenDatabaseSourceAuthenticationConfiguration(apiObject.DatabaseSourceAuthenticationConfiguration),
-		"vpc_configuration":            flattenDatabaseSourceVPCConfiguration(apiObject.DatabaseSourceVPCConfiguration),
-		"databases":                    aws.ToStringSlice(apiObject.Databases),
-		"endpoint":                     aws.ToString(apiObject.Endpoint),
-		"port":                         aws.ToInt32(apiObject.Port),
-		"snapshot_watermark_table":     aws.ToString(apiObject.SnapshotWatermarkTable),
-		"tables":                       aws.ToStringSlice(apiObject.Tables),
-		"type":                         string(apiObject.Type),
+	tfMap := map[string]interface{}{}
+
+	if include := apiObject.GetInclude(); len(include) > 0 {
+		tfMap["include"] = include
 	}
 
-	if apiObject.Columns != nil {
-		tfMap["columns"] = aws.ToStringSlice(apiObject.Columns)
+	if exclude := apiObject.GetExclude(); len(exclude) > 0 {
+		tfMap["exclude"] = exclude
 	}
 
-	if apiObject.SSLMode != "" {
-		tfMap["ssl_mode"] = string(apiObject.SSLMode)
+	return []interface{}{tfMap}
+}
+
+func flattenDatabaseSourceDescription(apiObject *types.DatabaseSourceDescription) map[string]interface{} {
+	if apiObject == nil {
+		return nil
 	}
 
-	if len(apiObject.SurrogateKeys) > 0 {
-		tfMap["surrogate_keys"] = apiObject.SurrogateKeys
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DatabaseSourceAuthenticationConfiguration; v != nil {
+		tfMap["authentication_configuration"] = flattenDatabaseSourceAuthenticationConfiguration(v)
 	}
 
-	return []interface{}{m}
+	if v := apiObject.DatabaseSourceVPCConfiguration; v != nil {
+		tfMap["vpc_configuration"] = flattenDatabaseSourceVPCConfiguration(v)
+	}
+
+	if v := apiObject.Columns; v != nil {
+		tfMap["columns"] = flattenIncludeExcludeList(v)
+	}
+
+	if v := apiObject.Databases; v != nil {
+		tfMap["databases"] = flattenIncludeExcludeList(v)
+	}
+
+	if v := apiObject.Endpoint; v != nil {
+		tfMap["endpoint"] = aws.ToString(v)
+	}
+
+	if v := apiObject.Port; v != nil {
+		tfMap["port"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.SSLMode; v != "" {
+		tfMap["ssl_mode"] = string(v)
+	}
+
+	if v := apiObject.SnapshotInfo; len(v) > 0 {
+		tfMap["snapshot_info"] = flattenDatabaseSnapshotInfo(v)
+	}
+
+	if v := apiObject.SnapshotWatermarkTable; v != nil {
+		tfMap["snapshot_watermark_table"] = aws.ToString(v)
+	}
+
+	if v := apiObject.SurrogateKeys; len(v) > 0 {
+		tfMap["surrogate_keys"] = v
+	}
+
+	if v := apiObject.Tables; v != nil {
+		tfMap["tables"] = flattenIncludeExcludeList(v)
+	}
+
+	if v := apiObject.Type; v != "" {
+		tfMap["type"] = string(v)
+	}
+
+	return tfMap
+}
+
+func flattenDatabaseSnapshotInfo(apiObjects []types.DatabaseSnapshotInfo) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"last_error_message":  aws.ToString(apiObject.LastErrorMessage),
+			"last_snapshot_end":   aws.ToTime(apiObject.LastSnapshotEnd),
+			"last_snapshot_start": aws.ToTime(apiObject.LastSnapshotStart),
+			"snapshot_status":     string(apiObject.SnapshotStatus),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func flattenDatabaseSourceAuthenticationConfiguration(apiObject *types.DatabaseSourceAuthenticationConfiguration) []interface{} {
