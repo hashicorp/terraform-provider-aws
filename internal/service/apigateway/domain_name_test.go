@@ -420,11 +420,7 @@ func testAccCheckDomainNameExists(ctx context.Context, n string, v *apigateway.G
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		domainName, domainNameId, err := tfapigateway.DomainNameID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-		output, err := tfapigateway.FindDomainByName(ctx, conn, domainName, domainNameId)
+		output, err := tfapigateway.FindDomainNameByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["domain_name_id"])
 
 		if err != nil {
 			return err
@@ -445,11 +441,7 @@ func testAccCheckDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			domainName, domainNameId, err := tfapigateway.DomainNameID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-			_, err = tfapigateway.FindDomainByName(ctx, conn, domainName, domainNameId)
+			_, err := tfapigateway.FindDomainNameByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrDomainName], rs.Primary.Attributes["domain_name_id"])
 
 			if tfresource.NotFound(err) {
 				continue

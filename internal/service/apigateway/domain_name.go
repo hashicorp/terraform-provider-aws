@@ -252,13 +252,7 @@ func resourceDomainNameCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Domain Name (%s): %s", domainName, err)
 	}
 
-	if output.DomainNameId != nil {
-		d.SetId(strings.Join([]string{aws.ToString(output.DomainName), domainNameResourceIDSeparator, aws.ToString(output.DomainNameId)}, ""))
-	} else {
-		d.SetId(aws.ToString(output.DomainName))
-	}
-
-	log.Printf("[DEBUG] API Gateway Domain Name Id is: (%s)", d.Id())
+	d.SetId(domainNameCreateResourceID(aws.ToString(output.DomainName), aws.ToString(output.DomainNameId)))
 
 	return append(diags, resourceDomainNameRead(ctx, d, meta)...)
 }
@@ -267,12 +261,12 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	domainNameStr, domainNameId, err := DomainNameID(d.Id())
+	domainName, domainNameID, err := domainNameParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	domainName, err := findDomainByName(ctx, conn, domainNameStr, domainNameId)
+	output, err := findDomainNameByTwoPartKey(ctx, conn, domainName, domainNameID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Domain Name (%s) not found, removing from state", d.Id())
@@ -285,32 +279,32 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set(names.AttrARN, domainNameARN(ctx, meta.(*conns.AWSClient), d.Id()))
-	d.Set(names.AttrCertificateARN, domainName.CertificateArn)
-	d.Set("certificate_name", domainName.CertificateName)
-	if domainName.CertificateUploadDate != nil {
-		d.Set("certificate_upload_date", domainName.CertificateUploadDate.Format(time.RFC3339))
+	d.Set(names.AttrCertificateARN, output.CertificateArn)
+	d.Set("certificate_name", output.CertificateName)
+	if output.CertificateUploadDate != nil {
+		d.Set("certificate_upload_date", output.CertificateUploadDate.Format(time.RFC3339))
 	} else {
 		d.Set("certificate_upload_date", nil)
 	}
-	d.Set("cloudfront_domain_name", domainName.DistributionDomainName)
+	d.Set("cloudfront_domain_name", output.DistributionDomainName)
 	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
-	d.Set(names.AttrDomainName, domainName.DomainName)
-	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
+	d.Set(names.AttrDomainName, output.DomainName)
+	d.Set("domain_name_id", output.DomainNameId)
+	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
-	if err = d.Set("mutual_tls_authentication", flattenMutualTLSAuthentication(domainName.MutualTlsAuthentication)); err != nil {
+	if err = d.Set("mutual_tls_authentication", flattenMutualTLSAuthentication(output.MutualTlsAuthentication)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mutual_tls_authentication: %s", err)
 	}
-	d.Set("ownership_verification_certificate_arn", domainName.OwnershipVerificationCertificateArn)
-	d.Set(names.AttrPolicy, domainName.Policy)
-	d.Set("regional_certificate_arn", domainName.RegionalCertificateArn)
-	d.Set("regional_certificate_name", domainName.RegionalCertificateName)
-	d.Set("regional_domain_name", domainName.RegionalDomainName)
-	d.Set("regional_zone_id", domainName.RegionalHostedZoneId)
-	d.Set("security_policy", domainName.SecurityPolicy)
-	d.Set("domain_name_id", domainName.DomainNameId)
+	d.Set("ownership_verification_certificate_arn", output.OwnershipVerificationCertificateArn)
+	d.Set(names.AttrPolicy, output.Policy)
+	d.Set("regional_certificate_arn", output.RegionalCertificateArn)
+	d.Set("regional_certificate_name", output.RegionalCertificateName)
+	d.Set("regional_domain_name", output.RegionalDomainName)
+	d.Set("regional_zone_id", output.RegionalHostedZoneId)
+	d.Set("security_policy", output.SecurityPolicy)
 
-	setTagsOut(ctx, domainName.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }
@@ -318,6 +312,11 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+
+	domainName, domainNameID, err := domainNameParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		var operations []types.PatchOperation
@@ -342,12 +341,12 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			// The domain name must have an endpoint type.
 			// If attempting to remove the configuration, do nothing.
 			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]interface{})) > 0 {
-				m := v.([]interface{})[0].(map[string]interface{})
+				tfMap := v.([]interface{})[0].(map[string]interface{})
 
 				operations = append(operations, types.PatchOperation{
 					Op:    types.OpReplace,
 					Path:  aws.String("/endpointConfiguration/types/0"),
-					Value: aws.String(m["types"].([]interface{})[0].(string)),
+					Value: aws.String(tfMap["types"].([]interface{})[0].(string)),
 				})
 			}
 		}
@@ -389,6 +388,14 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			})
 		}
 
+		if d.HasChange(names.AttrPolicy) {
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
+				Path:  aws.String("/policy"),
+				Value: aws.String(d.Get(names.AttrPolicy).(string)),
+			})
+		}
+
 		if d.HasChange("regional_certificate_arn") {
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
@@ -413,35 +420,21 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			})
 		}
 
-		if d.HasChange(names.AttrPolicy) {
-			operations = append(operations, types.PatchOperation{
-				Op:    types.OpReplace,
-				Path:  aws.String("/policy"),
-				Value: aws.String(d.Get(names.AttrPolicy).(string)),
-			})
-		}
-
-		domainName, domainNameId, err := DomainNameID(d.Id())
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-
 		input := &apigateway.UpdateDomainNameInput{
 			DomainName:      aws.String(domainName),
 			PatchOperations: operations,
 		}
-
-		if domainNameId != "" {
-			input.DomainNameId = aws.String(domainNameId)
+		if domainNameID != "" {
+			input.DomainNameId = aws.String(domainNameID)
 		}
 
-		output, err := conn.UpdateDomainName(ctx, input)
+		_, err := conn.UpdateDomainName(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Domain Name (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitDomainNameUpdated(ctx, conn, d.Id(), *output.DomainNameId); err != nil {
+		if _, err := waitDomainNameUpdated(ctx, conn, d.Id(), domainNameID); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for API Gateway Domain Name (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -453,9 +446,7 @@ func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	log.Printf("[DEBUG] Deleting API Gateway Domain Name: %s", d.Id())
-
-	domainName, domainNameId, err := DomainNameID(d.Id())
+	domainName, domainNameID, err := domainNameParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -463,11 +454,11 @@ func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta 
 	input := &apigateway.DeleteDomainNameInput{
 		DomainName: aws.String(domainName),
 	}
-
-	if domainNameId != "" {
-		input.DomainNameId = aws.String(domainNameId)
+	if domainNameID != "" {
+		input.DomainNameId = aws.String(domainNameID)
 	}
 
+	log.Printf("[DEBUG] Deleting API Gateway Domain Name: %s", d.Id())
 	_, err = conn.DeleteDomainName(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
@@ -481,13 +472,42 @@ func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func findDomainByName(ctx context.Context, conn *apigateway.Client, domainName, domainNameId string) (*apigateway.GetDomainNameOutput, error) {
+const domainNameResourceIDSeparator = "/"
+
+func domainNameCreateResourceID(domainName, domainNameID string) string {
+	var id string
+
+	if domainNameID == "" {
+		id = domainName
+	} else {
+		parts := []string{domainName, domainNameID}
+		id = strings.Join(parts, domainNameResourceIDSeparator)
+	}
+
+	return id
+}
+
+func domainNameParseResourceID(id string) (string, string, error) {
+	switch parts := strings.SplitN(id, domainNameResourceIDSeparator, 2); len(parts) {
+	case 1:
+		if domainName := parts[0]; domainName != "" {
+			return domainName, "", nil
+		}
+	case 2:
+		if domainName, domainNameID := parts[0], parts[1]; domainName != "" && domainNameID != "" {
+			return domainName, domainNameID, nil
+		}
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected DOMAIN-NAME or DOMAIN-NAME%[2]sDOMAIN-NAME-ID", id, domainNameResourceIDSeparator)
+}
+
+func findDomainNameByTwoPartKey(ctx context.Context, conn *apigateway.Client, domainName, domainNameID string) (*apigateway.GetDomainNameOutput, error) {
 	input := &apigateway.GetDomainNameInput{
 		DomainName: aws.String(domainName),
 	}
-
-	if domainNameId != "" {
-		input.DomainNameId = aws.String(domainNameId)
+	if domainNameID != "" {
+		input.DomainNameId = aws.String(domainNameID)
 	}
 
 	output, err := conn.GetDomainName(ctx, input)
@@ -510,13 +530,14 @@ func findDomainByName(ctx context.Context, conn *apigateway.Client, domainName, 
 	return output, nil
 }
 
-func statusDomainName(ctx context.Context, conn *apigateway.Client, domainName, domainNameId string) retry.StateRefreshFunc {
+func statusDomainName(ctx context.Context, conn *apigateway.Client, domainName, domainNameID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDomainByName(ctx, conn, domainName, domainNameId)
+		output, err := findDomainNameByTwoPartKey(ctx, conn, domainName, domainNameID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
+
 		if err != nil {
 			return nil, "", err
 		}
@@ -525,14 +546,14 @@ func statusDomainName(ctx context.Context, conn *apigateway.Client, domainName, 
 	}
 }
 
-func waitDomainNameUpdated(ctx context.Context, conn *apigateway.Client, domainName, domainNameId string) (*types.DomainName, error) {
+func waitDomainNameUpdated(ctx context.Context, conn *apigateway.Client, domainName, domainNameID string) (*types.DomainName, error) {
 	const (
 		timeout = 15 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending:    enum.Slice(types.DomainNameStatusUpdating),
 		Target:     enum.Slice(types.DomainNameStatusAvailable),
-		Refresh:    statusDomainName(ctx, conn, domainName, domainNameId),
+		Refresh:    statusDomainName(ctx, conn, domainName, domainNameID),
 		Timeout:    timeout,
 		Delay:      1 * time.Minute,
 		MinTimeout: 10 * time.Second,
@@ -589,19 +610,4 @@ func flattenMutualTLSAuthentication(apiObject *types.MutualTlsAuthentication) []
 
 func domainNameARN(ctx context.Context, c *conns.AWSClient, domainName string) string {
 	return c.RegionalARNNoAccount(ctx, "apigateway", fmt.Sprintf("/domainnames/%s", domainName))
-}
-
-const domainNameResourceIDSeparator = "/"
-
-func DomainNameID(id string) (string, string, error) {
-	if !strings.Contains(id, domainNameResourceIDSeparator) {
-		return id, "", nil
-	} else {
-		parts := strings.Split(id, domainNameResourceIDSeparator)
-		if len(parts) != 2 {
-			return "", "", fmt.Errorf("Unexpected format of ID (%[1]s), expected DOMAIN-NAME%[2]sDOMAIN-NAME-ID", id, domainNameResourceIDSeparator)
-		}
-
-		return parts[0], parts[1], nil
-	}
 }

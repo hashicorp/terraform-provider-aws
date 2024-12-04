@@ -56,6 +56,7 @@ func dataSourceDomainName() *schema.Resource {
 			},
 			"domain_name_id": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 			"endpoint_configuration": {
@@ -104,15 +105,15 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	var domainNameId string
+	var domainNameID string
 	domainName := d.Get(names.AttrDomainName).(string)
 	if v, ok := d.GetOk("domain_name_id"); ok {
-		domainNameId = v.(string)
+		domainNameID = v.(string)
 	}
-	output, err := findDomainByName(ctx, conn, domainName, domainNameId)
+	output, err := findDomainNameByTwoPartKey(ctx, conn, domainName, domainNameID)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", domainName, err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", domainNameCreateResourceID(domainName, domainNameID), err)
 	}
 
 	d.SetId(aws.ToString(output.DomainName))
@@ -125,6 +126,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("cloudfront_domain_name", output.DistributionDomainName)
 	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set(names.AttrDomainName, output.DomainName)
+	d.Set("domain_name_id", output.DomainNameId)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
