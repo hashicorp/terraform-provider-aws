@@ -19,6 +19,14 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "Capacity Block Offering",
 		},
 		{
+			Factory: newDataSourceAwsVpcIpam,
+			Name:    "AWS IPAM",
+		},
+		{
+			Factory: newDataSourceAwsVpcIpams,
+			Name:    "AWS IPAM",
+		},
+		{
 			Factory: newDataSourceSpotDataFeedSubscription,
 			Name:    "Spot Data Feed Subscription Data Source",
 		},
