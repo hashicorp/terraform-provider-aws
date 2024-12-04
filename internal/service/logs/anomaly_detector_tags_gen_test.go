@@ -70,7 +70,7 @@ func TestAccLogsAnomalyDetector_tags(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -124,7 +124,7 @@ func TestAccLogsAnomalyDetector_tags(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -172,7 +172,7 @@ func TestAccLogsAnomalyDetector_tags(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -208,7 +208,7 @@ func TestAccLogsAnomalyDetector_tags(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -272,7 +272,7 @@ func TestAccLogsAnomalyDetector_tags_null(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -325,7 +325,7 @@ func TestAccLogsAnomalyDetector_tags_EmptyMap(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -411,7 +411,7 @@ func TestAccLogsAnomalyDetector_tags_AddOnUpdate(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -475,7 +475,7 @@ func TestAccLogsAnomalyDetector_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -511,7 +511,7 @@ func TestAccLogsAnomalyDetector_tags_EmptyTag_OnCreate(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -612,7 +612,7 @@ func TestAccLogsAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -660,7 +660,7 @@ func TestAccLogsAnomalyDetector_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -755,7 +755,7 @@ func TestAccLogsAnomalyDetector_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -818,7 +818,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -870,7 +870,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -918,7 +918,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -956,7 +956,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_providerOnly(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1029,7 +1029,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1093,7 +1093,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1131,7 +1131,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1202,7 +1202,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1266,7 +1266,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1322,7 +1322,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_overlapping(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1417,7 +1417,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_updateToProviderOnly(t *testing
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1511,7 +1511,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_updateToResourceOnly(t *testing
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1582,7 +1582,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_emptyResourceTag(t *testing.T) 
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1645,7 +1645,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_emptyProviderOnlyTag(t *testing
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1716,7 +1716,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_nullOverlappingResourceTag(t *t
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1790,7 +1790,7 @@ func TestAccLogsAnomalyDetector_tags_DefaultTags_nullNonOverlappingResourceTag(t
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1851,7 +1851,7 @@ func TestAccLogsAnomalyDetector_tags_ComputedTag_OnCreate(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -1953,7 +1953,7 @@ func TestAccLogsAnomalyDetector_tags_ComputedTag_OnUpdate_Add(t *testing.T) {
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
@@ -2045,7 +2045,7 @@ func TestAccLogsAnomalyDetector_tags_ComputedTag_OnUpdate_Replace(t *testing.T) 
 				},
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    acctest.AttrImportStateIdFunc(resourceName, names.AttrARN),
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrARN,
 				ImportStateVerifyIgnore: []string{
