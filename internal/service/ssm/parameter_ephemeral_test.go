@@ -220,8 +220,8 @@ func testAccParameterEphemeralResourceConfig_basic(rName, secretString string) s
 		acctest.ConfigWithEchoProvider("ephemeral.aws_ssm_parameter.test"),
 		fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name = %[1]q
-  type = "String"
+  name  = %[1]q
+  type  = "String"
   value = %[2]q
 }
 
@@ -236,8 +236,8 @@ func testAccParameterEphemeralResourceConfig_secureString(rName, secretString st
 		acctest.ConfigWithEchoProvider("ephemeral.aws_ssm_parameter.test"),
 		fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name = %[1]q
-  type = "SecureString"
+  name  = %[1]q
+  type  = "SecureString"
   value = %[2]q
 }
 
@@ -252,13 +252,13 @@ func testAccParameterEphemeralResourceConfig_variable(rName, secretString string
 		acctest.ConfigWithEchoProvider("ephemeral.aws_ssm_parameter.test"),
 		fmt.Sprintf(`
 variable "test" {
-  type  = string  
+  type    = string
   default = %[2]q
 }
 
 resource "aws_ssm_parameter" "test" {
-  name = %[1]q
-  type = "String"
+  name  = %[1]q
+  type  = "String"
   value = var.test
 }
 
@@ -273,13 +273,13 @@ func testAccParameterEphemeralResourceConfig_secureStringVariable(rName, secretS
 		acctest.ConfigWithEchoProvider("ephemeral.aws_ssm_parameter.test"),
 		fmt.Sprintf(`
 variable "test" {
-  type  = string  
+  type    = string
   default = %[2]q
 }
 
 resource "aws_ssm_parameter" "test" {
-  name = %[1]q
-  type = "SecureString"
+  name  = %[1]q
+  type  = "SecureString"
   value = var.test
 }
 
@@ -294,8 +294,8 @@ func testAccParameterEphemeralResourceConfig_withDecryption(rName, secretString 
 		acctest.ConfigWithEchoProvider("ephemeral.aws_ssm_parameter.test"),
 		fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name = %[1]q
-  type = "String"
+  name  = %[1]q
+  type  = "String"
   value = %[2]q
 }
 
@@ -311,8 +311,8 @@ func testAccParameterEphemeralResourceConfig_withDecryptionFalse(rName, secretSt
 		acctest.ConfigWithEchoProvider("ephemeral.aws_ssm_parameter.test"),
 		fmt.Sprintf(`
 resource "aws_ssm_parameter" "test" {
-  name = %[1]q
-  type = "String"
+  name  = %[1]q
+  type  = "String"
   value = %[2]q
 }
 
