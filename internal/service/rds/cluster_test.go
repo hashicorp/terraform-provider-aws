@@ -5672,7 +5672,7 @@ resource "aws_rds_cluster" "test" {
 
   serverlessv2_scaling_configuration {
     max_capacity = 1.0
-    min_capacity = 0.5
+    min_capacity = 0.0
   }
 }
 `, rName, tfrds.ClusterEngineAuroraPostgreSQL, enableHttpEndpoint)
