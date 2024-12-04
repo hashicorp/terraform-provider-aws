@@ -5147,8 +5147,8 @@ resource "aws_rds_cluster" "test" {
   engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
 
   serverlessv2_scaling_configuration {
-    max_capacity             = %[3]f
-    min_capacity             = %[4]f
+    max_capacity = %[3]f
+    min_capacity = %[4]f
   }
 }
 `, tfrds.ClusterEngineAuroraPostgreSQL, rName, maxCapacity, minCapacity)
