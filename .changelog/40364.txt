@@ -1,15 +1,11 @@
 ```release-note:enhancement
-resource/aws_apigateway_domain_name: Add support for `policy` argument
+resource/aws_api_gateway_domain_name: Add `policy` argument and `domain_name_id` attribute
 ```
 
 ```release-note:enhancement
-resource/aws_apigateway_domain_name: Add support for value `PRIVATE` for the `endpoint_configuration.types` argument
+resource/aws_api_gateway_domain_name: Support `PRIVATE` as a valid value for `endpoint_configuration.types` argument, enabling custom domain name support for private REST API endpoints
 ```
 
 ```release-note:enhancement
-resource/aws_apigateway_domain_name: Add support for `domain_name_id` attribute
-```
-
-```release-note:enhancement
-data-source/aws_apigateway_domain_name: Add support for `policy` and `domain_name_id` attributes
+data-source/aws_api_gateway_domain_name: Add `policy` and `domain_name_id` attributes
 ```
