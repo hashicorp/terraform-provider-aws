@@ -1,7 +1,7 @@
 # Copyright (c) HashiCorp, Inc.
 # SPDX-License-Identifier: MPL-2.0
 
-resource aws_cloudwatch_log_group "test" {
+resource "aws_cloudwatch_log_group" "test" {
   count = 2
   name  = "${var.rName}-${count.index}"
 }
