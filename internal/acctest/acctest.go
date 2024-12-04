@@ -1006,17 +1006,7 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 func PreCheckRegion(t *testing.T, regions ...string) {
 	t.Helper()
 
-	curr := Region()
-	var regionOK bool
-
-	for _, region := range regions {
-		if curr == region {
-			regionOK = true
-			break
-		}
-	}
-
-	if !regionOK {
+	if curr := Region(); !slices.Contains(regions, curr) {
 		t.Skipf("skipping tests; %s (%s) not supported. Supported: [%s]", envvar.DefaultRegion, curr, strings.Join(regions, ", "))
 	}
 }
@@ -1025,21 +1015,26 @@ func PreCheckRegion(t *testing.T, regions ...string) {
 func PreCheckRegionNot(t *testing.T, regions ...string) {
 	t.Helper()
 
-	curr := Region()
-
-	for _, region := range regions {
-		if curr == region {
-			t.Skipf("skipping tests; %s (%s) not supported", envvar.DefaultRegion, curr)
-		}
+	if curr := Region(); slices.Contains(regions, curr) {
+		t.Skipf("skipping tests; %s (%s) not supported", envvar.DefaultRegion, curr)
 	}
 }
 
-// PreCheckAlternateRegionIs checks that the alternate test region is the specified AWS Region.
-func PreCheckAlternateRegionIs(t *testing.T, region string) {
+// PreCheckAlternateRegion checks that the alternate test region is one of the specified AWS Regions.
+func PreCheckAlternateRegion(t *testing.T, regions ...string) {
 	t.Helper()
 
-	if curr := AlternateRegion(); curr != region {
-		t.Skipf("skipping tests; %s (%s) does not equal %s", envvar.AlternateRegion, curr, region)
+	if curr := AlternateRegion(); !slices.Contains(regions, curr) {
+		t.Skipf("skipping tests; %s (%s) not supported. Supported: [%s]", envvar.AlternateRegion, curr, strings.Join(regions, ", "))
+	}
+}
+
+// PreCheckThirdRegion checks that the third test region is one of the specified AWS Regions.
+func PreCheckThirdRegion(t *testing.T, regions ...string) {
+	t.Helper()
+
+	if curr := ThirdRegion(); !slices.Contains(regions, curr) {
+		t.Skipf("skipping tests; %s (%s) not supported. Supported: [%s]", envvar.ThirdRegion, curr, strings.Join(regions, ", "))
 	}
 }
 
@@ -1056,10 +1051,8 @@ func PreCheckPartition(t *testing.T, partition string) {
 func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 	t.Helper()
 
-	for _, partition := range partitions {
-		if curr := Partition(); curr == partition {
-			t.Skipf("skipping tests; current partition (%s) not supported", curr)
-		}
+	if curr := Partition(); slices.Contains(partitions, curr) {
+		t.Skipf("skipping tests; current partition (%s) not supported", curr)
 	}
 }
 

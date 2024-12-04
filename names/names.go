@@ -145,10 +145,6 @@ const (
 	WAFRegionalEndpointID                  = "waf-regional"
 )
 
-const (
-	GlobalRegionID = "aws-global" // AWS Standard global region.
-)
-
 // PartitionForRegion returns the partition for the given Region.
 // Returns the empty partition if the Region is empty.
 // Returns the standard partition if no known partition includes the Region.

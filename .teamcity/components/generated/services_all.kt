@@ -201,6 +201,7 @@ val services = mapOf(
     "s3" to ServiceSpec("S3 (Simple Storage)"),
     "s3control" to ServiceSpec("S3 Control"),
     "s3outposts" to ServiceSpec("S3 on Outposts"),
+    "s3tables" to ServiceSpec("S3 Tables"),
     "sagemaker" to ServiceSpec("SageMaker", vpcLock = true),
     "scheduler" to ServiceSpec("EventBridge Scheduler"),
     "schemas" to ServiceSpec("EventBridge Schemas"),

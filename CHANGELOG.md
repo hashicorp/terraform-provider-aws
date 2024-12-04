@@ -1,4 +1,30 @@
-## 5.79.0 (Unreleased)
+## 5.81.0 (Unreleased)
+## 5.80.0 (December  4, 2024)
+
+FEATURES:
+
+* **New Resource:** `aws_codeconnections_connection` ([#40300](https://github.com/hashicorp/terraform-provider-aws/issues/40300))
+* **New Resource:** `aws_codeconnections_host` ([#40300](https://github.com/hashicorp/terraform-provider-aws/issues/40300))
+* **New Resource:** `aws_s3tables_namespace` ([#40420](https://github.com/hashicorp/terraform-provider-aws/issues/40420))
+* **New Resource:** `aws_s3tables_table` ([#40420](https://github.com/hashicorp/terraform-provider-aws/issues/40420))
+* **New Resource:** `aws_s3tables_table_bucket` ([#40420](https://github.com/hashicorp/terraform-provider-aws/issues/40420))
+* **New Resource:** `aws_s3tables_table_bucket_policy` ([#40420](https://github.com/hashicorp/terraform-provider-aws/issues/40420))
+* **New Resource:** `aws_s3tables_table_policy` ([#40420](https://github.com/hashicorp/terraform-provider-aws/issues/40420))
+
+ENHANCEMENTS:
+
+* resource/aws_bedrockagent_agent: Increase `instruction` max length for validation to 8000 ([#40279](https://github.com/hashicorp/terraform-provider-aws/issues/40279))
+* resource/aws_dynamodb_table_replica: Add `deletion_protection_enabled` argument ([#35359](https://github.com/hashicorp/terraform-provider-aws/issues/35359))
+* resource/aws_rds_cluster: Adjust `serverlessv2_scaling_configuration.max_capacity` and `serverlessv2_scaling_configuration.min_capacity` minimum values to `0` to support Amazon Aurora Serverless v2 scaling to 0 ACUs ([#40230](https://github.com/hashicorp/terraform-provider-aws/issues/40230))
+* resource/aws_s3_directory_bucket: Support `LocalZone` as a valid value for `location.type`, enabling support for [Amazon S3 Express One Zone in AWS Dedicated Local Zones](https://docs.aws.amazon.com/AmazonS3/latest/userguide/directory-bucket-data-residency.html) ([#40339](https://github.com/hashicorp/terraform-provider-aws/issues/40339))
+
+BUG FIXES:
+
+* resource/aws_bedrock_provisioned_model_throughput: Properly manages `tags_all` when planning. ([#40305](https://github.com/hashicorp/terraform-provider-aws/issues/40305))
+* resource/aws_connect_contact_flow: Fix `deserialization failed, failed to decode response body with invalid JSON` errors on Read ([#40419](https://github.com/hashicorp/terraform-provider-aws/issues/40419))
+* resource/aws_rds_cluster_instance: Fix error when destroying from a read replica cluster ([#40409](https://github.com/hashicorp/terraform-provider-aws/issues/40409))
+
+## 5.79.0 (December  3, 2024)
 
 FEATURES:
 
@@ -7,8 +33,16 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_eks_cluster: Add `compute_config`, `storage_config`, and `kubernetes_network_config.elastic_load_balancing` arguments for EKS Auto Mode ([#40370](https://github.com/hashicorp/terraform-provider-aws/issues/40370))
+* resource/aws_eks_cluster: Add `remote_network_config` argument for EKS Auto Mode ([#40371](https://github.com/hashicorp/terraform-provider-aws/issues/40371))
 * resource/aws_lambda_event_source_mapping: Add `metrics_config` argument ([#40322](https://github.com/hashicorp/terraform-provider-aws/issues/40322))
 * resource/aws_lambda_event_source_mapping: Add `provisioned_poller_config` argument ([#40303](https://github.com/hashicorp/terraform-provider-aws/issues/40303))
+* resource/aws_rds_cluster: Add ability to promote read replica cluster to standalone ([#40337](https://github.com/hashicorp/terraform-provider-aws/issues/40337))
+* resource/aws_vpc_endpoint_service: Add `supported_regions` argument ([#40346](https://github.com/hashicorp/terraform-provider-aws/issues/40346))
+
+BUG FIXES:
+
+* resource/aws_fsx_openzfs_file_system: Increase maximum value of `disk_iops_configuration.iops` from `350000` to `400000` for `deployment_type = "SINGLE_AZ_2"` ([#40359](https://github.com/hashicorp/terraform-provider-aws/issues/40359))
 
 ## 5.78.0 (November 26, 2024)
 
