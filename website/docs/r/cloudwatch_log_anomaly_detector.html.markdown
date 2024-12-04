@@ -1,12 +1,12 @@
 ---
 subcategory: "CloudWatch Logs"
 layout: "aws"
-page_title: "AWS: aws_cloudwatch_log_log_anomaly_detector"
+page_title: "AWS: aws_cloudwatch_log_anomaly_detector"
 description: |-
-  Terraform resource for managing an AWS CloudWatch Logs Log Anomaly Detector.
+  Terraform resource for managing an AWS CloudWatch Log Anomaly Detector.
 ---
 
-# Resource: aws_logs_log_anomaly_detector
+# Resource: aws_cloudwatch_log_anomaly_detector
 
 Terraform resource for managing an AWS CloudWatch Logs Log Anomaly Detector.
 
@@ -21,13 +21,7 @@ resource aws_cloudwatch_log_group "test" {
   name = "testing-${count.index}"
 }
 
-data aws_cloudwatch_log_groups "test" {
-  log_group_name_prefix = "testing"
-
-  depends_on = [aws_cloudwatch_log_group.test[0], aws_cloudwatch_log_group.test[1]]
-}
-
-resource "aws_cloudwatch_log_log_anomaly_detector" "test" {
+resource "aws_cloudwatch_log_anomaly_detector" "test" {
   detector_name           = "testing"
   log_group_arn_list      = [aws_cloudwatch_log_group.test[0].arn]
   anomaly_visibility_time = 7
