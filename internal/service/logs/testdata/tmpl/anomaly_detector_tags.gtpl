@@ -1,4 +1,4 @@
-resource aws_cloudwatch_log_group "test" {
+resource "aws_cloudwatch_log_group" "test" {
   count = 2
   name  = "${var.rName}-${count.index}"
 }

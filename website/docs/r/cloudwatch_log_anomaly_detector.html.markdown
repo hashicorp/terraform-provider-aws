@@ -15,7 +15,7 @@ Terraform resource for managing an AWS CloudWatch Logs Log Anomaly Detector.
 ### Basic Usage
 
 ```terraform
-resource aws_cloudwatch_log_group "test" {
+resource "aws_cloudwatch_log_group" "test" {
   count = 2
   name  = "testing-${count.index}"
 }
