@@ -6,13 +6,13 @@ package ssm
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/service/ssm"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral"
 	"github.com/hashicorp/terraform-plugin-framework/ephemeral/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -80,16 +80,7 @@ func (e *ephemeralParameter) Open(ctx context.Context, request ephemeral.OpenReq
 		data.WithDecryption = types.BoolValue(true)
 	}
 
-	// Ephemeral resources expect all dependencies to exist beforehand.
-	// Therefore, the ARN must be set, as opening an ephemeral resource is deferred
-	// if it references an instance marked as unknown.
-	// This can happen if the referenced SSM parameter is created in the same plan.
-	input := ssm.GetParameterInput{
-		Name:           data.ARN.ValueStringPointer(),
-		WithDecryption: data.WithDecryption.ValueBoolPointer(),
-	}
-
-	output, err := findParameterByName(ctx, conn, data.ARN.ValueString(), withDecryption)
+	output, err := findParameterByName(ctx, conn, data.ARN.ValueString(), data.WithDecryption.ValueBool())
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.SSM, create.ErrActionReading, ERNameParameter, data.ARN.String(), err),
@@ -98,8 +89,11 @@ func (e *ephemeralParameter) Open(ctx context.Context, request ephemeral.OpenReq
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output, &data)...)
-	data.WithDecryption = flex.BoolToFramework(ctx, &withDecryption)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.Result.Set(ctx, &data)...)
 }
 
