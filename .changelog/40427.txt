@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_rds_cluster: Fix `expected serverlessv2_scaling_configuration.0.min_capacity to be in the range (0.500000 - 256.000000), got 0.000000` errors when min_capacity is set to zero. With the release of aurora serverless v2, you can now pause the cluster after a time period of X so long as ACU is set to 0 where previously only 0.5 was the absolute minimum.
+```
