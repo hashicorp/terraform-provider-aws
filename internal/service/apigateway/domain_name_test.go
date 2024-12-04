@@ -47,7 +47,6 @@ func TestAccAPIGatewayDomainName_certificateARN(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "cloudfront_domain_name", regexache.MustCompile(`[0-9a-z]+.cloudfront.net`)),
 					resource.TestCheckResourceAttr(resourceName, "cloudfront_zone_id", acctest.Provider.Meta().(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, acmCertificateResourceName, names.AttrDomainName),
-					resource.TestCheckResourceAttr(resourceName, "domain_name_id", ""),
 				),
 			},
 			{
@@ -143,6 +142,7 @@ func TestAccAPIGatewayDomainName_regionalCertificateARN(t *testing.T) {
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
 					testAccCheckResourceAttrRegionalARNRegionalDomainName(resourceName, names.AttrARN, "apigateway", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					resource.TestCheckResourceAttr(resourceName, "domain_name_id", ""),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, "regional_domain_name", "execute-api", regexache.MustCompile(`d-[0-9a-z]+`)),
 					resource.TestMatchResourceAttr(resourceName, "regional_zone_id", regexache.MustCompile(`^Z`)),
 				),
