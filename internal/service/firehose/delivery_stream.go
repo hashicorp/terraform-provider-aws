@@ -385,6 +385,7 @@ func resourceDeliveryStream() *schema.Resource {
 				"database_source_configuration": {
 					Type:     schema.TypeList,
 					Optional: true,
+					ForceNew: true,
 					MaxItems: 1,
 					ConflictsWith: []string{
 						"kinesis_source_configuration",
