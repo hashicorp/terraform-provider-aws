@@ -89,7 +89,7 @@ func (e *ephemeralParameter) Open(ctx context.Context, request ephemeral.OpenReq
 		WithDecryption: data.WithDecryption.ValueBoolPointer(),
 	}
 
-	output, err := findParameterByName(ctx, conn, *input.Name, *input.WithDecryption)
+	output, err := findParameterByName(ctx, conn, data.ARN.ValueString(), withDecryption)
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.SSM, create.ErrActionReading, ERNameParameter, data.ARN.String(), err),
