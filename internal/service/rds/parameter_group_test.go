@@ -1934,7 +1934,7 @@ resource "aws_db_parameter_group" "test" {
   family = %[2]q
 
   parameter {
-	apply_method = %[3]q
+    apply_method = %[3]q
     name         = %[4]q
     value        = %[5]s
   }
