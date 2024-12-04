@@ -257,6 +257,22 @@ func resourceDeliveryStream() *schema.Resource {
 					},
 				}
 			}
+			includeExcludeElem := func() *schema.Resource {
+				return &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"include": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"exclude": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+					},
+				}
+			}
 			s3ConfigurationElem := func() *schema.Resource {
 				return &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -422,7 +438,8 @@ func resourceDeliveryStream() *schema.Resource {
 							"databases": {
 								Type:     schema.TypeList,
 								Required: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
+								MaxItems: 1,
+								Elem:     includeExcludeElem(),
 							},
 							"endpoint": {
 								Type:     schema.TypeString,
@@ -439,7 +456,7 @@ func resourceDeliveryStream() *schema.Resource {
 							"tables": {
 								Type:     schema.TypeList,
 								Required: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
+								Elem:     includeExcludeElem(),
 							},
 							"type": {
 								Type:     schema.TypeString,
@@ -452,7 +469,7 @@ func resourceDeliveryStream() *schema.Resource {
 							"columns": {
 								Type:     schema.TypeList,
 								Optional: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
+								Elem:     includeExcludeElem(),
 							},
 							"ssl_mode": {
 								Type:     schema.TypeString,
@@ -3633,6 +3650,15 @@ func expandAuthenticationConfiguration(tfMap map[string]interface{}) *types.Auth
 	return apiObject
 }
 
+func expandIncludeExcludeList(tfMap map[string]interface{}, target IncludeExcludeList) {
+	if include, ok := tfMap["include"].(*schema.Set); ok && include.Len() > 0 {
+		target.SetInclude(flex.ExpandStringSet(include))
+	}
+	if exclude, ok := tfMap["exclude"].(*schema.Set); ok && exclude.Len() > 0 {
+		target.SetExclude(flex.ExpandStringSet(exclude))
+	}
+}
+
 func expandDatabaseSourceConfiguration(tfMap map[string]interface{}) *types.DatabaseSourceConfiguration {
 	if tfMap == nil {
 		return nil
@@ -3640,75 +3666,52 @@ func expandDatabaseSourceConfiguration(tfMap map[string]interface{}) *types.Data
 
 	apiObject := &types.DatabaseSourceConfiguration{}
 
-	// Handle required authentication configuration
 	if v, ok := tfMap["authentication_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.DatabaseSourceAuthenticationConfiguration = expandDatabaseSourceAuthenticationConfiguration(v[0].(map[string]interface{}))
 	}
 
-	// Handle required VPC configuration
 	if v, ok := tfMap["vpc_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.DatabaseSourceVPCConfiguration = expandDatabaseSourceVPCConfiguration(v[0].(map[string]interface{}))
 	}
 
-	// Handle required databases list
-	if v, ok := tfMap["databases"].([]interface{}); ok && len(v) > 0 {
-		databases := make([]string, 0, len(v))
-		for _, d := range v {
-			if d != nil {
-				databases = append(databases, d.(string))
-			}
-		}
-		apiObject.Databases = &databases
+	if v, ok := tfMap["databases"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		databases := &types.DatabaseList{}
+		expandIncludeExcludeList(v[0].(map[string]interface{}), databases)
+		apiObject.Databases = databases
 	}
 
-	// Handle required endpoint
 	if v, ok := tfMap["endpoint"].(string); ok && v != "" {
 		apiObject.Endpoint = aws.String(v)
 	}
 
-	// Handle required port
 	if v, ok := tfMap["port"].(int); ok {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	// Handle required snapshot watermark table
 	if v, ok := tfMap["snapshot_watermark_table"].(string); ok && v != "" {
 		apiObject.SnapshotWatermarkTable = aws.String(v)
 	}
 
-	// Handle required tables list
-	if v, ok := tfMap["tables"].([]interface{}); ok && len(v) > 0 {
-		tables := make([]string, 0, len(v))
-		for _, t := range v {
-			if t != nil {
-				tables = append(tables, t.(string))
-			}
-		}
-		apiObject.Tables = &tables
+	if v, ok := tfMap["tables"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tables := &types.DatabaseTableList{}
+		expandIncludeExcludeList(v[0].(map[string]interface{}), tables)
+		apiObject.Tables = tables
 	}
 
-	// Handle required type
 	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = types.DatabaseType(v)
 	}
 
-	// Handle optional columns
-	if v, ok := tfMap["columns"].([]interface{}); ok && len(v) > 0 {
-		columns := make([]string, 0, len(v))
-		for _, c := range v {
-			if c != nil {
-				columns = append(columns, c.(string))
-			}
-		}
-		apiObject.Columns = &columns
+	if v, ok := tfMap["columns"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		columns := &types.DatabaseColumnList{}
+		expandIncludeExcludeList(v[0].(map[string]interface{}), columns)
+		apiObject.Columns = columns
 	}
 
-	// Handle optional SSL mode
 	if v, ok := tfMap["ssl_mode"].(string); ok && v != "" {
 		apiObject.SSLMode = types.SSLMode(v)
 	}
 
-	// Handle optional surrogate keys
 	if v, ok := tfMap["surrogate_keys"].([]interface{}); ok && len(v) > 0 {
 		surrogateKeys := make([]string, 0, len(v))
 		for _, k := range v {
@@ -3761,17 +3764,25 @@ func expandDatabaseSourceVPCConfiguration(tfMap map[string]interface{}) *types.D
 
 type IncludeExcludeList interface {
 	GetInclude() []string
+	SetInclude([]string)
 	GetExclude() []string
+	SetExclude([]string)
 }
 
-func (d *types.DatabaseColumnList) GetInclude() []string { return d.Include }
-func (d *types.DatabaseColumnList) GetExclude() []string { return d.Exclude }
+func (d *types.DatabaseColumnList) GetInclude() []string  { return d.Include }
+func (d *types.DatabaseColumnList) SetInclude(s []string) { d.Include = s }
+func (d *types.DatabaseColumnList) GetExclude() []string  { return d.Exclude }
+func (d *types.DatabaseColumnList) SetExclude(s []string) { d.Exclude = s }
 
-func (d *types.DatabaseList) GetInclude() []string { return d.Include }
-func (d *types.DatabaseList) GetExclude() []string { return d.Exclude }
+func (d *types.DatabaseList) GetInclude() []string  { return d.Include }
+func (d *types.DatabaseList) SetInclude(s []string) { d.Include = s }
+func (d *types.DatabaseList) GetExclude() []string  { return d.Exclude }
+func (d *types.DatabaseList) SetExclude(s []string) { d.Exclude = s }
 
-func (d *types.DatabaseTableList) GetInclude() []string { return d.Include }
-func (d *types.DatabaseTableList) GetExclude() []string { return d.Exclude }
+func (d *types.DatabaseTableList) GetInclude() []string  { return d.Include }
+func (d *types.DatabaseTableList) SetInclude(s []string) { d.Include = s }
+func (d *types.DatabaseTableList) GetExclude() []string  { return d.Exclude }
+func (d *types.DatabaseTableList) SetExclude(s []string) { d.Exclude = s }
 
 func flattenIncludeExcludeList(apiObject IncludeExcludeList) []interface{} {
 	if apiObject == nil {
