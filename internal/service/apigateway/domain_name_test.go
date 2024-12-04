@@ -411,6 +411,44 @@ func TestAccAPIGatewayDomainName_MutualTLSAuthentication_ownership(t *testing.T)
 	})
 }
 
+func TestAccAPIGatewayDomainName_updateIDFormat(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domainName apigateway.GetDomainNameOutput
+	resourceName := "aws_api_gateway_domain_name.test"
+	rName := acctest.RandomSubdomain()
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, rName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		CheckDestroy: testAccCheckDomainNameDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.80.0",
+					},
+				},
+				Config: testAccDomainNameConfig_regionalCertificateARN(rName, key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
+					testAccCheckResourceAttrRegionalARNRegionalDomainName(resourceName, names.AttrARN, "apigateway", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, rName),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, "regional_domain_name", "execute-api", regexache.MustCompile(`d-[0-9a-z]+`)),
+					resource.TestMatchResourceAttr(resourceName, "regional_zone_id", regexache.MustCompile(`^Z`)),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccDomainNameConfig_regionalCertificateARN(rName, key, certificate),
+				PlanOnly:                 true,
+			},
+		},
+	})
+}
+
 func testAccCheckDomainNameExists(ctx context.Context, n string, v *apigateway.GetDomainNameOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
