@@ -542,7 +542,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("customer_owned_ipv4_pool", lb.CustomerOwnedIpv4Pool)
 	d.Set(names.AttrDNSName, lb.DNSName)
 	d.Set("enforce_security_group_inbound_rules_on_private_link_traffic", lb.EnforceSecurityGroupInboundRulesOnPrivateLinkTraffic)
-	d.Set("enable_prefix_ipv6_source_nat", lb.EnablePrefixForIpv6SourceNat)
+	d.Set("enable_prefix_ipv6_source_nat", lb.EnablePrefixForIpv6SourceNat == awstypes.EnablePrefixForIpv6SourceNatEnumOn)
 	d.Set("internal", lb.Scheme == awstypes.LoadBalancerSchemeEnumInternal)
 	d.Set(names.AttrIPAddressType, lb.IpAddressType)
 	d.Set("load_balancer_type", lb.Type)
