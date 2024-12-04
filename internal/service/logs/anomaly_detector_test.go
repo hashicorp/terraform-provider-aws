@@ -150,12 +150,6 @@ resource aws_cloudwatch_log_group "test" {
   name = "%[1]s-${count.index}"
 }
 
-data aws_cloudwatch_log_groups "test" {
-  log_group_name_prefix = %[1]q
-
-  depends_on = [aws_cloudwatch_log_group.test[0], aws_cloudwatch_log_group.test[1]]
-}
-
 resource "aws_cloudwatch_log_anomaly_detector" "test" {
   detector_name           = %[1]q
   log_group_arn_list      = [aws_cloudwatch_log_group.test[0].arn]
