@@ -26,8 +26,7 @@ import (
 
 // Regions are hard coded due to limited availability of Bedrock service
 const (
-	foundationModelARN  = "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0"                                               // lintignore:AWSAT003,AWSAT005
-	inferenceProfileARN = "arn:aws:bedrock:us-west-2:${data.aws_caller_identity.current.account_id}:inference-profile/us.anthropic.claude-3-5-haiku-20241022-v1:0" // lintignore:AWSAT003,AWSAT005
+	foundationModelARN = "arn:aws:bedrock:eu-central-1::foundation-model/anthropic.claude-3-5-sonnet-20240620-v1:0" // lintignore:AWSAT003,AWSAT005
 )
 
 func TestAccBedrockInferenceProfile_basic(t *testing.T) {
@@ -48,15 +47,19 @@ func TestAccBedrockInferenceProfile_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN, "t1", "v1"),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test description"),
-					resource.TestCheckResourceAttrSet(resourceName, "updated_at"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`application-inference-profile/[a-z0-9]+$`)),
+					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "models.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "models.0.model_arn", foundationModelARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "bedrock", regexache.MustCompile(`application-inference-profile/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(types.InferenceProfileStatusActive)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, string(types.InferenceProfileTypeApplication)),
+					acctest.CheckResourceAttrRFC3339(resourceName, "updated_at"),
 				),
 			},
 			{
@@ -126,7 +129,7 @@ func TestAccBedrockInferenceProfile_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckInferenceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInferenceProfileConfig_basic(rName, inferenceProfileARN, "t1", "v1"),
+				Config: testAccInferenceProfileConfig_basic(rName, foundationModelARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInferenceProfileExists(ctx, resourceName, &inferenceprofile),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceInferenceProfile, resourceName),
@@ -218,22 +221,14 @@ func testAccCheckInferenceProfileNotRecreated(before, after *bedrock.GetInferenc
 	}
 }
 
-func testAccInferenceProfileConfig_basic(rName, source, tagKey, tagVal string) string {
+func testAccInferenceProfileConfig_basic(rName, source string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
 resource "aws_bedrock_inference_profile" "test" {
-  name        = %[1]q
-  description = "Test description"
+  name = %[1]q
 
   model_source {
     copy_from = %[2]q
   }
-
-  tags = {
-    Name  = "test"
-    %[3]q = %[4]q
-  }
 }
-`, rName, source, tagKey, tagVal)
+`, rName, source)
 }

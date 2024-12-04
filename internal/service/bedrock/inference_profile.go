@@ -34,7 +34,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource("aws_bedrock_inference_profile", name="Inference Profile")
 // @Tags(identifierAttribute="arn")
 func newResourceInferenceProfile(_ context.Context) (resource.ResourceWithConfigure, error) {
