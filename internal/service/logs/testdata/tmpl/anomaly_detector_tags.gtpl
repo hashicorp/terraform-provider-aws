@@ -1,6 +1,6 @@
 resource aws_cloudwatch_log_group "test" {
   count = 2
-  name = "${var.rName}-${count.index}"
+  name  = "${var.rName}-${count.index}"
 }
 
 resource "aws_cloudwatch_log_anomaly_detector" "test" {
