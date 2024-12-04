@@ -25,6 +25,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:     "Spot Data Feed Subscription Data Source",
 		},
 		{
+			Factory:  newDataSourceAwsVpcIpam,
+			TypeName: "aws_vpc_ipam",
+			Name:     "AWS IPAM",
+		},
+		{
+			Factory:  newDataSourceAwsVpcIpams,
+			TypeName: "aws_vpc_ipams",
+			Name:     "AWS IPAM",
+		},
+		{
 			Factory:  newSecurityGroupRuleDataSource,
 			TypeName: "aws_vpc_security_group_rule",
 			Name:     "Security Group Rule",
