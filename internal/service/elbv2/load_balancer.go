@@ -659,7 +659,6 @@ func resourceLoadBalancerUpdate(ctx context.Context, d *schema.ResourceData, met
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Load Balancer (%s) subnets: %s", d.Id(), err)
 		}
-
 	}
 
 	if d.HasChanges("subnet_mapping", names.AttrSubnets) {

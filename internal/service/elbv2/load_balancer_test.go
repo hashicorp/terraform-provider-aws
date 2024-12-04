@@ -421,7 +421,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 	})
 }
 
-func TestAccELBV2LoadBalancer_enablePrefixIpv6SourceNat(t *testing.T) {
+func TestAccELBV2LoadBalancer_enablePrefixipv6SourceNat(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pre, post awstypes.LoadBalancer
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -434,17 +434,17 @@ func TestAccELBV2LoadBalancer_enablePrefixIpv6SourceNat(t *testing.T) {
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLoadBalancerConfig_enablePrefixIpv6SourceNat(rName, false),
+				Config: testAccLoadBalancerConfig_enablePrefixipv6SourceNat(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &pre),
-					resource.TestCheckResourceAttr(resourceName, "enable_prefix_ipv6_source_nat", "off"),
+					resource.TestCheckResourceAttr(resourceName, "enable_prefix_ipv6_source_nat", acctest.CtFalse),
 				),
 			},
 			{
-				Config: testAccLoadBalancerConfig_enablePrefixIpv6SourceNat(rName, true),
+				Config: testAccLoadBalancerConfig_enablePrefixipv6SourceNat(rName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLoadBalancerExists(ctx, resourceName, &post),
-					resource.TestCheckResourceAttr(resourceName, "enable_prefix_ipv6_source_nat", "on"),
+					resource.TestCheckResourceAttr(resourceName, "enable_prefix_ipv6_source_nat", acctest.CtTrue),
 				),
 			},
 		},
@@ -2356,15 +2356,15 @@ resource "aws_lb" "test2" {
 `, rName))
 }
 
-func testAccLoadBalancerConfig_enablePrefixIpv6SourceNat(rName string, enablePrefixIpv6SourceNat bool) string {
+func testAccLoadBalancerConfig_enablePrefixipv6SourceNat(rName string, enablePrefixIpv6SourceNat bool) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnetsIPv6(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   security_groups = [aws_security_group.test.id]
   subnets         = aws_subnet.test[*].id
 
-  ip_address_type = "dualstack"
-  load_balancer_type = "network"
+  ip_address_type               = "dualstack"
+  load_balancer_type            = "network"
   enable_prefix_ipv6_source_nat = %[2]t
 
   idle_timeout               = 30
