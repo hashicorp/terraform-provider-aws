@@ -87,7 +87,7 @@ func (r *resourceAnomalyDetector) Schema(ctx context.Context, req resource.Schem
 			"filter_pattern": schema.StringAttribute{
 				Optional: true,
 			},
-			"enabled": schema.BoolAttribute{
+			names.AttrEnabled: schema.BoolAttribute{
 				Required: true,
 			},
 			names.AttrKMSKeyID: schema.StringAttribute{
@@ -237,7 +237,7 @@ func (r *resourceAnomalyDetector) Delete(ctx context.Context, req resource.Delet
 	}
 
 	in := &cloudwatchlogs.DeleteLogAnomalyDetectorInput{
-		AnomalyDetectorArn: aws.String(state.ARN.ValueString()),
+		AnomalyDetectorArn: state.ARN.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteLogAnomalyDetector(ctx, in)
