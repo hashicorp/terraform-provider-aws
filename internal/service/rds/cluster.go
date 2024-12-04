@@ -554,6 +554,12 @@ func resourceCluster() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.FloatBetween(0, 256),
 						},
+						"seconds_until_auto_pause": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntBetween(300, 86400),
+						},
 					},
 				},
 			},
@@ -2144,6 +2150,10 @@ func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *types
 		apiObject.MinCapacity = aws.Float64(v)
 	}
 
+	if v, ok := tfMap["seconds_until_auto_pause"].(int); ok {
+		apiObject.SecondsUntilAutoPause = aws.Int32(int32(v))
+	}
+
 	return apiObject
 }
 
@@ -2160,6 +2170,10 @@ func flattenServerlessV2ScalingConfigurationInfo(apiObject *types.ServerlessV2Sc
 
 	if v := apiObject.MinCapacity; v != nil {
 		tfMap["min_capacity"] = aws.ToFloat64(v)
+	}
+
+	if v := apiObject.SecondsUntilAutoPause; v != nil {
+		tfMap["seconds_until_auto_pause"] = aws.ToInt32(v)
 	}
 
 	return tfMap
