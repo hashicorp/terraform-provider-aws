@@ -194,8 +194,8 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.CUR,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "definition/" + reportName,
 	}.String()
 	d.Set(names.AttrARN, arn)

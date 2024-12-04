@@ -4,6 +4,7 @@
 package acctest
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
@@ -23,7 +24,7 @@ func (v globalARNCheck) CheckValue(other any) error {
 		return fmt.Errorf("expected string value for GlobalARN check, got: %T", other)
 	}
 
-	arnValue := globalARNValue(v.arnService, v.arnResource)
+	arnValue := globalARNValue(context.Background(), v.arnService, v.arnResource)
 
 	if otherVal != arnValue {
 		return fmt.Errorf("expected value %s for GlobalARN check, got: %s", arnValue, otherVal)
@@ -34,7 +35,7 @@ func (v globalARNCheck) CheckValue(other any) error {
 
 // String returns the string representation of the value.
 func (v globalARNCheck) String() string {
-	return globalARNValue(v.arnService, v.arnResource)
+	return globalARNValue(context.Background(), v.arnService, v.arnResource)
 }
 
 func GlobalARN(arnService, arnResource string) globalARNCheck {

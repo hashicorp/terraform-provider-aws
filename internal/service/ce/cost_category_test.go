@@ -41,7 +41,7 @@ func TestAccCECostCategory_basic(t *testing.T) {
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, "effective_start"),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ce", regexache.MustCompile(`costcategory/.+$`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ce", regexache.MustCompile(`costcategory/.+$`)),
 				),
 			},
 			{

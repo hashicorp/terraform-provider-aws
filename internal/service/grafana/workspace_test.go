@@ -39,7 +39,7 @@ func testAccWorkspace_saml(t *testing.T) {
 				Config: testAccWorkspaceConfig_authenticationProvider(rName, "SAML"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "grafana", regexache.MustCompile(`/workspaces/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "grafana", regexache.MustCompile(`/workspaces/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", string(awstypes.AccountAccessTypeCurrentAccount)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", string(awstypes.AuthenticationProviderTypesSaml)),
@@ -136,7 +136,7 @@ func testAccWorkspace_sso(t *testing.T) {
 				Config: testAccWorkspaceConfig_authenticationProvider(rName, "AWS_SSO"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "grafana", regexache.MustCompile(`/workspaces/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "grafana", regexache.MustCompile(`/workspaces/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", string(awstypes.AccountAccessTypeCurrentAccount)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", string(awstypes.AuthenticationProviderTypesAwsSso)),
@@ -288,7 +288,7 @@ func testAccWorkspace_dataSources(t *testing.T) {
 				Config: testAccWorkspaceConfig_dataSources(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWorkspaceExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "grafana", regexache.MustCompile(`/workspaces/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "grafana", regexache.MustCompile(`/workspaces/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "account_access_type", string(awstypes.AccountAccessTypeCurrentAccount)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_providers.0", string(awstypes.AuthenticationProviderTypesSaml)),

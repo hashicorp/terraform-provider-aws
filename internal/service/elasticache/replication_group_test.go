@@ -52,7 +52,7 @@ func TestAccElastiCacheReplicationGroup_Redis_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "redis"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticache", fmt.Sprintf("replicationgroup:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticache", fmt.Sprintf("replicationgroup:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtFalse),
@@ -133,7 +133,7 @@ func TestAccElastiCacheReplicationGroup_Valkey_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticache", fmt.Sprintf("replicationgroup:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticache", fmt.Sprintf("replicationgroup:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "num_cache_clusters", "1"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", acctest.CtFalse),

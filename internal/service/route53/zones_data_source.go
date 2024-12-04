@@ -67,7 +67,7 @@ func (d *zonesDataSource) Read(ctx context.Context, request datasource.ReadReque
 		}
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 	data.ZoneIDs = fwflex.FlattenFrameworkStringValueList(ctx, zoneIDs)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

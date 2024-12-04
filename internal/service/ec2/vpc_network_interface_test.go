@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -42,7 +43,7 @@ func TestAccVPCNetworkInterface_basic(t *testing.T) {
 				Config: testAccVPCNetworkInterfaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-interface/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-interface/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "interface_type", "interface"),
@@ -50,7 +51,7 @@ func TestAccVPCNetworkInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					checkResourceAttrPrivateDNSName(resourceName, "private_dns_name", &conf.PrivateIpAddress),
 					resource.TestCheckResourceAttrSet(resourceName, "private_ip"),
 					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "1"),
@@ -977,7 +978,7 @@ func convertIPToDashIP(ip string) string {
 }
 
 func regionalPrivateDNSSuffix(region string) string {
-	if region == names.USEast1RegionID {
+	if region == endpoints.UsEast1RegionID {
 		return "ec2.internal"
 	}
 

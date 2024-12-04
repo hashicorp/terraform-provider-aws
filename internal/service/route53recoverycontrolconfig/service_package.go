@@ -25,13 +25,13 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 			switch config["partition"].(string) {
 			case endpoints.AwsPartitionID:
 				// https://docs.aws.amazon.com/general/latest/gr/r53arc.html Setting default to us-west-2.
-				if cfg.Region != names.USWest2RegionID {
+				if cfg.Region != endpoints.UsWest2RegionID {
 					tflog.Info(ctx, "overriding region", map[string]any{
 						"original_region": cfg.Region,
-						"override_region": names.USWest2RegionID,
+						"override_region": endpoints.UsWest2RegionID,
 					})
 				}
-				o.Region = names.USWest2RegionID
+				o.Region = endpoints.UsWest2RegionID
 			}
 		},
 	), nil
