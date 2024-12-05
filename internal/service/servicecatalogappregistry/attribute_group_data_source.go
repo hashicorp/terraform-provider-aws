@@ -7,20 +7,19 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource("aws_servicecatalogappregistry_attribute_group", name="Attribute Group")
 // @Tags(identifierAttribute="arn")
 func newDataSourceAttributeGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
@@ -42,20 +41,21 @@ func (d *dataSourceAttributeGroup) Metadata(_ context.Context, req datasource.Me
 func (d *dataSourceAttributeGroup) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrAttributes: schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 				Computed:   true,
+			},
+			names.AttrAttributes: schema.StringAttribute{
 				CustomType: jsontypes.NormalizedType{},
+				Computed:   true,
 			},
 			names.AttrDescription: schema.StringAttribute{
-				Optional: true,
+				Computed: true,
 			},
 			names.AttrID: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				Validators: []validator.String{
-					stringvalidator.AtLeastOneOf(path.MatchRoot(names.AttrName), path.MatchRoot(names.AttrARN)),
-				},
 			},
 			names.AttrName: schema.StringAttribute{
 				Optional: true,
@@ -63,6 +63,16 @@ func (d *dataSourceAttributeGroup) Schema(ctx context.Context, req datasource.Sc
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 		},
+	}
+}
+
+func (d *dataSourceAttributeGroup) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.ExactlyOneOf(
+			path.MatchRoot(names.AttrARN),
+			path.MatchRoot(names.AttrID),
+			path.MatchRoot(names.AttrName),
+		),
 	}
 }
 
@@ -107,7 +117,7 @@ func (d *dataSourceAttributeGroup) Read(ctx context.Context, req datasource.Read
 }
 
 type dataSourceAttributeGroupData struct {
-	ARN         types.String         `tfsdk:"arn"`
+	ARN         fwtypes.ARN          `tfsdk:"arn"`
 	Attributes  jsontypes.Normalized `tfsdk:"attributes"`
 	Description types.String         `tfsdk:"description"`
 	ID          types.String         `tfsdk:"id"`

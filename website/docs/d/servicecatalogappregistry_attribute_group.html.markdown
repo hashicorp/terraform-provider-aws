@@ -22,13 +22,13 @@ data "aws_servicecatalogappregistry_attribute_group" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
-
 The following arguments are optional:
 
+~> Exactly one of `arn`, `id`, or `name` must be set.
+
+* `arn` - (Optional) ARN of the Attribute Group to find.
 * `id`   - (Optional) ID of the Attribute Group to find.
 * `name` - (Optional) Name of the Attribute Group to find.
-* `arn` - (Optional) ARN of the Attribute Group to find.
 
 ## Attribute Reference
 
