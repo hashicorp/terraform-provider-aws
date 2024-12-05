@@ -1650,6 +1650,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil && !errs.IsA[*types.GlobalClusterNotFoundFault](err) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
 			return sdkdiag.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
 		}
+
+		// Removal from a global cluster puts the cluster into 'promoting' state. Wait for it to become available again.
+		if _, err := waitDBClusterAvailable(ctx, conn, d.Id(), true, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) available: %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("iam_roles") {
@@ -1672,14 +1677,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	// Automatically remove from global cluster to bypass this error on deletion:
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
-	if d.Get("global_cluster_identifier").(string) != "" {
+	if globalClusterID := d.Get("global_cluster_identifier").(string); globalClusterID != "" {
 		clusterARN := d.Get(names.AttrARN).(string)
-		globalClusterID := d.Get("global_cluster_identifier").(string)
 		input := &rds.RemoveFromGlobalClusterInput{
 			DbClusterIdentifier:     aws.String(clusterARN),
 			GlobalClusterIdentifier: aws.String(globalClusterID),
@@ -1689,6 +1694,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil && !errs.IsA[*types.GlobalClusterNotFoundFault](err) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
 			return sdkdiag.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster (%s): %s", d.Id(), globalClusterID, err)
+		}
+
+		if _, err := waitDBClusterAvailable(ctx, conn, d.Id(), true, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) available: %s", d.Id(), err)
 		}
 	}
 
@@ -1945,14 +1954,15 @@ func statusDBCluster(ctx context.Context, conn *rds.Client, id string, waitNoPen
 
 func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, timeout time.Duration) (*types.DBCluster, error) { //nolint:unparam
 	pendingStatuses := []string{
-		clusterStatusCreating,
-		clusterStatusMigrating,
-		clusterStatusPreparingDataMigration,
-		clusterStatusRebooting,
 		clusterStatusBackingUp,
 		clusterStatusConfiguringIAMDatabaseAuth,
 		clusterStatusConfiguringEnhancedMonitoring,
+		clusterStatusCreating,
+		clusterStatusMigrating,
 		clusterStatusModifying,
+		clusterStatusPreparingDataMigration,
+		clusterStatusPromoting,
+		clusterStatusRebooting,
 		clusterStatusRenaming,
 		clusterStatusResettingMasterCredentials,
 		clusterStatusScalingCompute,
