@@ -256,7 +256,7 @@ func basePathMappingParseResourceID(id string) (string, string, string, error) {
 		}
 	}
 
-	return "", "", "", fmt.Errorf("Unexpected format of ID (%[1]s), expected DOMAIN-NAME%[2]sBASEPATH or DOMAIN-NAME%[2]sBASEPATH%[2]sDOMAIN-NAME-ID", id, basePathMappingResourceIDSeparator)
+	return "", "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected DOMAIN-NAME%[2]sBASEPATH or DOMAIN-NAME%[2]sBASEPATH%[2]sDOMAIN-NAME-ID", id, basePathMappingResourceIDSeparator)
 }
 
 func findBasePathMappingByThreePartKey(ctx context.Context, conn *apigateway.Client, domainName, basePath, domainNameID string) (*apigateway.GetBasePathMappingOutput, error) {
