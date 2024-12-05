@@ -1029,6 +1029,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.SourceDbClusterResourceId = aws.String(v)
 		}
 
+		if v, ok := d.GetOkExists(names.AttrStorageType); ok {
+			input.StorageType = aws.String(v.(string))
+		}
+
 		if v, ok := tfMap["use_latest_restorable_time"].(bool); ok && v {
 			input.UseLatestRestorableTime = aws.Bool(v)
 		}
