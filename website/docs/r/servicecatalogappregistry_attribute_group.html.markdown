@@ -47,7 +47,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Catalog AppRegistry Attribute Group using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Catalog AppRegistry Attribute Group using the `id`. For example:
 
 ```terraform
 import {
@@ -56,7 +56,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Service Catalog AppRegistry Attribute Group using the `1234567890abcfedhijk09876s`. For example:
+Using `terraform import`, import Service Catalog AppRegistry Attribute Group using the `id`. For example:
 
 ```console
 % terraform import aws_servicecatalogappregistry_attribute_group.example 1234567890abcfedhijk09876s
