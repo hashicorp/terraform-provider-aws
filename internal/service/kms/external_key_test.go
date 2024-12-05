@@ -41,7 +41,7 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 				Config: testAccExternalKeyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kms", regexache.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),

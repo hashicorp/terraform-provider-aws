@@ -89,7 +89,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Create(ctx context.Context, reques
 	}
 
 	// Set values for unknowns.
-	data.ID = types.StringValue(r.Meta().AccountID)
+	data.ID = types.StringValue(r.Meta().AccountID(ctx))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func() (interface{}, error) {
 		return findDRTRoleARNAssociation(ctx, conn, roleARN)

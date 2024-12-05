@@ -41,7 +41,7 @@ func testAccApp_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckNoResourceAttr(resourceName, "access_token"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),

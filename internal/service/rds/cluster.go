@@ -547,12 +547,18 @@ func resourceCluster() *schema.Resource {
 						names.AttrMaxCapacity: {
 							Type:         schema.TypeFloat,
 							Required:     true,
-							ValidateFunc: validation.FloatBetween(0.5, 256),
+							ValidateFunc: validation.FloatBetween(0, 256),
 						},
 						"min_capacity": {
 							Type:         schema.TypeFloat,
 							Required:     true,
-							ValidateFunc: validation.FloatBetween(0.5, 256),
+							ValidateFunc: validation.FloatBetween(0, 256),
+						},
+						"seconds_until_auto_pause": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(300, 86400),
 						},
 					},
 				},
@@ -1394,6 +1400,24 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
+	if d.HasChange("replication_source_identifier") {
+		if d.Get("replication_source_identifier").(string) == "" {
+			input := rds.PromoteReadReplicaDBClusterInput{
+				DBClusterIdentifier: aws.String(d.Id()),
+			}
+			_, err := conn.PromoteReadReplicaDBCluster(ctx, &input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "promoting read replica to primary for RDS Cluster (%s): %s", d.Id(), err)
+			}
+
+			if _, err := waitDBClusterAvailable(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+			}
+		} else {
+			return sdkdiag.AppendErrorf(diags, "promoting to standalone is not supported for RDS Cluster (%s)", d.Id())
+		}
+	}
+
 	if d.HasChangesExcept(
 		names.AttrAllowMajorVersionUpgrade,
 		"delete_automated_backups",
@@ -1626,6 +1650,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil && !errs.IsA[*types.GlobalClusterNotFoundFault](err) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
 			return sdkdiag.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster: %s", d.Id(), err)
 		}
+
+		// Removal from a global cluster puts the cluster into 'promoting' state. Wait for it to become available again.
+		if _, err := waitDBClusterAvailable(ctx, conn, d.Id(), true, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) available: %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("iam_roles") {
@@ -1648,14 +1677,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
-func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
+func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	// Automatically remove from global cluster to bypass this error on deletion:
 	// InvalidDBClusterStateFault: This cluster is a part of a global cluster, please remove it from globalcluster first
-	if d.Get("global_cluster_identifier").(string) != "" {
+	if globalClusterID := d.Get("global_cluster_identifier").(string); globalClusterID != "" {
 		clusterARN := d.Get(names.AttrARN).(string)
-		globalClusterID := d.Get("global_cluster_identifier").(string)
 		input := &rds.RemoveFromGlobalClusterInput{
 			DbClusterIdentifier:     aws.String(clusterARN),
 			GlobalClusterIdentifier: aws.String(globalClusterID),
@@ -1665,6 +1694,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err != nil && !errs.IsA[*types.GlobalClusterNotFoundFault](err) && !tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not found in global cluster") {
 			return sdkdiag.AppendErrorf(diags, "removing RDS Cluster (%s) from RDS Global Cluster (%s): %s", d.Id(), globalClusterID, err)
+		}
+
+		if _, err := waitDBClusterAvailable(ctx, conn, d.Id(), true, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) available: %s", d.Id(), err)
 		}
 	}
 
@@ -1919,16 +1952,17 @@ func statusDBCluster(ctx context.Context, conn *rds.Client, id string, waitNoPen
 	}
 }
 
-func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, timeout time.Duration) (*types.DBCluster, error) {
+func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, timeout time.Duration) (*types.DBCluster, error) { //nolint:unparam
 	pendingStatuses := []string{
-		clusterStatusCreating,
-		clusterStatusMigrating,
-		clusterStatusPreparingDataMigration,
-		clusterStatusRebooting,
 		clusterStatusBackingUp,
 		clusterStatusConfiguringIAMDatabaseAuth,
 		clusterStatusConfiguringEnhancedMonitoring,
+		clusterStatusCreating,
+		clusterStatusMigrating,
 		clusterStatusModifying,
+		clusterStatusPreparingDataMigration,
+		clusterStatusPromoting,
+		clusterStatusRebooting,
 		clusterStatusRenaming,
 		clusterStatusResettingMasterCredentials,
 		clusterStatusScalingCompute,
@@ -2118,12 +2152,16 @@ func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *types
 
 	apiObject := &types.ServerlessV2ScalingConfiguration{}
 
-	if v, ok := tfMap[names.AttrMaxCapacity].(float64); ok && v != 0.0 {
+	if v, ok := tfMap[names.AttrMaxCapacity].(float64); ok {
 		apiObject.MaxCapacity = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["min_capacity"].(float64); ok && v != 0.0 {
+	if v, ok := tfMap["min_capacity"].(float64); ok {
 		apiObject.MinCapacity = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["seconds_until_auto_pause"].(int); ok && v != 0 {
+		apiObject.SecondsUntilAutoPause = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -2142,6 +2180,10 @@ func flattenServerlessV2ScalingConfigurationInfo(apiObject *types.ServerlessV2Sc
 
 	if v := apiObject.MinCapacity; v != nil {
 		tfMap["min_capacity"] = aws.ToFloat64(v)
+	}
+
+	if v := apiObject.SecondsUntilAutoPause; v != nil {
+		tfMap["seconds_until_auto_pause"] = aws.ToInt32(v)
 	}
 
 	return tfMap

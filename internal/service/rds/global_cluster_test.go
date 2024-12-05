@@ -115,7 +115,7 @@ func TestAccRDSGlobalCluster_basic(t *testing.T) {
 				Config: testAccGlobalClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDeletionProtection, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "aurora-postgresql"),
@@ -248,7 +248,7 @@ func TestAccRDSGlobalCluster_engineLifecycleSupport_disabled(t *testing.T) {
 				Config: testAccGlobalClusterConfig_engineLifecycleSupport_disabled(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("global-cluster:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "aurora-postgresql"),
 					resource.TestCheckResourceAttr(resourceName, "engine_lifecycle_support", "open-source-rds-extended-support-disabled"),

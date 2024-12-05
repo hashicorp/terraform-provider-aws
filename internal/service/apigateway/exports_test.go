@@ -38,7 +38,7 @@ var (
 	FindDeploymentByTwoPartKey           = findDeploymentByTwoPartKey
 	FindDocumentationPartByTwoPartKey    = findDocumentationPartByTwoPartKey
 	FindDocumentationVersionByTwoPartKey = findDocumentationVersionByTwoPartKey
-	FindDomainByName                     = findDomainByName
+	FindDomainNameByTwoPartKey           = findDomainNameByTwoPartKey
 	FindGatewayResponseByTwoPartKey      = findGatewayResponseByTwoPartKey
 	FindIntegrationByThreePartKey        = findIntegrationByThreePartKey
 	FindIntegrationResponseByFourPartKey = findIntegrationResponseByFourPartKey

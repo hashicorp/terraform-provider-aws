@@ -43,7 +43,7 @@ func TestAccKendraDataSource_basic(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrLanguageCode, "en"),
@@ -158,7 +158,7 @@ func TestAccKendraDataSource_description(t *testing.T) {
 				Config: testAccDataSourceConfig_description(rName, rName2, rName3, rName4, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, originalDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", names.AttrID),
@@ -178,7 +178,7 @@ func TestAccKendraDataSource_description(t *testing.T) {
 				Config: testAccDataSourceConfig_description(rName, rName2, rName3, rName4, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, updatedDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", names.AttrID),

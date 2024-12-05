@@ -59,7 +59,7 @@ func (r *accountSuppressionAttributesResource) Create(ctx context.Context, reque
 
 	conn := r.Meta().SESV2Client(ctx)
 
-	id := r.Meta().AccountID
+	id := r.Meta().AccountID(ctx)
 	input := &sesv2.PutAccountSuppressionAttributesInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {

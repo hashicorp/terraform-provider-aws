@@ -38,7 +38,7 @@ func TestAccCodePipelineCustomActionType_basic(t *testing.T) {
 				Config: testAccCustomActionTypeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "category", "Test"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_property.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_artifact_details.#", "1"),
@@ -158,7 +158,7 @@ func TestAccCodePipelineCustomActionType_allAttributes(t *testing.T) {
 				Config: testAccCustomActionTypeConfig_allAttributes(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomActionTypeExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "codepipeline", fmt.Sprintf("actiontype:Custom/Test/%s/1", rName)),
 					resource.TestCheckResourceAttr(resourceName, "category", "Test"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_property.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_property.0.description", ""),

@@ -141,7 +141,7 @@ func (r *resourceServiceIntegration) Create(ctx context.Context, req resource.Cr
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	plan.ID = types.StringValue(r.Meta().Region)
+	plan.ID = types.StringValue(r.Meta().Region(ctx))
 
 	integration := &awstypes.UpdateServiceIntegrationConfig{}
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, integration)...)

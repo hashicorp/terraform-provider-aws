@@ -171,7 +171,7 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "core_network_attachment_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_gateway_configuration"),
@@ -268,7 +268,7 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 				Config: testAccSiteVPNConnectionConfig_withoutTGWorVGW(rName, rBgpAsn),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`vpn-connection/vpn-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "core_network_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "core_network_attachment_arn", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "customer_gateway_configuration"),

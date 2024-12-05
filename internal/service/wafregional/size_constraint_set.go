@@ -87,7 +87,7 @@ func resourceSizeConstraintSet() *schema.Resource {
 func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	output, err := newRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
@@ -135,7 +135,7 @@ func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, 
 func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	if d.HasChange("size_constraints") {
 		o, n := d.GetChange("size_constraints")
@@ -151,7 +151,7 @@ func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData
 func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalClient(ctx)
-	region := meta.(*conns.AWSClient).Region
+	region := meta.(*conns.AWSClient).Region(ctx)
 
 	if oldConstraints := d.Get("size_constraints").(*schema.Set).List(); len(oldConstraints) > 0 {
 		noConstraints := []interface{}{}

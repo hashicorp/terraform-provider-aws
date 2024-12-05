@@ -109,7 +109,7 @@ func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 				Config: testAccServiceLinkedRoleConfig_basic(awsServiceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", arnResource),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", arnResource),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_name", awsServiceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_date"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -146,7 +146,7 @@ func TestAccIAMServiceLinkedRole_customSuffix(t *testing.T) {
 				Config: testAccServiceLinkedRoleConfig_customSuffix(awsServiceName, customSuffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("role%s%s", path, name)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("role%s%s", path, name)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 				),
 			},
@@ -176,7 +176,7 @@ func TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc(t *testing.T) {
 				Config: testAccServiceLinkedRoleConfig_basic(awsServiceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "iam", fmt.Sprintf("role/aws-service-role/%s/%s", awsServiceName, name)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "iam", fmt.Sprintf("role/aws-service-role/%s/%s", awsServiceName, name)),
 					resource.TestCheckResourceAttr(resourceName, "custom_suffix", "CustomResource"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, name),
 				),

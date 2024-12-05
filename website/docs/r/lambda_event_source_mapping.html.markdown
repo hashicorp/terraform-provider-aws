@@ -58,6 +58,11 @@ resource "aws_lambda_event_source_mapping" "example" {
   topics            = ["Example"]
   starting_position = "TRIM_HORIZON"
 
+  provisioned_poller_config {
+    maximum_poller = 80
+    minimum_poller = 10
+  }
+
   self_managed_event_source {
     endpoints = {
       KAFKA_BOOTSTRAP_SERVERS = "kafka1.example.com:9092,kafka2.example.com:9092"
@@ -167,6 +172,7 @@ resource "aws_lambda_event_source_mapping" "example" {
 * `maximum_retry_attempts`: - (Optional) The maximum number of times to retry when the function returns an error. Only available for stream sources (DynamoDB and Kinesis). Minimum and default of -1 (forever), maximum of 10000.
 * `metrics_config`: - (Optional) CloudWatch metrics configuration of the event source. Only available for stream sources (DynamoDB and Kinesis) and SQS queues. Detailed below.
 * `parallelization_factor`: - (Optional) The number of batches to process from each shard concurrently. Only available for stream sources (DynamoDB and Kinesis). Minimum and default of 1, maximum of 10.
+* `provisioned_poller_config`: - (Optional) Event poller configuration for the event source. Only valid for Amazon MSK or self-managed Apache Kafka sources. Detailed below.
 * `queues` - (Optional) The name of the Amazon MQ broker destination queue to consume. Only available for MQ sources. The list must contain exactly one queue name.
 * `scaling_config` - (Optional) Scaling configuration of the event source. Only available for SQS queues. Detailed below.
 * `self_managed_event_source`: - (Optional) For Self Managed Kafka sources, the location of the self managed cluster. If set, configuration must also include `source_access_configuration`. Detailed below.
@@ -207,6 +213,11 @@ resource "aws_lambda_event_source_mapping" "example" {
 ### metrics_config Configuration Block
 
 * `metrics` - (Required) A list containing the metrics to be produced by the event source mapping. Valid values: `EventCount`.
+
+### provisioned_poller_config Configuration Block
+
+* `maximum_pollers` - (Optional) The maximum number of event pollers this event source can scale up to. The range is between 1 and 2000.
+* `minimum_pollers` - (Optional) The minimum number of event pollers this event source can scale down to. The range is between 1 and 200.
 
 ### scaling_config Configuration Block
 
