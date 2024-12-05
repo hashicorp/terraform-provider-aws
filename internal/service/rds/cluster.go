@@ -761,6 +761,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
+		if v, ok := d.GetOkExists(names.AttrStorageType); ok {
+			input.StorageType = aws.String(v.(string))
+		}
 		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
