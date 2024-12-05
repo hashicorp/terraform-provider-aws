@@ -20,32 +20,32 @@ func TestInstanceReplicateSourceDBSuppressDiff(t *testing.T) {
 		},
 
 		"old ARN same identifier": {
-			old:      "arn:aws:rds:us-west-2:123456789012:db:test",
+			old:      "arn:aws:rds:us-west-2:123456789012:db:test", //lintignore:AWSAT003,AWSAT005
 			new:      "test",
 			expected: true,
 		},
 
 		"old ARN different identifier": {
-			old:      "arn:aws:rds:us-west-2:123456789012:db:test1",
+			old:      "arn:aws:rds:us-west-2:123456789012:db:test1", //lintignore:AWSAT003,AWSAT005
 			new:      "test2",
 			expected: false,
 		},
 
 		"new ARN same identifier": {
 			old:      "test",
-			new:      "arn:aws:rds:us-west-2:123456789012:db:test",
+			new:      "arn:aws:rds:us-west-2:123456789012:db:test", //lintignore:AWSAT003,AWSAT005
 			expected: true,
 		},
 
 		"new ARN different identifier": {
 			old:      "test2",
-			new:      "arn:aws:rds:us-west-2:123456789012:db:test1",
+			new:      "arn:aws:rds:us-west-2:123456789012:db:test1", //lintignore:AWSAT003,AWSAT005
 			expected: false,
 		},
 
 		"both ARN": {
-			old:      "arn:aws:rds:us-west-2:123456789012:db:test1",
-			new:      "arn:aws:rds:us-west-2:123456789012:db:test2",
+			old:      "arn:aws:rds:us-west-2:123456789012:db:test1", //lintignore:AWSAT003,AWSAT005
+			new:      "arn:aws:rds:us-west-2:123456789012:db:test2", //lintignore:AWSAT003,AWSAT005
 			expected: false,
 		},
 
