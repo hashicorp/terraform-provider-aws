@@ -78,7 +78,6 @@ func (d *dataSourceAttributeGroup) ConfigValidators(_ context.Context) []datasou
 
 func (d *dataSourceAttributeGroup) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ServiceCatalogAppRegistryClient(ctx)
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig(ctx)
 
 	var data dataSourceAttributeGroupData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
@@ -109,9 +108,6 @@ func (d *dataSourceAttributeGroup) Read(ctx context.Context, req datasource.Read
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// Transparent tagging doesn't work for DataSource yet
-	data.Tags = tftags.NewMapFromMapValue(flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
