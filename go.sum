@@ -95,10 +95,10 @@ github.com/aws/aws-sdk-go-v2/service/batch v1.48.2 h1:/BSZk0ywzZD4KKRt4qm33fIcXQ
 github.com/aws/aws-sdk-go-v2/service/batch v1.48.2/go.mod h1:5pxmENM3nBEAr2XrSs6c89Iwl6wAJk0/pkyFd3Gmav0=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.7 h1:zrQ6zDzE5ohrLEpwaXGoF0PoBiSBo0oW6uW72iyF0ic=
 github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.7/go.mod h1:J+Zv3ekV1h3RyqVlxi1hCliEuI1SwugGAnmiOfwzNco=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.24.0 h1:WyGNIAmXDXp59IAVi/US8K/rV6kA5F0wWg5he/BLx0M=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.24.0/go.mod h1:BKSewSMuaeUidKqXArDlT06PWK/PP3wsgLWTXKeKgQw=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.31.0 h1:Nm9+rGcx1CWDDbEiRcuQ4kwyFS24ajcxNn8ca/aqAw0=
-github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.31.0/go.mod h1:d+BIleA83BNMLQbwc1gYB/Kgrogwl4lzn2RN+XPIC0s=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.25.0 h1:n2mFFkxqCnzFCf0T9uTbVkNM6i90Fx34ggvcs1DzgOc=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.25.0/go.mod h1:BKSewSMuaeUidKqXArDlT06PWK/PP3wsgLWTXKeKgQw=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.32.0 h1:hnoHWrcuFtnhPcg0Cx0HtWsXcQGZe01Y0OqssMIBy9o=
+github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.32.0/go.mod h1:d+BIleA83BNMLQbwc1gYB/Kgrogwl4lzn2RN+XPIC0s=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.28.7 h1:MaBE1kMoZnJ7sxK7wtR7qVe4ggfMz9681DoQZtasgII=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.28.7/go.mod h1:jhUXdAWAOIKQReti3jcD8zaDjyayYBAuhmijh8+rYrk=
 github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.1 h1:g+Xnw4sHm/T5xDTlNvPBeM6gAAQSzj7EwOI0vBXscSE=
@@ -309,8 +309,8 @@ github.com/aws/aws-sdk-go-v2/service/kafka v1.38.7 h1:RjCwdphB+wBtT/qQw6e7c6HOZ7
 github.com/aws/aws-sdk-go-v2/service/kafka v1.38.7/go.mod h1:6ezJjIOpnDf+Q/BJ2CIITrcdXSvfUS1zwjnEHHPa8oU=
 github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.21.7 h1:OSj7D23vSCmeHSp8IQUuSvc57cUi6FwYQ634FgbMdOY=
 github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.21.7/go.mod h1:oy7uAjiwfudbkCbOW5nIBNhzPEsQbnbcNO18JgdVqZU=
-github.com/aws/aws-sdk-go-v2/service/kendra v1.54.7 h1:tOVT7NRS+pv4o1/X8V8Abd/Pa+rVCvwfkdxCfPqofoI=
-github.com/aws/aws-sdk-go-v2/service/kendra v1.54.7/go.mod h1:/HuziZyTc3mY3YW5DqgZAnyhFoK38EMCqnASuWrpYoo=
+github.com/aws/aws-sdk-go-v2/service/kendra v1.55.0 h1:9I8Wi0EDviprTdQfgI75ax4mL/A9GAef/UqBst4rL2s=
+github.com/aws/aws-sdk-go-v2/service/kendra v1.55.0/go.mod h1:/HuziZyTc3mY3YW5DqgZAnyhFoK38EMCqnASuWrpYoo=
 github.com/aws/aws-sdk-go-v2/service/keyspaces v1.16.1 h1:6H6WaX339sByRffHdcX7yCG7JeFM4Z/61+uvGLleQNw=
 github.com/aws/aws-sdk-go-v2/service/keyspaces v1.16.1/go.mod h1:hW+Z1zESPAefZ33sgnMvY1ADVCiPI2e8v1vTQcz/MDY=
 github.com/aws/aws-sdk-go-v2/service/kinesis v1.32.7 h1:QTtbqxI+i2gaWjcTwJZtm8/xEl9kiQXXbOatGabNuXA=
@@ -403,8 +403,8 @@ github.com/aws/aws-sdk-go-v2/service/polly v1.45.8 h1:qP67eGQ8myAxyd9+ZA6AZc0nYF
 github.com/aws/aws-sdk-go-v2/service/polly v1.45.8/go.mod h1:Bn1paZpSkDKa1vVJcx5DnDZOFMxMrgR7s74igJuhMTk=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.32.7 h1:9UDHX1ZgcXUTAGcyxmw04r/6OVG/aUpQ7dZUziR+vTM=
 github.com/aws/aws-sdk-go-v2/service/pricing v1.32.7/go.mod h1:68s1DYctoo30LibzEY6gLajXbQEhxpn49+zYFy+Q5Xs=
-github.com/aws/aws-sdk-go-v2/service/qbusiness v1.18.0 h1:Wazwv3/svgvNu31XSsX0fdcwAzuEDKklcMv/V5PNcFE=
-github.com/aws/aws-sdk-go-v2/service/qbusiness v1.18.0/go.mod h1:cmW8VmRWKpSEhqy70H3+QCFfHcTguZMZphBIdqcWsIo=
+github.com/aws/aws-sdk-go-v2/service/qbusiness v1.19.0 h1:Kso/qtJxdA8weHZiidLoeQDn5xYQhjRGd0QGtR637LE=
+github.com/aws/aws-sdk-go-v2/service/qbusiness v1.19.0/go.mod h1:cmW8VmRWKpSEhqy70H3+QCFfHcTguZMZphBIdqcWsIo=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.25.7 h1:TWJzwB7S/SBBVitz/0HtdB7pqyf1iv9OUCQ6qeYob5Q=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.25.7/go.mod h1:8AyevnOHnUsSNTlqH723oxU2hGgIdhVsUjtDS6JIi8w=
 github.com/aws/aws-sdk-go-v2/service/quicksight v1.81.0 h1:U/ktIgrHh0l1Azkhl8sNxNvknhz1Ql6PtEgluc9R8GU=
@@ -455,8 +455,8 @@ github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.7 h1:yUuN4xIlI/2bUqniq5OdI
 github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.7/go.mod h1:yCIumXPHLHsjmrD8P9UvXFVT0R9R+Wlqut71bW5+ZY4=
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.0 h1:akXaBXvSIT3ca7Ojnc1TX+2pTK6lhyodZTYTrdUD6Vc=
 github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.0/go.mod h1:X85zeZUOEsqLnH/CShIydM9ANVMwXHL1A/pvTMSQw6U=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.168.1 h1:Sz0HMK2/8itHAb9ABnMOEHfpOAIxk2a+f6EMsw7jn54=
-github.com/aws/aws-sdk-go-v2/service/sagemaker v1.168.1/go.mod h1:LoIh7abCP1rQng1kxJVJOTux55TaYN2tVN7G+zNbhus=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.169.0 h1:keGexhxWOl6TmtE3QI+ofpgFIgdMLc3lfkwgjuSXe1o=
+github.com/aws/aws-sdk-go-v2/service/sagemaker v1.169.0/go.mod h1:LoIh7abCP1rQng1kxJVJOTux55TaYN2tVN7G+zNbhus=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.12.7 h1:lRA+BvESWVoldCxaw3SG9UssITkVref8rlVy5xCsh0A=
 github.com/aws/aws-sdk-go-v2/service/scheduler v1.12.7/go.mod h1:hCwaxwoPRJmODF1jv6HvbUyT9q7Ak43LesgkvNvZ0PI=
 github.com/aws/aws-sdk-go-v2/service/schemas v1.28.8 h1:9TVRGRx70yb6sa0QHQiASkQJvi/7yyHjSgacjqtuoGs=
