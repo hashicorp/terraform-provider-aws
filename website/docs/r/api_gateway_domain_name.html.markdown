@@ -214,7 +214,7 @@ For a private custom domain name:
 ```terraform
 import {
   to = aws_api_gateway_domain_name.example
-  id = "api.internal.example.com,abcde12345"
+  id = "api.internal.example.com/abcde12345"
 }
 ```
 
@@ -227,5 +227,5 @@ Using `terraform import`, import API Gateway domain names using their `name` or 
 For a private custom domain name:
 
 ```console
-% terraform import aws_api_gateway_domain_name.example dev.api.internal.example.com,abcde12345
+% terraform import aws_api_gateway_domain_name.example dev.api.internal.example.com/abcde12345
 ```
