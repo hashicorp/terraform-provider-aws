@@ -1017,6 +1017,28 @@ func TestAccRDSCluster_takeFinalSnapshot(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_GlobalClusterIdentifierTakeFinalSnapshot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroyWithFinalSnapshot(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_GlobalClusterID_finalSnapshot(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+				),
+			},
+		},
+	})
+}
+
 // This is a regression test to make sure that we always cover the scenario as highlighted in
 // https://github.com/hashicorp/terraform/issues/11568
 // Expected error updated to match API response
@@ -2074,6 +2096,7 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "64"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "2.5"),
+					resource.TestCheckResourceAttrSet(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause"),
 				),
 			},
 			{
@@ -2083,6 +2106,17 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName, 256.0, 0, 21600),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "256"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause", "21600"),
 				),
 			},
 		},
@@ -3705,6 +3739,28 @@ resource "aws_rds_cluster" "test" {
 `, rName, tfrds.ClusterEngineAuroraMySQL)
 }
 
+func testAccClusterConfig_GlobalClusterID_finalSnapshot(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_global_cluster" "test" {
+  global_cluster_identifier = %[1]q
+  engine                    = "aurora-postgresql"
+  engine_version            = "11.9"
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier        = %[1]q
+  database_name             = "test"
+  engine                    = aws_rds_global_cluster.test.engine
+  engine_version            = aws_rds_global_cluster.test.engine_version
+  master_username           = "tfacctest"
+  master_password           = "avoid-plaintext-passwords"
+  final_snapshot_identifier = %[1]q
+  skip_final_snapshot       = false
+  global_cluster_identifier = aws_rds_global_cluster.test.id
+}
+`, rName)
+}
+
 func testAccClusterConfig_withoutUserNameAndPassword(n int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "default" {
@@ -5152,6 +5208,32 @@ resource "aws_rds_cluster" "test" {
   }
 }
 `, tfrds.ClusterEngineAuroraPostgreSQL, rName, maxCapacity, minCapacity)
+}
+
+func testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName string, maxCapacity, minCapacity float64, secondsUntilAutoPause int) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = ["db.serverless"]
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[2]q
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
+
+  serverlessv2_scaling_configuration {
+    max_capacity = %[3]f
+    min_capacity = %[4]f
+
+    seconds_until_auto_pause = %[5]d
+  }
+}
+`, tfrds.ClusterEngineAuroraPostgreSQL, rName, maxCapacity, minCapacity, secondsUntilAutoPause)
 }
 
 func testAccClusterConfig_ScalingConfiguration_defaultMinCapacity(rName string, autoPause bool, maxCapacity, secondsUntilAutoPause int, timeoutAction string) string {

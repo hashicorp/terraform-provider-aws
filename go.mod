@@ -42,8 +42,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.39.8
 	github.com/aws/aws-sdk-go-v2/service/batch v1.48.2
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.7
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.24.0
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.31.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/chime v1.34.7
@@ -144,7 +144,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.38.7
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.21.7
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.54.7
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.25.8
@@ -191,7 +191,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.18.5
 	github.com/aws/aws-sdk-go-v2/service/polly v1.45.8
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.32.7
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.18.0
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.81.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.29.7
@@ -217,7 +217,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.168.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.169.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.12.7
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.28.8
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.7
@@ -299,10 +299,10 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pquerna/otp v1.4.0
 	github.com/shopspring/decimal v1.4.0
-	golang.org/x/crypto v0.29.0
+	golang.org/x/crypto v0.30.0
 	golang.org/x/mod v0.22.0
-	golang.org/x/text v0.20.0
-	golang.org/x/tools v0.27.0
+	golang.org/x/text v0.21.0
+	golang.org/x/tools v0.28.0
 	gopkg.in/dnaeon/go-vcr.v3 v3.2.1
 	gopkg.in/yaml.v2 v2.4.0
 	syreclabs.com/go/faker v1.2.3
@@ -368,9 +368,9 @@ require (
 	go.opentelemetry.io/otel v1.32.0 // indirect
 	go.opentelemetry.io/otel/metric v1.32.0 // indirect
 	go.opentelemetry.io/otel/trace v1.32.0 // indirect
-	golang.org/x/net v0.31.0 // indirect
-	golang.org/x/sync v0.9.0 // indirect
-	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/net v0.32.0 // indirect
+	golang.org/x/sync v0.10.0 // indirect
+	golang.org/x/sys v0.28.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20241202173237-19429a94021a // indirect
 	google.golang.org/grpc v1.68.0 // indirect

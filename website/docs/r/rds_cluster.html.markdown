@@ -113,8 +113,9 @@ resource "aws_rds_cluster" "example" {
   storage_encrypted  = true
 
   serverlessv2_scaling_configuration {
-    max_capacity = 1.0
-    min_capacity = 0.5
+    max_capacity             = 1.0
+    min_capacity             = 0.0
+    seconds_until_auto_pause = 3600
   }
 }
 
@@ -360,14 +361,16 @@ resource "aws_rds_cluster" "example" {
   # ... other configuration ...
 
   serverlessv2_scaling_configuration {
-    max_capacity = 256.0
-    min_capacity = 0.5
+    max_capacity             = 256
+    min_capacity             = 0
+    seconds_until_auto_pause = 3600
   }
 }
 ```
 
 * `max_capacity` - (Required) Maximum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0` up to `256` in steps of `0.5`.
 * `min_capacity` - (Required) Minimum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0` up to `256` in steps of `0.5`.
+* `seconds_until_auto_pause` - (Optional) Time, in seconds, before an Aurora DB cluster in `provisioned` DB engine mode is paused. Valid values are `300` through `86400`.
 
 ## Attribute Reference
 

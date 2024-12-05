@@ -350,12 +350,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 		// This operation will be quick if successful
 		globalClusterClusterDeleteTimeout = 5 * time.Minute
 	)
-	var timeout time.Duration
-	if x, y := deadline.Remaining(), globalClusterClusterDeleteTimeout; x < y {
-		timeout = x
-	} else {
-		timeout = y
-	}
+	timeout := max(deadline.Remaining(), globalClusterClusterDeleteTimeout)
 	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidGlobalClusterStateFault](ctx, timeout, func() (interface{}, error) {
 		return conn.DeleteGlobalCluster(ctx, &rds.DeleteGlobalClusterInput{
 			GlobalClusterIdentifier: aws.String(d.Id()),
