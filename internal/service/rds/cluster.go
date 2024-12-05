@@ -764,6 +764,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		if v, ok := d.GetOkExists(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
+
 		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
 			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
@@ -882,6 +883,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOkExists(names.AttrStorageEncrypted); ok {
 			input.StorageEncrypted = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOkExists(names.AttrStorageType); ok {
+			input.StorageType = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok && v.(*schema.Set).Len() > 0 {
