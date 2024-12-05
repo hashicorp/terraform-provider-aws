@@ -10637,10 +10637,6 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_instance_classes = [%[2]s]
 }
 
-data "aws_rds_certificate" "latest" {
-  latest_valid_till = true
-}
-
 resource "aws_db_instance" "source" {
   identifier              = "%[3]s-source"
   allocated_storage       = 20
@@ -10660,7 +10656,7 @@ resource "aws_db_instance" "source" {
   timeouts {
     update = "120m"
   }
-  ca_cert_identifier = data.aws_rds_certificate.latest.id
+  ca_cert_identifier = "rds-ca-rsa2048-g1"
 }
 `, tfrds.InstanceEngineOracleEnterprise, strings.Replace(mainInstanceClasses, "db.t3.small", "frodo", 1), rName)
 }
@@ -10678,7 +10674,7 @@ resource "aws_db_instance" "test" {
   apply_immediately   = true
 
   parameter_group_name = aws_db_parameter_group.test.name
-  ca_cert_identifier   = data.aws_rds_certificate.latest.id
+  ca_cert_identifier   = "rds-ca-rsa2048-g1"
 
   timeouts {
     update = "120m"
