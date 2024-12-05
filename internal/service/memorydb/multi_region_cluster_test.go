@@ -33,12 +33,251 @@ func TestAccMemoryDBMultiRegionCluster_basic(t *testing.T) {
 				Config: testAccMultiRegionClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrSuffix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "db.r7g.xlarge"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrParameterGroupName),
+					resource.TestCheckResourceAttrSet(resourceName, "num_shards"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, "clusters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBMultiRegionCluster_defaults(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_multi_region_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionClusterConfig_defaults(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrName),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrSuffix),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "db.r7g.xlarge"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrParameterGroupName),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
+					resource.TestCheckResourceAttr(resourceName, "clusters.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBMultiRegionCluster_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_multi_region_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionClusterConfig_description(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Also managed by Terraform"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBMultiRegionCluster_tlsEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_multi_region_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionClusterConfig_tlsEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBMultiRegionCluster_engine(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_multi_region_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionClusterConfig_engine(rName, "valkey"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBMultiRegionCluster_engineVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_multi_region_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionClusterConfig_engineVersion(rName, "valkey", "7.3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEngineVersion, "7.3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBMultiRegionCluster_clusters(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_multi_region_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionClusterConfig_clusters(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "clusters.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "clusters.0.arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "clusters.0.name"),
+					resource.TestCheckResourceAttrSet(resourceName, "clusters.0.region"),
+					resource.TestCheckResourceAttrSet(resourceName, "clusters.0.status"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBMultiRegionCluster_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_multi_region_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMultiRegionClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccMultiRegionClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
 			},
 		},
 	})
@@ -100,4 +339,140 @@ resource "aws_memorydb_multi_region_cluster" "test" {
   }
 }
 `, rName)
+}
+
+func testAccMultiRegionClusterConfig_defaults(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  suffix     = %[1]q
+  node_type  = "db.r7g.xlarge"
+}
+`, rName)
+}
+
+func testAccMultiRegionClusterConfig_description(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  suffix      = %[1]q
+  node_type   = "db.r7g.xlarge"
+  description = "Also managed by Terraform"
+
+  tags = {
+    Test = "test"
+  }
+}
+`, rName)
+}
+
+func testAccMultiRegionClusterConfig_tlsEnabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  suffix      = %[1]q
+  node_type   = "db.r7g.xlarge"
+  tls_enabled = false
+
+  tags = {
+    Test = "test"
+  }
+}
+`, rName)
+}
+
+func testAccMultiRegionClusterConfig_engine(rName, engine string) string {
+	return fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  suffix    = %[1]q
+  node_type = "db.r7g.xlarge"
+  engine    = %[2]q
+
+  tags = {
+    Test = "test"
+  }
+}
+`, rName, engine)
+}
+
+func testAccMultiRegionClusterConfig_engineVersion(rName, engine, engineVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  suffix         = %[1]q
+  node_type      = "db.r7g.xlarge"
+  engine         = %[2]q
+  engine_version = %[3]q
+
+  tags = {
+    Test = "test"
+  }
+}
+`, rName, engine, engineVersion)
+}
+
+func testAccMultiRegionClusterConfig_clusters(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseNetwork(rName),
+		testAccClusterConfig_baseUserAndACL(rName),
+		fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_memorydb_multi_region_cluster" "test" {
+  suffix     = %[1]q
+  node_type  = "db.r7g.xlarge"
+
+  tags = {
+    Test = "test"
+  }
+}
+
+resource "aws_memorydb_cluster" "test" {
+  acl_name                   = aws_memorydb_acl.test.id
+  auto_minor_version_upgrade = false
+  name                       = %[1]q
+  node_type                  = "db.t4g.small"
+  num_shards                 = 2
+  security_group_ids         = [aws_security_group.test.id]
+  snapshot_retention_limit   = 7
+  subnet_group_name          = aws_memorydb_subnet_group.test.id
+
+  multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.name
+
+  tags = {
+    Test = "test"
+  }
+}
+`, rName),
+	)
+}
+
+func testAccMultiRegionClusterConfig_tags1(rName, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  suffix     = %[1]q
+  node_type  = "db.r7g.xlarge"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tag1Key, tag1Value)
+}
+
+func testAccMultiRegionClusterConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  suffix     = %[1]q
+  node_type  = "db.r7g.xlarge"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tag1Key, tag1Value, tag2Key, tag2Value)
 }
