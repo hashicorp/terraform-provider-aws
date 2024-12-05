@@ -32,7 +32,7 @@ import (
 
 // @SDKResource("aws_rds_global_cluster", name="Global Cluster")
 // @Tags(identifierAttribute="arn")
-// @Testing(tagsTest=false)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/rds/types;types.GlobalCluster")
 func resourceGlobalCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGlobalClusterCreate,
