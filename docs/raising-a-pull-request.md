@@ -20,10 +20,13 @@
    it is fully completed by creating a [draft pull request](https://help.github.com/en/articles/about-pull-requests#draft-pull-requests).
    Please include specific questions or items you'd like feedback on.
 
-1. Pull Request Best Practice
-    - When creating a pull request, ensure it has a descriptive title highlighting the primary change in the PR. Include the resource/data source name if the change is related to one.
-    - Ensure the description includes the reasoning for the change, what was changed and how UX is expected to be altered (if applicable).
-    - Keep pull requests as small as possible and focused on a single change. When adding resources or data sources a pull request should only contain a single item (and its tests).  Pull requests containing multiple resources, or code to add both the service client and resources are much more difficult and time consuming for maintainers to review.
+1. Pull Request Best Practices
+    - **Descriptive Titles:**  When creating a pull request (PR), use a clear and descriptive title that highlights the primary change. If the change pertains to a specific resource or data source, include its name in the title.
+    - **Detailed Descriptions:**  Provide a comprehensive description that explains the reasoning behind the change, what was modified, and any expected changes to the user experience (if applicable).
+    - **Focused and Manageable Scope:**
+        * Keep pull requests small and focused on a single change.
+        * For resource or data source additions, each PR should contain only one item and its corresponding tests.
+        * Avoid bundling multiple resources or combining service client additions with resource changes in a single PR. Such combinations are significantly harder and more time-consuming for maintainers to review.
 
 1. Create a changelog entry following the process outlined [here](changelog-process.md)
 
