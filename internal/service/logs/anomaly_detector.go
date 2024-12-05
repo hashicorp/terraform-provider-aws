@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -68,8 +68,7 @@ func (r *resourceAnomalyDetector) Schema(ctx context.Context, req resource.Schem
 				Optional: true,
 				Computed: true,
 				Validators: []validator.Int64{
-					int64validator.AtLeast(7),
-					int64validator.AtMost(90),
+					int64validator.Between(7, 90),
 				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
@@ -79,10 +78,8 @@ func (r *resourceAnomalyDetector) Schema(ctx context.Context, req resource.Schem
 				Optional: true,
 			},
 			"evaluation_frequency": schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.EvaluationFrequency](),
-				},
+				CustomType: fwtypes.StringEnumType[awstypes.EvaluationFrequency](),
+				Optional:   true,
 			},
 			"filter_pattern": schema.StringAttribute{
 				Optional: true,
@@ -129,6 +126,7 @@ func (r *resourceAnomalyDetector) Create(ctx context.Context, req resource.Creat
 		)
 		return
 	}
+
 	if out == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameAnomalyDetector, plan.ARN.String(), nil),
@@ -158,6 +156,7 @@ func (r *resourceAnomalyDetector) Read(ctx context.Context, req resource.ReadReq
 
 	out, err := findLogAnomalyDetectorByARN(ctx, conn, state.ARN.ValueString())
 	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -189,9 +188,13 @@ func (r *resourceAnomalyDetector) Update(ctx context.Context, req resource.Updat
 		return
 	}
 
-	if !plan.DetectorName.Equal(state.DetectorName) ||
-		!plan.EvaluationFrequency.Equal(state.EvaluationFrequency) ||
-		!plan.Enabled.Equal(state.Enabled) {
+	diff, d := flex.Calculate(ctx, plan, state)
+	resp.Diagnostics.Append(d...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if diff.HasChanges() {
 		in := &cloudwatchlogs.UpdateLogAnomalyDetectorInput{}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
@@ -286,14 +289,14 @@ func findLogAnomalyDetectorByARN(ctx context.Context, conn *cloudwatchlogs.Clien
 }
 
 type resourceAnomalyDetectorData struct {
-	ARN                   types.String                      `tfsdk:"arn"`
-	LogGroupARNList       fwtypes.ListValueOf[types.String] `tfsdk:"log_group_arn_list"`
-	AnomalyVisibilityTime types.Int64                       `tfsdk:"anomaly_visibility_time"`
-	DetectorName          types.String                      `tfsdk:"detector_name"`
-	Enabled               types.Bool                        `tfsdk:"enabled"`
-	EvaluationFrequency   types.String                      `tfsdk:"evaluation_frequency"`
-	FilterPattern         types.String                      `tfsdk:"filter_pattern"`
-	KMSKeyID              types.String                      `tfsdk:"kms_key_id"`
-	Tags                  tftags.Map                        `tfsdk:"tags"`
-	TagsAll               tftags.Map                        `tfsdk:"tags_all"`
+	ARN                   types.String                                     `tfsdk:"arn"`
+	LogGroupARNList       fwtypes.ListValueOf[types.String]                `tfsdk:"log_group_arn_list"`
+	AnomalyVisibilityTime types.Int64                                      `tfsdk:"anomaly_visibility_time"`
+	DetectorName          types.String                                     `tfsdk:"detector_name"`
+	Enabled               types.Bool                                       `tfsdk:"enabled"`
+	EvaluationFrequency   fwtypes.StringEnum[awstypes.EvaluationFrequency] `tfsdk:"evaluation_frequency"`
+	FilterPattern         types.String                                     `tfsdk:"filter_pattern"`
+	KMSKeyID              types.String                                     `tfsdk:"kms_key_id"`
+	Tags                  tftags.Map                                       `tfsdk:"tags"`
+	TagsAll               tftags.Map                                       `tfsdk:"tags_all"`
 }
