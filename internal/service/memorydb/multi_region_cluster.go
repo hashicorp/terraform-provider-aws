@@ -129,6 +129,7 @@ func resourceMultiRegionCluster() *schema.Resource {
 					Type:     schema.TypeBool,
 					Optional: true,
 					Default:  true,
+					ForceNew: true,
 				},
 				names.AttrTags:    tftags.TagsSchema(),
 				names.AttrTagsAll: tftags.TagsSchemaComputed(),
