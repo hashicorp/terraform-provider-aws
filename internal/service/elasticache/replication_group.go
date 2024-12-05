@@ -70,7 +70,7 @@ func resourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
-				Default: true,
+				Default:  true,
 			},
 			"auth_token": {
 				Type:          schema.TypeString,
