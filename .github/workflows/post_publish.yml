@@ -70,6 +70,7 @@ jobs:
             else
               echo "Registry and Github Version matches"
               echo "current=$LATEST_VERSION" >> "$GITHUB_OUTPUT"
+              exit 0
             fi
           done
 
