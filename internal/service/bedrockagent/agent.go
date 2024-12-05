@@ -125,8 +125,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 				},
 			},
 			"instruction": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
