@@ -149,9 +149,7 @@ func testAccCheckAttributeGroupDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := conn.GetAttributeGroup(ctx, &servicecatalogappregistry.GetAttributeGroupInput{
-				AttributeGroup: aws.String(rs.Primary.ID),
-			})
+			_, err := tfservicecatalogappregistry.FindAttributeGroupByID(ctx, conn, rs.Primary.ID)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -178,10 +176,7 @@ func testAccCheckAttributeGroupExists(ctx context.Context, name string, attribut
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogAppRegistryClient(ctx)
-		resp, err := conn.GetAttributeGroup(ctx, &servicecatalogappregistry.GetAttributeGroupInput{
-			AttributeGroup: aws.String(rs.Primary.ID),
-		})
-
+		resp, err := tfservicecatalogappregistry.FindAttributeGroupByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.ServiceCatalogAppRegistry, create.ErrActionCheckingExistence, tfservicecatalogappregistry.ResNameAttributeGroup, rs.Primary.ID, err)
 		}
