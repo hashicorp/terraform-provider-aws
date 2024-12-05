@@ -547,12 +547,12 @@ func resourceCluster() *schema.Resource {
 						names.AttrMaxCapacity: {
 							Type:         schema.TypeFloat,
 							Required:     true,
-							ValidateFunc: validation.FloatBetween(0.5, 256),
+							ValidateFunc: validation.FloatBetween(0, 256),
 						},
 						"min_capacity": {
 							Type:         schema.TypeFloat,
 							Required:     true,
-							ValidateFunc: validation.FloatBetween(0.5, 256),
+							ValidateFunc: validation.FloatBetween(0, 256),
 						},
 					},
 				},
@@ -1394,6 +1394,24 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
+	if d.HasChange("replication_source_identifier") {
+		if d.Get("replication_source_identifier").(string) == "" {
+			input := rds.PromoteReadReplicaDBClusterInput{
+				DBClusterIdentifier: aws.String(d.Id()),
+			}
+			_, err := conn.PromoteReadReplicaDBCluster(ctx, &input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "promoting read replica to primary for RDS Cluster (%s): %s", d.Id(), err)
+			}
+
+			if _, err := waitDBClusterAvailable(ctx, conn, d.Id(), false, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for RDS Cluster (%s) update: %s", d.Id(), err)
+			}
+		} else {
+			return sdkdiag.AppendErrorf(diags, "promoting to standalone is not supported for RDS Cluster (%s)", d.Id())
+		}
+	}
+
 	if d.HasChangesExcept(
 		names.AttrAllowMajorVersionUpgrade,
 		"delete_automated_backups",
@@ -1919,7 +1937,7 @@ func statusDBCluster(ctx context.Context, conn *rds.Client, id string, waitNoPen
 	}
 }
 
-func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, timeout time.Duration) (*types.DBCluster, error) {
+func waitDBClusterAvailable(ctx context.Context, conn *rds.Client, id string, waitNoPendingModifiedValues bool, timeout time.Duration) (*types.DBCluster, error) { //nolint:unparam
 	pendingStatuses := []string{
 		clusterStatusCreating,
 		clusterStatusMigrating,
@@ -2118,11 +2136,11 @@ func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *types
 
 	apiObject := &types.ServerlessV2ScalingConfiguration{}
 
-	if v, ok := tfMap[names.AttrMaxCapacity].(float64); ok && v != 0.0 {
+	if v, ok := tfMap[names.AttrMaxCapacity].(float64); ok {
 		apiObject.MaxCapacity = aws.Float64(v)
 	}
 
-	if v, ok := tfMap["min_capacity"].(float64); ok && v != 0.0 {
+	if v, ok := tfMap["min_capacity"].(float64); ok {
 		apiObject.MinCapacity = aws.Float64(v)
 	}
 

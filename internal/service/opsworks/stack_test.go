@@ -259,7 +259,7 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 			// in order to exercise the OpsWorks classic endpoint functionality.
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
-			acctest.PreCheckAlternateRegionIs(t, endpoints.UsWest1RegionID)
+			acctest.PreCheckAlternateRegion(t, endpoints.UsWest1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),

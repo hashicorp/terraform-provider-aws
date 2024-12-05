@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Model Invocation Logging Configuration")
+// @FrameworkResource("aws_bedrock_model_invocation_logging_configuration", name="Model Invocation Logging Configuration")
 func newModelInvocationLoggingConfigurationResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceModelInvocationLoggingConfiguration{}, nil
 }

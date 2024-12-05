@@ -137,6 +137,7 @@ func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3.Client {
 
 	if c.s3ExpressClient == nil {
 		if s3Client.Options().Region == endpoints.AwsGlobalRegionID {
+			// No global endpoint for S3 Express.
 			c.s3ExpressClient = errs.Must(client[*s3.Client](ctx, c, names.S3, map[string]any{
 				"s3_us_east_1_regional_endpoint": "regional",
 			}))
