@@ -92,7 +92,7 @@ func TestAccQBusinessDatasource_tags(t *testing.T) {
 				Config: testAccDatasourceConfig_tags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatasourceExists(ctx, resourceName, &datasource),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -106,7 +106,7 @@ func TestAccQBusinessDatasource_tags(t *testing.T) {
 				Config: testAccDatasourceConfig_tags(rName, acctest.CtKey1, "value1new", acctest.CtKey2, "value2new"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatasourceExists(ctx, resourceName, &datasource),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, "value1new"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value2new"),
 				),
@@ -133,7 +133,7 @@ func TestAccQBusinessDatasource_documentEnrichmentConfiguration(t *testing.T) {
 					testAccCheckDatasourceExists(ctx, resourceName, &datasource),
 					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.condition.0.key", "STRING_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.condition.0.operator", "EXISTS"),
-					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.condition.0.value.string_list_value.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.condition.0.value.string_list_value.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.document_content_operator", "DELETE"),
 					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.target.0.key", "STRING_VALUE"),
 					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.0.inline_configuration.0.target.0.attribute_value_operator", "DELETE"),
@@ -161,7 +161,7 @@ func TestAccQBusinessDatasource_documentEnrichmentConfiguration(t *testing.T) {
 				Config: testAccDatasourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatasourceExists(ctx, resourceName, &datasource),
-					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "document_enrichment_configuration.#", "0"),
 				),
 			},
 		},
@@ -192,7 +192,7 @@ func TestAccQBusinessDatasource_vpcConfiguration(t *testing.T) {
 				Config: testAccDatasourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDatasourceExists(ctx, resourceName, &datasource),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
 			},
 		},
