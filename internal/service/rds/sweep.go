@@ -375,10 +375,16 @@ func sweepInstances(region string) error {
 		for _, v := range page.DBInstances {
 			id := aws.ToString(v.DbiResourceId)
 
-			// "InvalidParameterValue: Deleting cluster instances isn't supported for DB engine mysql".
-			if engine := aws.ToString(v.Engine); engine == InstanceEngineMySQL && v.DBClusterIdentifier != nil {
-				log.Printf("[INFO] Skipping RDS DB Instance %s", id)
+			switch engine := aws.ToString(v.Engine); engine {
+			case "docdb", "neptune":
+				// These engines are handled by their respective services' sweepers.
 				continue
+			default:
+				// "InvalidParameterValue: Deleting cluster instances isn't supported for DB engine mysql".
+				if v.DBClusterIdentifier != nil {
+					log.Printf("[INFO] Skipping RDS DB Instance %s", id)
+					continue
+				}
 			}
 
 			r := resourceInstance()
