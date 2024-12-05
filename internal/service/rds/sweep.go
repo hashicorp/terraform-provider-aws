@@ -241,11 +241,10 @@ func sweepClusters(region string) error {
 
 			if engineMode := aws.ToString(v.EngineMode); engineMode == engineModeGlobal || engineMode == engineModeProvisioned {
 				globalCluster, err := findGlobalClusterByDBClusterARN(ctx, conn, arn)
-				if err != nil {
-					if !tfresource.NotFound(err) {
-						log.Printf("[WARN] Reading RDS Global Cluster information for DB Cluster (%s): %s", id, err)
-						continue
-					}
+
+				if err != nil && !tfresource.NotFound(err) {
+					log.Printf("[WARN] Reading RDS Global Cluster information for DB Cluster (%s): %s", id, err)
+					continue
 				}
 
 				if globalCluster != nil && globalCluster.GlobalClusterIdentifier != nil {
@@ -374,9 +373,17 @@ func sweepInstances(region string) error {
 		}
 
 		for _, v := range page.DBInstances {
+			id := aws.ToString(v.DbiResourceId)
+
+			// "InvalidParameterValue: Deleting cluster instances isn't supported for DB engine mysql".
+			if engine := aws.ToString(v.Engine); engine == InstanceEngineMySQL && v.DBClusterIdentifier != nil {
+				log.Printf("[INFO] Skipping RDS DB Instance %s", id)
+				continue
+			}
+
 			r := resourceInstance()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.DbiResourceId))
+			d.SetId(id)
 			d.Set(names.AttrApplyImmediately, true)
 			d.Set("delete_automated_backups", true)
 			d.Set(names.AttrDeletionProtection, false)
