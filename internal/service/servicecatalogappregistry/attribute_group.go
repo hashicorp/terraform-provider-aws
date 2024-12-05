@@ -115,9 +115,6 @@ func (r *resourceAttributeGroup) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	plan.ARN = flex.StringToFramework(ctx, out.AttributeGroup.Arn)
-	plan.ID = flex.StringToFramework(ctx, out.AttributeGroup.Id)
-
 	resp.Diagnostics.Append(flex.Flatten(ctx, out.AttributeGroup, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -142,7 +139,7 @@ func (r *resourceAttributeGroup) Read(ctx context.Context, req resource.ReadRequ
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionSetting, ResNameAttributeGroup, state.ID.String(), err),
+			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionReading, ResNameAttributeGroup, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -192,11 +189,13 @@ func (r *resourceAttributeGroup) Update(ctx context.Context, req resource.Update
 			)
 			return
 		}
+
 		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
