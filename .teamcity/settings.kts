@@ -81,6 +81,7 @@ project {
             text("env.EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT", securityGroupRulesPerGroup)
         }
 
+        // Used to specify the default branch in the VCS Root
         val brancRef = DslContext.getParameter("branch_name", "")
         if (brancRef != "") {
             text("BRANCH_NAME", brancRef, display = ParameterDisplay.HIDDEN)
