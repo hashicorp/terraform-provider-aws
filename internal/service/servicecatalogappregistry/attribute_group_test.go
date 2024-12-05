@@ -26,14 +26,11 @@ import (
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var attributegroup servicecatalogappregistry.GetAttributeGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rDesc := "Simple Description"
+	description := "Simple Description"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -46,12 +43,12 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttributeGroupConfig_basic(rName, rDesc),
+				Config: testAccAttributeGroupConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
 			{
@@ -65,14 +62,11 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_basic(t *testing.T) {
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var attributegroup1, attributegroup2 servicecatalogappregistry.GetAttributeGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
-	rDesc := "Simple Description"
+	description := "Simple Description"
 	expectJsonV1 := `{"a":"1","b":"2"}`
 	expectJsonV2 := `{"b":"3","c":"4"}`
 
@@ -87,23 +81,23 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
 		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttributeGroupConfig_basic(rName, rDesc),
+				Config: testAccAttributeGroupConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup1),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAttributes, expectJsonV1),
 				),
 			},
 			{
-				Config: testAccAttributeGroupConfig_update(rName, rDesc),
+				Config: testAccAttributeGroupConfig_update(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup2),
 					testAccCheckAttributeGroupNotRecreated(&attributegroup1, &attributegroup2),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, rDesc),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAttributes, expectJsonV2),
 				),
 			},
@@ -118,13 +112,10 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_update(t *testing.T) {
 
 func TestAccServiceCatalogAppRegistryAttributeGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var attributegroup servicecatalogappregistry.GetAttributeGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rDesc := "Simple Description"
+	description := "Simple Description"
 	resourceName := "aws_servicecatalogappregistry_attribute_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -138,7 +129,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroup_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttributeGroupConfig_basic(rName, rDesc),
+				Config: testAccAttributeGroupConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, resourceName, &attributegroup),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfservicecatalogappregistry.ResourceAttributeGroup, resourceName),
