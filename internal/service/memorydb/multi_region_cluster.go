@@ -5,7 +5,9 @@ package memorydb
 
 import (
 	"context"
+	"errors"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -212,7 +214,11 @@ func resourceMultiRegionClusterRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrStatus, cluster.Status)
 
 	// These attributes aren't returned by the API, so we retain the current value.
-	d.Set("suffix", d.Get("suffix"))
+	suffix, err := suffixAfterHyphen(*cluster.MultiRegionClusterName)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "extracting suffix from Multi Region Cluster name: %s", err)
+	}
+	d.Set("suffix", suffix)
 	d.Set("update_strategy", d.Get("update_strategy"))
 
 	return diags
@@ -407,4 +413,14 @@ func waitMultiRegionClusterDeleted(ctx context.Context, conn *memorydb.Client, n
 	}
 
 	return nil, err
+}
+
+// suffixAfterHyphen extracts the substring after the first hyphen ("-") in the input string.
+// If no hyphen is found, it returns an error.
+func suffixAfterHyphen(input string) (string, error) {
+	idx := strings.Index(input, "-")
+	if idx == -1 {
+		return "", errors.New("no hyphen found in the input string")
+	}
+	return input[idx+1:], nil
 }
