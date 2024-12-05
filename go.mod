@@ -42,8 +42,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.39.8
 	github.com/aws/aws-sdk-go-v2/service/batch v1.48.2
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.7
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.24.0
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.31.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/chime v1.34.7
@@ -144,7 +144,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.16.7
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.38.7
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.21.7
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.54.7
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.55.0
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.25.8
@@ -191,7 +191,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.18.5
 	github.com/aws/aws-sdk-go-v2/service/polly v1.45.8
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.32.7
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.18.0
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.19.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.81.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.29.7
@@ -217,7 +217,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/s3outposts v1.28.7
 	github.com/aws/aws-sdk-go-v2/service/s3tables v1.0.0
-	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.168.1
+	github.com/aws/aws-sdk-go-v2/service/sagemaker v1.169.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.12.7
 	github.com/aws/aws-sdk-go-v2/service/schemas v1.28.8
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.34.7
