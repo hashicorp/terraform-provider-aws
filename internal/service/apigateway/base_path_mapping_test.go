@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -242,7 +243,7 @@ func testAccCheckBasePathStageAttribute(conf *apigateway.GetBasePathMappingOutpu
 		if conf.Stage == nil {
 			return fmt.Errorf("attribute Stage should not be nil")
 		}
-		if *conf.Stage != basePath {
+		if aws.ToString(conf.Stage) != basePath {
 			return fmt.Errorf("unexpected value Stage: %s", *conf.Stage)
 		}
 
@@ -255,7 +256,7 @@ func testAccCheckRestAPIIDAttributeHasChanged(conf *apigateway.GetBasePathMappin
 		if conf.RestApiId == nil {
 			return fmt.Errorf("attribute RestApiId should not be nil")
 		}
-		if *conf.RestApiId == *previousConf.RestApiId {
+		if aws.ToString(conf.RestApiId) == aws.ToString(previousConf.RestApiId) {
 			return fmt.Errorf("expected RestApiId to have changed")
 		}
 
@@ -268,7 +269,7 @@ func testAccCheckBasePathBasePathAttribute(conf *apigateway.GetBasePathMappingOu
 		if conf.Stage == nil {
 			return fmt.Errorf("attribute Stage should not be nil")
 		}
-		if *conf.BasePath != basePath {
+		if aws.ToString(conf.BasePath) != basePath {
 			return fmt.Errorf("unexpected value Stage: %s", *conf.BasePath)
 		}
 
