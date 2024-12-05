@@ -200,7 +200,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway domain names using their `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway domain names using their `name` or `name` and `domain_name_id` (for private custom domain names). For example:
 
 ```terraform
 import {
@@ -209,8 +209,23 @@ import {
 }
 ```
 
-Using `terraform import`, import API Gateway domain names using their `name`. For example:
+For a private custom domain name:
+
+```terraform
+import {
+  to = aws_api_gateway_domain_name.example
+  id = "api.internal.example.com/abcde12345"
+}
+```
+
+Using `terraform import`, import API Gateway domain names using their `name` or `name` and `domain_name_id` (for private custom domain names). For example:
 
 ```console
 % terraform import aws_api_gateway_domain_name.example dev.example.com
+```
+
+For a private custom domain name:
+
+```console
+% terraform import aws_api_gateway_domain_name.example dev.api.internal.example.com/abcde12345
 ```
