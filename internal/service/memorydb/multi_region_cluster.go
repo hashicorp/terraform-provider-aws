@@ -97,7 +97,7 @@ func resourceMultiRegionCluster() *schema.Resource {
 					Optional: true,
 					Computed: true,
 				},
-				names.AttrSuffix: {
+				names.AttrNameSuffix: {
 					Type:     schema.TypeString,
 					Required: true,
 				},
@@ -143,7 +143,7 @@ func resourceMultiRegionClusterCreate(ctx context.Context, d *schema.ResourceDat
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
 	input := &memorydb.CreateMultiRegionClusterInput{
-		MultiRegionClusterNameSuffix: aws.String(d.Get(names.AttrSuffix).(string)),
+		MultiRegionClusterNameSuffix: aws.String(d.Get(names.AttrNameSuffix).(string)),
 		NodeType:                     aws.String(d.Get("node_type").(string)),
 		TLSEnabled:                   aws.Bool(d.Get("tls_enabled").(bool)),
 		Tags:                         getTagsIn(ctx),
@@ -219,7 +219,7 @@ func resourceMultiRegionClusterRead(ctx context.Context, d *schema.ResourceData,
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "extracting suffix from Multi Region Cluster name: %s", err)
 	}
-	d.Set(names.AttrSuffix, suffix)
+	d.Set(names.AttrNameSuffix, suffix)
 	d.Set("update_strategy", d.Get("update_strategy"))
 
 	return diags

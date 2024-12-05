@@ -127,6 +127,7 @@ const (
 	AttrMostRecent                 = "most_recent"
 	AttrName                       = "name"
 	AttrNamePrefix                 = "name_prefix"
+	AttrNameSuffix                 = "name_suffix"
 	AttrNames                      = "names"
 	AttrNamespace                  = "namespace"
 	AttrNetworkConfiguration       = "network_configuration"
