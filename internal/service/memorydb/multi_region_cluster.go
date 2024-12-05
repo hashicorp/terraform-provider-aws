@@ -71,7 +71,7 @@ func resourceMultiRegionCluster() *schema.Resource {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
-							"cluster_name": {
+							names.AttrName: {
 								Type:     schema.TypeString,
 								Computed: true,
 							},
@@ -314,7 +314,7 @@ func flattenClusters(apiObjects *[]awstypes.RegionalCluster) []interface{} {
 	for _, apiObject := range *apiObjects {
 		tfList = append(tfList, map[string]interface{}{
 			names.AttrARN:    aws.ToString(apiObject.ARN),
-			"cluster_name":   aws.ToString(apiObject.ClusterName),
+			names.AttrName:   aws.ToString(apiObject.ClusterName),
 			names.AttrRegion: aws.ToString(apiObject.Region),
 			names.AttrStatus: aws.ToString(apiObject.Status),
 		})
