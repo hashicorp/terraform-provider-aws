@@ -5187,6 +5187,7 @@ resource "aws_rds_cluster" "test" {
     min_capacity = %[4]f
 
     seconds_until_auto_pause = %[5]d
+  }
 }
 `, tfrds.ClusterEngineAuroraPostgreSQL, rName, maxCapacity, minCapacity, secondsUntilAutoPause)
 }
