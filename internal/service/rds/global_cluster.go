@@ -54,6 +54,7 @@ func resourceGlobalCluster() *schema.Resource {
 			names.AttrDatabaseName: {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			names.AttrDeletionProtection: {
