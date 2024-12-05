@@ -360,7 +360,7 @@ resource "aws_api_gateway_domain_name" "test" {
 resource "aws_api_gateway_rest_api" "test" {
   name        = "tf-acc-apigateway-base-path-mapping"
   description = "Terraform Acceptance Tests"
-  policy      = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Action = "execute-api:Invoke"
