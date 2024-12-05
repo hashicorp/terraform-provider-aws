@@ -220,10 +220,6 @@ resource "aws_servicecatalogappregistry_attribute_group" "test" {
     a = "1"
     b = "2"
   })
-  tags = {
-    tag1 = "v1"
-    tag2 = "v2"
-  }
 }
 `, rName, description)
 }
@@ -237,10 +233,6 @@ resource "aws_servicecatalogappregistry_attribute_group" "test" {
     b = "3"
     c = "4"
   })
-  tags = {
-    tag1 = "v1"
-    tag2 = "v2"
-  }
 }
 `, rName, description)
 }
