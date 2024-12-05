@@ -42,15 +42,15 @@ This resource supports the following arguments:
 * `profile_id` - (Required) ID of the profile associated with the VPC.
 * `resource_id` - (Required) Resource ID of the VPC the profile to be associated with.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tags_all` - (Optional) Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the Profile Association.
-* `status` - Status of the Profile Association. See the [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html) for valid values.
+* `status` - Status of the Profile Association.
 * `status_message` - Status message of the Profile Association.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
