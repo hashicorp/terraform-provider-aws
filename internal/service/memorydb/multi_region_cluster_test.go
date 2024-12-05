@@ -331,8 +331,8 @@ func testAccCheckMultiRegionClusterDestroy(ctx context.Context) resource.TestChe
 func testAccMultiRegionClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  name_suffix    = %[1]q
-  node_type = "db.r7g.xlarge"
+  name_suffix = %[1]q
+  node_type   = "db.r7g.xlarge"
 
   tags = {
     Test = "test"
@@ -344,8 +344,8 @@ resource "aws_memorydb_multi_region_cluster" "test" {
 func testAccMultiRegionClusterConfig_defaults(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  name_suffix    = %[1]q
-  node_type = "db.r7g.xlarge"
+  name_suffix = %[1]q
+  node_type   = "db.r7g.xlarge"
 }
 `, rName)
 }
@@ -353,7 +353,7 @@ resource "aws_memorydb_multi_region_cluster" "test" {
 func testAccMultiRegionClusterConfig_description(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  name_suffix      = %[1]q
+  name_suffix = %[1]q
   node_type   = "db.r7g.xlarge"
   description = "Also managed by Terraform"
 
@@ -367,7 +367,7 @@ resource "aws_memorydb_multi_region_cluster" "test" {
 func testAccMultiRegionClusterConfig_tlsEnabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  name_suffix      = %[1]q
+  name_suffix = %[1]q
   node_type   = "db.r7g.xlarge"
   tls_enabled = false
 
@@ -381,9 +381,9 @@ resource "aws_memorydb_multi_region_cluster" "test" {
 func testAccMultiRegionClusterConfig_engine(rName, engine string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  name_suffix    = %[1]q
-  node_type = "db.r7g.xlarge"
-  engine    = %[2]q
+  name_suffix = %[1]q
+  node_type   = "db.r7g.xlarge"
+  engine      = %[2]q
 
   tags = {
     Test = "test"
@@ -395,7 +395,7 @@ resource "aws_memorydb_multi_region_cluster" "test" {
 func testAccMultiRegionClusterConfig_engineVersion(rName, engine, engineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  name_suffix         = %[1]q
+  name_suffix    = %[1]q
   node_type      = "db.r7g.xlarge"
   engine         = %[2]q
   engine_version = %[3]q
@@ -422,8 +422,8 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_memorydb_multi_region_cluster" "test" {
-  name_suffix    = %[1]q
-  node_type = "db.r7g.xlarge"
+  name_suffix = %[1]q
+  node_type   = "db.r7g.xlarge"
 
   tags = {
     Test = "test"
@@ -453,8 +453,8 @@ resource "aws_memorydb_cluster" "test" {
 func testAccMultiRegionClusterConfig_tags1(rName, tag1Key, tag1Value string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  name_suffix    = %[1]q
-  node_type = "db.r7g.xlarge"
+  name_suffix = %[1]q
+  node_type   = "db.r7g.xlarge"
 
   tags = {
     %[2]q = %[3]q
@@ -466,8 +466,8 @@ resource "aws_memorydb_multi_region_cluster" "test" {
 func testAccMultiRegionClusterConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  name_suffix    = %[1]q
-  node_type = "db.r7g.xlarge"
+  name_suffix = %[1]q
+  node_type   = "db.r7g.xlarge"
 
   tags = {
     %[2]q = %[3]q
