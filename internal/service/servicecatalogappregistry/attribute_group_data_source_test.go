@@ -17,13 +17,10 @@ import (
 
 func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var attributegroup servicecatalogappregistry.GetAttributeGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rDesc := "Simple Description"
+	description := "Simple Description"
 	expectJsonV1 := `{"a":"1","b":"2"}`
 	dataSourceName := "data.aws_servicecatalogappregistry_attribute_group.test"
 
@@ -38,11 +35,11 @@ func TestAccServiceCatalogAppRegistryAttributeGroupDataSource_basic(t *testing.T
 		CheckDestroy:             testAccCheckAttributeGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttributeGroupDataSourceConfig_basic(rName, rDesc),
+				Config: testAccAttributeGroupDataSourceConfig_basic(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupExists(ctx, dataSourceName, &attributegroup),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, rDesc),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrDescription, description),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrAttributes, expectJsonV1),
 					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/attribute-groups/+.`)),
 				),
@@ -64,10 +61,6 @@ resource "aws_servicecatalogappregistry_attribute_group" "test" {
     a = "1"
     b = "2"
   })
-  tags = {
-    tag1 = "v1"
-    tag2 = "v2"
-  }
 }
 `, rName, description)
 }
