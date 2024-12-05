@@ -117,16 +117,6 @@ project {
 
         // Define this parameter even when not set to allow individual builds to set the value
         text("env.TF_ACC_TERRAFORM_VERSION", DslContext.getParameter("terraform_version", ""))
-
-        // These overrides exist because of the inherited dependency in the existing project structure and can
-        // be removed when this is moved outside of it
-        val isOnPrem = DslContext.getParameter("is_on_prem", "true").equals("true", ignoreCase = true)
-        if (isOnPrem) {
-            // These should be overridden in the base AWS project
-            param("env.GOPATH", "")
-            param("env.GO111MODULE", "") // No longer needed as of Go 1.16
-            param("env.GO_VERSION", "") // We're using `goenv` and `.go-version`
-        }
     }
 
     subProject(Services)
