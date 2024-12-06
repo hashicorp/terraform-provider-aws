@@ -85,39 +85,30 @@ resource "aws_glue_catalog_table_optimizer" "example" {
 The following arguments are required:
 
 * `catalog_id` - (Required) The Catalog ID of the table.
+* `configuration` - (Required) A configuration block that defines the table optimizer settings. See [Configuration](#configuration) for additional details.
 * `database_name` - (Required) The name of the database in the catalog in which the table resides.
 * `table_name` - (Required) The name of the table.
 * `type` - (Required) The type of table optimizer. Valid values are `compaction`, `retention`, and `orphan_file_deletion`.
-* `configuration` - (Required) A configuration block that defines the table optimizer settings. Detailed below.
 
-### `configuration`
+### Configuration
 
-The following arguments are required:
-
-* `role_arn` - (Required) The ARN of the IAM role to use for the table optimizer.
 * `enabled` - (Required) Indicates whether the table optimizer is enabled.
+* `orphan_file_deletion_configuration` (Optional) - The configuration block for an orphan file deletion optimizer. See [Orphan File Deletion Configuration](#orphan-file-deletion-configuration) for additional details.
+* `retention_configuration` (Optional) - The configuration block for a snapshot retention optimizer. See [Retention Configuration](#retention-configuration) for additional details.
+* `role_arn` - (Required) The ARN of the IAM role to use for the table optimizer.
 
-The following arguments are optional:
-
-* `retention_configuration` (Optional) - The configuration block for a snapshot retention optimizer. Detailed below.
-* `orphan_file_deletion_configuration` (Optional) - The configuration block for an orphan file deletion optimizer. Detailed below.
-
-### `retention_configuration`
-
-The following arguments are optional:
-
-* `iceberg_configuration` (Optional) - The configuration for an Iceberg snapshot retention optimizer.
-    * `snapshot_retention_period_in_days` (Optional) - The number of days to retain the Iceberg snapshots. Defaults to `5`, or the corresponding Iceberg table configuration field if it exsists.
-    * `number_of_snapshots_to_retain` (Optional) - The number of Iceberg snapshots to retain within the retention period. Defaults to `1` or the corresponding Icebert table configuration field if it exists.
-    * `clean_expired_files` (Optional) - If set to `false`, snapshots are only deleted from table metadata, and the underlying data and metadata files are not deleted. Defaults to `false`.
-
-### `orphan_file_deletion_configuration`
-
-The following arguments are optional:
+### Orphan File Deletion Configuration
 
 * `iceberg_configuration` (Optional) - The configuration for an Iceberg orphan file deletion optimizer.
-    * `orphan_file_retention_period_in_days` (Optional) - The number of days that orphan files should be retained before file deletion. Defaults to `3`.
-    * `location` (Optional) - Specifies a directory in which to look for files. You may choose a sub-directory rather than the top-level table location. Defaults to the table's location.
+  * `orphan_file_retention_period_in_days` (Optional) - The number of days that orphan files should be retained before file deletion. Defaults to `3`.
+  * `location` (Optional) - Specifies a directory in which to look for files. You may choose a sub-directory rather than the top-level table location. Defaults to the table's location.
+  
+### Retention Configuration
+
+* `iceberg_configuration` (Optional) - The configuration for an Iceberg snapshot retention optimizer.
+    * `snapshot_retention_period_in_days` (Optional) - The number of days to retain the Iceberg snapshots. Defaults to `5`, or the corresponding Iceberg table configuration field if it exists.
+    * `number_of_snapshots_to_retain` (Optional) - The number of Iceberg snapshots to retain within the retention period. Defaults to `1` or the corresponding Iceberg table configuration field if it exists.
+    * `clean_expired_files` (Optional) - If set to `false`, snapshots are only deleted from table metadata, and the underlying data and metadata files are not deleted. Defaults to `false`.
 
 ## Attribute Reference
 
