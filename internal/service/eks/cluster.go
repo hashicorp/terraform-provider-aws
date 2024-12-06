@@ -54,7 +54,7 @@ func resourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
-			validateAutoModeCustsomizeDiff,
+			validateAutoModeCustomizeDiff,
 			customdiff.ForceNewIfChange("encryption_config", func(_ context.Context, old, new, meta interface{}) bool {
 				// You cannot disable envelope encryption after enabling it. This action is irreversible.
 				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
@@ -1762,7 +1762,7 @@ func flattenZonalShiftConfig(apiObject *types.ZonalShiftConfigResponse) []interf
 
 // InvalidParameterException: For EKS Auto Mode, please ensure that all required configs,
 // including computeConfig, kubernetesNetworkConfig, and blockStorage are all either fully enabled or fully disabled.
-func validateAutoModeCustsomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+func validateAutoModeCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
 	if d.HasChanges("compute_config", "kubernetes_network_config", "storage_config") {
 		computeConfig := expandComputeConfigRequest(d.Get("compute_config").([]interface{}))
 		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
