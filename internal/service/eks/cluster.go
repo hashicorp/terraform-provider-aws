@@ -55,23 +55,33 @@ func resourceCluster() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
 			validateAutoModeCustomizeDiff,
-			customdiff.ForceNewIfChange("encryption_config", func(_ context.Context, old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("encryption_config", func(_ context.Context, old, new, meta any) bool {
 				// You cannot disable envelope encryption after enabling it. This action is irreversible.
-				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
+				return len(old.([]any)) == 1 && len(new.([]any)) == 0
 			}),
-			customdiff.ForceNewIfChange("compute_config", func(_ context.Context, old, new, meta interface{}) bool {
-				// Changing from one node role ARN to another requires a replacement.
-				// Enabling or disabling does not
-				oldComputeConfig := expandComputeConfigRequest(old.([]interface{}))
-				newComputeConfig := expandComputeConfigRequest(new.([]interface{}))
+			func(ctx context.Context, rd *schema.ResourceDiff, meta any) error {
+				if rd.Id() == "" {
+					return nil
+				}
+				oldValue, newValue := rd.GetChange("compute_config")
 
-				if newComputeConfig != nil && newComputeConfig.Enabled != nil && aws.ToBool(newComputeConfig.Enabled) {
-					if oldComputeConfig != nil && oldComputeConfig.NodeRoleArn != nil && newComputeConfig.NodeRoleArn != nil {
-						return *oldComputeConfig.NodeRoleArn != *newComputeConfig.NodeRoleArn
+				oldComputeConfig := expandComputeConfigRequest(oldValue.([]any))
+				newComputeConfig := expandComputeConfigRequest(newValue.([]any))
+
+				if newComputeConfig == nil || oldComputeConfig == nil {
+					return nil
+				}
+
+				oldRoleARN := aws.ToString(oldComputeConfig.NodeRoleArn)
+				newRoleARN := aws.ToString(newComputeConfig.NodeRoleArn)
+
+				if oldRoleARN != newRoleARN {
+					if err := rd.ForceNew("compute_config.0.node_role_arn"); err != nil {
+						return err
 					}
 				}
-				return false
-			}),
+				return nil
+			},
 		),
 
 		Timeouts: &schema.ResourceTimeout{
@@ -1044,10 +1054,11 @@ func waitClusterCreated(ctx context.Context, conn *eks.Client, name string, time
 
 func waitClusterDeleted(ctx context.Context, conn *eks.Client, name string, timeout time.Duration) (*types.Cluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.ClusterStatusActive, types.ClusterStatusDeleting),
-		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, name),
-		Timeout: timeout,
+		Pending:    enum.Slice(types.ClusterStatusActive, types.ClusterStatusDeleting),
+		Target:     []string{},
+		Refresh:    statusCluster(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
 		// An attempt to avoid "ResourceInUseException: Cluster already exists with name: ..." errors
 		// in acceptance tests when recreating a cluster with the same randomly generated name.
 		ContinuousTargetOccurence: 3,
