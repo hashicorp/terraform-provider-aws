@@ -203,7 +203,7 @@ resource "aws_rds_cluster_instance" "primary" {
 This resource supports the following arguments:
 
 * `global_cluster_identifier` - (Required, Forces new resources) Global cluster identifier.
-* `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.
+* `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation. Terraform will only perform drift detection if a configuration value is provided.
 * `deletion_protection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
 * `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Terraform will only perform drift detection if a configuration value is provided. Valid values: `aurora`, `aurora-mysql`, `aurora-postgresql`. Defaults to `aurora`. Conflicts with `source_db_cluster_identifier`.
 * `engine_lifecycle_support` - (Optional) The life cycle type for this DB instance. This setting applies only to Aurora PostgreSQL-based global databases. Valid values are `open-source-rds-extended-support`, `open-source-rds-extended-support-disabled`. Default value is `open-source-rds-extended-support`. [Using Amazon RDS Extended Support]: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/extended-support.html

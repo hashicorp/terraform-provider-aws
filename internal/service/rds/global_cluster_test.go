@@ -562,6 +562,36 @@ func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_storageEncrypted(t *testi
 	})
 }
 
+func TestAccRDSGlobalCluster_SourceDBClusterIdentifier_databaseName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var globalCluster1 types.GlobalCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	clusterResourceName := "aws_rds_cluster.test"
+	resourceName := "aws_rds_global_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalCluster(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalClusterConfig_sourceClusterIDDatabaseName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlobalClusterExists(ctx, resourceName, &globalCluster1),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrDatabaseName, clusterResourceName, names.AttrDatabaseName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrForceDestroy, "source_db_cluster_identifier"},
+			},
+		},
+	})
+}
+
 func TestAccRDSGlobalCluster_storageEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var globalCluster1, globalCluster2 types.GlobalCluster
@@ -1204,6 +1234,36 @@ resource "aws_rds_cluster" "test" {
   master_username     = "test"
   skip_final_snapshot = true
   storage_encrypted   = true
+
+  # global_cluster_identifier cannot be Computed
+
+  lifecycle {
+    ignore_changes = [global_cluster_identifier]
+  }
+}
+
+resource "aws_rds_global_cluster" "test" {
+  force_destroy                = true
+  global_cluster_identifier    = %[1]q
+  source_db_cluster_identifier = aws_rds_cluster.test.arn
+}
+`, rName)
+}
+
+func testAccGlobalClusterConfig_sourceClusterIDDatabaseName(rName string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "aurora-postgresql"
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[1]q
+  engine              = data.aws_rds_engine_version.default.engine
+  engine_version      = data.aws_rds_engine_version.default.version
+  master_password     = "mustbeeightcharacters"
+  master_username     = "test"
+  skip_final_snapshot = true
+  database_name       = "database04"
 
   # global_cluster_identifier cannot be Computed
 
