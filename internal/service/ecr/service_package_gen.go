@@ -28,7 +28,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newAccountSettingResource,
+			Name:    "Account Setting",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -66,11 +71,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
-		{
-			Factory:  resourceAccountSetting,
-			TypeName: "aws_ecr_account_setting",
-			Name:     "Account Settings",
-		},
 		{
 			Factory:  resourceLifecyclePolicy,
 			TypeName: "aws_ecr_lifecycle_policy",

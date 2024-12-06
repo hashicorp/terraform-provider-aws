@@ -45,10 +45,11 @@ func testAccAccountSetting_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "AWS_NATIVE")),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportStateId:     rName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateId:                        rName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
 			},
 			{
 				Config: testAccAccountSettingConfig_basic(rName, "CLAIR"),
@@ -70,17 +71,17 @@ func testAccCheckAccountSettingExists(ctx context.Context, n string) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
-		_, err := tfecr.FindAccountSettingByName(ctx, conn, rs.Primary.ID)
+		_, err := tfecr.FindAccountSettingByName(ctx, conn, rs.Primary.Attributes[names.AttrName])
 
 		return err
 	}
 }
 
-func testAccAccountSettingConfig_basic(Name string, Value string) string {
+func testAccAccountSettingConfig_basic(name, value string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_account_setting" "test" {
   name  = %[1]q
   value = %[2]q
 }
-`, Name, Value)
+`, name, value)
 }

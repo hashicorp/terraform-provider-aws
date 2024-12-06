@@ -5,7 +5,6 @@ package ecr
 
 // Exports for use in tests only.
 var (
-	ResourceAccountSetting                = resourceAccountSetting
 	ResourceLifecyclePolicy               = resourceLifecyclePolicy
 	ResourcePullThroughCacheRule          = resourcePullThroughCacheRule
 	ResourceRegistryPolicy                = resourceRegistryPolicy
