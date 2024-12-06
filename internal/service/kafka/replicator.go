@@ -721,14 +721,6 @@ func expandConsumerGroupReplicationUpdate(tfMap map[string]interface{}) *types.C
 func expandTopicReplicationUpdate(tfMap map[string]interface{}) *types.TopicReplicationUpdate {
 	apiObject := &types.TopicReplicationUpdate{}
 
-	if v, ok := tfMap["topics_to_replicate"].(*schema.Set); ok {
-		apiObject.TopicsToReplicate = flex.ExpandStringValueSet(v)
-	}
-
-	if v, ok := tfMap["topics_to_exclude"].(*schema.Set); ok {
-		apiObject.TopicsToExclude = flex.ExpandStringValueSet(v)
-	}
-
 	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
 		apiObject.CopyTopicConfigurations = aws.Bool(v)
 	}
@@ -739,6 +731,14 @@ func expandTopicReplicationUpdate(tfMap map[string]interface{}) *types.TopicRepl
 
 	if v, ok := tfMap["detect_and_copy_new_topics"].(bool); ok {
 		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["topics_to_exclude"].(*schema.Set); ok {
+		apiObject.TopicsToExclude = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := tfMap["topics_to_replicate"].(*schema.Set); ok {
+		apiObject.TopicsToReplicate = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
