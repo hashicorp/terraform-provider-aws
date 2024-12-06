@@ -44,6 +44,67 @@ func TestAccLogsAnomalyDetector_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_frequency", "TEN_MIN"),
+					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "7"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_group_arn_list.#"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{names.AttrEnabled},
+			},
+		},
+	})
+}
+
+func TestAccLogsAnomalyDetector_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var loganomalydetector cloudwatchlogs.GetLogAnomalyDetectorOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_log_anomaly_detector.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLogAnomalyDetectorConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
+					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_frequency", "TEN_MIN"),
+					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "7"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_group_arn_list.#"),
+				),
+			},
+			{
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateVerify:                    true,
+				ImportStateIdFunc:                    testAccAnomalyDetectorImportStateIDFunc(resourceName),
+				ImportStateVerifyIdentifierAttribute: names.AttrARN,
+				ImportStateVerifyIgnore:              []string{names.AttrEnabled},
+			},
+			{
+				Config: testAccLogAnomalyDetectorConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
+					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
+					resource.TestCheckResourceAttr(resourceName, "evaluation_frequency", "FIVE_MIN"),
+					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "7"),
+					resource.TestCheckResourceAttrSet(resourceName, "log_group_arn_list.#"),
 				),
 			},
 			{
@@ -71,7 +132,6 @@ func TestAccLogsAnomalyDetector_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, names.LogsServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
