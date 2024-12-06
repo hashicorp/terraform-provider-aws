@@ -5,6 +5,7 @@ package route53domains_test
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -307,6 +308,23 @@ func testAccRegisteredDomain_transferLock(t *testing.T) {
 	})
 }
 
+func testAccRegisteredDomain_createRegisterFails(t *testing.T) {
+	ctx := acctest.Context(t)
+	domainName := acctest.SkipIfEnvVarNotSet(t, "ROUTE53DOMAINS_DOMAIN_NAME")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRegisteredDomainConfig_registerDisabled(domainName),
+				ExpectError: regexp.MustCompile(`Route 53 Domains (.+) registration is not enabled`),
+			},
+		},
+	})
+}
+
 func testAccRegisteredDomainConfig_tags1(domainName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_route53domains_registered_domain" "test" {
@@ -536,4 +554,13 @@ resource "aws_route53domains_registered_domain" "test" {
   transfer_lock = %[2]t
 }
 `, domainName, transferLock)
+}
+
+func testAccRegisteredDomainConfig_registerDisabled(domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_route53domains_registered_domain" "test" {
+  domain_name   = "nonexistent-%[1]s"
+  register      = false
+}
+`, domainName)
 }
