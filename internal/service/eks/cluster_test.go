@@ -111,7 +111,7 @@ func TestAccEKSCluster_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceCluster(), resourceName),
 				),
@@ -135,7 +135,7 @@ func TestAccEKSCluster_AccessConfig_create(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_accessConfig(rName, types.AuthenticationModeConfigMap),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeConfigMap)),
@@ -166,7 +166,7 @@ func TestAccEKSCluster_AccessConfig_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeConfigMap)),
@@ -180,7 +180,7 @@ func TestAccEKSCluster_AccessConfig_update(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionNoop),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeConfigMap)),
@@ -194,7 +194,7 @@ func TestAccEKSCluster_AccessConfig_update(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", string(types.AuthenticationModeApiAndConfigMap)),
@@ -203,7 +203,7 @@ func TestAccEKSCluster_AccessConfig_update(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
 				),
@@ -226,7 +226,7 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_bootstrapSelfManagedAddons(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtFalse),
 				),
@@ -244,7 +244,7 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_update(t *testing.T) {
 						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
 					},
 				},
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
 				),
@@ -272,7 +272,7 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
 					},
 				},
 				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckNoResourceAttr(resourceName, "bootstrap_self_managed_addons"),
 				),
@@ -280,7 +280,7 @@ func TestAccEKSCluster_BootstrapSelfManagedAddons_migrate(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
@@ -500,7 +500,7 @@ func TestAccEKSCluster_Encryption_create(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_encryption(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.provider.#", "1"),
@@ -533,14 +533,14 @@ func TestAccEKSCluster_Encryption_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "0"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_encryption(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "1"),
@@ -575,7 +575,7 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_encryptionVersion(rName, clusterVersionUpgradeInitial),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.0.provider.#", "1"),
@@ -592,7 +592,7 @@ func TestAccEKSCluster_Encryption_versionUpdate(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_encryptionVersion(rName, clusterVersionUpgradeUpdated),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "encryption_config.#", "1"),
@@ -620,7 +620,7 @@ func TestAccEKSCluster_version(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeInitial),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeInitial),
 				),
@@ -633,7 +633,7 @@ func TestAccEKSCluster_version(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_version(rName, clusterVersionUpgradeUpdated),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, clusterVersionUpgradeUpdated),
@@ -657,7 +657,7 @@ func TestAccEKSCluster_logging(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_logging(rName, []string{"api"}),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "enabled_cluster_log_types.*", "api"),
@@ -671,7 +671,7 @@ func TestAccEKSCluster_logging(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_logging(rName, []string{"api", "audit"}),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "2"),
@@ -682,7 +682,7 @@ func TestAccEKSCluster_logging(t *testing.T) {
 			// Disable all log types.
 			{
 				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cluster_log_types.#", "0"),
@@ -706,7 +706,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
@@ -720,7 +720,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
@@ -729,7 +729,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster3),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
@@ -753,7 +753,7 @@ func TestAccEKSCluster_VPC_securityGroupIDs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_vpcSecurityGroupIDs(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
@@ -783,7 +783,7 @@ func TestAccEKSCluster_VPC_securityGroupIDsAndSubnetIDs_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_vpcSecurityGroupIDs(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
@@ -792,7 +792,7 @@ func TestAccEKSCluster_VPC_securityGroupIDsAndSubnetIDs_update(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_vpcSecurityGroupIDsAndSubnetIDsUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -824,7 +824,7 @@ func TestAccEKSCluster_VPC_endpointPrivateAccess(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_vpcEndpointPrivateAccess(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_private_access", acctest.CtTrue),
@@ -838,7 +838,7 @@ func TestAccEKSCluster_VPC_endpointPrivateAccess(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_vpcEndpointPrivateAccess(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -847,7 +847,7 @@ func TestAccEKSCluster_VPC_endpointPrivateAccess(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_vpcEndpointPrivateAccess(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster3),
 					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -872,7 +872,7 @@ func TestAccEKSCluster_VPC_endpointPublicAccess(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_vpcEndpointPublicAccess(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.endpoint_public_access", acctest.CtFalse),
@@ -886,7 +886,7 @@ func TestAccEKSCluster_VPC_endpointPublicAccess(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_vpcEndpointPublicAccess(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -895,7 +895,7 @@ func TestAccEKSCluster_VPC_endpointPublicAccess(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_vpcEndpointPublicAccess(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster3),
 					testAccCheckClusterNotRecreated(&cluster2, &cluster3),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
@@ -920,7 +920,7 @@ func TestAccEKSCluster_VPC_publicAccessCIDRs(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_vpcPublicAccessCIDRs(rName, `["1.2.3.4/32", "5.6.7.8/32"]`),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.public_access_cidrs.#", "2"),
@@ -934,7 +934,7 @@ func TestAccEKSCluster_VPC_publicAccessCIDRs(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_vpcPublicAccessCIDRs(rName, `["4.3.2.1/32", "8.7.6.5/32"]`),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.public_access_cidrs.#", "2"),
@@ -978,7 +978,7 @@ func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_networkServiceIPv4CIDR(rName, `"192.168.0.0/24"`),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", "192.168.0.0/24"),
@@ -997,7 +997,7 @@ func TestAccEKSCluster_Network_serviceIPv4CIDR(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_networkServiceIPv4CIDR(rName, `"192.168.1.0/24"`),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
@@ -1022,7 +1022,7 @@ func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_networkIPFamily(rName, `"ipv6"`),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.ip_family", "ipv6"),
@@ -1041,7 +1041,7 @@ func TestAccEKSCluster_Network_ipFamily(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_networkIPFamily(rName, `"ipv4"`),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
@@ -1067,7 +1067,7 @@ func TestAccEKSCluster_Outpost_create(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_outpost(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^[0-9A-Fa-f]{8}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
@@ -1100,7 +1100,7 @@ func TestAccEKSCluster_Outpost_placement(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_outpostPlacement(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestMatchResourceAttr(resourceName, "cluster_id", regexache.MustCompile(`^[0-9A-Fa-f]{8}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{4}\b-[0-9A-Fa-f]{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "1"),
@@ -1134,7 +1134,7 @@ func TestAccEKSCluster_RemoteNetwork_Node(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_remoteNodeNetwork(rName, remoteNodeCIDR),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.#", "1"),
@@ -1169,7 +1169,7 @@ func TestAccEKSCluster_RemoteNetwork_Pod(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_remotePodNetwork(rName, remoteNodeCIDR, remotePodCIDR),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "remote_network_config.0.remote_node_networks.#", "1"),
@@ -1204,7 +1204,7 @@ func TestAccEKSCluster_upgradePolicy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_upgradePolicy(rName, "STANDARD"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.0.support_type", "STANDARD"),
@@ -1218,7 +1218,7 @@ func TestAccEKSCluster_upgradePolicy(t *testing.T) {
 			},
 			{
 				Config: testAccClusterConfig_upgradePolicy(rName, "EXTENDED"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "upgrade_policy.0.support_type", "EXTENDED"),
@@ -1248,14 +1248,14 @@ func TestAccEKSCluster_zonalShiftConfig(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
 					resource.TestCheckResourceAttr(resourceName, "zonal_shift_config.#", "0"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_zonalShiftConfig(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster2),
 					testAccCheckClusterNotRecreated(&cluster1, &cluster2),
 					resource.TestCheckResourceAttr(resourceName, "zonal_shift_config.#", "1"),
