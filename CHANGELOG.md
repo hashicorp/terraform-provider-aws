@@ -5,21 +5,26 @@ FEATURES:
 * **New Data Source:** `aws_servicecatalogappregistry_attribute_group` ([#38188](https://github.com/hashicorp/terraform-provider-aws/issues/38188))
 * **New Ephemeral Resource:** `aws_ssm_parameter` ([#40313](https://github.com/hashicorp/terraform-provider-aws/issues/40313))
 * **New Resource:** `aws_bedrock_inference_profile` ([#40294](https://github.com/hashicorp/terraform-provider-aws/issues/40294))
+* **New Resource:** `aws_ecr_account_setting` ([#40219](https://github.com/hashicorp/terraform-provider-aws/issues/40219))
 * **New Resource:** `aws_servicecatalogappregistry_attribute_group` ([#38183](https://github.com/hashicorp/terraform-provider-aws/issues/38183))
 
 ENHANCEMENTS:
 
 * data-source/aws_api_gateway_domain_name: Add `policy` and `domain_name_id` attributes ([#40364](https://github.com/hashicorp/terraform-provider-aws/issues/40364))
+* data-source/aws_servicecatalogappregistry_application: Add `tags` attribute ([#38243](https://github.com/hashicorp/terraform-provider-aws/issues/38243))
 * resource/aws_api_gateway_base_path_mapping: Add `domain_name_id` argument ([#40447](https://github.com/hashicorp/terraform-provider-aws/issues/40447))
 * resource/aws_api_gateway_domain_name: Add `policy` argument and `domain_name_id` attribute ([#40364](https://github.com/hashicorp/terraform-provider-aws/issues/40364))
 * resource/aws_api_gateway_domain_name: Support `PRIVATE` as a valid value for `endpoint_configuration.types` argument, enabling custom domain name support for private REST API endpoints ([#40364](https://github.com/hashicorp/terraform-provider-aws/issues/40364))
 * resource/aws_ebs_snapshot_copy: Add `completion_duration_minutes` argument ([#40336](https://github.com/hashicorp/terraform-provider-aws/issues/40336))
+* resource/aws_msk_replicator: Add `topic_replication.topic_name_configuration` argument ([#40101](https://github.com/hashicorp/terraform-provider-aws/issues/40101))
 * resource/aws_networkfirewall_firewall_policy: Add `stateful_engine_options.flow_timeouts` argument ([#39996](https://github.com/hashicorp/terraform-provider-aws/issues/39996))
 * resource/aws_rds_cluster: Add `serverlessv2_scaling_configuration.seconds_until_auto_pause` argument ([#40441](https://github.com/hashicorp/terraform-provider-aws/issues/40441))
 * resource/aws_rds_global_cluster: Add `tags` argument and `tags_all` attribute ([#40470](https://github.com/hashicorp/terraform-provider-aws/issues/40470))
+* resource/aws_servicecatalogappregistry_application: Add `tags` argument and `tags_all` attribute ([#38243](https://github.com/hashicorp/terraform-provider-aws/issues/38243))
 
 BUG FIXES:
 
+* resource/aws_fsx_windows_file_system: Fix plan-time validation of `throughput_capacity` validation to allow values up to `12228` ([#40468](https://github.com/hashicorp/terraform-provider-aws/issues/40468))
 * resource/aws_rds_cluster: Fix `InvalidDBClusterStateFault` errors when deleting clusters that are members of a global cluster ([#40333](https://github.com/hashicorp/terraform-provider-aws/issues/40333))
 * resource/aws_rds_cluster: Respect `storage_type` when restoring from S3 ([#40471](https://github.com/hashicorp/terraform-provider-aws/issues/40471))
 * resource/aws_rds_cluster: Respect `storage_type` when restoring from snapshot ([#40471](https://github.com/hashicorp/terraform-provider-aws/issues/40471))
