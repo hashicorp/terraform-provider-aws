@@ -20,16 +20,11 @@ val sweeperRegions = DslContext.getParameter("sweeper_regions")
 val awsAccountID = DslContext.getParameter("aws_account.account_id")
 val acctestParallelism = DslContext.getParameter("acctest_parallelism", "")
 val tfAccAssumeRoleArn = DslContext.getParameter("tf_acc_assume_role_arn", "")
-val awsAlternateAccountID = DslContext.getParameter("aws_alt_account.account_id", "")
 val tfLog = DslContext.getParameter("tf_log", "")
 
 // Legacy User credentials
 val legacyAWSAccessKeyID = DslContext.getParameter("aws_account.legacy_access_key_id", "")
 val legacyAWSSecretAccessKey = DslContext.getParameter("aws_account.legacy_secret_access_key", "")
-
-// Legacy Alternate User credentials
-val legacyAWSAlternateAccessKeyID = DslContext.getParameter("aws_alt_account.legacy_access_key_id", "")
-val legacyAWSAlternateSecretAccessKey = DslContext.getParameter("aws_alt_account.legacy_secret_access_key", "")
 
 // Assume Role credentials
 val accTestRoleARN = DslContext.getParameter("aws_account.role_arn", "")
@@ -82,11 +77,12 @@ project {
         }
 
         // Used to specify the default branch in the VCS Root
-        val brancRef = DslContext.getParameter("branch_name", "")
-        if (brancRef != "") {
-            text("BRANCH_NAME", brancRef, display = ParameterDisplay.HIDDEN)
+        val branchRef = DslContext.getParameter("branch_name", "")
+        if (branchRef != "") {
+            text("BRANCH_NAME", branchRef, display = ParameterDisplay.HIDDEN)
         }
 
+        // Additional role to assume for some acceptance tests
         if (tfAccAssumeRoleArn != "") {
             text("env.TF_ACC_ASSUME_ROLE_ARN", tfAccAssumeRoleArn)
         }
@@ -97,13 +93,6 @@ project {
         }
         if (legacyAWSSecretAccessKey != "") {
             password("env.AWS_SECRET_ACCESS_KEY", legacyAWSSecretAccessKey, display = ParameterDisplay.HIDDEN)
-        }
-
-        // Legacy Alternate User credentials
-        if (awsAlternateAccountID != "" || legacyAWSAlternateAccessKeyID != "" || legacyAWSAlternateSecretAccessKey != "") {
-            text("env.AWS_ALTERNATE_ACCOUNT_ID", awsAlternateAccountID, display = ParameterDisplay.HIDDEN)
-            password("env.AWS_ALTERNATE_ACCESS_KEY_ID", legacyAWSAlternateAccessKeyID, display = ParameterDisplay.HIDDEN)
-            password("env.AWS_ALTERNATE_SECRET_ACCESS_KEY", legacyAWSAlternateSecretAccessKey, display = ParameterDisplay.HIDDEN)
         }
 
         // Assume Role credentials
