@@ -330,7 +330,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("multi_region_cluster_name"); ok {
-		input.MaintenanceWindow = aws.String(v.(string))
+		input.MultiRegionClusterName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
