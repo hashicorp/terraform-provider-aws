@@ -80,13 +80,15 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 		CheckDestroy:             testAccCheckAnomalyDetectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLogAnomalyDetectorConfig_basic(rName),
+				Config: testAccLogAnomalyDetectorConfig_update(rName, "TEN_MIN", acctest.CtFalse, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_frequency", "TEN_MIN"),
 					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "7"),
 					resource.TestCheckResourceAttrSet(resourceName, "log_group_arn_list.#"),
+					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "7"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -98,13 +100,14 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 				ImportStateVerifyIgnore:              []string{names.AttrEnabled},
 			},
 			{
-				Config: testAccLogAnomalyDetectorConfig_basic(rName),
+				Config: testAccLogAnomalyDetectorConfig_update(rName, "FIVE_MIN", acctest.CtTrue, 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyDetectorExists(ctx, resourceName, &loganomalydetector),
 					resource.TestCheckResourceAttrSet(resourceName, "detector_name"),
 					resource.TestCheckResourceAttr(resourceName, "evaluation_frequency", "FIVE_MIN"),
-					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "7"),
+					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "8"),
 					resource.TestCheckResourceAttrSet(resourceName, "log_group_arn_list.#"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -222,7 +225,24 @@ resource "aws_cloudwatch_log_anomaly_detector" "test" {
   log_group_arn_list      = [aws_cloudwatch_log_group.test[0].arn]
   anomaly_visibility_time = 7
   evaluation_frequency    = "TEN_MIN"
-  enabled                 = "false"
+  enabled                 = false
 }
 `, rName)
+}
+
+func testAccLogAnomalyDetectorConfig_update(rName string, ef string, enabled string, avt int64) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  count = 2
+  name  = "%[1]s-${count.index}"
+}
+
+resource "aws_cloudwatch_log_anomaly_detector" "test" {
+  detector_name           = %[1]q
+  log_group_arn_list      = [aws_cloudwatch_log_group.test[0].arn]
+  anomaly_visibility_time = %[4]d
+  evaluation_frequency    = %[2]q
+  enabled                 = %[3]q
+}
+`, rName, ef, enabled, avt)
 }
