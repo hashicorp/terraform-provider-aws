@@ -761,7 +761,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			requiresModifyDbCluster = true
 		}
 
-		if v, ok := d.GetOkExists(names.AttrStorageType); ok {
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
@@ -885,7 +885,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.StorageEncrypted = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOkExists(names.AttrStorageType); ok {
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
@@ -1029,7 +1029,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.SourceDbClusterResourceId = aws.String(v)
 		}
 
-		if v, ok := d.GetOkExists(names.AttrStorageType); ok {
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
@@ -1213,7 +1213,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.StorageEncrypted = aws.Bool(v.(bool))
 		}
 
-		if v, ok := d.GetOkExists(names.AttrStorageType); ok {
+		if v, ok := d.GetOk(names.AttrStorageType); ok {
 			input.StorageType = aws.String(v.(string))
 		}
 
