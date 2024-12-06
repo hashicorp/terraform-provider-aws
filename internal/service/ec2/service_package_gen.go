@@ -514,6 +514,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Endpoint Service",
 		},
 		{
+			Factory:  dataSourceIPAM,
+			TypeName: "aws_vpc_ipam",
+			Name:     "IPAM",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
 			Factory:  dataSourceIPAMPool,
 			TypeName: "aws_vpc_ipam_pool",
 			Name:     "IPAM Pool",
@@ -533,6 +539,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceIPAMPreviewNextCIDR,
 			TypeName: "aws_vpc_ipam_preview_next_cidr",
 			Name:     "IPAM Preview Next CIDR",
+		},
+		{
+			Factory:  dataSourceIPAMs,
+			TypeName: "aws_vpc_ipams",
+			Name:     "IPAMs",
 		},
 		{
 			Factory:  dataSourceVPCPeeringConnection,
