@@ -35,7 +35,7 @@ jobs:
           PR_HTML_URL: ${{ github.event.pull_request.html_url }}
           PR_TITLE: ${{ github.event.pull_request.title }}
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
             {

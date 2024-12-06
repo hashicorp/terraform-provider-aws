@@ -30,7 +30,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode(t *testing.T) {
 				Config: testAccServiceQuotaDataSourceConfig_code(setQuotaServiceCode, setQuotaQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", acctest.CtTrue),
-					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
+					acctest.CheckResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDefaultValue, "5"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", setQuotaQuotaCode),
@@ -94,7 +94,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaCode_hasUsageMetric(t *test
 			{
 				Config: testAccServiceQuotaDataSourceConfig_code(hasUsageMetricServiceCode, hasUsageMetricQuotaCode),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", hasUsageMetricServiceCode, hasUsageMetricQuotaCode)),
+					acctest.CheckResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", hasUsageMetricServiceCode, hasUsageMetricQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDefaultValue, "500"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", acctest.CtFalse),
@@ -155,7 +155,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName(t *testing.T) {
 				Config: testAccServiceQuotaDataSourceConfig_name("vpc", setQuotaQuotaName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", acctest.CtTrue),
-					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
+					acctest.CheckResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", setQuotaServiceCode, setQuotaQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDefaultValue, "5"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, "quota_code", setQuotaQuotaCode),
@@ -219,7 +219,7 @@ func TestAccServiceQuotasServiceQuotaDataSource_quotaName_hasUsageMetric(t *test
 			{
 				Config: testAccServiceQuotaDataSourceConfig_name(hasUsageMetricServiceCode, hasUsageMetricQuotaName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrRegionalARN(dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", hasUsageMetricServiceCode, hasUsageMetricQuotaCode)),
+					acctest.CheckResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "servicequotas", fmt.Sprintf("%s/%s", hasUsageMetricServiceCode, hasUsageMetricQuotaCode)),
 					resource.TestCheckResourceAttr(dataSourceName, "adjustable", acctest.CtTrue),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrDefaultValue, "500"),
 					resource.TestCheckResourceAttr(dataSourceName, "global_quota", acctest.CtFalse),

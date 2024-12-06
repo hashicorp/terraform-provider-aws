@@ -36,8 +36,8 @@ This resource supports the following arguments:
 
 The `location` block supports the following:
 
-* `name` - (Required) [Availability Zone ID](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#az-ids).
-* `type` - (Optional, Default:`AvailabilityZone`) Location type. Valid values: `AvailabilityZone`.
+* `name` - (Required) [Availability Zone ID](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#az-ids) or Local Zone ID.
+* `type` - (Optional, Default:`AvailabilityZone`) Location type. Valid values: `AvailabilityZone`, `LocalZone`.
 
 ## Attribute Reference
 

@@ -169,7 +169,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: aws.ToString(ownerID),
 		Resource:  "vpc/" + d.Id(),
 	}.String()

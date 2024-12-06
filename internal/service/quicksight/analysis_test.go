@@ -103,7 +103,7 @@ func TestAccQuickSightAnalysis_sourceEntity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 				),
 			},
 			{

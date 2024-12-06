@@ -38,7 +38,7 @@ func testAccOrganizationCustomRule_basic(t *testing.T) {
 				Config: testAccOrganizationCustomRuleConfig_triggerTypes1(rName, "ConfigurationItemChangeNotification"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationCustomRuleExists(ctx, resourceName, &rule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "config", regexache.MustCompile(fmt.Sprintf("organization-config-rule/%s-.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "excluded_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_parameters", ""),

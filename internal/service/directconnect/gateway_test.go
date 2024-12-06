@@ -36,7 +36,7 @@ func TestAccDirectConnectGateway_basic(t *testing.T) {
 				Config: testAccGatewayConfig_basic(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 				),
 			},
 			{
@@ -90,7 +90,7 @@ func TestAccDirectConnectGateway_complex(t *testing.T) {
 				Config: testAccGatewayConfig_associationMultiVPNSingleAccount(rName, rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGatewayExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 				),
 			},
 			{

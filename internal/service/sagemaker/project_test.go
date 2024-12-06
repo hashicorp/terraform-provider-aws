@@ -36,7 +36,7 @@ func TestAccSageMakerProject_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &mpg),
 					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("project/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "service_catalog_provisioning_details.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_catalog_provisioning_details.0.product_id", "aws_servicecatalog_product.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

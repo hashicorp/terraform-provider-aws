@@ -121,7 +121,7 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &kms.ReplicateKeyInput{
 		KeyId:         aws.String(strings.TrimPrefix(primaryKeyARN.Resource, "key/")),
-		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region),
+		ReplicaRegion: aws.String(meta.(*conns.AWSClient).Region(ctx)),
 		Tags:          getTagsIn(ctx),
 	}
 

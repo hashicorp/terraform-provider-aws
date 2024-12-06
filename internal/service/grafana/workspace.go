@@ -287,8 +287,8 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	workspaceARN := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "grafana",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("/workspaces/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, workspaceARN)

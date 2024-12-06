@@ -99,7 +99,7 @@ func dataSourceRulesRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	d.Set("resolver_rule_ids", aws.ToStringSlice(ruleIDs))
 

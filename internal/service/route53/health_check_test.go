@@ -181,7 +181,7 @@ func TestAccRoute53HealthCheck_withHealthCheckRegions(t *testing.T) {
 		CheckDestroy:             testAccCheckHealthCheckDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccHealthCheckConfig_regions(names.USWest2RegionID, names.USEast1RegionID, names.EUWest1RegionID),
+				Config: testAccHealthCheckConfig_regions(endpoints.UsWest2RegionID, endpoints.UsEast1RegionID, endpoints.EuWest1RegionID),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHealthCheckExists(ctx, resourceName, &check),
 					resource.TestCheckResourceAttr(resourceName, "regions.#", "3"),

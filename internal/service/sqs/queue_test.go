@@ -108,7 +108,7 @@ func TestAccSQSQueue_basic(t *testing.T) {
 				Config: testAccQueueConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sqs", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sqs", rName),
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
@@ -297,7 +297,7 @@ func TestAccSQSQueue_update(t *testing.T) {
 				Config: testAccQueueConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sqs", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sqs", rName),
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", strconv.Itoa(tfsqs.DefaultQueueDelaySeconds)),
@@ -319,7 +319,7 @@ func TestAccSQSQueue_update(t *testing.T) {
 				Config: testAccQueueConfig_updated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sqs", rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sqs", rName),
 					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "deduplication_scope", ""),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
@@ -379,7 +379,7 @@ func TestAccSQSQueue_Policy_basic(t *testing.T) {
 				Config: testAccQueueConfig_policy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					testAccCheckQueuePolicyAttribute(&queueAttributes, rName, expectedPolicy),
+					testAccCheckQueuePolicyAttribute(ctx, &queueAttributes, rName, expectedPolicy),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
@@ -433,7 +433,7 @@ func TestAccSQSQueue_Policy_ignoreEquivalent(t *testing.T) {
 				Config: testAccQueueConfig_policyEquivalent(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queueAttributes),
-					testAccCheckQueuePolicyAttribute(&queueAttributes, rName, expectedPolicy),
+					testAccCheckQueuePolicyAttribute(ctx, &queueAttributes, rName, expectedPolicy),
 					resource.TestCheckResourceAttr(resourceName, "delay_seconds", "90"),
 					resource.TestCheckResourceAttr(resourceName, "max_message_size", "2048"),
 					resource.TestCheckResourceAttr(resourceName, "message_retention_seconds", "86400"),
@@ -820,9 +820,9 @@ func TestAccSQSQueue_defaultKMSDataKeyReusePeriodSeconds(t *testing.T) {
 	})
 }
 
-func testAccCheckQueuePolicyAttribute(queueAttributes *map[types.QueueAttributeName]string, rName, policyTemplate string) resource.TestCheckFunc {
+func testAccCheckQueuePolicyAttribute(ctx context.Context, queueAttributes *map[types.QueueAttributeName]string, rName, policyTemplate string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedPolicy := fmt.Sprintf(policyTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(), rName)
+		expectedPolicy := fmt.Sprintf(policyTemplate, acctest.Partition(), acctest.Region(), acctest.AccountID(ctx), rName)
 
 		var actualPolicyText string
 		for key, value := range *queueAttributes {

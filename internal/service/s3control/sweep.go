@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -70,7 +71,7 @@ func sweepAccessGrants(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListAccessGrantsInput{
 		AccountId: aws.String(accountID),
 	}
@@ -112,7 +113,7 @@ func sweepAccessGrantsInstances(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListAccessGrantsInstancesInput{
 		AccountId: aws.String(accountID),
 	}
@@ -154,7 +155,7 @@ func sweepAccessGrantsLocations(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListAccessGrantsLocationsInput{
 		AccountId: aws.String(accountID),
 	}
@@ -196,7 +197,7 @@ func sweepAccessPoints(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListAccessPointsInput{
 		AccountId: aws.String(accountID),
 	}
@@ -242,7 +243,7 @@ func sweepAccessPoints(region string) error {
 
 func sweepMultiRegionAccessPoints(region string) error {
 	ctx := sweep.Context(region)
-	if region != names.USWest2RegionID {
+	if region != endpoints.UsWest2RegionID {
 		log.Printf("[WARN] Skipping S3 Multi-Region Access Point sweep for region: %s", region)
 		return nil
 	}
@@ -251,7 +252,7 @@ func sweepMultiRegionAccessPoints(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListMultiRegionAccessPointsInput{
 		AccountId: aws.String(accountID),
 	}
@@ -295,7 +296,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListAccessPointsForObjectLambdaInput{
 		AccountId: aws.String(accountID),
 	}
@@ -334,7 +335,7 @@ func sweepObjectLambdaAccessPoints(region string) error {
 
 func sweepStorageLensConfigurations(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USGovEast1RegionID || region == names.USGovWest1RegionID {
+	if region == endpoints.UsGovEast1RegionID || region == endpoints.UsGovWest1RegionID {
 		log.Printf("[WARN] Skipping S3 Storage Lens Configuration sweep for region: %s", region)
 		return nil
 	}
@@ -343,7 +344,7 @@ func sweepStorageLensConfigurations(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.S3ControlClient(ctx)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &s3control.ListStorageLensConfigurationsInput{
 		AccountId: aws.String(accountID),
 	}

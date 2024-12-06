@@ -17,6 +17,7 @@ import (
 )
 
 // @SDKDataSource("aws_memorydb_snapshot", name="Snapshot")
+// @Tags(identifierAttribute="arn")
 func dataSourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSnapshotRead,
@@ -32,6 +33,10 @@ func dataSourceSnapshot() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						names.AttrDescription: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrEngine: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -109,13 +114,11 @@ func dataSourceSnapshot() *schema.Resource {
 
 func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	name := d.Get(names.AttrName).(string)
 
-	snapshot, err := FindSnapshotByName(ctx, conn, name)
+	snapshot, err := findSnapshotByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB Snapshot", err))
@@ -125,22 +128,12 @@ func dataSourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set(names.AttrARN, snapshot.ARN)
 	if err := d.Set("cluster_configuration", flattenClusterConfiguration(snapshot.ClusterConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "failed to set cluster_configuration for MemoryDB Snapshot (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting cluster_configuration: %s", err)
 	}
 	d.Set(names.AttrClusterName, snapshot.ClusterConfiguration.Name)
 	d.Set(names.AttrKMSKeyARN, snapshot.KmsKeyId)
 	d.Set(names.AttrName, snapshot.Name)
 	d.Set(names.AttrSource, snapshot.Source)
-
-	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for MemoryDB Snapshot (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set(names.AttrTags, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }

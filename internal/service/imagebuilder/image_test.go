@@ -37,7 +37,7 @@ func TestAccImageBuilderImage_basic(t *testing.T) {
 				Config: testAccImageConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "imagebuilder", regexache.MustCompile(fmt.Sprintf("image/%s/1.0.0/[1-9][0-9]*", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "imagebuilder", regexache.MustCompile(fmt.Sprintf("image/%s/1.0.0/[1-9][0-9]*", rName))),
 					resource.TestCheckNoResourceAttr(resourceName, "container_recipe_arn"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "date_created"),
 					resource.TestCheckNoResourceAttr(resourceName, "distribution_configuration_arn"),

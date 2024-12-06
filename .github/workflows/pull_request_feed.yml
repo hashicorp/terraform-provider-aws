@@ -36,7 +36,7 @@ jobs:
           MERGED_BY_URL: ${{ github.event.pull_request.merged_by.html_url }}
           MERGED_BY_LOGIN: ${{ github.event.pull_request.merged_by.login }}
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
             {
@@ -61,7 +61,7 @@ jobs:
           PR_AUTHOR_URL: ${{ github.event.pull_request.user.html_url }}
           PR_AUTHOR_LOGIN: ${{ github.event.pull_request.user.login }}
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
             {
@@ -85,7 +85,7 @@ jobs:
           PR_AUTHOR_URL: ${{ github.event.pull_request.user.html_url }}
           PR_AUTHOR_LOGIN: ${{ github.event.pull_request.user.login }}
         with:
-          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook: ${{ secrets.FEED_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
             {

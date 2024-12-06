@@ -40,7 +40,7 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrSet(resourceName, "last_provisioning_record_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_record_id"),
@@ -106,7 +106,7 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(fmt.Sprintf(`stack/%s/pp-.*`, rName))),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedTime),
 					resource.TestCheckResourceAttrSet(resourceName, "last_provisioning_record_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_record_id"),
