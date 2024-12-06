@@ -45,7 +45,7 @@ resource "aws_glue_catalog_table_optimizer" "example" {
       iceberg_configuration {
         snapshot_retention_period_in_days = 7
         number_of_snapshots_to_retain     = 3
-        clean_expired_files     		      = true
+        clean_expired_files     		  = true
       }
     }
 
@@ -100,8 +100,8 @@ The following arguments are required:
 ### Orphan File Deletion Configuration
 
 * `iceberg_configuration` (Optional) - The configuration for an Iceberg orphan file deletion optimizer.
-  * `orphan_file_retention_period_in_days` (Optional) - The number of days that orphan files should be retained before file deletion. Defaults to `3`.
-  * `location` (Optional) - Specifies a directory in which to look for files. You may choose a sub-directory rather than the top-level table location. Defaults to the table's location.
+    * `orphan_file_retention_period_in_days` (Optional) - The number of days that orphan files should be retained before file deletion. Defaults to `3`.
+    * `location` (Optional) - Specifies a directory in which to look for files. You may choose a sub-directory rather than the top-level table location. Defaults to the table's location.
   
 ### Retention Configuration
 
