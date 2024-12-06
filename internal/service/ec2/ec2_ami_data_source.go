@@ -217,6 +217,10 @@ func dataSourceAMI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"uefi_data": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"usage_operation": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -337,6 +341,13 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("tpm_support", image.TpmSupport)
 	d.Set("usage_operation", image.UsageOperation)
 	d.Set("virtualization_type", image.VirtualizationType)
+
+	instanceData, err := conn.GetInstanceUefiData(ctx, &ec2.GetInstanceUefiDataInput{
+		InstanceId: aws.String(d.Id()),
+	})
+	if err == nil {
+		d.Set("uefi_data", instanceData.UefiData)
+	}
 
 	setTagsOut(ctx, image.Tags)
 
