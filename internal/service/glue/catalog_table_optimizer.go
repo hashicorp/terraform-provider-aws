@@ -144,7 +144,7 @@ func (r *resourceCatalogTableOptimizer) Schema(ctx context.Context, _ resource.S
 												"orphan_file_retention_period_in_days": schema.Int32Attribute{
 													Optional: true,
 												},
-												"location": schema.StringAttribute{
+												names.AttrLocation: schema.StringAttribute{
 													Optional: true,
 												},
 											},
