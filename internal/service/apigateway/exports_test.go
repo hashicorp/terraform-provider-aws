@@ -33,12 +33,12 @@ var (
 	FindAccount                          = findAccount
 	FindAPIKeyByID                       = findAPIKeyByID
 	FindAuthorizerByTwoPartKey           = findAuthorizerByTwoPartKey
-	FindBasePathMappingByTwoPartKey      = findBasePathMappingByTwoPartKey
+	FindBasePathMappingByThreePartKey    = findBasePathMappingByThreePartKey
 	FindClientCertificateByID            = findClientCertificateByID
 	FindDeploymentByTwoPartKey           = findDeploymentByTwoPartKey
 	FindDocumentationPartByTwoPartKey    = findDocumentationPartByTwoPartKey
 	FindDocumentationVersionByTwoPartKey = findDocumentationVersionByTwoPartKey
-	FindDomainByName                     = findDomainByName
+	FindDomainNameByTwoPartKey           = findDomainNameByTwoPartKey
 	FindGatewayResponseByTwoPartKey      = findGatewayResponseByTwoPartKey
 	FindIntegrationByThreePartKey        = findIntegrationByThreePartKey
 	FindIntegrationResponseByFourPartKey = findIntegrationResponseByFourPartKey

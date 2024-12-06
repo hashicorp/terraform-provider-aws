@@ -37,7 +37,7 @@ func TestAccSESV2DedicatedIPPool_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDedicatedIPPoolExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ses", regexache.MustCompile(`dedicated-ip-pool/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ses", regexache.MustCompile(`dedicated-ip-pool/.+`)),
 				),
 			},
 			{

@@ -37,7 +37,7 @@ func TestAccEMRStudio_sso(t *testing.T) {
 				Config: testAccStudioConfig_sso(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioExists(ctx, resourceName, &studio),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName1),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),
@@ -59,7 +59,7 @@ func TestAccEMRStudio_sso(t *testing.T) {
 				Config: testAccStudioConfig_sso(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioExists(ctx, resourceName, &studio),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName2),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrURL),

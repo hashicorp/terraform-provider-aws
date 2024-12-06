@@ -70,7 +70,7 @@ func sweepDashboards(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListDashboardsInput{
 		AwsAccountId: aws.String(awsAccountID),
 	}
@@ -114,7 +114,7 @@ func sweepDataSets(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListDataSetsInput{
 		AwsAccountId: aws.String(awsAccountID),
 	}
@@ -158,7 +158,7 @@ func sweepDataSources(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListDataSourcesInput{
 		AwsAccountId: aws.String(awsAccountID),
 	}
@@ -202,7 +202,7 @@ func sweepFolders(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	accountID := client.AccountID
+	accountID := client.AccountID(ctx)
 	input := &quicksight.ListFoldersInput{
 		AwsAccountId: aws.String(accountID),
 	}
@@ -246,7 +246,7 @@ func sweepGroups(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListGroupsInput{
 		AwsAccountId: aws.String(awsAccountID),
 		Namespace:    aws.String(defaultUserNamespace),
@@ -298,7 +298,7 @@ func sweepTemplates(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListTemplatesInput{
 		AwsAccountId: aws.String(awsAccountID),
 	}
@@ -342,7 +342,7 @@ func sweepUsers(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListUsersInput{
 		AwsAccountId: aws.String(awsAccountID),
 		Namespace:    aws.String(defaultUserNamespace),
@@ -394,7 +394,7 @@ func sweepVPCConnections(region string) error {
 	}
 	conn := client.QuickSightClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	awsAccountID := client.AccountID
+	awsAccountID := client.AccountID(ctx)
 	input := &quicksight.ListVPCConnectionsInput{
 		AwsAccountId: aws.String(awsAccountID),
 	}

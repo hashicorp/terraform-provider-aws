@@ -35,7 +35,7 @@ func TestAccECSCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_capacity_provider_strategy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
@@ -186,14 +186,14 @@ func TestAccECSCluster_containerInsights(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
 				),
 			},
 			{
 				Config: testAccClusterConfig_containerInsights(rName, names.AttrEnabled),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecs", fmt.Sprintf("cluster/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{

@@ -35,7 +35,7 @@ func TestAccRoute53ResolverDNSSECConfig_basic(t *testing.T) {
 				Config: testAccDNSSECConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDNSSECConfigExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "route53resolver", regexache.MustCompile(`resolver-dnssec-config/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "route53resolver", regexache.MustCompile(`resolver-dnssec-config/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceID),

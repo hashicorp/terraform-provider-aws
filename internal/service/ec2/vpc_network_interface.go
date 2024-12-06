@@ -513,7 +513,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  "network-interface/" + d.Id(),
 	}.String()
@@ -1077,7 +1077,9 @@ func attachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 }
 
 func deleteNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID string) error {
-	log.Printf("[INFO] Deleting EC2 Network Interface: %s", networkInterfaceID)
+	tflog.Info(ctx, "Deleting EC2 Network Interface", map[string]any{
+		names.AttrNetworkInterfaceID: networkInterfaceID,
+	})
 	_, err := conn.DeleteNetworkInterface(ctx, &ec2.DeleteNetworkInterfaceInput{
 		NetworkInterfaceId: aws.String(networkInterfaceID),
 	})
@@ -1094,7 +1096,9 @@ func deleteNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 }
 
 func detachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID, attachmentID string, timeout time.Duration) error {
-	log.Printf("[INFO] Detaching EC2 Network Interface: %s", networkInterfaceID)
+	tflog.Info(ctx, "Detaching EC2 Network Interface", map[string]any{
+		names.AttrNetworkInterfaceID: networkInterfaceID,
+	})
 	_, err := conn.DetachNetworkInterface(ctx, &ec2.DetachNetworkInterfaceInput{
 		AttachmentId: aws.String(attachmentID),
 		Force:        aws.Bool(true),

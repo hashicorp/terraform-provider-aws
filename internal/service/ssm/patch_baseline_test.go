@@ -47,7 +47,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("patch-baseline-%s", name)),
@@ -81,7 +81,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB456789"),

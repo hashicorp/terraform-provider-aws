@@ -167,7 +167,7 @@ func (r *accessGrantResource) Create(ctx context.Context, request resource.Creat
 	conn := r.Meta().S3ControlClient(ctx)
 
 	if data.AccountID.ValueString() == "" {
-		data.AccountID = types.StringValue(r.Meta().AccountID)
+		data.AccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	input := &s3control.CreateAccessGrantInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)

@@ -131,7 +131,7 @@ func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T)
 						&awstypes.VpcPeeringConnectionOptionsDescription{
 							AllowDnsResolutionFromRemoteVpc: aws.Bool(true),
 						},
-						acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers),
+						acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers),
 					),
 				),
 			},
@@ -168,7 +168,7 @@ func TestAccVPCPeeringConnectionOptions_differentRegionSameAccount(t *testing.T)
 						&awstypes.VpcPeeringConnectionOptionsDescription{
 							AllowDnsResolutionFromRemoteVpc: aws.Bool(false),
 						},
-						acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers),
+						acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers),
 					),
 				),
 			},

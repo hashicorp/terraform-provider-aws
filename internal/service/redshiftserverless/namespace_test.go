@@ -34,7 +34,7 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 				Config: testAccNamespaceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("namespace/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("namespace/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
 					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "0"),
@@ -51,7 +51,7 @@ func TestAccRedshiftServerlessNamespace_basic(t *testing.T) {
 				Config: testAccNamespaceConfig_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNamespaceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("namespace/.+$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "redshift-serverless", regexache.MustCompile("namespace/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "namespace_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "namespace_id"),
 					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "0"),

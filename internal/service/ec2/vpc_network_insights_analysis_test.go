@@ -34,7 +34,7 @@ func TestAccVPCNetworkInsightsAnalysis_basic(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-analysis/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`network-insights-analysis/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "filter_in_arns.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "network_insights_path_id", "aws_ec2_network_insights_path.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "path_found", acctest.CtTrue),
@@ -138,7 +138,7 @@ func TestAccVPCNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_filterInARNs(rName, "vpc-peering-connection/pcx-fakearn1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn1$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn1$`)),
 				),
 			},
 			{
@@ -151,7 +151,7 @@ func TestAccVPCNetworkInsightsAnalysis_filterInARNs(t *testing.T) {
 				Config: testAccVPCNetworkInsightsAnalysisConfig_filterInARNs(rName, "vpc-peering-connection/pcx-fakearn2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkInsightsAnalysisExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn2$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "filter_in_arns.0", "ec2", regexache.MustCompile(`vpc-peering-connection/pcx-fakearn2$`)),
 				),
 			},
 		},

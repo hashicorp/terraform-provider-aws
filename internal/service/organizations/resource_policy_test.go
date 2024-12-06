@@ -38,7 +38,7 @@ func testAccResourcePolicy_basic(t *testing.T) {
 				Config: testAccResourcePolicyConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourcePolicyExists(ctx, resourceName, &policy),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "organizations", regexache.MustCompile("resourcepolicy/o-.+/rp-.+$")),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "organizations", regexache.MustCompile("resourcepolicy/o-.+/rp-.+$")),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrContent),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),

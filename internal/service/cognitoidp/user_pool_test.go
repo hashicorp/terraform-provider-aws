@@ -48,7 +48,7 @@ func TestAccCognitoIDPUserPool_basic(t *testing.T) {
 				Config: testAccUserPoolConfig_name(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cognito-idp", regexache.MustCompile(`userpool/.+`)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrEndpoint, regexache.MustCompile(`^cognito-idp\.[^.]+\.amazonaws.com/[\w-]+_[0-9A-Za-z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreationDate),

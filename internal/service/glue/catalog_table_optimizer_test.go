@@ -39,7 +39,7 @@ func testAccCatalogTableOptimizer_basic(t *testing.T) {
 				Config: testAccCatalogTableOptimizerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
@@ -75,7 +75,7 @@ func testAccCatalogTableOptimizer_update(t *testing.T) {
 				Config: testAccCatalogTableOptimizerConfig_update(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
@@ -86,7 +86,7 @@ func testAccCatalogTableOptimizer_update(t *testing.T) {
 				Config: testAccCatalogTableOptimizerConfig_update(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "compaction"),
