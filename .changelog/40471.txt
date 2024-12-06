@@ -1,9 +1,9 @@
 ```release-note:bug
-resource/aws_rds_cluster: Respect `storage_type` when restored from snapshot
+resource/aws_rds_cluster: Respect `storage_type` when restoring from snapshot
 ```
 ```release-note:bug
-resource/aws_rds_cluster: Respect `storage_type` when restored from s3
+resource/aws_rds_cluster: Respect `storage_type` when restoring from S3
 ```
 ```release-note:bug
-resource/aws_rds_cluster: Respect `storage_type` when restored from point in time
+resource/aws_rds_cluster: Respect `storage_type` when restoring to a point in time
 ```
