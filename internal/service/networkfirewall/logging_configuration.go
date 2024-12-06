@@ -51,11 +51,9 @@ func resourceLoggingConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"log_destination_config": {
-							// At most 3 configurations can exist,
-							// with 1 destination for FLOW logs and 1 for ALERT logs and 1 for TLS Logs
 							Type:     schema.TypeSet,
 							Required: true,
-							MaxItems: 3,
+							MaxItems: len(enum.Values[awstypes.LogType]()),
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"log_destination": {
@@ -79,6 +77,33 @@ func resourceLoggingConfiguration() *schema.Resource {
 					},
 				},
 			},
+		},
+
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			// Ensure distinct logging_configuration.log_destination_config.log_type values.
+			if v, ok := d.GetOk(names.AttrLoggingConfiguration); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				tfMap := v.([]interface{})[0].(map[string]interface{})
+
+				if v, ok := tfMap["log_destination_config"].(*schema.Set); ok && v.Len() > 0 {
+					logTypes := make(map[string]struct{})
+
+					for _, tfMapRaw := range v.List() {
+						tfMap, ok := tfMapRaw.(map[string]interface{})
+						if !ok {
+							continue
+						}
+
+						if v, ok := tfMap["log_type"].(string); ok && v != "" {
+							if _, ok := logTypes[v]; ok {
+								return fmt.Errorf("duplicate logging_configuration.log_destination_config.log_type value: %s", v)
+							}
+							logTypes[v] = struct{}{}
+						}
+					}
+				}
+			}
+
+			return nil
 		},
 	}
 }
