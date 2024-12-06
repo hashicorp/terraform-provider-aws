@@ -508,11 +508,11 @@ func TestAccNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinations(
 				),
 			},
 			{
-				Config: testAccLoggingConfigurationConfig_s3AndKinesis(bucketName, streamName, rName, string(awstypes.LogTypeAlert), string(awstypes.LogTypeFlow)),
+				Config: testAccLoggingConfigurationConfig_s3AndKinesis(bucketName, streamName, rName, string(awstypes.LogTypeAlert), string(awstypes.LogTypeFlow), string(awstypes.LogTypeTls)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "logging_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "logging_configuration.0.log_destination_config.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
 						"log_destination.%":              "1",
 						"log_destination.deliveryStream": streamName,
@@ -524,6 +524,12 @@ func TestAccNetworkFirewallLoggingConfiguration_updateToMultipleLogDestinations(
 						"log_destination.bucketName": bucketName,
 						"log_destination_type":       string(awstypes.LogDestinationTypeS3),
 						"log_type":                   string(awstypes.LogTypeAlert),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "logging_configuration.0.log_destination_config.*", map[string]string{
+						"log_destination.%":              "1",
+						"log_destination.deliveryStream": streamName,
+						"log_destination_type":           string(awstypes.LogDestinationTypeKinesisDataFirehose),
+						"log_type":                       string(awstypes.LogTypeTls),
 					}),
 				),
 			},
@@ -1054,7 +1060,7 @@ resource "aws_networkfirewall_logging_configuration" "test" {
 `, rName, destinationType, logType))
 }
 
-func testAccLoggingConfigurationConfig_s3AndKinesis(bucketName, streamName, rName, logTypeS3, logTypeKinesis string) string {
+func testAccLoggingConfigurationConfig_s3AndKinesis(bucketName, streamName, rName, logTypeS3, logTypeKinesis1, logTypeKinesis2 string) string {
 	return acctest.ConfigCompose(
 		testAccLoggingConfigurationConfig_baseS3Bucket(bucketName),
 		testAccLoggingConfigurationConfig_baseFirehose(rName, streamName),
@@ -1079,9 +1085,17 @@ resource "aws_networkfirewall_logging_configuration" "test" {
       log_destination_type = "KinesisDataFirehose"
       log_type             = %[3]q
     }
+
+    log_destination_config {
+      log_destination = {
+        deliveryStream = aws_kinesis_firehose_delivery_stream.test.name
+      }
+      log_destination_type = "KinesisDataFirehose"
+      log_type             = %[4]q
+    }
   }
 }
-`, rName, logTypeS3, logTypeKinesis))
+`, rName, logTypeS3, logTypeKinesis1, logTypeKinesis2))
 }
 
 func testAccLoggingConfigurationConfig_s3AndCloudWatch(bucketName, logGroupName, rName, logTypeS3, logTypeCloudWatch string) string {
