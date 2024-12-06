@@ -88,7 +88,7 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "7"),
 					resource.TestCheckResourceAttrSet(resourceName, "log_group_arn_list.#"),
 					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "7"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtFalse),
 				),
 			},
 			{
@@ -107,7 +107,7 @@ func TestAccLogsAnomalyDetector_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "evaluation_frequency", "FIVE_MIN"),
 					resource.TestCheckResourceAttr(resourceName, "anomaly_visibility_time", "8"),
 					resource.TestCheckResourceAttrSet(resourceName, "log_group_arn_list.#"),
-					resource.TestCheckResourceAttr(resourceName, "enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, names.AttrEnabled, acctest.CtTrue),
 				),
 			},
 			{
