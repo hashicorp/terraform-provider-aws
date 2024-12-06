@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_servicecatalogappregistry_attribute_group` ([#38188](https://github.com/hashicorp/terraform-provider-aws/issues/38188))
 * **New Ephemeral Resource:** `aws_ssm_parameter` ([#40313](https://github.com/hashicorp/terraform-provider-aws/issues/40313))
 * **New Resource:** `aws_bedrock_inference_profile` ([#40294](https://github.com/hashicorp/terraform-provider-aws/issues/40294))
 * **New Resource:** `aws_servicecatalogappregistry_attribute_group` ([#38183](https://github.com/hashicorp/terraform-provider-aws/issues/38183))
@@ -18,6 +19,9 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_rds_cluster: Fix `InvalidDBClusterStateFault` errors when deleting clusters that are members of a global cluster ([#40333](https://github.com/hashicorp/terraform-provider-aws/issues/40333))
+* resource/aws_rds_cluster: Respect `storage_type` when restored from point in time ([#40471](https://github.com/hashicorp/terraform-provider-aws/issues/40471))
+* resource/aws_rds_cluster: Respect `storage_type` when restored from s3 ([#40471](https://github.com/hashicorp/terraform-provider-aws/issues/40471))
+* resource/aws_rds_cluster: Respect `storage_type` when restored from snapshot ([#40471](https://github.com/hashicorp/terraform-provider-aws/issues/40471))
 
 ## 5.80.0 (December  4, 2024)
 
