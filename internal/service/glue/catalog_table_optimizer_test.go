@@ -123,7 +123,7 @@ func testAccCatalogTableOptimizer_disappears(t *testing.T) {
 	})
 }
 
-func TestAccGlueCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
+func testAccCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var catalogTableOptimizer glue.GetTableOptimizerOutput
 
@@ -141,7 +141,7 @@ func TestAccGlueCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
 				Config: testAccCatalogTableOptimizerConfig_retentionConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "retention"),
@@ -162,7 +162,7 @@ func TestAccGlueCatalogTableOptimizer_RetentionConfiguration(t *testing.T) {
 	})
 }
 
-func TestAccGlueCatalogTableOptimizer_DeleteOrphanFileConfiguration(t *testing.T) {
+func testAccCatalogTableOptimizer_DeleteOrphanFileConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	var catalogTableOptimizer glue.GetTableOptimizerOutput
 
@@ -180,7 +180,7 @@ func TestAccGlueCatalogTableOptimizer_DeleteOrphanFileConfiguration(t *testing.T
 				Config: testAccCatalogTableOptimizerConfig_orphanFileDeletionConfiguration(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCatalogTableOptimizerExists(ctx, resourceName, &catalogTableOptimizer),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDatabaseName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "orphan_file_deletion"),
