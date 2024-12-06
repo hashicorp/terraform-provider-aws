@@ -120,6 +120,7 @@ mode,Mode
 most_recent,MostRecent
 name,Name
 name_prefix,NamePrefix
+name_suffix,NameSuffix
 names,Names
 namespace,Namespace
 network_configuration,NetworkConfiguration
@@ -196,6 +197,7 @@ stream_arn,StreamARN
 subnet_id,SubnetID
 subnet_ids,SubnetIDs
 subnets,Subnets
+suffix,Suffix
 table_name,TableName
 tags,Tags
 tags_all,TagsAll
