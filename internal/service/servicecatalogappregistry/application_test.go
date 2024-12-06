@@ -42,6 +42,7 @@ func TestAccServiceCatalogAppRegistryApplication_basic(t *testing.T) {
 					testAccCheckApplicationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "servicecatalog", regexache.MustCompile(`/applications/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
