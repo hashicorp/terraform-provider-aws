@@ -120,7 +120,7 @@ func resourceMultiRegionCluster() *schema.Resource {
 					Optional:         true,
 					ValidateDiagFunc: enum.Validate[awstypes.UpdateStrategy](),
 				},
-				"status": {
+				names.AttrStatus: {
 					Type:     schema.TypeString,
 					Optional: true,
 					Computed: true,
@@ -175,7 +175,7 @@ func resourceMultiRegionClusterCreate(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Multi Region cluster: %s", err)
 	}
 
-	d.SetId(*output.MultiRegionCluster.MultiRegionClusterName)
+	d.SetId(aws.ToString(output.MultiRegionCluster.MultiRegionClusterName))
 
 	if _, err := waitMultiRegionClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi Region cluster (%s) create: %s", d.Id(), err)

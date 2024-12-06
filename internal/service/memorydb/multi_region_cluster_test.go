@@ -421,15 +421,6 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_memorydb_multi_region_cluster" "test" {
-  name_suffix = %[1]q
-  node_type   = "db.r7g.xlarge"
-
-  tags = {
-    Test = "test"
-  }
-}
-
 resource "aws_memorydb_cluster" "test" {
   acl_name                   = aws_memorydb_acl.test.id
   auto_minor_version_upgrade = false
@@ -440,7 +431,14 @@ resource "aws_memorydb_cluster" "test" {
   snapshot_retention_limit   = 7
   subnet_group_name          = aws_memorydb_subnet_group.test.id
 
-  multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.name
+  tags = {
+    Test = "test"
+  }
+}
+
+resource "aws_memorydb_multi_region_cluster" "test" {
+  name_suffix = %[1]q
+  node_type   = "db.r7g.xlarge"
 
   tags = {
     Test = "test"
