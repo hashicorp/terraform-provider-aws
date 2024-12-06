@@ -113,9 +113,9 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "cognito-identity",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("identitypool/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())

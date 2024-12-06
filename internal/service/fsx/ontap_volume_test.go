@@ -38,7 +38,7 @@ func TestAccFSxONTAPVolume_basic(t *testing.T) {
 				Config: testAccONTAPVolumeConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "fsx", regexache.MustCompile(`volume/fs-.+/fsvol-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_snaplock_enterprise_retention", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", acctest.CtFalse),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrFileSystemID),

@@ -11,7 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/sagemaker/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -1131,13 +1133,21 @@ func sweepHubs(region string) error {
 	}
 	conn := client.SageMakerClient(ctx)
 
-	sweepResources := make([]sweep.Sweepable, 0)
-	in := &sagemaker.ListHubsInput{}
+	var sweepResources []sweep.Sweepable
 
+	in := sagemaker.ListHubsInput{}
 	for {
-		out, err := conn.ListHubs(ctx, in)
+		out, err := conn.ListHubs(ctx, &in)
 		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Sagemaker Hubs sweep for %s: %s", region, err)
+			return nil
+		}
+		// The Sagemaker API returns this in unsupported regions
+		if tfawserr.ErrCodeEquals(err, "ThrottlingException") {
+			tflog.Warn(ctx, "Skipping sweeper", map[string]any{
+				"skip_reason": "Unsupported region",
+				"error":       err.Error(),
+			})
 			return nil
 		}
 		if err != nil {

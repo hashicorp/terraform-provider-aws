@@ -49,12 +49,12 @@ func testAccSubscriber_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
 					func(s *terraform.State) error {
 						id := aws.ToString(subscriber.SubscriberId)
-						return acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "securitylake", fmt.Sprintf("subscriber/%s", id))(s)
+						return acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "securitylake", fmt.Sprintf("subscriber/%s", id))(s)
 					},
 					resource.TestCheckResourceAttr(resourceName, "resource_share_arn", ""),
 					func(s *terraform.State) error {
 						id := aws.ToString(subscriber.SubscriberId)
-						return acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/AmazonSecurityLake-%s", id))(s)
+						return acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/AmazonSecurityLake-%s", id))(s)
 					},
 					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "s3_bucket_arn", "s3", regexache.MustCompile(fmt.Sprintf(`aws-security-data-lake-%s-[a-z0-9]{30}$`, acctest.Region()))),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),

@@ -32,7 +32,7 @@ func TestAccNetworkManagerGlobalNetwork_basic(t *testing.T) {
 				Config: testAccGlobalNetworkConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlobalNetworkExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`global-network/global-network-.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`global-network/global-network-.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),

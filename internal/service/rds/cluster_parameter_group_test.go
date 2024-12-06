@@ -39,7 +39,7 @@ func TestAccRDSClusterParameterGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckClusterParameterGroupAttributes(&v, rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster-pg:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster-pg:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "aurora5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test cluster parameter group for terraform"),
@@ -208,7 +208,7 @@ func TestAccRDSClusterParameterGroup_withApplyMethod(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterParameterGroupExists(ctx, resourceName, &v),
 					testAccCheckClusterParameterGroupAttributes(&v, rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster-pg:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("cluster-pg:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "aurora5.6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Test cluster parameter group for terraform"),

@@ -65,7 +65,7 @@ func dataSourceTrackerAssociationsRead(ctx context.Context, d *schema.ResourceDa
 		arns = append(arns, page.ConsumerArns...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("consumer_arns", arns)
 
 	return diags

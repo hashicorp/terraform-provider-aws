@@ -10,6 +10,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -37,7 +38,7 @@ func TestAccOpsWorksRailsAppLayer_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLayerExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "app_server", "apache_passenger"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "opsworks", regexache.MustCompile(`layer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_elastic_ips", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_assign_public_ips", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "auto_healing", acctest.CtTrue),
@@ -160,8 +161,8 @@ func TestAccOpsWorksRailsAppLayer_tagsAlternateRegion(t *testing.T) {
 			// This test requires a very particular AWS Region configuration
 			// in order to exercise the OpsWorks classic endpoint functionality.
 			acctest.PreCheckMultipleRegion(t, 2)
-			acctest.PreCheckRegion(t, names.USEast1RegionID)
-			acctest.PreCheckAlternateRegionIs(t, names.USWest1RegionID)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckAlternateRegion(t, endpoints.UsWest1RegionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),

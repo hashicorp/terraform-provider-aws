@@ -280,7 +280,7 @@ func resourceConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta i
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "networkmanager",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("connect-peer/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

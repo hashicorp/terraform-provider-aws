@@ -40,11 +40,11 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_name"),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrDNSName, "efs", regexache.MustCompile(`fs-[^.]+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "file_system_arn", "elasticfilesystem", regexache.MustCompile(`file-system/fs-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "file_system_arn", "elasticfilesystem", regexache.MustCompile(`file-system/fs-.+`)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrIPAddress, regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "mount_target_dns_name"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrNetworkInterfaceID),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 				),
 			},
 			{

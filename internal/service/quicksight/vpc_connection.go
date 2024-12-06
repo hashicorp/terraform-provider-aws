@@ -163,7 +163,7 @@ func (r *vpcConnectionResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, vpcConnectionID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.VPCConnectionID)
 	in := &quicksight.CreateVPCConnectionInput{

@@ -17,6 +17,7 @@ var (
 	ResourceEventSubscription                   = resourceEventSubscription
 	ResourceGlobalCluster                       = resourceGlobalCluster
 	ResourceInstance                            = resourceInstance
+	ResourceInstanceState                       = newResourceInstanceState
 	ResourceInstanceAutomatedBackupsReplication = resourceInstanceAutomatedBackupsReplication
 	ResourceInstanceRoleAssociation             = resourceInstanceRoleAssociation
 	ResourceIntegration                         = newIntegrationResource

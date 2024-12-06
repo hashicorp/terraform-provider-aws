@@ -98,7 +98,7 @@ func dataSourceRouteRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// They can't list tags and tag/untag resources in a mesh that aren't created by the account.
 	var tags tftags.KeyValueTags
 
-	if meshOwner == meta.(*conns.AWSClient).AccountID {
+	if meshOwner == meta.(*conns.AWSClient).AccountID(ctx) {
 		tags, err = listTags(ctx, conn, arn)
 
 		if err != nil {

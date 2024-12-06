@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,7 +20,7 @@ import (
 func testAccRegion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_region.test"
-	regionName := names.APSoutheast3RegionID
+	regionName := endpoints.ApSoutheast3RegionID
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -61,7 +62,7 @@ func testAccRegion_basic(t *testing.T) {
 func testAccRegion_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_region.test"
-	regionName := names.APSoutheast3RegionID
+	regionName := endpoints.ApSoutheast3RegionID
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {

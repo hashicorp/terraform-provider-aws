@@ -95,6 +95,9 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	input := &s3.PutBucketMetricsConfigurationInput{
 		Bucket:               aws.String(bucket),
 		Id:                   aws.String(name),
@@ -137,6 +140,10 @@ func resourceBucketMetricRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	mc, err := findMetricsConfiguration(ctx, conn, bucket, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -167,6 +174,10 @@ func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, met
 	bucket, name, err := BucketMetricParseID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Bucket Metric: %s", d.Id())

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Custom Models")
+// @FrameworkDataSource("aws_bedrock_custom_models", name="Custom Models")
 func newCustomModelsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &customModelsDataSource{}, nil
 }
@@ -72,7 +72,7 @@ func (d *customModelsDataSource) Read(ctx context.Context, request datasource.Re
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

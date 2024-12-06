@@ -200,7 +200,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 				Config: testAccScheduleConfig_basic(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleExists(ctx, t, resourceName, &schedule),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule/default/`+name))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule/default/`+name))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "end_date", ""),
 					resource.TestCheckResourceAttr(resourceName, "flexible_time_window.0.maximum_window_in_minutes", "0"),

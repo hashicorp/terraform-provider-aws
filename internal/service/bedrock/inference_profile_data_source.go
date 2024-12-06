@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Inference Profile")
+// @FrameworkDataSource("aws_bedrock_inference_profile", name="Inference Profile")
 func newInferenceProfileDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &inferenceProfileDataSource{}, nil
 }

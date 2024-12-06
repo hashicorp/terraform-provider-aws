@@ -9,6 +9,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
@@ -224,7 +225,6 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	_, err := conn.PutIntegration(ctx, input)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Integration: %s", err)
 	}
@@ -289,7 +289,6 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	// According to the above documentation, only a few parts are addable / removable.
 	if d.HasChange("request_templates") {
 		o, n := d.GetChange("request_templates")
-		prefix := "requestTemplates"
 
 		os := o.(map[string]interface{})
 		ns := n.(map[string]interface{})
@@ -299,7 +298,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			if _, ok := ns[k]; !ok {
 				operations = append(operations, types.PatchOperation{
 					Op:   types.OpRemove,
-					Path: aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
+					Path: aws.String(parameterizeParameter(k, requestTemplatesType)),
 				})
 			}
 		}
@@ -309,7 +308,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			if _, ok := os[k]; ok {
 				operations = append(operations, types.PatchOperation{
 					Op:    types.OpReplace,
-					Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
+					Path:  aws.String(parameterizeParameter(k, requestTemplatesType)),
 					Value: aws.String(v.(string)),
 				})
 			}
@@ -318,7 +317,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			if _, ok := os[k]; !ok {
 				operations = append(operations, types.PatchOperation{
 					Op:    types.OpAdd,
-					Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
+					Path:  aws.String(parameterizeParameter(k, requestTemplatesType)),
 					Value: aws.String(v.(string)),
 				})
 			}
@@ -327,27 +326,28 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange("request_parameters") {
 		o, n := d.GetChange("request_parameters")
-		prefix := "requestParameters"
 
 		os := o.(map[string]interface{})
 		ns := n.(map[string]interface{})
 
 		// Handle Removal
-		for k := range os {
+		for k, v := range os {
 			if _, ok := ns[k]; !ok {
 				operations = append(operations, types.PatchOperation{
-					Op:   types.OpRemove,
-					Path: aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
+					Op:    types.OpRemove,
+					Path:  aws.String(parameterizeParameter(k, requestParameterType)),
+					Value: aws.String(v.(string)),
 				})
 			}
 		}
 
 		for k, v := range ns {
 			// Handle replaces
-			if _, ok := os[k]; ok {
+			// Replaces only if values are different
+			if _, ok := os[k]; ok && os[k].(string) != v.(string) {
 				operations = append(operations, types.PatchOperation{
 					Op:    types.OpReplace,
-					Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
+					Path:  aws.String(parameterizeParameter(k, requestParameterType)),
 					Value: aws.String(v.(string)),
 				})
 			}
@@ -356,12 +356,14 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 			if _, ok := os[k]; !ok {
 				operations = append(operations, types.PatchOperation{
 					Op:    types.OpAdd,
-					Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
+					Path:  aws.String(parameterizeParameter(k, requestParameterType)),
 					Value: aws.String(v.(string)),
 				})
 			}
 		}
 	}
+
+	ckpOperations := make([]types.PatchOperation, 0) // separating from the other operations
 
 	if d.HasChange("cache_key_parameters") {
 		o, n := d.GetChange("cache_key_parameters")
@@ -371,18 +373,28 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		removalList := os.Difference(ns)
 		for _, v := range removalList.List() {
-			operations = append(operations, types.PatchOperation{
+			ckpOperations = append(ckpOperations, types.PatchOperation{
 				Op:    types.OpRemove,
-				Path:  aws.String(fmt.Sprintf("/cacheKeyParameters/%s", v.(string))),
+				Path:  aws.String(parameterizeParameter(v.(string), cacheKeyParameterType)),
 				Value: aws.String(""),
 			})
 		}
 
-		additionList := ns.Difference(os)
-		for _, v := range additionList.List() {
-			operations = append(operations, types.PatchOperation{
+		// "Replace" for cache key parameter isn't actually a thing but provides a way to mark the
+		// parameter for further evaluation during update processing. For example, sometimes, according to
+		// Terraform, it's a replace, but the parameter doesn't exist. In that case, it should be an add.
+		for _, v := range ns.Intersection(os).List() {
+			ckpOperations = append(ckpOperations, types.PatchOperation{
+				Op:    types.OpReplace,
+				Path:  aws.String(parameterizeParameter(v.(string), cacheKeyParameterType)),
+				Value: aws.String(""),
+			})
+		}
+
+		for _, v := range ns.Difference(os).List() {
+			ckpOperations = append(ckpOperations, types.PatchOperation{
 				Op:    types.OpAdd,
-				Path:  aws.String(fmt.Sprintf("/cacheKeyParameters/%s", v.(string))),
+				Path:  aws.String(parameterizeParameter(v.(string), cacheKeyParameterType)),
 				Value: aws.String(""),
 			})
 		}
@@ -451,17 +463,129 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	input := &apigateway.UpdateIntegrationInput{
-		HttpMethod:      aws.String(d.Get("http_method").(string)),
-		PatchOperations: operations,
-		ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
-		RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+	// Updating, Stage 1: Everything except cache key parameters
+
+	// Updating is handled in two stages because of the challenges of keeping AWS and state in sync in
+	// these, and probably other, situations:
+	//  - Cache key parameters are updated by request parameter updates.
+	//  - One cache key parameter can disappear when another is added.
+	//  - Cache key parameters can be updated independently of request parameters.
+	//
+	// These challenges are not documented in the API Gateway documentation, but they are observed in
+	// practice resulting in these errors:
+	//  - BadRequestException: Invalid mapping expression specified: Validation Result: warnings : [], errors : [Invalid mapping expression parameter specified: method.request.querystring.X-Some-Header-2]
+	//  - NotFoundException: Invalid parameter name specified
+	//
+	// Using two stages is necessary because making these updates simultaneously can cause unpredictable
+	// "not found" errors: the first operation succeeds, but the second fails if it attempts to modify a
+	// non-existent parameter. To prevent this, we initially perform only the request parameter updates.
+	// In a second stage, we examine the results and adjust the cache key parameter operations as needed
+	// based on those results.
+
+	if len(operations) > 0 {
+		input := &apigateway.UpdateIntegrationInput{
+			HttpMethod:      aws.String(d.Get("http_method").(string)),
+			PatchOperations: operations,
+			ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
+			RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+		}
+
+		_, err := conn.UpdateIntegration(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating API Gateway Integration, initial (%s): %s", d.Id(), err)
+		}
 	}
 
-	_, err := conn.UpdateIntegration(ctx, input)
+	// Updating, Stage 2: Cache key parameters
 
+	// As described above, in the second stage, we look at the results of the first stage and adjust the
+	// cache key parameter operations as needed.
+
+	// NOTE: The changes in #29991 seem like an attempt to fix this same problem in the *method* resource.
+	// However, in debugging, the approach there always calls Update with an empty set of operations and
+	// that sometimes causes errors. To avoid the risk of breaking some remote edge case, we're leaving
+	// the #29991 attempt in *method* but it can likely be removed.
+
+	// No reasonable way to determine the first stage has fully propagated, so we wait a bit.
+	time.Sleep(pauseBetweenUpdateStages)
+
+	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get(names.AttrResourceID).(string), d.Get("rest_api_id").(string))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Integration (%s): %s", d.Id(), err)
+	}
+
+	// Go through the cache key parameters, one by one, and include or exclude them based on the existing
+	// cache key parameters.
+	if len(ckpOperations) > 0 {
+		lackingOperations := make([]types.PatchOperation, 0)
+
+	outer:
+		for _, ckp := range ckpOperations {
+			if ckp.Op == types.OpReplace {
+				// Search for the cache key parameter in the existing cache key parameters
+				for _, p := range integration.CacheKeyParameters {
+					if aws.ToString(ckp.Path) == parameterizeParameter(p, cacheKeyParameterType) {
+						// Op is excluded--for a cache key parameter, a replace doesn't do anything if the parameter already exists.
+						// Testing against the API, this is reached.
+						continue outer
+					}
+				}
+
+				// Op is included--since it's not found, it changes "replace" to "add".
+				// Testing against the API, this is reached.
+				lackingOperations = append(lackingOperations, types.PatchOperation{
+					Op:    types.OpAdd,
+					Path:  ckp.Path,
+					Value: ckp.Value,
+				})
+				continue
+			}
+
+			if ckp.Op == types.OpRemove {
+				// Search for the cache key parameter in the existing cache key parameters
+				for _, p := range integration.CacheKeyParameters {
+					if aws.ToString(ckp.Path) == parameterizeParameter(p, cacheKeyParameterType) {
+						// Op is included--since it's found, it's removed.
+						// Testing against the API, this is NOT reached but included for completeness or just in case.
+						lackingOperations = append(lackingOperations, ckp)
+						continue outer
+					}
+				}
+				// Op is excluded--since it's not found, it's not removed.
+				// Testing against the API, this is reached.
+				continue
+			}
+
+			if ckp.Op == types.OpAdd {
+				// Search for the cache key parameter in the existing cache key parameters
+				for _, p := range integration.CacheKeyParameters {
+					if aws.ToString(ckp.Path) == parameterizeParameter(p, cacheKeyParameterType) {
+						// Op is excluded--since it's found, it doesn't need to be added.
+						// Testing against the API, this is NOT reached but included for completeness or just in case.
+						continue outer
+					}
+				}
+
+				// Op is included--since it's not found, it's added.
+				// Testing against the API, this is reached.
+				lackingOperations = append(lackingOperations, ckp)
+				continue outer
+			}
+		}
+
+		if len(lackingOperations) > 0 {
+			input := &apigateway.UpdateIntegrationInput{
+				HttpMethod:      aws.String(d.Get("http_method").(string)),
+				PatchOperations: lackingOperations,
+				ResourceId:      aws.String(d.Get(names.AttrResourceID).(string)),
+				RestApiId:       aws.String(d.Get("rest_api_id").(string)),
+			}
+
+			_, err = conn.UpdateIntegration(ctx, input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating API Gateway Integration, secondary (%s): %s", d.Id(), err)
+			}
+		}
 	}
 
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
@@ -487,6 +611,21 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+const (
+	requestParameterType  = "requestParameters"
+	cacheKeyParameterType = "cacheKeyParameters"
+	requestTemplatesType  = "requestTemplates"
+
+	pauseBetweenUpdateStages = 3 * time.Second
+)
+
+// parameterizeParameter takes a parameter path and adds a prefix and escapes. For example:
+// in : integration.request.querystring.X-Some-Header-2
+// out: /requestParameters/integration.request.querystring.X-Some-Header-2
+func parameterizeParameter(s string, paramType string) string {
+	return fmt.Sprintf("/%s/%s", paramType, strings.Replace(s, "/", "~1", -1))
 }
 
 func findIntegrationByThreePartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID string) (*apigateway.GetIntegrationOutput, error) {

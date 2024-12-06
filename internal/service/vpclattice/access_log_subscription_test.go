@@ -91,7 +91,7 @@ func TestAccVPCLatticeAccessLogSubscription_basic(t *testing.T) {
 				Config: testAccAccessLogSubscriptionConfig_basicS3(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessLogSubscriptionExists(ctx, resourceName, &accesslogsubscription),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, names.VPCLatticeEndpointID, regexache.MustCompile(`accesslogsubscription/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, names.VPCLatticeEndpointID, regexache.MustCompile(`accesslogsubscription/.+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDestinationARN, s3BucketResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, serviceNetworkResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_identifier", serviceNetworkResourceName, names.AttrID),
