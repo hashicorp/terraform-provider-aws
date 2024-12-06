@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -302,7 +303,10 @@ func (r *resourceRetriever) Create(ctx context.Context, req resource.CreateReque
 	data.RetrieverId = fwflex.StringToFramework(ctx, out.RetrieverId)
 	data.RetrieverArn = fwflex.StringToFramework(ctx, out.RetrieverArn)
 
-	data.setID()
+	resp.Diagnostics.Append(data.setID()...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	if _, err := waitRetrieverCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError("failed to wait for Q Business retriever creation", err.Error())
@@ -345,8 +349,8 @@ func (r *resourceRetriever) Delete(ctx context.Context, req resource.DeleteReque
 	conn := r.Meta().QBusinessClient(ctx)
 
 	input := &qbusiness.DeleteRetrieverInput{
-		ApplicationId: aws.String(data.ApplicationId.ValueString()),
-		RetrieverId:   aws.String(data.RetrieverId.ValueString()),
+		ApplicationId: data.ApplicationId.ValueStringPointer(),
+		RetrieverId:   data.RetrieverId.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteRetriever(ctx, input)
@@ -413,8 +417,8 @@ func (r *resourceRetriever) Update(ctx context.Context, req resource.UpdateReque
 		!old.RoleArn.Equal(new.RoleArn) ||
 		!old.DisplayName.Equal(new.DisplayName) {
 		input := &qbusiness.UpdateRetrieverInput{
-			ApplicationId: aws.String(old.ApplicationId.ValueString()),
-			RetrieverId:   aws.String(old.RetrieverId.ValueString()),
+			ApplicationId: old.ApplicationId.ValueStringPointer(),
+			RetrieverId:   old.RetrieverId.ValueStringPointer(),
 		}
 
 		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
@@ -471,8 +475,18 @@ const (
 	retrieverResourceIDPartCount = 2
 )
 
-func (data *resourceRetrieverData) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.ApplicationId.ValueString(), data.RetrieverId.ValueString()}, retrieverResourceIDPartCount, false)))
+func (data *resourceRetrieverData) setID() diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	id, err := flex.FlattenResourceId([]string{data.ApplicationId.ValueString(), data.RetrieverId.ValueString()}, retrieverResourceIDPartCount, false)
+	if err != nil {
+		diags.AddError(
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionFlatteningResourceId, ResNameRetriever, id, err),
+			err.Error())
+		return diags
+	}
+	data.ID = types.StringValue(id)
+	return diags
 }
 
 func (data *resourceRetrieverData) flattenConfiguration(ctx context.Context, retrieverConf awstypes.RetrieverConfiguration) diag.Diagnostics {
@@ -614,8 +628,8 @@ func (data *resourceRetrieverData) expandConfiguration(ctx context.Context, omit
 type resourceRetrieverData struct {
 	ApplicationId            types.String                                        `tfsdk:"application_id"`
 	ID                       types.String                                        `tfsdk:"id"`
-	Tags                     types.Map                                           `tfsdk:"tags"`
-	TagsAll                  types.Map                                           `tfsdk:"tags_all"`
+	Tags                     tftags.Map                                          `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                          `tfsdk:"tags_all"`
 	Timeouts                 timeouts.Value                                      `tfsdk:"timeouts"`
 	DisplayName              types.String                                        `tfsdk:"display_name"`
 	RoleArn                  types.String                                        `tfsdk:"iam_service_role_arn"`

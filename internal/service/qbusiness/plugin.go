@@ -26,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -270,7 +271,10 @@ func (r *resourcePlugin) Create(ctx context.Context, req resource.CreateRequest,
 	data.PluginId = fwflex.StringToFramework(ctx, output.PluginId)
 	data.PluginArn = fwflex.StringToFramework(ctx, output.PluginArn)
 
-	data.setID()
+	resp.Diagnostics.Append(data.setID()...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	if _, err := waitPluginCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError("failed to wait for Q Business plugin to be created", err.Error())
@@ -359,8 +363,8 @@ func (r *resourcePlugin) Delete(ctx context.Context, req resource.DeleteRequest,
 	conn := r.Meta().QBusinessClient(ctx)
 
 	input := &qbusiness.DeletePluginInput{
-		ApplicationId: aws.String(data.ApplicationId.ValueString()),
-		PluginId:      aws.String(data.PluginId.ValueString()),
+		ApplicationId: data.ApplicationId.ValueStringPointer(),
+		PluginId:      data.PluginId.ValueStringPointer(),
 	}
 
 	_, err := conn.DeletePlugin(ctx, input)
@@ -395,8 +399,8 @@ type resourcePluginData struct {
 	Type                      fwtypes.StringEnum[awstypes.PluginType]                        `tfsdk:"type"`
 	ServerURL                 types.String                                                   `tfsdk:"server_url"`
 	State                     fwtypes.StringEnum[awstypes.PluginState]                       `tfsdk:"state"`
-	Tags                      types.Map                                                      `tfsdk:"tags"`
-	TagsAll                   types.Map                                                      `tfsdk:"tags_all"`
+	Tags                      tftags.Map                                                     `tfsdk:"tags"`
+	TagsAll                   tftags.Map                                                     `tfsdk:"tags_all"`
 	Timeouts                  timeouts.Value                                                 `tfsdk:"timeouts"`
 }
 
@@ -528,8 +532,18 @@ const (
 	pluginResourceIDPartCount = 2
 )
 
-func (r *resourcePluginData) setID() {
-	r.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{r.ApplicationId.ValueString(), r.PluginId.ValueString()}, pluginResourceIDPartCount, false)))
+func (data *resourcePluginData) setID() diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	id, err := flex.FlattenResourceId([]string{data.ApplicationId.ValueString(), data.PluginId.ValueString()}, pluginResourceIDPartCount, false)
+	if err != nil {
+		diags.AddError(
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionFlatteningResourceId, ResNamePlugin, id, err),
+			err.Error())
+		return diags
+	}
+	data.ID = types.StringValue(id)
+	return diags
 }
 
 func FindPluginByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetPluginOutput, error) {

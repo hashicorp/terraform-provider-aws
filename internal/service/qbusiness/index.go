@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -27,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -185,7 +187,10 @@ func (r *resourceIndex) Create(ctx context.Context, req resource.CreateRequest, 
 	data.IndexId = fwflex.StringToFramework(ctx, out.IndexId)
 	data.IndexArn = fwflex.StringToFramework(ctx, out.IndexArn)
 
-	data.setID()
+	resp.Diagnostics.Append(data.setID()...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	if _, err := waitIndexCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError("failed to wait for Amazon Q index creation", err.Error())
@@ -346,8 +351,8 @@ type resourceIndexData struct {
 	ID                              types.String                                                       `tfsdk:"id"`
 	IndexId                         types.String                                                       `tfsdk:"index_id"`
 	IndexArn                        types.String                                                       `tfsdk:"arn"`
-	Tags                            types.Map                                                          `tfsdk:"tags"`
-	TagsAll                         types.Map                                                          `tfsdk:"tags_all"`
+	Tags                            tftags.Map                                                         `tfsdk:"tags"`
+	TagsAll                         tftags.Map                                                         `tfsdk:"tags_all"`
 	Timeouts                        timeouts.Value                                                     `tfsdk:"timeouts"`
 	DocumentAttributeConfigurations fwtypes.SetNestedObjectValueOf[documentAttributeConfigurationData] `tfsdk:"document_attribute_configuration"`
 }
@@ -366,8 +371,18 @@ const (
 	indexResourceIDPartCount = 2
 )
 
-func (data *resourceIndexData) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.ApplicationId.ValueString(), data.IndexId.ValueString()}, indexResourceIDPartCount, false)))
+func (data *resourceIndexData) setID() diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	id, err := flex.FlattenResourceId([]string{data.ApplicationId.ValueString(), data.IndexId.ValueString()}, indexResourceIDPartCount, false)
+	if err != nil {
+		diags.AddError(
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionFlatteningResourceId, ResNameIndex, id, err),
+			err.Error())
+		return diags
+	}
+	data.ID = types.StringValue(id)
+	return diags
 }
 
 func (data *resourceIndexData) initFromID() error {

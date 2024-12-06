@@ -302,8 +302,8 @@ type resourceApplicationData struct {
 	RoleArn                      fwtypes.ARN                                                   `tfsdk:"iam_service_role_arn"`
 	IdentityCenterInstanceArn    fwtypes.ARN                                                   `tfsdk:"identity_center_instance_arn"`
 	IdentityCenterApplicationArn types.String                                                  `tfsdk:"identity_center_application_arn"`
-	Tags                         types.Map                                                     `tfsdk:"tags"`
-	TagsAll                      types.Map                                                     `tfsdk:"tags_all"`
+	Tags                         tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                      tftags.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                     timeouts.Value                                                `tfsdk:"timeouts"`
 	AttachmentsConfiguration     fwtypes.ListNestedObjectValueOf[attachmentsConfigurationData] `tfsdk:"attachments_configuration"`
 	EncryptionConfiguration      fwtypes.ListNestedObjectValueOf[encryptionConfigurationData]  `tfsdk:"encryption_configuration"`

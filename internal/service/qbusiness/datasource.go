@@ -30,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -370,7 +371,10 @@ func (r *resourceDatasource) Create(ctx context.Context, req resource.CreateRequ
 
 	data.DatasourceId = fwflex.StringToFramework(ctx, out.DataSourceId)
 	data.DatasourceArn = fwflex.StringToFramework(ctx, out.DataSourceArn)
-	data.setID()
+	resp.Diagnostics.Append(data.setID()...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	if _, err := waitDatasourceCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
 		resp.Diagnostics.AddError("failed to wait for datasource to be created", err.Error())
@@ -390,9 +394,9 @@ func (r *resourceDatasource) Delete(ctx context.Context, req resource.DeleteRequ
 	conn := r.Meta().QBusinessClient(ctx)
 
 	input := &qbusiness.DeleteDataSourceInput{
-		ApplicationId: aws.String(data.ApplicationId.ValueString()),
-		IndexId:       aws.String(data.IndexId.ValueString()),
-		DataSourceId:  aws.String(data.DatasourceId.ValueString()),
+		ApplicationId: data.ApplicationId.ValueStringPointer(),
+		IndexId:       data.IndexId.ValueStringPointer(),
+		DataSourceId:  data.DatasourceId.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteDataSource(ctx, input)
@@ -495,8 +499,8 @@ type resourceDatasourceData struct {
 	IndexId                         types.String                                                                 `tfsdk:"index_id"`
 	RoleArn                         fwtypes.ARN                                                                  `tfsdk:"iam_service_role_arn"`
 	SyncSchedule                    types.String                                                                 `tfsdk:"sync_schedule"`
-	Tags                            types.Map                                                                    `tfsdk:"tags"`
-	TagsAll                         types.Map                                                                    `tfsdk:"tags_all"`
+	Tags                            tftags.Map                                                                   `tfsdk:"tags"`
+	TagsAll                         tftags.Map                                                                   `tfsdk:"tags_all"`
 	Timeouts                        timeouts.Value                                                               `tfsdk:"timeouts"`
 	VpcConfiguration                fwtypes.ListNestedObjectValueOf[resourceVPCConfigurationData]                `tfsdk:"vpc_config"`
 }
@@ -576,29 +580,31 @@ func (r *resourceDatasourceData) flattenFromGetDataSourceOutput(ctx context.Cont
 	if d := r.flattenDocumentEnrichmentConfiguration(ctx, out.DocumentEnrichmentConfiguration); d.HasError() {
 		return d
 	}
-	r.setID()
+	diags.Append(r.setID()...)
 	return diags
 }
 
-func flattenInlineConfiguration(ctx context.Context, conf []awstypes.InlineDocumentEnrichmentConfiguration) ([]*resourceInlineDocumentEnrichmentConfigurationData, diag.Diagnostics) {
+func flatInlineConfiguration(ctx context.Context, conf []awstypes.InlineDocumentEnrichmentConfiguration) ([]*resourceInlineDocumentEnrichmentConfigurationData, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var idec []*resourceInlineDocumentEnrichmentConfigurationData
 
 	for _, c := range conf {
 		var ic resourceInlineDocumentEnrichmentConfigurationData
 		ic.Operator = fwtypes.StringEnumValue(c.DocumentContentOperator)
-		cond, d := flattenDocumentAttributeCondition(ctx, c.Condition)
+		var cond resourceConditionData
+		d := cond.flattenDocumentAttributeCondition(ctx, c.Condition)
 		if d.HasError() {
 			return nil, d
 		}
-		if ic.Condition, diags = fwtypes.NewListNestedObjectValueOfPtr[resourceConditionData](ctx, cond); diags.HasError() {
+		if ic.Condition, diags = fwtypes.NewListNestedObjectValueOfPtr[resourceConditionData](ctx, &cond); diags.HasError() {
 			return nil, diags
 		}
-		target, d := flattenResourceDocumentAttributeTargetData(ctx, c.Target)
+		var target resourceDocumentAttributeTargetData
+		d = target.flattenResourceDocumentAttributeTargetData(ctx, c.Target)
 		if d.HasError() {
 			return nil, d
 		}
-		if ic.Target, diags = fwtypes.NewListNestedObjectValueOfPtr[resourceDocumentAttributeTargetData](ctx, target); diags.HasError() {
+		if ic.Target, diags = fwtypes.NewListNestedObjectValueOfPtr[resourceDocumentAttributeTargetData](ctx, &target); diags.HasError() {
 			return nil, diags
 		}
 		idec = append(idec, &ic)
@@ -607,51 +613,44 @@ func flattenInlineConfiguration(ctx context.Context, conf []awstypes.InlineDocum
 	return idec, diags
 }
 
-func flattenResourceDocumentAttributeTargetData(ctx context.Context, conf *awstypes.DocumentAttributeTarget) (*resourceDocumentAttributeTargetData, diag.Diagnostics) {
+func (data *resourceDocumentAttributeTargetData) flattenResourceDocumentAttributeTargetData(ctx context.Context, conf *awstypes.DocumentAttributeTarget) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var dat resourceDocumentAttributeTargetData
 
-	dat.Key = fwflex.StringToFramework(ctx, conf.Key)
-	dat.Operator = fwtypes.StringEnumValue(conf.AttributeValueOperator)
-
-	if dat.Value, diags = fwtypes.NewObjectValueOf[resourceValueData](ctx, flattenValue(ctx, conf.Value)); diags.HasError() {
-		return nil, diags
-	}
-	return &dat, diags
+	data.Key = fwflex.StringToFramework(ctx, conf.Key)
+	data.Operator = fwtypes.StringEnumValue(conf.AttributeValueOperator)
+	data.Value, diags = fwtypes.NewObjectValueOf[resourceValueData](ctx, flatValue(ctx, conf.Value))
+	return diags
 }
 
-func flattenDocumentAttributeCondition(ctx context.Context, conf *awstypes.DocumentAttributeCondition) (*resourceConditionData, diag.Diagnostics) {
-	var c resourceConditionData
+func (data *resourceConditionData) flattenDocumentAttributeCondition(ctx context.Context, conf *awstypes.DocumentAttributeCondition) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	c.Key = fwflex.StringToFramework(ctx, conf.Key)
-	c.Operator = fwtypes.StringEnumValue(conf.Operator)
-	if c.Value, diags = fwtypes.NewObjectValueOf[resourceValueData](ctx, flattenValue(ctx, conf.Value)); diags.HasError() {
-		return nil, diags
-	}
-	return &c, nil
+	data.Key = fwflex.StringToFramework(ctx, conf.Key)
+	data.Operator = fwtypes.StringEnumValue(conf.Operator)
+	data.Value, diags = fwtypes.NewObjectValueOf[resourceValueData](ctx, flatValue(ctx, conf.Value))
+	return diags
 }
 
-func flattenHookConfiguration(ctx context.Context, conf *awstypes.HookConfiguration) (*resourceHookConfigurationData, diag.Diagnostics) {
+func (hc *resourceHookConfigurationData) flattenHookConfiguration(ctx context.Context, conf *awstypes.HookConfiguration) diag.Diagnostics {
 	var diags diag.Diagnostics
-	var hc resourceHookConfigurationData
 
 	hc.LambdaARN = fwflex.StringToFramework(ctx, conf.LambdaArn)
 	hc.RoleARN = fwflex.StringToFramework(ctx, conf.RoleArn)
 	hc.S3BucketName = fwflex.StringToFramework(ctx, conf.S3BucketName)
 
 	if conf.InvocationCondition != nil {
-		c, d := flattenDocumentAttributeCondition(ctx, conf.InvocationCondition)
+		var c resourceConditionData
+		d := c.flattenDocumentAttributeCondition(ctx, conf.InvocationCondition)
 		if d.HasError() {
-			return nil, d
+			return d
 		}
-		ic, d := fwtypes.NewListNestedObjectValueOfPtr[resourceConditionData](ctx, c)
+		ic, d := fwtypes.NewListNestedObjectValueOfPtr[resourceConditionData](ctx, &c)
 		if d.HasError() {
-			return nil, d
+			return d
 		}
 		hc.Condition = ic
 	}
-	return &hc, diags
+	return diags
 }
 
 func (r *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx context.Context, conf *awstypes.DocumentEnrichmentConfiguration) diag.Diagnostics {
@@ -659,7 +658,7 @@ func (r *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx cont
 	var diags diag.Diagnostics
 
 	if conf.InlineConfigurations != nil {
-		ic, d := flattenInlineConfiguration(ctx, conf.InlineConfigurations)
+		ic, d := flatInlineConfiguration(ctx, conf.InlineConfigurations)
 		if d.HasError() {
 			return d
 		}
@@ -671,11 +670,12 @@ func (r *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx cont
 	}
 
 	if conf.PreExtractionHookConfiguration != nil {
-		pre, d := flattenHookConfiguration(ctx, conf.PreExtractionHookConfiguration)
+		var pre resourceHookConfigurationData
+		d := pre.flattenHookConfiguration(ctx, conf.PreExtractionHookConfiguration)
 		if d.HasError() {
 			return d
 		}
-		if dec.PreExreactionHookConfiguration, diags = fwtypes.NewListNestedObjectValueOfPtr[resourceHookConfigurationData](ctx, pre); diags.HasError() {
+		if dec.PreExreactionHookConfiguration, diags = fwtypes.NewListNestedObjectValueOfPtr[resourceHookConfigurationData](ctx, &pre); diags.HasError() {
 			return diags
 		}
 	} else {
@@ -683,11 +683,12 @@ func (r *resourceDatasourceData) flattenDocumentEnrichmentConfiguration(ctx cont
 	}
 
 	if conf.PostExtractionHookConfiguration != nil {
-		post, d := flattenHookConfiguration(ctx, conf.PostExtractionHookConfiguration)
+		var post resourceHookConfigurationData
+		d := post.flattenHookConfiguration(ctx, conf.PostExtractionHookConfiguration)
 		if d.HasError() {
 			return d
 		}
-		if dec.PostExtractionHookConfiguration, diags = fwtypes.NewListNestedObjectValueOfPtr[resourceHookConfigurationData](ctx, post); diags.HasError() {
+		if dec.PostExtractionHookConfiguration, diags = fwtypes.NewListNestedObjectValueOfPtr[resourceHookConfigurationData](ctx, &post); diags.HasError() {
 			return diags
 		}
 	} else {
@@ -718,7 +719,7 @@ func (r *resourceDatasourceData) flattenConfiguration(conf document.Interface) d
 	return diags
 }
 
-func flattenValue(ctx context.Context, av awstypes.DocumentAttributeValue) *resourceValueData {
+func flatValue(ctx context.Context, av awstypes.DocumentAttributeValue) *resourceValueData {
 	rvd := resourceValueData{
 		DateValue:       timetypes.NewRFC3339Null(),
 		LongValue:       types.Int64Null(),
@@ -823,7 +824,7 @@ func (r *resourceDatasourceData) expandDocumentEnrichmentConfiguration(
 		return nil, diags
 	}
 
-	if dec.InlineConfigurations, diags = expandInlineConfiguration(ctx, inlineConfs); diags.HasError() {
+	if dec.InlineConfigurations, diags = expInlineConfiguration(ctx, inlineConfs); diags.HasError() {
 		return nil, diags
 	}
 
@@ -832,7 +833,7 @@ func (r *resourceDatasourceData) expandDocumentEnrichmentConfiguration(
 		return nil, diags
 	}
 
-	if dec.PostExtractionHookConfiguration, diags = expandHookConfiguration(ctx, postHook); diags.HasError() {
+	if dec.PostExtractionHookConfiguration, diags = expHookConfiguration(ctx, postHook); diags.HasError() {
 		return nil, diags
 	}
 
@@ -840,13 +841,13 @@ func (r *resourceDatasourceData) expandDocumentEnrichmentConfiguration(
 	if diags.HasError() {
 		return nil, diags
 	}
-	if dec.PreExtractionHookConfiguration, diags = expandHookConfiguration(ctx, preHook); diags.HasError() {
+	if dec.PreExtractionHookConfiguration, diags = expHookConfiguration(ctx, preHook); diags.HasError() {
 		return nil, diags
 	}
 	return &dec, diags
 }
 
-func expandInlineConfiguration(ctx context.Context, conf []*resourceInlineDocumentEnrichmentConfigurationData) ([]awstypes.InlineDocumentEnrichmentConfiguration, diag.Diagnostics) {
+func expInlineConfiguration(ctx context.Context, conf []*resourceInlineDocumentEnrichmentConfigurationData) ([]awstypes.InlineDocumentEnrichmentConfiguration, diag.Diagnostics) {
 	inlineDocConf := []awstypes.InlineDocumentEnrichmentConfiguration{}
 
 	for _, c := range conf {
@@ -858,7 +859,7 @@ func expandInlineConfiguration(ctx context.Context, conf []*resourceInlineDocume
 		if diags.HasError() {
 			return nil, diags
 		}
-		if ic.Condition, diags = expandDocumentAttributeCondition(ctx, rcs); diags.HasError() {
+		if ic.Condition, diags = expDocumentAttributeCondition(ctx, rcs); diags.HasError() {
 			return nil, diags
 		}
 
@@ -866,7 +867,7 @@ func expandInlineConfiguration(ctx context.Context, conf []*resourceInlineDocume
 		if diags.HasError() {
 			return nil, diags
 		}
-		if ic.Target, diags = expandDocumentAttributeTarget(ctx, dat); diags.HasError() {
+		if ic.Target, diags = expDocumentAttributeTarget(ctx, dat); diags.HasError() {
 			return nil, diags
 		}
 		inlineDocConf = append(inlineDocConf, ic)
@@ -875,7 +876,7 @@ func expandInlineConfiguration(ctx context.Context, conf []*resourceInlineDocume
 	return inlineDocConf, nil
 }
 
-func expandDocumentAttributeTarget(ctx context.Context, conf *resourceDocumentAttributeTargetData) (*awstypes.DocumentAttributeTarget, diag.Diagnostics) {
+func expDocumentAttributeTarget(ctx context.Context, conf *resourceDocumentAttributeTargetData) (*awstypes.DocumentAttributeTarget, diag.Diagnostics) {
 	if conf == nil {
 		return nil, nil
 	}
@@ -891,14 +892,14 @@ func expandDocumentAttributeTarget(ctx context.Context, conf *resourceDocumentAt
 		return nil, diags
 	}
 
-	dat.Value, diags = expandValue(ctx, val)
+	dat.Value, diags = expValue(ctx, val)
 	if diags.HasError() {
 		return nil, diags
 	}
 	return &dat, nil
 }
 
-func expandHookConfiguration(ctx context.Context, conf *resourceHookConfigurationData) (*awstypes.HookConfiguration, diag.Diagnostics) {
+func expHookConfiguration(ctx context.Context, conf *resourceHookConfigurationData) (*awstypes.HookConfiguration, diag.Diagnostics) {
 	if conf == nil {
 		return &awstypes.HookConfiguration{}, nil
 	}
@@ -909,7 +910,7 @@ func expandHookConfiguration(ctx context.Context, conf *resourceHookConfiguratio
 		if d.HasError() {
 			return nil, d
 		}
-		if hookConf.InvocationCondition, d = expandDocumentAttributeCondition(ctx, c); d.HasError() {
+		if hookConf.InvocationCondition, d = expDocumentAttributeCondition(ctx, c); d.HasError() {
 			return nil, d
 		}
 	}
@@ -919,7 +920,7 @@ func expandHookConfiguration(ctx context.Context, conf *resourceHookConfiguratio
 	return &hookConf, nil
 }
 
-func expandDocumentAttributeCondition(ctx context.Context, conf *resourceConditionData) (*awstypes.DocumentAttributeCondition, diag.Diagnostics) {
+func expDocumentAttributeCondition(ctx context.Context, conf *resourceConditionData) (*awstypes.DocumentAttributeCondition, diag.Diagnostics) {
 	if conf == nil {
 		return nil, nil
 	}
@@ -928,7 +929,7 @@ func expandDocumentAttributeCondition(ctx context.Context, conf *resourceConditi
 	if d.HasError() {
 		return nil, d
 	}
-	v, d := expandValue(ctx, c)
+	v, d := expValue(ctx, c)
 	if d.HasError() {
 		return nil, d
 	}
@@ -940,7 +941,7 @@ func expandDocumentAttributeCondition(ctx context.Context, conf *resourceConditi
 	return &cond, nil
 }
 
-func expandValue(ctx context.Context, rvd *resourceValueData) (awstypes.DocumentAttributeValue, diag.Diagnostics) {
+func expValue(ctx context.Context, rvd *resourceValueData) (awstypes.DocumentAttributeValue, diag.Diagnostics) {
 	if rvd == nil {
 		return nil, nil
 	}
@@ -980,12 +981,22 @@ const (
 	datasourceResourceIDPartCount = 3
 )
 
-func (r *resourceDatasourceData) setID() {
-	r.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{
+func (r *resourceDatasourceData) setID() diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	id, err := flex.FlattenResourceId([]string{
 		r.ApplicationId.ValueString(),
 		r.IndexId.ValueString(),
 		r.DatasourceId.ValueString(),
-	}, datasourceResourceIDPartCount, false)))
+	}, datasourceResourceIDPartCount, false)
+	if err != nil {
+		diags.AddError(
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionFlatteningResourceId, ResNameDatasource, id, err),
+			err.Error())
+		return diags
+	}
+	r.ID = types.StringValue(id)
+	return diags
 }
 
 func FindDatasourceByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetDataSourceOutput, error) {

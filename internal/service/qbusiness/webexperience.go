@@ -15,6 +15,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -23,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -125,8 +127,8 @@ type resourceWebexperienceData struct {
 	RoleArn                  fwtypes.ARN                                                        `tfsdk:"iam_service_role_arn"`
 	SamplePromptsControlMode fwtypes.StringEnum[awstypes.WebExperienceSamplePromptsControlMode] `tfsdk:"sample_prompts_control_mode"`
 	Subtitle                 types.String                                                       `tfsdk:"subtitle"`
-	Tags                     types.Map                                                          `tfsdk:"tags"`
-	TagsAll                  types.Map                                                          `tfsdk:"tags_all"`
+	Tags                     tftags.Map                                                         `tfsdk:"tags"`
+	TagsAll                  tftags.Map                                                         `tfsdk:"tags_all"`
 	Timeouts                 timeouts.Value                                                     `tfsdk:"timeouts"`
 	Title                    types.String                                                       `tfsdk:"title"`
 	WebexperienceArn         types.String                                                       `tfsdk:"arn"`
@@ -293,9 +295,19 @@ const (
 	indexWebexperienceIDPartCount = 2
 )
 
-func (r *resourceWebexperienceData) setID() {
-	r.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{r.ApplicationId.ValueString(), r.WebexperienceId.ValueString()},
-		indexWebexperienceIDPartCount, false)))
+func (data *resourceWebexperienceData) setID() diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	id, err := flex.FlattenResourceId([]string{data.ApplicationId.ValueString(), data.WebexperienceId.ValueString()},
+		indexWebexperienceIDPartCount, false)
+	if err != nil {
+		diags.AddError(
+			create.ProblemStandardMessage(names.QBusiness, create.ErrActionFlatteningResourceId, ResNameWebexperience, id, err),
+			err.Error())
+		return diags
+	}
+	data.ID = types.StringValue(id)
+	return diags
 }
 
 func (r *resourceWebexperienceData) initFromID() error {
