@@ -468,7 +468,7 @@ resource "aws_glue_catalog_table_optimizer" "test" {
       iceberg_configuration {
         snapshot_retention_period_in_days = %[1]d
         number_of_snapshots_to_retain     = 3
-        clean_expired_files  		      = true
+        clean_expired_files               = true
       }
     }
   }
