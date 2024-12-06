@@ -23,12 +23,12 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		func(o *globalaccelerator.Options) {
 			if config["partition"].(string) == endpoints.AwsPartitionID {
 				// Global Accelerator endpoint is only available in AWS Commercial us-west-2 Region.
-				if cfg.Region != names.USWest2RegionID {
+				if cfg.Region != endpoints.UsWest2RegionID {
 					tflog.Info(ctx, "overriding region", map[string]any{
 						"original_region": cfg.Region,
-						"override_region": names.USWest2RegionID,
+						"override_region": endpoints.UsWest2RegionID,
 					})
-					o.Region = names.USWest2RegionID
+					o.Region = endpoints.UsWest2RegionID
 				}
 			}
 		},

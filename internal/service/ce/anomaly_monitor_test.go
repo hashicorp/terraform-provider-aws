@@ -37,7 +37,7 @@ func TestAccCEAnomalyMonitor_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalyMonitorExists(ctx, resourceName, &monitor),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "ce", regexache.MustCompile(`anomalymonitor/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ce", regexache.MustCompile(`anomalymonitor/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "monitor_type", "CUSTOM"),
 					resource.TestCheckResourceAttrSet(resourceName, "monitor_specification"),
 				),

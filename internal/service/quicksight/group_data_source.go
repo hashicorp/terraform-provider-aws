@@ -61,7 +61,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
-	awsAccountID := meta.(*conns.AWSClient).AccountID
+	awsAccountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAWSAccountID); ok {
 		awsAccountID = v.(string)
 	}

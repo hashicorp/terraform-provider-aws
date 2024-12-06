@@ -38,10 +38,10 @@ func TestAccECRRepository_basic(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ecr", fmt.Sprintf("repository/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ecr", fmt.Sprintf("repository/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					testAccCheckRepositoryRegistryID(resourceName),
-					testAccCheckRepositoryRepositoryURL(resourceName, rName),
+					testAccCheckRepositoryRegistryID(ctx, resourceName),
+					testAccCheckRepositoryRepositoryURL(ctx, resourceName, rName),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeAes256)),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.kms_key", ""),
@@ -226,7 +226,7 @@ func TestAccECRRepository_Encryption_kms(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.encryption_type", string(types.EncryptionTypeKms)),
 					// This will be the default ECR service KMS key. We don't currently have a way to look this up.
-					acctest.MatchResourceAttrRegionalARN(resourceName, "encryption_configuration.0.kms_key", "kms", regexache.MustCompile(fmt.Sprintf("key/%s$", verify.UUIDRegexPattern))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "encryption_configuration.0.kms_key", "kms", regexache.MustCompile(fmt.Sprintf("key/%s$", verify.UUIDRegexPattern))),
 				),
 			},
 			{
@@ -346,16 +346,16 @@ func testAccCheckRepositoryExists(ctx context.Context, n string, v *types.Reposi
 	}
 }
 
-func testAccCheckRepositoryRegistryID(resourceName string) resource.TestCheckFunc {
+func testAccCheckRepositoryRegistryID(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attributeValue := acctest.AccountID()
+		attributeValue := acctest.AccountID(ctx)
 		return resource.TestCheckResourceAttr(resourceName, "registry_id", attributeValue)(s)
 	}
 }
 
-func testAccCheckRepositoryRepositoryURL(resourceName, repositoryName string) resource.TestCheckFunc {
+func testAccCheckRepositoryRepositoryURL(ctx context.Context, resourceName, repositoryName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s", acctest.AccountID(), acctest.Region(), repositoryName)
+		attributeValue := fmt.Sprintf("%s.dkr.ecr.%s.amazonaws.com/%s", acctest.AccountID(ctx), acctest.Region(), repositoryName)
 		return resource.TestCheckResourceAttr(resourceName, "repository_url", attributeValue)(s)
 	}
 }

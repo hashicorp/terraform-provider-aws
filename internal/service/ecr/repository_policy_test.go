@@ -36,7 +36,7 @@ func TestAccECRRepositoryPolicy_basic(t *testing.T) {
 					testAccCheckRepositoryPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", names.AttrName),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(rName)),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
 			},
 			{
@@ -51,7 +51,7 @@ func TestAccECRRepositoryPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "repository", "aws_ecr_repository.test", names.AttrName),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(rName)),
 					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile("ecr:DescribeImages")),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 				),
 			},
 		},

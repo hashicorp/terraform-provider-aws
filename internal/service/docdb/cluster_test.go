@@ -52,7 +52,7 @@ func TestAccDocDBCluster_basic(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrApplyImmediately),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),
@@ -790,8 +790,8 @@ func TestAccDocDBCluster_GlobalClusterIdentifier_PrimarySecondaryClusters(t *tes
 			{
 				Config: testAccClusterConfig_globalIdentifierPrimarySecondary(rNameGlobal, rNamePrimary, rNameSecondary),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExistsProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(acctest.Region(), &providers)),
-					testAccCheckClusterExistsProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckClusterExistsProvider(ctx, resourceNamePrimary, &primaryDbCluster, acctest.RegionProviderFunc(ctx, acctest.Region(), &providers)),
+					testAccCheckClusterExistsProvider(ctx, resourceNameSecondary, &secondaryDbCluster, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 				),
 			},
 		},
@@ -819,7 +819,7 @@ func TestAccDocDBCluster_updateEngineMajorVersion(t *testing.T) {
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllowMajorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, names.AttrApplyImmediately, acctest.CtTrue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(fmt.Sprintf("cluster:%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "backup_retention_period", "1"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, rName),

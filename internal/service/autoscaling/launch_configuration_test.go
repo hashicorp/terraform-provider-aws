@@ -39,7 +39,7 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 				Config: testAccLaunchConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(`launchConfiguration:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(`launchConfiguration:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", acctest.CtFalse),

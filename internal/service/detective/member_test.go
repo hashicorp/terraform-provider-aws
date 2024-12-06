@@ -38,7 +38,7 @@ func testAccMember_basic(t *testing.T) {
 				Config: testAccMemberConfig_basic(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
-					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "administrator_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_time"),
@@ -103,7 +103,7 @@ func testAccMember_message(t *testing.T) {
 				Config: testAccMemberConfig_invitationMessage(email),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMemberExists(ctx, resourceName, &detectiveOutput),
-					acctest.CheckResourceAttrAccountID(resourceName, "administrator_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "administrator_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAccountID, dataSourceAlternate, names.AttrAccountID),
 					acctest.CheckResourceAttrRFC3339(resourceName, "invited_time"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "updated_time"),

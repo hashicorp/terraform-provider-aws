@@ -28,7 +28,7 @@ func testAccAuthorizationTokenDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 		},
@@ -50,7 +50,7 @@ func testAccAuthorizationTokenDataSource_owner(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 		},
@@ -73,7 +73,7 @@ func testAccAuthorizationTokenDataSource_duration(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expiration"),
 					resource.TestCheckResourceAttr(dataSourceName, "duration_seconds", "900"),
-					acctest.CheckResourceAttrAccountID(dataSourceName, "domain_owner"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSourceName, "domain_owner"),
 				),
 			},
 		},

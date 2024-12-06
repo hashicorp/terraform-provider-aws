@@ -36,7 +36,7 @@ func testAccConfigurationRecorder_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConfigurationRecorderExists(ctx, resourceName, &cr),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
 				),
 			},
 			{
@@ -99,7 +99,7 @@ func testAccConfigurationRecorder_allParams(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.recording_frequency", "CONTINUOUS"),
 					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.resource_types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.resource_types.0", "AWS::EC2::Instance"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
 				),
 			},
 		},
@@ -127,7 +127,7 @@ func testAccConfigurationRecorder_recordStrategy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.exclusion_by_resource_types.0.resource_types.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.recording_strategy.0.use_only", "EXCLUSION_BY_RESOURCE_TYPES"),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", fmt.Sprintf("role/%s", rName)),
 				),
 			},
 		},

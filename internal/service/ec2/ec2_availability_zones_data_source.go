@@ -139,7 +139,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 		zoneIds = append(zoneIds, zoneID)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	if err := d.Set("group_names", groupNames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting group_names: %s", err)

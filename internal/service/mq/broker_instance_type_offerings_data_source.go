@@ -118,7 +118,7 @@ func dataSourceBrokerInstanceTypeOfferingsRead(ctx context.Context, d *schema.Re
 		return sdkdiag.AppendErrorf(diags, "reading MQ Broker Instance Options: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	if err := d.Set("broker_instance_options", flattenBrokerInstanceOptions(output)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting broker_instance_options: %s", err)

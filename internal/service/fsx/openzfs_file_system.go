@@ -355,8 +355,8 @@ func validateDiskConfigurationIOPS(_ context.Context, d *schema.ResourceDiff, me
 						return fmt.Errorf("expected disk_iops_configuration.0.iops to be in the range (0 - 160000) when deployment_type (%s), got %d", awstypes.OpenZFSDeploymentTypeSingleAz1, v)
 					}
 				} else if deploymentType == string(awstypes.OpenZFSDeploymentTypeSingleAz2) {
-					if v < 0 || v > 350000 {
-						return fmt.Errorf("expected disk_iops_configuration.0.iops to be in the range (0 - 350000) when deployment_type (%s), got %d", awstypes.OpenZFSDeploymentTypeSingleAz2, v)
+					if v < 0 || v > 400000 {
+						return fmt.Errorf("expected disk_iops_configuration.0.iops to be in the range (0 - 400000) when deployment_type (%s), got %d", awstypes.OpenZFSDeploymentTypeSingleAz2, v)
 					}
 				}
 			}

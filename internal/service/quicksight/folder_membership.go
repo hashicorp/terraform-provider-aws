@@ -95,7 +95,7 @@ func (r *folderMembershipResource) Create(ctx context.Context, req resource.Crea
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, folderID, memberType, memberID := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.FolderID), flex.StringValueFromFramework(ctx, plan.MemberType), flex.StringValueFromFramework(ctx, plan.MemberID)
 	in := &quicksight.CreateFolderMembershipInput{

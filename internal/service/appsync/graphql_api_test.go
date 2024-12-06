@@ -37,7 +37,7 @@ func testAccGraphQLAPI_basic(t *testing.T) {
 				Config: testAccGraphQLAPIConfig_authenticationType(rName, "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "0"),
@@ -104,7 +104,7 @@ func testAccGraphQLAPI_schema(t *testing.T) {
 				Config: testAccGraphQLAPIConfig_schema(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "0"),
@@ -186,7 +186,7 @@ func testAccGraphQLAPI_AuthenticationType_apiKey(t *testing.T) {
 				Config: testAccGraphQLAPIConfig_authenticationType(rName, "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -216,7 +216,7 @@ func testAccGraphQLAPI_AuthenticationType_iam(t *testing.T) {
 				Config: testAccGraphQLAPIConfig_authenticationType(rName, "AWS_IAM"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_IAM"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 				),
@@ -981,7 +981,7 @@ func testAccGraphQLAPI_AdditionalAuthentication_apiKey(t *testing.T) {
 				Config: testAccGraphQLAPIConfig_additionalAuthAuthType(rName, "AWS_IAM", "API_KEY"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_IAM"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "1"),
@@ -1016,7 +1016,7 @@ func testAccGraphQLAPI_AdditionalAuthentication_iam(t *testing.T) {
 				Config: testAccGraphQLAPIConfig_additionalAuthAuthType(rName, "API_KEY", "AWS_IAM"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "1"),
@@ -1052,7 +1052,7 @@ func testAccGraphQLAPI_AdditionalAuthentication_cognitoUserPools(t *testing.T) {
 				Config: testAccGraphQLAPIConfig_additionalAuthUserPool(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "1"),
@@ -1088,7 +1088,7 @@ func testAccGraphQLAPI_AdditionalAuthentication_openIDConnect(t *testing.T) {
 				Config: testAccGraphQLAPIConfig_additionalAuthOpenIdConnect(rName, "https://example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "1"),
@@ -1125,7 +1125,7 @@ func testAccGraphQLAPI_AdditionalAuthentication_lambda(t *testing.T) {
 				Config: testAccGraphQLAPIConfig_additionalAuthLambda(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "1"),
@@ -1165,7 +1165,7 @@ func testAccGraphQLAPI_AdditionalAuthentication_multiple(t *testing.T) {
 				Config: testAccGraphQLAPIConfig_additionalAuthMultiple(rName, "https://example.com"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "appsync", regexache.MustCompile(`apis/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "4"),
