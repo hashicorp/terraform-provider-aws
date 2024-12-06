@@ -47,6 +47,8 @@ func TestAccEKSCluster_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
 					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.authentication_mode", "CONFIG_MAP"),
+					resource.TestCheckResourceAttr(resourceName, "access_config.0.bootstrap_cluster_creator_admin_permissions", acctest.CtTrue),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("cluster/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "bootstrap_self_managed_addons", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
@@ -63,8 +65,9 @@ func TestAccEKSCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.elastic_load_balancing.0.enabled", acctest.CtFalse),
-					resource.TestCheckResourceAttrSet(resourceName, "kubernetes_network_config.0.service_ipv4_cidr"),
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.ip_family", "ipv4"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", "172.20.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_network_config.0.service_ipv6_cidr", ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "outpost_config.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "platform_version", regexache.MustCompile(`^eks\.\d+$`)),
@@ -1505,7 +1508,7 @@ resource "aws_eks_cluster" "test" {
   compute_config {
     enabled       = %[2]t
     node_pools    = ["general-purpose"]
-    node_role_arn = %[3]v
+    node_role_arn = %[3]s
   }
 
   kubernetes_network_config {
@@ -1556,7 +1559,7 @@ func testAccClusterConfig_logging(rName string, logTypes []string) string {
 resource "aws_eks_cluster" "test" {
   name                      = %[1]q
   role_arn                  = aws_iam_role.cluster.arn
-  enabled_cluster_log_types = ["%[2]v"]
+  enabled_cluster_log_types = ["%[2]s"]
 
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
