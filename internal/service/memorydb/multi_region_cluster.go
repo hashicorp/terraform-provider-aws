@@ -62,30 +62,6 @@ func resourceMultiRegionCluster() *schema.Resource {
 					Optional: true,
 					Default:  "Managed by Terraform",
 				},
-				"clusters": {
-					Type:     schema.TypeList,
-					Computed: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							names.AttrARN: {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							names.AttrName: {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							names.AttrRegion: {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-							names.AttrStatus: {
-								Type:     schema.TypeString,
-								Computed: true,
-							},
-						},
-					},
-				},
 				names.AttrEngine: {
 					Type:             schema.TypeString,
 					Optional:         true,
@@ -203,9 +179,6 @@ func resourceMultiRegionClusterRead(ctx context.Context, d *schema.ResourceData,
 	d.Set(names.AttrARN, cluster.ARN)
 	d.Set(names.AttrName, cluster.MultiRegionClusterName)
 	d.Set(names.AttrDescription, cluster.Description)
-	if err := d.Set("clusters", flattenClusters(&cluster.Clusters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting clusters: %s", err)
-	}
 	d.Set(names.AttrEngine, cluster.Engine)
 	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
 	d.Set("node_type", cluster.NodeType)
@@ -302,25 +275,6 @@ func resourceMultiRegionClusterDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	return diags
-}
-
-func flattenClusters(apiObjects *[]awstypes.RegionalCluster) []interface{} {
-	if apiObjects == nil {
-		return []interface{}{}
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range *apiObjects {
-		tfList = append(tfList, map[string]interface{}{
-			names.AttrARN:    aws.ToString(apiObject.ARN),
-			names.AttrName:   aws.ToString(apiObject.ClusterName),
-			names.AttrRegion: aws.ToString(apiObject.Region),
-			names.AttrStatus: aws.ToString(apiObject.Status),
-		})
-	}
-
-	return tfList
 }
 
 func findMultiRegionClusterByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.MultiRegionCluster, error) {

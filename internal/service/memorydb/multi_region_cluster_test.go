@@ -207,37 +207,6 @@ func TestAccMemoryDBMultiRegionCluster_engineVersion(t *testing.T) {
 	})
 }
 
-func TestAccMemoryDBMultiRegionCluster_clusters(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_memorydb_multi_region_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMultiRegionClusterConfig_clusters(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiRegionClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "clusters.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "clusters.0.arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "clusters.0.name"),
-					resource.TestCheckResourceAttrSet(resourceName, "clusters.0.region"),
-					resource.TestCheckResourceAttrSet(resourceName, "clusters.0.status"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccMemoryDBMultiRegionCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
