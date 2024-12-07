@@ -241,6 +241,7 @@ The following arguments are optional:
 * `hidden_app_types` - (Optional) The Applications supported in Studio that are hidden from the Studio left navigation pane.
 * `hidden_instance_types` - (Optional) The instance types you are hiding from the Studio user interface.
 * `hidden_ml_tools` - (Optional) The machine learning tools that are hidden from the Studio left navigation pane.
+* `hidden_sagemaker_image_version_aliases` - (Optional) The version aliases you are hiding from the Studio user interface. See [`hidden_sagemaker_image_version_aliases` Block](#hidden_sagemaker_image_version_aliases-block) below.
 
 ##### `code_repository` Block
 
@@ -318,6 +319,12 @@ The following arguments are optional:
 
 * `assumable_role_arns` - (Optional) An array of Amazon Resource Names (ARNs) of the IAM roles that the execution role of SageMaker can assume for performing operations or tasks related to Amazon EMR clusters or Amazon EMR Serverless applications. These roles define the permissions and access policies required when performing Amazon EMR-related operations, such as listing, connecting to, or terminating Amazon EMR clusters or Amazon EMR Serverless applications. They are typically used in cross-account access scenarios, where the Amazon EMR resources (clusters or serverless applications) are located in a different AWS account than the SageMaker domain.
 * `execution_role_arns` - (Optional) An array of Amazon Resource Names (ARNs) of the IAM roles used by the Amazon EMR cluster instances or job execution environments to access other AWS services and resources needed during the runtime of your Amazon EMR or Amazon EMR Serverless workloads, such as Amazon S3 for data access, Amazon CloudWatch for logging, or other AWS services based on the particular workload requirements.
+
+#### `hidden_sagemaker_image_version_aliases` Block
+
+* `sagemaker_image_name` (Optional) - The SageMaker image name that you are hiding from the Studio user interface. Valid value is: `sagemaker_distribution`.
+
+* `version_aliases` - (Optional) - The version aliases you are hiding from the Studio user interfac, e.g, `["1.9", "1.10"]`. Maximum number of 20 items.
 
 ## Attribute Reference
 
