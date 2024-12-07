@@ -1413,8 +1413,8 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_memorydb_multi_region_cluster" "test" {
-  suffix    = %[1]q
-  node_type = "db.r7g.xlarge"
+  name_suffix = %[1]q
+  node_type   = "db.r7g.xlarge"
 
   tags = {
     Test = "test"
