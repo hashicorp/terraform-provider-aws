@@ -201,7 +201,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("delegation_set_id", "")
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API.
-	d.Set(names.AttrName, normalizeZoneName(aws.ToString(output.HostedZone.Name)))
+	d.Set(names.AttrName, cleanRecordName(normalizeZoneName(aws.ToString(output.HostedZone.Name))))
 	d.Set("zone_id", zoneID)
 
 	var nameServers []string
