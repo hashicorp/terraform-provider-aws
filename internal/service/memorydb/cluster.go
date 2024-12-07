@@ -571,6 +571,10 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		ClusterName: aws.String(d.Id()),
 	}
 
+	if v := d.Get("multi_region_cluster_name"); v != nil && len(v.(string)) > 0 {
+		input.MultiRegionClusterName = aws.String(v.(string))
+	}
+
 	if v := d.Get("final_snapshot_name"); v != nil && len(v.(string)) > 0 {
 		input.FinalSnapshotName = aws.String(v.(string))
 	}
