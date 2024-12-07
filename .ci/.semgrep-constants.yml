@@ -2197,6 +2197,24 @@ rules:
     options:
       constant_propagation: false
 
+  - id: literal-name_suffix-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrNameSuffix` for the string literal "name_suffix"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"name_suffix"'
+      - pattern-not-regex: '"name_suffix":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrNameSuffix"
+    options:
+      constant_propagation: false
+
   - id: literal-names-string-constant
     languages: [go]
     message: Use the constant `names.AttrNames` for the string literal "names"
@@ -3562,6 +3580,24 @@ rules:
       - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrSubnets"
+    options:
+      constant_propagation: false
+
+  - id: literal-suffix-string-constant
+    languages: [go]
+    message: Use the constant `names.AttrSuffix` for the string literal "suffix"
+    paths:
+      include:
+        - "internal/service/**/*.go"
+    patterns:
+      - pattern: '"suffix"'
+      - pattern-not-regex: '"suffix":\s+test\w+,'
+      - pattern-not-inside: 'config.Variables{ ... }'
+      - pattern-not-inside: 'packageName = ...'
+      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
+      - pattern-not-inside: 'const $X = ...'
+    severity: ERROR
+    fix: "names.AttrSuffix"
     options:
       constant_propagation: false
 
