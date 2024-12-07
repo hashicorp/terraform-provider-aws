@@ -56,7 +56,7 @@ This resource supports the following arguments:
 * `name` - (Required) The name of the notebook instance (must be unique).
 * `role_arn` - (Required) The ARN of the IAM role to be used by the notebook instance which allows SageMaker to call other services on your behalf.
 * `instance_type` - (Required) The name of ML compute instance type.
-* `platform_identifier` - (Optional) The platform identifier of the notebook instance runtime environment. This value can be either `notebook-al1-v1`, `notebook-al2-v1`, or  `notebook-al2-v2`, depending on which version of Amazon Linux you require.
+* `platform_identifier` - (Optional) The platform identifier of the notebook instance runtime environment. This value can be either `notebook-al1-v1`, `notebook-al2-v1`, `notebook-al2-v2`, or `notebook-al2-v3`, depending on which version of Amazon Linux you require.
 * `volume_size` - (Optional) The size, in GB, of the ML storage volume to attach to the notebook instance. The default value is 5 GB.
 * `subnet_id` - (Optional) The VPC subnet ID.
 * `security_groups` - (Optional) The associated security groups.
