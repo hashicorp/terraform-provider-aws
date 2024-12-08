@@ -116,7 +116,7 @@ resource "aws_internet_gateway" "gw" {
 }
 
 resource "aws_security_group" "allow_tls" {
-  rName        = "allow_tls"
+  name        = "allow_tls"
   description = "Allow TLS inbound traffic and all outbound traffic"
   vpc_id      = aws_vpc.test.id
 
@@ -140,7 +140,7 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 }
 
 resource "aws_lb" "this" {
-  rName               =  %[1]q
+  name               =  %[1]q
   internal           = true
   load_balancer_type = "application"
   security_groups    = [aws_security_group.allow_tls.id]
@@ -153,7 +153,7 @@ resource "aws_lb" "this" {
 
 resource "aws_cloudfront_vpc_origin" "this" {
   vpc_origin_endpoint_config {
-    rName = %[1]q
+    name = %[1]q
     origin_arn = aws_lb.this.arn
     http_port = 8080
     https_port = 8443

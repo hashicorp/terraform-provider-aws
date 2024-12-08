@@ -28,11 +28,6 @@ import (
 	"time"
 )
 
-const (
-	deleteVPCOriginTimeout = 15 * time.Minute
-	updateVPCOriginTimeout = 15 * time.Minute
-)
-
 // @FrameworkResource("aws_cloudfront_vpc_origin", name="VPC Origin")
 func newCloudfrontVPCOriginResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &cloudfrontVPCOriginResource{}
@@ -156,21 +151,23 @@ func (r *cloudfrontVPCOriginResource) Create(ctx context.Context, request resour
 
 	output, err := conn.CreateVpcOrigin(ctx, &input)
 
-	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	if _, err = waitVPCOriginDeployed(ctx, conn, data.Id.ValueString(), createTimeout); err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForCreation, "VPC Origin", data.Id.String(), err),
-			err.Error(),
-		)
+	if err != nil {
+		response.Diagnostics.AddError("Creating CloudFront VPC Origin", err.Error())
 		return
 	}
 
+	data.Id = fwflex.StringToFramework(ctx, output.VpcOrigin.Id)
 	data.ARN = fwflex.StringToFramework(ctx, output.VpcOrigin.Arn)
 	data.CreatedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.CreatedTime)
-	data.Id = fwflex.StringToFramework(ctx, output.VpcOrigin.Id)
 	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.LastModifiedTime)
 	data.Status = fwflex.StringToFramework(ctx, output.VpcOrigin.Status)
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
+
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	if _, err = waitVPCOriginDeployed(ctx, conn, data.Id.ValueString(), createTimeout); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("Creating CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
