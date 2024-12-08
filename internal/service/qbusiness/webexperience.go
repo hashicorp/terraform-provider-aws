@@ -310,14 +310,14 @@ func (data *resourceWebexperienceData) setID() diag.Diagnostics {
 	return diags
 }
 
-func (r *resourceWebexperienceData) initFromID() error {
-	parts, err := flex.ExpandResourceId(r.ID.ValueString(), indexWebexperienceIDPartCount, false)
+func (data *resourceWebexperienceData) initFromID() error {
+	parts, err := flex.ExpandResourceId(data.ID.ValueString(), indexWebexperienceIDPartCount, false)
 	if err != nil {
 		return err
 	}
 
-	r.ApplicationId = types.StringValue(parts[0])
-	r.WebexperienceId = types.StringValue(parts[1])
+	data.ApplicationId = types.StringValue(parts[0])
+	data.WebexperienceId = types.StringValue(parts[1])
 	return nil
 }
 
