@@ -332,7 +332,7 @@ func waitVPCOriginDeployed(ctx context.Context, conn *cloudfront.Client, id stri
 
 func waitVPCOriginDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.VpcOrigin, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"Deploying"},
+		Pending: []string{"Deploying", "Deployed"},
 		Target:  []string{},
 		Refresh: VPCOriginStatus(ctx, conn, id),
 		Timeout: timeout,
