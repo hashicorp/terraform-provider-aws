@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/url"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -46,7 +47,8 @@ func forEachObjectVersionsPage(ctx context.Context, conn *s3.Client, bucket stri
 	var nObjects int64
 
 	input := &s3.ListObjectVersionsInput{
-		Bucket: aws.String(bucket),
+		Bucket:       aws.String(bucket),
+		EncodingType: types.EncodingTypeUrl,
 	}
 	var lastErr error
 
@@ -56,6 +58,20 @@ func forEachObjectVersionsPage(ctx context.Context, conn *s3.Client, bucket stri
 
 		if err != nil {
 			return nObjects, fmt.Errorf("listing S3 bucket (%s) object versions: %w", bucket, err)
+		}
+
+		// Reverse URL-encoding from requested EncodingType: "url"
+		page.Versions, err = tfslices.ApplyToAllWithError(page.Versions, func(v types.ObjectVersion) (types.ObjectVersion, error) {
+			unescaped, err := url.QueryUnescape(aws.ToString(v.Key))
+			if err != nil {
+				return types.ObjectVersion{}, err
+			}
+			v.Key = aws.String(unescaped)
+			return v, nil
+		})
+
+		if err != nil {
+			return nObjects, fmt.Errorf("listing S3 bucket (%s) object versions: unescaping object keys: %w", bucket, err)
 		}
 
 		n, err := fn(ctx, conn, bucket, page)
