@@ -28,7 +28,7 @@ This resource supports the following arguments:
 * `subtitle` - (Optional) Subtitle for Amazon Q web experience.
 * `title` - (Optional) Title for Amazon Q web experience.
 * `welcome_message` - (Optional) Customized welcome message for end users of an Amazon Q web experience.
-* `iam_service_role_arn` - (Optional) The Amazon Resource Name (ARN) of the service role attached to your web experience.
+* `iam_service_role_arn` - (Required) The Amazon Resource Name (ARN) of the service role attached to your web experience.
 
 ## Attribute Reference
 

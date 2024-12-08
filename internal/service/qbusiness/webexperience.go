@@ -75,7 +75,7 @@ func (r *resourceWebexperience) Schema(ctx context.Context, req resource.SchemaR
 			"iam_service_role_arn": schema.StringAttribute{
 				CustomType:  fwtypes.ARNType,
 				Description: "The Amazon Resource Name (ARN) of the service role attached to your web experience",
-				Optional:    true,
+				Required:    true,
 			},
 			"sample_prompts_control_mode": schema.StringAttribute{
 				CustomType:  fwtypes.StringEnumType[awstypes.WebExperienceSamplePromptsControlMode](),

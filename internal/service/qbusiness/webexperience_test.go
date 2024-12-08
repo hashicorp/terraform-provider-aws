@@ -240,6 +240,7 @@ func testAccWebexperienceConfig_basic(rName string) string {
 resource "aws_qbusiness_webexperience" "test" {
   application_id              = aws_qbusiness_app.test.id
   sample_prompts_control_mode = "DISABLED"
+  iam_service_role_arn        = aws_iam_role.test.arn
 }
 `)
 }
@@ -249,6 +250,7 @@ func testAccWebexperienceConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValu
 resource "aws_qbusiness_webexperience" "test" {
   application_id              = aws_qbusiness_app.test.id
   sample_prompts_control_mode = "DISABLED"
+  iam_service_role_arn        = aws_iam_role.test.arn
 
   tags = {
     %[2]q = %[3]q
@@ -266,6 +268,7 @@ resource "aws_qbusiness_webexperience" "test" {
   title                       = %[1]q
   subtitle                    = %[1]q
   welcome_message             = %[1]q
+  iam_service_role_arn        = aws_iam_role.test.arn
 }
 `, title))
 }
@@ -275,6 +278,7 @@ func testAccWebexperienceConfig_samplePromptsControlMode(rName, control string) 
 resource "aws_qbusiness_webexperience" "test" {
   application_id              = aws_qbusiness_app.test.id
   sample_prompts_control_mode = %[1]q
+  iam_service_role_arn        = aws_iam_role.test.arn
 }
 `, control))
 }
