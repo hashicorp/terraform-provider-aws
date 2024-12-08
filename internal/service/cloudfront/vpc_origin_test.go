@@ -71,17 +71,36 @@ func testAccCheckVPCOriginExists(ctx context.Context, n string) resource.TestChe
 
 func testAccCheckVPCOriginDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		// Not yet implemented
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudfront_vpc_origin" {
+				continue
+			}
+
+			_, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
+		}
+
 		return nil
 	}
 }
 
-// FIXME: This resource has the right parts and the wrong configuration.
+// FIXME: Need to wait for load balancer to finish provisioning before deploying VPC Origin
 func testAccVPCOriginConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
   tags = {
     Name = %[1]q
@@ -90,19 +109,19 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "a" {
   vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.1.0/24"
+  cidr_block = "10.1.1.0/24"
   availability_zone = "ap-southeast-1a"
 }
 
 resource "aws_subnet" "b" {
   vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.2.0/24"
+  cidr_block = "10.1.2.0/24"
   availability_zone = "ap-southeast-1b"
 }
 
 resource "aws_subnet" "c" {
   vpc_id     = aws_vpc.test.id
-  cidr_block = "10.0.3.0/24"
+  cidr_block = "10.1.3.0/24"
   availability_zone = "ap-southeast-1c"
 }
 
@@ -127,7 +146,7 @@ resource "aws_security_group" "allow_tls" {
 
 resource "aws_vpc_security_group_ingress_rule" "allow_tls_ipv4" {
   security_group_id = aws_security_group.allow_tls.id
-  cidr_ipv4         = aws_vpc.test.cidr_block
+  cidr_ipv4         = "0.0.0.0/0"
   from_port         = 443
   ip_protocol       = "tcp"
   to_port           = 443
