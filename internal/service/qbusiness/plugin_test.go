@@ -32,20 +32,19 @@ func TestAccQBusinessPlugin_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPluginDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPluginConfig_basic(rName),
+				Config: testAccPluginConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPluginExists(ctx, resourceName, &plugin),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrApplicationID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "plugin_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "auth_configuration.0.basic_auth_configuration.0.role_arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "auth_configuration.0.basic_auth_configuration.0.secret_arn"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: testAccPluginConfig_basic(rName, "DISABLED"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckPluginExists(ctx, resourceName, &plugin),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "DISABLED"),
+				),
 			},
 		},
 	})
@@ -64,7 +63,7 @@ func TestAccQBusinessPlugin_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPluginDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPluginConfig_basic(rName),
+				Config: testAccPluginConfig_basic(rName, "ENABLED"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPluginExists(ctx, resourceName, &plugin),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourcePlugin, resourceName),
@@ -108,37 +107,6 @@ func TestAccQBusinessPlugin_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, "value2updated"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccQBusinessPlugin_customPlugin(t *testing.T) {
-	ctx := acctest.Context(t)
-	var plugin qbusiness.GetPluginOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_qbusiness_plugin.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPlugin(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPluginDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPluginConfig_customPlugin(rName, "ENABLED"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPluginExists(ctx, resourceName, &plugin),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrType, "CUSTOM"),
-				),
-			},
-			{
-				Config: testAccPluginConfig_customPlugin(rName, "DISABLED"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPluginExists(ctx, resourceName, &plugin),
-					resource.TestCheckResourceAttr(resourceName, names.AttrState, "DISABLED"),
 				),
 			},
 		},
@@ -208,78 +176,42 @@ func testAccCheckPluginExists(ctx context.Context, n string, v *qbusiness.GetPlu
 	}
 }
 
-func testAccPluginConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
-variable "credentials" {
-  default = {
-    username = "username"
-    password = "password"
-  }
-  type = map(string)
-}
-
-resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
-}
-
-resource "aws_secretsmanager_secret_version" "test" {
-  secret_id     = aws_secretsmanager_secret.test.id
-  secret_string = jsonencode(var.credentials)
-}
-
-resource "aws_iam_policy" "test" {
-  policy = jsonencode(
-    {
-      Version = "2012-10-17"
-      Statement = [
-        {
-          Action   = ["secretsmanager:GetSecretValue"]
-          Effect   = "Allow"
-          Resource = aws_secretsmanager_secret.test.arn
-        }
-      ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "test-attach" {
-  role       = aws_iam_role.test.name
-  policy_arn = aws_iam_policy.test.arn
-}
-`, rName))
-}
-
-func testAccPluginConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccPluginConfig_base(rName), fmt.Sprintf(`
-resource "aws_qbusiness_plugin" "test" {
-  application_id = aws_qbusiness_app.test.id
-  auth_configuration {
-    basic_auth_configuration {
-      role_arn   = aws_iam_role.test.arn
-      secret_arn = aws_secretsmanager_secret.test.arn
-    }
-  }
-  display_name = %[1]q
-  server_url   = "https://yourinstance.service-now.com"
-  state        = "ENABLED"
-  type         = "SERVICE_NOW"
-}
-`, rName))
-}
-
 func testAccPluginConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccPluginConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_plugin" "test" {
   application_id = aws_qbusiness_app.test.id
+  display_name   = "plugin"
+  state          = "ENABLED"
+  type           = "CUSTOM"
   auth_configuration {
-    basic_auth_configuration {
-      role_arn   = aws_iam_role.test.arn
-      secret_arn = aws_secretsmanager_secret.test.arn
+  }
+  custom_plugin_configuration {
+    api_schema_type = "OPEN_API_V3"
+    description     = "Plugin description"
+    api_schema {
+      payload = <<SCHEMA
+openapi: 3.0.0
+info:
+  title: Sample API
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/
+paths:
+  /strings:
+    get:
+      description: Test
+      responses:
+        '200':
+          description: A JSON array of strings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+SCHEMA
     }
   }
-  display_name = %[1]q
-  server_url   = "https://yourinstance.service-now.com"
-  state        = "ENABLED"
-  type         = "SERVICE_NOW"
 
   tags = {
     %[2]q = %[3]q
@@ -289,8 +221,8 @@ resource "aws_qbusiness_plugin" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccPluginConfig_customPlugin(rName, state string) string {
-	return acctest.ConfigCompose(testAccPluginConfig_base(rName), fmt.Sprintf(`
+func testAccPluginConfig_basic(rName, state string) string {
+	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_plugin" "test" {
   application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q

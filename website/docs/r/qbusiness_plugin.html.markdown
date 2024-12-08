@@ -39,7 +39,7 @@ This resource supports the following arguments:
 * `display_name` - (Required) The name of the Amazon Q plugin.
 * `server_url` - (Required) Source URL used for plugin configuration.
 * `state` - (Required) State of plugin. Valid value are `ENABLED` and `DISABLED`
-* `type` - (Required) Type of plugin. Valid value are `SERVICE_NOW`, `SALESFORCE`, `JIRA`, `ZENDESK` and `CUSTOM`
+* `type` - (Required) Type of plugin. Valid value are `SERVICE_NOW`, `SALESFORCE`, `JIRA`, `ZENDESK`, `CUSTOM`, `QUICKSIGHT`, `SERVICENOW_NOW_PLATFORM`, `JIRA_CLOUD`, `SALESFORCE_CRM`, `ZENDESK_SUITE`, `ATLASSIAN_CONFLUENCE`, `GOOGLE_CALENDAR`, `MICROSOFT_TEAMS`, `MICROSOFT_EXCHANGE`, `PAGERDUTY_ADVANCE`, `SMARTSHEET`, `ASANA`
 * `custom_plugin_configuration` - (Required if `type` is `CUSTOM`) Custom plugin configuration.
 
 `auth_configuration` supports the following:
