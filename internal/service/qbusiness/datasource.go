@@ -715,6 +715,17 @@ func (r *resourceDatasourceData) flattenConfiguration(conf document.Interface) d
 		diags.AddError("failed to marshal configuration", err.Error())
 		return diags
 	}
+	var kv map[string]interface{}
+	if err := json.Unmarshal(b, &kv); err != nil {
+		diags.AddError("failed to unmarshal configuration", err.Error())
+		return diags
+	}
+	delete(kv, "IngestionMode")
+	b, err = json.Marshal(kv)
+	if err != nil {
+		diags.AddError("failed to marshal configuration", err.Error())
+		return diags
+	}
 	r.Configuration = types.StringValue(string(b))
 	return diags
 }
@@ -1024,6 +1035,5 @@ func FindDatasourceByID(ctx context.Context, conn *qbusiness.Client, id string) 
 	if err != nil {
 		return nil, err
 	}
-
 	return output, nil
 }
