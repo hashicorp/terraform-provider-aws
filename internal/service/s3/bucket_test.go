@@ -223,6 +223,29 @@ func TestAccS3Bucket_Basic_forceDestroy(t *testing.T) {
 	})
 }
 
+func TestAccS3Bucket_Basic_forceDestroyWithUnusualKeyBytes(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_s3_bucket.test"
+	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketConfig_forceDestroyUnusualKeyBytes(bucketName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketExists(ctx, resourceName),
+					testAccCheckBucketAddObjects(ctx, resourceName, "unusual-key-bytes\x10.txt"),
+					//testAccCheckBucketAddObjects(ctx, resourceName, "unusual-key-bytes\x09.txt"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3Bucket_Basic_forceDestroyWithObjectVersions(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_s3_bucket.test"
@@ -4197,6 +4220,15 @@ resource "aws_s3_bucket_versioning" "test" {
 }
 
 func testAccBucketConfig_forceDestroy(bucketName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+`, bucketName)
+}
+
+func testAccBucketConfig_forceDestroyUnusualKeyBytes(bucketName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
