@@ -34,13 +34,6 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
-		{
-			Factory: newDataSourceAttributeGroup,
-			Name:    "Attribute Group",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
 	}
 }
 
