@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -42,12 +43,22 @@ func (d *dataSourceApplicationAttributeGroupAssociations) Metadata(_ context.Con
 func (d *dataSourceApplicationAttributeGroupAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: schema.StringAttribute{
-				Required: true,
+			names.AttrARN: schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				Computed:   true,
 			},
 			"attribute_group_ids": schema.SetAttribute{
 				Computed:    true,
 				ElementType: types.StringType,
+			},
+			names.AttrID: schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+			},
+			names.AttrName: schema.StringAttribute{
+				Optional: true,
+				Computed: true,
 			},
 		},
 	}
@@ -61,7 +72,17 @@ func (d *dataSourceApplicationAttributeGroupAssociations) Read(ctx context.Conte
 		return
 	}
 
-	out, err := findApplicationAttributeGroupAssociationsByID(ctx, conn, data.ID.ValueString())
+	var id string
+
+	if !data.ID.IsNull() {
+		id = data.ID.ValueString()
+	} else if !data.Name.IsNull() {
+		id = data.Name.ValueString()
+	} else if !data.ARN.IsNull() {
+		id = data.ARN.ValueString()
+	}
+
+	out, err := findApplicationAttributeGroupAssociationsByID(ctx, conn, id)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionReading, DSNameApplicationAttributeGroupAssociations, data.ID.String(), err),
@@ -100,6 +121,8 @@ func findApplicationAttributeGroupAssociationsByID(ctx context.Context, conn *se
 }
 
 type dataSourceApplicationAttributeGroupAssociationsData struct {
+	ARN             fwtypes.ARN  `tfsdk:"arn"`
 	ID              types.String `tfsdk:"id"`
 	AttributeGroups types.Set    `tfsdk:"attribute_group_ids"`
+	Name            types.String `tfsdk:"name"`
 }
