@@ -87,6 +87,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"studioWebPortalSettings_hiddenAppTypes":                  testAccDomain_studioWebPortalSettings_hiddenAppTypes,
 			"studioWebPortalSettings_hiddenInstanceTypes":             testAccDomain_studioWebPortalSettings_hiddenInstanceTypes,
 			"studioWebPortalSettings_hiddenMlTools":                   testAccDomain_studioWebPortalSettings_hiddenMlTools,
+			"studioWebPortalSettings_hiddenImageVersionAliases":       testAccDomain_studioWebPortalSettings_hiddenImageVersionAliases,
 		},
 		"FlowDefinition": {
 			acctest.CtBasic:                  testAccFlowDefinition_basic,
