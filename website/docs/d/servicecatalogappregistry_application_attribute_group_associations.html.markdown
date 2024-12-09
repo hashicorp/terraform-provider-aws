@@ -24,7 +24,12 @@ data "aws_servicecatalogappregistry_application_attribute_group_associations" "e
 
 The following arguments are required:
 
-* `id` - (Required) The Id of the Application to read Associations for.
+The following arguments are optional:
+
+~> Exactly one of `id`or `name` must be set.
+
+* `id`   - (Optional) ID of the Attribute Group to find.
+* `name` - (Optional) Name of the Attribute Group to find.
 
 The following arguments are optional:
 
