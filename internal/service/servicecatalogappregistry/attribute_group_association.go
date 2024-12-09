@@ -5,7 +5,6 @@ package servicecatalogappregistry
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -34,9 +33,9 @@ func newResourceAttributeGroupAssociation(_ context.Context) (resource.ResourceW
 
 const (
 	ResNameAttributeGroupAssociation = "Attribute Group Association"
-)
 
-const attributeGroupAssociationIDParts = 2
+	attributeGroupAssociationIDParts = 2
+)
 
 type resourceAttributeGroupAssociation struct {
 	framework.ResourceWithConfigure
@@ -83,18 +82,11 @@ func (r *resourceAttributeGroupAssociation) Create(ctx context.Context, req reso
 		return
 	}
 
-	out, err := conn.AssociateAttributeGroup(ctx, in)
+	_, err := conn.AssociateAttributeGroup(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionCreating, ResNameAttributeGroupAssociation, plan.AttributeGroup.String(), err),
 			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionCreating, ResNameAttributeGroupAssociation, plan.AttributeGroup.String(), nil),
-			errors.New("empty output").Error(),
 		)
 		return
 	}
