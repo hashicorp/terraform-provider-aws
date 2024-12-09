@@ -10,7 +10,7 @@ description: |-
 
 Provides an RDS DB proxy resource. For additional information, see the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy.html).
 
-~> **NOTE:** Not all availability zones support a DB proxy. Including `vpc_subnet_ids` corresponding to AZs that don't support proxies won't result in an error if at least one of the `vpc_subnet_ids` is valid. However, this will cause Terraform to show a constant difference between the configuration and infrastructure. See the avoiding
+~> **Note:** Not all Availability Zones (AZs) support DB proxies. Specifying `vpc_subnet_ids` for AZs that do not support proxies will not trigger an error as long as at least one `vpc_subnet_id` is valid. However, this will cause Terraform to continuously detect differences between the configuration and the actual infrastructure. Refer to the [Unsupported Availability Zones](#unsupported-availability-zones) section below for potential workarounds.
 
 ## Example Usage
 
@@ -45,7 +45,7 @@ resource "aws_db_proxy" "example" {
 
 Terraform may report constant differences if you use `vpc_subnet_ids` that correspond to Availability Zones (AZs) that do not support a DB proxy. While this typically does not result in an error, AWS only returns `vpc_subnet_ids` for AZs that support DB proxies. As a result, Terraform detects a mismatch between your configuration and the actual infrastructure, leading it to report that changes are required. Below are some ways to avoid this issue.
 
-One solution is to exclude AZs that do not support DB proxies by using the [`aws_availability_zones` data source](/docs/providers/aws/d/availability_zones.html). The following example demonstrates how to configure this for the `us-east-1` region, excluding the `use1-az3` AZ. If the `us-east-1` region has six AZs in total and you want to configure as many subnets as possible, you would exclude one AZ and configure five subnets:
+One solution is to exclude AZs that do not support DB proxies by using the [`aws_availability_zones` data source](/docs/providers/aws/d/availability_zones.html). The example below demonstrates how to configure this for the `us-east-1` region, excluding the `use1-az3` AZ. (Keep in mind that AZ names can vary between accounts, while AZ IDs remain consistent.) If the `us-east-1` region has six AZs in total and you aim to configure the maximum number of subnets, you would exclude one AZ and configure five subnets:
 
 ```terraform
 data "aws_availability_zones" "available" {
