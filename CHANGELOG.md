@@ -8,6 +8,7 @@ FEATURES:
 * **New Resource:** `aws_cloudwatch_log_anomaly_detector` ([#40437](https://github.com/hashicorp/terraform-provider-aws/issues/40437))
 * **New Resource:** `aws_ecr_account_setting` ([#40219](https://github.com/hashicorp/terraform-provider-aws/issues/40219))
 * **New Resource:** `aws_servicecatalogappregistry_attribute_group` ([#38183](https://github.com/hashicorp/terraform-provider-aws/issues/38183))
+* **New Resource:** `aws_servicecatalogappregistry_attribute_group_association` ([#38290](https://github.com/hashicorp/terraform-provider-aws/issues/38290))
 
 ENHANCEMENTS:
 
