@@ -38,18 +38,16 @@ resource "aws_servicecatalogappregistry_application_attribute_group_association"
 
 The following arguments are required:
 
-* `application_id` - (Required) ID of the Application to associate
-* `attribute_group_id` - (Required) ID of the Attribute Group to associate
-
-The following arguments are optional:
+* `application_id` - (Required) ID of the application to associate.
+* `attribute_group_id` - (Required) ID of the attribute group to associate.
 
 ## Attribute Reference
 
-This resource exports the following attributes in addition to the arguments above:
+This resource exports no additional attributes.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Catalog AppRegistry Application Attribute Group Association using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Catalog AppRegistry Application Attribute Group Association using the `application_id` and `attribute_group_id` arguments separated by a comma (`,`). For example:
 
 ```terraform
 import {
@@ -58,7 +56,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Service Catalog AppRegistry Application Attribute Group Association using the `12456778723424sdffsdfsdq34,12234t3564dsfsdf34asff4ww3`. For example:
+Using `terraform import`, import Service Catalog AppRegistry Application Attribute Group Association using `application_id` and `attribute_group_id` arguments separated by a comma (`,`). For example:
 
 ```console
 % terraform import aws_servicecatalogappregistry_application_attribute_group_association.example 12456778723424sdffsdfsdq34,12234t3564dsfsdf34asff4ww3
