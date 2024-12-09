@@ -105,11 +105,8 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					that each data point persists). A bucket belongs to an organization.`,
 			},
 			"db_instance_type": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.DbInstanceType](),
-				Required:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				CustomType:  fwtypes.StringEnumType[awstypes.DbInstanceType](),
+				Required:    true,
 				Description: `The Timestream for InfluxDB DB instance type to run InfluxDB on.`,
 			},
 			"db_parameter_group_identifier": schema.StringAttribute{
@@ -146,7 +143,6 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:   true,
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: `Specifies whether the DB instance will be deployed as a standalone instance or 
@@ -215,6 +211,18 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					also use the InfluxDB CLI to create an operator token. These attributes will be 
 					stored in a Secret created in AWS SecretManager in your account.`,
 			},
+			names.AttrPort: schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.Int64{
+					int64validator.Between(1024, 65535),
+					int64validator.NoneOf(2375, 2376, 7788, 7789, 7790, 7791, 7792, 7793, 7794, 7795, 7796, 7797, 7798, 7799, 8090, 51678, 51679, 51680),
+				},
+				Description: `The port number on which InfluxDB accepts connections.`,
+			},
 			names.AttrPubliclyAccessible: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -226,9 +234,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"secondary_availability_zone": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Default:  nil,
 				Description: `The Availability Zone in which the standby instance is located when deploying 
 					with a MultiAZ standby instance.`,
 			},
@@ -454,15 +460,34 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) ||
-		!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
+		!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) ||
+		!plan.DBInstanceType.Equal(state.DBInstanceType) ||
+		!plan.DeploymentType.Equal(state.DeploymentType) ||
+		!plan.Port.Equal(state.Port) {
 		in := timestreaminfluxdb.UpdateDbInstanceInput{
 			Identifier: plan.ID.ValueStringPointer(),
 		}
 
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
+		// If any argument is updated with the same value, a ValidationException will occur. Arguments should only
+		// be updated if they have changed. For this reason, flex.Expand cannot be used for all arguments.
+		if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) {
+			in.DbParameterGroupIdentifier = plan.DBParameterGroupIdentifier.ValueStringPointer()
+		}
 
-		if resp.Diagnostics.HasError() {
-			return
+		if !plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
+			flex.Expand(ctx, plan.LogDeliveryConfiguration, &in.LogDeliveryConfiguration)
+		}
+
+		if !plan.DBInstanceType.Equal(state.DBInstanceType) {
+			in.DbInstanceType = awstypes.DbInstanceType(plan.DBInstanceType.ValueString())
+		}
+
+		if !plan.DeploymentType.Equal(state.DeploymentType) {
+			in.DeploymentType = awstypes.DeploymentType(plan.DeploymentType.ValueString())
+		}
+
+		if !plan.Port.Equal(state.Port) {
+			in.Port = aws.Int32(int32(plan.Port.ValueInt64()))
 		}
 
 		_, err := conn.UpdateDbInstance(ctx, &in)
@@ -557,7 +582,7 @@ func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client,
 
 func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.StatusModifying, awstypes.StatusUpdating),
+		Pending:                   enum.Slice(awstypes.StatusModifying, awstypes.StatusUpdating, awstypes.StatusUpdatingInstanceType, awstypes.StatusUpdatingDeploymentType),
 		Target:                    enum.Slice(awstypes.StatusAvailable),
 		Refresh:                   statusDBInstance(ctx, conn, id),
 		Timeout:                   timeout,
@@ -645,6 +670,7 @@ type resourceDBInstanceData struct {
 	Name                          types.String                                                  `tfsdk:"name"`
 	Organization                  types.String                                                  `tfsdk:"organization"`
 	Password                      types.String                                                  `tfsdk:"password"`
+	Port                          types.Int64                                                   `tfsdk:"port"`
 	PubliclyAccessible            types.Bool                                                    `tfsdk:"publicly_accessible"`
 	SecondaryAvailabilityZone     types.String                                                  `tfsdk:"secondary_availability_zone"`
 	Tags                          tftags.Map                                                    `tfsdk:"tags"`
