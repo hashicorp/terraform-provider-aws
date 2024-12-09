@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -43,16 +42,12 @@ func (d *dataSourceApplicationAttributeGroupAssociations) Metadata(_ context.Con
 func (d *dataSourceApplicationAttributeGroupAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Optional:   true,
+			names.AttrID: schema.StringAttribute{
+				Optional: true,
 			},
 			"attribute_group_ids": schema.SetAttribute{
 				Computed:    true,
 				ElementType: types.StringType,
-			},
-			names.AttrID: schema.StringAttribute{
-				Optional: true,
 			},
 			names.AttrName: schema.StringAttribute{
 				Optional: true,
@@ -75,8 +70,6 @@ func (d *dataSourceApplicationAttributeGroupAssociations) Read(ctx context.Conte
 		id = data.ID.ValueString()
 	} else if !data.Name.IsNull() {
 		id = data.Name.ValueString()
-	} else if !data.ARN.IsNull() {
-		id = data.ARN.ValueString()
 	}
 
 	out, err := findApplicationAttributeGroupAssociationsByID(ctx, conn, id)
@@ -118,7 +111,6 @@ func findApplicationAttributeGroupAssociationsByID(ctx context.Context, conn *se
 }
 
 type dataSourceApplicationAttributeGroupAssociationsData struct {
-	ARN             fwtypes.ARN  `tfsdk:"arn"`
 	ID              types.String `tfsdk:"id"`
 	AttributeGroups types.Set    `tfsdk:"attribute_group_ids"`
 	Name            types.String `tfsdk:"name"`
