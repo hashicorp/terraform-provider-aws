@@ -19,9 +19,8 @@ func TestAccServiceCatalogAppRegistryApplicationAttributeGroupAssociationsDataSo
 	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	description := "some description"
 	dataSourceName := "data.aws_servicecatalogappregistry_application_attribute_group_associations.test"
-	resourceName := "aws_servicecatalogappregistry_application_attribute_group_association.test"
+	resourceName := "aws_servicecatalogappregistry_attribute_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -31,12 +30,12 @@ func TestAccServiceCatalogAppRegistryApplicationAttributeGroupAssociationsDataSo
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckApplicationAttributeGroupAssociationDestroy(ctx),
+		CheckDestroy:             testAccCheckAttributeGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationAttributeGroupAssociationsDataSourceConfig_basic(rName, description),
+				Config: testAccApplicationAttributeGroupAssociationsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckApplicationAttributeGroupAssociationExists(ctx, resourceName),
+					testAccCheckAttributeGroupAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "attribute_group_ids.#", "1"),
 				),
 			},
@@ -44,14 +43,14 @@ func TestAccServiceCatalogAppRegistryApplicationAttributeGroupAssociationsDataSo
 	})
 }
 
-func testAccApplicationAttributeGroupAssociationsDataSourceConfig_basic(rName, description string) string {
+func testAccApplicationAttributeGroupAssociationsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		testAccApplicationAttributeGroupAssociationConfig_basic(rName, description),
+		testAccAttributeGroupAssociationConfig_basic(rName),
 		`
 data "aws_servicecatalogappregistry_application_attribute_group_associations" "test" {
   id = aws_servicecatalogappregistry_application.test.id
 
-  depends_on = [aws_servicecatalogappregistry_application_attribute_group_association.test]
+  depends_on = [aws_servicecatalogappregistry_attribute_group_association.test]
 }
 `)
 }
