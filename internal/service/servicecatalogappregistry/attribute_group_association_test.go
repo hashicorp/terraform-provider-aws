@@ -149,13 +149,23 @@ func testAccCheckAttributeGroupAssociationImportStateIdFunc(resourceName string)
 }
 
 func testAccAttributeGroupAssociationConfig_basic(rName, description string) string {
-	return acctest.ConfigCompose(
-		testAccAttributeGroupConfig_basic(rName, description),
-		testAccApplicationConfig_description(rName, description),
-		`
+	return fmt.Sprintf(`
+resource "aws_servicecatalogappregistry_application" "test" {
+  name = %[1]q
+}
+
+resource "aws_servicecatalogappregistry_attribute_group" "test" {
+  name        = %[1]q
+  description = %[2]q
+  attributes = jsonencode({
+    a = "1"
+    b = "2"
+  })
+}
+
 resource "aws_servicecatalogappregistry_attribute_group_association" "test" {
   application_id     = aws_servicecatalogappregistry_application.test.id
   attribute_group_id = aws_servicecatalogappregistry_attribute_group.test.id
 }
-`)
+`, rName, description)
 }
