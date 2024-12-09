@@ -267,7 +267,7 @@ func findLoggingConfigurationByARN(ctx context.Context, conn *networkfirewall.Cl
 		return nil, err
 	}
 
-	if output == nil || output.LoggingConfiguration == nil {
+	if output == nil || output.LoggingConfiguration == nil || len(output.LoggingConfiguration.LogDestinationConfigs) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
