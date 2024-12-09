@@ -46,7 +46,6 @@ func (d *dataSourceApplicationAttributeGroupAssociations) Schema(ctx context.Con
 			names.AttrARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
-				Computed:   true,
 			},
 			"attribute_group_ids": schema.SetAttribute{
 				Computed:    true,
@@ -54,11 +53,9 @@ func (d *dataSourceApplicationAttributeGroupAssociations) Schema(ctx context.Con
 			},
 			names.AttrID: schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 			},
 			names.AttrName: schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 			},
 		},
 	}
