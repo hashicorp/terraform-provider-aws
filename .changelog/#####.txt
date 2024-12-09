@@ -1,3 +1,7 @@
 ```release-note:enhancement
 resource/aws_kinesis_stream: Add plan-time validation that `shard_count` does not exceed the AWS account's [shard quota](https://docs.aws.amazon.com/streams/latest/dev/service-sizes-and-limits.html) when the data stream capacity mode is `PROVISIONED`, preventing the provider from retrying for 1 hour in the case that the quota is exceeded. This change requires the `kinesis:DescribeLimits` IAM permission
 ```
+
+```release-note:bug
+data-source/aws_kinesis_stream: Fix `InvalidArgumentException: NextToken and StreamName cannot be provided together` errors when the data stream has more than 1000 shards
+```
