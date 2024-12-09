@@ -71,8 +71,10 @@ func resourceStream() *schema.Resource {
 						return fmt.Errorf("reading Kinesis account limits: %w", err)
 					}
 
-					if shardCount, shardLimit := int32(diff.Get("shard_count").(int)), aws.ToInt32(output.ShardLimit); shardCount > shardLimit {
-						return fmt.Errorf("shard_count (%d) exceeds Kinesis account limit (%d)", shardCount, shardLimit)
+					o, n := diff.GetChange("shard_count")
+
+					if shardCount, shardLimit := aws.ToInt32(output.OpenShardCount)+int32(n.(int)-o.(int)), aws.ToInt32(output.ShardLimit); shardCount > shardLimit {
+						return fmt.Errorf("open shard count (%d) would exceed the Kinesis account limit (%d)", shardCount, shardLimit)
 					}
 				}
 
