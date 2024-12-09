@@ -5,6 +5,7 @@ FEATURES:
 * **New Data Source:** `aws_servicecatalogappregistry_attribute_group` ([#38188](https://github.com/hashicorp/terraform-provider-aws/issues/38188))
 * **New Ephemeral Resource:** `aws_ssm_parameter` ([#40313](https://github.com/hashicorp/terraform-provider-aws/issues/40313))
 * **New Resource:** `aws_bedrock_inference_profile` ([#40294](https://github.com/hashicorp/terraform-provider-aws/issues/40294))
+* **New Resource:** `aws_cloudwatch_log_anomaly_detector` ([#40437](https://github.com/hashicorp/terraform-provider-aws/issues/40437))
 * **New Resource:** `aws_ecr_account_setting` ([#40219](https://github.com/hashicorp/terraform-provider-aws/issues/40219))
 * **New Resource:** `aws_servicecatalogappregistry_attribute_group` ([#38183](https://github.com/hashicorp/terraform-provider-aws/issues/38183))
 
@@ -21,11 +22,13 @@ ENHANCEMENTS:
 * resource/aws_networkfirewall_firewall_policy: Add `stateful_engine_options.flow_timeouts` argument ([#39996](https://github.com/hashicorp/terraform-provider-aws/issues/39996))
 * resource/aws_rds_cluster: Add `serverlessv2_scaling_configuration.seconds_until_auto_pause` argument ([#40441](https://github.com/hashicorp/terraform-provider-aws/issues/40441))
 * resource/aws_rds_global_cluster: Add `tags` argument and `tags_all` attribute ([#40470](https://github.com/hashicorp/terraform-provider-aws/issues/40470))
+* resource/aws_sagemaker_notebook_instance: Support `notebook-al2-v3` value for `platform_identifier` ([#40484](https://github.com/hashicorp/terraform-provider-aws/issues/40484))
 * resource/aws_servicecatalogappregistry_application: Add `tags` argument and `tags_all` attribute ([#38243](https://github.com/hashicorp/terraform-provider-aws/issues/38243))
 
 BUG FIXES:
 
 * resource/aws_fsx_windows_file_system: Fix plan-time validation of `throughput_capacity` validation to allow values up to `12228` ([#40468](https://github.com/hashicorp/terraform-provider-aws/issues/40468))
+* resource/aws_networkfirewall_logging_configuration: Correctly manage all configured `logging_configuration.log_destination_config`s ([#40092](https://github.com/hashicorp/terraform-provider-aws/issues/40092))
 * resource/aws_rds_cluster: Fix `InvalidDBClusterStateFault` errors when deleting clusters that are members of a global cluster ([#40333](https://github.com/hashicorp/terraform-provider-aws/issues/40333))
 * resource/aws_rds_cluster: Respect `storage_type` when restoring from S3 ([#40471](https://github.com/hashicorp/terraform-provider-aws/issues/40471))
 * resource/aws_rds_cluster: Respect `storage_type` when restoring from snapshot ([#40471](https://github.com/hashicorp/terraform-provider-aws/issues/40471))
