@@ -42,8 +42,8 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_basic(t *testing.
 				Config: testAccAttributeGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "application_id", applicationResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "attribute_group_id", attributeGroupResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrApplicationID, applicationResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "attribute_group_id", attributeGroupResourceName, names.AttrID),
 				),
 			},
 			{
