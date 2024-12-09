@@ -65,7 +65,7 @@ func dataSourceContainerRecipesRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipes: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, tfslices.ApplyToAll(containerRecipes, func(v awstypes.ContainerRecipeSummary) string {
 		return aws.ToString(v.Arn)
 	}))

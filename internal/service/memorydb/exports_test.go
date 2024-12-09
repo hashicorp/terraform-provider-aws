@@ -11,4 +11,13 @@ var (
 	ResourceSnapshot       = resourceSnapshot
 	ResourceSubnetGroup    = resourceSubnetGroup
 	ResourceUser           = resourceUser
+
+	FindACLByName            = findACLByName
+	FindClusterByName        = findClusterByName
+	FindParameterGroupByName = findParameterGroupByName
+	FindSnapshotByName       = findSnapshotByName
+	FindSubnetGroupByName    = findSubnetGroupByName
+	FindUserByName           = findUserByName
+	ParameterChanges         = parameterChanges
+	ParameterHash            = parameterHash
 )

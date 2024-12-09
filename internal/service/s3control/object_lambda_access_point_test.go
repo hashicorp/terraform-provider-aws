@@ -38,9 +38,9 @@ func TestAccS3ControlObjectLambdaAccessPoint_basic(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					resource.TestMatchResourceAttr(resourceName, names.AttrAlias, regexache.MustCompile("^.{1,20}-.*--ol-s3$")),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", acctest.CtFalse),
@@ -107,8 +107,8 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointConfig_optionals(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "configuration.0.allowed_features.*", "GetObject-PartNumber"),
@@ -135,8 +135,8 @@ func TestAccS3ControlObjectLambdaAccessPoint_update(t *testing.T) {
 				Config: testAccObjectLambdaAccessPointConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckObjectLambdaAccessPointExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrAccountID),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3-object-lambda", fmt.Sprintf("accesspoint/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.allowed_features.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.cloud_watch_metrics_enabled", acctest.CtFalse),

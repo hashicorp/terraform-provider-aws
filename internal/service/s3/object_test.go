@@ -20,6 +20,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -652,7 +653,7 @@ func TestAccS3Object_updatesWithVersioningViaAccessPoint(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &originalObj),
 					testAccCheckObjectBody(&originalObj, "initial versioned object state"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "s3", fmt.Sprintf("accesspoint/%s/updateable-key", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "s3", fmt.Sprintf("accesspoint/%s/updateable-key", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, accessPointResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "etag", "cee4407fa91906284e2a5e5e03e86b1b"),
 				),
@@ -1843,6 +1844,10 @@ func TestAccS3Object_prefix(t *testing.T) {
 func TestAccS3Object_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	errorPattern := `PermanentRedirect`
+	if acctest.Region() == endpoints.UsEast1RegionID {
+		errorPattern = `No AWSAccessKey was presented`
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -1855,7 +1860,7 @@ func TestAccS3Object_crossRegion(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccObjectConfig_crossRegion(rName),
-				ExpectError: regexache.MustCompile(`PermanentRedirect`),
+				ExpectError: regexache.MustCompile(errorPattern),
 			},
 		},
 	})
@@ -1865,7 +1870,7 @@ func TestAccS3Object_crossRegion(t *testing.T) {
 func TestAccS3Object_optInRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	optInRegion := names.APEast1RegionID // Hong Kong.
+	optInRegion := endpoints.ApEast1RegionID // Hong Kong.
 	providers := make(map[string]*schema.Provider)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2034,17 +2039,18 @@ func testAccCheckObjectVersionIDEquals(first, second *s3.GetObjectOutput) resour
 func testAccCheckObjectDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_object" {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 			if tfs3.IsDirectoryBucket(rs.Primary.Attributes[names.AttrBucket]) {
 				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			var optFns []func(*s3.Options)
-			if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
+			if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 				optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 			}
 
@@ -2078,7 +2084,7 @@ func testAccCheckObjectExists(ctx context.Context, n string, v *s3.GetObjectOutp
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
@@ -2137,7 +2143,7 @@ func testAccCheckObjectACL(ctx context.Context, n string, want []string) resourc
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
@@ -2176,7 +2182,7 @@ func testAccCheckObjectStorageClass(ctx context.Context, n, want string) resourc
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
@@ -2211,7 +2217,7 @@ func testAccCheckObjectSSE(ctx context.Context, n, want string) resource.TestChe
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
@@ -2255,7 +2261,7 @@ func testAccCheckObjectUpdateTags(ctx context.Context, n string, oldTags, newTag
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 
@@ -2273,7 +2279,7 @@ func testAccCheckAllObjectTags(ctx context.Context, n string, expectedTags map[s
 		}
 
 		var optFns []func(*s3.Options)
-		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == names.GlobalRegionID {
+		if arn.IsARN(rs.Primary.Attributes[names.AttrBucket]) && conn.Options().Region == endpoints.AwsGlobalRegionID {
 			optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 		}
 

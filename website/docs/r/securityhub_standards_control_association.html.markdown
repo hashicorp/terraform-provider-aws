@@ -28,7 +28,7 @@ resource "aws_securityhub_standards_subscription" "cis_aws_foundations_benchmark
   depends_on    = [aws_securityhub_account.example]
 }
 
-resource "aws_standards_control_association" "cis_aws_foundations_benchmark_disable_iam_1" {
+resource "aws_securityhub_standards_control_association" "cis_aws_foundations_benchmark_disable_iam_1" {
   standards_arn       = aws_securityhub_standards_subscription.cis_aws_foundations_benchmark.standards_arn
   security_control_id = "IAM.1"
   association_status  = "DISABLED"

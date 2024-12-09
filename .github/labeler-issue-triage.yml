@@ -599,6 +599,8 @@ service/s3control:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(s3_account_|s3control_|s3_access_)'
 service/s3outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3outposts_'
+service/s3tables:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3tables_'
 service/sagemaker:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_sagemaker_'
 service/sagemakera2iruntime:
@@ -679,6 +681,8 @@ service/swf:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_swf_'
 service/synthetics:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_synthetics_'
+service/taxsettings:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_taxsettings_'
 service/textract:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_textract_'
 service/timestreaminfluxdb:

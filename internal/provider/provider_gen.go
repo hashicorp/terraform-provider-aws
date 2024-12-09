@@ -1871,6 +1871,14 @@ func endpointsSchema() *schema.Schema {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// s3tables
+
+				"s3tables": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// sagemaker
 
 				"sagemaker": {
@@ -2136,6 +2144,14 @@ func endpointsSchema() *schema.Schema {
 				// synthetics
 
 				"synthetics": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
+				// taxsettings
+
+				"taxsettings": {
 					Type:        schema.TypeString,
 					Optional:    true,
 					Description: "Use this to override the default service endpoint URL",

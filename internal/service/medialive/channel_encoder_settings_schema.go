@@ -1789,6 +1789,22 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Type:     schema.TypeInt,
 														Optional: true,
 													},
+													"min_qp": {
+														Type:     schema.TypeInt,
+														Optional: true,
+													},
+													"mv_over_picture_boundaries": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265MvOverPictureBoundaries](),
+													},
+													"mv_temporal_predictor": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265MvTemporalPredictor](),
+													},
 													"par_denominator": {
 														Type:     schema.TypeInt,
 														Optional: true,
@@ -1836,6 +1852,22 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.H265Tier](),
 													},
+													"tile_height": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(64),
+													},
+													"tile_padding": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265TilePadding](),
+													},
+													"tile_width": {
+														Type:         schema.TypeInt,
+														Optional:     true,
+														ValidateFunc: validation.IntAtLeast(256),
+													},
 													"timecode_burnin_settings": {
 														Type:     schema.TypeList,
 														Optional: true,
@@ -1867,6 +1899,12 @@ func channelEncoderSettingsSchema() *schema.Schema {
 														Optional:         true,
 														Computed:         true,
 														ValidateDiagFunc: enum.Validate[types.H265TimecodeInsertionBehavior](),
+													},
+													"treeblock_size": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														Computed:         true,
+														ValidateDiagFunc: enum.Validate[types.H265TreeblockSize](),
 													},
 												},
 											},
@@ -5607,6 +5645,15 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["min_i_interval"].(int); ok && v != 0 {
 		out.MinIInterval = aws.Int32(int32(v))
 	}
+	if v, ok := m["min_qp"].(int); ok && v != 0 {
+		out.MinQp = aws.Int32(int32(v))
+	}
+	if v, ok := m["mv_over_picture_boundaries"].(string); ok && v != "" {
+		out.MvOverPictureBoundaries = types.H265MvOverPictureBoundaries(v)
+	}
+	if v, ok := m["mv_temporal_predictor"].(string); ok && v != "" {
+		out.MvTemporalPredictor = types.H265MvTemporalPredictor(v)
+	}
 	if v, ok := m["par_denominator"].(int); ok && v != 0 {
 		out.ParDenominator = aws.Int32(int32(v))
 	}
@@ -5634,11 +5681,23 @@ func expandsVideoDescriptionsCodecSettingsH265Settings(tfList []interface{}) *ty
 	if v, ok := m["tier"].(string); ok && v != "" {
 		out.Tier = types.H265Tier(v)
 	}
+	if v, ok := m["tile_height"].(int); ok && v != 0 {
+		out.TileHeight = aws.Int32(int32(v))
+	}
+	if v, ok := m["tile_padding"].(string); ok && v != "" {
+		out.TilePadding = types.H265TilePadding(v)
+	}
+	if v, ok := m["tile_width"].(int); ok && v != 0 {
+		out.TileWidth = aws.Int32(int32(v))
+	}
 	if v, ok := m["timecode_burnin_settings"].([]interface{}); ok && len(v) > 0 {
 		out.TimecodeBurninSettings = expandH265TimecodeBurninSettings(v)
 	}
 	if v, ok := m["timecode_insertion"].(string); ok && v != "" {
 		out.TimecodeInsertion = types.H265TimecodeInsertionBehavior(v)
+	}
+	if v, ok := m["treeblock_size"].(string); ok && v != "" {
+		out.TreeblockSize = types.H265TreeblockSize(v)
 	}
 
 	return &out
@@ -7021,6 +7080,9 @@ func flattenCodecSettingsH265Settings(in *types.H265Settings) []interface{} {
 		"look_ahead_rate_control":       string(in.LookAheadRateControl),
 		"max_bitrate":                   int(aws.ToInt32(in.MaxBitrate)),
 		"min_i_interval":                int(aws.ToInt32(in.MinIInterval)),
+		"min_qp":                        int(aws.ToInt32(in.MinQp)),
+		"mv_over_picture_boundaries":    string(in.MvOverPictureBoundaries),
+		"mv_temporal_predictor":         string(in.MvTemporalPredictor),
 		"par_denominator":               int(aws.ToInt32(in.ParDenominator)),
 		"par_numerator":                 int(aws.ToInt32(in.ParNumerator)),
 		names.AttrProfile:               string(in.Profile),
@@ -7030,8 +7092,12 @@ func flattenCodecSettingsH265Settings(in *types.H265Settings) []interface{} {
 		"scene_change_detect":           string(in.SceneChangeDetect),
 		"slices":                        int(aws.ToInt32(in.Slices)),
 		"tier":                          string(in.Tier),
+		"tile_height":                   int(aws.ToInt32(in.TileHeight)),
+		"tile_padding":                  string(in.TilePadding),
+		"tile_width":                    int(aws.ToInt32(in.TileWidth)),
 		"timecode_burnin_settings":      flattenH265TimecodeBurninSettings(in.TimecodeBurninSettings),
 		"timecode_insertion":            string(in.TimecodeInsertion),
+		"treeblock_size":                string(in.TreeblockSize),
 	}
 	return []interface{}{m}
 }

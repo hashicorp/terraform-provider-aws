@@ -66,7 +66,7 @@ func (r *defaultAutoScalingConfigurationVersionResource) Create(ctx context.Cont
 	}
 
 	// Set values for unknowns.
-	data.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	data.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

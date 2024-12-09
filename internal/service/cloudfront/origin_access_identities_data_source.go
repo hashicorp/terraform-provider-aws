@@ -87,7 +87,7 @@ func dataSourceOriginAccessIdentitiesRead(ctx context.Context, d *schema.Resourc
 		s3CanonicalUserIDs = append(s3CanonicalUserIDs, aws.ToString(v.S3CanonicalUserId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 	d.Set("iam_arns", iamARNs)
 	d.Set(names.AttrIDs, ids)
 	d.Set("s3_canonical_user_ids", s3CanonicalUserIDs)

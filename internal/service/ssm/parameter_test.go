@@ -41,7 +41,7 @@ func TestAccSSMParameter_basic(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter/%s", name)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter/%s", name)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
@@ -90,7 +90,7 @@ func TestAccSSMParameter_multiple(t *testing.T) {
 				Config: testAccParameterConfig_multiple(rName, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter/%s-1", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter/%s-1", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
@@ -765,7 +765,7 @@ func TestAccSSMParameter_fullPath(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter%s", name)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter%s", name)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 				),

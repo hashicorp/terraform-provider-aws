@@ -35,7 +35,7 @@ jobs:
 
       - name: Apply Size Labels
         if: contains(fromJSON('["opened", "edited"]'), github.event.action)
-        uses: codelytv/pr-size-labeler@c7a55a022747628b50f3eb5bf863b9e796b8f274 # v1.10.1
+        uses: codelytv/pr-size-labeler@1c3422395d899286d5ee2c809fd5aed264d5eb9b # v1.10.2
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           xs_label: "size/XS"

@@ -844,11 +844,12 @@ func waitFileSystemUpdated(ctx context.Context, conn *fsx.Client, id string, sta
 
 func waitFileSystemDeleted(ctx context.Context, conn *fsx.Client, id string, timeout time.Duration) (*awstypes.FileSystem, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.FileSystemLifecycleAvailable, awstypes.FileSystemLifecycleDeleting),
-		Target:  []string{},
-		Refresh: statusFileSystem(ctx, conn, id),
-		Timeout: timeout,
-		Delay:   30 * time.Second,
+		Pending:      enum.Slice(awstypes.FileSystemLifecycleAvailable, awstypes.FileSystemLifecycleDeleting),
+		Target:       []string{},
+		Refresh:      statusFileSystem(ctx, conn, id),
+		Timeout:      timeout,
+		Delay:        10 * time.Minute,
+		PollInterval: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

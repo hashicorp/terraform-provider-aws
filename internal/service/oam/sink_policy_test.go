@@ -47,7 +47,7 @@ func testAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 				Config: testAccSinkPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkPolicyExists(ctx, resourceName, &sinkPolicy),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "oam", regexache.MustCompile(`sink/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "oam", regexache.MustCompile(`sink/.+$`)),
 					resource.TestCheckResourceAttrWith(resourceName, names.AttrPolicy, func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
@@ -67,7 +67,7 @@ func testAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 		}
     }]
 }
-					`, acctest.Partition(), acctest.AccountID()))
+					`, acctest.Partition(), acctest.AccountID(ctx)))
 						return err
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_id"),
@@ -106,7 +106,7 @@ func testAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 				Config: testAccSinkPolicyConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSinkPolicyExists(ctx, resourceName, &sinkPolicy),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "oam", regexache.MustCompile(`sink/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "oam", regexache.MustCompile(`sink/.+$`)),
 					resource.TestCheckResourceAttrWith(resourceName, names.AttrPolicy, func(value string) error {
 						_, err := awspolicy.PoliciesAreEquivalent(value, fmt.Sprintf(`
 {
@@ -126,7 +126,7 @@ func testAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 		}
     }]
 }
-					`, acctest.Partition(), acctest.AccountID()))
+					`, acctest.Partition(), acctest.AccountID(ctx)))
 						return err
 					}),
 					resource.TestCheckResourceAttrSet(resourceName, "sink_id"),
@@ -154,7 +154,7 @@ func testAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 		}
     }]
 }
-					`, acctest.Partition(), acctest.AccountID()))
+					`, acctest.Partition(), acctest.AccountID(ctx)))
 						return err
 					}),
 				),

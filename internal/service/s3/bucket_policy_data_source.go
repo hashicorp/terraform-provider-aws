@@ -36,11 +36,15 @@ func dataSourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	name := d.Get(names.AttrBucket).(string)
-	policy, err := findBucketPolicy(ctx, conn, name)
+	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
+	policy, err := findBucketPolicy(ctx, conn, bucket)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Policy: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Policy: %s", bucket, err)
 	}
 
 	policy, err = structure.NormalizeJsonString(policy)
@@ -48,7 +52,7 @@ func dataSourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(name)
+	d.SetId(bucket)
 	d.Set(names.AttrPolicy, policy)
 
 	return diags

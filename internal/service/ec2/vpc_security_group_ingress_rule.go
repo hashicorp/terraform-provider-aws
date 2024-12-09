@@ -296,7 +296,7 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 	data.Description = fwflex.StringToFramework(ctx, output.Description)
 	data.IPProtocol = fwflex.StringToFrameworkValuable[ipProtocol](ctx, output.IpProtocol)
 	data.PrefixListID = fwflex.StringToFramework(ctx, output.PrefixListId)
-	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID)
+	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID(ctx))
 	data.SecurityGroupID = fwflex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = fwflex.StringToFramework(ctx, output.SecurityGroupRuleId)
 
