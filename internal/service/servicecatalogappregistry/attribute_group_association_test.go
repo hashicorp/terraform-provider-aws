@@ -25,7 +25,6 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_basic(t *testing.
 	ctx := acctest.Context(t)
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	description := "Some description"
 	resourceName := "aws_servicecatalogappregistry_attribute_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -39,7 +38,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_basic(t *testing.
 		CheckDestroy:             testAccCheckAttributeGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttributeGroupAssociationConfig_basic(rName, description),
+				Config: testAccAttributeGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupAssociationExists(ctx, resourceName),
 				),
@@ -59,7 +58,6 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_disappears(t *tes
 	ctx := acctest.Context(t)
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	description := "Some description"
 	resourceName := "aws_servicecatalogappregistry_attribute_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -73,7 +71,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_disappears(t *tes
 		CheckDestroy:             testAccCheckAttributeGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAttributeGroupAssociationConfig_basic(rName, description),
+				Config: testAccAttributeGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupAssociationExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfservicecatalogappregistry.ResourceAttributeGroupAssociation, resourceName),
@@ -148,15 +146,15 @@ func testAccCheckAttributeGroupAssociationImportStateIdFunc(resourceName string)
 	}
 }
 
-func testAccAttributeGroupAssociationConfig_basic(rName, description string) string {
+func testAccAttributeGroupAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalogappregistry_application" "test" {
   name = %[1]q
 }
 
 resource "aws_servicecatalogappregistry_attribute_group" "test" {
-  name        = %[1]q
-  description = %[2]q
+  name = %[1]q
+
   attributes = jsonencode({
     a = "1"
     b = "2"
@@ -167,5 +165,5 @@ resource "aws_servicecatalogappregistry_attribute_group_association" "test" {
   application_id     = aws_servicecatalogappregistry_application.test.id
   attribute_group_id = aws_servicecatalogappregistry_attribute_group.test.id
 }
-`, rName, description)
+`, rName)
 }
