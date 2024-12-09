@@ -6,6 +6,7 @@ package servicecatalogappregistry
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
@@ -16,9 +17,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	flex2 "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -27,9 +29,7 @@ import (
 
 // @FrameworkResource("aws_servicecatalogappregistry_attribute_group_association", name="Attribute Group Association")
 func newResourceAttributeGroupAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceAttributeGroupAssociation{}
-
-	return r, nil
+	return &resourceAttributeGroupAssociation{}, nil
 }
 
 const (
@@ -40,6 +40,7 @@ const attributeGroupAssociationIDParts = 2
 
 type resourceAttributeGroupAssociation struct {
 	framework.ResourceWithConfigure
+	framework.WithNoUpdate
 }
 
 func (r *resourceAttributeGroupAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -49,7 +50,6 @@ func (r *resourceAttributeGroupAssociation) Metadata(_ context.Context, req reso
 func (r *resourceAttributeGroupAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			names.AttrApplicationID: schema.StringAttribute{
 				Description: "ID of the application.",
 				Required:    true,
@@ -78,8 +78,10 @@ func (r *resourceAttributeGroupAssociation) Create(ctx context.Context, req reso
 	}
 
 	in := &servicecatalogappregistry.AssociateAttributeGroupInput{}
-
 	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	out, err := conn.AssociateAttributeGroup(ctx, in)
 	if err != nil {
@@ -96,13 +98,6 @@ func (r *resourceAttributeGroupAssociation) Create(ctx context.Context, req reso
 		)
 		return
 	}
-	id, err := plan.setId()
-	if err != nil {
-		resp.Diagnostics.AddError("flattening resource ID AttributeGroup Association", err.Error())
-		return
-	}
-
-	plan.ID = types.StringValue(id)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -116,34 +111,20 @@ func (r *resourceAttributeGroupAssociation) Read(ctx context.Context, req resour
 		return
 	}
 
-	err := state.parseId()
-	if err != nil {
-		resp.Diagnostics.AddError("failed to parse id", err.Error())
-		return
-	}
-
-	exists, err := findAttributeGroupAssociationByID(ctx, conn, state.Application.ValueString(), state.AttributeGroup.ValueString())
+	_, err := findAttributeGroupAssociationByTwoPartKey(ctx, conn, state.Application.ValueString(), state.AttributeGroup.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionSetting, ResNameAttributeGroupAssociation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionReading, ResNameAttributeGroupAssociation, state.AttributeGroup.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	if exists != nil && !*exists {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceAttributeGroupAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 }
 
 func (r *resourceAttributeGroupAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -166,7 +147,7 @@ func (r *resourceAttributeGroupAssociation) Delete(ctx context.Context, req reso
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionDeleting, ResNameAttributeGroupAssociation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionDeleting, ResNameAttributeGroupAssociation, state.AttributeGroup.String(), err),
 			err.Error(),
 		)
 		return
@@ -174,54 +155,44 @@ func (r *resourceAttributeGroupAssociation) Delete(ctx context.Context, req reso
 }
 
 func (r *resourceAttributeGroupAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+	parts, err := intflex.ExpandResourceId(req.ID, attributeGroupAssociationIDParts, true)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Unexpected Import Identifier",
+			fmt.Sprintf("Expected import identifier with format: application_id,attribute_group_id. Got: %q", req.ID),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root(names.AttrApplicationID), parts[0])...)
+	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("attribute_group_id"), parts[1])...)
 }
 
-func findAttributeGroupAssociationByID(ctx context.Context, conn *servicecatalogappregistry.Client, applicationId string, attributeGroupId string) (*bool, error) {
+func findAttributeGroupAssociationByTwoPartKey(ctx context.Context, conn *servicecatalogappregistry.Client, applicationId string, attributeGroupId string) (string, error) {
 	in := &servicecatalogappregistry.ListAssociatedAttributeGroupsInput{
 		Application: aws.String(applicationId),
 	}
-	exists := false
 
 	paginator := servicecatalogappregistry.NewListAssociatedAttributeGroupsPaginator(conn, in)
-
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
 		if err != nil {
-			return nil, err
+			return "", err
 		}
 
 		for _, item := range page.AttributeGroups {
 			if item == attributeGroupId {
-				exists = true
-				return &exists, nil
+				return item, nil
 			}
 		}
 	}
 
-	return &exists, nil
+	return "", &retry.NotFoundError{
+		LastRequest: in,
+	}
 }
 
 type resourceAttributeGroupAssociationData struct {
-	ID             types.String `tfsdk:"id"`
 	Application    types.String `tfsdk:"application_id"`
 	AttributeGroup types.String `tfsdk:"attribute_group_id"`
-}
-
-func (data *resourceAttributeGroupAssociationData) setId() (string, error) {
-	return flex2.FlattenResourceId([]string{data.Application.ValueString(), data.AttributeGroup.ValueString()}, attributeGroupAssociationIDParts, false)
-}
-
-func (data *resourceAttributeGroupAssociationData) parseId() error {
-	id := data.ID.ValueString()
-	parts, err := flex2.ExpandResourceId(id, attributeGroupAssociationIDParts, false)
-
-	if err != nil {
-		return err
-	}
-
-	data.Application = types.StringValue(parts[0])
-	data.AttributeGroup = types.StringValue(parts[1])
-
-	return nil
 }
