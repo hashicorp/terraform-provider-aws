@@ -124,22 +124,16 @@ resource "aws_route53_resolver_rule" "forward" {
   }
 }
 
-resource "aws_route53_resolver_rule" "recursive" {
-  domain_name = %[4]q
-  rule_type   = "RECURSIVE"
-  name        = %[2]q
-}
-
 data "aws_route53_resolver_rules" "by_resolver_endpoint_id" {
   owner_id             = aws_route53_resolver_rule.forward.owner_id
   resolver_endpoint_id = aws_route53_resolver_rule.forward.resolver_endpoint_id
 }
 
 data "aws_route53_resolver_rules" "by_resolver_endpoint_id_rule_type_share_status" {
-  owner_id             = aws_route53_resolver_rule.recursive.owner_id
-  resolver_endpoint_id = aws_route53_resolver_rule.recursive.resolver_endpoint_id
-  rule_type            = aws_route53_resolver_rule.recursive.rule_type
-  share_status         = aws_route53_resolver_rule.recursive.share_status
+  owner_id             = aws_route53_resolver_rule.forward.owner_id
+  resolver_endpoint_id = aws_route53_resolver_rule.forward.resolver_endpoint_id
+  rule_type            = aws_route53_resolver_rule.forward.rule_type
+  share_status         = aws_route53_resolver_rule.forward.share_status
 }
 
 data "aws_route53_resolver_rules" "by_invalid_owner_id" {

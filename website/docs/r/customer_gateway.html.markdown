@@ -30,7 +30,8 @@ resource "aws_customer_gateway" "main" {
 
 This resource supports the following arguments:
 
-* `bgp_asn` - (Required) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN).
+* `bgp_asn` - (Optional, Forces new resource) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN). Valid values are from  `1` to `2147483647`. Conflicts with `bgp_asn_extended`.
+* `bgp_asn_extended` - (Optional, Forces new resource) The gateway's Border Gateway Protocol (BGP) Autonomous System Number (ASN). Valid values are from  `2147483648` to `4294967295` Conflicts with `bgp_asn`.
 * `certificate_arn` - (Optional) The Amazon Resource Name (ARN) for the customer gateway certificate.
 * `device_name` - (Optional) A name for the customer gateway device.
 * `ip_address` - (Optional) The IPv4 address for the customer gateway device's outside interface.

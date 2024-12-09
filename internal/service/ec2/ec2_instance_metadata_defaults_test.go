@@ -23,9 +23,9 @@ func TestAccEC2InstanceMetadataDefaults_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":      testAccInstanceMetadataDefaults_basic,
-		"disappears": testAccInstanceMetadataDefaults_disappears,
-		"empty":      testAccInstanceMetadataDefaults_empty,
+		acctest.CtBasic:      testAccInstanceMetadataDefaults_basic,
+		acctest.CtDisappears: testAccInstanceMetadataDefaults_disappears,
+		"empty":              testAccInstanceMetadataDefaults_empty,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -45,7 +45,7 @@ func testAccInstanceMetadataDefaults_basic(t *testing.T) {
 				Config: testAccInstanceMetadataDefaultsConfig_full,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint", names.AttrEnabled),
 					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", "1"),
 					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
 					resource.TestCheckResourceAttr(resourceName, "instance_metadata_tags", "disabled"),

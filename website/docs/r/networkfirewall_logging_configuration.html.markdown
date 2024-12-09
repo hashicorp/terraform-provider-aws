@@ -21,7 +21,7 @@ resource "aws_networkfirewall_logging_configuration" "example" {
     log_destination_config {
       log_destination = {
         bucketName = aws_s3_bucket.example.bucket
-        prefix     = "/example"
+        prefix     = "example"
       }
       log_destination_type = "S3"
       log_type             = "FLOW"
@@ -58,7 +58,7 @@ resource "aws_networkfirewall_logging_configuration" "example" {
         deliveryStream = aws_kinesis_firehose_delivery_stream.example.name
       }
       log_destination_type = "KinesisDataFirehose"
-      log_type             = "ALERT"
+      log_type             = "TLS"
     }
   }
 }
@@ -76,20 +76,20 @@ This resource supports the following arguments:
 
 The `logging_configuration` block supports the following arguments:
 
-* `log_destination_config` - (Required) Set of configuration blocks describing the logging details for a firewall. See [Log Destination Config](#log-destination-config) below for details. At most, only two blocks can be specified; one for `FLOW` logs and one for `ALERT` logs.
+* `log_destination_config` - (Required) Set of configuration blocks describing the logging details for a firewall. See [Log Destination Config](#log-destination-config) below for details. At most, only Three blocks can be specified; one for `FLOW` logs and one for `ALERT` logs and one for `TLS` logs.
 
 ### Log Destination Config
 
 The `log_destination_config` block supports the following arguments:
 
 * `log_destination` - (Required) A map describing the logging destination for the chosen `log_destination_type`.
-    * For an Amazon S3 bucket, specify the key `bucketName` with the name of the bucket and optionally specify the key `prefix` with a path.
+    * For an Amazon S3 bucket, specify the key `bucketName` with the name of the bucket and optionally specify the key `prefix` with a path (Do not add a leading / in the `prefix` as the configuration will have two // when applied).
     * For a CloudWatch log group, specify the key `logGroup` with the name of the CloudWatch log group.
     * For a Kinesis Data Firehose delivery stream, specify the key `deliveryStream` with the name of the delivery stream.
 
 * `log_destination_type` - (Required) The location to send logs to. Valid values: `S3`, `CloudWatchLogs`, `KinesisDataFirehose`.
 
-* `log_type` - (Required) The type of log to send. Valid values: `ALERT` or `FLOW`. Alert logs report traffic that matches a `StatefulRule` with an action setting that sends a log message. Flow logs are standard network traffic flow logs.
+* `log_type` - (Required) The type of log to send. Valid values: `ALERT` or `FLOW` or `TLS`. Alert logs report traffic that matches a `StatefulRule` with an action setting that sends a log message. Flow logs are standard network traffic flow logs.
 
 ## Attribute Reference
 

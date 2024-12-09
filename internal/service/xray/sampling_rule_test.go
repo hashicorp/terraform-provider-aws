@@ -6,6 +6,7 @@ package xray_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
@@ -35,19 +36,19 @@ func TestAccXRaySamplingRule_basic(t *testing.T) {
 				Config: testAccSamplingRuleConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "priority", "5"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, "5"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "reservoir_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "url_path", "*"),
 					resource.TestCheckResourceAttr(resourceName, "host", "*"),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "fixed_rate", "0.3"),
-					resource.TestCheckResourceAttr(resourceName, "resource_arn", "*"),
-					resource.TestCheckResourceAttr(resourceName, "service_name", "*"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceARN, "*"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "*"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "*"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -77,16 +78,16 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 				Config: testAccSamplingRuleConfig_update(rName, sdkacctest.RandIntRange(0, 9999), sdkacctest.RandIntRange(0, 2147483647)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
-					resource.TestCheckResourceAttrSet(resourceName, "priority"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrPriority),
 					resource.TestCheckResourceAttrSet(resourceName, "reservoir_size"),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "url_path", "*"),
 					resource.TestCheckResourceAttr(resourceName, "host", "*"),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "fixed_rate", "0.3"),
-					resource.TestCheckResourceAttr(resourceName, "resource_arn", "*"),
-					resource.TestCheckResourceAttr(resourceName, "service_name", "*"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceARN, "*"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "*"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "*"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
 				),
@@ -95,16 +96,16 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 				Config: testAccSamplingRuleConfig_update(rName, updatedPriority, updatedReservoirSize),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "priority", fmt.Sprintf("%d", updatedPriority)),
-					resource.TestCheckResourceAttr(resourceName, "reservoir_size", fmt.Sprintf("%d", updatedReservoirSize)),
-					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "xray", fmt.Sprintf("sampling-rule/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPriority, strconv.Itoa(updatedPriority)),
+					resource.TestCheckResourceAttr(resourceName, "reservoir_size", strconv.Itoa(updatedReservoirSize)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 					resource.TestCheckResourceAttr(resourceName, "url_path", "*"),
 					resource.TestCheckResourceAttr(resourceName, "host", "*"),
 					resource.TestCheckResourceAttr(resourceName, "http_method", "GET"),
 					resource.TestCheckResourceAttr(resourceName, "fixed_rate", "0.3"),
-					resource.TestCheckResourceAttr(resourceName, "resource_arn", "*"),
-					resource.TestCheckResourceAttr(resourceName, "service_name", "*"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrResourceARN, "*"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrServiceName, "*"),
 					resource.TestCheckResourceAttr(resourceName, "service_type", "*"),
 					resource.TestCheckResourceAttr(resourceName, "attributes.%", "0"),
 				),

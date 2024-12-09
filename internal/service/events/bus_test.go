@@ -24,10 +24,11 @@ import (
 
 func TestAccEventsBus_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 eventbridge.DescribeEventBusOutput
+	var v1, v2, v3, v4, v5 eventbridge.DescribeEventBusOutput
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	busNameModified := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_bus.test"
+	description := "Test event bus"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -39,10 +40,11 @@ func TestAccEventsBus_basic(t *testing.T) {
 				Config: testAccBusConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v1),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
-					resource.TestCheckResourceAttr(resourceName, "name", busName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -51,23 +53,76 @@ func TestAccEventsBus_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBusConfig_basic(busNameModified),
+				Config: testAccBusConfig_description(busName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v2),
-					testAccCheckBusRecreated(&v1, &v2),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busNameModified)),
-					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
-					resource.TestCheckResourceAttr(resourceName, "name", busNameModified),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckBusNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, description),
 				),
 			},
 			{
-				Config: testAccBusConfig_tags1(busNameModified, "key", "value"),
+				Config: testAccBusConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v3),
 					testAccCheckBusNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key", "value"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+				),
+			},
+			{
+				Config: testAccBusConfig_basic(busNameModified),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v4),
+					testAccCheckBusRecreated(&v3, &v4),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busNameModified)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckNoResourceAttr(resourceName, "event_source_name"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, busNameModified),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+				),
+			},
+			{
+				Config: testAccBusConfig_tags1(busNameModified, names.AttrKey, names.AttrValue),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v5),
+					testAccCheckBusNotRecreated(&v4, &v5),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key", names.AttrValue),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEventsBus_kmsKeyIdentifier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 eventbridge.DescribeEventBusOutput
+	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudwatch_event_bus.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBusConfig_kmsKeyIdentifier1(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test1", names.AttrARN),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBusConfig_kmsKeyIdentifier2(busName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBusExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_identifier", "aws_kms_key.test2", names.AttrARN),
 				),
 			},
 		},
@@ -87,11 +142,11 @@ func TestAccEventsBus_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckBusDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBusConfig_tags1(busName, "key1", "value1"),
+				Config: testAccBusConfig_tags1(busName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -100,22 +155,22 @@ func TestAccEventsBus_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBusConfig_tags2(busName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccBusConfig_tags2(busName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v2),
 					testAccCheckBusNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
-				Config: testAccBusConfig_tags1(busName, "key2", "value2"),
+				Config: testAccBusConfig_tags1(busName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &v3),
 					testAccCheckBusNotRecreated(&v2, &v3),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -184,10 +239,10 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 				Config: testAccBusConfig_partnerSource(busName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBusExists(ctx, resourceName, &busOutput),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "events", fmt.Sprintf("event-bus/%s", busName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", fmt.Sprintf("event-bus/%s", busName)),
 					resource.TestCheckResourceAttr(resourceName, "event_source_name", busName),
-					resource.TestCheckResourceAttr(resourceName, "name", busName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, busName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 		},
@@ -267,6 +322,15 @@ resource "aws_cloudwatch_event_bus" "test" {
 `, name)
 }
 
+func testAccBusConfig_description(name, description string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name        = %[1]q
+  description = %[2]q
+}
+`, name, description)
+}
+
 func testAccBusConfig_tags1(name, key, value string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
@@ -299,4 +363,93 @@ resource "aws_cloudwatch_event_bus" "test" {
   event_source_name = %[1]q
 }
 `, name)
+}
+
+func testAccBusConfig_kmsKeyIdentifierBase() string {
+	return `
+data "aws_caller_identity" "current" {}
+
+data "aws_partition" "current" {}
+
+resource "aws_kms_key" "test1" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_key" "test2" {
+  deletion_window_in_days = 7
+}
+
+data "aws_iam_policy_document" "key_policy" {
+  statement {
+    actions = [
+      "kms:Decrypt",
+      "kms:GenerateDataKey"
+    ]
+
+    resources = [
+      aws_kms_key.test1.arn,
+      aws_kms_key.test2.arn,
+    ]
+
+    principals {
+      type        = "Service"
+      identifiers = ["events.amazonaws.com"]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "aws:SourceAccount"
+      values   = [data.aws_caller_identity.current.account_id]
+    }
+  }
+
+  statement {
+    actions = [
+      "kms:*",
+    ]
+
+    resources = [
+      aws_kms_key.test1.arn,
+      aws_kms_key.test2.arn,
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+  }
+}
+
+resource "aws_kms_key_policy" "test1" {
+  key_id = aws_kms_key.test1.id
+  policy = data.aws_iam_policy_document.key_policy.json
+}
+
+resource "aws_kms_key_policy" "test2" {
+  key_id = aws_kms_key.test2.id
+  policy = data.aws_iam_policy_document.key_policy.json
+}
+`
+}
+
+func testAccBusConfig_kmsKeyIdentifier1(name string) string {
+	return acctest.ConfigCompose(
+		testAccBusConfig_kmsKeyIdentifierBase(),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name               = %[1]q
+  kms_key_identifier = aws_kms_key.test1.arn
+}
+`, name))
+}
+
+func testAccBusConfig_kmsKeyIdentifier2(name string) string {
+	return acctest.ConfigCompose(
+		testAccBusConfig_kmsKeyIdentifierBase(),
+		fmt.Sprintf(`
+resource "aws_cloudwatch_event_bus" "test" {
+  name               = %[1]q
+  kms_key_identifier = aws_kms_key.test2.arn
+}
+`, name))
 }

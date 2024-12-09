@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -61,14 +62,14 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"created_at": schema.StringAttribute{
+			names.AttrCreatedAt: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 			},
 			"failure_reasons": schema.ListAttribute{
@@ -77,10 +78,10 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 				Computed:    true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -102,10 +103,16 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -116,11 +123,17 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								listvalidator.SizeAtLeast(1),
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"embedding_model_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
@@ -135,10 +148,16 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
+						names.AttrType: schema.StringAttribute{
 							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -147,17 +166,29 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"connection_string": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"credentials_secret_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
-									"namespace": schema.StringAttribute{
+									names.AttrNamespace: schema.StringAttribute{
 										Optional: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -166,13 +197,22 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"metadata_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"text_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 											},
 										},
@@ -185,21 +225,36 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"credentials_secret_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
-									"database_name": schema.StringAttribute{
+									names.AttrDatabaseName: schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
-									"resource_arn": schema.StringAttribute{
+									names.AttrResourceARN: schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
-									"table_name": schema.StringAttribute{
+									names.AttrTableName: schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -208,19 +263,34 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"metadata_field": schema.StringAttribute{
 													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"primary_key_field": schema.StringAttribute{
 													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"text_field": schema.StringAttribute{
 													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"vector_field": schema.StringAttribute{
 													Required: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 											},
 										},
@@ -233,17 +303,29 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"credentials_secret_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
-									"endpoint": schema.StringAttribute{
+									names.AttrEndpoint: schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"vector_index_name": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -252,16 +334,28 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"metadata_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"text_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"vector_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 											},
 										},
@@ -274,14 +368,23 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"collection_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
 										Required:   true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"vector_index_name": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -290,16 +393,28 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.RequiresReplace(),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"metadata_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"text_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 												"vector_field": schema.StringAttribute{
 													Optional: true,
+													PlanModifiers: []planmodifier.String{
+														stringplanmodifier.RequiresReplace(),
+													},
 												},
 											},
 										},
@@ -310,7 +425,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -414,9 +529,7 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	if !new.Description.Equal(old.Description) ||
-		!new.KnowledgeBaseConfiguration.Equal(old.KnowledgeBaseConfiguration) ||
-		!new.Name.Equal(old.Name) ||
-		!new.StorageConfiguration.Equal(old.StorageConfiguration) {
+		!new.Name.Equal(old.Name) {
 		input := &bedrockagent.UpdateKnowledgeBaseInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
@@ -461,7 +574,7 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	_, err := conn.DeleteKnowledgeBase(ctx, &bedrockagent.DeleteKnowledgeBaseInput{
-		KnowledgeBaseId: aws.String(data.KnowledgeBaseID.ValueString()),
+		KnowledgeBaseId: data.KnowledgeBaseID.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -595,8 +708,8 @@ type knowledgeBaseResourceModel struct {
 	Name                       types.String                                                     `tfsdk:"name"`
 	RoleARN                    fwtypes.ARN                                                      `tfsdk:"role_arn"`
 	StorageConfiguration       fwtypes.ListNestedObjectValueOf[storageConfigurationModel]       `tfsdk:"storage_configuration"`
-	Tags                       types.Map                                                        `tfsdk:"tags"`
-	TagsAll                    types.Map                                                        `tfsdk:"tags_all"`
+	Tags                       tftags.Map                                                       `tfsdk:"tags"`
+	TagsAll                    tftags.Map                                                       `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
 	UpdatedAt                  timetypes.RFC3339                                                `tfsdk:"updated_at"`
 }

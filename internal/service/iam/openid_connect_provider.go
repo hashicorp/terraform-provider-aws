@@ -25,7 +25,7 @@ import (
 )
 
 // @SDKResource("aws_iam_openid_connect_provider", name="OIDC Provider")
-// @Tags(identifierAttribute="id", resourceType="OIDCProvider")
+// @Tags(identifierAttribute="arn", resourceType="OIDCProvider")
 // @Testing(name="OpenIDConnectProvider")
 func resourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
@@ -39,14 +39,13 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"client_id_list": {
 				Type:     schema.TypeSet,
 				Required: true,
-				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(1, 255),
@@ -63,7 +62,7 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(40, 40),
 				},
 			},
-			"url": {
+			names.AttrURL: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -83,7 +82,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	input := &iam.CreateOpenIDConnectProviderInput{
 		ClientIDList: flex.ExpandStringValueSet(d.Get("client_id_list").(*schema.Set)),
 		Tags:         getTagsIn(ctx),
-		Url:          aws.String(d.Get("url").(string)),
+		Url:          aws.String(d.Get(names.AttrURL).(string)),
 	}
 
 	if v, ok := d.GetOk("thumbprint_list"); ok {
@@ -93,7 +92,7 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	output, err := conn.CreateOpenIDConnectProvider(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
@@ -139,10 +138,10 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading IAM OIDC Provider (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", d.Id())
+	d.Set(names.AttrARN, d.Id())
 	d.Set("client_id_list", output.ClientIDList)
 	d.Set("thumbprint_list", output.ThumbprintList)
-	d.Set("url", output.Url)
+	d.Set(names.AttrURL, output.Url)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -165,6 +164,39 @@ func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.Resource
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("client_id_list") {
+		o, n := d.GetChange("client_id_list")
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+
+		for _, v := range ns.Difference(os).List() {
+			v := v.(string)
+			input := &iam.AddClientIDToOpenIDConnectProviderInput{
+				ClientID:                 aws.String(v),
+				OpenIDConnectProviderArn: aws.String(d.Id()),
+			}
+
+			_, err := conn.AddClientIDToOpenIDConnectProvider(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "adding IAM OIDC Provider (%s) client ID (%s): %s", d.Id(), v, err)
+			}
+		}
+
+		for _, v := range os.Difference(ns).List() {
+			v := v.(string)
+			input := &iam.RemoveClientIDFromOpenIDConnectProviderInput{
+				ClientID:                 aws.String(v),
+				OpenIDConnectProviderArn: aws.String(d.Id()),
+			}
+
+			_, err := conn.RemoveClientIDFromOpenIDConnectProvider(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "removing IAM OIDC Provider (%s) client ID (%s): %s", d.Id(), v, err)
 			}
 		}
 	}

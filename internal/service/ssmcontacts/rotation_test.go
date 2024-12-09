@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testRotation_basic(t *testing.T) {
+func testAccRotation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -49,7 +49,7 @@ func testRotation_basic(t *testing.T) {
 				Config: testAccRotationConfig_basic(rName, recurrenceMultiplier, timeZoneId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "time_zone_id", timeZoneId),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.number_of_on_calls", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.recurrence_multiplier", "1"),
@@ -57,7 +57,7 @@ func testRotation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.hour_of_day", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.minute_of_hour", "0"),
 					resource.TestCheckResourceAttr(resourceName, "contact_ids.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm-contacts", regexache.MustCompile(`rotation\/+.`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm-contacts", regexache.MustCompile(`rotation/.+$`)),
 				),
 			},
 			{
@@ -76,7 +76,7 @@ func testRotation_basic(t *testing.T) {
 	})
 }
 
-func testRotation_disappears(t *testing.T) {
+func testAccRotation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -108,7 +108,7 @@ func testRotation_disappears(t *testing.T) {
 	})
 }
 
-func testRotation_updateRequiredFields(t *testing.T) {
+func testAccRotation_updateRequiredFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -156,7 +156,7 @@ func testRotation_updateRequiredFields(t *testing.T) {
 	})
 }
 
-func testRotation_startTime(t *testing.T) {
+func testAccRotation_startTime(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -181,7 +181,7 @@ func testRotation_startTime(t *testing.T) {
 				Config: testAccRotationConfig_startTime(rName, iniStartTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "start_time", iniStartTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, iniStartTime),
 				),
 			},
 			{
@@ -193,14 +193,14 @@ func testRotation_startTime(t *testing.T) {
 				Config: testAccRotationConfig_startTime(rName, updStartTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "start_time", updStartTime),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStartTime, updStartTime),
 				),
 			},
 		},
 	})
 }
 
-func testRotation_contactIds(t *testing.T) {
+func testAccRotation_contactIds(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -241,7 +241,7 @@ func testRotation_contactIds(t *testing.T) {
 	})
 }
 
-func testRotation_recurrence(t *testing.T) {
+func testAccRotation_recurrence(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -346,59 +346,6 @@ func testRotation_recurrence(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.2.coverage_times.0.start.0.minute_of_hour", "0"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.2.coverage_times.0.end.0.hour_of_day", "23"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.2.coverage_times.0.end.0.minute_of_hour", "0"),
-				),
-			},
-		},
-	})
-}
-
-func testRotation_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ssmcontacts_rotation.test"
-
-	tagKey1 := sdkacctest.RandString(26)
-	tagVal1 := sdkacctest.RandString(26)
-	tagVal1Updated := sdkacctest.RandString(26)
-	tagKey2 := sdkacctest.RandString(26)
-	tagVal2 := sdkacctest.RandString(26)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRotationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRotationConfig_oneTag(rName, tagKey1, tagVal1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags."+tagKey1, tagVal1),
-				),
-			},
-			{
-				Config: testAccRotationConfig_multipleTags(rName, tagKey1, tagVal1, tagKey2, tagVal2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags."+tagKey1, tagVal1),
-					resource.TestCheckResourceAttr(resourceName, "tags."+tagKey2, tagVal2),
-				),
-			},
-			{
-				Config: testAccRotationConfig_oneTag(rName, tagKey1, tagVal1Updated),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRotationExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags."+tagKey1, tagVal1Updated),
 				),
 			},
 		},
@@ -844,61 +791,4 @@ resource "aws_ssmcontacts_rotation" "test" {
 
   depends_on = [aws_ssmincidents_replication_set.test]
 }`, rName))
-}
-
-func testAccRotationConfig_oneTag(rName, tagKey, tagValue string) string {
-	return acctest.ConfigCompose(
-		testAccRotationConfig_base(rName, 1),
-		fmt.Sprintf(`
-resource "aws_ssmcontacts_rotation" "test" {
-  contact_ids = aws_ssmcontacts_contact.test[*].arn
-
-  name = %[1]q
-
-  recurrence {
-    number_of_on_calls    = 1
-    recurrence_multiplier = 1
-    daily_settings {
-      hour_of_day    = 18
-      minute_of_hour = 00
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-
-  time_zone_id = "Australia/Sydney"
-
-  depends_on = [aws_ssmincidents_replication_set.test]
-}`, rName, tagKey, tagValue))
-}
-
-func testAccRotationConfig_multipleTags(rName, tagKey1, tagVal1, tagKey2, tagVal2 string) string {
-	return acctest.ConfigCompose(
-		testAccRotationConfig_base(rName, 1),
-		fmt.Sprintf(`
-resource "aws_ssmcontacts_rotation" "test" {
-  contact_ids = aws_ssmcontacts_contact.test[*].arn
-
-  name = %[1]q
-
-  recurrence {
-    number_of_on_calls    = 1
-    recurrence_multiplier = 1
-    daily_settings {
-      hour_of_day    = 18
-      minute_of_hour = 00
-    }
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-
-  time_zone_id = "Australia/Sydney"
-
-  depends_on = [aws_ssmincidents_replication_set.test]
-}`, rName, tagKey1, tagVal1, tagKey2, tagVal2))
 }

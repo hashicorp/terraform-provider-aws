@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_globalaccelerator_listener", name="Listener")
@@ -73,7 +74,7 @@ func resourceListener() *schema.Resource {
 					},
 				},
 			},
-			"protocol": {
+			names.AttrProtocol: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ValidateDiagFunc: enum.Validate[awstypes.Protocol](),
@@ -92,7 +93,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		ClientAffinity:   awstypes.ClientAffinity(d.Get("client_affinity").(string)),
 		IdempotencyToken: aws.String(id.UniqueId()),
 		PortRanges:       expandPortRanges(d.Get("port_range").(*schema.Set).List()),
-		Protocol:         awstypes.Protocol(d.Get("protocol").(string)),
+		Protocol:         awstypes.Protocol(d.Get(names.AttrProtocol).(string)),
 	}
 
 	output, err := conn.CreateListener(ctx, input)
@@ -137,7 +138,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("port_range", flattenPortRanges(listener.PortRanges)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting port_range: %s", err)
 	}
-	d.Set("protocol", listener.Protocol)
+	d.Set(names.AttrProtocol, listener.Protocol)
 
 	return diags
 }
@@ -151,7 +152,7 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		ClientAffinity: awstypes.ClientAffinity(d.Get("client_affinity").(string)),
 		ListenerArn:    aws.String(d.Id()),
 		PortRanges:     expandPortRanges(d.Get("port_range").(*schema.Set).List()),
-		Protocol:       awstypes.Protocol(d.Get("protocol").(string)),
+		Protocol:       awstypes.Protocol(d.Get(names.AttrProtocol).(string)),
 	}
 
 	_, err := conn.UpdateListener(ctx, input)

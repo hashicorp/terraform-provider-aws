@@ -28,7 +28,7 @@ func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOriginRequestPolicyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSource1Name, "comment", resourceName, "comment"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cookies_config.#", resourceName, "cookies_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cookies_config.0.cookie_behavior", resourceName, "cookies_config.0.cookie_behavior"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "cookies_config.0.cookies.#", resourceName, "cookies_config.0.cookies.#"),
@@ -39,7 +39,7 @@ func TestAccCloudFrontOriginRequestPolicyDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSource1Name, "query_strings_config.0.query_string_behavior", resourceName, "query_strings_config.0.query_string_behavior"),
 					resource.TestCheckResourceAttrPair(dataSource1Name, "query_strings_config.0.query_strings.#", resourceName, "query_strings_config.0.query_strings.#"),
 
-					resource.TestCheckResourceAttrPair(dataSource2Name, "comment", resourceName, "comment"),
+					resource.TestCheckResourceAttrPair(dataSource2Name, names.AttrComment, resourceName, names.AttrComment),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cookies_config.#", resourceName, "cookies_config.#"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cookies_config.0.cookie_behavior", resourceName, "cookies_config.0.cookie_behavior"),
 					resource.TestCheckResourceAttrPair(dataSource2Name, "cookies_config.0.cookies.#", resourceName, "cookies_config.0.cookies.#"),

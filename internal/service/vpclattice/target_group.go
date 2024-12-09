@@ -47,7 +47,7 @@ func ResourceTargetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -57,13 +57,13 @@ func ResourceTargetGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"health_check": {
+						names.AttrHealthCheck: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"enabled": {
+									names.AttrEnabled: {
 										Type:     schema.TypeBool,
 										Optional: true,
 										Default:  true,
@@ -92,7 +92,7 @@ func ResourceTargetGroup() *schema.Resource {
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"value": {
+												names.AttrValue: {
 													Type:     schema.TypeString,
 													Optional: true,
 													Default:  "200",
@@ -101,18 +101,18 @@ func ResourceTargetGroup() *schema.Resource {
 										},
 										DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 									},
-									"path": {
+									names.AttrPath: {
 										Type:     schema.TypeString,
 										Optional: true,
 										Default:  "/",
 									},
-									"port": {
+									names.AttrPort: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Computed:     true,
 										ValidateFunc: validation.IsPortNumber,
 									},
-									"protocol": {
+									names.AttrProtocol: {
 										Type:             schema.TypeString,
 										Optional:         true,
 										Computed:         true,
@@ -137,7 +137,7 @@ func ResourceTargetGroup() *schema.Resource {
 							},
 							DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 						},
-						"ip_address_type": {
+						names.AttrIPAddressType: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -151,14 +151,14 @@ func ResourceTargetGroup() *schema.Resource {
 							ForceNew:         true,
 							ValidateDiagFunc: enum.Validate[types.LambdaEventStructureVersion](),
 						},
-						"port": {
+						names.AttrPort: {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IsPortNumber,
 						},
-						"protocol": {
+						names.AttrProtocol: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
@@ -184,17 +184,17 @@ func ResourceTargetGroup() *schema.Resource {
 				},
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(3, 128),
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
@@ -213,14 +213,15 @@ const (
 )
 
 func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	in := &vpclattice.CreateTargetGroupInput{
 		ClientToken: aws.String(id.UniqueId()),
 		Name:        aws.String(name),
 		Tags:        getTagsIn(ctx),
-		Type:        types.TargetGroupType(d.Get("type").(string)),
+		Type:        types.TargetGroupType(d.Get(names.AttrType).(string)),
 	}
 
 	if v, ok := d.GetOk("config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -230,19 +231,20 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	out, err := conn.CreateTargetGroup(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionCreating, ResNameService, name, err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionCreating, ResNameService, name, err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
 
 	if _, err := waitTargetGroupCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForCreation, ResNameTargetGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionWaitingForCreation, ResNameTargetGroup, d.Id(), err)
 	}
 
-	return resourceTargetGroupRead(ctx, d, meta)
+	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
 func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	out, err := FindTargetGroupByID(ctx, conn, d.Id())
@@ -250,32 +252,33 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] VpcLattice Target Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionReading, ResNameTargetGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionReading, ResNameTargetGroup, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	if out.Config != nil {
 		if err := d.Set("config", []interface{}{flattenTargetGroupConfig(out.Config)}); err != nil {
-			return create.DiagError(names.VPCLattice, create.ErrActionSetting, ResNameTargetGroup, d.Id(), err)
+			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionSetting, ResNameTargetGroup, d.Id(), err)
 		}
 	} else {
 		d.Set("config", nil)
 	}
-	d.Set("name", out.Name)
-	d.Set("status", out.Status)
-	d.Set("type", out.Type)
+	d.Set(names.AttrName, out.Name)
+	d.Set(names.AttrStatus, out.Status)
+	d.Set(names.AttrType, out.Type)
 
-	return nil
+	return diags
 }
 
 func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		in := &vpclattice.UpdateTargetGroupInput{
 			TargetGroupIdentifier: aws.String(d.Id()),
 		}
@@ -291,24 +294,25 @@ func resourceTargetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if in.HealthCheck == nil {
-			return nil
+			return diags
 		}
 
 		out, err := conn.UpdateTargetGroup(ctx, in)
 
 		if err != nil {
-			return create.DiagError(names.VPCLattice, create.ErrActionUpdating, ResNameTargetGroup, d.Id(), err)
+			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionUpdating, ResNameTargetGroup, d.Id(), err)
 		}
 
 		if _, err := waitTargetGroupUpdated(ctx, conn, aws.ToString(out.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.VPCLattice, create.ErrActionWaitingForUpdate, ResNameTargetGroup, d.Id(), err)
+			return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionWaitingForUpdate, ResNameTargetGroup, d.Id(), err)
 		}
 	}
 
-	return resourceTargetGroupRead(ctx, d, meta)
+	return append(diags, resourceTargetGroupRead(ctx, d, meta)...)
 }
 
 func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).VPCLatticeClient(ctx)
 
 	log.Printf("[INFO] Deleting VpcLattice TargetGroup: %s", d.Id())
@@ -319,17 +323,17 @@ func resourceTargetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameTargetGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionDeleting, ResNameTargetGroup, d.Id(), err)
 	}
 
 	if _, err := waitTargetGroupDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameTargetGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.VPCLattice, create.ErrActionWaitingForDeletion, ResNameTargetGroup, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitTargetGroupCreated(ctx context.Context, conn *vpclattice.Client, id string, timeout time.Duration) (*vpclattice.CreateTargetGroupOutput, error) {
@@ -429,18 +433,18 @@ func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]int
 	}
 
 	tfMap := map[string]interface{}{
-		"ip_address_type":                apiObject.IpAddressType,
+		names.AttrIPAddressType:          apiObject.IpAddressType,
 		"lambda_event_structure_version": apiObject.LambdaEventStructureVersion,
-		"protocol":                       apiObject.Protocol,
+		names.AttrProtocol:               apiObject.Protocol,
 		"protocol_version":               apiObject.ProtocolVersion,
 	}
 
 	if v := apiObject.HealthCheck; v != nil {
-		tfMap["health_check"] = []interface{}{flattenHealthCheckConfig(v)}
+		tfMap[names.AttrHealthCheck] = []interface{}{flattenHealthCheckConfig(v)}
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.ToInt32(v)
+		tfMap[names.AttrPort] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.VpcIdentifier; v != nil {
@@ -456,12 +460,12 @@ func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]int
 	}
 
 	tfMap := map[string]interface{}{
-		"protocol":         apiObject.Protocol,
+		names.AttrProtocol: apiObject.Protocol,
 		"protocol_version": apiObject.ProtocolVersion,
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	if v := apiObject.HealthCheckIntervalSeconds; v != nil {
@@ -481,11 +485,11 @@ func flattenHealthCheckConfig(apiObject *types.HealthCheckConfig) map[string]int
 	}
 
 	if v := apiObject.Path; v != nil {
-		tfMap["path"] = aws.ToString(v)
+		tfMap[names.AttrPath] = aws.ToString(v)
 	}
 
 	if v := apiObject.Port; v != nil {
-		tfMap["port"] = aws.ToInt32(v)
+		tfMap[names.AttrPort] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.UnhealthyThresholdCount; v != nil {
@@ -501,7 +505,7 @@ func flattenMatcherMemberHTTPCode(apiObject *types.MatcherMemberHttpCode) map[st
 	}
 
 	tfMap := map[string]interface{}{
-		"value": apiObject.Value,
+		names.AttrValue: apiObject.Value,
 	}
 
 	return tfMap
@@ -514,11 +518,11 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 
 	apiObject := &types.TargetGroupConfig{}
 
-	if v, ok := tfMap["health_check"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap[names.AttrHealthCheck].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.HealthCheck = expandHealthCheckConfig(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrIPAddressType].(string); ok && v != "" {
 		apiObject.IpAddressType = types.IpAddressType(v)
 	}
 
@@ -526,11 +530,11 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 		apiObject.LambdaEventStructureVersion = types.LambdaEventStructureVersion(v)
 	}
 
-	if v, ok := tfMap["port"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiObject.Protocol = types.TargetGroupProtocol(v)
 	}
 
@@ -548,7 +552,7 @@ func expandTargetGroupConfig(tfMap map[string]interface{}) *types.TargetGroupCon
 func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckConfig {
 	apiObject := &types.HealthCheckConfig{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -568,15 +572,15 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckCon
 		apiObject.Matcher = expandMatcherMemberHTTPCode(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["path"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrPath].(string); ok && v != "" {
 		apiObject.Path = aws.String(v)
 	}
 
-	if v, ok := tfMap["port"].(int); ok && v != 0 {
+	if v, ok := tfMap[names.AttrPort].(int); ok && v != 0 {
 		apiObject.Port = aws.Int32(int32(v))
 	}
 
-	if v, ok := tfMap["protocol"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrProtocol].(string); ok && v != "" {
 		apiObject.Protocol = types.TargetGroupProtocol(v)
 	}
 
@@ -594,7 +598,7 @@ func expandHealthCheckConfig(tfMap map[string]interface{}) *types.HealthCheckCon
 func expandMatcherMemberHTTPCode(tfMap map[string]interface{}) types.Matcher {
 	apiObject := &types.MatcherMemberHttpCode{}
 
-	if v, ok := tfMap["value"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 		apiObject.Value = v
 	}
 	return apiObject

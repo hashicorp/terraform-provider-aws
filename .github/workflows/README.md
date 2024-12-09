@@ -1,5 +1,12 @@
 # GitHub Workflows
 
+## This README Is Out-of-Date
+
+This README is not maintained. Instead, refer to the Contributor Guide:
+
+* [Continuous integration](https://hashicorp.github.io/terraform-provider-aws/continuous-integration/)
+* [Makefile cheat sheet](https://hashicorp.github.io/terraform-provider-aws/makefile-cheat-sheet/)
+
 ## Using the `setup-terraform` action
 
 By default, the [`setup-terraform` action](https://github.com/hashicorp/setup-terraform) adds a wrapper for the `terraform` command that allows passing results to subsequent steps. This will prevent using the output of a `terraform` command as the input to another command in the same step.

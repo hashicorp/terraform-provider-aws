@@ -6,6 +6,7 @@ package cloudfront
 import (
 	"context"
 
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -26,7 +27,7 @@ func dataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 		ReadWithoutTimeout: dataSourceLogDeliveryCanonicalUserIDRead,
 
 		Schema: map[string]*schema.Schema{
-			"region": {
+			names.AttrRegion: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -36,18 +37,18 @@ func dataSourceLogDeliveryCanonicalUserID() *schema.Resource {
 
 func dataSourceLogDeliveryCanonicalUserIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	canonicalId := defaultLogDeliveryCanonicalUserID
+	canonicalUserID := defaultLogDeliveryCanonicalUserID
 
-	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+	region := meta.(*conns.AWSClient).Region(ctx)
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
-	if v := names.PartitionForRegion(region); v == names.ChinaPartitionID {
-		canonicalId = cnLogDeliveryCanonicalUserID
+	if v := names.PartitionForRegion(region); v.ID() == endpoints.AwsCnPartitionID {
+		canonicalUserID = cnLogDeliveryCanonicalUserID
 	}
 
-	d.SetId(canonicalId)
+	d.SetId(canonicalUserID)
 
 	return diags
 }

@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
-	"github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -47,8 +47,8 @@ func TestAccRedshiftLogging_basic(t *testing.T) {
 				Config: testAccLoggingConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingExists(ctx, resourceName, &log),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_type", string(types.LogDestinationTypeCloudwatch)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", string(awstypes.LogDestinationTypeCloudwatch)),
 					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "3"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "log_exports.*", string(tfredshift.LogExportsConnectionLog)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "log_exports.*", string(tfredshift.LogExportsUserActivityLog)),
@@ -155,10 +155,10 @@ func TestAccRedshiftLogging_s3(t *testing.T) {
 				Config: testAccLoggingConfig_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLoggingExists(ctx, resourceName, &log),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket_name", bucketResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_type", string(types.LogDestinationTypeS3)),
-					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", "testprefix/"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucketName, bucketResourceName, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_type", string(awstypes.LogDestinationTypeS3)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrS3KeyPrefix, "testprefix/"),
 				),
 			},
 			{

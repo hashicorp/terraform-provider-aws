@@ -5,19 +5,18 @@ package sfn
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sfn"
-	"github.com/aws/aws-sdk-go/service/sfn/sfniface"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sfn"
 )
 
-func listStateMachineVersionsPages(ctx context.Context, conn sfniface.SFNAPI, input *sfn.ListStateMachineVersionsInput, fn func(*sfn.ListStateMachineVersionsOutput, bool) bool) error {
+func listStateMachineVersionsPages(ctx context.Context, conn *sfn.Client, input *sfn.ListStateMachineVersionsInput, fn func(*sfn.ListStateMachineVersionsOutput, bool) bool) error {
 	for {
-		output, err := conn.ListStateMachineVersionsWithContext(ctx, input)
+		output, err := conn.ListStateMachineVersions(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.NextToken) == ""
+		lastPage := aws.ToString(output.NextToken) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}

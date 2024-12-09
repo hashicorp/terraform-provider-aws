@@ -12,6 +12,8 @@ description: |-
 
 Terraform resource for managing an AWS Security Lake Subscriber.
 
+~> **NOTE:** The underlying `aws_securitylake_data_lake` must be configured before creating the `aws_securitylake_subscriber`. Use a `dependsOn` statement.
+
 ## Example Usage
 
 ```typescript
@@ -28,6 +30,7 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new SecuritylakeSubscriber(this, "example", {
       accessType: "S3",
+      dependsOn: [awsSecuritylakeDataLakeExample],
       source: [
         {
           awsLogSourceResource: [
@@ -38,7 +41,6 @@ class MyConvertedCode extends TerraformStack {
           ],
         },
       ],
-      source_version: "1.0",
       subscriberIdentity: [
         {
           externalId: "example",
@@ -56,30 +58,39 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `source` - (Required) The supported AWS services from which logs and events are collected. Security Lake supports log and event collection for natively supported AWS services.
-* `subscriberIdentity` - (Required) The AWS identity used to access your data.
+* `accessType` - (Optional) The Amazon S3 or Lake Formation access type.
+* `source` - (Required) The supported AWS services from which logs and events are collected. Security Lake supports log and event collection for natively supported AWS services. See [`source` Blocks](#source-blocks) below.
+* `subscriberIdentity` - (Required) The AWS identity used to access your data. See [`subscriberIdentity` Block](#subscriber_identity-block) below.
 * `subscriberDescription` - (Optional) The description for your subscriber account in Security Lake.
 * `subscriberName` - (Optional) The name of your Security Lake subscriber account.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-Subsciber Identity support the following:
+### `source` Blocks
+
+`source` blocks support the following arguments:
+
+* `awsLogSourceResource` - (Optional) Amazon Security Lake supports log and event collection for natively supported AWS services. See [`awsLogSourceResource` Block](#aws_log_source_resource-block) below.
+* `customLogSourceResource` - (Optional) Amazon Security Lake supports custom source types. See [`customLogSourceResource` Block](#custom_log_source_resource-block) below.
+
+### `subscriberIdentity` Block
+
+The `subscriberIdentity` block supports the following arguments:
 
 * `externalId` - (Required) The AWS Regions where Security Lake is automatically enabled.
 * `principal` - (Required) Provides encryption details of Amazon Security Lake object.
 
-Sources support the following:
+### `awsLogSourceResource` Block
 
-* `awsLogSourceResource` - (Optional) Amazon Security Lake supports log and event collection for natively supported AWS services.
-* `customLogSourceResource` - (Optional) Amazon Security Lake supports custom source types.
+The `awsLogSourceResource` block supports the following arguments:
 
-Aws Log Source Resource support the following:
-
-* `sourceName` - (Optional) Provides data expiration details of Amazon Security Lake object.
+* `sourceName` - (Required) Provides data expiration details of Amazon Security Lake object.
 * `sourceVersion` - (Optional) Provides data storage transition details of Amazon Security Lake object.
 
-Custom Log Source Resource support the following:
+### `customLogSourceResource` Block
 
-* `sourceName` - (Optional) The name for a third-party custom source. This must be a Regionally unique value.
+The `customLogSourceResource` block supports the following arguments. See [`customLogSourceResource` Attribute Reference](#custom_log_source_resource-attribute-reference) below for additional read-only attributes.
+
+* `sourceName` - (Required) The name for a third-party custom source. This must be a Regionally unique value.
 * `sourceVersion` - (Optional) The version for a third-party custom source. This must be a Regionally unique value.
 
 ## Attribute Reference
@@ -87,20 +98,36 @@ Custom Log Source Resource support the following:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Data Lake.
+* `id` - The Subscriber ID of the subscriber.
 * `s3BucketArn` - The ARN for the Amazon Security Lake Amazon S3 bucket.
 * `resourceShareArn` - The Amazon Resource Name (ARN) which uniquely defines the AWS RAM resource share. Before accepting the RAM resource share invitation, you can view details related to the RAM resource share.
 * `roleArn` - The Amazon Resource Name (ARN) specifying the role of the subscriber.
 * `subscriberEndpoint` - The subscriber endpoint to which exception messages are posted.
 * `subscriberStatus` - The subscriber status of the Amazon Security Lake subscriber account.
 * `resourceShareName` - The name of the resource share.
-* `attributes` - The attributes of a third-party custom source.
-    * `crawler_arn` - The ARN of the AWS Glue crawler.
-    * `database_arn` - The ARN of the AWS Glue database where results are written.
-    * `tableArn` - The ARN of the AWS Glue table.
-* `providerDetails` - The details of the log provider for a third-party custom source.
-    * `location` - The location of the partition in the Amazon S3 bucket for Security Lake.
-    * `roleArn` - The ARN of the IAM role to be used by the entity putting logs into your custom source partition.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+### `customLogSourceResource` Attribute Reference
+
+The `customLogSourceResource` block exports the following attributes in addition to the arguments above:
+
+* `attributes` - The attributes of the third-party custom source. See [`attributes` Block](#attributes-block) below.
+* `provider` - The details of the log provider for the third-party custom source. See [`provider` Block](#provider-block) below.
+
+### `attributes` Block
+
+The `attributes` block exports the following attributes:
+
+* `crawler_arn` - The ARN of the AWS Glue crawler.
+* `database_arn` - The ARN of the AWS Glue database where results are written.
+* `tableArn` - The ARN of the AWS Glue table.
+
+### `provider` Block
+
+The `provider` block exports the following attributes:
+
+* `location` - The location of the partition in the Amazon S3 bucket for Security Lake.
+* `roleArn` - The ARN of the IAM role to be used by the entity putting logs into your custom source partition.
 
 ## Timeouts
 
@@ -142,4 +169,4 @@ Using `terraform import`, import Security Lake subscriber using the subscriber I
 % terraform import aws_securitylake_subscriber.example 9f3bfe79-d543-474d-a93c-f3846805d208
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-236327fbc88412ff27daff6b466e14ddcb0a303883525382815bf68f46262e47 -->
+<!-- cache-key: cdktf-0.20.8 input-f5b4e1cd25d75d8ae4e94f1a85219a6922ba8874605c700c427ef7a190ff3716 -->

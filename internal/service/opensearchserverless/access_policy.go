@@ -10,8 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
+	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/document"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -30,7 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Access Policy)
 func newResourceAccessPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceAccessPolicy{}, nil
 }
@@ -39,7 +39,7 @@ type resourceAccessPolicyData struct {
 	Description   types.String                                  `tfsdk:"description"`
 	ID            types.String                                  `tfsdk:"id"`
 	Name          types.String                                  `tfsdk:"name"`
-	Policy        jsontypes.Normalized                          `tfsdk:"policy"`
+	Policy        fwtypes.SmithyJSON[document.Interface]        `tfsdk:"policy"`
 	PolicyVersion types.String                                  `tfsdk:"policy_version"`
 	Type          fwtypes.StringEnum[awstypes.AccessPolicyType] `tfsdk:"type"`
 }
@@ -59,14 +59,14 @@ func (r *resourceAccessPolicy) Metadata(_ context.Context, request resource.Meta
 func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 1000),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
@@ -75,8 +75,8 @@ func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRe
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"policy": schema.StringAttribute{
-				CustomType: jsontypes.NormalizedType{},
+			names.AttrPolicy: schema.StringAttribute{
+				CustomType: fwtypes.NewSmithyJSONType(ctx, document.NewLazyDocument),
 				Required:   true,
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(1, 20480),
@@ -84,11 +84,8 @@ func (r *resourceAccessPolicy) Schema(ctx context.Context, req resource.SchemaRe
 			},
 			"policy_version": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
-			"type": schema.StringAttribute{
+			names.AttrType: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.AccessPolicyType](),
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
@@ -157,8 +154,15 @@ func (r *resourceAccessPolicy) Read(ctx context.Context, req resource.ReadReques
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameAccessPolicy, state.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
 
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -181,27 +185,26 @@ func (r *resourceAccessPolicy) Update(ctx context.Context, req resource.UpdateRe
 		input := &opensearchserverless.UpdateAccessPolicyInput{}
 
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
-
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
 		input.ClientToken = aws.String(id.UniqueId())
+		input.PolicyVersion = state.PolicyVersion.ValueStringPointer() // use policy version from state since it can be recalculated on update
 
 		out, err := conn.UpdateAccessPolicy(ctx, input)
-
 		if err != nil {
 			resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
 			return
 		}
-		resp.Diagnostics.Append(flex.Flatten(ctx, out.AccessPolicyDetail, &state)...)
 
+		resp.Diagnostics.Append(flex.Flatten(ctx, out.AccessPolicyDetail, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceAccessPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -215,7 +218,7 @@ func (r *resourceAccessPolicy) Delete(ctx context.Context, req resource.DeleteRe
 
 	_, err := conn.DeleteAccessPolicy(ctx, &opensearchserverless.DeleteAccessPolicyInput{
 		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(state.Name.ValueString()),
+		Name:        state.Name.ValueStringPointer(),
 		Type:        awstypes.AccessPolicyType(state.Type.ValueString()),
 	})
 

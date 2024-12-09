@@ -5,7 +5,6 @@ package identitystore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfidentitystore "github.com/hashicorp/terraform-provider-aws/internal/service/identitystore"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -42,7 +40,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "addresses.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", "Acceptance Test"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDisplayName, "Acceptance Test"),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "external_ids.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_store_id"),
@@ -60,7 +58,7 @@ func TestAccIdentityStoreUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "timezone", ""),
 					resource.TestCheckResourceAttr(resourceName, "title", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "user_id"),
-					resource.TestCheckResourceAttr(resourceName, "user_name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrUserName, rName),
 					resource.TestCheckResourceAttr(resourceName, "user_type", ""),
 				),
 			},
@@ -126,7 +124,7 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.formatted", "Formatted Address 1"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.locality", "The Locality 1"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.postal_code", "AAA BBB 1"),
-					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", "true"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.region", "The Region 1"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.street_address", "The Street Address 1"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.type", "The Type 1"),
@@ -146,7 +144,7 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.formatted", "Formatted Address 2"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.locality", "The Locality 2"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.postal_code", "AAA BBB 2"),
-					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.region", "The Region 2"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.street_address", "The Street Address 2"),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.type", "The Type 2"),
@@ -166,7 +164,7 @@ func TestAccIdentityStoreUser_Addresses(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.formatted", ""),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.locality", ""),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.postal_code", ""),
-					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.region", ""),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.street_address", ""),
 					resource.TestCheckResourceAttr(resourceName, "addresses.0.type", "Home"),
@@ -217,7 +215,7 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "true"),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.type", "The Type 1"),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.value", email1),
 				),
@@ -232,7 +230,7 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.type", "The Type 2"),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.value", email2),
 				),
@@ -247,7 +245,7 @@ func TestAccIdentityStoreUser_Emails(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "emails.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "emails.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.type", ""),
 					resource.TestCheckResourceAttr(resourceName, "emails.0.value", ""),
 				),
@@ -666,7 +664,7 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", "true"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.type", "The Type 1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.value", "111111"),
 				),
@@ -681,7 +679,7 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.type", "The Type 2"),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.value", "2222222"),
 				),
@@ -696,7 +694,7 @@ func TestAccIdentityStoreUser_PhoneNumbers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", "false"),
+					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.primary", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.type", ""),
 					resource.TestCheckResourceAttr(resourceName, "phone_numbers.0.value", "2222222"),
 				),
@@ -1006,11 +1004,7 @@ func testAccCheckUserExists(ctx context.Context, n string, v *identitystore.Desc
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameUser, n, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.ResNameUser, n, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IdentityStoreClient(ctx)

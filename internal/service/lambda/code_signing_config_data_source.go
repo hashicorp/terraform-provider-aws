@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_lambda_code_signing_config", name="Code Signing Config")
@@ -35,7 +36,7 @@ func dataSourceCodeSigningConfig() *schema.Resource {
 					},
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -44,7 +45,7 @@ func dataSourceCodeSigningConfig() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,7 +73,7 @@ func dataSourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	arn := d.Get("arn").(string)
+	arn := d.Get(names.AttrARN).(string)
 	output, err := findCodeSigningConfigByARN(ctx, conn, arn)
 
 	if err != nil {
@@ -84,7 +85,7 @@ func dataSourceCodeSigningConfigRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "setting allowed_publishers: %s", err)
 	}
 	d.Set("config_id", output.CodeSigningConfigId)
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("last_modified", output.LastModified)
 	if err := d.Set("policies", []interface{}{map[string]interface{}{
 		"untrusted_artifact_on_deployment": output.CodeSigningPolicies.UntrustedArtifactOnDeployment,

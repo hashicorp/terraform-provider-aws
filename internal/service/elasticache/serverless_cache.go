@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -62,7 +63,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"create_time": schema.StringAttribute{
+			names.AttrCreateTime: schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
@@ -76,14 +77,14 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"description": schema.StringAttribute{
+			names.AttrDescription: schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"endpoint": schema.ListAttribute{
+			names.AttrEndpoint: schema.ListAttribute{
 				CustomType:  fwtypes.NewListNestedObjectTypeOf[endpointModel](ctx),
 				ElementType: fwtypes.NewObjectTypeOf[endpointModel](ctx),
 				Computed:    true,
@@ -91,10 +92,14 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"engine": schema.StringAttribute{
+			names.AttrEngine: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIf(func(ctx context.Context, sr planmodifier.StringRequest, rrifr *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+						configIsRedis := sr.ConfigValue.Equal(basetypes.NewStringValue(engineRedis))
+						planIsValkey := sr.PlanValue.Equal(basetypes.NewStringValue(engineValkey))
+						rrifr.RequiresReplace = !(configIsRedis && planIsValkey)
+					}, "Replace engine diff", "Replace engine diff"),
 				},
 			},
 			"full_engine_version": schema.StringAttribute{
@@ -104,7 +109,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"kms_key_id": schema.StringAttribute{
+			names.AttrKMSKeyID: schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -118,7 +123,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"name": schema.StringAttribute{
+			names.AttrName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -132,7 +137,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"security_group_ids": schema.SetAttribute{
+			names.AttrSecurityGroupIDs: schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
@@ -159,13 +164,13 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"subnet_ids": schema.SetAttribute{
+			names.AttrSubnetIDs: schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Optional:    true,
@@ -195,17 +200,11 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Optional: true,
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
-										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
-										},
 									},
-									"unit": schema.StringAttribute{
+									names.AttrUnit: schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DataStorageUnit](),
 										Required:   true,
 									},
@@ -224,17 +223,11 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
 										},
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
-										},
 									},
 									"minimum": schema.Int64Attribute{
 										Optional: true,
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
-										},
-										PlanModifiers: []planmodifier.Int64{
-											int64planmodifier.RequiresReplace(),
 										},
 									},
 								},
@@ -243,7 +236,7 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -267,7 +260,7 @@ func (r *serverlessCacheResource) Create(ctx context.Context, request resource.C
 		return
 	}
 
-	input.Tags = getTagsInV2(ctx)
+	input.Tags = getTagsIn(ctx)
 
 	_, err := conn.CreateServerlessCache(ctx, input)
 
@@ -350,6 +343,14 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 	if serverlessCacheHasChanges(ctx, new, old) {
 		input := &elasticache.ModifyServerlessCacheInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		// Unset engine related stuff to prevent the following error:
+		// This API supports only cross-engine upgrades to Valkey engine currently.
+		if new.Engine.Equal(old.Engine) {
+			input.Engine = nil
+		}
+		if new.MajorEngineVersion.Equal(old.MajorEngineVersion) {
+			input.MajorEngineVersion = nil
+		}
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -369,7 +370,7 @@ func (r *serverlessCacheResource) Update(ctx context.Context, request resource.U
 		}
 	}
 
-	// AWS returns null values for certain values that are available on redis only.
+	// AWS returns null values for certain values that are available on redis/valkey only.
 	// always set these values to the state value to avoid unnecessary diff failures on computed values.
 	output, err := findServerlessCacheByID(ctx, conn, old.ID.ValueString())
 
@@ -397,7 +398,7 @@ func (r *serverlessCacheResource) Delete(ctx context.Context, request resource.D
 	conn := r.Meta().ElastiCacheClient(ctx)
 
 	tflog.Debug(ctx, "deleting ElastiCache Serverless Cache", map[string]interface{}{
-		"id": data.ID.ValueString(),
+		names.AttrID: data.ID.ValueString(),
 	})
 
 	input := &elasticache.DeleteServerlessCacheInput{
@@ -559,8 +560,8 @@ type serverlessCacheResourceModel struct {
 	SnapshotRetentionLimit types.Int64                                            `tfsdk:"snapshot_retention_limit"`
 	Status                 types.String                                           `tfsdk:"status"`
 	SubnetIDs              fwtypes.SetValueOf[types.String]                       `tfsdk:"subnet_ids"`
-	Tags                   types.Map                                              `tfsdk:"tags"`
-	TagsAll                types.Map                                              `tfsdk:"tags_all"`
+	Tags                   tftags.Map                                             `tfsdk:"tags"`
+	TagsAll                tftags.Map                                             `tfsdk:"tags_all"`
 	Timeouts               timeouts.Value                                         `tfsdk:"timeouts"`
 	UserGroupID            types.String                                           `tfsdk:"user_group_id"`
 }

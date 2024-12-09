@@ -6,12 +6,13 @@ package elasticache
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_elasticache_user", name="User")
@@ -33,14 +34,14 @@ func dataSourceUser() *schema.Resource {
 							Optional: true,
 							Type:     schema.TypeInt,
 						},
-						"type": {
+						names.AttrType: {
 							Optional: true,
 							Type:     schema.TypeString,
 						},
 					},
 				},
 			},
-			"engine": {
+			names.AttrEngine: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -59,7 +60,7 @@ func dataSourceUser() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -69,7 +70,7 @@ func dataSourceUser() *schema.Resource {
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
+	conn := meta.(*conns.AWSClient).ElastiCacheClient(ctx)
 
 	user, err := findUserByID(ctx, conn, d.Get("user_id").(string))
 
@@ -77,21 +78,21 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ElastiCache User", err))
 	}
 
-	d.SetId(aws.StringValue(user.UserId))
+	d.SetId(aws.ToString(user.UserId))
 	d.Set("access_string", user.AccessString)
 	if v := user.Authentication; v != nil {
 		tfMap := map[string]interface{}{
-			"password_count": aws.Int64Value(v.PasswordCount),
-			"type":           aws.StringValue(v.Type),
+			"password_count": aws.ToInt32(v.PasswordCount),
+			names.AttrType:   string(v.Type),
 		}
 
 		if err := d.Set("authentication_mode", []interface{}{tfMap}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting authentication_mode: %s", err)
 		}
 	}
-	d.Set("engine", user.Engine)
+	d.Set(names.AttrEngine, user.Engine)
 	d.Set("user_id", user.UserId)
-	d.Set("user_name", user.UserName)
+	d.Set(names.AttrUserName, user.UserName)
 
 	return diags
 }

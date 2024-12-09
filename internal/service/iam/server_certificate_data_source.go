@@ -6,7 +6,7 @@ package iam
 import (
 	"context"
 	"log"
-	"sort"
+	"slices"
 	"strings"
 	"time"
 
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_iam_server_certificate", name="Server Certificate")
@@ -27,18 +28,18 @@ func dataSourceServerCertificate() *schema.Resource {
 		ReadWithoutTimeout: dataSourceServerCertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validation.StringLenBetween(0, 128),
 			},
 
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"name"},
+				ConflictsWith: []string{names.AttrName},
 				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
 			},
 
@@ -53,12 +54,12 @@ func dataSourceServerCertificate() *schema.Resource {
 				Default:  false,
 			},
 
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"path": {
+			names.AttrPath: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -78,7 +79,7 @@ func dataSourceServerCertificate() *schema.Resource {
 				Computed: true,
 			},
 
-			"certificate_chain": {
+			names.AttrCertificateChain: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,28 +87,14 @@ func dataSourceServerCertificate() *schema.Resource {
 	}
 }
 
-type CertificateByExpiration []awstypes.ServerCertificateMetadata
-
-func (m CertificateByExpiration) Len() int {
-	return len(m)
-}
-
-func (m CertificateByExpiration) Swap(i, j int) {
-	m[i], m[j] = m[j], m[i]
-}
-
-func (m CertificateByExpiration) Less(i, j int) bool {
-	return m[i].Expiration.After(*m[j].Expiration)
-}
-
 func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	var matcher = func(cert awstypes.ServerCertificateMetadata) bool {
-		return strings.HasPrefix(aws.ToString(cert.ServerCertificateName), d.Get("name_prefix").(string))
+		return strings.HasPrefix(aws.ToString(cert.ServerCertificateName), d.Get(names.AttrNamePrefix).(string))
 	}
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		matcher = func(cert awstypes.ServerCertificateMetadata) bool {
 			return aws.ToString(cert.ServerCertificateName) == v.(string)
 		}
@@ -135,19 +122,17 @@ func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData
 	if len(metadatas) == 0 {
 		return sdkdiag.AppendErrorf(diags, "Search for AWS IAM server certificate returned no results")
 	}
-	if len(metadatas) > 1 {
-		if !d.Get("latest").(bool) {
-			return sdkdiag.AppendErrorf(diags, "Search for AWS IAM server certificate returned too many results")
-		}
-
-		sort.Sort(CertificateByExpiration(metadatas))
+	if len(metadatas) > 1 && !d.Get("latest").(bool) {
+		return sdkdiag.AppendErrorf(diags, "Search for AWS IAM server certificate returned too many results")
 	}
 
-	metadata := metadatas[0]
+	metadata := slices.MaxFunc(metadatas, func(a, b awstypes.ServerCertificateMetadata) int {
+		return a.Expiration.Compare(aws.ToTime(b.Expiration))
+	})
 	d.SetId(aws.ToString(metadata.ServerCertificateId))
-	d.Set("arn", metadata.Arn)
-	d.Set("path", metadata.Path)
-	d.Set("name", metadata.ServerCertificateName)
+	d.Set(names.AttrARN, metadata.Arn)
+	d.Set(names.AttrPath, metadata.Path)
+	d.Set(names.AttrName, metadata.ServerCertificateName)
 	if metadata.Expiration != nil {
 		d.Set("expiration_date", metadata.Expiration.Format(time.RFC3339))
 	}
@@ -161,7 +146,7 @@ func dataSourceServerCertificateRead(ctx context.Context, d *schema.ResourceData
 	}
 	d.Set("upload_date", serverCertificateResp.ServerCertificate.ServerCertificateMetadata.UploadDate.Format(time.RFC3339))
 	d.Set("certificate_body", serverCertificateResp.ServerCertificate.CertificateBody)
-	d.Set("certificate_chain", serverCertificateResp.ServerCertificate.CertificateChain)
+	d.Set(names.AttrCertificateChain, serverCertificateResp.ServerCertificate.CertificateChain)
 
 	return diags
 }

@@ -34,6 +34,8 @@ import (
 
 // @FrameworkResource("aws_bcmdataexports_export",name="Export")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/bcmdataexports;bcmdataexports.GetExportOutput")
+// @Testing(skipEmptyTags=true, skipNullTags=true)
 func newResourceExport(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceExport{}
 
@@ -89,7 +91,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 						stringplanmodifier.RequiresReplace(),
 					},
 				},
-				"format": schema.StringAttribute{
+				names.AttrFormat: schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[awstypes.FormatOption](),
 					PlanModifiers: []planmodifier.String{
@@ -115,7 +117,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[s3Destination](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"s3_bucket": schema.StringAttribute{
+				names.AttrS3Bucket: schema.StringAttribute{
 					Required: true,
 					PlanModifiers: []planmodifier.String{
 						stringplanmodifier.RequiresReplace(),
@@ -166,7 +168,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id":              framework.IDAttribute(),
+			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -178,13 +180,13 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 							},
 						},
-						"description": schema.StringAttribute{
+						names.AttrDescription: schema.StringAttribute{
 							Optional: true,
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
@@ -204,7 +206,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 			}),
@@ -317,7 +319,7 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		in.ExportArn = aws.String(plan.ID.ValueString())
+		in.ExportArn = plan.ID.ValueStringPointer()
 
 		out, err := conn.UpdateExport(ctx, in)
 		if err != nil {
@@ -361,7 +363,7 @@ func (r *resourceExport) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	in := &bcmdataexports.DeleteExportInput{
-		ExportArn: aws.String(state.ID.ValueString()),
+		ExportArn: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteExport(ctx, in)
@@ -461,8 +463,8 @@ func findExportByID(ctx context.Context, conn *bcmdataexports.Client, exportArn 
 type resourceExportData struct {
 	Export   fwtypes.ListNestedObjectValueOf[exportData] `tfsdk:"export"`
 	ID       types.String                                `tfsdk:"id"`
-	Tags     types.Map                                   `tfsdk:"tags"`
-	TagsAll  types.Map                                   `tfsdk:"tags_all"`
+	Tags     tftags.Map                                  `tfsdk:"tags"`
+	TagsAll  tftags.Map                                  `tfsdk:"tags_all"`
 	Timeouts timeouts.Value                              `tfsdk:"timeouts"`
 }
 

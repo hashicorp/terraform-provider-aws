@@ -3,7 +3,8 @@
 ## Requirements
 
 - [Terraform](https://www.terraform.io/downloads.html) 0.12.26+ (to run acceptance tests)
-- [Go](https://golang.org/doc/install) 1.22+ (to build the provider plugin)
+- [Go](https://golang.org/doc/install) 1.23+ (to build the provider plugin)
+- Mac, Linux or WSL (to build the provider plugin)
 
 ## Quick Start
 
@@ -39,7 +40,7 @@ make build
 This will build the provider and put the provider binary in the `$GOPATH/bin` directory.
 
 ```console
-ls -la ./$GOPATH/bin/terraform-provider-aws
+ls -la $GOPATH/bin/terraform-provider-aws
 ```
 
 ### Testing the Provider

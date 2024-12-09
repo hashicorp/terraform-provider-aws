@@ -8,8 +8,11 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
+	"github.com/hashicorp/terraform-plugin-testing/compare"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -39,19 +42,21 @@ func TestAccMediaLiveInputDataSource_basic(t *testing.T) {
 				Config: testAccInputDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, dataSourceName, &input),
-					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrName, dataSourceName, names.AttrName),
 					resource.TestCheckResourceAttr(dataSourceName, "destinations.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_class", dataSourceName, "input_class"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_devices", dataSourceName, "input_devices"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_partner_ids", dataSourceName, "input_partner_ids"),
 					resource.TestCheckResourceAttrPair(resourceName, "input_source_type", dataSourceName, "input_source_type"),
-					resource.TestCheckResourceAttrPair(resourceName, "security_groups", dataSourceName, "security_groups"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrSecurityGroups, dataSourceName, names.AttrSecurityGroups),
 					resource.TestCheckResourceAttrPair(resourceName, "sources", dataSourceName, "sources"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "state"),
-					resource.TestCheckResourceAttrPair(resourceName, "tag_all", dataSourceName, "tags"),
-					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceName, "type"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrState),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrType, dataSourceName, names.AttrType),
 				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.CompareValuePairs(dataSourceName, tfjsonpath.New(names.AttrTags), resourceName, tfjsonpath.New(names.AttrTagsAll), compare.ValuesSame()),
+				},
 			},
 		},
 	})

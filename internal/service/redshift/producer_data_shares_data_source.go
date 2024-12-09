@@ -6,7 +6,6 @@ package redshift
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshift"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -39,12 +38,12 @@ func (d *dataSourceProducerDataShares) Metadata(_ context.Context, req datasourc
 func (d *dataSourceProducerDataShares) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"producer_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
-			"status": schema.StringAttribute{
+			names.AttrStatus: schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.DataShareStatusForProducer](),
 				Optional:   true,
 			},
@@ -80,7 +79,7 @@ func (d *dataSourceProducerDataShares) Read(ctx context.Context, req datasource.
 	data.ID = types.StringValue(data.ProducerARN.ValueString())
 
 	input := &redshift.DescribeDataSharesForProducerInput{
-		ProducerArn: aws.String(data.ProducerARN.ValueString()),
+		ProducerArn: data.ProducerARN.ValueStringPointer(),
 	}
 	if !data.Status.IsNull() {
 		input.Status = awstypes.DataShareStatusForProducer(data.Status.ValueString())

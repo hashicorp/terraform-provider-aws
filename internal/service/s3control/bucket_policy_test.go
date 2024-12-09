@@ -35,8 +35,8 @@ func TestAccS3ControlBucketPolicy_basic(t *testing.T) {
 				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:*"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3control_bucket.test", "arn"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`s3-outposts:\*`)),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, "aws_s3control_bucket.test", names.AttrARN),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`s3-outposts:\*`)),
 				),
 			},
 			{
@@ -86,7 +86,7 @@ func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:GetObject"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`s3-outposts:GetObject`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`s3-outposts:GetObject`)),
 				),
 			},
 			{
@@ -98,7 +98,7 @@ func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 				Config: testAccBucketPolicyConfig_basic(rName, "s3-outposts:PutObject"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketPolicyExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`s3-outposts:PutObject`)),
+					resource.TestMatchResourceAttr(resourceName, names.AttrPolicy, regexache.MustCompile(`s3-outposts:PutObject`)),
 				),
 			},
 		},

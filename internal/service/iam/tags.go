@@ -315,6 +315,15 @@ func serverCertificateCreateTags(ctx context.Context, conn *iam.Client, identifi
 	return serverCertificateUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
+func serverCertificateKeyValueTags(ctx context.Context, conn *iam.Client, identifier string) (tftags.KeyValueTags, error) {
+	tags, err := serverCertificateTags(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	return KeyValueTags(ctx, tags), nil
+}
+
 // userUpdateTags updates IAM user tags.
 // The identifier is the user name.
 func userUpdateTags(ctx context.Context, conn *iam.Client, identifier string, oldTagsMap, newTagsMap any) error {
@@ -478,6 +487,9 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 			return err
 		}
 		tags, err = roleKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), roleName)
+
+	case "ServerCertificate":
+		tags, err = serverCertificateKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
 
 	case "User":
 		tags, err = userKeyValueTags(ctx, meta.(*conns.AWSClient).IAMClient(ctx), identifier)
