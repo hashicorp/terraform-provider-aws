@@ -104,6 +104,94 @@ resource "aws_signer_signing_job" "test" {
 `, rName)
 }
 
+func TestAccSignerSigningJob_profileOwner(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_signer_signing_job.test"
+	profileResourceName := "aws_signer_signing_profile.test"
+
+	var job signer.DescribeSigningJobOutput
+	var conf signer.GetSigningProfileOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSigningJobConfig_profileOwner(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSigningProfileExists(ctx, profileResourceName, &conf),
+					testAccCheckSigningJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "platform_id", "AWSLambda-SHA384-ECDSA"),
+					resource.TestCheckResourceAttr(resourceName, "platform_display_name", "AWS Lambda"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Succeeded"),
+					resource.TestCheckResourceAttrPair(resourceName, "profile_owner", "data.aws_caller_identity.current", names.AttrAccountID),
+				),
+			},
+		},
+	})
+}
+
+func testAccSigningJobConfig_profileOwner(rName string) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_signer_signing_profile" "test" {
+  platform_id = "AWSLambda-SHA384-ECDSA"
+}
+
+resource "aws_s3_bucket" "source" {
+  bucket        = "%[1]s-source"
+  force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "source" {
+  bucket = aws_s3_bucket.source.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket" "destination" {
+  bucket        = "%[1]s"
+  force_destroy = true
+}
+
+resource "aws_s3_object" "source" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.source]
+
+  bucket = aws_s3_bucket.source.bucket
+  key    = "lambdatest.zip"
+  source = "test-fixtures/lambdatest.zip"
+}
+
+resource "aws_signer_signing_job" "test" {
+  profile_name  = aws_signer_signing_profile.test.name
+  profile_owner = data.aws_caller_identity.current.account_id
+
+  source {
+    s3 {
+      bucket  = aws_s3_object.source.bucket
+      key     = aws_s3_object.source.key
+      version = aws_s3_object.source.version_id
+    }
+  }
+
+  destination {
+    s3 {
+      bucket = aws_s3_bucket.destination.bucket
+    }
+  }
+}
+`, rName)
+}
+
 func testAccCheckSigningJobExists(ctx context.Context, res string, job *signer.DescribeSigningJobOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[res]
