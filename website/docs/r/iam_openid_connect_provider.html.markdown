@@ -26,13 +26,9 @@ resource "aws_iam_openid_connect_provider" "default" {
 
 This resource supports the following arguments:
 
-* `url` - (Required) The URL of the identity provider. Corresponds to the _iss_ claim.
-* `client_id_list` - (Required) A list of client IDs (also known as audiences). When a mobile or web app registers with an OpenID Connect provider, they establish a value that identifies the application. (This is the value that's sent as the client_id parameter on OAuth requests.)
-* `thumbprint_list` - (Optional) A list of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s).
-
-  AWS secures communication with some OIDC identity providers (IdPs) through a library of trusted root certificate authorities (CAs) instead of using a certificate thumbprint to verify the IdP server certificate. In these cases, a specified thumbprint list remains in the configuration, but is not used for validation. These OIDC IdPs include Auth0, GitHub, GitLab, Google, and those that use an Amazon S3 bucket to host a JSON Web Key Set (JWKS) endpoint.
-
-  If it is not specified, and the IdP is not included in the aforementioned group, IAM will retrieve and use the top intermediate certificate authority (CA) thumbprint of the OIDC identity provider server certificate.
+* `url` - (Required) URL of the identity provider. Corresponds to the _iss_ claim.
+* `client_id_list` - (Required) List of client IDs (also known as audiences). When a mobile or web app registers with an OpenID Connect provider, they establish a value that identifies the application. (This is the value that's sent as the client_id parameter on OAuth requests.)
+* `thumbprint_list` - (Optional) List of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s). For certain OIDC identity providers (_e.g._, Auth0, GitHub, GitLab, Google, or those using an Amazon S3 bucket to host a JSON Web Key Set [JWKS] endpoint), AWS uses a library of trusted root certificate authorities (CAs) instead of the thumbprint for validation. In these cases, the specified thumbprint list is retained in the configuration but not used for verification. If no thumbprint list is provided and the IdP is not in this group, IAM retrieves and uses the top intermediate CA thumbprint of the OIDC IdP server certificate.
 * `tags` - (Optional) Map of resource tags for the IAM OIDC provider. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
