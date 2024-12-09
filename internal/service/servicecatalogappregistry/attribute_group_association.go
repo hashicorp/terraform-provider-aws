@@ -25,41 +25,40 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource("aws_servicecatalogappregistry_application_attribute_group_association", name="Application Attribute Group Association")
-func newResourceApplicationAttributeGroupAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceApplicationAttributeGroupAssociation{}
+// @FrameworkResource("aws_servicecatalogappregistry_attribute_group_association", name="Attribute Group Association")
+func newResourceAttributeGroupAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceAttributeGroupAssociation{}
 
 	return r, nil
 }
 
 const (
-	ResNameApplicationAttributeGroupAssociation = "Application Attribute Group Association"
+	ResNameAttributeGroupAssociation = "Attribute Group Association"
 )
 
-const applicationAttributeGroupAssociationIDParts = 2
+const attributeGroupAssociationIDParts = 2
 
-type resourceApplicationAttributeGroupAssociation struct {
+type resourceAttributeGroupAssociation struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceApplicationAttributeGroupAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_servicecatalogappregistry_application_attribute_group_association"
+func (r *resourceAttributeGroupAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_servicecatalogappregistry_attribute_group_association"
 }
 
-func (r *resourceApplicationAttributeGroupAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceAttributeGroupAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
 			names.AttrApplicationID: schema.StringAttribute{
-				Description: "ID of the application to associate with",
+				Description: "ID of the application.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"attribute_group_id": schema.StringAttribute{
-				Description: "ID of the attribute group to associate with",
+				Description: "ID of the attribute group to associate with the application.",
 				Required:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -69,10 +68,10 @@ func (r *resourceApplicationAttributeGroupAssociation) Schema(ctx context.Contex
 	}
 }
 
-func (r *resourceApplicationAttributeGroupAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceAttributeGroupAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var plan resourceApplicationAttributeGroupAssociationData
+	var plan resourceAttributeGroupAssociationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -85,21 +84,21 @@ func (r *resourceApplicationAttributeGroupAssociation) Create(ctx context.Contex
 	out, err := conn.AssociateAttributeGroup(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionCreating, ResNameApplicationAttributeGroupAssociation, plan.AttributeGroup.String(), err),
+			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionCreating, ResNameAttributeGroupAssociation, plan.AttributeGroup.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionCreating, ResNameApplicationAttributeGroupAssociation, plan.AttributeGroup.String(), nil),
+			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionCreating, ResNameAttributeGroupAssociation, plan.AttributeGroup.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 	id, err := plan.setId()
 	if err != nil {
-		resp.Diagnostics.AddError("flattening resource ID Application AttributeGroup Association", err.Error())
+		resp.Diagnostics.AddError("flattening resource ID AttributeGroup Association", err.Error())
 		return
 	}
 
@@ -108,10 +107,10 @@ func (r *resourceApplicationAttributeGroupAssociation) Create(ctx context.Contex
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceApplicationAttributeGroupAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceAttributeGroupAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var state resourceApplicationAttributeGroupAssociationData
+	var state resourceAttributeGroupAssociationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -123,14 +122,14 @@ func (r *resourceApplicationAttributeGroupAssociation) Read(ctx context.Context,
 		return
 	}
 
-	exists, err := findApplicationAttributeGroupAssociationByID(ctx, conn, state.Application.ValueString(), state.AttributeGroup.ValueString())
+	exists, err := findAttributeGroupAssociationByID(ctx, conn, state.Application.ValueString(), state.AttributeGroup.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionSetting, ResNameApplicationAttributeGroupAssociation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionSetting, ResNameAttributeGroupAssociation, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -144,13 +143,13 @@ func (r *resourceApplicationAttributeGroupAssociation) Read(ctx context.Context,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceApplicationAttributeGroupAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceAttributeGroupAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 }
 
-func (r *resourceApplicationAttributeGroupAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceAttributeGroupAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var state resourceApplicationAttributeGroupAssociationData
+	var state resourceAttributeGroupAssociationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -167,18 +166,18 @@ func (r *resourceApplicationAttributeGroupAssociation) Delete(ctx context.Contex
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionDeleting, ResNameApplicationAttributeGroupAssociation, state.ID.String(), err),
+			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionDeleting, ResNameAttributeGroupAssociation, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
-func (r *resourceApplicationAttributeGroupAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *resourceAttributeGroupAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
 }
 
-func findApplicationAttributeGroupAssociationByID(ctx context.Context, conn *servicecatalogappregistry.Client, applicationId string, attributeGroupId string) (*bool, error) {
+func findAttributeGroupAssociationByID(ctx context.Context, conn *servicecatalogappregistry.Client, applicationId string, attributeGroupId string) (*bool, error) {
 	in := &servicecatalogappregistry.ListAssociatedAttributeGroupsInput{
 		Application: aws.String(applicationId),
 	}
@@ -203,19 +202,19 @@ func findApplicationAttributeGroupAssociationByID(ctx context.Context, conn *ser
 	return &exists, nil
 }
 
-type resourceApplicationAttributeGroupAssociationData struct {
+type resourceAttributeGroupAssociationData struct {
 	ID             types.String `tfsdk:"id"`
 	Application    types.String `tfsdk:"application_id"`
 	AttributeGroup types.String `tfsdk:"attribute_group_id"`
 }
 
-func (data *resourceApplicationAttributeGroupAssociationData) setId() (string, error) {
-	return flex2.FlattenResourceId([]string{data.Application.ValueString(), data.AttributeGroup.ValueString()}, applicationAttributeGroupAssociationIDParts, false)
+func (data *resourceAttributeGroupAssociationData) setId() (string, error) {
+	return flex2.FlattenResourceId([]string{data.Application.ValueString(), data.AttributeGroup.ValueString()}, attributeGroupAssociationIDParts, false)
 }
 
-func (data *resourceApplicationAttributeGroupAssociationData) parseId() error {
+func (data *resourceAttributeGroupAssociationData) parseId() error {
 	id := data.ID.ValueString()
-	parts, err := flex2.ExpandResourceId(id, applicationAttributeGroupAssociationIDParts, false)
+	parts, err := flex2.ExpandResourceId(id, attributeGroupAssociationIDParts, false)
 
 	if err != nil {
 		return err
