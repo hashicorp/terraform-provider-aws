@@ -55,24 +55,28 @@ func resourceStream() *schema.Resource {
 					if shardCount < 1 {
 						return fmt.Errorf("shard_count must be at least 1 when stream_mode is %s", streamMode)
 					}
-				default:
-					return fmt.Errorf("unsupported stream mode %s", streamMode)
 				}
 
 				return nil
 			},
 			func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
-				if streamMode := getStreamMode(diff); streamMode == types.StreamModeProvisioned {
-					conn := meta.(*conns.AWSClient).KinesisClient(ctx)
+				conn := meta.(*conns.AWSClient).KinesisClient(ctx)
 
-					output, err := findLimits(ctx, conn)
+				output, err := findLimits(ctx, conn)
 
-					if err != nil {
-						return fmt.Errorf("reading Kinesis account limits: %w", err)
+				if err != nil {
+					return fmt.Errorf("reading Kinesis account limits: %w", err)
+				}
+
+				switch streamMode := getStreamMode(diff); streamMode {
+				case types.StreamModeOnDemand:
+					if diff.Id() == "" {
+						if streamCount, streamLimit := aws.ToInt32(output.OnDemandStreamCount)+1, aws.ToInt32(output.OnDemandStreamCountLimit); streamCount > streamLimit {
+							return fmt.Errorf("on-demand stream count (%d) would exceed the Kinesis account limit (%d)", streamCount, streamLimit)
+						}
 					}
-
+				case types.StreamModeProvisioned:
 					o, n := diff.GetChange("shard_count")
-
 					if shardCount, shardLimit := aws.ToInt32(output.OpenShardCount)+int32(n.(int)-o.(int)), aws.ToInt32(output.ShardLimit); shardCount > shardLimit {
 						return fmt.Errorf("open shard count (%d) would exceed the Kinesis account limit (%d)", shardCount, shardLimit)
 					}
