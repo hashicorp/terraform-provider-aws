@@ -79,6 +79,28 @@ func TestAccKinesisStreamDataSource_encryption(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/40494
+func TestAccKinesisStreamDataSource_pagedShards(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_kinesis_stream.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KinesisServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStreamDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStreamDataSourceConfig_basic(rName, 1100),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "open_shards.#", "1100"),
+				),
+			},
+		},
+	})
+}
+
 func testAccStreamDataSourceConfig_basic(rName string, shardCount int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
