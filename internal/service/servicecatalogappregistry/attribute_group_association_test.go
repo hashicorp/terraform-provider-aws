@@ -26,12 +26,13 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_basic(t *testing.
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_servicecatalogappregistry_attribute_group_association.test"
+	applicationResourceName := "aws_servicecatalogappregistry_application.test"
+	attributeGroupResourceName := "aws_servicecatalogappregistry_attribute_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceCatalogAppRegistryEndpointID)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -41,6 +42,8 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_basic(t *testing.
 				Config: testAccAttributeGroupAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupAssociationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "application_id", applicationResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "attribute_group_id", attributeGroupResourceName, "id"),
 				),
 			},
 			{
@@ -64,7 +67,6 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociation_disappears(t *tes
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ServiceCatalogAppRegistryEndpointID)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
