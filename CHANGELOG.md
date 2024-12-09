@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_domain_name: Add `policy` argument and `domain_name_id` attribute ([#40364](https://github.com/hashicorp/terraform-provider-aws/issues/40364))
 * resource/aws_api_gateway_domain_name: Support `PRIVATE` as a valid value for `endpoint_configuration.types` argument, enabling custom domain name support for private REST API endpoints ([#40364](https://github.com/hashicorp/terraform-provider-aws/issues/40364))
 * resource/aws_ebs_snapshot_copy: Add `completion_duration_minutes` argument ([#40336](https://github.com/hashicorp/terraform-provider-aws/issues/40336))
+* resource/aws_glue_catalog_table_optimizer: Add `configuration.retention_configuration` and `configuration.orphan_file_deletion_configuration` attributes. ([#40199](https://github.com/hashicorp/terraform-provider-aws/issues/40199))
 * resource/aws_msk_replicator: Add `topic_replication.topic_name_configuration` argument ([#40101](https://github.com/hashicorp/terraform-provider-aws/issues/40101))
 * resource/aws_networkfirewall_firewall_policy: Add `stateful_engine_options.flow_timeouts` argument ([#39996](https://github.com/hashicorp/terraform-provider-aws/issues/39996))
 * resource/aws_rds_cluster: Add `serverlessv2_scaling_configuration.seconds_until_auto_pause` argument ([#40441](https://github.com/hashicorp/terraform-provider-aws/issues/40441))
