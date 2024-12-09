@@ -52,6 +52,7 @@ func resourceDomainAssociation() *schema.Resource {
 			"certificate_settings": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MinItems: 0,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -61,7 +62,8 @@ func resourceDomainAssociation() *schema.Resource {
 						},
 						names.AttrType: {
 							Type:             schema.TypeString,
-							Required:         true,
+							Optional:         true,
+							Default:          types.CertificateTypeAmplifyManaged,
 							ValidateDiagFunc: enum.Validate[types.CertificateType](),
 						},
 						"custom_certificate_arn": {
@@ -70,6 +72,14 @@ func resourceDomainAssociation() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 					},
+				},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Ignore Certificate Settings diff if AMPLIFY_MANAGED certificate is used
+					if types.CertificateType(d.Get("certificate_settings.0.type").(string)) == types.CertificateTypeAmplifyManaged {
+						return true
+					}
+
+					return old == new
 				},
 			},
 			"certificate_verification_dns_record": {
@@ -190,8 +200,10 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 	if err := d.Set("sub_domain", flattenSubDomains(domainAssociation.SubDomains)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting sub_domain: %s", err)
 	}
-	if err := d.Set("certificate_settings", flattenCertificateSettings(domainAssociation.Certificate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting certificate_settings: %s", err)
+	if domainAssociation.Certificate != nil {
+		if err := d.Set("certificate_settings", flattenCertificateSettings(domainAssociation.Certificate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting certificate_settings: %s", err)
+		}
 	}
 
 	return diags
@@ -213,7 +225,9 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("certificate_settings") {
-			input.CertificateSettings = expandCertificateSettings(d.Get("certificate_settings").([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("certificate_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.CertificateSettings = expandCertificateSettings(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		if d.HasChange("enable_auto_sub_domain") {
@@ -429,7 +443,7 @@ func expandCertificateSettings(tfMap map[string]interface{}) *types.CertificateS
 		Type: types.CertificateType(tfMap[names.AttrType].(string)),
 	}
 
-	if v, ok := tfMap["custom_certificate_arn"].(string); ok {
+	if v, ok := tfMap["custom_certificate_arn"].(string); ok && v != "" {
 		apiObject.CustomCertificateArn = aws.String(v)
 	}
 
