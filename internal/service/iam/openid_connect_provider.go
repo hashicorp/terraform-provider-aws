@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -72,12 +71,7 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			customdiff.ForceNewIfChange("thumbprint_list", func(_ context.Context, old, new, meta interface{}) bool {
-				return len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0
-			}),
-		),
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -160,10 +154,13 @@ func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.Resource
 
 	if d.HasChange("thumbprint_list") {
 		if v := d.Get("thumbprint_list").([]interface{}); len(v) > 0 {
-			// This creates a problem since clearing the thumbprint will not enter this block. Clearing
-			// the thumbprint is problematic because setting the list to empty will cause an error since
-			// the API either requires no thumbprints at creation or at least one thumbprint. Entirely
-			// removing the thumbprint_list attribute doesn't work because it doesn't trigger a diff.
+			// Issues with an update to clear the thumbprint_list:
+			// - A cleared thumbprint_list will have a length of 0, and not enter this block.
+			// - Setting it to empty triggers an API error (the API requires either no thumbprints at
+			//   **creation** or at least one thumbprint on update).
+			// - Removing the thumbprint_list attribute entirely doesn’t work because it won’t register as
+			//   a change (no diff is detected).
+			// See https://github.com/hashicorp/terraform-provider-aws/issues/40509
 			input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
 				OpenIDConnectProviderArn: aws.String(d.Id()),
 				ThumbprintList:           flex.ExpandStringValueList(v),
