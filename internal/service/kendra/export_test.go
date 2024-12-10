@@ -1,0 +1,5 @@
+package kendra
+
+var ExpandDataSourceConfiguration = expandDataSourceConfiguration
+
+var FlattenDataSourceConfiguration = flattenDataSourceConfiguration
