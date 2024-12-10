@@ -12,14 +12,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccServiceCatalogAppRegistryApplicationAttributeGroupsDataSource_basic(t *testing.T) {
+func TestAccServiceCatalogAppRegistryAttributeGroupAssociationsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_servicecatalogappregistry_application_attribute_groups.test"
+	dataSourceName := "data.aws_servicecatalogappregistry_attribute_group_associations.test"
 	resourceName := "aws_servicecatalogappregistry_attribute_group_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -47,7 +47,7 @@ func testAccApplicationAttributeGroupAssociationsDataSourceConfig_basic(rName st
 	return acctest.ConfigCompose(
 		testAccAttributeGroupAssociationConfig_basic(rName),
 		`
-data "aws_servicecatalogappregistry_application_attribute_groups" "test" {
+data "aws_servicecatalogappregistry_attribute_group_associations" "test" {
   id = aws_servicecatalogappregistry_application.test.id
 
   depends_on = [aws_servicecatalogappregistry_attribute_group_association.test]
