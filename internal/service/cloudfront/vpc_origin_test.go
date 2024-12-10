@@ -66,23 +66,25 @@ func testAccCheckVPCOriginDestroy(ctx context.Context, n string) resource.TestCh
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
-		rs := s.RootModule().Resources[n]
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudfront_vpc_origin" {
+				continue
+			}
 
-		if rs.Type != "aws_cloudfront_vpc_origin" {
-			return fmt.Errorf("resource %s is not a Cloudfront VPC Origin", n)
+			_, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		if tfresource.NotFound(err) {
-			return nil
-		}
-
-		return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
+		return nil
 	}
 }
 
