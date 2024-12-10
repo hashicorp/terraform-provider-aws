@@ -49,13 +49,13 @@ func (r *resourceDRTAccessRoleARNAssociation) Schema(ctx context.Context, reques
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"role_arn": schema.StringAttribute{
+			names.AttrRoleARN: schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -89,7 +89,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Create(ctx context.Context, reques
 	}
 
 	// Set values for unknowns.
-	data.ID = types.StringValue(r.Meta().AccountID)
+	data.ID = types.StringValue(r.Meta().AccountID(ctx))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, r.CreateTimeout(ctx, data.Timeouts), func() (interface{}, error) {
 		return findDRTRoleARNAssociation(ctx, conn, roleARN)

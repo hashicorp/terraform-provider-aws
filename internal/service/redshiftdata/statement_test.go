@@ -34,7 +34,7 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 				Config: testAccStatementConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStatementExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", "aws_redshift_cluster.test", "cluster_identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, "aws_redshift_cluster.test", names.AttrClusterIdentifier),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
 					resource.TestCheckResourceAttr(resourceName, "workgroup_name", ""),
@@ -44,7 +44,7 @@ func TestAccRedshiftDataStatement_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"database", "db_user"},
+				ImportStateVerifyIgnore: []string{names.AttrDatabase, "db_user"},
 			},
 		},
 	})
@@ -66,7 +66,7 @@ func TestAccRedshiftDataStatement_workgroup(t *testing.T) {
 				Config: testAccStatementConfig_workgroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStatementExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", ""),
+					resource.TestCheckResourceAttr(resourceName, names.AttrClusterIdentifier, ""),
 					resource.TestCheckResourceAttr(resourceName, "parameters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "sql", "CREATE GROUP group_name;"),
 					resource.TestCheckResourceAttrPair(resourceName, "workgroup_name", "aws_redshiftserverless_workgroup.test", "workgroup_name"),
@@ -76,7 +76,7 @@ func TestAccRedshiftDataStatement_workgroup(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"database", "db_user"},
+				ImportStateVerifyIgnore: []string{names.AttrDatabase, "db_user"},
 			},
 		},
 	})

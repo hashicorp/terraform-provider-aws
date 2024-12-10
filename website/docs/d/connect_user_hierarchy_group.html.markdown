@@ -34,7 +34,7 @@ data "aws_connect_user_hierarchy_group" "example" {
 
 ~> **NOTE:** `instance_id` and one of either `name` or `hierarchy_group_id` is required.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `hierarchy_group_id` - (Optional) Returns information on a specific hierarchy group by hierarchy group id
 * `instance_id` - (Required) Reference to the hosting Amazon Connect Instance

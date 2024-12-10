@@ -49,8 +49,8 @@ This resource supports the following arguments:
 
 The `location` block supports the following:
 
-* `name` - (Required) [Availability Zone ID](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#az-ids).
-* `type` - (Optional, Default:`AvailabilityZone`) Location type. Valid values: `AvailabilityZone`.
+* `name` - (Required) [Availability Zone ID](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#az-ids) or Local Zone ID.
+* `type` - (Optional, Default:`AvailabilityZone`) Location type. Valid values: `AvailabilityZone`, `LocalZone`.
 
 ## Attribute Reference
 
@@ -84,4 +84,4 @@ Using `terraform import`, import S3 bucket using `bucket`. For example:
 % terraform import aws_s3_directory_bucket.example example--usw2-az1--x-s3
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ecd2f34ecfd0b06c47a4352b23162aad2e13520bdaeaf78f7643a7d034dc3c6a -->
+<!-- cache-key: cdktf-0.20.8 input-0e4bc20e8cd7179bbaa30fdacb2507255d4fcf3c4306b70467bba052d9a3cd9e -->

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -24,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="EBS Fast Snapshot Restore")
+// @FrameworkResource("aws_ebs_fast_snapshot_restore", name="EBS Fast Snapshot Restore")
 func newEBSFastSnapshotRestoreResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ebsFastSnapshotRestoreResource{}
 
@@ -48,25 +47,25 @@ func (*ebsFastSnapshotRestoreResource) Metadata(_ context.Context, request resou
 func (r *ebsFastSnapshotRestoreResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"availability_zone": schema.StringAttribute{
+			names.AttrAvailabilityZone: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"snapshot_id": schema.StringAttribute{
+			names.AttrSnapshotID: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				Computed: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
 			}),
@@ -103,7 +102,12 @@ func (r *ebsFastSnapshotRestoreResource) Create(ctx context.Context, request res
 	}
 
 	// Set values for unknowns.
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("creating EC2 EBS Fast Snapshot Restore", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	v, err := waitFastSnapshotRestoreCreated(ctx, conn, availabilityZone, snapshotID, r.CreateTimeout(ctx, data.Timeouts))
 
@@ -208,6 +212,11 @@ func (data *ebsFastSnapshotRestoreResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *ebsFastSnapshotRestoreResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.AvailabilityZone.ValueString(), data.SnapshotID.ValueString()}, ebsFastSnapshotRestoreIDPartCount, false)))
+func (data *ebsFastSnapshotRestoreResourceModel) setID() (string, error) {
+	parts := []string{
+		data.AvailabilityZone.ValueString(),
+		data.SnapshotID.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, ebsFastSnapshotRestoreIDPartCount, false)
 }

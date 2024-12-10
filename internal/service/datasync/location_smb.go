@@ -47,11 +47,11 @@ func resourceLocationSMB() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
@@ -64,7 +64,7 @@ func resourceLocationSMB() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"version": {
+						names.AttrVersion: {
 							Type:             schema.TypeString,
 							Default:          awstypes.SmbVersionAutomatic,
 							Optional:         true,
@@ -73,7 +73,7 @@ func resourceLocationSMB() *schema.Resource {
 					},
 				},
 			},
-			"password": {
+			names.AttrPassword: {
 				Type:         schema.TypeString,
 				Required:     true,
 				Sensitive:    true,
@@ -103,7 +103,7 @@ func resourceLocationSMB() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"uri": {
+			names.AttrURI: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -125,14 +125,14 @@ func resourceLocationSMBCreate(ctx context.Context, d *schema.ResourceData, meta
 	input := &datasync.CreateLocationSmbInput{
 		AgentArns:      flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
 		MountOptions:   expandSMBMountOptions(d.Get("mount_options").([]interface{})),
-		Password:       aws.String(d.Get("password").(string)),
+		Password:       aws.String(d.Get(names.AttrPassword).(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
 		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           getTagsIn(ctx),
 		User:           aws.String(d.Get("user").(string)),
 	}
 
-	if v, ok := d.GetOk("domain"); ok {
+	if v, ok := d.GetOk(names.AttrDomain); ok {
 		input.Domain = aws.String(v.(string))
 	}
 
@@ -174,14 +174,14 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("agent_arns", output.AgentArns)
-	d.Set("arn", output.LocationArn)
-	d.Set("domain", output.Domain)
+	d.Set(names.AttrARN, output.LocationArn)
+	d.Set(names.AttrDomain, output.Domain)
 	if err := d.Set("mount_options", flattenSMBMountOptions(output.MountOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mount_options: %s", err)
 	}
 	d.Set("server_hostname", serverHostName)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", uri)
+	d.Set(names.AttrURI, uri)
 	d.Set("user", output.User)
 
 	return diags
@@ -191,17 +191,17 @@ func resourceLocationSMBUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &datasync.UpdateLocationSmbInput{
 			LocationArn:  aws.String(d.Id()),
 			AgentArns:    flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set)),
 			MountOptions: expandSMBMountOptions(d.Get("mount_options").([]interface{})),
-			Password:     aws.String(d.Get("password").(string)),
+			Password:     aws.String(d.Get(names.AttrPassword).(string)),
 			Subdirectory: aws.String(d.Get("subdirectory").(string)),
 			User:         aws.String(d.Get("user").(string)),
 		}
 
-		if v, ok := d.GetOk("domain"); ok {
+		if v, ok := d.GetOk(names.AttrDomain); ok {
 			input.Domain = aws.String(v.(string))
 		}
 
@@ -266,7 +266,7 @@ func flattenSMBMountOptions(mountOptions *awstypes.SmbMountOptions) []interface{
 	}
 
 	m := map[string]interface{}{
-		"version": string(mountOptions.Version),
+		names.AttrVersion: string(mountOptions.Version),
 	}
 
 	return []interface{}{m}
@@ -280,7 +280,7 @@ func expandSMBMountOptions(l []interface{}) *awstypes.SmbMountOptions {
 	m := l[0].(map[string]interface{})
 
 	smbMountOptions := &awstypes.SmbMountOptions{
-		Version: awstypes.SmbVersion(m["version"].(string)),
+		Version: awstypes.SmbVersion(m[names.AttrVersion].(string)),
 	}
 
 	return smbMountOptions

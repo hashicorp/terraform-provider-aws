@@ -11,7 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func RegisterSweepers() {
@@ -43,7 +44,7 @@ func sweepScalingPlans(region string) error {
 			r := ResourceScalingPlan()
 			d := r.Data(nil)
 			d.SetId("unused")
-			d.Set("name", scalingPlanName)
+			d.Set(names.AttrName, scalingPlanName)
 			d.Set("scaling_plan_version", scalingPlanVersion)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -52,7 +53,7 @@ func sweepScalingPlans(region string) error {
 		return !lastPage
 	})
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Auto Scaling Scaling Plan sweep for %s: %s", region, err)
 		return nil
 	}

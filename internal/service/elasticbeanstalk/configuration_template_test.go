@@ -129,7 +129,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_settings(t *testing.T) {
 					testAccCheckConfigurationTemplateExists(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "setting.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "setting.*", map[string]string{
-						"value": "m1.small",
+						names.AttrValue: "m1.small",
 					}),
 				),
 			},
@@ -168,10 +168,6 @@ func testAccCheckConfigurationTemplateExists(ctx context.Context, n string, v *a
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Elastic Beanstalk Configuration Template ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)

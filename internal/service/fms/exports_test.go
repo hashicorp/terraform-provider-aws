@@ -7,8 +7,10 @@ package fms
 var (
 	ResourceAdminAccount = resourceAdminAccount
 	ResourcePolicy       = resourcePolicy
+	ResourceSet          = newResourceResourceSet
 
 	FindAdminAccount          = findAdminAccount
 	FindPolicyByID            = findPolicyByID
+	FindResourceSetByID       = findResourceSetByID
 	RemoveEmptyFieldsFromJSON = removeEmptyFieldsFromJSON
 )

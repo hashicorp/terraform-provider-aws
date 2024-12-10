@@ -30,6 +30,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_cloudwatch_event_target", name="Target")
@@ -50,7 +51,7 @@ func resourceTarget() *schema.Resource {
 				id := targetCreateResourceID(busName, ruleName, targetID)
 				d.SetId(id)
 				d.Set("target_id", targetID)
-				d.Set("rule", ruleName)
+				d.Set(names.AttrRule, ruleName)
 				d.Set("event_bus_name", busName)
 
 				return []*schema.ResourceData{d}, nil
@@ -67,7 +68,21 @@ func resourceTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			"appsync_target": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"graphql_operation": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1048576)),
+						},
+					},
+				},
+			},
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -105,7 +120,7 @@ func resourceTarget() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"arn": {
+						names.AttrARN: {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
@@ -119,7 +134,7 @@ func resourceTarget() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"capacity_provider_strategy": {
+						names.AttrCapacityProviderStrategy: {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
@@ -133,7 +148,7 @@ func resourceTarget() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"weight": {
+									names.AttrWeight: {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										ValidateFunc: validation.IntBetween(0, 1000),
@@ -161,7 +176,7 @@ func resourceTarget() *schema.Resource {
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.LaunchType](),
 						},
-						"network_configuration": {
+						names.AttrNetworkConfiguration: {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
@@ -172,12 +187,12 @@ func resourceTarget() *schema.Resource {
 										Optional: true,
 										Default:  false,
 									},
-									"security_groups": {
+									names.AttrSecurityGroups: {
 										Type:     schema.TypeSet,
 										Optional: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
-									"subnets": {
+									names.AttrSubnets: {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem:     &schema.Schema{Type: schema.TypeString},
@@ -191,12 +206,12 @@ func resourceTarget() *schema.Resource {
 							MaxItems: 5,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"field": {
+									names.AttrField: {
 										Type:         schema.TypeString,
 										Optional:     true,
 										ValidateFunc: validation.StringLenBetween(0, 255),
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.PlacementStrategyType](),
@@ -210,11 +225,11 @@ func resourceTarget() *schema.Resource {
 							MaxItems: 10,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"expression": {
+									names.AttrExpression: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
+									names.AttrType: {
 										Type:             schema.TypeString,
 										Required:         true,
 										ValidateDiagFunc: enum.Validate[types.PlacementConstraintType](),
@@ -227,12 +242,12 @@ func resourceTarget() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1600),
 						},
-						"propagate_tags": {
+						names.AttrPropagateTags: {
 							Type:             schema.TypeString,
 							Optional:         true,
 							ValidateDiagFunc: enum.Validate[types.PropagateTags](),
 						},
-						"tags": tftags.TagsSchema(),
+						names.AttrTags: tftags.TagsSchema(),
 						"task_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -253,6 +268,11 @@ func resourceTarget() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validBusNameOrARN,
 				Default:      DefaultEventBusName,
+			},
+			names.AttrForceDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"http_target": {
 				Type:     schema.TypeList,
@@ -351,7 +371,7 @@ func resourceTarget() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"database": {
+						names.AttrDatabase: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 64),
@@ -402,12 +422,12 @@ func resourceTarget() *schema.Resource {
 					},
 				},
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -419,12 +439,12 @@ func resourceTarget() *schema.Resource {
 				MaxItems: 5,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"key": {
+						names.AttrKey: {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 128),
 						},
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 50,
@@ -449,11 +469,11 @@ func resourceTarget() *schema.Resource {
 							MaxItems: 200,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
-									"value": {
+									names.AttrValue: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
@@ -491,7 +511,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	ruleName := d.Get("rule").(string)
+	ruleName := d.Get(names.AttrRule).(string)
 	var targetID string
 	if v, ok := d.GetOk("target_id"); ok {
 		targetID = v.(string)
@@ -527,7 +547,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
 	eventBusName := d.Get("event_bus_name").(string)
-	target, err := findTargetByThreePartKey(ctx, conn, eventBusName, d.Get("rule").(string), d.Get("target_id").(string))
+	target, err := findTargetByThreePartKey(ctx, conn, eventBusName, d.Get(names.AttrRule).(string), d.Get("target_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
@@ -539,11 +559,12 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading EventBridge Target (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", target.Arn)
+	d.Set(names.AttrARN, target.Arn)
 	d.Set("event_bus_name", eventBusName)
+	d.Set(names.AttrForceDestroy, d.Get(names.AttrForceDestroy).(bool))
 	d.Set("input", target.Input)
 	d.Set("input_path", target.InputPath)
-	d.Set("role_arn", target.RoleArn)
+	d.Set(names.AttrRoleARN, target.RoleArn)
 	d.Set("target_id", target.Id)
 
 	if target.RunCommandParameters != nil {
@@ -614,6 +635,12 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
+	if target.AppSyncParameters != nil {
+		if err := d.Set("appsync_target", flattenAppSyncParameters(target.AppSyncParameters)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting appsync_target: %s", err)
+		}
+	}
+
 	return diags
 }
 
@@ -621,16 +648,18 @@ func resourceTargetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	input := expandPutTargetsInput(ctx, d)
+	if d.HasChangesExcept(names.AttrForceDestroy) {
+		input := expandPutTargetsInput(ctx, d)
 
-	output, err := conn.PutTargets(ctx, input)
+		output, err := conn.PutTargets(ctx, input)
 
-	if err == nil && output != nil {
-		err = putTargetsError(output.FailedEntries)
-	}
+		if err == nil && output != nil {
+			err = putTargetsError(output.FailedEntries)
+		}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating EventBridge Target (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EventBridge Target (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceTargetRead(ctx, d, meta)...)
@@ -642,11 +671,15 @@ func resourceTargetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	input := &eventbridge.RemoveTargetsInput{
 		Ids:  []string{d.Get("target_id").(string)},
-		Rule: aws.String(d.Get("rule").(string)),
+		Rule: aws.String(d.Get(names.AttrRule).(string)),
 	}
 
 	if v, ok := d.GetOk("event_bus_name"); ok {
 		input.EventBusName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk(names.AttrForceDestroy); ok {
+		input.Force = v.(bool)
 	}
 
 	log.Printf("[DEBUG] Deleting EventBridge Target: %s", d.Id())
@@ -798,7 +831,7 @@ func removeTargetsError(apiObjects []types.RemoveTargetsResultEntry) error {
 
 func expandPutTargetsInput(ctx context.Context, d *schema.ResourceData) *eventbridge.PutTargetsInput {
 	target := types.Target{
-		Arn: aws.String(d.Get("arn").(string)),
+		Arn: aws.String(d.Get(names.AttrARN).(string)),
 		Id:  aws.String(d.Get("target_id").(string)),
 	}
 
@@ -810,7 +843,7 @@ func expandPutTargetsInput(ctx context.Context, d *schema.ResourceData) *eventbr
 		target.InputPath = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("role_arn"); ok {
+	if v, ok := d.GetOk(names.AttrRoleARN); ok {
 		target.RoleArn = aws.String(v.(string))
 	}
 
@@ -858,8 +891,12 @@ func expandPutTargetsInput(ctx context.Context, d *schema.ResourceData) *eventbr
 		target.DeadLetterConfig = expandDeadLetterParametersConfig(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("appsync_target"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		target.AppSyncParameters = expandAppSyncParameters(v.([]interface{}))
+	}
+
 	input := &eventbridge.PutTargetsInput{
-		Rule:    aws.String(d.Get("rule").(string)),
+		Rule:    aws.String(d.Get(names.AttrRule).(string)),
 		Targets: []types.Target{target},
 	}
 
@@ -875,8 +912,8 @@ func expandTargetRunParameters(config []interface{}) *types.RunCommandParameters
 	for _, c := range config {
 		param := c.(map[string]interface{})
 		command := types.RunCommandTarget{
-			Key:    aws.String(param["key"].(string)),
-			Values: flex.ExpandStringValueList(param["values"].([]interface{})),
+			Key:    aws.String(param[names.AttrKey].(string)),
+			Values: flex.ExpandStringValueList(param[names.AttrValues].([]interface{})),
 		}
 		commands = append(commands, command)
 	}
@@ -893,7 +930,7 @@ func expandTargetRedshiftParameters(config []interface{}) *types.RedshiftDataPar
 	for _, c := range config {
 		param := c.(map[string]interface{})
 
-		redshiftParameters.Database = aws.String(param["database"].(string))
+		redshiftParameters.Database = aws.String(param[names.AttrDatabase].(string))
 		redshiftParameters.Sql = aws.String(param["sql"].(string))
 
 		if val, ok := param["with_event"].(bool); ok {
@@ -920,9 +957,9 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 	ecsParameters := &types.EcsParameters{}
 	for _, c := range tfList {
 		tfMap := c.(map[string]interface{})
-		tags := tftags.New(ctx, tfMap["tags"].(map[string]interface{}))
+		tags := tftags.New(ctx, tfMap[names.AttrTags].(map[string]interface{}))
 
-		if v, ok := tfMap["capacity_provider_strategy"].(*schema.Set); ok && v.Len() > 0 {
+		if v, ok := tfMap[names.AttrCapacityProviderStrategy].(*schema.Set); ok && v.Len() > 0 {
 			ecsParameters.CapacityProviderStrategy = expandTargetCapacityProviderStrategy(v.List())
 		}
 
@@ -934,7 +971,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 			ecsParameters.LaunchType = types.LaunchType(v)
 		}
 
-		if v, ok := tfMap["network_configuration"]; ok {
+		if v, ok := tfMap[names.AttrNetworkConfiguration]; ok {
 			ecsParameters.NetworkConfiguration = expandTargetECSParametersNetworkConfiguration(v.([]interface{}))
 		}
 
@@ -950,7 +987,7 @@ func expandTargetECSParameters(ctx context.Context, tfList []interface{}) *types
 			ecsParameters.PlacementStrategy = expandTargetPlacementStrategies(v.([]interface{}))
 		}
 
-		if v, ok := tfMap["propagate_tags"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrPropagateTags].(string); ok && v != "" {
 			ecsParameters.PropagateTags = types.PropagateTags(v)
 		}
 
@@ -991,7 +1028,7 @@ func expandDeadLetterParametersConfig(dlp []interface{}) *types.DeadLetterConfig
 	for _, v := range dlp {
 		params := v.(map[string]interface{})
 
-		if val, ok := params["arn"].(string); ok && val != "" {
+		if val, ok := params[names.AttrARN].(string); ok && val != "" {
 			deadLetterConfig.Arn = aws.String(val)
 		}
 	}
@@ -1005,10 +1042,10 @@ func expandTargetECSParametersNetworkConfiguration(nc []interface{}) *types.Netw
 	}
 	awsVpcConfig := &types.AwsVpcConfiguration{}
 	raw := nc[0].(map[string]interface{})
-	if val, ok := raw["security_groups"]; ok {
+	if val, ok := raw[names.AttrSecurityGroups]; ok {
 		awsVpcConfig.SecurityGroups = flex.ExpandStringValueSet(val.(*schema.Set))
 	}
-	awsVpcConfig.Subnets = flex.ExpandStringValueSet(raw["subnets"].(*schema.Set))
+	awsVpcConfig.Subnets = flex.ExpandStringValueSet(raw[names.AttrSubnets].(*schema.Set))
 	if val, ok := raw["assign_public_ip"].(bool); ok {
 		awsVpcConfig.AssignPublicIp = types.AssignPublicIpDisabled
 		if val {
@@ -1080,11 +1117,11 @@ func expandTargetSageMakerPipelineParameterList(tfList []interface{}) []types.Sa
 
 		apiObject := types.SageMakerPipelineParameter{}
 
-		if v, ok := tfMap["name"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 			apiObject.Name = aws.String(v)
 		}
 
-		if v, ok := tfMap["value"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrValue].(string); ok && v != "" {
 			apiObject.Value = aws.String(v)
 		}
 
@@ -1153,8 +1190,8 @@ func flattenTargetRunParameters(runCommand *types.RunCommandParameters) []map[st
 	for _, x := range runCommand.RunCommandTargets {
 		config := make(map[string]interface{})
 
-		config["key"] = aws.ToString(x.Key)
-		config["values"] = x.Values
+		config[names.AttrKey] = aws.ToString(x.Key)
+		config[names.AttrValues] = x.Values
 
 		result = append(result, config)
 	}
@@ -1170,12 +1207,12 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 
 	config["launch_type"] = ecsParameters.LaunchType
 
-	config["network_configuration"] = flattenTargetECSParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
+	config[names.AttrNetworkConfiguration] = flattenTargetECSParametersNetworkConfiguration(ecsParameters.NetworkConfiguration)
 	if ecsParameters.PlatformVersion != nil {
 		config["platform_version"] = aws.ToString(ecsParameters.PlatformVersion)
 	}
 
-	config["propagate_tags"] = ecsParameters.PropagateTags
+	config[names.AttrPropagateTags] = ecsParameters.PropagateTags
 
 	if ecsParameters.PlacementConstraints != nil {
 		config["placement_constraint"] = flattenTargetPlacementConstraints(ecsParameters.PlacementConstraints)
@@ -1186,10 +1223,10 @@ func flattenTargetECSParameters(ctx context.Context, ecsParameters *types.EcsPar
 	}
 
 	if ecsParameters.CapacityProviderStrategy != nil {
-		config["capacity_provider_strategy"] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
+		config[names.AttrCapacityProviderStrategy] = flattenTargetCapacityProviderStrategy(ecsParameters.CapacityProviderStrategy)
 	}
 
-	config["tags"] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
+	config[names.AttrTags] = KeyValueTags(ctx, ecsParameters.Tags).IgnoreAWS().Map()
 	config["enable_execute_command"] = ecsParameters.EnableExecuteCommand
 	config["enable_ecs_managed_tags"] = ecsParameters.EnableECSManagedTags
 	config["task_count"] = aws.ToInt32(ecsParameters.TaskCount)
@@ -1205,7 +1242,7 @@ func flattenTargetRedshiftParameters(redshiftParameters *types.RedshiftDataParam
 		return []map[string]interface{}{config}
 	}
 
-	config["database"] = aws.ToString(redshiftParameters.Database)
+	config[names.AttrDatabase] = aws.ToString(redshiftParameters.Database)
 	config["db_user"] = aws.ToString(redshiftParameters.DbUser)
 	config["secrets_manager_arn"] = aws.ToString(redshiftParameters.SecretManagerArn)
 	config["sql"] = aws.ToString(redshiftParameters.Sql)
@@ -1222,8 +1259,8 @@ func flattenTargetECSParametersNetworkConfiguration(nc *types.NetworkConfigurati
 	}
 
 	result := make(map[string]interface{})
-	result["security_groups"] = nc.AwsvpcConfiguration.SecurityGroups
-	result["subnets"] = nc.AwsvpcConfiguration.Subnets
+	result[names.AttrSecurityGroups] = nc.AwsvpcConfiguration.SecurityGroups
+	result[names.AttrSubnets] = nc.AwsvpcConfiguration.Subnets
 	result["assign_public_ip"] = nc.AwsvpcConfiguration.AssignPublicIp == types.AssignPublicIpEnabled
 
 	return []interface{}{result}
@@ -1264,8 +1301,8 @@ func flattenTargetSageMakerPipelineParameter(pcs []types.SageMakerPipelineParame
 	results := make([]map[string]interface{}, 0)
 	for _, pc := range pcs {
 		c := make(map[string]interface{})
-		c["name"] = aws.ToString(pc.Name)
-		c["value"] = aws.ToString(pc.Value)
+		c[names.AttrName] = aws.ToString(pc.Name)
+		c[names.AttrValue] = aws.ToString(pc.Value)
 
 		results = append(results, c)
 	}
@@ -1323,7 +1360,7 @@ func flattenTargetRetryPolicy(rp *types.RetryPolicy) []map[string]interface{} {
 func flattenTargetDeadLetterConfig(dlc *types.DeadLetterConfig) []map[string]interface{} {
 	config := make(map[string]interface{})
 
-	config["arn"] = aws.ToString(dlc.Arn)
+	config[names.AttrARN] = aws.ToString(dlc.Arn)
 
 	result := []map[string]interface{}{config}
 	return result
@@ -1345,11 +1382,11 @@ func expandTargetPlacementConstraints(tfList []interface{}) []types.PlacementCon
 
 		apiObject := types.PlacementConstraint{}
 
-		if v, ok := tfMap["expression"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrExpression].(string); ok && v != "" {
 			apiObject.Expression = aws.String(v)
 		}
 
-		if v, ok := tfMap["type"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 			apiObject.Type = types.PlacementConstraintType(v)
 		}
 
@@ -1375,11 +1412,11 @@ func expandTargetPlacementStrategies(tfList []interface{}) []types.PlacementStra
 
 		apiObject := types.PlacementStrategy{}
 
-		if v, ok := tfMap["field"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrField].(string); ok && v != "" {
 			apiObject.Field = aws.String(v)
 		}
 
-		if v, ok := tfMap["type"].(string); ok && v != "" {
+		if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
 			apiObject.Type = types.PlacementStrategyType(v)
 		}
 
@@ -1409,7 +1446,7 @@ func expandTargetCapacityProviderStrategy(tfList []interface{}) []types.Capacity
 			apiObject.Base = int32(val.(int))
 		}
 
-		if val, ok := cp["weight"]; ok {
+		if val, ok := cp[names.AttrWeight]; ok {
 			apiObject.Weight = int32(val.(int))
 		}
 
@@ -1430,9 +1467,9 @@ func flattenTargetPlacementConstraints(pcs []types.PlacementConstraint) []map[st
 	results := make([]map[string]interface{}, 0)
 	for _, pc := range pcs {
 		c := make(map[string]interface{})
-		c["type"] = pc.Type
+		c[names.AttrType] = pc.Type
 		if pc.Expression != nil {
-			c["expression"] = aws.ToString(pc.Expression)
+			c[names.AttrExpression] = aws.ToString(pc.Expression)
 		}
 
 		results = append(results, c)
@@ -1447,9 +1484,9 @@ func flattenTargetPlacementStrategies(pcs []types.PlacementStrategy) []map[strin
 	results := make([]map[string]interface{}, 0)
 	for _, pc := range pcs {
 		c := make(map[string]interface{})
-		c["type"] = pc.Type
+		c[names.AttrType] = pc.Type
 		if pc.Field != nil {
-			c["field"] = aws.ToString(pc.Field)
+			c[names.AttrField] = aws.ToString(pc.Field)
 		}
 
 		results = append(results, c)
@@ -1465,9 +1502,29 @@ func flattenTargetCapacityProviderStrategy(cps []types.CapacityProviderStrategyI
 	for _, cp := range cps {
 		s := make(map[string]interface{})
 		s["capacity_provider"] = aws.ToString(cp.CapacityProvider)
-		s["weight"] = cp.Weight
+		s[names.AttrWeight] = cp.Weight
 		s["base"] = cp.Base
 		results = append(results, s)
 	}
 	return results
+}
+
+func flattenAppSyncParameters(apiObject *types.AppSyncParameters) []map[string]interface{} {
+	tfMap := make(map[string]interface{})
+	tfMap["graphql_operation"] = aws.ToString(apiObject.GraphQLOperation)
+
+	return []map[string]interface{}{tfMap}
+}
+
+func expandAppSyncParameters(tfList []interface{}) *types.AppSyncParameters {
+	apiObject := &types.AppSyncParameters{}
+
+	for _, tfMapRaw := range tfList {
+		tfMap := tfMapRaw.(map[string]interface{})
+		if v, ok := tfMap["graphql_operation"].(string); ok && v != "" {
+			apiObject.GraphQLOperation = aws.String(v)
+		}
+	}
+
+	return apiObject
 }

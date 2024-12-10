@@ -29,8 +29,8 @@ func TestAccKafkaKafkaVersionDataSource_basic(t *testing.T) {
 			{
 				Config: testAccVersionDataSourceConfig_basic(version),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", version),
-					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, version),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),
 			},
 		},
@@ -50,8 +50,8 @@ func TestAccKafkaKafkaVersionDataSource_preferred(t *testing.T) {
 			{
 				Config: testAccVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "2.4.1.1"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "status"),
+					resource.TestCheckResourceAttr(dataSourceName, names.AttrVersion, "2.4.1.1"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrStatus),
 				),
 			},
 		},

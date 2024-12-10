@@ -38,11 +38,11 @@ func TestAccAPIGatewayDeployment_basic(t *testing.T) {
 				Config: testAccDeploymentConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(".+/")),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrCreatedDate),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "execution_arn", "execute-api", regexache.MustCompile(".+/")),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/", acctest.Region()))),
-					resource.TestCheckResourceAttrPair(resourceName, "rest_api_id", restApiResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "rest_api_id", restApiResourceName, names.AttrID),
 					resource.TestCheckNoResourceAttr(resourceName, "stage_description"),
 					resource.TestCheckNoResourceAttr(resourceName, "stage_name"),
 					resource.TestCheckNoResourceAttr(resourceName, "variables.%"),
@@ -101,7 +101,7 @@ func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 				Config: testAccDeploymentConfig_stageName(rName, stageName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					testAccCheckRestAPIExists(ctx, restApiResourceName, &restApi),
+					testAccCheckRESTAPIExists(ctx, restApiResourceName, &restApi),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceRestAPI(), restApiResourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -128,7 +128,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment1),
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description1"),
 				),
 				// Due to how the Terraform state is handled for resources during creation,
@@ -141,7 +141,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment2),
 					testAccCheckDeploymentRecreated(&deployment1, &deployment2),
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description1"),
 				),
 			},
@@ -151,7 +151,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment3),
 					testAccCheckDeploymentNotRecreated(&deployment2, &deployment3),
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description1"),
 				),
 			},
@@ -161,7 +161,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment4),
 					testAccCheckDeploymentRecreated(&deployment3, &deployment4),
 					testAccCheckStageExists(ctx, resourceName, &stage),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 					resource.TestCheckResourceAttr(resourceName, "stage_description", "description2"),
 				),
 			},
@@ -185,14 +185,14 @@ func TestAccAPIGatewayDeployment_description(t *testing.T) {
 				Config: testAccDeploymentConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description1"),
 				),
 			},
 			{
 				Config: testAccDeploymentConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "description2"),
 				),
 			},
 		},
@@ -244,7 +244,7 @@ func TestAccAPIGatewayDeployment_stageName(t *testing.T) {
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					testAccCheckStageExists(ctx, resourceName, &stage),
 					resource.TestCheckResourceAttr(resourceName, "stage_name", stageName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(fmt.Sprintf(".+/%s", stageName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "execution_arn", "execute-api", regexache.MustCompile(fmt.Sprintf(".+/%s", stageName))),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", acctest.Region(), stageName))),
 				),
 			},
@@ -252,7 +252,7 @@ func TestAccAPIGatewayDeployment_stageName(t *testing.T) {
 				Config: testAccDeploymentConfig_required(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckNoResourceAttr(resourceName, "stage_name"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(".+/")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "execution_arn", "execute-api", regexache.MustCompile(".+/")),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexache.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/", acctest.Region()))),
 				),
 			},
@@ -296,11 +296,11 @@ func TestAccAPIGatewayDeployment_variables(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_variables(rName, "key1", "value1"),
+				Config: testAccDeploymentConfig_variables(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "variables.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "variables.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "variables.key1", acctest.CtValue1),
 				),
 			},
 		},
@@ -326,6 +326,46 @@ func TestAccAPIGatewayDeployment_conflictingConnectionType(t *testing.T) {
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAPIGatewayDeployment_deploymentCanarySettings(t *testing.T) {
+	ctx := acctest.Context(t)
+	var deployment apigateway.GetDeploymentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	url := "https://example.com"
+	resourceName := "aws_api_gateway_deployment.test"
+	resourceNameDeploymentMain := "aws_api_gateway_deployment.test_main"
+	resourceNameStage := "aws_api_gateway_stage.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentConfig_canarySettings(rName, url),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					resource.TestCheckResourceAttrPair(resourceNameStage, "deployment_id", resourceNameDeploymentMain, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "variables.one", "1"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "33.33"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", "3"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtTrue),
+				),
+			},
+			{
+				RefreshState: true,
+				Check: resource.ComposeTestCheckFunc(
+					// check that canary settings on the deployment match what is on the stage
+					resource.TestCheckResourceAttrPair(resourceNameStage, "deployment_id", resourceNameDeploymentMain, names.AttrID),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.percent_traffic", resourceNameStage, "canary_settings.0.percent_traffic"),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.stage_variable_overrides.one", resourceNameStage, "canary_settings.0.stage_variable_overrides.one"),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.use_stage_cache", resourceNameStage, "canary_settings.0.use_stage_cache"),
+				),
 			},
 		},
 	})
@@ -578,7 +618,46 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.iam_for_lambda.arn
   handler       = "index.handler"
-  runtime       = "nodejs16.x"
+  runtime       = "nodejs20.x"
 }
 `, rName))
+}
+
+func testAccDeploymentConfig_canarySettings(rName, url string) string {
+	return acctest.ConfigCompose(testAccDeploymentConfig_base(rName, url), `
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.test_main.id
+
+  lifecycle {
+    ignore_changes = [variables, canary_settings]
+  }
+}
+
+resource "aws_api_gateway_deployment" "test_main" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  description = "test-api-gateway"
+  rest_api_id = aws_api_gateway_rest_api.test.id
+}
+
+resource "aws_api_gateway_deployment" "test" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  stage_name  = aws_api_gateway_stage.test.stage_name
+  canary_settings {
+    percent_traffic = "33.33"
+    stage_variable_overrides = {
+      one = "3"
+    }
+    use_stage_cache = "true"
+  }
+  variables = {
+    one = "1"
+    two = "2"
+  }
+}
+`)
 }

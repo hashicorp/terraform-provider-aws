@@ -17,11 +17,11 @@ import (
 func resourceRuleV0() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -43,28 +43,28 @@ func resourceRuleV0() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-			"role_arn": {
+			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"schedule_expression": {
+			names.AttrScheduleExpression: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"state": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -85,9 +85,9 @@ func resourceRuleUpgradeV0(ctx context.Context, rawState map[string]any, meta an
 	})
 
 	if rawState["is_enabled"].(bool) {
-		rawState["state"] = types.RuleStateEnabled
+		rawState[names.AttrState] = types.RuleStateEnabled
 	} else {
-		rawState["state"] = types.RuleStateDisabled
+		rawState[names.AttrState] = types.RuleStateDisabled
 	}
 
 	return rawState, nil

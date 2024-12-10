@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_ecr_image", name="Image")
@@ -30,8 +31,8 @@ func dataSourceImage() *schema.Resource {
 				Type:          schema.TypeString,
 				Computed:      true,
 				Optional:      true,
-				AtLeastOneOf:  []string{"image_digest", "image_tag", "most_recent"},
-				ConflictsWith: []string{"most_recent"},
+				AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
+				ConflictsWith: []string{names.AttrMostRecent},
 			},
 			"image_pushed_at": {
 				Type:     schema.TypeInt,
@@ -44,8 +45,8 @@ func dataSourceImage() *schema.Resource {
 			"image_tag": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				AtLeastOneOf:  []string{"image_digest", "image_tag", "most_recent"},
-				ConflictsWith: []string{"most_recent"},
+				AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
+				ConflictsWith: []string{names.AttrMostRecent},
 			},
 			"image_tags": {
 				Type:     schema.TypeList,
@@ -56,10 +57,10 @@ func dataSourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"most_recent": {
+			names.AttrMostRecent: {
 				Type:          schema.TypeBool,
 				Optional:      true,
-				AtLeastOneOf:  []string{"image_digest", "image_tag", "most_recent"},
+				AtLeastOneOf:  []string{"image_digest", "image_tag", names.AttrMostRecent},
 				ConflictsWith: []string{"image_digest", "image_tag"},
 			},
 			"registry_id": {
@@ -68,7 +69,7 @@ func dataSourceImage() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -81,7 +82,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	input := &ecr.DescribeImagesInput{
-		RepositoryName: aws.String(d.Get("repository_name").(string)),
+		RepositoryName: aws.String(d.Get(names.AttrRepositoryName).(string)),
 	}
 
 	if v, ok := d.GetOk("image_digest"); ok {
@@ -119,7 +120,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if len(imageDetails) > 1 {
-		if !d.Get("most_recent").(bool) {
+		if !d.Get(names.AttrMostRecent).(bool) {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria, or set `most_recent` attribute to true.")
 		}
 
@@ -155,7 +156,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("image_tags", imageDetail.ImageTags)
 	d.Set("image_uri", fmt.Sprintf("%s@%s", aws.ToString(repository.RepositoryUri), aws.ToString(imageDetail.ImageDigest)))
 	d.Set("registry_id", imageDetail.RegistryId)
-	d.Set("repository_name", imageDetail.RepositoryName)
+	d.Set(names.AttrRepositoryName, imageDetail.RepositoryName)
 
 	return diags
 }

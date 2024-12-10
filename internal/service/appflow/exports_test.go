@@ -9,5 +9,5 @@ var (
 	ResourceFlow             = resourceFlow
 
 	FindConnectorProfileByARN = findConnectorProfileByARN
-	FindFlowByARN             = findFlowByARN
+	FindFlowByName            = findFlowByName
 )

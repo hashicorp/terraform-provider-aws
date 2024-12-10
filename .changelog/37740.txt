@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_emr_cluster: Support `io2` as a valid value for `ebs_config.type`
+```
+
+```release-note:enhancement
+resource/aws_emr_instance_fleet: Support `io2` as a valid value for `instance_type_configs.ebs_config.type`
+```
+
+```release-note:enhancement
+resource/aws_emr_instance_group: Support `io2` as a valid value for `instance_type_configs.ebs_config.type`
+```
+
+```release-note:bug
+resource/aws_emr_instance_group: Properly send an `instance_count` value of `0` on create when configured
+```

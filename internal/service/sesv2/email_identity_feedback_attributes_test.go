@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -109,7 +108,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testi
 				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, true),
-					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", acctest.CtTrue),
 				),
 			},
 			{
@@ -121,7 +120,7 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testi
 				Config: testAccEmailIdentityFeedbackAttributesConfig_emailForwardingEnabled(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEmailIdentityFeedbackAttributesExist(ctx, emailIdentityName, false),
-					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "email_forwarding_enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -130,25 +129,23 @@ func TestAccSESV2EmailIdentityFeedbackAttributes_emailForwardingEnabled(t *testi
 
 // testAccCheckEmailIdentityFeedbackAttributesExist verifies that both the email identity exists,
 // and that the email forwarding enabled setting is correct
-func testAccCheckEmailIdentityFeedbackAttributesExist(ctx context.Context, name string, emailForwardingEnabled bool) resource.TestCheckFunc {
+func testAccCheckEmailIdentityFeedbackAttributesExist(ctx context.Context, n string, emailForwardingEnabled bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESV2Client(ctx)
 
 		out, err := tfsesv2.FindEmailIdentityByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentity, rs.Primary.ID, err)
+			return err
 		}
-		if out == nil || out.FeedbackForwardingStatus != emailForwardingEnabled {
-			return create.Error(names.SESV2, create.ErrActionCheckingExistence, tfsesv2.ResNameEmailIdentityFeedbackAttributes, rs.Primary.ID, errors.New("feedback attributes not set"))
+
+		if out.FeedbackForwardingStatus != emailForwardingEnabled {
+			return errors.New("feedback attributes not set")
 		}
 
 		return nil

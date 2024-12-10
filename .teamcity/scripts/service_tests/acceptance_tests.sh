@@ -4,6 +4,7 @@ set -euo pipefail
 
 TEST_LIST=$(./test-binary -test.list="%TEST_PATTERN%" 2>/dev/null)
 
+# shellcheck disable=2157 # This isn't a constant string, it's a TeamCity variable substitution
 if [[ -n "%TEST_EXCLUDE_PATTERN%" ]]; then
   TEST_LIST=$(echo "${TEST_LIST}" | grep -vE "%TEST_EXCLUDE_PATTERN%")
 fi
@@ -69,9 +70,6 @@ source_profile = alternate_user
 aws_access_key_id     = %AWS_ALTERNATE_ACCESS_KEY_ID%
 aws_secret_access_key = %AWS_ALTERNATE_SECRET_ACCESS_KEY%
 EOF
-
-		unset AWS_ALTERNATE_ACCESS_KEY_ID
-		unset AWS_ALTERNATE_SECRET_ACCESS_KEY
 
 		export AWS_ALTERNATE_PROFILE=alternate
 	fi

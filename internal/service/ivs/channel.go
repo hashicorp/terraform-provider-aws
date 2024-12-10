@@ -10,14 +10,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ivs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ivs"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ivs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -44,7 +46,7 @@ func ResourceChannel() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -58,12 +60,12 @@ func ResourceChannel() *schema.Resource {
 				Computed: true,
 			},
 			"latency_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(ivs.ChannelLatencyMode_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ChannelLatencyMode](),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -81,11 +83,11 @@ func ResourceChannel() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(ivs.ChannelType_Values(), false),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ChannelType](),
 			},
 		},
 
@@ -100,21 +102,21 @@ const (
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IVSConn(ctx)
+	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	in := &ivs.CreateChannelInput{
 		Tags: getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("authorized"); ok {
-		in.Authorized = aws.Bool(v.(bool))
+		in.Authorized = v.(bool)
 	}
 
 	if v, ok := d.GetOk("latency_mode"); ok {
-		in.LatencyMode = aws.String(v.(string))
+		in.LatencyMode = awstypes.ChannelLatencyMode(v.(string))
 	}
 
-	if v, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
 		in.Name = aws.String(v.(string))
 	}
 
@@ -122,20 +124,20 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 		in.RecordingConfigurationArn = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("type"); ok {
-		in.Type = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrType); ok {
+		in.Type = awstypes.ChannelType(v.(string))
 	}
 
-	out, err := conn.CreateChannelWithContext(ctx, in)
+	out, err := conn.CreateChannel(ctx, in)
 	if err != nil {
-		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameChannel, d.Get(names.AttrName).(string), err)
 	}
 
 	if out == nil || out.Channel == nil {
-		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameChannel, d.Get(names.AttrName).(string), errors.New("empty output"))
 	}
 
-	d.SetId(aws.StringValue(out.Channel.Arn))
+	d.SetId(aws.ToString(out.Channel.Arn))
 
 	if _, err := waitChannelCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForCreation, ResNameChannel, d.Id(), err)
@@ -147,7 +149,7 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IVSConn(ctx)
+	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	out, err := FindChannelByID(ctx, conn, d.Id())
 
@@ -161,14 +163,14 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionReading, ResNameChannel, d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
+	d.Set(names.AttrARN, out.Arn)
 	d.Set("authorized", out.Authorized)
 	d.Set("ingest_endpoint", out.IngestEndpoint)
 	d.Set("latency_mode", out.LatencyMode)
-	d.Set("name", out.Name)
+	d.Set(names.AttrName, out.Name)
 	d.Set("playback_url", out.PlaybackUrl)
 	d.Set("recording_configuration_arn", out.RecordingConfigurationArn)
-	d.Set("type", out.Type)
+	d.Set(names.AttrType, out.Type)
 
 	return diags
 }
@@ -176,7 +178,7 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IVSConn(ctx)
+	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	update := false
 
@@ -186,17 +188,17 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChanges("authorized") {
-		in.Authorized = aws.Bool(d.Get("authorized").(bool))
+		in.Authorized = d.Get("authorized").(bool)
 		update = true
 	}
 
 	if d.HasChanges("latency_mode") {
-		in.LatencyMode = aws.String(d.Get("latency_mode").(string))
+		in.LatencyMode = awstypes.ChannelLatencyMode(d.Get("latency_mode").(string))
 		update = true
 	}
 
-	if d.HasChanges("name") {
-		in.Name = aws.String(d.Get("name").(string))
+	if d.HasChanges(names.AttrName) {
+		in.Name = aws.String(d.Get(names.AttrName).(string))
 		update = true
 	}
 
@@ -205,8 +207,8 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		update = true
 	}
 
-	if d.HasChanges("type") {
-		in.Type = aws.String(d.Get("type").(string))
+	if d.HasChanges(names.AttrType) {
+		in.Type = awstypes.ChannelType(d.Get(names.AttrType).(string))
 		update = true
 	}
 
@@ -216,7 +218,7 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Updating IVS Channel (%s): %#v", d.Id(), in)
 
-	out, err := conn.UpdateChannelWithContext(ctx, in)
+	out, err := conn.UpdateChannel(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.IVS, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 	}
@@ -231,16 +233,16 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IVSConn(ctx)
+	conn := meta.(*conns.AWSClient).IVSClient(ctx)
 
 	log.Printf("[INFO] Deleting IVS Channel %s", d.Id())
 
-	_, err := conn.DeleteChannelWithContext(ctx, &ivs.DeleteChannelInput{
+	_, err := conn.DeleteChannel(ctx, &ivs.DeleteChannelInput{
 		Arn: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return diags
 		}
 

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_athena_named_query")
@@ -31,17 +32,17 @@ func resourceNamedQuery() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"database": {
+			names.AttrDatabase: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,9 +66,9 @@ func resourceNamedQueryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &athena.CreateNamedQueryInput{
-		Database:    aws.String(d.Get("database").(string)),
+		Database:    aws.String(d.Get(names.AttrDatabase).(string)),
 		Name:        aws.String(name),
 		QueryString: aws.String(d.Get("query").(string)),
 	}
@@ -76,7 +77,7 @@ func resourceNamedQueryCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.WorkGroup = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -107,9 +108,9 @@ func resourceNamedQueryRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Athena Named Query (%s): %s", d.Id(), err)
 	}
 
-	d.Set("database", namedQuery.Database)
-	d.Set("description", namedQuery.Description)
-	d.Set("name", namedQuery.Name)
+	d.Set(names.AttrDatabase, namedQuery.Database)
+	d.Set(names.AttrDescription, namedQuery.Description)
+	d.Set(names.AttrName, namedQuery.Name)
 	d.Set("query", namedQuery.QueryString)
 	d.Set("workgroup", namedQuery.WorkGroup)
 

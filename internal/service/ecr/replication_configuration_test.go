@@ -21,9 +21,9 @@ func TestAccECRReplicationConfiguration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":            testAccReplicationConfiguration_basic,
-		"disappears":       testAccReplicationConfiguration_disappears,
-		"repositoryFilter": testAccReplicationConfiguration_repositoryFilter,
+		acctest.CtBasic:      testAccReplicationConfiguration_basic,
+		acctest.CtDisappears: testAccReplicationConfiguration_disappears,
+		"repositoryFilter":   testAccReplicationConfiguration_repositoryFilter,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -43,12 +43,12 @@ func testAccReplicationConfiguration_basic(t *testing.T) {
 				Config: testAccReplicationConfigurationConfig_basic(acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.0.region", acctest.AlternateRegion()),
-					acctest.CheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.#", "0"),
 				),
 			},
@@ -61,14 +61,14 @@ func testAccReplicationConfiguration_basic(t *testing.T) {
 				Config: testAccReplicationConfigurationConfig_multipleRegion(acctest.AlternateRegion(), acctest.ThirdRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.0.region", acctest.AlternateRegion()),
-					acctest.CheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.1.region", acctest.ThirdRegion()),
-					acctest.CheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.1.registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "replication_configuration.0.rule.0.destination.1.registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.#", "0"),
 				),
 			},
@@ -76,12 +76,12 @@ func testAccReplicationConfiguration_basic(t *testing.T) {
 				Config: testAccReplicationConfigurationConfig_basic(acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.0.region", acctest.AlternateRegion()),
-					acctest.CheckResourceAttrAccountID(resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "replication_configuration.0.rule.0.destination.0.registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.#", "0"),
 				),
 			},
@@ -125,7 +125,7 @@ func testAccReplicationConfiguration_repositoryFilter(t *testing.T) {
 				Config: testAccReplicationConfigurationConfig_repositoryFilter(acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),
@@ -143,7 +143,7 @@ func testAccReplicationConfiguration_repositoryFilter(t *testing.T) {
 				Config: testAccReplicationConfigurationConfig_repositoryFilterMultiple(acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.repository_filter.#", "2"),
@@ -157,7 +157,7 @@ func testAccReplicationConfiguration_repositoryFilter(t *testing.T) {
 				Config: testAccReplicationConfigurationConfig_repositoryFilter(acctest.AlternateRegion()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_configuration.0.rule.0.destination.#", "1"),

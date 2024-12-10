@@ -647,7 +647,7 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	testTimeStr := "2023-12-08T09:34:01Z"
-	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
+	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr)) // nosemgrep: ci.avoid-errs-Must
 
 	intentDescribeTF := tflexv2models.ResourceIntentData{
 		BotID:                  types.StringValue(testString),
@@ -701,7 +701,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		WantErr  bool
 	}{
 		{
-			TestName: "message",
+			TestName: names.AttrMessage,
 			TFFull:   &messageTF,
 			TFEmpty:  &tflexv2models.Message{},
 			AWSFull:  &messageAWS,
@@ -842,12 +842,10 @@ func TestIntentAutoFlex(t *testing.T) {
 	)
 
 	for _, testCase := range testCases {
-		testCase := testCase
-
 		t.Run(fmt.Sprintf("expand %s", testCase.TestName), func(t *testing.T) {
 			t.Parallel()
 
-			diags := flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, "Intent"), testCase.TFFull, testCase.AWSEmpty)
+			diags := flex.Expand(ctx, testCase.TFFull, testCase.AWSEmpty, tflexv2models.IntentFlexOpt)
 
 			gotErr := diags != nil
 
@@ -869,7 +867,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		t.Run(fmt.Sprintf("flatten %s", testCase.TestName), func(t *testing.T) {
 			t.Parallel()
 
-			diags := flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, "Intent"), testCase.AWSFull, testCase.TFEmpty)
+			diags := flex.Flatten(ctx, testCase.AWSFull, testCase.TFEmpty, tflexv2models.IntentFlexOpt)
 
 			gotErr := diags != nil
 
@@ -920,7 +918,7 @@ func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 				Config: testAccIntentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -986,7 +984,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateConfirmationSetting(rName, 1, "test", 640, 640),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -995,7 +993,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 						"message_selection_strategy": "Ordered",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.message_group.*.message.*.plain_text_message.*", map[string]string{
-						"value": "test",
+						names.AttrValue: "test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.prompt_attempts_specification.*.audio_and_dtmf_input_specification.*.audio_specification.*", map[string]string{
 						"end_timeout_ms": "640",
@@ -1006,7 +1004,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateConfirmationSetting(rName, 1, "test", 650, 660),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1015,7 +1013,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 						"message_selection_strategy": "Ordered",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.message_group.*.message.*.plain_text_message.*", map[string]string{
-						"value": "test",
+						names.AttrValue: "test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.prompt_attempts_specification.*.audio_and_dtmf_input_specification.*.audio_specification.*", map[string]string{
 						"end_timeout_ms": "650",
@@ -1051,15 +1049,15 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateClosingSetting(rName, "test1", "test2", "test3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*", map[string]string{
-						"active": "true",
+						"active": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*.conditional.*.conditional_branch.*", map[string]string{
-						"name": rName,
+						names.AttrName: rName,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
 					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
@@ -1072,15 +1070,15 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateClosingSetting(rName, "Hvad", "er", "hygge"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*", map[string]string{
-						"active": "true",
+						"active": acctest.CtTrue,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*.conditional.*.conditional_branch.*", map[string]string{
-						"name": rName,
+						names.AttrName: rName,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
 					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
@@ -1115,7 +1113,7 @@ func TestAccLexV2ModelsIntent_updateInputContext(t *testing.T) {
 				Config: testAccIntentConfig_updateInputContext(rName, "sammanhang1", "sammanhang2", "sammanhang3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1132,7 +1130,7 @@ func TestAccLexV2ModelsIntent_updateInputContext(t *testing.T) {
 				Config: testAccIntentConfig_updateInputContext(rName, "kropp", "utan", "blod"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1171,7 +1169,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateInitialResponseSetting(rName, "branch1", "tre", "slumpmässiga", "ord"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1179,14 +1177,14 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.enable_code_hook_invocation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.active", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.enable_code_hook_invocation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.invocation_label", "test"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.%", "9"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.condition.#", "1"),
@@ -1204,7 +1202,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1229,7 +1227,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1252,7 +1250,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.conditional.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.#", "1"),
@@ -1271,7 +1269,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 				Config: testAccIntentConfig_updateInitialResponseSetting(rName, "gren1", "några", "olika", "bokstäver"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1279,14 +1277,14 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.enable_code_hook_invocation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.active", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.enable_code_hook_invocation", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.invocation_label", "test"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.%", "9"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.condition.#", "1"),
@@ -1304,7 +1302,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1329,7 +1327,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1352,7 +1350,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.conditional.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.#", "1"),
@@ -1393,20 +1391,20 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 				Config: testAccIntentConfig_updateFulfillmentCodeHook(rName, "meddelande", 10, "slumpmässiga", "gren1", "alfanumerisk", "olika"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.active", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.delay_in_seconds", "5"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.%", "2"),
@@ -1422,7 +1420,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.timeout_in_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.frequency_in_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.%", "2"),
@@ -1439,7 +1437,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.%", "9"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.condition.#", "1"),
@@ -1451,7 +1449,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.slot_to_elicit", "slot1"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.suppress_next_message", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.suppress_next_message", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.type", "CloseIntent"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.%", "2"),
@@ -1468,7 +1466,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot2", "roligt2"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1493,7 +1491,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1519,20 +1517,20 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 				Config: testAccIntentConfig_updateFulfillmentCodeHook(rName, "dagdröm", 10, "dansa", "dumbom", "gås", "mat"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.active", "true"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.active", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.%", "4"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.delay_in_seconds", "5"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.%", "2"),
@@ -1548,7 +1546,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.timeout_in_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.frequency_in_seconds", "10"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.%", "2"),
@@ -1565,7 +1563,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.%", "9"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.active", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.condition.#", "1"),
@@ -1577,7 +1575,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.slot_to_elicit", "slot1"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.suppress_next_message", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.suppress_next_message", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.type", "CloseIntent"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.%", "2"),
@@ -1594,7 +1592,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot2", "roligt2"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1619,7 +1617,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.#", "1"),
@@ -1667,26 +1665,26 @@ func TestAccLexV2ModelsIntent_updateDialogCodeHook(t *testing.T) {
 				Config: testAccIntentConfig_updateDialogCodeHook(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.enabled", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccIntentConfig_updateDialogCodeHook(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.enabled", acctest.CtFalse),
 				),
 			},
 		},
@@ -1715,7 +1713,7 @@ func TestAccLexV2ModelsIntent_updateOutputContext(t *testing.T) {
 				Config: testAccIntentConfig_updateOutputContext(rName, "name1", "name2", "name3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1738,7 +1736,7 @@ func TestAccLexV2ModelsIntent_updateOutputContext(t *testing.T) {
 				Config: testAccIntentConfig_updateOutputContext(rName, "name2", "name3", "name4"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1783,7 +1781,7 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 				Config: testAccIntentConfig_updateSampleUtterance(rName, "yttrande", "twocolors", "danny", "dansa"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
@@ -1802,7 +1800,7 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 				Config: testAccIntentConfig_updateSampleUtterance(rName, "rustedroot", "sendme", "onmy", "way"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),

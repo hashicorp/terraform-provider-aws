@@ -20,6 +20,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iam_signing_certificate", name="Signing Certificate")
@@ -44,13 +45,13 @@ func resourceSigningCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Default:          awstypes.StatusTypeActive,
 				ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,7 +66,7 @@ func resourceSigningCertificateCreate(ctx context.Context, d *schema.ResourceDat
 
 	createOpts := &iam.UploadSigningCertificateInput{
 		CertificateBody: aws.String(d.Get("certificate_body").(string)),
-		UserName:        aws.String(d.Get("user_name").(string)),
+		UserName:        aws.String(d.Get(names.AttrUserName).(string)),
 	}
 
 	resp, err := conn.UploadSigningCertificate(ctx, createOpts)
@@ -77,10 +78,10 @@ func resourceSigningCertificateCreate(ctx context.Context, d *schema.ResourceDat
 	certId := cert.CertificateId
 	d.SetId(fmt.Sprintf("%s:%s", aws.ToString(certId), aws.ToString(cert.UserName)))
 
-	if v, ok := d.GetOk("status"); ok && v.(string) != string(awstypes.StatusTypeActive) {
+	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) != string(awstypes.StatusTypeActive) {
 		updateInput := &iam.UpdateSigningCertificateInput{
 			CertificateId: certId,
-			UserName:      aws.String(d.Get("user_name").(string)),
+			UserName:      aws.String(d.Get(names.AttrUserName).(string)),
 			Status:        awstypes.StatusType(v.(string)),
 		}
 
@@ -120,8 +121,8 @@ func resourceSigningCertificateRead(ctx context.Context, d *schema.ResourceData,
 
 	d.Set("certificate_body", resp.CertificateBody)
 	d.Set("certificate_id", resp.CertificateId)
-	d.Set("user_name", resp.UserName)
-	d.Set("status", resp.Status)
+	d.Set(names.AttrUserName, resp.UserName)
+	d.Set(names.AttrStatus, resp.Status)
 
 	return diags
 }
@@ -138,7 +139,7 @@ func resourceSigningCertificateUpdate(ctx context.Context, d *schema.ResourceDat
 	updateInput := &iam.UpdateSigningCertificateInput{
 		CertificateId: aws.String(certId),
 		UserName:      aws.String(userName),
-		Status:        awstypes.StatusType(d.Get("status").(string)),
+		Status:        awstypes.StatusType(d.Get(names.AttrStatus).(string)),
 	}
 
 	_, err = conn.UpdateSigningCertificate(ctx, updateInput)
