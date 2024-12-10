@@ -3,7 +3,7 @@ subcategory: "Service Catalog AppRegistry"
 layout: "aws"
 page_title: "AWS: aws_servicecatalogappregistry_attribute_group_associations"
 description: |-
-  Terraform data source for managing an AWS Service Catalog AppRegistry Application Attribute Groups.
+  Terraform data source for managing an AWS Service Catalog AppRegistry Application Attribute Group Associations.
 ---
 
 # Data Source: aws_servicecatalogappregistry_attribute_group_associations
