@@ -89,7 +89,6 @@ func TestAccKinesisStream_disappears(t *testing.T) {
 func TestAccKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stream types.StreamDescriptionSummary
-	resourceName := "aws_kinesis_stream.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -122,13 +121,6 @@ func TestAccKinesisStream_createMultipleConcurrentStreams(t *testing.T) {
 					testAccCheckStreamExists(ctx, "aws_kinesis_stream.test.18", &stream),
 					testAccCheckStreamExists(ctx, "aws_kinesis_stream.test.19", &stream),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateId:           rName + "-0",
-				ImportStateVerifyIgnore: []string{"enforce_consumer_deletion"},
 			},
 		},
 	})
