@@ -19,6 +19,8 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_domain_name: Support `PRIVATE` as a valid value for `endpoint_configuration.types` argument, enabling custom domain name support for private REST API endpoints ([#40364](https://github.com/hashicorp/terraform-provider-aws/issues/40364))
 * resource/aws_ebs_snapshot_copy: Add `completion_duration_minutes` argument ([#40336](https://github.com/hashicorp/terraform-provider-aws/issues/40336))
 * resource/aws_glue_catalog_table_optimizer: Add `configuration.retention_configuration` and `configuration.orphan_file_deletion_configuration` attributes. ([#40199](https://github.com/hashicorp/terraform-provider-aws/issues/40199))
+* resource/aws_kinesis_stream: Add plan-time validation that `shard_count` would not exceed the AWS account's [shard quota](https://docs.aws.amazon.com/streams/latest/dev/service-sizes-and-limits.html) when the data stream capacity mode is `PROVISIONED`, preventing the provider from retrying for 1 hour in the case that the quota is exceeded. This functionality requires the `kinesis:DescribeLimits` IAM permission ([#40499](https://github.com/hashicorp/terraform-provider-aws/issues/40499))
+* resource/aws_kinesis_stream: Add plan-time validation that creation of an on-demand stream would not exceed the AWS account's [data stream quota](https://docs.aws.amazon.com/streams/latest/dev/service-sizes-and-limits.html), preventing the provider from retrying for 1 hour in the case that the quota is exceeded. This functionality requires the `kinesis:DescribeLimits` IAM permission ([#40499](https://github.com/hashicorp/terraform-provider-aws/issues/40499))
 * resource/aws_msk_replicator: Add `topic_replication.topic_name_configuration` argument ([#40101](https://github.com/hashicorp/terraform-provider-aws/issues/40101))
 * resource/aws_networkfirewall_firewall_policy: Add `stateful_engine_options.flow_timeouts` argument ([#39996](https://github.com/hashicorp/terraform-provider-aws/issues/39996))
 * resource/aws_rds_cluster: Add `serverlessv2_scaling_configuration.seconds_until_auto_pause` argument ([#40441](https://github.com/hashicorp/terraform-provider-aws/issues/40441))
@@ -28,6 +30,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_kinesis_stream: Fix `InvalidArgumentException: NextToken and StreamName cannot be provided together` errors when the data stream has more than 1000 shards ([#40499](https://github.com/hashicorp/terraform-provider-aws/issues/40499))
 * resource/aws_fsx_windows_file_system: Fix plan-time validation of `throughput_capacity` validation to allow values up to `12228` ([#40468](https://github.com/hashicorp/terraform-provider-aws/issues/40468))
 * resource/aws_networkfirewall_logging_configuration: Correctly manage all configured `logging_configuration.log_destination_config`s ([#40092](https://github.com/hashicorp/terraform-provider-aws/issues/40092))
 * resource/aws_rds_cluster: Fix `InvalidDBClusterStateFault` errors when deleting clusters that are members of a global cluster ([#40333](https://github.com/hashicorp/terraform-provider-aws/issues/40333))
