@@ -24,7 +24,7 @@ func TestAccCloudFrontVPCOrigin_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCOriginDestroy(ctx),
+		CheckDestroy:             testAccCheckVPCOriginDestroy(ctx, resourceName),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCOriginConfig_basic(rName),
@@ -46,56 +46,46 @@ func TestAccCloudFrontVPCOrigin_basic(t *testing.T) {
 func testAccCheckVPCOriginExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		rs := s.RootModule().Resources[n]
 
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_cloudfront_vpc_origin" {
-				continue
-			}
+		if rs.Type != "aws_cloudfront_vpc_origin" {
+			return fmt.Errorf("resource %s is not a Cloudfront VPC Origin", n)
+		}
 
-			_, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
+		_, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
+		if err != nil {
+			return err
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckVPCOriginDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckVPCOriginDestroy(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_cloudfront_vpc_origin" {
-				continue
-			}
+		rs := s.RootModule().Resources[n]
 
-			_, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
+		if rs.Type != "aws_cloudfront_vpc_origin" {
+			return fmt.Errorf("resource %s is not a Cloudfront VPC Origin", n)
 		}
 
-		return nil
+		_, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		if tfresource.NotFound(err) {
+			return nil
+		}
+
+		return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
 	}
 }
 
-// FIXME: Need to wait for load balancer to finish provisioning before deploying VPC Origin
 func testAccVPCOriginConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 

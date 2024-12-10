@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	fwdiag "github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -242,10 +241,7 @@ func (r *cloudfrontVPCOriginResource) Update(ctx context.Context, request resour
 
 	updateTimeout := r.UpdateTimeout(ctx, old.Timeouts)
 	if _, err = waitVPCOriginDeployed(ctx, conn, old.Id.ValueString(), updateTimeout); err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CloudFront, create.ErrActionWaitingForUpdate, "VPC Origin", old.Id.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("Updating CloudFront VPC Origin (%s)", new.Id.ValueString()), err.Error())
 		return
 	}
 
@@ -281,10 +277,7 @@ func (r *cloudfrontVPCOriginResource) Delete(ctx context.Context, request resour
 
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 	if _, err = waitVPCOriginDeleted(ctx, conn, data.Id.ValueString(), deleteTimeout); err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage("Cloudfront VPC Origin", create.ErrActionWaitingForDeletion, names.AttrStatus, data.Id.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("Deleting CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
 		return
 	}
 }
