@@ -65,7 +65,7 @@ func resourceStream() *schema.Resource {
 				output, err := findLimits(ctx, conn)
 
 				if err != nil {
-					// Explictly OK if IAM permissions not set (or any other error).
+					// Explicitly OK if IAM permissions not set (or any other error).
 					return nil
 				}
 
