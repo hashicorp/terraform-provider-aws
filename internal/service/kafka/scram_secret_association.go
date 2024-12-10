@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -50,18 +49,11 @@ func resourceSCRAMSecretAssociation() *schema.Resource {
 			},
 			"secret_arn_list": {
 				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
+				Required: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
-			},
-			"secret_arn": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ConflictsWith: []string{"secret_arn_list"},
 			},
 		},
 	}
@@ -86,18 +78,7 @@ func resourceSCRAMSecretAssociationRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	idParts := strings.Split(d.Id(), "#")
-	if len(idParts) == 0 || len(idParts) > 2 {
-		return sdkdiag.AppendErrorf(diags, "Invalid MSK SCRAM Secret Association ID (%s). It should contain the clusterARN alone or clusterARN and secretARN delimited by a single '#' i.e., `clusterARN#secretARN`", d.Id())
-	}
-
-	clusterARN := idParts[0]
-	secretARN := ""
-	if len(idParts) == 2 {
-		secretARN = idParts[1]
-	}
-
-	scramSecrets, err := findSCRAMSecretsByClusterARN(ctx, conn, clusterARN)
+	scramSecrets, err := findSCRAMSecretsByClusterARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MSK SCRAM Secret Association (%s) not found, removing from state", d.Id())
@@ -109,18 +90,8 @@ func resourceSCRAMSecretAssociationRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading MSK SCRAM Secret Association (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(clusterARN)
-	d.Set("cluster_arn", clusterARN)
-
-	if secretARN != "" {
-		if tfslices.Any(scramSecrets, func(s string) bool { return s == secretARN }) {
-			d.Set("secret_arn", secretARN)
-		} else {
-			d.Set("secret_arn", nil)
-		}
-	} else {
-		d.Set("secret_arn_list", scramSecrets)
-	}
+	d.Set("cluster_arn", d.Id())
+	d.Set("secret_arn_list", scramSecrets)
 
 	return diags
 }
