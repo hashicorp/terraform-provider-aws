@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -55,7 +56,8 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"thumbprint_list": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(40, 40),
@@ -70,7 +72,12 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+			customdiff.ForceNewIfChange("thumbprint_list", func(_ context.Context, old, new, meta interface{}) bool {
+				return len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0
+			}),
+		),
 	}
 }
 
@@ -79,10 +86,13 @@ func resourceOpenIDConnectProviderCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	input := &iam.CreateOpenIDConnectProviderInput{
-		ClientIDList:   flex.ExpandStringValueSet(d.Get("client_id_list").(*schema.Set)),
-		Tags:           getTagsIn(ctx),
-		ThumbprintList: flex.ExpandStringValueList(d.Get("thumbprint_list").([]interface{})),
-		Url:            aws.String(d.Get(names.AttrURL).(string)),
+		ClientIDList: flex.ExpandStringValueSet(d.Get("client_id_list").(*schema.Set)),
+		Tags:         getTagsIn(ctx),
+		Url:          aws.String(d.Get(names.AttrURL).(string)),
+	}
+
+	if v, ok := d.GetOk("thumbprint_list"); ok {
+		input.ThumbprintList = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	output, err := conn.CreateOpenIDConnectProvider(ctx, input)
@@ -149,15 +159,19 @@ func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChange("thumbprint_list") {
-		input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
-			OpenIDConnectProviderArn: aws.String(d.Id()),
-			ThumbprintList:           flex.ExpandStringValueList(d.Get("thumbprint_list").([]interface{})),
-		}
+		if v := d.Get("thumbprint_list").([]interface{}); len(v) > 0 {
+			// This creates a problem since clearing the thumbprint will not enter this block. Clearing
+			// the thumbprint is problematic because setting the list to empty will cause an error since
+			// the API either requires no thumbprints at creation or at least one thumbprint. Entirely
+			// removing the thumbprint_list attribute doesn't work because it doesn't trigger a diff.
+			input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
+				OpenIDConnectProviderArn: aws.String(d.Id()),
+				ThumbprintList:           flex.ExpandStringValueList(v),
+			}
 
-		_, err := conn.UpdateOpenIDConnectProviderThumbprint(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
+			if _, err := conn.UpdateOpenIDConnectProviderThumbprint(ctx, input); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
+			}
 		}
 	}
 
