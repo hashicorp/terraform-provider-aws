@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"slices"
 
+	"github.com/aws/aws-sdk-go-v2/service/kafka"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -111,11 +112,7 @@ func (r *singleSCRAMSecretAssociationResource) Read(ctx context.Context, request
 
 	conn := r.Meta().KafkaClient(ctx)
 
-	secretARNs, err := findSCRAMSecretsByClusterARN(ctx, conn, data.ClusterARN.ValueString())
-
-	if err == nil && !slices.Contains(secretARNs, data.SecretARN.ValueString()) {
-		err = tfresource.NewEmptyResultError(nil)
-	}
+	err := findSingleSCRAMSecretAssociationByTwoPartKey(ctx, conn, data.ClusterARN.ValueString(), data.SecretARN.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -124,7 +121,7 @@ func (r *singleSCRAMSecretAssociationResource) Read(ctx context.Context, request
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading MSK SCRAM Secrets (%s)", data.ClusterARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading MSK Single SCRAM Secret Association (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
@@ -172,6 +169,20 @@ func (data *singleSCRAMSecretAssociationResourceModel) InitFromID() error {
 
 	data.ClusterARN = fwtypes.ARNValue(parts[0])
 	data.SecretARN = fwtypes.ARNValue(parts[1])
+
+	return nil
+}
+
+func findSingleSCRAMSecretAssociationByTwoPartKey(ctx context.Context, conn *kafka.Client, clusterARN, secretARN string) error {
+	output, err := findSCRAMSecretsByClusterARN(ctx, conn, clusterARN)
+
+	if err != nil {
+		return err
+	}
+
+	if !slices.Contains(output, secretARN) {
+		return tfresource.NewEmptyResultError(nil)
+	}
 
 	return nil
 }
