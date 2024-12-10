@@ -22,7 +22,7 @@ import (
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource("aws_servicecatalogappregistry_application_attribute_group_associations", name="Application Attribute Group Associations")
+// @FrameworkDataSource("aws_servicecatalogappregistry_application_attribute_groups", name="Application Attribute Group Associations")
 func newDataSourceApplicationAttributeGroupAssociations(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceApplicationAttributeGroupAssociations{}, nil
 }
@@ -36,7 +36,7 @@ type dataSourceApplicationAttributeGroupAssociations struct {
 }
 
 func (d *dataSourceApplicationAttributeGroupAssociations) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_servicecatalogappregistry_application_attribute_group_associations"
+	resp.TypeName = "aws_servicecatalogappregistry_application_attribute_groups"
 }
 
 func (d *dataSourceApplicationAttributeGroupAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
