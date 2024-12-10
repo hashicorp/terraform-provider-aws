@@ -74,6 +74,9 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
+			customdiff.ForceNewIfChange("thumbprint_list", func(_ context.Context, old, new, meta interface{}) bool {
+				return len(old.([]interface{})) > 0 && len(new.([]interface{})) == 0
+			}),
 		),
 	}
 }
