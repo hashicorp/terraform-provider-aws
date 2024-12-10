@@ -547,7 +547,22 @@ func resourceCluster() *schema.Resource {
 						names.AttrMaxCapacity: {
 							Type:         schema.TypeFloat,
 							Required:     true,
-							ValidateFunc: validation.FloatBetween(0, 256),
+							ValidateFunc: validation.FloatBetween(0.5, 256),
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// Handles a breaking regression. On v5.79.0 and earlier,
+								// serverlessv2_scaling_configuration block could be removed from
+								// configuration. Although doing so doesn't actually remove the scaling
+								// configuration from AWS this dsf does allow the user to remove the block
+								// from their configuration without perpetual diffs.
+								// https://github.com/hashicorp/terraform-provider-aws/issues/40473
+								config := d.GetRawConfig()
+								raw := config.GetAttr("serverlessv2_scaling_configuration")
+
+								if raw.LengthInt() == 0 && (old != "0" && old != "") && (new == "0" || new == "") {
+									return true
+								}
+								return false
+							},
 						},
 						"min_capacity": {
 							Type:         schema.TypeFloat,
@@ -2164,7 +2179,9 @@ func expandServerlessV2ScalingConfiguration(tfMap map[string]interface{}) *types
 
 	apiObject := &types.ServerlessV2ScalingConfiguration{}
 
-	if v, ok := tfMap[names.AttrMaxCapacity].(float64); ok {
+	// Removing the serverlessv2_scaling_configuration block from config for an update, sets max_capacity
+	// to 0. Sending 0 to the API causes an error.
+	if v, ok := tfMap[names.AttrMaxCapacity].(float64); ok && v != 0.0 {
 		apiObject.MaxCapacity = aws.Float64(v)
 	}
 
