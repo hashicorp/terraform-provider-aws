@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Debug Selected Test",
+        "request": "launch",
+        "type": "go",
+        "args": [
+          "-test.v",
+          "-test.run",
+          "^${selectedText}$"
+        ],
+        "mode": "auto",
+        "program": "${fileDirname}",
+        "env": {"PKG_NAME": "${relativeFileDirname}"},
+        "envFile": "${workspaceFolder}/.vscode/private.env",
+        "showLog": true
+      }
+    ]
+  }
