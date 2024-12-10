@@ -304,7 +304,7 @@ func resourceDistribution() *schema.Resource {
 			"is_ipv6_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Default:  true,
 			},
 			"last_modified_time": {
 				Type:     schema.TypeString,
