@@ -1373,12 +1373,7 @@ func TestAccEC2Instance_networkInstanceRemovingAllSecurityGroups(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccInstanceConfig_networkVPCRemoveSecurityGroupIDs(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-				),
+				Config:      testAccInstanceConfig_networkVPCRemoveSecurityGroupIDs(rName),
 				ExpectError: regexache.MustCompile(`VPC-based instances require at least one security group to be attached`),
 			},
 		},
