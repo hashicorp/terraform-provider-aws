@@ -1742,7 +1742,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryption7x(t *testing.T) {
 	})
 }
 
-func TestAccElastiCacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
+func TestAccElastiCacheReplicationGroup_Redis_enableAtRestEncryption(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -1759,10 +1759,43 @@ func TestAccElastiCacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationGroupConfig_enableAtRestEncryption(rName),
+				Config: testAccReplicationGroupConfig_Redis_enableAtRestEncryption(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "auth_token_update_strategy"},
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheReplicationGroup_Valkey_disableAtRestEncryption(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var rg awstypes.ReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationGroupConfig_Valkey_disableAtRestEncryption(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
+					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -3926,37 +3959,33 @@ resource "aws_kms_key" "test" {
 	)
 }
 
-func testAccReplicationGroupConfig_enableAtRestEncryption(rName string) string {
+func testAccReplicationGroupConfig_Redis_enableAtRestEncryption(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets(rName, 1),
 		fmt.Sprintf(`
 resource "aws_elasticache_replication_group" "test" {
+  engine                     = "redis"
   replication_group_id       = %[1]q
   description                = "test description"
-  node_type                  = "cache.t2.micro"
+  node_type                  = "cache.t4g.small"
   num_cache_clusters         = "1"
   port                       = 6379
-  subnet_group_name          = aws_elasticache_subnet_group.test.name
-  security_group_ids         = [aws_security_group.test.id]
   at_rest_encryption_enabled = true
 }
-
-resource "aws_elasticache_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
+`, rName),
+	)
 }
 
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "tf-test-security-group-descr"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+func testAccReplicationGroupConfig_Valkey_disableAtRestEncryption(rName string) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+resource "aws_elasticache_replication_group" "test" {
+  engine                     = "valkey"
+  replication_group_id       = %[1]q
+  description                = "test description"
+  node_type                  = "cache.t4g.small"
+  num_cache_clusters         = "1"
+  port                       = 6379
+  at_rest_encryption_enabled = false
 }
 `, rName),
 	)
