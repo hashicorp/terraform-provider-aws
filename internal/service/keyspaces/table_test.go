@@ -346,6 +346,57 @@ func TestAccKeyspacesTable_update(t *testing.T) {
 	})
 }
 
+func TestAccKeyspacesTable_autoScalingSpecification_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v1, v2 keyspaces.GetTableOutput
+	rName1 := "tf_acc_test_" + sdkacctest.RandString(20)
+	rName2 := "tf_acc_test_" + sdkacctest.RandString(20)
+	resourceName := "aws_keyspaces_table.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_autoScalingSpecification(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &v1),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cassandra", fmt.Sprintf("/keyspace/%s/table/%s", rName1, rName2)),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.read_capacity_units", "4000"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.write_capacity_units", "100"),
+					resource.TestCheckResourceAttr(resourceName, "keyspace_name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccTableConfig_autoScalingSpecificationUpdated(rName1, rName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableExists(ctx, resourceName, &v2),
+					testAccCheckTableNotRecreated(&v1, &v2),
+					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cassandra", fmt.Sprintf("/keyspace/%s/table/%s", rName1, rName2)),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.read_capacity_units", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.throughput_mode", "PROVISIONED"),
+					resource.TestCheckResourceAttr(resourceName, "capacity_specification.0.write_capacity_units", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "keyspace_name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrTableName, rName2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKeyspacesTable_addColumns(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v1, v2 keyspaces.GetTableOutput
@@ -862,6 +913,86 @@ resource "aws_keyspaces_table" "test" {
 
   ttl {
     status = "ENABLED"
+  }
+}
+`, rName1, rName2)
+}
+
+func testAccTableConfig_autoScalingSpecification(rName1, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "message"
+      type = "ascii"
+    }
+
+    partition_key {
+      name = "message"
+    }
+  }
+
+  capacity_specification {
+    throughput_mode = "PROVISIONED"
+  }
+
+  auto_scaling_specification {
+    read_capacity_auto_scaling {
+      auto_scaling_disabled = false
+      minimum_units         = 4000
+      scaling_policy {
+        target_tracking_scaling_policy_configuration {
+          target_value = 30
+        }
+      }
+    }
+  }
+}
+`, rName1, rName2)
+}
+
+func testAccTableConfig_autoScalingSpecificationUpdated(rName1, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+}
+
+resource "aws_keyspaces_table" "test" {
+  keyspace_name = aws_keyspaces_keyspace.test.name
+  table_name    = %[2]q
+
+  schema_definition {
+    column {
+      name = "message"
+      type = "ascii"
+    }
+
+    partition_key {
+      name = "message"
+    }
+  }
+
+  capacity_specification {
+    throughput_mode = "PROVISIONED"
+  }
+
+  auto_scaling_specification {
+    write_capacity_auto_scaling {
+      auto_scaling_disabled = false
+      minimum_units         = 4000
+      scaling_policy {
+        target_tracking_scaling_policy_configuration {
+          target_value = 30
+        }
+      }
+    }
   }
 }
 `, rName1, rName2)
