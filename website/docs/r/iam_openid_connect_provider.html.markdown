@@ -12,7 +12,7 @@ Provides an IAM OpenID Connect provider.
 
 ## Example Usage
 
-### With A Thumbprint
+### Basic Usage
 
 ```terraform
 resource "aws_iam_openid_connect_provider" "default" {
@@ -44,7 +44,7 @@ This resource supports the following arguments:
 
 * `url` - (Required) URL of the identity provider, corresponding to the `iss` claim.
 * `client_id_list` - (Required) List of client IDs (audiences) that identify the application registered with the OpenID Connect provider. This is the value sent as the `client_id` parameter in OAuth requests.
-* `thumbprint_list` - (Optional) List of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s). For certain OIDC identity providers (_e.g._, Auth0, GitHub, GitLab, Google, or those using an Amazon S3 bucket to host a JSON Web Key Set [JWKS] endpoint), AWS uses a library of trusted root certificate authorities (CAs) instead of the thumbprint for validation. In these cases, the specified thumbprint list is retained in the configuration but not used for verification. If no thumbprint list is provided and the IdP is not in this group, IAM retrieves and uses the top intermediate CA thumbprint of the OIDC IdP server certificate.
+* `thumbprint_list` - (Optional) List of server certificate thumbprints for the OpenID Connect (OIDC) identity provider's server certificate(s). For certain OIDC identity providers (e.g., Auth0, GitHub, GitLab, Google, or those using an Amazon S3-hosted JWKS endpoint), AWS relies on its own library of trusted root certificate authorities (CAs) for validation instead of using any configured thumbprints. In these cases, any configured `thumbprint_list` is retained in the configuration but not used for verification. For other IdPs, if no `thumbprint_list` is provided, IAM automatically retrieves and uses the top intermediate CA thumbprint from the OIDC IdP server certificate. However, if a `thumbprint_list` is initially configured and later removed, Terraform does not prompt IAM to retrieve a thumbprint the same way. Instead, it continues using the original thumbprint list from the initial configuration. This differs from the behavior when creating an `aws_iam_openid_connect_provider` without a `thumbprint_list`.
 * `tags` - (Optional) Map of resource tags for the IAM OIDC provider. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
