@@ -65,7 +65,8 @@ func resourceStream() *schema.Resource {
 				output, err := findLimits(ctx, conn)
 
 				if err != nil {
-					return fmt.Errorf("reading Kinesis account limits: %w", err)
+					// Explictly OK if IAM permissions not set (or any other error).
+					return nil
 				}
 
 				switch streamMode := getStreamMode(diff); streamMode {
