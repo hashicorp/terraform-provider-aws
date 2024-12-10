@@ -8,7 +8,7 @@ val services = mapOf(
     "amp" to ServiceSpec("AMP (Managed Prometheus)", parallelismOverride = 10),
     "amplify" to ServiceSpec("Amplify"),
     "apigateway" to ServiceSpec("API Gateway", vpcLock = true),
-    "apigatewayv2" to ServiceSpec("API Gateway V2", vpcLock = true),
+    "apigatewayv2" to ServiceSpec("API Gateway V2", vpcLock = true, parallelismOverride = 10),
     "appautoscaling" to ServiceSpec("Application Auto Scaling", vpcLock = true),
     "appconfig" to ServiceSpec("AppConfig"),
     "appfabric" to ServiceSpec("AppFabric", regionOverride = "us-east-1"),
