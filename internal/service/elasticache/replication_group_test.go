@@ -1628,7 +1628,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryptionWithAuthToken(t *testin
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg),
 					resource.TestCheckResourceAttr(resourceName, "auth_token", authToken),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_encryption_mode"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", string(awstypes.TransitEncryptionModeRequired)),
 				),
 			},
 			{
@@ -1662,7 +1662,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryption5x(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg1),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, "transit_encryption_mode"),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", string(awstypes.TransitEncryptionModeRequired)),
 				),
 			},
 			{
@@ -1679,6 +1679,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryption5x(t *testing.T) {
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg2),
 					testAccCheckReplicationGroupRecreated(&rg1, &rg2),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", ""),
 				),
 			},
 		},
@@ -1742,6 +1743,7 @@ func TestAccElastiCacheReplicationGroup_transitEncryption7x(t *testing.T) {
 					testAccCheckReplicationGroupExists(ctx, resourceName, &rg4),
 					testAccCheckReplicationGroupNotRecreated(&rg3, &rg4),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", ""),
 				),
 			},
 		},
