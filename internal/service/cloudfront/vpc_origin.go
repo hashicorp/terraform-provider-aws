@@ -2,6 +2,7 @@ package cloudfront
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
@@ -268,12 +269,19 @@ func (r *cloudfrontVPCOriginResource) Delete(ctx context.Context, request resour
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	input := &cloudfront.DeleteVpcOriginInput{
-		Id:      aws.String(data.Id.ValueString()),
-		IfMatch: aws.String(data.ETag.ValueString()),
+	output, err := findVPCOriginByID(ctx, conn, data.Id.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
+		return
 	}
 
-	_, err := conn.DeleteVpcOrigin(ctx, input)
+	input := &cloudfront.DeleteVpcOriginInput{
+		Id:      aws.String(data.Id.ValueString()),
+		IfMatch: aws.String(*output.ETag),
+	}
+
+	_, err = conn.DeleteVpcOrigin(ctx, input)
 
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 	if _, err = waitVPCOriginDeleted(ctx, conn, data.Id.ValueString(), deleteTimeout); err != nil {
@@ -334,6 +342,7 @@ func waitVPCOriginDeleted(ctx context.Context, conn *cloudfront.Client, id strin
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.VpcOrigin); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status)))
 		return output, err
 	}
 
