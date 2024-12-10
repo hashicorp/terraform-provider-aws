@@ -34,7 +34,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.29.7
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/appstream v1.41.7
-	github.com/aws/aws-sdk-go-v2/service/appsync v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/appsync v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/athena v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.37.7
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.51.1
@@ -42,9 +42,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/backup v1.39.8
 	github.com/aws/aws-sdk-go-v2/service/batch v1.48.2
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.7.7
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.32.0
-	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.7
+	github.com/aws/aws-sdk-go-v2/service/budgets v1.28.8
 	github.com/aws/aws-sdk-go-v2/service/chatbot v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/chime v1.34.7
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.21.2
@@ -71,8 +71,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.29.7
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.26.7
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.27.7
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.47.1
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.27.8
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.51.1
@@ -100,10 +100,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.195.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.196.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.7
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.7
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.52.1
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.52.2
 	github.com/aws/aws-sdk-go-v2/service/efs v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/eks v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.1
@@ -145,7 +145,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.38.7
 	github.com/aws/aws-sdk-go-v2/service/kafkaconnect v1.21.7
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.55.0
-	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.16.1
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.32.7
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalytics v1.25.8
 	github.com/aws/aws-sdk-go-v2/service/kinesisanalyticsv2 v1.31.8
@@ -164,7 +164,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.43.7
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.63.1
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.62.7
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.34.7
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.24.7
@@ -258,7 +258,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wafv2 v1.55.6
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.34.7
 	github.com/aws/aws-sdk-go-v2/service/worklink v1.23.2
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.50.2
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.50.3
 	github.com/aws/aws-sdk-go-v2/service/workspacesweb v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/xray v1.30.1
 	github.com/aws/smithy-go v1.22.1
