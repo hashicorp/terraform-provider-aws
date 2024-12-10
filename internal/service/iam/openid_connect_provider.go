@@ -160,13 +160,16 @@ func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.Resource
 
 	if d.HasChange("thumbprint_list") {
 		if v := d.Get("thumbprint_list").([]interface{}); len(v) > 0 {
+			// This creates a problem since clearing the thumbprint will not enter this block. Clearing
+			// the thumbprint is problematic because setting the list to empty will cause an error since
+			// the API either requires no thumbprints at creation or at least one thumbprint. Entirely
+			// removing the thumbprint_list attribute doesn't work because it doesn't trigger a diff.
 			input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
 				OpenIDConnectProviderArn: aws.String(d.Id()),
 				ThumbprintList:           flex.ExpandStringValueList(v),
 			}
 
-			_, err := conn.UpdateOpenIDConnectProviderThumbprint(ctx, input)
-			if err != nil {
+			if _, err := conn.UpdateOpenIDConnectProviderThumbprint(ctx, input); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
 			}
 		}
