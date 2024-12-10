@@ -64,6 +64,8 @@ func TestAccElastiCacheReplicationGroup_Redis_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", ""),
 				),
 			},
 			{
@@ -102,6 +104,8 @@ func TestAccElastiCacheReplicationGroup_Redis_basic_v5(t *testing.T) {
 					// Even though it is ignored, the API returns `true` in this case
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", ""),
 				),
 			},
 			{
@@ -147,6 +151,8 @@ func TestAccElastiCacheReplicationGroup_Valkey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "data_tiering_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "at_rest_encryption_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_mode", ""),
 				),
 			},
 			{
