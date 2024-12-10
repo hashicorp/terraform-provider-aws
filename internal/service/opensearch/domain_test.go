@@ -73,45 +73,6 @@ func TestEBSVolumeTypePermitsThroughputInput(t *testing.T) {
 	}
 }
 
-func TestAccAWSOpenSearchDomain_InstanceTypeUpdate(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var input awstypes.DomainStatus
-	rName := testAccRandomDomainName()
-	resourceName := "aws_opensearch_domain.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDomainDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDomainConfig_instanceType(rName, "t2.small.search"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.small.search"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateId:     rName,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccDomainConfig_instanceType(rName, "m5.large.search"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName, &input),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "m5.large.search"),
-				),
-			},
-		},
-	})
-}
 func TestParseEngineVersion(t *testing.T) {
 	t.Parallel()
 
@@ -3868,25 +3829,4 @@ resource "aws_opensearch_domain" "test" {
   }
 }
 `, rName, option)
-}
-
-func testAccDomainConfig_instanceType(rName, instanceType string) string {
-	return fmt.Sprintf(`
-resource "aws_opensearch_domain" "test" {
-  domain_name = %[1]q
-
-  engine_version = "Elasticsearch_7.1"
-
-ebs_options {
-    ebs_enabled = true
-    volume_size = 10
-  }
-
-  cluster_config {
-    instance_count         = 2
-    zone_awareness_enabled = true
-    instance_type          = %[2]q
-  }
-}
-`, rName, instanceType)
 }

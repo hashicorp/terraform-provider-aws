@@ -1000,6 +1000,9 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 
+		if d.HasChange("advanced_options") {
+			input.AdvancedOptions = flex.ExpandStringValueMap(d.Get("advanced_options").(map[string]interface{}))
+		}
 		if d.HasChange("advanced_security_options") {
 			input.AdvancedSecurityOptions = expandAdvancedSecurityOptions(d.Get("advanced_security_options").([]interface{}))
 			if (d.Get("advanced_security_options.0.enabled")).(bool) {
