@@ -125,6 +125,8 @@ func (r *singleSCRAMSecretAssociationResource) Read(ctx context.Context, request
 
 		return
 	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *singleSCRAMSecretAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
