@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -71,7 +72,9 @@ func resourceOpenIDConnectProvider() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -153,15 +156,13 @@ func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChange("thumbprint_list") {
-		thumbprintList := d.Get("thumbprint_list").([]interface{})
-		if thumbprintList != nil {
+		if v := d.Get("thumbprint_list").([]interface{}); len(v) > 0 {
 			input := &iam.UpdateOpenIDConnectProviderThumbprintInput{
 				OpenIDConnectProviderArn: aws.String(d.Id()),
-				ThumbprintList:           flex.ExpandStringValueList(thumbprintList),
+				ThumbprintList:           flex.ExpandStringValueList(v),
 			}
 
 			_, err := conn.UpdateOpenIDConnectProviderThumbprint(ctx, input)
-
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
 			}
