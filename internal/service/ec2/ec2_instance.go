@@ -334,10 +334,6 @@ func resourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				AtLeastOneOf: []string{
-					"ipv6_address_count",
-					"ipv6_addresses",
-				},
 			},
 			"ephemeral_block_device": {
 				Type:     schema.TypeSet,

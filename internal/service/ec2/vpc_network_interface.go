@@ -80,11 +80,6 @@ func resourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				AtLeastOneOf: []string{
-					"ipv6_address_count",
-					"ipv6_addresses",
-					"ipv6_address_list",
-				},
 			},
 			"interface_type": {
 				Type:             schema.TypeString,
