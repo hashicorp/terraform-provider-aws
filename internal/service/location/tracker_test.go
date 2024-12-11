@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/location"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
-	"github.com/aws/aws-sdk-go/aws"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -40,8 +40,8 @@ func TestAccLocationTracker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKMSKeyID, ""),
 					resource.TestCheckResourceAttr(resourceName, "position_filtering", "TimeBased"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "tracker_arn", "geo", fmt.Sprintf("tracker/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "tracker_arn", "geo", fmt.Sprintf("tracker/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tracker_name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "update_time"),
 				),
@@ -188,7 +188,7 @@ func TestAccLocationTracker_tags(t *testing.T) {
 				Config: testAccTrackerConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrackerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -201,7 +201,7 @@ func TestAccLocationTracker_tags(t *testing.T) {
 				Config: testAccTrackerConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrackerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -210,7 +210,7 @@ func TestAccLocationTracker_tags(t *testing.T) {
 				Config: testAccTrackerConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrackerExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

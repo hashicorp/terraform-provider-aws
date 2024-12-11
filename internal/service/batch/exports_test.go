@@ -11,6 +11,8 @@ var (
 	ResourceSchedulingPolicy   = resourceSchedulingPolicy
 
 	EquivalentContainerPropertiesJSON       = equivalentContainerPropertiesJSON
+	EquivalentECSPropertiesJSON             = equivalentECSPropertiesJSON
+	EquivalentEKSPropertiesJSON             = equivalentEKSPropertiesJSON
 	EquivalentNodePropertiesJSON            = equivalentNodePropertiesJSON
 	ExpandEC2ConfigurationsUpdate           = expandEC2ConfigurationsUpdate
 	ExpandLaunchTemplateSpecificationUpdate = expandLaunchTemplateSpecificationUpdate
@@ -18,4 +20,6 @@ var (
 	FindJobDefinitionByARN                  = findJobDefinitionByARN
 	FindJobQueueByID                        = findJobQueueByID
 	FindSchedulingPolicyByARN               = findSchedulingPolicyByARN
+
+	ListTags = listTags
 )

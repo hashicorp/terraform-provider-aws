@@ -6,6 +6,7 @@ package gamelift_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -69,42 +70,42 @@ func TestAccGameLiftGameSessionQueue_basic(t *testing.T) {
 					playerLatencyPolicies, timeoutInSeconds, "Custom Event Data"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gamesessionqueue/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gamesessionqueue/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, queueName),
-					resource.TestCheckResourceAttr(resourceName, "destinations.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "destinations.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "notification_target", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_event_data", "Custom Event Data"),
-					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.0.maximum_individual_player_latency_milliseconds",
-						fmt.Sprintf("%d", *playerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds)),
+						strconv.Itoa(int(aws.ToInt32(playerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds)))),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.0.policy_duration_seconds",
-						fmt.Sprintf("%d", *playerLatencyPolicies[0].PolicyDurationSeconds)),
+						strconv.Itoa(int(aws.ToInt32(playerLatencyPolicies[0].PolicyDurationSeconds)))),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.1.maximum_individual_player_latency_milliseconds",
-						fmt.Sprintf("%d", *playerLatencyPolicies[1].MaximumIndividualPlayerLatencyMilliseconds)),
-					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.1.policy_duration_seconds", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "timeout_in_seconds", fmt.Sprintf("%d", timeoutInSeconds)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+						strconv.Itoa(int(aws.ToInt32(playerLatencyPolicies[1].MaximumIndividualPlayerLatencyMilliseconds)))),
+					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.1.policy_duration_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_in_seconds", strconv.Itoa(int(timeoutInSeconds))),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
 				Config: testAccGameSessionQueueConfig_basic(uQueueName, uPlayerLatencyPolicies, uTimeoutInSeconds, "Custom Event Data"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gamesessionqueue/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gamesessionqueue/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, uQueueName),
-					resource.TestCheckResourceAttr(resourceName, "destinations.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "destinations.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "notification_target", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_event_data", "Custom Event Data"),
-					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.0.maximum_individual_player_latency_milliseconds",
-						fmt.Sprintf("%d", *uPlayerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds)),
+						strconv.Itoa(int(aws.ToInt32(uPlayerLatencyPolicies[0].MaximumIndividualPlayerLatencyMilliseconds)))),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.0.policy_duration_seconds",
-						fmt.Sprintf("%d", *uPlayerLatencyPolicies[0].PolicyDurationSeconds)),
+						strconv.Itoa(int(aws.ToInt32(uPlayerLatencyPolicies[0].PolicyDurationSeconds)))),
 					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.1.maximum_individual_player_latency_milliseconds",
-						fmt.Sprintf("%d", *uPlayerLatencyPolicies[1].MaximumIndividualPlayerLatencyMilliseconds)),
-					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.1.policy_duration_seconds", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "timeout_in_seconds", fmt.Sprintf("%d", uTimeoutInSeconds)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+						strconv.Itoa(int(aws.ToInt32(uPlayerLatencyPolicies[1].MaximumIndividualPlayerLatencyMilliseconds)))),
+					resource.TestCheckResourceAttr(resourceName, "player_latency_policy.1.policy_duration_seconds", "0"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_in_seconds", strconv.Itoa(int(uTimeoutInSeconds))),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -137,7 +138,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 				Config: testAccGameSessionQueueConfig_basicTags1(queueName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -150,7 +151,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 				Config: testAccGameSessionQueueConfig_basicTags2(queueName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -159,7 +160,7 @@ func TestAccGameLiftGameSessionQueue_tags(t *testing.T) {
 				Config: testAccGameSessionQueueConfig_basicTags1(queueName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameSessionQueueExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

@@ -113,7 +113,12 @@ func (r *cidrLocationResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating Route 53 CIDR Location (%s)", name), err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -193,10 +198,10 @@ func (r *cidrLocationResource) Update(ctx context.Context, request resource.Upda
 			Changes: []awstypes.CidrCollectionChange{{
 				Action:       awstypes.CidrCollectionChangeActionPut,
 				CidrList:     add,
-				LocationName: aws.String(new.Name.ValueString()),
+				LocationName: new.Name.ValueStringPointer(),
 			}},
 			CollectionVersion: collectionVersion,
-			Id:                aws.String(new.CIDRCollectionID.ValueString()),
+			Id:                new.CIDRCollectionID.ValueStringPointer(),
 		}
 
 		_, err = conn.ChangeCidrCollection(ctx, input)
@@ -215,10 +220,10 @@ func (r *cidrLocationResource) Update(ctx context.Context, request resource.Upda
 			Changes: []awstypes.CidrCollectionChange{{
 				Action:       awstypes.CidrCollectionChangeActionDeleteIfExists,
 				CidrList:     del,
-				LocationName: aws.String(new.Name.ValueString()),
+				LocationName: new.Name.ValueStringPointer(),
 			}},
 			CollectionVersion: collectionVersion,
-			Id:                aws.String(new.CIDRCollectionID.ValueString()),
+			Id:                new.CIDRCollectionID.ValueStringPointer(),
 		}
 
 		_, err = conn.ChangeCidrCollection(ctx, input)
@@ -258,10 +263,10 @@ func (r *cidrLocationResource) Delete(ctx context.Context, request resource.Dele
 		Changes: []awstypes.CidrCollectionChange{{
 			Action:       awstypes.CidrCollectionChangeActionDeleteIfExists,
 			CidrList:     fwflex.ExpandFrameworkStringValueSet(ctx, data.CIDRBlocks),
-			LocationName: aws.String(data.Name.ValueString()),
+			LocationName: data.Name.ValueStringPointer(),
 		}},
 		CollectionVersion: collection.Version,
-		Id:                aws.String(data.CIDRCollectionID.ValueString()),
+		Id:                data.CIDRCollectionID.ValueStringPointer(),
 	}
 
 	_, err = conn.ChangeCidrCollection(ctx, input)
@@ -302,8 +307,13 @@ func (data *cidrLocationResourceModel) InitFromID() error {
 	return nil
 }
 
-func (data *cidrLocationResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.CIDRCollectionID.ValueString(), data.Name.ValueString()}, cidrLocationResourceIDPartCount, false)))
+func (data *cidrLocationResourceModel) setID() (string, error) {
+	parts := []string{
+		data.CIDRCollectionID.ValueString(),
+		data.Name.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, cidrLocationResourceIDPartCount, false)
 }
 
 func findCIDRLocationByTwoPartKey(ctx context.Context, conn *route53.Client, collectionID, locationName string) ([]string, error) {

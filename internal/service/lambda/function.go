@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -676,7 +677,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if output.Code != nil {
 		d.Set("image_uri", output.Code.ImageUri)
 	}
-	d.Set("invoke_arn", invokeARN(meta.(*conns.AWSClient), functionARN))
+	d.Set("invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), functionARN))
 	d.Set(names.AttrKMSKeyARN, function.KMSKeyArn)
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
@@ -721,7 +722,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if hasQualifier {
 		d.Set("qualified_arn", functionARN)
-		d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), functionARN))
+		d.Set("qualified_invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), functionARN))
 		d.Set(names.AttrVersion, function.Version)
 	} else {
 		latest, err := findLatestFunctionVersionByName(ctx, conn, d.Id())
@@ -732,7 +733,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 		qualifiedARN := aws.ToString(latest.FunctionArn)
 		d.Set("qualified_arn", qualifiedARN)
-		d.Set("qualified_invoke_arn", invokeARN(meta.(*conns.AWSClient), qualifiedARN))
+		d.Set("qualified_invoke_arn", invokeARN(ctx, meta.(*conns.AWSClient), qualifiedARN))
 		d.Set(names.AttrVersion, latest.Version)
 
 		setTagsOut(ctx, output.Tags)
@@ -743,7 +744,7 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	// in AWS GovCloud (US)) so we cannot just ignore the error as would typically.
 	// Currently this functionality is not enabled in all Regions and returns ambiguous error codes
 	// (e.g. AccessDeniedException), so we cannot just ignore the error as we would typically.
-	if partition, region := meta.(*conns.AWSClient).Partition, meta.(*conns.AWSClient).Region; partition == names.StandardPartitionID && signerServiceIsAvailable(region) {
+	if partition, region := meta.(*conns.AWSClient).Partition(ctx), meta.(*conns.AWSClient).Region(ctx); partition == endpoints.AwsPartitionID && signerServiceIsAvailable(region) {
 		var codeSigningConfigARN string
 
 		// Code Signing is only supported on zip packaged lambda functions.
@@ -1383,11 +1384,11 @@ func needsFunctionConfigUpdate(d sdkv2.ResourceDiffer) bool {
 }
 
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-custom-integrations.html.
-func invokeARN(c *conns.AWSClient, functionOrAliasARN string) string {
+func invokeARN(ctx context.Context, c *conns.AWSClient, functionOrAliasARN string) string {
 	return arn.ARN{
-		Partition: c.Partition,
+		Partition: c.Partition(ctx),
 		Service:   "apigateway",
-		Region:    c.Region,
+		Region:    c.Region(ctx),
 		AccountID: "lambda",
 		Resource:  fmt.Sprintf("path/2015-03-31/functions/%s/invocations", functionOrAliasARN),
 	}.String()
@@ -1398,26 +1399,26 @@ func invokeARN(c *conns.AWSClient, functionOrAliasARN string) string {
 // See https://docs.aws.amazon.com/general/latest/gr/signer.html#signer_lambda_region.
 func signerServiceIsAvailable(region string) bool {
 	availableRegions := map[string]struct{}{
-		names.USEast1RegionID:      {},
-		names.USEast2RegionID:      {},
-		names.USWest1RegionID:      {},
-		names.USWest2RegionID:      {},
-		names.AFSouth1RegionID:     {},
-		names.APEast1RegionID:      {},
-		names.APSouth1RegionID:     {},
-		names.APNortheast2RegionID: {},
-		names.APSoutheast1RegionID: {},
-		names.APSoutheast2RegionID: {},
-		names.APNortheast1RegionID: {},
-		names.CACentral1RegionID:   {},
-		names.EUCentral1RegionID:   {},
-		names.EUWest1RegionID:      {},
-		names.EUWest2RegionID:      {},
-		names.EUSouth1RegionID:     {},
-		names.EUWest3RegionID:      {},
-		names.EUNorth1RegionID:     {},
-		names.MESouth1RegionID:     {},
-		names.SAEast1RegionID:      {},
+		endpoints.UsEast1RegionID:      {},
+		endpoints.UsEast2RegionID:      {},
+		endpoints.UsWest1RegionID:      {},
+		endpoints.UsWest2RegionID:      {},
+		endpoints.AfSouth1RegionID:     {},
+		endpoints.ApEast1RegionID:      {},
+		endpoints.ApSouth1RegionID:     {},
+		endpoints.ApNortheast2RegionID: {},
+		endpoints.ApSoutheast1RegionID: {},
+		endpoints.ApSoutheast2RegionID: {},
+		endpoints.ApNortheast1RegionID: {},
+		endpoints.CaCentral1RegionID:   {},
+		endpoints.EuCentral1RegionID:   {},
+		endpoints.EuWest1RegionID:      {},
+		endpoints.EuWest2RegionID:      {},
+		endpoints.EuSouth1RegionID:     {},
+		endpoints.EuWest3RegionID:      {},
+		endpoints.EuNorth1RegionID:     {},
+		endpoints.MeSouth1RegionID:     {},
+		endpoints.SaEast1RegionID:      {},
 	}
 	_, ok := availableRegions[region]
 

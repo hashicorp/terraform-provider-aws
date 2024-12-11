@@ -150,7 +150,7 @@ func dataSourceVPCEndpoint() *schema.Resource {
 func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	input := &ec2.DescribeVpcEndpointsInput{
 		Filters: newAttributeFilterList(
@@ -186,9 +186,9 @@ func dataSourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(vpce.VpcEndpointId))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: aws.ToString(vpce.OwnerId),
 		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
 	}.String()

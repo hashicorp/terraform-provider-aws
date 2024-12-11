@@ -113,7 +113,7 @@ func ResourceCanary() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 21),
+					validation.StringLenBetween(1, 255),
 					validation.StringMatch(regexache.MustCompile(`^[0-9a-z_\-]+$`), "must contain only lowercase alphanumeric, hyphen, or underscore."),
 				),
 			},
@@ -144,9 +144,9 @@ func ResourceCanary() *schema.Resource {
 						},
 						"timeout_in_seconds": {
 							Type:         schema.TypeInt,
+							Computed:     true,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(3, 14*60),
-							Default:      840,
 						},
 					},
 				},
@@ -378,10 +378,10 @@ func resourceCanaryRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	canaryArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "synthetics",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("canary:%s", aws.ToString(canary.Name)),
 	}.String()
 	d.Set(names.AttrARN, canaryArn)
@@ -698,8 +698,10 @@ func expandCanaryRunConfig(l []interface{}) *awstypes.CanaryRunConfigInput {
 
 	m := l[0].(map[string]interface{})
 
-	codeConfig := &awstypes.CanaryRunConfigInput{
-		TimeoutInSeconds: aws.Int32(int32(m["timeout_in_seconds"].(int))),
+	codeConfig := &awstypes.CanaryRunConfigInput{}
+
+	if v, ok := m["timeout_in_seconds"].(int); ok && v > 0 {
+		codeConfig.TimeoutInSeconds = aws.Int32(int32(v))
 	}
 
 	if v, ok := m["memory_in_mb"].(int); ok && v > 0 {

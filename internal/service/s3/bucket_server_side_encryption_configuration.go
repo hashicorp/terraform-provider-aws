@@ -87,6 +87,9 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	expectedBucketOwner := d.Get(names.AttrExpectedBucketOwner).(string)
 	input := &s3.PutBucketEncryptionInput{
 		Bucket: aws.String(bucket),
@@ -101,10 +104,6 @@ func resourceBucketServerSideEncryptionConfigurationCreate(ctx context.Context, 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketEncryption(ctx, input)
 	}, errCodeNoSuchBucket, errCodeOperationAborted)
-
-	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "ServerSideEncryptionConfiguration is not valid, expected CreateBucketConfiguration") {
-		err = errDirectoryBucket(err)
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Server-side Encryption Configuration: %s", bucket, err)
@@ -130,6 +129,10 @@ func resourceBucketServerSideEncryptionConfigurationRead(ctx context.Context, d 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	sse, err := findServerSideEncryptionConfiguration(ctx, conn, bucket, expectedBucketOwner)
@@ -162,6 +165,10 @@ func resourceBucketServerSideEncryptionConfigurationUpdate(ctx context.Context, 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	input := &s3.PutBucketEncryptionInput{
 		Bucket: aws.String(bucket),
 		ServerSideEncryptionConfiguration: &types.ServerSideEncryptionConfiguration{
@@ -190,6 +197,10 @@ func resourceBucketServerSideEncryptionConfigurationDelete(ctx context.Context, 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	input := &s3.DeleteBucketEncryptionInput{

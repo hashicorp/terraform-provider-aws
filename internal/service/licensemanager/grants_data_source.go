@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
-	namevaluesfiltersv2 "github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters/v2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,7 +43,7 @@ func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData
 	input := &licensemanager.ListDistributedGrantsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok && v.(*schema.Set).Len() > 0 {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).LicenseManagerFilters()
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).LicenseManagerFilters()
 	}
 
 	grants, err := findDistributedGrants(ctx, conn, input)
@@ -53,7 +52,7 @@ func dataSourceDistributedGrantsRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading License Manager Distributed Grants: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, tfslices.ApplyToAll(grants, func(v awstypes.Grant) string {
 		return aws.ToString(v.GrantArn)
 	}))

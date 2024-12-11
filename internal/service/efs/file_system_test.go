@@ -35,22 +35,22 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 				Config: testAccFileSystemConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "elasticfilesystem", regexache.MustCompile(`file-system/fs-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticfilesystem", regexache.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_token"),
 					acctest.MatchResourceAttrRegionalHostname(resourceName, names.AttrDNSName, "efs", regexache.MustCompile(`fs-[^.]+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, ""),
-					resource.TestCheckResourceAttr(resourceName, "number_of_mount_targets", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "number_of_mount_targets", "0"),
 					acctest.MatchResourceAttrAccountID(resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttr(resourceName, "performance_mode", "generalPurpose"),
-					resource.TestCheckResourceAttr(resourceName, "protection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "protection.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "protection.0.replication_overwrite", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "size_in_bytes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "size_in_bytes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value"),
 					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value_in_ia"),
 					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value_in_standard"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", string(awstypes.ThroughputModeBursting)),
 				),
 			},
@@ -128,7 +128,7 @@ func TestAccEFSFileSystem_protection(t *testing.T) {
 				Config: testAccFileSystemConfig_protection("DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "protection.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "protection.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "protection.0.replication_overwrite", "DISABLED"),
 				),
 			},
@@ -193,7 +193,7 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 				Config: testAccFileSystemConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -206,7 +206,7 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 				Config: testAccFileSystemConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -215,7 +215,7 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 				Config: testAccFileSystemConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -223,7 +223,7 @@ func TestAccEFSFileSystem_tags(t *testing.T) {
 				Config: testAccFileSystemConfig_pagedTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct10),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "10"),
 				),
 			},
 			{
@@ -260,7 +260,7 @@ func TestAccEFSFileSystem_kmsKey(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrEncrypted, acctest.CtTrue),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrKMSKeyID, kmsKeyResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
@@ -306,7 +306,7 @@ func TestAccEFSFileSystem_provisionedThroughputInMibps(t *testing.T) {
 				Config: testAccFileSystemConfig_provisionedThroughputInMibps(1.0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", "1"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", string(awstypes.ThroughputModeProvisioned)),
 				),
 			},
@@ -314,7 +314,7 @@ func TestAccEFSFileSystem_provisionedThroughputInMibps(t *testing.T) {
 				Config: testAccFileSystemConfig_provisionedThroughputInMibps(2.0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", "2"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", string(awstypes.ThroughputModeProvisioned)),
 				),
 			},
@@ -342,7 +342,7 @@ func TestAccEFSFileSystem_throughputMode(t *testing.T) {
 				Config: testAccFileSystemConfig_provisionedThroughputInMibps(1.0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", "1"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", string(awstypes.ThroughputModeProvisioned)),
 				),
 			},
@@ -350,7 +350,7 @@ func TestAccEFSFileSystem_throughputMode(t *testing.T) {
 				Config: testAccFileSystemConfig_throughputMode(string(awstypes.ThroughputModeBursting)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_throughput_in_mibps", "0"),
 					resource.TestCheckResourceAttr(resourceName, "throughput_mode", string(awstypes.ThroughputModeBursting)),
 				),
 			},
@@ -388,7 +388,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", string(awstypes.TransitionToIARulesAfter30Days)),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", ""),
@@ -406,7 +406,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", string(awstypes.TransitionToPrimaryStorageClassRulesAfter1Access)),
@@ -416,7 +416,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				Config: testAccFileSystemConfig_removedLifecyclePolicy,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "0"),
 				),
 			},
 			{
@@ -428,7 +428,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", string(awstypes.TransitionToPrimaryStorageClassRulesAfter1Access)),
@@ -448,7 +448,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", string(awstypes.TransitionToPrimaryStorageClassRulesAfter1Access)),
@@ -469,7 +469,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", string(awstypes.TransitionToIARulesAfter30Days)),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", ""),

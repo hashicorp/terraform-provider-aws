@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -160,7 +159,7 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 	dpInput := expandDataPrivacy(ctx, dp)
 
 	in := lexmodelsv2.CreateBotInput{
-		BotName:                 aws.String(plan.Name.ValueString()),
+		BotName:                 plan.Name.ValueStringPointer(),
 		DataPrivacy:             dpInput,
 		IdleSessionTTLInSeconds: aws.Int32(int32(plan.IdleSessionTTLInSeconds.ValueInt64())),
 		RoleArn:                 flex.StringFromFramework(ctx, plan.RoleARN),
@@ -172,7 +171,7 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 	}
 
 	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+		in.Description = plan.Description.ValueStringPointer()
 	}
 
 	var bm []membersData
@@ -200,17 +199,11 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 		)
 		return
 	}
-	botArn := arn.ARN{
-		Partition: r.Meta().Partition,
-		Service:   "lex",
-		Region:    r.Meta().Region,
-		AccountID: r.Meta().AccountID,
-		Resource:  fmt.Sprintf("bot/%s", aws.ToString(out.BotId)),
-	}.String()
+	botARN := r.Meta().RegionalARN(ctx, "lex", fmt.Sprintf("bot/%s", aws.ToString(out.BotId)))
 	plan.ID = flex.StringToFramework(ctx, out.BotId)
 	state := plan
 	state.Type = flex.StringValueToFramework(ctx, out.BotType)
-	state.ARN = flex.StringValueToFramework(ctx, botArn)
+	state.ARN = flex.StringValueToFramework(ctx, botARN)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 
@@ -246,14 +239,8 @@ func (r *resourceBot) Read(ctx context.Context, req resource.ReadRequest, resp *
 		return
 	}
 
-	botArn := arn.ARN{
-		Partition: r.Meta().Partition,
-		Service:   "lex",
-		Region:    r.Meta().Region,
-		AccountID: r.Meta().AccountID,
-		Resource:  fmt.Sprintf("bot/%s", aws.ToString(out.BotId)),
-	}.String()
-	state.ARN = flex.StringValueToFramework(ctx, botArn)
+	botARN := r.Meta().RegionalARN(ctx, "lex", fmt.Sprintf("bot/%s", aws.ToString(out.BotId)))
+	state.ARN = flex.StringValueToFramework(ctx, botARN)
 	state.RoleARN = flex.StringToFrameworkARN(ctx, out.RoleArn)
 	state.ID = flex.StringToFramework(ctx, out.BotId)
 	state.Name = flex.StringToFramework(ctx, out.BotName)
@@ -310,7 +297,7 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 		}
 
 		if !plan.Description.IsNull() {
-			in.Description = aws.String(plan.Description.ValueString())
+			in.Description = plan.Description.ValueStringPointer()
 		}
 
 		if !plan.Members.IsNull() {
@@ -366,7 +353,7 @@ func (r *resourceBot) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 
 	in := &lexmodelsv2.DeleteBotInput{
-		BotId: aws.String(state.ID.ValueString()),
+		BotId: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteBot(ctx, in)
@@ -603,8 +590,8 @@ type resourceBotData struct {
 	Name                    types.String   `tfsdk:"name"`
 	Members                 types.List     `tfsdk:"members"`
 	RoleARN                 fwtypes.ARN    `tfsdk:"role_arn"`
-	Tags                    types.Map      `tfsdk:"tags"`
-	TagsAll                 types.Map      `tfsdk:"tags_all"`
+	Tags                    tftags.Map     `tfsdk:"tags"`
+	TagsAll                 tftags.Map     `tfsdk:"tags_all"`
 	TestBotAliasTags        types.Map      `tfsdk:"test_bot_alias_tags"`
 	Timeouts                timeouts.Value `tfsdk:"timeouts"`
 	Type                    types.String   `tfsdk:"type"`

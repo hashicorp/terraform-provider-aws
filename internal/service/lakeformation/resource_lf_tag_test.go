@@ -54,7 +54,7 @@ func testAccResourceLFTag_basic(t *testing.T) {
 				Config: testAccResourceLFTagConfig_basic(rName, []string{names.AttrValue}, names.AttrValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrCatalogID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrCatalogID),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.key", rName),
 					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", names.AttrValue),
 				),

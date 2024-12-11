@@ -20,6 +20,7 @@ import (
 // @SDKDataSource("aws_appmesh_mesh", name="Service Mesh")
 // @Tags
 // @Testing(serialize=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceMesh() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceMeshRead,
@@ -86,7 +87,7 @@ func dataSourceMeshRead(ctx context.Context, d *schema.ResourceData, meta interf
 	// They can't list tags and tag/untag resources in a mesh that aren't created by the account.
 	var tags tftags.KeyValueTags
 
-	if meshOwner == meta.(*conns.AWSClient).AccountID {
+	if meshOwner == meta.(*conns.AWSClient).AccountID(ctx) {
 		tags, err = listTags(ctx, conn, arn)
 
 		if err != nil {

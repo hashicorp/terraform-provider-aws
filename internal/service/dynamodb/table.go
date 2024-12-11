@@ -47,6 +47,7 @@ const (
 
 // @SDKResource("aws_dynamodb_table", name="Table")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/dynamodb/types;types.TableDescription")
 func resourceTable() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
@@ -103,6 +104,11 @@ func resourceTable() *schema.Resource {
 					return nil
 				}
 
+				if !diff.GetRawPlan().GetAttr("restore_source_table_arn").IsWhollyKnown() ||
+					diff.Get("restore_source_table_arn") != "" {
+					return nil
+				}
+
 				var errs []error
 				if err := validateProvisionedThroughputField(diff, "read_capacity"); err != nil {
 					errs = append(errs, err)
@@ -115,6 +121,9 @@ func resourceTable() *schema.Resource {
 			customdiff.ForceNewIfChange("restore_source_name", func(_ context.Context, old, new, meta interface{}) bool {
 				// If they differ force new unless new is cleared
 				// https://github.com/hashicorp/terraform-provider-aws/issues/25214
+				return old.(string) != new.(string) && new.(string) != ""
+			}),
+			customdiff.ForceNewIfChange("restore_source_table_arn", func(_ context.Context, old, new, meta interface{}) bool {
 				return old.(string) != new.(string) && new.(string) != ""
 			}),
 			validateTTLCustomDiff,
@@ -176,6 +185,7 @@ func resourceTable() *schema.Resource {
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
+						"on_demand_throughput": onDemandThroughputSchema(),
 						"projection_type": {
 							Type:             schema.TypeString,
 							Required:         true,
@@ -188,10 +198,12 @@ func resourceTable() *schema.Resource {
 						"read_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"write_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -239,6 +251,7 @@ func resourceTable() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"on_demand_throughput": onDemandThroughputSchema(),
 			"point_in_time_recovery": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -259,9 +272,10 @@ func resourceTable() *schema.Resource {
 				ForceNew: true,
 			},
 			"read_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
+				Type:          schema.TypeInt,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"on_demand_throughput"},
 			},
 			"replica": {
 				Type:     schema.TypeSet,
@@ -309,7 +323,7 @@ func resourceTable() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"restore_source_name"},
+				ConflictsWith: []string{"restore_source_name", "restore_source_table_arn"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"input_compression_type": {
@@ -380,10 +394,16 @@ func resourceTable() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidUTCTimestamp,
 			},
+			"restore_source_table_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"import_table", "restore_source_name"},
+			},
 			"restore_source_name": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"import_table"},
+				ConflictsWith: []string{"import_table", "restore_source_table_arn"},
 			},
 			"restore_to_latest_time": {
 				Type:     schema.TypeBool,
@@ -453,6 +473,14 @@ func resourceTable() *schema.Resource {
 						"attribute_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// AWS requires the attribute name to be set when disabling TTL but
+								// does not return it so it causes a diff.
+								if old == "" && new != "" && !d.Get("ttl.0.enabled").(bool) {
+									return true
+								}
+								return false
+							},
 						},
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
@@ -464,9 +492,38 @@ func resourceTable() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"write_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-				Optional: true,
+				Type:          schema.TypeInt,
+				Computed:      true,
+				Optional:      true,
+				ConflictsWith: []string{"on_demand_throughput"},
+			},
+		},
+	}
+}
+
+func onDemandThroughputSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"max_read_request_units": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "0" && new == "-1"
+					},
+				},
+				"max_write_request_units": {
+					Type:     schema.TypeInt,
+					Optional: true,
+					Computed: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						return old == "0" && new == "-1"
+					},
+				},
 			},
 		},
 	}
@@ -484,10 +541,20 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		keySchemaMap["range_key"] = v.(string)
 	}
 
-	if v, ok := d.GetOk("restore_source_name"); ok {
+	sourceName, nameOk := d.GetOk("restore_source_name")
+	sourceArn, arnOk := d.GetOk("restore_source_table_arn")
+
+	if nameOk || arnOk {
 		input := &dynamodb.RestoreTableToPointInTimeInput{
-			SourceTableName: aws.String(v.(string)),
 			TargetTableName: aws.String(tableName),
+		}
+
+		if nameOk {
+			input.SourceTableName = aws.String(sourceName.(string))
+		}
+
+		if arnOk {
+			input.SourceTableArn = aws.String(sourceArn.(string))
 		}
 
 		if v, ok := d.GetOk("restore_date_time"); ok {
@@ -598,6 +665,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			tcp.GlobalSecondaryIndexes = globalSecondaryIndexes
 		}
 
+		if v, ok := d.GetOk("on_demand_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tcp.OnDemandThroughput = expandOnDemandThroughput(v.([]interface{})[0].(map[string]interface{}))
+		}
+
 		input.TableCreationParameters = tcp
 
 		importTableOutput, err := tfresource.RetryWhen(ctx, createTableTimeout, func() (interface{}, error) {
@@ -672,6 +743,10 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.GlobalSecondaryIndexes = globalSecondaryIndexes
 		}
 
+		if v, ok := d.GetOk("on_demand_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.OnDemandThroughput = expandOnDemandThroughput(v.([]interface{})[0].(map[string]interface{}))
+		}
+
 		if v, ok := d.GetOk("stream_enabled"); ok {
 			input.StreamSpecification = &awstypes.StreamSpecification{
 				StreamEnabled:  aws.Bool(v.(bool)),
@@ -735,7 +810,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
-		if err := updatePITR(ctx, conn, d.Id(), true, meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := updatePITR(ctx, conn, d.Id(), true, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("enabling point in time recovery: %w", err))
 		}
 	}
@@ -805,6 +880,10 @@ func resourceTableRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if err := d.Set("global_secondary_index", flattenTableGlobalSecondaryIndex(table.GlobalSecondaryIndexes)); err != nil {
 		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "global_secondary_index", err)
+	}
+
+	if err := d.Set("on_demand_throughput", flattenOnDemandThroughput(table.OnDemandThroughput)); err != nil {
+		return create.AppendDiagSettingError(diags, names.DynamoDB, resNameTable, d.Id(), "on_demand_throughput", err)
 	}
 
 	if table.StreamSpecification != nil {
@@ -960,6 +1039,13 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.DeletionProtectionEnabled = aws.Bool(d.Get("deletion_protection_enabled").(bool))
 	}
 
+	if d.HasChange("on_demand_throughput") {
+		hasTableUpdate = true
+		if v, ok := d.GetOk("on_demand_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.OnDemandThroughput = expandOnDemandThroughput(v.([]interface{})[0].(map[string]interface{}))
+		}
+	}
+
 	// make change when
 	//   stream_enabled has change (below) OR
 	//   stream_view_type has change and stream_enabled is true (special case)
@@ -992,6 +1078,18 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if newBillingMode == awstypes.BillingModeProvisioned {
 		for _, gsiUpdate := range gsiUpdates {
 			if gsiUpdate.Update == nil {
+				continue
+			}
+
+			hasTableUpdate = true
+			input.GlobalSecondaryIndexUpdates = append(input.GlobalSecondaryIndexUpdates, gsiUpdate)
+		}
+	}
+
+	// update only on-demand throughput indexes when switching to PAY_PER_REQUEST
+	if newBillingMode == awstypes.BillingModePayPerRequest {
+		for _, gsiUpdate := range gsiUpdates {
+			if gsiUpdate.Update == nil || (gsiUpdate.Update != nil && gsiUpdate.Update.OnDemandThroughput == nil) {
 				continue
 			}
 
@@ -1048,34 +1146,35 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("server_side_encryption") {
-		if replicas := d.Get("replica").(*schema.Set); replicas.Len() > 0 {
+		if replicas, sseSpecification := d.Get("replica").(*schema.Set), expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})); replicas.Len() > 0 && sseSpecification.KMSMasterKeyId != nil {
 			log.Printf("[DEBUG] Using SSE update on replicas")
 			var replicaInputs []awstypes.ReplicationGroupUpdate
-			var replicaRegions []string
 			for _, replica := range replicas.List() {
 				tfMap, ok := replica.(map[string]interface{})
 				if !ok {
 					continue
 				}
-				var regionName string
-				var KMSMasterKeyId string
-				if v, ok := tfMap["region_name"].(string); ok {
-					regionName = v
-					replicaRegions = append(replicaRegions, v)
+
+				region, ok := tfMap["region_name"].(string)
+				if !ok {
+					continue
 				}
-				if v, ok := tfMap[names.AttrKMSKeyARN].(string); ok && v != "" {
-					KMSMasterKeyId = v
+
+				key, ok := tfMap[names.AttrKMSKeyARN].(string)
+				if !ok || key == "" {
+					continue
 				}
+
 				var input = &awstypes.UpdateReplicationGroupMemberAction{
-					RegionName:     aws.String(regionName),
-					KMSMasterKeyId: aws.String(KMSMasterKeyId),
+					RegionName:     aws.String(region),
+					KMSMasterKeyId: aws.String(key),
 				}
 				var update = awstypes.ReplicationGroupUpdate{Update: input}
 				replicaInputs = append(replicaInputs, update)
 			}
 			var input = &awstypes.UpdateReplicationGroupMemberAction{
-				KMSMasterKeyId: expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})).KMSMasterKeyId,
-				RegionName:     aws.String(meta.(*conns.AWSClient).Region),
+				KMSMasterKeyId: sseSpecification.KMSMasterKeyId,
+				RegionName:     aws.String(meta.(*conns.AWSClient).Region(ctx)),
 			}
 			var update = awstypes.ReplicationGroupUpdate{Update: input}
 			replicaInputs = append(replicaInputs, update)
@@ -1086,27 +1185,40 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
 			}
+		} else {
+			log.Printf("[DEBUG] Using normal update for SSE")
+			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
+				TableName:        aws.String(d.Id()),
+				SSESpecification: sseSpecification,
+			})
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
+			}
+		}
+
+		// since we don't update replicas unless there is a KMS key, we need to wait for replica
+		// updates for the scenario where 1) there are replicas, 2) we are updating SSE (such as
+		// disabling), and 3) we have no KMS key
+		if replicas := d.Get("replica").(*schema.Set); replicas.Len() > 0 {
+			var replicaRegions []string
+			for _, replica := range replicas.List() {
+				tfMap, ok := replica.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				if v, ok := tfMap["region_name"].(string); ok {
+					replicaRegions = append(replicaRegions, v)
+				}
+			}
 			for _, region := range replicaRegions {
 				if _, err := waitReplicaSSEUpdated(ctx, conn, region, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table (%s) replica SSE update in region %q: %s", d.Id(), region, err)
 				}
 			}
-			if _, err := waitSSEUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
-			}
-		} else {
-			log.Printf("[DEBUG] Using normal update for SSE")
-			_, err := conn.UpdateTable(ctx, &dynamodb.UpdateTableInput{
-				TableName:        aws.String(d.Id()),
-				SSESpecification: expandEncryptAtRestOptions(d.Get("server_side_encryption").([]interface{})),
-			})
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating DynamoDB Table (%s) SSE: %s", d.Id(), err)
-			}
+		}
 
-			if _, err := waitSSEUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
-			}
+		if _, err := waitSSEUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for DynamoDB Table (%s) SSE update: %s", d.Id(), err)
 		}
 	}
 
@@ -1138,7 +1250,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("point_in_time_recovery") {
-		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
 		}
 	}
@@ -1318,7 +1430,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			return fmt.Errorf("creating replica (%s): %w", tfMap["region_name"].(string), err)
 		}
 
-		if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), timeout); err != nil {
+		if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), replicaDelayDefault, timeout); err != nil {
 			return fmt.Errorf("waiting for replica (%s) creation: %w", tfMap["region_name"].(string), err)
 		}
 
@@ -1560,13 +1672,19 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			m := data.(map[string]interface{})
 			idxName := m[names.AttrName].(string)
 
+			c := awstypes.CreateGlobalSecondaryIndexAction{
+				IndexName:             aws.String(idxName),
+				KeySchema:             expandKeySchema(m),
+				ProvisionedThroughput: expandProvisionedThroughput(m, billingMode),
+				Projection:            expandProjection(m),
+			}
+
+			if v, ok := m["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				c.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+			}
+
 			ops = append(ops, awstypes.GlobalSecondaryIndexUpdate{
-				Create: &awstypes.CreateGlobalSecondaryIndexAction{
-					IndexName:             aws.String(idxName),
-					KeySchema:             expandKeySchema(m),
-					ProvisionedThroughput: expandProvisionedThroughput(m, billingMode),
-					Projection:            expandProjection(m),
-				},
+				Create: &c,
 			})
 		}
 	}
@@ -1584,6 +1702,20 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			newWriteCapacity, newReadCapacity := newMap["write_capacity"].(int), newMap["read_capacity"].(int)
 			capacityChanged := (oldWriteCapacity != newWriteCapacity || oldReadCapacity != newReadCapacity)
 
+			oldOnDemandThroughput := &awstypes.OnDemandThroughput{}
+			newOnDemandThroughput := &awstypes.OnDemandThroughput{}
+			if v, ok := oldMap["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				oldOnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+			}
+
+			if v, ok := newMap["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+				newOnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+			}
+			var onDemandThroughputChanged bool
+			if !reflect.DeepEqual(oldOnDemandThroughput, newOnDemandThroughput) {
+				onDemandThroughputChanged = true
+			}
+
 			// pluck non_key_attributes from oldAttributes and newAttributes as reflect.DeepEquals will compare
 			// ordinal of elements in its equality (which we actually don't care about)
 			nonKeyAttributesChanged := checkIfNonKeyAttributesChanged(oldMap, newMap)
@@ -1596,6 +1728,10 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			if err != nil {
 				return ops, err
 			}
+			oldAttributes, err = stripOnDemandThroughputAttributes(oldAttributes)
+			if err != nil {
+				return ops, err
+			}
 			newAttributes, err := stripCapacityAttributes(newMap)
 			if err != nil {
 				return ops, err
@@ -1604,13 +1740,25 @@ func updateDiffGSI(oldGsi, newGsi []interface{}, billingMode awstypes.BillingMod
 			if err != nil {
 				return ops, err
 			}
+			newAttributes, err = stripOnDemandThroughputAttributes(newAttributes)
+			if err != nil {
+				return ops, err
+			}
 			otherAttributesChanged := nonKeyAttributesChanged || !reflect.DeepEqual(oldAttributes, newAttributes)
 
-			if capacityChanged && !otherAttributesChanged {
+			if capacityChanged && !otherAttributesChanged && billingMode == awstypes.BillingModeProvisioned {
 				update := awstypes.GlobalSecondaryIndexUpdate{
 					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
 						IndexName:             aws.String(idxName),
 						ProvisionedThroughput: expandProvisionedThroughput(newMap, billingMode),
+					},
+				}
+				ops = append(ops, update)
+			} else if onDemandThroughputChanged && !otherAttributesChanged && billingMode == awstypes.BillingModePayPerRequest {
+				update := awstypes.GlobalSecondaryIndexUpdate{
+					Update: &awstypes.UpdateGlobalSecondaryIndexAction{
+						IndexName:          aws.String(idxName),
+						OnDemandThroughput: newOnDemandThroughput,
 					},
 				}
 				ops = append(ops, update)
@@ -1873,12 +2021,12 @@ func clearSSEDefaultKey(ctx context.Context, client *conns.AWSClient, sseList []
 
 	sse := sseList[0].(map[string]interface{})
 
-	dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", client.Region)
+	dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", client.Region(ctx))
 	if err != nil {
 		return sseList
 	}
 
-	if sse[names.AttrKMSKeyARN].(string) == dk {
+	if v, ok := sse[names.AttrKMSKeyARN].(string); ok && v == dk {
 		sse[names.AttrKMSKeyARN] = ""
 		return []interface{}{sse}
 	}
@@ -2000,6 +2148,10 @@ func flattenTableGlobalSecondaryIndex(gsi []awstypes.GlobalSecondaryIndexDescrip
 			gsi["non_key_attributes"] = g.Projection.NonKeyAttributes
 		}
 
+		if g.OnDemandThroughput != nil {
+			gsi["on_demand_throughput"] = flattenOnDemandThroughput(g.OnDemandThroughput)
+		}
+
 		output = append(output, gsi)
 	}
 
@@ -2029,6 +2181,24 @@ func expandAttributes(cfg []interface{}) []awstypes.AttributeDefinition {
 		}
 	}
 	return attributes
+}
+
+func flattenOnDemandThroughput(apiObject *awstypes.OnDemandThroughput) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.MaxReadRequestUnits; v != nil {
+		m["max_read_request_units"] = aws.ToInt64(v)
+	}
+
+	if v := apiObject.MaxWriteRequestUnits; v != nil {
+		m["max_write_request_units"] = aws.ToInt64(v)
+	}
+
+	return []interface{}{m}
 }
 
 func flattenReplicaDescription(apiObject *awstypes.ReplicaDescription) map[string]interface{} {
@@ -2147,12 +2317,18 @@ func expandImportTable(data map[string]interface{}) *dynamodb.ImportTableInput {
 }
 
 func expandGlobalSecondaryIndex(data map[string]interface{}, billingMode awstypes.BillingMode) *awstypes.GlobalSecondaryIndex {
-	return &awstypes.GlobalSecondaryIndex{
+	output := awstypes.GlobalSecondaryIndex{
 		IndexName:             aws.String(data[names.AttrName].(string)),
 		KeySchema:             expandKeySchema(data),
 		Projection:            expandProjection(data),
 		ProvisionedThroughput: expandProvisionedThroughput(data, billingMode),
 	}
+
+	if v, ok := data["on_demand_throughput"].([]any); ok && len(v) > 0 && v[0] != nil {
+		output.OnDemandThroughput = expandOnDemandThroughput(v[0].(map[string]any))
+	}
+
+	return &output
 }
 
 func expandProvisionedThroughput(data map[string]interface{}, billingMode awstypes.BillingMode) *awstypes.ProvisionedThroughput {
@@ -2259,6 +2435,24 @@ func expandInputFormatOptions(data []interface{}) *awstypes.InputFormatOptions {
 	}
 
 	return a
+}
+
+func expandOnDemandThroughput(tfMap map[string]interface{}) *awstypes.OnDemandThroughput {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.OnDemandThroughput{}
+
+	if v, ok := tfMap["max_read_request_units"].(int); ok && v != 0 {
+		apiObject.MaxReadRequestUnits = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["max_write_request_units"].(int); ok && v != 0 {
+		apiObject.MaxWriteRequestUnits = aws.Int64(int64(v))
+	}
+
+	return apiObject
 }
 
 func expandS3BucketSource(data map[string]interface{}) *awstypes.S3BucketSource {
@@ -2442,13 +2636,9 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 				errs.PathString(ttlPath.GetAttr("attribute_name")),
 			))
 		}
-	} else {
-		if !(attribute.IsNull() || attribute.AsString() == "") {
-			*diags = append(*diags, errs.NewAttributeConflictsWhenError(
-				ttlPath.GetAttr("attribute_name"),
-				ttlPath.GetAttr(names.AttrEnabled),
-				"false",
-			))
-		}
 	}
+
+	// !! Not a validation error for attribute_name to be set when enabled is false !!
+	// AWS *requires* attribute_name to be set when disabling TTL but does not return it, causing a diff.
+	// The diff is handled by DiffSuppressFunc of attribute_name.
 }

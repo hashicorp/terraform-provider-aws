@@ -134,6 +134,47 @@ func resourceDeploymentConfig() *schema.Resource {
 					},
 				},
 			},
+			"zonal_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"first_zone_monitor_duration_in_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						"minimum_healthy_hosts_per_zone": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrType: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ForceNew:         true,
+										ValidateDiagFunc: enum.Validate[types.MinimumHealthyHostsPerZoneType](),
+									},
+									names.AttrValue: {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"monitor_duration_in_seconds": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -148,6 +189,7 @@ func resourceDeploymentConfigCreate(ctx context.Context, d *schema.ResourceData,
 		DeploymentConfigName: aws.String(name),
 		MinimumHealthyHosts:  expandMinimumHealthyHosts(d),
 		TrafficRoutingConfig: expandTrafficRoutingConfig(d),
+		ZonalConfig:          expandZonalConfig(d),
 	}
 
 	_, err := conn.CreateDeploymentConfig(ctx, input)
@@ -179,10 +221,10 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 
 	deploymentConfigName := aws.ToString(deploymentConfig.DeploymentConfigName)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codedeploy",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "deploymentconfig:" + deploymentConfigName,
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -194,6 +236,9 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	if err := d.Set("traffic_routing_config", flattenTrafficRoutingConfig(deploymentConfig.TrafficRoutingConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting traffic_routing_config: %s", err)
+	}
+	if err := d.Set("zonal_config", flattenZonalConfig(deploymentConfig.ZonalConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting zonal_config: %s", err)
 	}
 
 	return diags
@@ -241,116 +286,186 @@ func findDeploymentConfigByName(ctx context.Context, conn *codedeploy.Client, na
 }
 
 func expandMinimumHealthyHosts(d *schema.ResourceData) *types.MinimumHealthyHosts {
-	hosts, ok := d.GetOk("minimum_healthy_hosts")
+	v, ok := d.GetOk("minimum_healthy_hosts")
 	if !ok {
 		return nil
 	}
-	host := hosts.([]interface{})[0].(map[string]interface{})
 
-	minimumHealthyHost := types.MinimumHealthyHosts{
-		Type:  types.MinimumHealthyHostsType(host[names.AttrType].(string)),
-		Value: int32(host[names.AttrValue].(int)),
+	tfMap := v.([]interface{})[0].(map[string]interface{})
+
+	apiObject := &types.MinimumHealthyHosts{
+		Type:  types.MinimumHealthyHostsType(tfMap[names.AttrType].(string)),
+		Value: int32(tfMap[names.AttrValue].(int)),
 	}
 
-	return &minimumHealthyHost
+	return apiObject
 }
 
 func expandTrafficRoutingConfig(d *schema.ResourceData) *types.TrafficRoutingConfig {
-	block, ok := d.GetOk("traffic_routing_config")
+	v, ok := d.GetOk("traffic_routing_config")
 	if !ok {
 		return nil
 	}
-	config := block.([]interface{})[0].(map[string]interface{})
-	trafficRoutingConfig := types.TrafficRoutingConfig{}
 
-	if trafficType, ok := config[names.AttrType]; ok {
-		trafficRoutingConfig.Type = types.TrafficRoutingType(trafficType.(string))
+	tfMap := v.([]interface{})[0].(map[string]interface{})
+	apiObject := &types.TrafficRoutingConfig{}
+
+	if v, ok := tfMap["time_based_canary"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.TimeBasedCanary = expandTimeBasedCanary(v.([]interface{})[0].(map[string]interface{}))
 	}
-	if canary, ok := config["time_based_canary"]; ok && len(canary.([]interface{})) > 0 {
-		canaryConfig := canary.([]interface{})[0].(map[string]interface{})
-		trafficRoutingConfig.TimeBasedCanary = expandTimeBasedCanary(canaryConfig)
+	if v, ok := tfMap["time_based_linear"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.TimeBasedLinear = expandTimeBasedLinear(v.([]interface{})[0].(map[string]interface{}))
 	}
-	if linear, ok := config["time_based_linear"]; ok && len(linear.([]interface{})) > 0 {
-		linearConfig := linear.([]interface{})[0].(map[string]interface{})
-		trafficRoutingConfig.TimeBasedLinear = expandTimeBasedLinear(linearConfig)
+	if v, ok := tfMap[names.AttrType]; ok {
+		apiObject.Type = types.TrafficRoutingType(v.(string))
 	}
 
-	return &trafficRoutingConfig
+	return apiObject
 }
 
-func expandTimeBasedCanary(config map[string]interface{}) *types.TimeBasedCanary {
-	canary := types.TimeBasedCanary{}
-	if interval, ok := config[names.AttrInterval]; ok {
-		canary.CanaryInterval = int32(interval.(int))
+func expandTimeBasedCanary(tfMap map[string]interface{}) *types.TimeBasedCanary {
+	apiObject := &types.TimeBasedCanary{}
+
+	if v, ok := tfMap[names.AttrInterval]; ok {
+		apiObject.CanaryInterval = int32(v.(int))
 	}
-	if percentage, ok := config["percentage"]; ok {
-		canary.CanaryPercentage = int32(percentage.(int))
+	if v, ok := tfMap["percentage"]; ok {
+		apiObject.CanaryPercentage = int32(v.(int))
 	}
-	return &canary
+
+	return apiObject
 }
 
-func expandTimeBasedLinear(config map[string]interface{}) *types.TimeBasedLinear {
-	linear := types.TimeBasedLinear{}
-	if interval, ok := config[names.AttrInterval]; ok {
-		linear.LinearInterval = int32(interval.(int))
+func expandTimeBasedLinear(tfMap map[string]interface{}) *types.TimeBasedLinear {
+	apiObject := &types.TimeBasedLinear{}
+
+	if v, ok := tfMap[names.AttrInterval]; ok {
+		apiObject.LinearInterval = int32(v.(int))
 	}
-	if percentage, ok := config["percentage"]; ok {
-		linear.LinearPercentage = int32(percentage.(int))
+	if v, ok := tfMap["percentage"]; ok {
+		apiObject.LinearPercentage = int32(v.(int))
 	}
-	return &linear
+
+	return apiObject
 }
 
-func flattenMinimumHealthHosts(hosts *types.MinimumHealthyHosts) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
-	if hosts == nil {
-		return result
+func expandZonalConfig(d *schema.ResourceData) *types.ZonalConfig {
+	v, ok := d.GetOk("zonal_config")
+	if !ok {
+		return nil
 	}
 
-	item := make(map[string]interface{})
+	tfMap := v.([]interface{})[0].(map[string]interface{})
+	apiObject := &types.ZonalConfig{}
 
-	item[names.AttrType] = string(hosts.Type)
-	item[names.AttrValue] = hosts.Value
+	if v, ok := tfMap["first_zone_monitor_duration_in_seconds"].(int); ok {
+		apiObject.FirstZoneMonitorDurationInSeconds = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["minimum_healthy_hosts_per_zone"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.MinimumHealthyHostsPerZone = expandMinimumHealthyHostsPerZone(v.([]interface{})[0].(map[string]interface{}))
+	}
+	if v, ok := tfMap["monitor_duration_in_seconds"].(int); ok {
+		apiObject.MonitorDurationInSeconds = aws.Int64(int64(v))
+	}
 
-	return append(result, item)
+	return apiObject
 }
 
-func flattenTrafficRoutingConfig(config *types.TrafficRoutingConfig) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
-	if config == nil {
-		return result
+func expandMinimumHealthyHostsPerZone(tfMap map[string]interface{}) *types.MinimumHealthyHostsPerZone {
+	if tfMap == nil {
+		return nil
 	}
 
-	item := make(map[string]interface{})
+	apiObject := &types.MinimumHealthyHostsPerZone{
+		Type:  types.MinimumHealthyHostsPerZoneType(tfMap[names.AttrType].(string)),
+		Value: int32(tfMap[names.AttrValue].(int)),
+	}
 
-	item[names.AttrType] = string(config.Type)
-	item["time_based_canary"] = flattenTimeBasedCanary(config.TimeBasedCanary)
-	item["time_based_linear"] = flattenTimeBasedLinear(config.TimeBasedLinear)
-
-	return append(result, item)
+	return apiObject
 }
 
-func flattenTimeBasedCanary(canary *types.TimeBasedCanary) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
-	if canary == nil {
-		return result
+func flattenMinimumHealthHosts(apiObject *types.MinimumHealthyHosts) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	if apiObject == nil {
+		return tfList
 	}
 
-	item := make(map[string]interface{})
-	item[names.AttrInterval] = canary.CanaryInterval
-	item["percentage"] = canary.CanaryPercentage
+	tfMap := make(map[string]interface{})
+	tfMap[names.AttrType] = apiObject.Type
+	tfMap[names.AttrValue] = apiObject.Value
 
-	return append(result, item)
+	return append(tfList, tfMap)
 }
 
-func flattenTimeBasedLinear(linear *types.TimeBasedLinear) []map[string]interface{} {
-	result := make([]map[string]interface{}, 0)
-	if linear == nil {
-		return result
+func flattenTrafficRoutingConfig(apiObject *types.TrafficRoutingConfig) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	if apiObject == nil {
+		return tfList
 	}
 
-	item := make(map[string]interface{})
-	item[names.AttrInterval] = linear.LinearInterval
-	item["percentage"] = linear.LinearPercentage
+	tfMap := make(map[string]interface{})
+	tfMap["time_based_canary"] = flattenTimeBasedCanary(apiObject.TimeBasedCanary)
+	tfMap["time_based_linear"] = flattenTimeBasedLinear(apiObject.TimeBasedLinear)
+	tfMap[names.AttrType] = apiObject.Type
 
-	return append(result, item)
+	return append(tfList, tfMap)
+}
+
+func flattenTimeBasedCanary(apiObject *types.TimeBasedCanary) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	if apiObject == nil {
+		return tfList
+	}
+
+	tfMap := make(map[string]interface{})
+	tfMap[names.AttrInterval] = apiObject.CanaryInterval
+	tfMap["percentage"] = apiObject.CanaryPercentage
+
+	return append(tfList, tfMap)
+}
+
+func flattenTimeBasedLinear(apiObject *types.TimeBasedLinear) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	if apiObject == nil {
+		return tfList
+	}
+
+	tfMap := make(map[string]interface{})
+	tfMap[names.AttrInterval] = apiObject.LinearInterval
+	tfMap["percentage"] = apiObject.LinearPercentage
+
+	return append(tfList, tfMap)
+}
+
+func flattenZonalConfig(apiObject *types.ZonalConfig) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+	tfMap["first_zone_monitor_duration_in_seconds"] = aws.ToInt64(apiObject.FirstZoneMonitorDurationInSeconds)
+	tfMap["minimum_healthy_hosts_per_zone"] = flattenMinimumHealthHostsPerZone(apiObject.MinimumHealthyHostsPerZone)
+	tfMap["monitor_duration_in_seconds"] = aws.ToInt64(apiObject.MonitorDurationInSeconds)
+
+	return append(tfList, tfMap)
+}
+
+func flattenMinimumHealthHostsPerZone(apiObject *types.MinimumHealthyHostsPerZone) []interface{} {
+	tfList := make([]interface{}, 0)
+
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+	tfMap[names.AttrType] = apiObject.Type
+	tfMap[names.AttrValue] = apiObject.Value
+
+	return append(tfList, tfMap)
 }

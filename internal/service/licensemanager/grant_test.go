@@ -72,7 +72,7 @@ func testAccGrant_basic(t *testing.T) {
 				Config: testAccGrantConfig_basic(licenseARN, rName, principal, homeRegion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGrantExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "license-manager", regexache.MustCompile(`grant:g-.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "license-manager", regexache.MustCompile(`grant:g-.+`)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "ListPurchasedLicenses"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "CheckoutLicense"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "allowed_operations.*", "CheckInLicense"),
@@ -83,7 +83,7 @@ func testAccGrant_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "parent_arn"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPrincipal, principal),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "PENDING_ACCEPT"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "1"),
 				),
 			},
 			{

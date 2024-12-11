@@ -511,9 +511,9 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 
 	ownerID := aws.ToString(eni.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  "network-interface/" + d.Id(),
 	}.String()
@@ -1077,7 +1077,9 @@ func attachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 }
 
 func deleteNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID string) error {
-	log.Printf("[INFO] Deleting EC2 Network Interface: %s", networkInterfaceID)
+	tflog.Info(ctx, "Deleting EC2 Network Interface", map[string]any{
+		names.AttrNetworkInterfaceID: networkInterfaceID,
+	})
 	_, err := conn.DeleteNetworkInterface(ctx, &ec2.DeleteNetworkInterfaceInput{
 		NetworkInterfaceId: aws.String(networkInterfaceID),
 	})
@@ -1094,7 +1096,9 @@ func deleteNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterf
 }
 
 func detachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID, attachmentID string, timeout time.Duration) error {
-	log.Printf("[INFO] Detaching EC2 Network Interface: %s", networkInterfaceID)
+	tflog.Info(ctx, "Detaching EC2 Network Interface", map[string]any{
+		names.AttrNetworkInterfaceID: networkInterfaceID,
+	})
 	_, err := conn.DetachNetworkInterface(ctx, &ec2.DetachNetworkInterfaceInput{
 		AttachmentId: aws.String(attachmentID),
 		Force:        aws.Bool(true),
@@ -1477,6 +1481,8 @@ func deleteLingeringENIs(ctx context.Context, conn *ec2.Client, filterName, reso
 		}
 
 		deleteLingeringDMSENI(ctx, &g, conn, eni, timeout)
+		deleteLingeringRDSENI(ctx, &g, conn, eni, timeout)
+		deleteLingeringQuickSightENI(ctx, &g, conn, eni, timeout)
 	}
 
 	return g.Wait().ErrorOrNil()
@@ -1573,6 +1579,64 @@ func deleteLingeringDMSENI(ctx context.Context, g *multierror.Group, conn *ec2.C
 
 		if err := deleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
 			return fmt.Errorf("deleting DMS ENI (%s): %w", networkInterfaceID, err)
+		}
+
+		return nil
+	})
+
+	return true
+}
+
+func deleteLingeringRDSENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, v *types.NetworkInterface, timeout time.Duration) bool {
+	// Deletion appears to take approximately 5 minutes
+	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
+	}
+
+	if aws.ToString(v.Description) != "RDSNetworkInterface" {
+		return false
+	}
+
+	g.Go(func() error {
+		networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
+
+		if v.Attachment != nil {
+			if err := detachNetworkInterface(ctx, conn, networkInterfaceID, aws.ToString(v.Attachment.AttachmentId), timeout); err != nil {
+				return fmt.Errorf("detaching RDS ENI (%s): %w", networkInterfaceID, err)
+			}
+		}
+
+		if err := deleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
+			return fmt.Errorf("deleting RDS ENI (%s): %w", networkInterfaceID, err)
+		}
+
+		return nil
+	})
+
+	return true
+}
+
+func deleteLingeringQuickSightENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, v *types.NetworkInterface, timeout time.Duration) bool {
+	// Deletion appears to take approximately 5 minutes
+	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
+		timeout = minimumTimeout
+	}
+
+	if !strings.HasPrefix(aws.ToString(v.Description), "QuickSightarn:") {
+		return false
+	}
+
+	g.Go(func() error {
+		networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
+
+		if v.Attachment != nil {
+			if err := detachNetworkInterface(ctx, conn, networkInterfaceID, aws.ToString(v.Attachment.AttachmentId), timeout); err != nil {
+				return fmt.Errorf("detaching QuickSight ENI (%s): %w", networkInterfaceID, err)
+			}
+		}
+
+		if err := deleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
+			return fmt.Errorf("deleting QuickSight ENI (%s): %w", networkInterfaceID, err)
 		}
 
 		return nil

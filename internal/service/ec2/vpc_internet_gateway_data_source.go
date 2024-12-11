@@ -69,7 +69,7 @@ func dataSourceInternetGateway() *schema.Resource {
 func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	internetGatewayId, internetGatewayIdOk := d.GetOk("internet_gateway_id")
 	tags, tagsOk := d.GetOk(names.AttrTags)
@@ -100,9 +100,9 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 
 	ownerID := aws.ToString(igw.OwnerId)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("internet-gateway/%s", d.Id()),
 	}.String()

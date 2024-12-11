@@ -189,12 +189,12 @@ func resourceDetectorRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading GuardDuty Detector (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrAccountID, meta.(*conns.AWSClient).AccountID)
+	d.Set(names.AttrAccountID, meta.(*conns.AWSClient).AccountID(ctx))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "guardduty",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("detector/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

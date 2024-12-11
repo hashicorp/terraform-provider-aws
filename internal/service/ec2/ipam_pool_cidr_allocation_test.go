@@ -171,7 +171,7 @@ func TestAccIPAMPoolCIDRAllocation_ipv4DisallowedCIDR(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolCIDRAllocationExists(ctx, resourceName, &allocation),
 					resource.TestCheckResourceAttr(resourceName, "cidr", expectedCidr),
-					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "disallowed_cidrs.0", disallowedCidr),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "ipam_pool_id", "aws_vpc_ipam_pool.test", names.AttrID),
@@ -244,7 +244,7 @@ func TestAccIPAMPoolCIDRAllocation_differentRegion(t *testing.T) {
 			{
 				Config: testAccIPAMPoolCIDRAllocationConfig_differentRegion(cidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx, resourceName, &allocation, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					testAccCheckIPAMPoolCIDRAllocationExistsWithProvider(ctx, resourceName, &allocation, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 					resource.TestCheckResourceAttr(resourceName, "cidr", cidr),
 					resource.TestMatchResourceAttr(resourceName, names.AttrID, regexache.MustCompile(`^ipam-pool-alloc-[0-9a-f]+_ipam-pool(-[0-9a-f]+)$`)),
 					resource.TestMatchResourceAttr(resourceName, "ipam_pool_allocation_id", regexache.MustCompile(`^ipam-pool-alloc-[0-9a-f]+$`)),

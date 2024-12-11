@@ -5,29 +5,34 @@ package connect
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_connect_vocabulary", name="Vocabulary")
 // @Tags(identifierAttribute="arn")
-func ResourceVocabulary() *schema.Resource {
+func resourceVocabulary() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVocabularyCreate,
 		ReadWithoutTimeout:   resourceVocabularyRead,
@@ -39,8 +44,10 @@ func ResourceVocabulary() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(vocabularyCreatedTimeout),
-			Delete: schema.DefaultTimeout(vocabularyDeletedTimeout),
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			// It takes about 90 minutes for Amazon Connect to delete a vocabulary.
+			// https://docs.aws.amazon.com/connect/latest/adminguide/add-custom-vocabulary.html
+			Delete: schema.DefaultTimeout(100 * time.Minute),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -67,10 +74,10 @@ func ResourceVocabulary() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			names.AttrLanguageCode: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(connect.VocabularyLanguageCode_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.VocabularyLanguageCode](),
 			},
 			"last_modified_time": {
 				Type:     schema.TypeString,
@@ -101,8 +108,7 @@ func ResourceVocabulary() *schema.Resource {
 
 func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get(names.AttrInstanceID).(string)
 	vocabularyName := d.Get(names.AttrName).(string)
@@ -110,29 +116,23 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 		ClientToken:    aws.String(id.UniqueId()),
 		InstanceId:     aws.String(instanceID),
 		Content:        aws.String(d.Get(names.AttrContent).(string)),
-		LanguageCode:   aws.String(d.Get(names.AttrLanguageCode).(string)),
+		LanguageCode:   awstypes.VocabularyLanguageCode(d.Get(names.AttrLanguageCode).(string)),
 		Tags:           getTagsIn(ctx),
 		VocabularyName: aws.String(vocabularyName),
 	}
 
-	log.Printf("[DEBUG] Creating Connect Vocabulary %s", input)
-	output, err := conn.CreateVocabularyWithContext(ctx, input)
+	output, err := conn.CreateVocabulary(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Vocabulary (%s): %s", vocabularyName, err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "creating Connect Vocabulary (%s): empty output", vocabularyName)
-	}
+	vocabularyID := aws.ToString(output.VocabularyId)
+	id := vocabularyCreateResourceID(instanceID, vocabularyID)
+	d.SetId(id)
 
-	vocabularyID := aws.StringValue(output.VocabularyId)
-
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, vocabularyID))
-
-	// waiter since the status changes from CREATION_IN_PROGRESS to either ACTIVE or CREATION_FAILED
-	if _, err := waitVocabularyCreated(ctx, conn, d.Timeout(schema.TimeoutCreate), instanceID, vocabularyID); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Vocabulary (%s) creation: %s", d.Id(), err)
+	if _, err := waitVocabularyCreated(ctx, conn, instanceID, vocabularyID, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Connect Vocabulary (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceVocabularyRead(ctx, d, meta)...)
@@ -140,35 +140,24 @@ func resourceVocabularyCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, vocabularyID, err := VocabularyParseID(d.Id())
-
+	instanceID, vocabularyID, err := vocabularyParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := conn.DescribeVocabularyWithContext(ctx, &connect.DescribeVocabularyInput{
-		InstanceId:   aws.String(instanceID),
-		VocabularyId: aws.String(vocabularyID),
-	})
+	vocabulary, err := findVocabularyByTwoPartKey(ctx, conn, instanceID, vocabularyID)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Vocabulary (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect Vocabulary (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Connect Vocabulary (%s): %s", d.Id(), err)
 	}
-
-	if resp == nil || resp.Vocabulary == nil {
-		return sdkdiag.AppendErrorf(diags, "getting Connect Vocabulary (%s): empty response", d.Id())
-	}
-
-	vocabulary := resp.Vocabulary
 
 	d.Set(names.AttrARN, vocabulary.Arn)
 	d.Set(names.AttrContent, vocabulary.Content)
@@ -180,7 +169,7 @@ func resourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set(names.AttrState, vocabulary.State)
 	d.Set("vocabulary_id", vocabulary.Id)
 
-	setTagsOut(ctx, resp.Vocabulary.Tags)
+	setTagsOut(ctx, vocabulary.Tags)
 
 	return diags
 }
@@ -192,37 +181,133 @@ func resourceVocabularyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceVocabularyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
-
-	instanceID, vocabularyID, err := VocabularyParseID(d.Id())
-
+	instanceID, vocabularyID, err := vocabularyParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DeleteVocabularyWithContext(ctx, &connect.DeleteVocabularyInput{
+	log.Printf("[DEBUG] Deleting Connect Vocabulary: %s", d.Id())
+	_, err = conn.DeleteVocabulary(ctx, &connect.DeleteVocabularyInput{
 		InstanceId:   aws.String(instanceID),
 		VocabularyId: aws.String(vocabularyID),
 	})
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Vocabulary (%s): %s", d.Id(), err)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	if _, err := waitVocabularyDeleted(ctx, conn, d.Timeout(schema.TimeoutDelete), instanceID, vocabularyID); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Vocabulary (%s) deletion: %s", d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Connect Vocabulary (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitVocabularyDeleted(ctx, conn, instanceID, vocabularyID, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Connect Vocabulary (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func VocabularyParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ":", 2)
+const vocabularyResourceIDSeparator = ":"
+
+func vocabularyCreateResourceID(instanceID, vocabularyID string) string {
+	parts := []string{instanceID, vocabularyID}
+	id := strings.Join(parts, vocabularyResourceIDSeparator)
+
+	return id
+}
+
+func vocabularyParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, vocabularyResourceIDSeparator, 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected instanceID:vocabularyID", id)
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected instanceID%[2]svocabularyID", id, vocabularyResourceIDSeparator)
 	}
 
 	return parts[0], parts[1], nil
+}
+
+func findVocabularyByTwoPartKey(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string) (*awstypes.Vocabulary, error) {
+	input := &connect.DescribeVocabularyInput{
+		InstanceId:   aws.String(instanceID),
+		VocabularyId: aws.String(vocabularyID),
+	}
+
+	return findVocabulary(ctx, conn, input)
+}
+
+func findVocabulary(ctx context.Context, conn *connect.Client, input *connect.DescribeVocabularyInput) (*awstypes.Vocabulary, error) {
+	output, err := conn.DescribeVocabulary(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Vocabulary == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Vocabulary, nil
+}
+
+func statusVocabulary(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVocabularyByTwoPartKey(ctx, conn, instanceID, vocabularyID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func waitVocabularyCreated(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string, timeout time.Duration) (*awstypes.Vocabulary, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.VocabularyStateCreationInProgress),
+		Target:  enum.Slice(awstypes.VocabularyStateActive, awstypes.VocabularyStateCreationFailed),
+		Refresh: statusVocabulary(ctx, conn, instanceID, vocabularyID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Vocabulary); ok {
+		if state := output.State; state == awstypes.VocabularyStateCreationFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureReason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVocabularyDeleted(ctx context.Context, conn *connect.Client, instanceID, vocabularyID string, timeout time.Duration) (*awstypes.Vocabulary, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.VocabularyStateDeleteInProgress),
+		Target:  []string{},
+		Refresh: statusVocabulary(ctx, conn, instanceID, vocabularyID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Vocabulary); ok {
+		return output, err
+	}
+
+	return nil, err
 }

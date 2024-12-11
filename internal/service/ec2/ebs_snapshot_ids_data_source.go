@@ -5,11 +5,12 @@ package ec2
 
 import (
 	"context"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -76,9 +77,7 @@ func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshots: %s", err)
 	}
 
-	sort.Slice(snapshots, func(i, j int) bool {
-		return aws.ToTime(snapshots[i].StartTime).Unix() > aws.ToTime(snapshots[j].StartTime).Unix()
-	})
+	sortSnapshotsDescending(snapshots)
 
 	var snapshotIDs []string
 
@@ -86,8 +85,14 @@ func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, m
 		snapshotIDs = append(snapshotIDs, aws.ToString(v.SnapshotId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, snapshotIDs)
 
 	return diags
+}
+
+func sortSnapshotsDescending(snapshots []awstypes.Snapshot) {
+	slices.SortFunc(snapshots, func(a, b awstypes.Snapshot) int {
+		return aws.ToTime(b.StartTime).Compare(aws.ToTime(a.StartTime))
+	})
 }

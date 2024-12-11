@@ -616,14 +616,16 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if v, _ := d.GetChange("ttl"); v.(int) != 0 {
-		oldRec.TTL = aws.Int64(int64(v.(int)))
-	}
-
 	// Resource records
 	if v, _ := d.GetChange("records"); v != nil {
 		if v.(*schema.Set).Len() > 0 {
 			oldRec.ResourceRecords = expandResourceRecords(flex.ExpandStringValueSet(v.(*schema.Set)), awstypes.RRType(oldRRType.(string)))
+
+			// TTL and ResourceRecords
+			if v := d.GetRawState().GetAttr("ttl"); !v.IsNull() {
+				v, _ := v.AsBigFloat().Int64()
+				oldRec.TTL = aws.Int64(v)
+			}
 		}
 	}
 
@@ -904,63 +906,56 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 		Type: rrType,
 	}
 
-	if v, ok := d.GetOk("ttl"); ok {
-		apiObject.TTL = aws.Int64(int64(v.(int)))
-	}
-
 	// Resource records
 	if v, ok := d.GetOk("records"); ok {
 		apiObject.ResourceRecords = expandResourceRecords(flex.ExpandStringValueSet(v.(*schema.Set)), rrType)
+
+		// TTL and ResourceRecords
+		if v := d.GetRawPlan().GetAttr("ttl"); v.IsKnown() && !v.IsNull() {
+			v, _ := v.AsBigFloat().Int64()
+			apiObject.TTL = aws.Int64(v)
+		}
 	}
 
 	// Alias record
-	if v, ok := d.GetOk(names.AttrAlias); ok {
-		aliases := v.([]interface{})
-		alias := aliases[0].(map[string]interface{})
+	if v, ok := d.GetOk(names.AttrAlias); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
 		apiObject.AliasTarget = &awstypes.AliasTarget{
-			DNSName:              aws.String(alias[names.AttrName].(string)),
-			EvaluateTargetHealth: alias["evaluate_target_health"].(bool),
-			HostedZoneId:         aws.String(alias["zone_id"].(string)),
+			DNSName:              aws.String(tfMap[names.AttrName].(string)),
+			EvaluateTargetHealth: tfMap["evaluate_target_health"].(bool),
+			HostedZoneId:         aws.String(tfMap["zone_id"].(string)),
 		}
 	}
 
-	if v, ok := d.GetOk("cidr_routing_policy"); ok {
-		records := v.([]interface{})
-		cidr := records[0].(map[string]interface{})
-
+	if v, ok := d.GetOk("cidr_routing_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
 		apiObject.CidrRoutingConfig = &awstypes.CidrRoutingConfig{
-			CollectionId: aws.String(cidr["collection_id"].(string)),
-			LocationName: aws.String(cidr["location_name"].(string)),
+			CollectionId: aws.String(tfMap["collection_id"].(string)),
+			LocationName: aws.String(tfMap["location_name"].(string)),
 		}
 	}
 
-	if v, ok := d.GetOk("failover_routing_policy"); ok {
-		records := v.([]interface{})
-		failover := records[0].(map[string]interface{})
-
-		apiObject.Failover = awstypes.ResourceRecordSetFailover(failover[names.AttrType].(string))
+	if v, ok := d.GetOk("failover_routing_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		apiObject.Failover = awstypes.ResourceRecordSetFailover(tfMap[names.AttrType].(string))
 	}
 
-	if v, ok := d.GetOk("geolocation_routing_policy"); ok {
-		geolocations := v.([]interface{})
-		geolocation := geolocations[0].(map[string]interface{})
-
+	if v, ok := d.GetOk("geolocation_routing_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
 		apiObject.GeoLocation = &awstypes.GeoLocation{
-			ContinentCode:   nilString(geolocation["continent"].(string)),
-			CountryCode:     nilString(geolocation["country"].(string)),
-			SubdivisionCode: nilString(geolocation["subdivision"].(string)),
+			ContinentCode:   nilString(tfMap["continent"].(string)),
+			CountryCode:     nilString(tfMap["country"].(string)),
+			SubdivisionCode: nilString(tfMap["subdivision"].(string)),
 		}
 	}
 
-	if v, ok := d.GetOk("geoproximity_routing_policy"); ok {
-		geoproximityvalues := v.([]interface{})
-		geoproximity := geoproximityvalues[0].(map[string]interface{})
-
+	if v, ok := d.GetOk("geoproximity_routing_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
 		apiObject.GeoProximityLocation = &awstypes.GeoProximityLocation{
-			AWSRegion:      nilString(geoproximity["aws_region"].(string)),
-			Bias:           aws.Int32(int32(geoproximity["bias"].(int))),
-			Coordinates:    expandCoordinates(geoproximity["coordinates"].(*schema.Set).List()),
-			LocalZoneGroup: nilString(geoproximity["local_zone_group"].(string)),
+			AWSRegion:      nilString(tfMap["aws_region"].(string)),
+			Bias:           aws.Int32(int32(tfMap["bias"].(int))),
+			Coordinates:    expandCoordinates(tfMap["coordinates"].(*schema.Set).List()),
+			LocalZoneGroup: nilString(tfMap["local_zone_group"].(string)),
 		}
 	}
 
@@ -968,11 +963,9 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 		apiObject.HealthCheckId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("latency_routing_policy"); ok {
-		records := v.([]interface{})
-		latency := records[0].(map[string]interface{})
-
-		apiObject.Region = awstypes.ResourceRecordSetRegion(latency[names.AttrRegion].(string))
+	if v, ok := d.GetOk("latency_routing_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		apiObject.Region = awstypes.ResourceRecordSetRegion(tfMap[names.AttrRegion].(string))
 	}
 
 	if v, ok := d.GetOk("multivalue_answer_routing_policy"); ok {
@@ -983,11 +976,9 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 		apiObject.SetIdentifier = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("weighted_routing_policy"); ok {
-		records := v.([]interface{})
-		weight := records[0].(map[string]interface{})
-
-		apiObject.Weight = aws.Int64(int64(weight[names.AttrWeight].(int)))
+	if v, ok := d.GetOk("weighted_routing_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		tfMap := v.([]interface{})[0].(map[string]interface{})
+		apiObject.Weight = aws.Int64(int64(tfMap[names.AttrWeight].(int)))
 	}
 
 	return apiObject

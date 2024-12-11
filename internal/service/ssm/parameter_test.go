@@ -41,7 +41,7 @@ func TestAccSSMParameter_basic(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter/%s", name)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter/%s", name)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
@@ -90,7 +90,7 @@ func TestAccSSMParameter_multiple(t *testing.T) {
 				Config: testAccParameterConfig_multiple(rName, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter/%s-1", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter/%s-1", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 					resource.TestCheckResourceAttr(resourceName, "tier", string(awstypes.ParameterTierStandard)),
@@ -447,14 +447,14 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 				},
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "This value is set using Terraform"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "2"),
 					resource.TestCheckResourceAttr(resourceName, "overwrite", acctest.CtTrue),
 				),
 			},
 			{
 				Config: testAccParameterConfig_basicOverwrite(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "3"),
 					resource.TestCheckResourceAttr(resourceName, "overwrite", acctest.CtTrue),
 				),
 			},
@@ -470,7 +470,7 @@ func TestAccSSMParameter_Overwrite_basic(t *testing.T) {
 					testAccCheckParameterExists(ctx, resourceName, &param),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test3"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, names.AttrVersion, "4"),
 					resource.TestCheckResourceAttr(resourceName, "overwrite", acctest.CtTrue),
 				),
 			},
@@ -765,7 +765,7 @@ func TestAccSSMParameter_fullPath(t *testing.T) {
 				Config: testAccParameterConfig_basic(name, "String", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterExists(ctx, resourceName, &param),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter%s", name)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", fmt.Sprintf("parameter%s", name)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrValue, "test2"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "String"),
 				),
@@ -1048,6 +1048,41 @@ func TestAccSSMParameter_Secure_keyUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrType, "SecureString"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKeyID, "alias/"+randString),
 				),
+			},
+		},
+	})
+}
+
+// lintignore:AT002
+func TestAccSSMParameter_importByARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var param awstypes.Parameter
+	name := fmt.Sprintf("%s_%s", t.Name(), sdkacctest.RandString(10))
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckParameterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccParameterConfig_basic(name, "String", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckParameterExists(ctx, resourceName, &param),
+				),
+			},
+			// Test import by ARN.
+			// https://github.com/hashicorp/terraform-provider-aws/issues/39050.
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(*terraform.State) (string, error) {
+					return aws.ToString(param.ARN), nil
+				},
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrName,
+				ImportStateVerifyIgnore:              []string{names.AttrID, "overwrite"},
 			},
 		},
 	})

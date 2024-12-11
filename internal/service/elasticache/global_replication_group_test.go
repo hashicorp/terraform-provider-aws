@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
+func TestAccElastiCacheGlobalReplicationGroup_Redis_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -48,11 +48,11 @@ func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_basic(rName, primaryReplicationGroupId),
+				Config: testAccGlobalReplicationGroupConfig_Redis_basic(rName, primaryReplicationGroupId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "elasticache", regexache.MustCompile(`globalreplicationgroup:`+tfelasticache.GlobalReplicationGroupRegionPrefixFormat+rName)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "elasticache", regexache.MustCompile(`globalreplicationgroup:`+tfelasticache.GlobalReplicationGroupRegionPrefixFormat+rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "at_rest_encryption_enabled", primaryReplicationGroupResourceName, "at_rest_encryption_enabled"),
 					resource.TestCheckResourceAttr(resourceName, "auth_token_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttrPair(resourceName, "automatic_failover_enabled", primaryReplicationGroupResourceName, "automatic_failover_enabled"),
@@ -63,8 +63,62 @@ func TestAccElastiCacheGlobalReplicationGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_id_suffix", rName),
 					resource.TestMatchResourceAttr(resourceName, "global_replication_group_id", regexache.MustCompile(tfelasticache.GlobalReplicationGroupRegionPrefixFormat+rName)),
 					resource.TestCheckResourceAttr(resourceName, "global_replication_group_description", tfelasticache.EmptyDescription),
-					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "0"),
+					resource.TestCheckResourceAttr(resourceName, "primary_replication_group_id", primaryReplicationGroupId),
+					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheGlobalReplicationGroup_Valkey_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalReplicationGroup awstypes.GlobalReplicationGroup
+	var primaryReplicationGroup awstypes.ReplicationGroup
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resourceName := "aws_elasticache_global_replication_group.test"
+	primaryReplicationGroupResourceName := "aws_elasticache_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckGlobalReplicationGroupDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalReplicationGroupConfig_Valkey_basic(rName, primaryReplicationGroupId),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
+					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "elasticache", regexache.MustCompile(`globalreplicationgroup:`+tfelasticache.GlobalReplicationGroupRegionPrefixFormat+rName)),
+					resource.TestCheckResourceAttrPair(resourceName, "at_rest_encryption_enabled", primaryReplicationGroupResourceName, "at_rest_encryption_enabled"),
+					resource.TestCheckResourceAttr(resourceName, "auth_token_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "automatic_failover_enabled", primaryReplicationGroupResourceName, "automatic_failover_enabled"),
+					resource.TestCheckResourceAttrPair(resourceName, "cache_node_type", primaryReplicationGroupResourceName, "node_type"),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_enabled", primaryReplicationGroupResourceName, "cluster_enabled"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrEngine, primaryReplicationGroupResourceName, names.AttrEngine),
+					resource.TestCheckResourceAttrPair(resourceName, "engine_version_actual", primaryReplicationGroupResourceName, "engine_version_actual"),
+					resource.TestCheckResourceAttr(resourceName, "global_replication_group_id_suffix", rName),
+					resource.TestMatchResourceAttr(resourceName, "global_replication_group_id", regexache.MustCompile(tfelasticache.GlobalReplicationGroupRegionPrefixFormat+rName)),
+					resource.TestCheckResourceAttr(resourceName, "global_replication_group_description", tfelasticache.EmptyDescription),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "0"),
 					resource.TestCheckResourceAttr(resourceName, "primary_replication_group_id", primaryReplicationGroupId),
 					resource.TestCheckResourceAttr(resourceName, "transit_encryption_enabled", acctest.CtFalse),
 				),
@@ -96,7 +150,7 @@ func TestAccElastiCacheGlobalReplicationGroup_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_basic(rName, primaryReplicationGroupId),
+				Config: testAccGlobalReplicationGroupConfig_Redis_basic(rName, primaryReplicationGroupId),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelasticache.ResourceGlobalReplicationGroup(), resourceName),
@@ -579,9 +633,9 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_NoChange(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", acctest.Ct2),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct2),
-					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "2"),
 				),
 			},
 			{
@@ -619,7 +673,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_Increase(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "3"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 					}),
@@ -629,8 +683,8 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_Increase(
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0003$", rName)),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct3),
-					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "2"),
 				),
 			},
 			{
@@ -668,13 +722,13 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnCreate_Decrease(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 						"slots":                regexache.MustCompile("^0-16383$"), // all slots
 					}),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct1),
-					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "1"),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "3"),
 				),
 			},
 			{
@@ -712,15 +766,15 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Increase(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "2"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0002$", rName)),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct2),
-					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "2"),
 				),
 			},
 			{
@@ -729,7 +783,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Increase(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "3"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 					}),
@@ -739,8 +793,8 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Increase(
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0003$", rName)),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct3),
-					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "3"),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "2"),
 				),
 			},
 			{
@@ -778,15 +832,15 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Decrease(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "2"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 					}),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0002$", rName)),
 					}),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct2),
-					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "2"),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "2"),
 				),
 			},
 			{
@@ -795,13 +849,13 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Decrease(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &primaryReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "cluster_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "global_node_groups.#", "1"),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "global_node_groups.*", map[string]*regexp.Regexp{
 						"global_node_group_id": regexache.MustCompile(fmt.Sprintf("^[a-z]+-%s-0001$", rName)),
 						"slots":                regexache.MustCompile("^0-16383$"), // all slots
 					}),
-					resource.TestCheckResourceAttr(resourceName, "num_node_groups", acctest.Ct1),
-					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "num_node_groups", "1"),
+					resource.TestCheckResourceAttr(primaryReplicationGroupResourceName, "num_node_groups", "2"),
 				),
 			},
 			{
@@ -813,7 +867,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetNumNodeGroupsOnUpdate_Decrease(
 	})
 }
 
-func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_v6(t *testing.T) {
+func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_Redis_v6(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -831,7 +885,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.2", "6.2"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersion(rName, primaryReplicationGroupId, "6.2", "6.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
@@ -846,7 +900,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 	})
 }
 
-func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_v6x(t *testing.T) {
+func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_Redis_v6x(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -864,7 +918,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.2", "6.x"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersion(rName, primaryReplicationGroupId, "6.2", "6.x"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
@@ -880,7 +934,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 	})
 }
 
-func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_v5(t *testing.T) {
+func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_Redis_v5(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -898,10 +952,43 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "5.0.6", "5.0.6"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersion(rName, primaryReplicationGroupId, "5.0.6", "5.0.6"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "engine_version_actual", "5.0.6"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_NoChange_Valkey_v7(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var globalReplicationGroup awstypes.GlobalReplicationGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	primaryReplicationGroupId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_elasticache_global_replication_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGlobalReplicationGroup(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlobalReplicationGroupConfig_Valkey_engineVersion(rName, primaryReplicationGroupId, "7.2", "7.2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
+					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^7\.2\.[[:digit:]]+$`)),
 				),
 			},
 			{
@@ -934,7 +1021,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorUpgr
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.0", "6.2"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersion(rName, primaryReplicationGroupId, "6.0", "6.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &rg),
@@ -972,7 +1059,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorUpgr
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.0", "6.x"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersion(rName, primaryReplicationGroupId, "6.0", "6.x"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					testAccCheckReplicationGroupExists(ctx, primaryReplicationGroupResourceName, &rg),
@@ -1078,7 +1165,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnCreate_MinorDown
 		CheckDestroy:             testAccCheckGlobalReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.2", "6.0"),
+				Config:      testAccGlobalReplicationGroupConfig_Redis_engineVersion(rName, primaryReplicationGroupId, "6.2", "6.0"),
 				ExpectError: regexache.MustCompile(`cannot downgrade version when creating, is 6.2.[[:digit:]]+, want 6.0.[[:digit:]]+`),
 			},
 		},
@@ -1151,7 +1238,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 				),
 			},
 			{
-				Config: testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.0", "6.2"),
+				Config: testAccGlobalReplicationGroupConfig_Redis_engineVersion(rName, primaryReplicationGroupId, "6.0", "6.2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGlobalReplicationGroupExists(ctx, resourceName, &globalReplicationGroup),
 					resource.TestMatchResourceAttr(resourceName, "engine_version_actual", regexache.MustCompile(`^6\.2\.[[:digit:]]+$`)),
@@ -1188,7 +1275,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorUpgr
 				),
 			},
 			{
-				Config:   testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.0", "6.x"),
+				Config:   testAccGlobalReplicationGroupConfig_Redis_engineVersion(rName, primaryReplicationGroupId, "6.0", "6.x"),
 				PlanOnly: true,
 			},
 		},
@@ -1222,7 +1309,7 @@ func TestAccElastiCacheGlobalReplicationGroup_SetEngineVersionOnUpdate_MinorDown
 				),
 			},
 			{
-				Config:      testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, "6.2", "6.0"),
+				Config:      testAccGlobalReplicationGroupConfig_Redis_engineVersion(rName, primaryReplicationGroupId, "6.2", "6.0"),
 				ExpectError: regexache.MustCompile(`Downgrading ElastiCache Global Replication Group \(.*\) engine version requires replacement`),
 			},
 			// This step fails with: Error running pre-apply refresh
@@ -1515,7 +1602,7 @@ func testAccMatchReplicationGroupActualVersion(ctx context.Context, j *awstypes.
 	}
 }
 
-func testAccGlobalReplicationGroupConfig_basic(rName, primaryReplicationGroupId string) string {
+func testAccGlobalReplicationGroupConfig_Redis_basic(rName, primaryReplicationGroupId string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   global_replication_group_id_suffix = %[1]q
@@ -1528,6 +1615,25 @@ resource "aws_elasticache_replication_group" "test" {
 
   engine             = "redis"
   engine_version     = "5.0.6"
+  node_type          = "cache.m5.large"
+  num_cache_clusters = 1
+}
+`, rName, primaryReplicationGroupId)
+}
+
+func testAccGlobalReplicationGroupConfig_Valkey_basic(rName, primaryReplicationGroupId string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.test.id
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[2]q
+  description          = "test"
+
+  engine             = "valkey"
+  engine_version     = "7.2"
   node_type          = "cache.m5.large"
   num_cache_clusters = 1
 }
@@ -1974,7 +2080,7 @@ resource "aws_elasticache_replication_group" "test" {
 `, rName, primaryReplicationGroupId, repGroupEngineVersion)
 }
 
-func testAccGlobalReplicationGroupConfig_engineVersion(rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion string) string {
+func testAccGlobalReplicationGroupConfig_Redis_engineVersion(rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticache_global_replication_group" "test" {
   global_replication_group_id_suffix = %[1]q
@@ -1988,6 +2094,31 @@ resource "aws_elasticache_replication_group" "test" {
   description          = "test"
 
   engine             = "redis"
+  engine_version     = %[3]q
+  node_type          = "cache.m5.large"
+  num_cache_clusters = 1
+
+  lifecycle {
+    ignore_changes = [engine_version]
+  }
+}
+`, rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion)
+}
+
+func testAccGlobalReplicationGroupConfig_Valkey_engineVersion(rName, primaryReplicationGroupId, repGroupEngineVersion, globalEngineVersion string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_global_replication_group" "test" {
+  global_replication_group_id_suffix = %[1]q
+  primary_replication_group_id       = aws_elasticache_replication_group.test.id
+
+  engine_version = %[4]q
+}
+
+resource "aws_elasticache_replication_group" "test" {
+  replication_group_id = %[2]q
+  description          = "test"
+
+  engine             = "valkey"
   engine_version     = %[3]q
   node_type          = "cache.m5.large"
   num_cache_clusters = 1

@@ -153,6 +153,8 @@ service/codecatalyst:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecatalyst_'
 service/codecommit:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codecommit_'
+service/codeconnections:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeconnections_'
 service/codeguruprofiler:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_codeguruprofiler_'
 service/codegurureviewer:
@@ -513,6 +515,8 @@ service/paymentcryptography:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_paymentcryptography_'
 service/pcaconnectorad:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcaconnectorad_'
+service/pcs:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcs_'
 service/personalize:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_personalize_'
 service/personalizeevents:
@@ -527,6 +531,8 @@ service/pinpointemail:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointemail_'
 service/pinpointsmsvoice:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointsmsvoice_'
+service/pinpointsmsvoicev2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pinpointsmsvoicev2_'
 service/pipes:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pipes_'
 service/polly:
@@ -593,6 +599,8 @@ service/s3control:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_(s3_account_|s3control_|s3_access_)'
 service/s3outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3outposts_'
+service/s3tables:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_s3tables_'
 service/sagemaker:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_sagemaker_'
 service/sagemakera2iruntime:
@@ -653,6 +661,8 @@ service/ssmcontacts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmcontacts_'
 service/ssmincidents:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmincidents_'
+service/ssmquicksetup:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmquicksetup_'
 service/ssmsap:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmsap_'
 service/sso:
@@ -671,6 +681,8 @@ service/swf:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_swf_'
 service/synthetics:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_synthetics_'
+service/taxsettings:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_taxsettings_'
 service/textract:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_textract_'
 service/timestreaminfluxdb:

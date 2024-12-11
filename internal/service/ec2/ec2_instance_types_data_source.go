@@ -57,7 +57,7 @@ func dataSourceInstanceTypesRead(ctx context.Context, d *schema.ResourceData, me
 		instanceTypes = append(instanceTypes, string(instanceType.InstanceType))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("instance_types", instanceTypes)
 
 	return diags

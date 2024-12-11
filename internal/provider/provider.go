@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -33,6 +34,8 @@ import (
 // New returns a new, initialized Terraform Plugin SDK v2-style provider instance.
 // The provider instance is fully configured once the `ConfigureContextFunc` has been called.
 func New(ctx context.Context) (*schema.Provider, error) {
+	log.Printf("Initializing Terraform AWS Provider...")
+
 	provider := &schema.Provider{
 		// This schema must match exactly the Terraform Protocol v6 (Terraform Plugin Framework) provider's schema.
 		// Notably the attributes can have no Default values.
@@ -273,7 +276,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		servicePackageMap[servicePackageName] = sp
 
 		for _, v := range sp.SDKDataSources(ctx) {
-			v := v
 			typeName := v.TypeName
 
 			if _, ok := provider.DataSourcesMap[typeName]; ok {
@@ -293,7 +295,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
 				ctx = conns.NewDataSourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
-					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
 					ctx = v.RegisterLogger(ctx)
 				}
 
@@ -338,7 +340,6 @@ func New(ctx context.Context) (*schema.Provider, error) {
 		}
 
 		for _, v := range sp.SDKResources(ctx) {
-			v := v
 			typeName := v.TypeName
 
 			if _, ok := provider.ResourcesMap[typeName]; ok {
@@ -370,7 +371,7 @@ func New(ctx context.Context) (*schema.Provider, error) {
 			bootstrapContext := func(ctx context.Context, meta any) context.Context {
 				ctx = conns.NewResourceContext(ctx, servicePackageName, v.Name)
 				if v, ok := meta.(*conns.AWSClient); ok {
-					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig, v.IgnoreTagsConfig)
+					ctx = tftags.NewContext(ctx, v.DefaultTagsConfig(ctx), v.IgnoreTagsConfig(ctx))
 					ctx = v.RegisterLogger(ctx)
 				}
 
@@ -517,14 +518,37 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.AllowedAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("assume_role"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		config.AssumeRole = expandAssumeRole(ctx, v.([]interface{})[0].(map[string]interface{}))
-		tflog.Info(ctx, "assume_role configuration set", map[string]any{
-			"tf_aws.assume_role.role_arn":        config.AssumeRole.RoleARN,
-			"tf_aws.assume_role.session_name":    config.AssumeRole.SessionName,
-			"tf_aws.assume_role.external_id":     config.AssumeRole.ExternalID,
-			"tf_aws.assume_role.source_identity": config.AssumeRole.SourceIdentity,
-		})
+	if v, ok := d.GetOk("assume_role"); ok {
+		path := cty.GetAttrPath("assume_role")
+		v := v.([]any)
+		if len(v) == 1 {
+			if v[0] == nil {
+				diags = append(diags,
+					errs.NewAttributeRequiredWillBeError(path.IndexInt(0), "role_arn"),
+				)
+			} else {
+				l := v[0].(map[string]any)
+				if s, ok := l["role_arn"]; !ok || s == "" {
+					diags = append(diags,
+						errs.NewAttributeRequiredWillBeError(path.IndexInt(0), "role_arn"),
+					)
+				} else {
+					ar, dg := expandAssumeRoles(ctx, path, v)
+					diags = append(diags, dg...)
+					if dg.HasError() {
+						return nil, diags
+					}
+					config.AssumeRole = ar
+				}
+			}
+		} else if len(v) > 1 {
+			ar, dg := expandAssumeRoles(ctx, path, v)
+			diags = append(diags, dg...)
+			if dg.HasError() {
+				return nil, diags
+			}
+			config.AssumeRole = ar
+		}
 	}
 
 	if v, ok := d.GetOk("assume_role_with_web_identity"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -614,7 +638,6 @@ func assumeRoleSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
-		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"duration": {
@@ -649,7 +672,7 @@ func assumeRoleSchema() *schema.Schema {
 				},
 				"role_arn": {
 					Type:         schema.TypeString,
-					Optional:     true,
+					Optional:     true, // For historical reasons, we allow an empty `assume_role` block
 					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 					ValidateFunc: verify.ValidARN,
 				},
@@ -712,7 +735,7 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 				},
 				"role_arn": {
 					Type:         schema.TypeString,
-					Optional:     true,
+					Optional:     true, // For historical reasons, we allow an empty `assume_role_with_web_identity` block
 					Description:  "Amazon Resource Name (ARN) of an IAM Role to assume prior to making API calls.",
 					ValidateFunc: verify.ValidARN,
 				},
@@ -738,72 +761,74 @@ func assumeRoleWithWebIdentitySchema() *schema.Schema {
 	}
 }
 
-func endpointsSchema() *schema.Schema {
-	endpointsAttributes := make(map[string]*schema.Schema)
+func expandAssumeRoles(ctx context.Context, path cty.Path, tfList []any) (result []awsbase.AssumeRole, diags diag.Diagnostics) {
+	result = make([]awsbase.AssumeRole, len(tfList))
 
-	for _, serviceKey := range names.Aliases() {
-		endpointsAttributes[serviceKey] = &schema.Schema{
-			Type:        schema.TypeString,
-			Optional:    true,
-			Default:     "",
-			Description: "Use this to override the default service endpoint URL",
+	for i, v := range tfList {
+		path := path.IndexInt(i)
+		if ar, ok := v.(map[string]any); ok {
+			x, d := expandAssumeRole(ctx, path, ar)
+			diags = append(diags, d...)
+			if d.HasError() {
+				return result, diags
+			}
+			result[i] = x
+			tflog.Info(ctx, "assume_role configuration set", map[string]any{
+				"tf_aws.assume_role.index":           i,
+				"tf_aws.assume_role.role_arn":        result[i].RoleARN,
+				"tf_aws.assume_role.session_name":    result[i].SessionName,
+				"tf_aws.assume_role.external_id":     result[i].ExternalID,
+				"tf_aws.assume_role.source_identity": result[i].SourceIdentity,
+			})
+		} else {
+			return result, append(diags, errs.NewAttributeRequiredError(path, "role_arn"))
 		}
 	}
 
-	return &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: endpointsAttributes,
-		},
-	}
+	return result, diags
 }
 
-func expandAssumeRole(_ context.Context, tfMap map[string]interface{}) *awsbase.AssumeRole {
-	if tfMap == nil {
-		return nil
+func expandAssumeRole(_ context.Context, path cty.Path, tfMap map[string]any) (result awsbase.AssumeRole, diags diag.Diagnostics) {
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		result.RoleARN = v
+	} else {
+		return result, append(diags, errs.NewAttributeRequiredError(path, "role_arn"))
 	}
-
-	assumeRole := awsbase.AssumeRole{}
 
 	if v, ok := tfMap["duration"].(string); ok && v != "" {
 		duration, _ := time.ParseDuration(v)
-		assumeRole.Duration = duration
+		result.Duration = duration
 	}
 
 	if v, ok := tfMap["external_id"].(string); ok && v != "" {
-		assumeRole.ExternalID = v
+		result.ExternalID = v
 	}
 
 	if v, ok := tfMap["policy"].(string); ok && v != "" {
-		assumeRole.Policy = v
+		result.Policy = v
 	}
 
 	if v, ok := tfMap["policy_arns"].(*schema.Set); ok && v.Len() > 0 {
-		assumeRole.PolicyARNs = flex.ExpandStringValueSet(v)
-	}
-
-	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
-		assumeRole.RoleARN = v
+		result.PolicyARNs = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["session_name"].(string); ok && v != "" {
-		assumeRole.SessionName = v
+		result.SessionName = v
 	}
 
 	if v, ok := tfMap["source_identity"].(string); ok && v != "" {
-		assumeRole.SourceIdentity = v
+		result.SourceIdentity = v
 	}
 
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		assumeRole.Tags = flex.ExpandStringValueMap(v)
+		result.Tags = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := tfMap["transitive_tag_keys"].(*schema.Set); ok && v.Len() > 0 {
-		assumeRole.TransitiveTagKeys = flex.ExpandStringValueSet(v)
+		result.TransitiveTagKeys = flex.ExpandStringValueSet(v)
 	}
 
-	return &assumeRole
+	return result, diags
 }
 
 func expandAssumeRoleWithWebIdentity(_ context.Context, tfMap map[string]interface{}) *awsbase.AssumeRoleWithWebIdentity {
@@ -915,111 +940,6 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags
 	}
 
 	return ignoreConfig
-}
-
-func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	endpointsPath := cty.GetAttrPath("endpoints")
-
-	if l := len(tfList); l > 1 {
-		diags = append(diags, errs.NewAttributeWarningDiagnostic(
-			endpointsPath,
-			"Invalid Attribute Value",
-			fmt.Sprintf("Attribute %q should have at most 1 element, got %d."+
-				"\n\nThis will be an error in a future release.",
-				errs.PathString(endpointsPath), l),
-		))
-	}
-
-	endpoints := make(map[string]string)
-
-	for i, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		elementPath := endpointsPath.IndexInt(i)
-
-		for _, endpoint := range names.Endpoints() {
-			pkg := endpoint.ProviderPackage
-
-			if len(endpoint.Aliases) > 0 {
-				count := 0
-				attrs := []string{pkg}
-				if tfMap[pkg] != "" {
-					count++
-				}
-				for _, alias := range endpoint.Aliases {
-					attrs = append(attrs, alias)
-					if tfMap[alias] != "" {
-						count++
-					}
-				}
-
-				if count > 1 {
-					diags = append(diags, ConflictingEndpointsWarningDiag(elementPath, attrs...))
-				}
-			}
-
-			if endpoints[pkg] == "" {
-				if v := tfMap[pkg].(string); v != "" {
-					endpoints[pkg] = v
-				} else {
-					for _, alias := range endpoint.Aliases {
-						if v := tfMap[alias].(string); v != "" {
-							endpoints[pkg] = v
-							break
-						}
-					}
-				}
-			}
-		}
-	}
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	for _, pkg := range names.ProviderPackages() {
-		if endpoints[pkg] != "" {
-			continue
-		}
-
-		// We only need to handle the services with custom envvars here before we hand off to `aws-sdk-go-base`
-		tfAwsEnvVar := names.TFAWSEnvVar(pkg)
-		deprecatedEnvVar := names.DeprecatedEnvVar(pkg)
-		if tfAwsEnvVar == "" && deprecatedEnvVar == "" {
-			continue
-		}
-
-		awsEnvVar := names.AWSServiceEnvVar(pkg)
-		if awsEnvVar != "" {
-			if v := os.Getenv(awsEnvVar); v != "" {
-				endpoints[pkg] = v
-				continue
-			}
-		}
-
-		if tfAwsEnvVar != "" {
-			if v := os.Getenv(tfAwsEnvVar); v != "" {
-				diags = append(diags, DeprecatedEnvVarDiag(tfAwsEnvVar, awsEnvVar))
-				endpoints[pkg] = v
-				continue
-			}
-		}
-
-		if deprecatedEnvVar != "" {
-			if v := os.Getenv(deprecatedEnvVar); v != "" {
-				diags = append(diags, DeprecatedEnvVarDiag(deprecatedEnvVar, awsEnvVar))
-				endpoints[pkg] = v
-				continue
-			}
-		}
-	}
-
-	return endpoints, diags
 }
 
 func DeprecatedEnvVarDiag(envvar, replacement string) diag.Diagnostic {

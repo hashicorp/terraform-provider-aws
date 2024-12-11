@@ -41,12 +41,12 @@ func TestAccStorageGatewayFileSystemAssociation_basic(t *testing.T) {
 				Config: testAccFileSystemAssociationConfig_required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, "location_arn", fsxResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, names.AttrUsername, username),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -77,8 +77,8 @@ func TestAccStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 				Config: testAccFileSystemAssociationConfig_tags1(rName, domainName, username, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -92,8 +92,8 @@ func TestAccStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 				Config: testAccFileSystemAssociationConfig_tags2(rName, domainName, username, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -102,8 +102,8 @@ func TestAccStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 				Config: testAccFileSystemAssociationConfig_tags1(rName, domainName, username, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -129,7 +129,7 @@ func TestAccStorageGatewayFileSystemAssociation_cacheAttributes(t *testing.T) {
 				Config: testAccFileSystemAssociationConfig_cache(rName, domainName, username, 400),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "400"),
 				),
 			},
@@ -143,8 +143,8 @@ func TestAccStorageGatewayFileSystemAssociation_cacheAttributes(t *testing.T) {
 				Config: testAccFileSystemAssociationConfig_cache(rName, domainName, username, 0),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_attributes.0.cache_stale_timeout_in_seconds", "0"),
 				),
 			},
 		},

@@ -6,11 +6,12 @@ package memorydb_test
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,6 +22,126 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+func TestParameterChanges(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Name                string
+		Old                 *schema.Set
+		New                 *schema.Set
+		ExpectedRemove      []awstypes.ParameterNameValue
+		ExpectedAddOrUpdate []awstypes.ParameterNameValue
+	}{
+		{
+			Name:                "Empty",
+			Old:                 new(schema.Set),
+			New:                 new(schema.Set),
+			ExpectedRemove:      []awstypes.ParameterNameValue{},
+			ExpectedAddOrUpdate: []awstypes.ParameterNameValue{},
+		},
+		{
+			Name: "Remove all",
+			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
+				map[string]interface{}{
+					names.AttrName:  "reserved-memory",
+					names.AttrValue: "0",
+				},
+			}),
+			New: new(schema.Set),
+			ExpectedRemove: []awstypes.ParameterNameValue{
+				{
+					ParameterName:  aws.String("reserved-memory"),
+					ParameterValue: aws.String("0"),
+				},
+			},
+			ExpectedAddOrUpdate: []awstypes.ParameterNameValue{},
+		},
+		{
+			Name: "No change",
+			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
+				map[string]interface{}{
+					names.AttrName:  "reserved-memory",
+					names.AttrValue: "0",
+				},
+			}),
+			New: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
+				map[string]interface{}{
+					names.AttrName:  "reserved-memory",
+					names.AttrValue: "0",
+				},
+			}),
+			ExpectedRemove:      []awstypes.ParameterNameValue{},
+			ExpectedAddOrUpdate: []awstypes.ParameterNameValue{},
+		},
+		{
+			Name: "Remove partial",
+			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
+				map[string]interface{}{
+					names.AttrName:  "reserved-memory",
+					names.AttrValue: "0",
+				},
+				map[string]interface{}{
+					names.AttrName:  "appendonly",
+					names.AttrValue: "yes",
+				},
+			}),
+			New: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
+				map[string]interface{}{
+					names.AttrName:  "appendonly",
+					names.AttrValue: "yes",
+				},
+			}),
+			ExpectedRemove: []awstypes.ParameterNameValue{
+				{
+					ParameterName:  aws.String("reserved-memory"),
+					ParameterValue: aws.String("0"),
+				},
+			},
+			ExpectedAddOrUpdate: []awstypes.ParameterNameValue{},
+		},
+		{
+			Name: "Add to existing",
+			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
+				map[string]interface{}{
+					names.AttrName:  "appendonly",
+					names.AttrValue: "yes",
+				},
+			}),
+			New: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
+				map[string]interface{}{
+					names.AttrName:  "appendonly",
+					names.AttrValue: "yes",
+				},
+				map[string]interface{}{
+					names.AttrName:  "appendfsync",
+					names.AttrValue: "always",
+				},
+			}),
+			ExpectedRemove: []awstypes.ParameterNameValue{},
+			ExpectedAddOrUpdate: []awstypes.ParameterNameValue{
+				{
+					ParameterName:  aws.String("appendfsync"),
+					ParameterValue: aws.String("always"),
+				},
+			},
+		},
+	}
+
+	ignoreExportedOpts := cmpopts.IgnoreUnexported(
+		awstypes.ParameterNameValue{},
+	)
+
+	for _, tc := range cases {
+		remove, addOrUpdate := tfmemorydb.ParameterChanges(tc.Old, tc.New)
+		if diff := cmp.Diff(remove, tc.ExpectedRemove, ignoreExportedOpts); diff != "" {
+			t.Errorf("unexpected Remove diff (+wanted, -got): %s", diff)
+		}
+		if diff := cmp.Diff(addOrUpdate, tc.ExpectedAddOrUpdate, ignoreExportedOpts); diff != "" {
+			t.Errorf("unexpected AddOrUpdate diff (+wanted, -got): %s", diff)
+		}
+	}
+}
 
 func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -37,21 +158,21 @@ func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 				Config: testAccParameterGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "parametergroup/"+rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "memorydb", "parametergroup/"+rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrFamily, "memorydb_redis6"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrID, rName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "active-defrag-cycle-max",
 						names.AttrValue: "70",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  "active-defrag-cycle-min",
-						names.AttrValue: acctest.Ct10,
+						names.AttrValue: "10",
 					}),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
 				),
 			},
@@ -102,7 +223,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				Config: testAccParameterGroupConfig_none(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 				),
 			},
 			{
@@ -111,13 +232,13 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, acctest.Ct0), // 0 is the default value
+				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, "0"), // 0 is the default value
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  names.AttrTimeout,
-						names.AttrValue: acctest.Ct0,
+						names.AttrValue: "0",
 					}),
 				),
 			},
@@ -133,7 +254,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, "20"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  names.AttrTimeout,
 						names.AttrValue: "20",
@@ -149,7 +270,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				Config: testAccParameterGroupConfig_multiple(rName, names.AttrTimeout, "20", "activerehashing", "no"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  names.AttrTimeout,
 						names.AttrValue: "20",
@@ -169,7 +290,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				Config: testAccParameterGroupConfig_one(rName, names.AttrTimeout, "20"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						names.AttrName:  names.AttrTimeout,
 						names.AttrValue: "20",
@@ -185,7 +306,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 				Config: testAccParameterGroupConfig_none(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "parameter.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "0"),
 				),
 			},
 			{
@@ -212,8 +333,8 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -225,10 +346,10 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags2(rName, "Key1", acctest.CtValue1, "Key2", acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", acctest.CtValue2),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", acctest.CtValue2),
 				),
@@ -242,9 +363,9 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags1(rName, "Key1", acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", acctest.CtValue1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key1", acctest.CtValue1),
 				),
 			},
@@ -257,8 +378,8 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 				Config: testAccParameterGroupConfig_tags0(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckParameterGroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsAllPercent, "0"),
 				),
 			},
 			{
@@ -414,121 +535,4 @@ resource "aws_memorydb_parameter_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-// TestParameterChanges was copy-pasted from the ElastiCache implementation.
-func TestParameterChanges(t *testing.T) {
-	t.Parallel()
-
-	cases := []struct {
-		Name                string
-		Old                 *schema.Set
-		New                 *schema.Set
-		ExpectedRemove      []*awstypes.ParameterNameValue
-		ExpectedAddOrUpdate []*awstypes.ParameterNameValue
-	}{
-		{
-			Name:                "Empty",
-			Old:                 new(schema.Set),
-			New:                 new(schema.Set),
-			ExpectedRemove:      []*awstypes.ParameterNameValue{},
-			ExpectedAddOrUpdate: []*awstypes.ParameterNameValue{},
-		},
-		{
-			Name: "Remove all",
-			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
-					names.AttrName:  "reserved-memory",
-					names.AttrValue: acctest.Ct0,
-				},
-			}),
-			New: new(schema.Set),
-			ExpectedRemove: []*awstypes.ParameterNameValue{
-				{
-					ParameterName:  aws.String("reserved-memory"),
-					ParameterValue: aws.String(acctest.Ct0),
-				},
-			},
-			ExpectedAddOrUpdate: []*awstypes.ParameterNameValue{},
-		},
-		{
-			Name: "No change",
-			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
-					names.AttrName:  "reserved-memory",
-					names.AttrValue: acctest.Ct0,
-				},
-			}),
-			New: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
-					names.AttrName:  "reserved-memory",
-					names.AttrValue: acctest.Ct0,
-				},
-			}),
-			ExpectedRemove:      []*awstypes.ParameterNameValue{},
-			ExpectedAddOrUpdate: []*awstypes.ParameterNameValue{},
-		},
-		{
-			Name: "Remove partial",
-			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
-					names.AttrName:  "reserved-memory",
-					names.AttrValue: acctest.Ct0,
-				},
-				map[string]interface{}{
-					names.AttrName:  "appendonly",
-					names.AttrValue: "yes",
-				},
-			}),
-			New: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
-					names.AttrName:  "appendonly",
-					names.AttrValue: "yes",
-				},
-			}),
-			ExpectedRemove: []*awstypes.ParameterNameValue{
-				{
-					ParameterName:  aws.String("reserved-memory"),
-					ParameterValue: aws.String(acctest.Ct0),
-				},
-			},
-			ExpectedAddOrUpdate: []*awstypes.ParameterNameValue{},
-		},
-		{
-			Name: "Add to existing",
-			Old: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
-					names.AttrName:  "appendonly",
-					names.AttrValue: "yes",
-				},
-			}),
-			New: schema.NewSet(tfmemorydb.ParameterHash, []interface{}{
-				map[string]interface{}{
-					names.AttrName:  "appendonly",
-					names.AttrValue: "yes",
-				},
-				map[string]interface{}{
-					names.AttrName:  "appendfsync",
-					names.AttrValue: "always",
-				},
-			}),
-			ExpectedRemove: []*awstypes.ParameterNameValue{},
-			ExpectedAddOrUpdate: []*awstypes.ParameterNameValue{
-				{
-					ParameterName:  aws.String("appendfsync"),
-					ParameterValue: aws.String("always"),
-				},
-			},
-		},
-	}
-
-	for _, tc := range cases {
-		remove, addOrUpdate := tfmemorydb.ParameterChanges(tc.Old, tc.New)
-		if !reflect.DeepEqual(remove, tc.ExpectedRemove) {
-			t.Errorf("Case %q: Remove did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedRemove, remove)
-		}
-		if !reflect.DeepEqual(addOrUpdate, tc.ExpectedAddOrUpdate) {
-			t.Errorf("Case %q: AddOrUpdate did not match\n%#v\n\nGot:\n%#v", tc.Name, tc.ExpectedAddOrUpdate, addOrUpdate)
-		}
-	}
 }

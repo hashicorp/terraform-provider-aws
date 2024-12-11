@@ -60,8 +60,8 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, request resource.Up
 		Priority            types.Int64    `tfsdk:"priority"`
 		SchedulingPolicyARN types.String   `tfsdk:"scheduling_policy_arn"`
 		State               types.String   `tfsdk:"state"`
-		Tags                types.Map      `tfsdk:"tags"`
-		TagsAll             types.Map      `tfsdk:"tags_all"`
+		Tags                tftags.Map     `tfsdk:"tags"`
+		TagsAll             tftags.Map     `tfsdk:"tags_all"`
 		Timeouts            timeouts.Value `tfsdk:"timeouts"`
 	}
 
@@ -72,16 +72,17 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, request resource.Up
 	}
 
 	jobQueueDataV1 := jobQueueResourceModel{
-		ComputeEnvironments:     jobQueueDataV0.ComputeEnvironments,
-		ComputeEnvironmentOrder: fwtypes.NewListNestedObjectValueOfNull[computeEnvironmentOrderModel](ctx),
-		ID:                      jobQueueDataV0.ID,
-		JobQueueARN:             jobQueueDataV0.JobQueueARN,
-		JobQueueName:            jobQueueDataV0.JobQueueName,
-		Priority:                jobQueueDataV0.Priority,
-		State:                   jobQueueDataV0.State,
-		Tags:                    jobQueueDataV0.Tags,
-		TagsAll:                 jobQueueDataV0.TagsAll,
-		Timeouts:                jobQueueDataV0.Timeouts,
+		ComputeEnvironments:      jobQueueDataV0.ComputeEnvironments,
+		ComputeEnvironmentOrder:  fwtypes.NewListNestedObjectValueOfNull[computeEnvironmentOrderModel](ctx),
+		ID:                       jobQueueDataV0.ID,
+		JobQueueARN:              jobQueueDataV0.JobQueueARN,
+		JobQueueName:             jobQueueDataV0.JobQueueName,
+		JobStateTimeLimitActions: fwtypes.NewListNestedObjectValueOfNull[jobStateTimeLimitActionModel](ctx),
+		Priority:                 jobQueueDataV0.Priority,
+		State:                    jobQueueDataV0.State,
+		Tags:                     jobQueueDataV0.Tags,
+		TagsAll:                  jobQueueDataV0.TagsAll,
+		Timeouts:                 jobQueueDataV0.Timeouts,
 	}
 
 	if jobQueueDataV0.SchedulingPolicyARN.ValueString() == "" {

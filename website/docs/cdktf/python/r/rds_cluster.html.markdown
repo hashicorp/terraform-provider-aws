@@ -171,7 +171,8 @@ class MyConvertedCode(TerraformStack):
             master_username="test",
             serverlessv2_scaling_configuration=RdsClusterServerlessv2ScalingConfiguration(
                 max_capacity=1,
-                min_capacity=0.5
+                min_capacity=0,
+                seconds_until_auto_pause=3600
             ),
             storage_encrypted=True
         )
@@ -346,7 +347,7 @@ This resource supports the following arguments:
 * `port` - (Optional) Port on which the DB accepts connections.
 * `preferred_backup_window` - (Optional) Daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter.Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per region, e.g. `04:00-09:00`.
 * `preferred_maintenance_window` - (Optional) Weekly time range during which system maintenance can occur, in (UTC) e.g., `wed:04:00-wed:04:30`
-* `replication_source_identifier` - (Optional) ARN of a source DB cluster or DB instance if this DB cluster is to be created as a Read Replica. If DB Cluster is part of a Global Cluster, use the [`lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to prevent Terraform from showing differences for this argument instead of configuring this value.
+* `replication_source_identifier` - (Optional) ARN of a source DB cluster or DB instance if this DB cluster is to be created as a Read Replica. **Note:** Removing this attribute after creation will promote the read replica to a standalone cluster. If DB Cluster is part of a Global Cluster, use the [`lifecycle` configuration block `ignore_changes` argument](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to prevent Terraform from showing differences for this argument instead of configuring this value.
 * `restore_to_point_in_time` - (Optional) Nested attribute for [point in time restore](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-pitr.html). More details below.
 * `scaling_configuration` - (Optional) Nested attribute with scaling properties. Only valid when `engine_mode` is set to `serverless`. More details below.
 * `serverlessv2_scaling_configuration`- (Optional) Nested attribute with scaling properties for ServerlessV2. Only valid when `engine_mode` is set to `provisioned`. More details below.
@@ -492,15 +493,17 @@ class MyConvertedCode(TerraformStack):
         super().__init__(scope, name)
         RdsCluster(self, "example",
             serverlessv2_scaling_configuration=RdsClusterServerlessv2ScalingConfiguration(
-                max_capacity=128,
-                min_capacity=0.5
+                max_capacity=256,
+                min_capacity=0,
+                seconds_until_auto_pause=3600
             ),
             engine=engine
         )
 ```
 
-* `max_capacity` - (Required) Maximum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
-* `min_capacity` - (Required) Minimum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0.5` up to `128` in steps of `0.5`.
+* `max_capacity` - (Required) Maximum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The maximum capacity must be greater than or equal to the minimum capacity. Valid capacity values are in a range of `0` up to `256` in steps of `0.5`.
+* `min_capacity` - (Required) Minimum capacity for an Aurora DB cluster in `provisioned` DB engine mode. The minimum capacity must be lesser than or equal to the maximum capacity. Valid capacity values are in a range of `0` up to `256` in steps of `0.5`.
+* `seconds_until_auto_pause` - (Optional) Time, in seconds, before an Aurora DB cluster in `provisioned` DB engine mode is paused. Valid values are `300` through `86400`.
 
 ## Attribute Reference
 
@@ -539,7 +542,10 @@ load-balanced across replicas
 
 ### master_user_secret
 
-The `master_user_secret` configuration block supports the following attributes:
+~> **NOTE:** The `master_user_secret` block is a list. To reference elements, use [index notation](https://developer.hashicorp.com/terraform/language/expressions/types#indices-and-attributes). For example:<br><br>
+`aws_rds_cluster.this.master_user_secret[0].secret_arn`
+
+The `master_user_secret` block supports the following attributes:
 
 * `kms_key_id` - Amazon Web Services KMS key identifier that is used to encrypt the secret.
 * `secret_arn` - Amazon Resource Name (ARN) of the secret.
@@ -579,4 +585,4 @@ Using `terraform import`, import RDS Clusters using the `cluster_identifier`. Fo
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d70df5756840581dbadef1fa8179389ff2481c8133dbe538ab98788b7a72b917 -->
+<!-- cache-key: cdktf-0.20.8 input-537b22caac4928654c2249807cab70dea10f693e32ea7964cdcfdff81549652f -->

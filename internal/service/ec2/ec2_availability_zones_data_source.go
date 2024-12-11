@@ -4,9 +4,10 @@
 package ec2
 
 import (
+	"cmp"
 	"context"
 	"log"
-	"sort"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -107,8 +108,8 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "fetching Availability Zones: %s", err)
 	}
 
-	sort.Slice(resp.AvailabilityZones, func(i, j int) bool {
-		return aws.ToString(resp.AvailabilityZones[i].ZoneName) < aws.ToString(resp.AvailabilityZones[j].ZoneName)
+	slices.SortFunc(resp.AvailabilityZones, func(a, b awstypes.AvailabilityZone) int {
+		return cmp.Compare(aws.ToString(a.ZoneName), aws.ToString(b.ZoneName))
 	})
 
 	excludeNames := d.Get("exclude_names").(*schema.Set)
@@ -138,7 +139,7 @@ func dataSourceAvailabilityZonesRead(ctx context.Context, d *schema.ResourceData
 		zoneIds = append(zoneIds, zoneID)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	if err := d.Set("group_names", groupNames); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting group_names: %s", err)

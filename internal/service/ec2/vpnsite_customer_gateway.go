@@ -164,10 +164,10 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

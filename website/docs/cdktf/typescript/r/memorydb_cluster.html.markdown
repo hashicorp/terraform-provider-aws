@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_cluster"
 description: |-
@@ -30,6 +30,8 @@ class MyConvertedCode extends TerraformStack {
     super(scope, name);
     new MemorydbCluster(this, "example", {
       aclName: "open-access",
+      engine: "redis",
+      engineVersion: "7.1",
       name: "my-cluster",
       nodeType: "db.t4g.small",
       numShards: 2,
@@ -47,6 +49,8 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `aclName` - (Required) The name of the Access Control List to associate with the cluster.
+* `engine` - (Optional) The engine that will run on your nodes. Supported values are `redis` and `valkey`.
+* `engineVersion` - (Optional) Version number of the engine to be used for the cluster. Downgrades are not supported.
 * `nodeType` - (Required) The compute and memory capacity of the nodes in the cluster. See AWS documentation on [supported node types](https://docs.aws.amazon.com/memorydb/latest/devguide/nodes.supportedtypes.html) as well as [vertical scaling](https://docs.aws.amazon.com/memorydb/latest/devguide/cluster-vertical-scaling.html).
 
 The following arguments are optional:
@@ -54,7 +58,6 @@ The following arguments are optional:
 * `autoMinorVersionUpgrade` - (Optional, Forces new resource) When set to `true`, the cluster will automatically receive minor engine version upgrades after launch. Defaults to `true`.
 * `dataTiering` - (Optional, Forces new resource) Enables data tiering. This option is not supported by all instance types. For more information, see [Data tiering](https://docs.aws.amazon.com/memorydb/latest/devguide/data-tiering.html).
 * `description` - (Optional) Description for the cluster. Defaults to `"Managed by Terraform"`.
-* `engineVersion` - (Optional) Version number of the Redis engine to be used for the cluster. Downgrades are not supported.
 * `finalSnapshotName` - (Optional) Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
 * `kmsKeyArn` - (Optional, Forces new resource) ARN of the KMS key used to encrypt the cluster at rest.
 * `maintenanceWindow` - (Optional) Specifies the weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). The minimum maintenance window is a 60 minute period. Example: `sun:23:00-mon:01:30`.
@@ -83,7 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `clusterEndpoint`
     * `address` - DNS hostname of the cluster configuration endpoint.
     * `port` - Port number that the cluster configuration endpoint is listening on.
-* `enginePatchVersion` - Patch version number of the Redis engine used by the cluster.
+* `enginePatchVersion` - Patch version number of the engine used by the cluster.
 * `shards` - Set of shards in this cluster.
     * `name` - Name of this shard.
     * `num_nodes` - Number of individual nodes in this shard.
@@ -133,4 +136,4 @@ Using `terraform import`, import a cluster using the `name`. For example:
 % terraform import aws_memorydb_cluster.example my-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d6818a9008412346bdaa4fa4b26d098dea2f660a578683a93af8623986328ed6 -->
+<!-- cache-key: cdktf-0.20.8 input-bd7eba75b50da85dc3b9f8f15ceb631cc3be04863e150d5d499d34a64da7128e -->

@@ -20,6 +20,7 @@ import (
 // @SDKDataSource("aws_appmesh_virtual_node", name="Virtual Node")
 // @Tags
 // @Testing(serialize=true)
+// @Testing(tagsIdentifierAttribute="arn")
 func dataSourceVirtualNode() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVirtualNodeRead,
@@ -92,7 +93,7 @@ func dataSourceVirtualNodeRead(ctx context.Context, d *schema.ResourceData, meta
 	// They can't list tags and tag/untag resources in a mesh that aren't created by the account.
 	var tags tftags.KeyValueTags
 
-	if meshOwner == meta.(*conns.AWSClient).AccountID {
+	if meshOwner == meta.(*conns.AWSClient).AccountID(ctx) {
 		tags, err = listTags(ctx, conn, arn)
 
 		if err != nil {

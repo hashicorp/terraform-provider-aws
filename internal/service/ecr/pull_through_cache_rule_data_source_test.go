@@ -25,7 +25,7 @@ func TestAccECRPullThroughCacheRuleDataSource_basic(t *testing.T) {
 			{
 				Config: testAccPullThroughCacheRuleDataSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrAccountID(dataSource, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSource, "registry_id"),
 					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", "public.ecr.aws"),
 				),
 			},
@@ -47,7 +47,7 @@ func TestAccECRPullThroughCacheRuleDataSource_repositoryPrefixWithSlash(t *testi
 			{
 				Config: testAccPullThroughCacheRuleDataSourceConfig_repositoryPrefixWithSlash(repositoryPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrAccountID(dataSource, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSource, "registry_id"),
 					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", "public.ecr.aws"),
 				),
 			},
@@ -69,7 +69,7 @@ func TestAccECRPullThroughCacheRuleDataSource_credential(t *testing.T) {
 				Config: testAccPullThroughCacheRuleDataSourceConfig_credentialARN(repositoryPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSource, "credential_arn"),
-					acctest.CheckResourceAttrAccountID(dataSource, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSource, "registry_id"),
 					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", "registry-1.docker.io"),
 				),
 			},

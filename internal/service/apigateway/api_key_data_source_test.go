@@ -27,6 +27,7 @@ func TestAccAPIGatewayAPIKeyDataSource_basic(t *testing.T) {
 			{
 				Config: testAccAPIKeyDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrARN, dataSourceName, names.AttrARN),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCreatedDate, dataSourceName, names.AttrCreatedDate),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_id", dataSourceName, "customer_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDescription, dataSourceName, names.AttrDescription),

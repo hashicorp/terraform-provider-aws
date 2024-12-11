@@ -7,7 +7,7 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -90,7 +90,7 @@ func dataSourceServiceNetworkRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID {
+	if parsedARN.AccountID == meta.(*conns.AWSClient).AccountID(ctx) {
 		tags, err := listTags(ctx, conn, serviceNetworkARN)
 
 		if err != nil {

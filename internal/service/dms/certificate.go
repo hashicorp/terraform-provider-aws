@@ -131,7 +131,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	if v := aws.ToString(certificate.CertificatePem); v != "" {
 		d.Set("certificate_pem", v)
 	}
-	if certificate.CertificateWallet != nil && len(certificate.CertificateWallet) != 0 {
+	if len(certificate.CertificateWallet) != 0 {
 		d.Set("certificate_wallet", itypes.Base64EncodeOnce(certificate.CertificateWallet))
 	}
 

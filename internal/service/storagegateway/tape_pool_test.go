@@ -36,11 +36,11 @@ func TestAccStorageGatewayTapePool_basic(t *testing.T) {
 				Config: testAccTapePoolConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "GLACIER"),
 					resource.TestCheckResourceAttr(resourceName, "retention_lock_type", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", "0"),
 				),
 			},
 			{
@@ -68,11 +68,11 @@ func TestAccStorageGatewayTapePool_retention(t *testing.T) {
 				Config: testAccTapePoolConfig_retention(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "storagegateway", regexache.MustCompile(`tapepool/pool-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "pool_name", rName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "GLACIER"),
 					resource.TestCheckResourceAttr(resourceName, "retention_lock_type", "GOVERNANCE"),
-					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "retention_lock_time_in_days", "1"),
 				),
 			},
 			{
@@ -100,7 +100,7 @@ func TestAccStorageGatewayTapePool_tags(t *testing.T) {
 				Config: testAccTapePoolConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -113,7 +113,7 @@ func TestAccStorageGatewayTapePool_tags(t *testing.T) {
 				Config: testAccTapePoolConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -122,7 +122,7 @@ func TestAccStorageGatewayTapePool_tags(t *testing.T) {
 				Config: testAccTapePoolConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTapePoolExists(ctx, resourceName, &TapePool),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},

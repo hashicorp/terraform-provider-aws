@@ -42,7 +42,7 @@ func dataSourceLocationsRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Locations: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("location_codes", tfslices.ApplyToAll(locations, func(v awstypes.Location) string {
 		return aws.ToString(v.LocationCode)
 	}))

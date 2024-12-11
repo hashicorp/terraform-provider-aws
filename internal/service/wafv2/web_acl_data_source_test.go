@@ -33,7 +33,7 @@ func TestAccWAFV2WebACLDataSource_basic(t *testing.T) {
 				Config: testAccWebACLDataSourceConfig_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(datasourceName, names.AttrARN, "wafv2", regexache.MustCompile(fmt.Sprintf("regional/webacl/%v/.+$", name))),
+					acctest.MatchResourceAttrRegionalARN(ctx, datasourceName, names.AttrARN, "wafv2", regexache.MustCompile(fmt.Sprintf("regional/webacl/%v/.+$", name))),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrDescription, resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrID, resourceName, names.AttrID),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrName, resourceName, names.AttrName),

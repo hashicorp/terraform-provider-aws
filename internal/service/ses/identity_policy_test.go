@@ -8,14 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ses"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -139,65 +138,35 @@ func testAccCheckIdentityPolicyDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
+			_, err := tfses.FindIdentityPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity"], rs.Primary.Attributes[names.AttrName])
 
-			input := &ses.GetIdentityPoliciesInput{
-				Identity:    aws.String(identityARN),
-				PolicyNames: []string{policyName},
+			if tfresource.NotFound(err) {
+				continue
 			}
-
-			output, err := conn.GetIdentityPolicies(ctx, input)
 
 			if err != nil {
 				return err
 			}
 
-			if output != nil && len(output.Policies) > 0 && output.Policies[policyName] != "" {
-				return fmt.Errorf("SES Identity (%s) Policy (%s) still exists", identityARN, policyName)
-			}
+			return fmt.Errorf("SES Identity Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckIdentityPolicyExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckIdentityPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("SES Identity Policy not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("SES Identity Policy ID not set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SESClient(ctx)
 
-		identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
+		_, err := tfses.FindIdentityPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["identity"], rs.Primary.Attributes[names.AttrName])
 
-		input := &ses.GetIdentityPoliciesInput{
-			Identity:    aws.String(identityARN),
-			PolicyNames: []string{policyName},
-		}
-
-		output, err := conn.GetIdentityPolicies(ctx, input)
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil || len(output.Policies) == 0 {
-			return fmt.Errorf("SES Identity (%s) Policy (%s) not found", identityARN, policyName)
-		}
-
-		return nil
+		return err
 	}
 }
 

@@ -55,3 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `use_custom_tts_voices` - Whether use custom tts voices is enabled.
 * `status` - State of the instance.
 * `service_role` - Service role of the instance.
+* `tags` - A map of tags to assigned to the instance.

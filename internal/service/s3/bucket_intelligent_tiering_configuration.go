@@ -114,6 +114,9 @@ func resourceBucketIntelligentTieringConfigurationPut(ctx context.Context, d *sc
 	}
 
 	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	input := &s3.PutBucketIntelligentTieringConfigurationInput{
 		Bucket:                          aws.String(bucket),
 		Id:                              aws.String(name),
@@ -156,6 +159,10 @@ func resourceBucketIntelligentTieringConfigurationRead(ctx context.Context, d *s
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+
 	output, err := findIntelligentTieringConfiguration(ctx, conn, bucket, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -192,6 +199,10 @@ func resourceBucketIntelligentTieringConfigurationDelete(ctx context.Context, d 
 	bucket, name, err := BucketIntelligentTieringConfigurationParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Bucket Intelligent-Tiering Configuration: %s", d.Id())

@@ -5,8 +5,8 @@ package lakeformation
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
@@ -28,11 +28,6 @@ func DataSourceDataLakeSettings() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"admins": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"read_only_admins": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -93,6 +88,16 @@ func DataSourceDataLakeSettings() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			names.AttrParameters: {
+				Type:     schema.TypeMap,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"read_only_admins": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"trusted_resource_owners": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -111,7 +116,7 @@ func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk(names.AttrCatalogID); ok {
 		input.CatalogId = aws.String(v.(string))
 	}
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(prettify(input))))
+	d.SetId(strconv.Itoa(create.StringHashcode(prettify(input))))
 
 	output, err := conn.GetDataLakeSettings(ctx, input)
 
@@ -132,14 +137,15 @@ func dataSourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData,
 	settings := output.DataLakeSettings
 
 	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
-	d.Set("read_only_admins", flattenDataLakeSettingsAdmins(settings.ReadOnlyAdmins))
 	d.Set("allow_external_data_filtering", settings.AllowExternalDataFiltering)
+	d.Set("allow_full_table_external_data_access", settings.AllowFullTableExternalDataAccess)
 	d.Set("authorized_session_tag_value_list", flex.FlattenStringValueList(settings.AuthorizedSessionTagValueList))
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
 	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))
+	d.Set(names.AttrParameters, flex.FlattenStringValueMap(settings.Parameters))
+	d.Set("read_only_admins", flattenDataLakeSettingsAdmins(settings.ReadOnlyAdmins))
 	d.Set("trusted_resource_owners", flex.FlattenStringyValueList(settings.TrustedResourceOwners))
-	d.Set("allow_full_table_external_data_access", settings.AllowFullTableExternalDataAccess)
 
 	return diags
 }

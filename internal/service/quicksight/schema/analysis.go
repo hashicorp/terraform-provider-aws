@@ -4,11 +4,10 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,7 +35,7 @@ func AnalysisDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							names.AttrRole:         stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
+							names.AttrRole:         stringEnumSchema[awstypes.ColumnRole](attrOptional),
 						},
 					},
 				},
@@ -47,11 +46,11 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       stringSchema(true, validation.StringInSlice(quicksight.CrossDatasetTypes_Values(), false)),
+							"cross_dataset":       stringEnumSchema[awstypes.CrossDatasetTypes](attrRequired),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							names.AttrStatus:      stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+							names.AttrStatus:      stringEnumSchema[awstypes.Status](attrOptional),
 						},
 					},
 				},
@@ -76,17 +75,12 @@ func AnalysisDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"sheet_id": idSchema(),
-							names.AttrContentType: {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Computed:     true,
-								ValidateFunc: validation.StringInSlice(quicksight.SheetContentType_Values(), false),
-							},
-							names.AttrDescription:   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"sheet_id":              idSchema(),
+							names.AttrContentType:   stringEnumSchema[awstypes.SheetContentType](attrOptionalComputed),
+							names.AttrDescription:   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							names.AttrName:          stringSchema(false, validation.StringLenBetween(1, 2048)),
+							names.AttrName:          stringLenBetweenSchema(attrOptional, 1, 2048),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -97,11 +91,11 @@ func AnalysisDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										names.AttrContent:   stringSchema(false, validation.StringLenBetween(1, 150000)),
+										names.AttrContent:   stringLenBetweenSchema(attrOptional, 1, 150000),
 									},
 								},
 							},
-							"title":   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"title":   stringLenBetweenSchema(attrOptional, 1, 1024),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -109,6 +103,10 @@ func AnalysisDefinitionSchema() *schema.Schema {
 			},
 		},
 	}
+}
+
+func AnalysisDefinitionDataSourceSchema() *schema.Schema {
+	return sdkv2.DataSourcePropertyFromResourceProperty(AnalysisDefinitionSchema())
 }
 
 func AnalysisSourceEntitySchema() *schema.Schema {
@@ -128,11 +126,7 @@ func AnalysisSourceEntitySchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							names.AttrARN: {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
-							},
+							names.AttrARN:         arnStringSchema(attrRequired),
 							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
 					},
@@ -142,7 +136,7 @@ func AnalysisSourceEntitySchema() *schema.Schema {
 	}
 }
 
-func ExpandAnalysisSourceEntity(tfList []interface{}) *quicksight.AnalysisSourceEntity {
+func ExpandAnalysisSourceEntity(tfList []interface{}) *awstypes.AnalysisSourceEntity {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -152,32 +146,33 @@ func ExpandAnalysisSourceEntity(tfList []interface{}) *quicksight.AnalysisSource
 		return nil
 	}
 
-	sourceEntity := &quicksight.AnalysisSourceEntity{}
+	apiObject := &awstypes.AnalysisSourceEntity{}
 
 	if v, ok := tfMap["source_template"].([]interface{}); ok && len(v) > 0 {
-		sourceEntity.SourceTemplate = expandAnalysisSourceTemplate(v[0].(map[string]interface{}))
+		apiObject.SourceTemplate = expandAnalysisSourceTemplate(v[0].(map[string]interface{}))
 	}
 
-	return sourceEntity
+	return apiObject
 }
 
-func expandAnalysisSourceTemplate(tfMap map[string]interface{}) *quicksight.AnalysisSourceTemplate {
+func expandAnalysisSourceTemplate(tfMap map[string]interface{}) *awstypes.AnalysisSourceTemplate {
 	if tfMap == nil {
 		return nil
 	}
 
-	sourceTemplate := &quicksight.AnalysisSourceTemplate{}
+	apiObject := &awstypes.AnalysisSourceTemplate{}
+
 	if v, ok := tfMap[names.AttrARN].(string); ok && v != "" {
-		sourceTemplate.Arn = aws.String(v)
+		apiObject.Arn = aws.String(v)
 	}
 	if v, ok := tfMap["data_set_references"].([]interface{}); ok && len(v) > 0 {
-		sourceTemplate.DataSetReferences = expandDataSetReferences(v)
+		apiObject.DataSetReferences = expandDataSetReferences(v)
 	}
 
-	return sourceTemplate
+	return apiObject
 }
 
-func ExpandAnalysisDefinition(tfList []interface{}) *quicksight.AnalysisDefinition {
+func ExpandAnalysisDefinition(tfList []interface{}) *awstypes.AnalysisDefinition {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -187,39 +182,40 @@ func ExpandAnalysisDefinition(tfList []interface{}) *quicksight.AnalysisDefiniti
 		return nil
 	}
 
-	definition := &quicksight.AnalysisDefinition{}
+	apiObject := &awstypes.AnalysisDefinition{}
 
 	if v, ok := tfMap["analysis_defaults"].([]interface{}); ok && len(v) > 0 {
-		definition.AnalysisDefaults = expandAnalysisDefaults(v)
+		apiObject.AnalysisDefaults = expandAnalysisDefaults(v)
 	}
 	if v, ok := tfMap["calculated_fields"].(*schema.Set); ok && v.Len() > 0 {
-		definition.CalculatedFields = expandCalculatedFields(v.List())
+		apiObject.CalculatedFields = expandCalculatedFields(v.List())
 	}
 	if v, ok := tfMap["column_configurations"].([]interface{}); ok && len(v) > 0 {
-		definition.ColumnConfigurations = expandColumnConfigurations(v)
+		apiObject.ColumnConfigurations = expandColumnConfigurations(v)
 	}
 	if v, ok := tfMap["data_set_identifiers_declarations"].([]interface{}); ok && len(v) > 0 {
-		definition.DataSetIdentifierDeclarations = expandDataSetIdentifierDeclarations(v)
+		apiObject.DataSetIdentifierDeclarations = expandDataSetIdentifierDeclarations(v)
 	}
 	if v, ok := tfMap["filter_groups"].([]interface{}); ok && len(v) > 0 {
-		definition.FilterGroups = expandFilterGroups(v)
+		apiObject.FilterGroups = expandFilterGroups(v)
 	}
 	if v, ok := tfMap["parameter_declarations"].(*schema.Set); ok && v.Len() > 0 {
-		definition.ParameterDeclarations = expandParameterDeclarations(v.List())
+		apiObject.ParameterDeclarations = expandParameterDeclarations(v.List())
 	}
 	if v, ok := tfMap["sheets"].([]interface{}); ok && len(v) > 0 {
-		definition.Sheets = expandSheetDefinitions(v)
+		apiObject.Sheets = expandSheetDefinitions(v)
 	}
 
-	return definition
+	return apiObject
 }
 
-func FlattenAnalysisDefinition(apiObject *quicksight.AnalysisDefinition) []interface{} {
+func FlattenAnalysisDefinition(apiObject *awstypes.AnalysisDefinition) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
 	if apiObject.AnalysisDefaults != nil {
 		tfMap["analysis_defaults"] = flattenAnalysisDefaults(apiObject.AnalysisDefaults)
 	}

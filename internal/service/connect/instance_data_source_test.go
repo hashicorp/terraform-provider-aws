@@ -39,6 +39,7 @@ func testAccInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "multi_party_conference_enabled", dataSourceName, "multi_party_conference_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrStatus, dataSourceName, names.AttrStatus),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrServiceRole, dataSourceName, names.AttrServiceRole),
+					resource.TestCheckResourceAttrPair(resourceName, acctest.CtTagsPercent, dataSourceName, acctest.CtTagsPercent),
 				),
 			},
 			{

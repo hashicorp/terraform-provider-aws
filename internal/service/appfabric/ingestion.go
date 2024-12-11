@@ -30,8 +30,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Ingestion")
+// @FrameworkResource("aws_appfabric_ingestion", name="Ingestion")
 // @Tags(identifierAttribute="arn")
+// TODO: Tests need additional setup
+// @Testing(tagsTest=false)
+// @Testing(serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/appfabric/types;types.Ingestion")
 func newIngestionResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &ingestionResource{}
 
@@ -106,9 +110,14 @@ func (r *ingestionResource) Create(ctx context.Context, request resource.CreateR
 		return
 	}
 
+	uuid, err := uuid.GenerateUUID()
+	if err != nil {
+		response.Diagnostics.AddError("creating AppFabric Ingestion", err.Error())
+	}
+
 	// Additional fields.
 	input.AppBundleIdentifier = fwflex.StringFromFramework(ctx, data.AppBundleARN)
-	input.ClientToken = aws.String(errs.Must(uuid.GenerateUUID()))
+	input.ClientToken = aws.String(uuid)
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateIngestion(ctx, input)
@@ -126,7 +135,12 @@ func (r *ingestionResource) Create(ctx context.Context, request resource.CreateR
 
 	// Set values for unknowns.
 	data.ARN = fwflex.StringToFramework(ctx, output.Ingestion.Arn)
-	data.setID()
+	id, err := data.setID()
+	if err != nil {
+		response.Diagnostics.AddError("flattening resource ID AppFabric Ingestion", err.Error())
+		return
+	}
+	data.ID = types.StringValue(id)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -178,8 +192,8 @@ func (r *ingestionResource) Delete(ctx context.Context, request resource.DeleteR
 	conn := r.Meta().AppFabricClient(ctx)
 
 	_, err := conn.DeleteIngestion(ctx, &appfabric.DeleteIngestionInput{
-		AppBundleIdentifier: aws.String(data.AppBundleARN.ValueString()),
-		IngestionIdentifier: aws.String(data.ARN.ValueString()),
+		AppBundleIdentifier: data.AppBundleARN.ValueStringPointer(),
+		IngestionIdentifier: data.ARN.ValueStringPointer(),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -229,8 +243,8 @@ type ingestionResourceModel struct {
 	ARN           types.String                               `tfsdk:"arn"`
 	ID            types.String                               `tfsdk:"id"`
 	IngestionType fwtypes.StringEnum[awstypes.IngestionType] `tfsdk:"ingestion_type"`
-	Tags          types.Map                                  `tfsdk:"tags"`
-	TagsAll       types.Map                                  `tfsdk:"tags_all"`
+	Tags          tftags.Map                                 `tfsdk:"tags"`
+	TagsAll       tftags.Map                                 `tfsdk:"tags_all"`
 	TenantId      types.String                               `tfsdk:"tenant_id"`
 }
 
@@ -251,6 +265,11 @@ func (m *ingestionResourceModel) InitFromID() error {
 	return nil
 }
 
-func (m *ingestionResourceModel) setID() {
-	m.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{m.AppBundleARN.ValueString(), m.ARN.ValueString()}, ingestionResourceIDPartCount, false)))
+func (m *ingestionResourceModel) setID() (string, error) {
+	parts := []string{
+		m.AppBundleARN.ValueString(),
+		m.ARN.ValueString(),
+	}
+
+	return flex.FlattenResourceId(parts, ingestionResourceIDPartCount, false)
 }

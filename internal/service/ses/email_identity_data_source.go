@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,10 +16,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ses_email_identity")
-func DataSourceEmailIdentity() *schema.Resource {
+// @SDKDataSource("aws_ses_email_identity", name="Email Identity")
+func dataSourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEmailIdentityRead,
+
 		Schema: map[string]*schema.Schema{
 			names.AttrARN: {
 				Type:     schema.TypeString,
@@ -41,35 +41,23 @@ func dataSourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	email := d.Get(names.AttrEmail).(string)
-	email = strings.TrimSuffix(email, ".")
+	email := strings.TrimSuffix(d.Get(names.AttrEmail).(string), ".")
+	_, err := findIdentityNotificationAttributesByIdentity(ctx, conn, email)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SES Email Identity (%s) verification: %s", email, err)
+	}
 
 	d.SetId(email)
-	d.Set(names.AttrEmail, email)
-
-	readOpts := &ses.GetIdentityVerificationAttributesInput{
-		Identities: []string{
-			email,
-		},
-	}
-
-	response, err := conn.GetIdentityVerificationAttributes(ctx, readOpts)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "[WARN] Error fetching identity verification attributes for %s: %s", email, err)
-	}
-
-	_, ok := response.VerificationAttributes[email]
-	if !ok {
-		return sdkdiag.AppendErrorf(diags, "[WARN] Email not listed in response when fetching verification attributes for %s", d.Id())
-	}
-
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("identity/%s", email),
 		Service:   "ses",
 	}.String()
 	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrEmail, email)
+
 	return diags
 }

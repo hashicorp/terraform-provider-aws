@@ -72,7 +72,7 @@ func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := meta.(*conns.AWSClient).AccountID(ctx)
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
 		accountID = v.(string)
 	}
@@ -95,7 +95,7 @@ func resourceAccountPublicAccessBlockCreate(ctx context.Context, d *schema.Resou
 
 	d.SetId(accountID)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, s3PropagationTimeout, func() (interface{}, error) {
 		return findPublicAccessBlockByAccountID(ctx, conn, d.Id())
 	})
 
@@ -176,6 +176,14 @@ func resourceAccountPublicAccessBlockDelete(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Account Public Access Block (%s): %s", d.Id(), err)
 	}
 
+	_, err = tfresource.RetryUntilNotFound(ctx, s3PropagationTimeout, func() (interface{}, error) {
+		return findPublicAccessBlockByAccountID(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for S3 Account Public Access Block (%s) delete: %s", d.Id(), err)
+	}
+
 	return diags
 }
 
@@ -225,7 +233,7 @@ func waitPublicAccessBlockEqual(ctx context.Context, conn *s3control.Client, acc
 		Pending:                   []string{strconv.FormatBool(false)},
 		Target:                    []string{strconv.FormatBool(true)},
 		Refresh:                   statusPublicAccessBlockEqual(ctx, conn, accountID, target),
-		Timeout:                   propagationTimeout,
+		Timeout:                   s3PropagationTimeout,
 		MinTimeout:                5 * time.Second,
 		ContinuousTargetOccurence: 2,
 	}

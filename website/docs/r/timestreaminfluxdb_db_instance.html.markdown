@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_timestreaminfluxdb_db_instance
 
-Terraform resource for managing an Amazon Timestream for InfluxDB Db Instance.
+Terraform resource for managing an Amazon Timestream for InfluxDB database instance.
 
 ## Example Usage
 

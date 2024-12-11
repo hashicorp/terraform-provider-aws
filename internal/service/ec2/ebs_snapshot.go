@@ -190,9 +190,9 @@ func resourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
 	}.String()
 	d.Set(names.AttrARN, arn)

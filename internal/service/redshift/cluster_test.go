@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +25,7 @@ import (
 
 func TestAccRedshiftCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -39,7 +40,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrAvailabilityZone, "data.aws_availability_zones.available", "names.0"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "cluster_nodes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtTrue),
@@ -49,8 +50,8 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maintenance_track_name", "current"),
 					resource.TestCheckResourceAttr(resourceName, "manual_snapshot_retention_period", "-1"),
 					resource.TestCheckResourceAttr(resourceName, "multi_az", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct0),
-					resource.TestCheckResourceAttr(resourceName, "tags.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.#", "0"),
 				),
 			},
 			{
@@ -70,7 +71,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 
 func TestAccRedshiftCluster_aqua(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -118,7 +119,7 @@ func TestAccRedshiftCluster_aqua(t *testing.T) {
 
 func TestAccRedshiftCluster_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -142,7 +143,7 @@ func TestAccRedshiftCluster_disappears(t *testing.T) {
 
 func TestAccRedshiftCluster_withFinalSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -175,7 +176,7 @@ func TestAccRedshiftCluster_withFinalSnapshot(t *testing.T) {
 
 func TestAccRedshiftCluster_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	keyResourceName := "aws_kms_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -212,7 +213,7 @@ func TestAccRedshiftCluster_kmsKey(t *testing.T) {
 
 func TestAccRedshiftCluster_enhancedVPCRoutingEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -253,7 +254,7 @@ func TestAccRedshiftCluster_enhancedVPCRoutingEnabled(t *testing.T) {
 
 func TestAccRedshiftCluster_loggingEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	bucketResourceName := "aws_s3_bucket.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -304,7 +305,7 @@ func TestAccRedshiftCluster_loggingEnabled(t *testing.T) {
 
 func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -322,7 +323,7 @@ func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", "1"),
 				),
 			},
 			{
@@ -330,14 +331,7 @@ func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", acctest.Ct3),
-				),
-			},
-			{
-				Config: testAccClusterConfig_snapshotCopyDisabled(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", "3"),
 				),
 			},
 		},
@@ -346,7 +340,7 @@ func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
 
 func TestAccRedshiftCluster_iamRoles(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -360,14 +354,14 @@ func TestAccRedshiftCluster_iamRoles(t *testing.T) {
 				Config: testAccClusterConfig_iamRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "2"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_updateIAMRoles(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "1"),
 				),
 			},
 		},
@@ -376,7 +370,7 @@ func TestAccRedshiftCluster_iamRoles(t *testing.T) {
 
 func TestAccRedshiftCluster_publiclyAccessible(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -407,7 +401,7 @@ func TestAccRedshiftCluster_publiclyAccessible(t *testing.T) {
 
 func TestAccRedshiftCluster_updateNodeCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -421,14 +415,14 @@ func TestAccRedshiftCluster_updateNodeCount(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "1"),
 				),
 			},
 			{
 				Config: testAccClusterConfig_updateNodeCount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "2"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "multi-node"),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "dc2.large"),
 				),
@@ -439,7 +433,7 @@ func TestAccRedshiftCluster_updateNodeCount(t *testing.T) {
 
 func TestAccRedshiftCluster_updateNodeType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -469,7 +463,7 @@ func TestAccRedshiftCluster_updateNodeType(t *testing.T) {
 
 func TestAccRedshiftCluster_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -483,7 +477,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -502,7 +496,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -511,7 +505,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 				Config: testAccClusterConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -521,7 +515,7 @@ func TestAccRedshiftCluster_tags(t *testing.T) {
 
 func TestAccRedshiftCluster_forceNewUsername(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 redshift.Cluster
+	var v1, v2 awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -554,7 +548,7 @@ func TestAccRedshiftCluster_forceNewUsername(t *testing.T) {
 
 func TestAccRedshiftCluster_changeAvailabilityZone(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 redshift.Cluster
+	var v1, v2 awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -587,7 +581,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone(t *testing.T) {
 
 func TestAccRedshiftCluster_changeAvailabilityZoneAndSetAvailabilityZoneRelocation(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 redshift.Cluster
+	var v1, v2 awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -621,7 +615,7 @@ func TestAccRedshiftCluster_changeAvailabilityZoneAndSetAvailabilityZoneRelocati
 
 func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNotSet(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -650,7 +644,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNot
 
 func TestAccRedshiftCluster_changeEncryption1(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 redshift.Cluster
+	var cluster1, cluster2 awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -681,7 +675,7 @@ func TestAccRedshiftCluster_changeEncryption1(t *testing.T) {
 
 func TestAccRedshiftCluster_changeEncryption2(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cluster1, cluster2 redshift.Cluster
+	var cluster1, cluster2 awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -712,7 +706,7 @@ func TestAccRedshiftCluster_changeEncryption2(t *testing.T) {
 
 func TestAccRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -753,7 +747,7 @@ func TestAccRedshiftCluster_availabilityZoneRelocation(t *testing.T) {
 
 func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -777,7 +771,7 @@ func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *tes
 
 func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -812,7 +806,7 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 
 func TestAccRedshiftCluster_restoreFromSnapshotARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -847,7 +841,7 @@ func TestAccRedshiftCluster_restoreFromSnapshotARN(t *testing.T) {
 
 func TestAccRedshiftCluster_manageMasterPassword(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -883,7 +877,7 @@ func TestAccRedshiftCluster_manageMasterPassword(t *testing.T) {
 
 func TestAccRedshiftCluster_multiAZ(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v redshift.Cluster
+	var v awstypes.Cluster
 	resourceName := "aws_redshift_cluster.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -924,7 +918,7 @@ func TestAccRedshiftCluster_multiAZ(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_redshift_cluster" {
@@ -956,9 +950,9 @@ func testAccCheckClusterTestSnapshotDestroy(ctx context.Context, rName string) r
 			}
 
 			// Try and delete the snapshot before we check for the cluster not found
-			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
-			_, err := conn.DeleteClusterSnapshotWithContext(ctx, &redshift.DeleteClusterSnapshotInput{
+			_, err := conn.DeleteClusterSnapshot(ctx, &redshift.DeleteClusterSnapshotInput{
 				SnapshotIdentifier: aws.String(rName),
 			})
 
@@ -983,7 +977,7 @@ func testAccCheckClusterTestSnapshotDestroy(ctx context.Context, rName string) r
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, n string, v *redshift.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -994,7 +988,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *redshift.Cluste
 			return fmt.Errorf("No Redshift Cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftClient(ctx)
 
 		output, err := tfredshift.FindClusterByID(ctx, conn, rs.Primary.ID)
 
@@ -1008,23 +1002,23 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *redshift.Cluste
 	}
 }
 
-func testAccCheckClusterMasterUsername(c *redshift.Cluster, value string) resource.TestCheckFunc {
+func testAccCheckClusterMasterUsername(c *awstypes.Cluster, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if got, want := aws.StringValue(c.MasterUsername), value; got != want {
+		if got, want := aws.ToString(c.MasterUsername), value; got != want {
 			return fmt.Errorf("Expected cluster's MasterUsername: %q, given: %q", want, got)
 		}
 		return nil
 	}
 }
 
-func testAccCheckClusterNotRecreated(i, j *redshift.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterNotRecreated(i, j *awstypes.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// In lieu of some other uniquely identifying attribute from the API that always changes
 		// when a cluster is destroyed and recreated with the same identifier, we use the SSH key
 		// as it will get regenerated when a cluster is destroyed.
 		// Certain update operations (e.g KMS encrypting a cluster) will change ClusterCreateTime.
 		// Clusters with the same identifier can/will have an overlapping Endpoint.Address.
-		if aws.StringValue(i.ClusterPublicKey) != aws.StringValue(j.ClusterPublicKey) {
+		if aws.ToString(i.ClusterPublicKey) != aws.ToString(j.ClusterPublicKey) {
 			return errors.New("Redshift Cluster was recreated")
 		}
 
@@ -1032,14 +1026,14 @@ func testAccCheckClusterNotRecreated(i, j *redshift.Cluster) resource.TestCheckF
 	}
 }
 
-func testAccCheckClusterRecreated(i, j *redshift.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterRecreated(i, j *awstypes.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// In lieu of some other uniquely identifying attribute from the API that always changes
 		// when a cluster is destroyed and recreated with the same identifier, we use the SSH key
 		// as it will get regenerated when a cluster is destroyed.
 		// Certain update operations (e.g KMS encrypting a cluster) will change ClusterCreateTime.
 		// Clusters with the same identifier can/will have an overlapping Endpoint.Address.
-		if aws.StringValue(i.ClusterPublicKey) == aws.StringValue(j.ClusterPublicKey) {
+		if aws.ToString(i.ClusterPublicKey) == aws.ToString(j.ClusterPublicKey) {
 			return errors.New("Redshift Cluster was not recreated")
 		}
 
@@ -1391,25 +1385,6 @@ resource "aws_redshift_cluster" "test" {
   }
 
   skip_final_snapshot = true
-}
-`, rName))
-}
-
-func testAccClusterConfig_snapshotCopyDisabled(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(2),
-		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
-		fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier                  = %[1]q
-  availability_zone                   = data.aws_availability_zones.available.names[0]
-  database_name                       = "mydb"
-  master_username                     = "foo_test"
-  master_password                     = "Mustbe8characters"
-  node_type                           = "dc2.large"
-  automated_snapshot_retention_period = 0
-  allow_version_upgrade               = false
-  skip_final_snapshot                 = true
 }
 `, rName))
 }

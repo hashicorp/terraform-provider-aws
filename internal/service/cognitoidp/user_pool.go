@@ -4,6 +4,7 @@
 package cognitoidp
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -31,7 +33,8 @@ import (
 )
 
 // @SDKResource("aws_cognito_user_pool", name="User Pool")
-// @Tags
+// @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types;awstypes;awstypes.UserPoolType")
 func resourceUserPool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolCreate,
@@ -386,6 +389,11 @@ func resourceUserPool() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(6, 99),
 						},
+						"password_history_size": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(0, 24),
+						},
 						"require_lowercase": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -405,6 +413,7 @@ func resourceUserPool() *schema.Resource {
 						"temporary_password_validity_days": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(0, 365),
 						},
 					},
@@ -415,6 +424,7 @@ func resourceUserPool() *schema.Resource {
 				Optional: true,
 				MinItems: 1,
 				MaxItems: 50,
+				Set:      resourceUserPoolSchemaHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute_data_type": {
@@ -945,15 +955,17 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"sms_authentication_message",
 		"sms_configuration",
 		"sms_verification_message",
-		names.AttrTags,
-		names.AttrTagsAll,
+		// names.AttrTagsAll,
 		"user_attribute_update_settings",
 		"user_pool_add_ons",
 		"verification_message_template",
 	) {
+		// TODO: `UpdateUserPoolInput` has a field `UserPoolTags` that can be used to set tags directly.
+		// However, setting tags directly on the update requires correctly managing Ignored and Default tags.
+		// For now, use `UpdateTags`. Once this is fixed, `UpdateTags` will no longer be needed by this package.
 		input := &cognitoidentityprovider.UpdateUserPoolInput{
-			UserPoolId:   aws.String(d.Id()),
-			UserPoolTags: getTagsIn(ctx),
+			UserPoolId: aws.String(d.Id()),
+			// UserPoolTags: getTagsIn(ctx),
 		}
 
 		if v, ok := d.GetOk("account_recovery_setting"); ok {
@@ -1589,6 +1601,10 @@ func expandPasswordPolicyType(tfMap map[string]interface{}) *awstypes.PasswordPo
 		apiObject.MinimumLength = aws.Int32(int32(v.(int)))
 	}
 
+	if v, ok := tfMap["password_history_size"]; ok {
+		apiObject.PasswordHistorySize = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := tfMap["require_lowercase"]; ok {
 		apiObject.RequireLowercase = v.(bool)
 	}
@@ -1682,7 +1698,11 @@ func expandSchemaAttributeTypes(tfList []interface{}) []awstypes.SchemaAttribute
 						sact.MinLength = aws.String(v.(string))
 					}
 
-					apiObject.StringAttributeConstraints = sact
+					if sact.MinLength == nil && sact.MaxLength == nil {
+						apiObject.StringAttributeConstraints = nil
+					} else {
+						apiObject.StringAttributeConstraints = sact
+					}
 				}
 			}
 		}
@@ -1884,6 +1904,10 @@ func flattenPasswordPolicyType(apiObject *awstypes.PasswordPolicyType) []interfa
 
 	if apiObject.MinimumLength != nil {
 		tfMap["minimum_length"] = aws.ToInt32(apiObject.MinimumLength)
+	}
+
+	if apiObject.PasswordHistorySize != nil {
+		tfMap["password_history_size"] = aws.ToInt32(apiObject.PasswordHistorySize)
 	}
 
 	if len(tfMap) > 0 {
@@ -2263,4 +2287,55 @@ func userPoolSchemaAttributeMatchesStandardAttribute(apiObject *awstypes.SchemaA
 	}
 
 	return false
+}
+
+func resourceUserPoolSchemaHash(v any) int {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]any)
+	if !ok {
+		return 0
+	}
+
+	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["attribute_data_type"].(string)))
+	buf.WriteString(fmt.Sprintf("%t-", m["developer_only_attribute"].(bool)))
+	buf.WriteString(fmt.Sprintf("%t-", m["mutable"].(bool)))
+	buf.WriteString(fmt.Sprintf("%t-", m["required"].(bool)))
+
+	if v, ok := m["string_attribute_constraints"]; ok {
+		data := v.([]any)
+
+		if len(data) > 0 {
+			buf.WriteString("string_attribute_constraints-")
+			m, _ := data[0].(map[string]any)
+			if ok {
+				if l, ok := m["min_length"]; ok && l.(string) != "" {
+					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+				}
+
+				if l, ok := m["max_length"]; ok && l.(string) != "" {
+					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+				}
+			}
+		}
+	}
+
+	if v, ok := m["number_attribute_constraints"]; ok {
+		data := v.([]any)
+
+		if len(data) > 0 {
+			buf.WriteString("number_attribute_constraints-")
+			m, _ := data[0].(map[string]any)
+			if ok {
+				if l, ok := m["min_value"]; ok && l.(string) != "" {
+					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+				}
+
+				if l, ok := m["max_value"]; ok && l.(string) != "" {
+					buf.WriteString(fmt.Sprintf("%s-", l.(string)))
+				}
+			}
+		}
+	}
+	return create.StringHashcode(buf.String())
 }

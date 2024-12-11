@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -87,7 +88,7 @@ func TestAccS3BucketObject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrForceDestroy, acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, names.AttrKey, "test-key"),
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrKMSKeyID),
-					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_legal_hold_status", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "object_lock_retain_until_date", ""),
@@ -95,7 +96,7 @@ func TestAccS3BucketObject_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, names.AttrSource),
 					resource.TestCheckNoResourceAttr(resourceName, "source_hash"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrStorageClass, "STANDARD"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "website_redirect", ""),
 				),
@@ -504,7 +505,11 @@ func TestAccS3BucketObject_updatesWithVersioningViaAccessPoint(t *testing.T) {
 	defer os.Remove(sourceInitial)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`" is expected.
+			acctest.PreCheckRegionNot(t, endpoints.UsEast1RegionID)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
@@ -669,7 +674,7 @@ func TestAccS3BucketObject_metadata(t *testing.T) {
 				Config: testAccBucketObjectConfig_metadata(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "metadata.key1", acctest.CtValue1),
 					resource.TestCheckResourceAttr(resourceName, "metadata.key2", acctest.CtValue2),
 				),
@@ -678,7 +683,7 @@ func TestAccS3BucketObject_metadata(t *testing.T) {
 				Config: testAccBucketObjectConfig_metadata(rName, acctest.CtKey1, acctest.CtValue1Updated, "key3", "value3"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "metadata.key1", acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, "metadata.key3", "value3"),
 				),
@@ -687,7 +692,7 @@ func TestAccS3BucketObject_metadata(t *testing.T) {
 				Config: testAccBucketObjectConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "metadata.%", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "metadata.%", "0"),
 				),
 			},
 			{
@@ -784,7 +789,7 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -797,7 +802,7 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
@@ -811,7 +816,7 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj3),
 					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -821,7 +826,7 @@ func TestAccS3BucketObject_tagsLeadingSingleSlash(t *testing.T) {
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -856,7 +861,7 @@ func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -869,7 +874,7 @@ func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
@@ -883,7 +888,7 @@ func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj3),
 					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -893,7 +898,7 @@ func TestAccS3BucketObject_tagsLeadingMultipleSlashes(t *testing.T) {
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -922,7 +927,7 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -935,7 +940,7 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
 					testAccCheckObjectBody(&obj2, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct4),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
@@ -949,7 +954,7 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj3),
 					testAccCheckObjectVersionIDEquals(&obj3, &obj2),
 					testAccCheckObjectBody(&obj3, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -959,7 +964,7 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj4),
 					testAccCheckObjectVersionIDDiffers(&obj4, &obj3),
 					testAccCheckObjectBody(&obj4, "changed stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
@@ -1260,7 +1265,7 @@ func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, "stuff"),
 					testAccCheckObjectUpdateTags(ctx, resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					testAccCheckAllObjectTags(ctx, resourceName, map[string]string{
 						"ignorekey1": "ignorevalue1",
 					}),
@@ -1274,7 +1279,7 @@ func TestAccS3BucketObject_ignoreTags(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, "stuff"),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct3),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),

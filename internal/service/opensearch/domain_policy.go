@@ -8,8 +8,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/opensearch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -21,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_opensearch_domain_policy")
-func ResourceDomainPolicy() *schema.Resource {
+// @SDKResource("aws_opensearch_domain_policy", name="Domain Policy")
+func resourceDomainPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainPolicyUpsert,
 		ReadWithoutTimeout:   resourceDomainPolicyRead,
@@ -55,9 +56,9 @@ func ResourceDomainPolicy() *schema.Resource {
 
 func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
-	ds, err := FindDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
+	ds, err := findDomainByName(ctx, conn, d.Get(names.AttrDomainName).(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] OpenSearch Domain Policy (%s) not found, removing from state", d.Id())
@@ -69,7 +70,7 @@ func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain Policy (%s): %s", d.Id(), err)
 	}
 
-	policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.StringValue(ds.AccessPolicies))
+	policies, err := verify.PolicyToSet(d.Get("access_policies").(string), aws.ToString(ds.AccessPolicies))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading OpenSearch Domain Policy (%s): %s", d.Id(), err)
@@ -82,7 +83,7 @@ func resourceDomainPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 	domainName := d.Get(names.AttrDomainName).(string)
 
 	policy, err := structure.NormalizeJsonString(d.Get("access_policies").(string))
@@ -91,16 +92,14 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.UpdateDomainConfigWithContext(ctx, &opensearchservice.UpdateDomainConfigInput{
+			return conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
 				DomainName:     aws.String(domainName),
 				AccessPolicies: aws.String(policy),
 			})
-		},
-		opensearchservice.ErrCodeValidationException,
-		"A change/update is in progress",
-	)
+		}, "A change/update is in progress")
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain Policy (%s): %s", d.Id(), err)
 	}
@@ -116,9 +115,9 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDomainPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OpenSearchConn(ctx)
+	conn := meta.(*conns.AWSClient).OpenSearchClient(ctx)
 
-	_, err := conn.UpdateDomainConfigWithContext(ctx, &opensearchservice.UpdateDomainConfigInput{
+	_, err := conn.UpdateDomainConfig(ctx, &opensearch.UpdateDomainConfigInput{
 		DomainName:     aws.String(d.Get(names.AttrDomainName).(string)),
 		AccessPolicies: aws.String(""),
 	})

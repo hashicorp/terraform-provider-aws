@@ -6,7 +6,6 @@ package docdb
 import (
 	"context"
 	"log"
-	"reflect"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -226,7 +226,7 @@ func findClusterSnapshots(ctx context.Context, conn *docdb.Client, input *docdb.
 		}
 
 		for _, v := range page.DBClusterSnapshots {
-			if !reflect.ValueOf(v).IsZero() {
+			if !itypes.IsZero(&v) {
 				output = append(output, v)
 			}
 		}

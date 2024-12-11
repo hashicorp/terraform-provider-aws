@@ -13,12 +13,25 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+const (
+	defaultAuthenticationMethodKey   = "KEY"
+	defaultAuthenticationMethodToken = "TOKEN"
+)
+
+func defaultAuthenticationMethod_Values() []string {
+	return []string{
+		defaultAuthenticationMethodKey,
+		defaultAuthenticationMethodToken,
+	}
+}
 
 // @SDKResource("aws_pinpoint_gcm_channel", name="GCM Channel")
 func resourceGCMChannel() *schema.Resource {
@@ -37,10 +50,23 @@ func resourceGCMChannel() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"default_authentication_method": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          defaultAuthenticationMethodKey,
+				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(defaultAuthenticationMethod_Values(), false)),
+			},
 			"api_key": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ExactlyOneOf: []string{"api_key", "service_json"},
+			},
+			"service_json": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ExactlyOneOf: []string{"api_key", "service_json"},
 			},
 			names.AttrEnabled: {
 				Type:     schema.TypeBool,
@@ -59,8 +85,14 @@ func resourceGCMChannelUpsert(ctx context.Context, d *schema.ResourceData, meta 
 
 	params := &awstypes.GCMChannelRequest{}
 
-	params.ApiKey = aws.String(d.Get("api_key").(string))
+	params.DefaultAuthenticationMethod = aws.String(d.Get("default_authentication_method").(string))
 	params.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
+	if d.Get("default_authentication_method") == defaultAuthenticationMethodKey {
+		params.ApiKey = aws.String(d.Get("api_key").(string))
+	}
+	if d.Get("default_authentication_method") == defaultAuthenticationMethodToken {
+		params.ServiceJson = aws.String(d.Get("service_json").(string))
+	}
 
 	req := pinpoint.UpdateGcmChannelInput{
 		ApplicationId:     aws.String(applicationId),
@@ -96,8 +128,8 @@ func resourceGCMChannelRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	d.Set(names.AttrApplicationID, output.ApplicationId)
+	d.Set("default_authentication_method", output.DefaultAuthenticationMethod)
 	d.Set(names.AttrEnabled, output.Enabled)
-	// api_key is never returned
 
 	return diags
 }

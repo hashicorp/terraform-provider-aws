@@ -5,8 +5,8 @@ package sesv2
 import (
 	"context"
 
-	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sesv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,42 +19,18 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newAccountSuppressionAttributesResource,
+			Name:    "Account Suppression Attributes",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceConfigurationSet,
-			TypeName: "aws_sesv2_configuration_set",
-		},
-		{
-			Factory:  DataSourceDedicatedIPPool,
-			TypeName: "aws_sesv2_dedicated_ip_pool",
-		},
-		{
-			Factory:  DataSourceEmailIdentity,
-			TypeName: "aws_sesv2_email_identity",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
-		{
-			Factory:  DataSourceEmailIdentityMailFromAttributes,
-			TypeName: "aws_sesv2_email_identity_mail_from_attributes",
-		},
-	}
-}
-
-func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
-		{
-			Factory:  ResourceAccountVDMAttributes,
-			TypeName: "aws_sesv2_account_vdm_attributes",
-			Name:     "Account VDM Attributes",
-		},
-		{
-			Factory:  ResourceConfigurationSet,
+			Factory:  dataSourceConfigurationSet,
 			TypeName: "aws_sesv2_configuration_set",
 			Name:     "Configuration Set",
 			Tags: &types.ServicePackageResourceTags{
@@ -62,23 +38,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConfigurationSetEventDestination,
-			TypeName: "aws_sesv2_configuration_set_event_destination",
-		},
-		{
-			Factory:  ResourceContactList,
-			TypeName: "aws_sesv2_contact_list",
-			Name:     "Contact List",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: names.AttrARN,
-			},
-		},
-		{
-			Factory:  ResourceDedicatedIPAssignment,
-			TypeName: "aws_sesv2_dedicated_ip_assignment",
-		},
-		{
-			Factory:  ResourceDedicatedIPPool,
+			Factory:  dataSourceDedicatedIPPool,
 			TypeName: "aws_sesv2_dedicated_ip_pool",
 			Name:     "Dedicated IP Pool",
 			Tags: &types.ServicePackageResourceTags{
@@ -86,7 +46,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEmailIdentity,
+			Factory:  dataSourceEmailIdentity,
 			TypeName: "aws_sesv2_email_identity",
 			Name:     "Email Identity",
 			Tags: &types.ServicePackageResourceTags{
@@ -94,15 +54,74 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEmailIdentityFeedbackAttributes,
-			TypeName: "aws_sesv2_email_identity_feedback_attributes",
-		},
-		{
-			Factory:  ResourceEmailIdentityMailFromAttributes,
+			Factory:  dataSourceEmailIdentityMailFromAttributes,
 			TypeName: "aws_sesv2_email_identity_mail_from_attributes",
+			Name:     "Email Identity Mail From Attributes",
+		},
+	}
+}
+
+func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
+	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceAccountVDMAttributes,
+			TypeName: "aws_sesv2_account_vdm_attributes",
+			Name:     "Account VDM Attributes",
 		},
 		{
-			Factory:  ResourceEmailIdentityPolicy,
+			Factory:  resourceConfigurationSet,
+			TypeName: "aws_sesv2_configuration_set",
+			Name:     "Configuration Set",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceConfigurationSetEventDestination,
+			TypeName: "aws_sesv2_configuration_set_event_destination",
+			Name:     "Configuration Set Event Destination",
+		},
+		{
+			Factory:  resourceContactList,
+			TypeName: "aws_sesv2_contact_list",
+			Name:     "Contact List",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceDedicatedIPAssignment,
+			TypeName: "aws_sesv2_dedicated_ip_assignment",
+			Name:     "Dedicated IP Assignment",
+		},
+		{
+			Factory:  resourceDedicatedIPPool,
+			TypeName: "aws_sesv2_dedicated_ip_pool",
+			Name:     "Dedicated IP Pool",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceEmailIdentity,
+			TypeName: "aws_sesv2_email_identity",
+			Name:     "Email Identity",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
+			Factory:  resourceEmailIdentityFeedbackAttributes,
+			TypeName: "aws_sesv2_email_identity_feedback_attributes",
+			Name:     "Email Identity Feedback Attributes",
+		},
+		{
+			Factory:  resourceEmailIdentityMailFromAttributes,
+			TypeName: "aws_sesv2_email_identity_mail_from_attributes",
+			Name:     "Email Identity Mail From Attributes",
+		},
+		{
+			Factory:  resourceEmailIdentityPolicy,
 			TypeName: "aws_sesv2_email_identity_policy",
 			Name:     "Email Identity Policy",
 		},
@@ -114,11 +133,11 @@ func (p *servicePackage) ServicePackageName() string {
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*sesv2_sdkv2.Client, error) {
-	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*sesv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	return sesv2_sdkv2.NewFromConfig(cfg,
-		sesv2_sdkv2.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+	return sesv2.NewFromConfig(cfg,
+		sesv2.WithEndpointResolverV2(newEndpointResolverV2()),
 		withBaseEndpoint(config[names.AttrEndpoint].(string)),
 	), nil
 }

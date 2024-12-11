@@ -128,7 +128,7 @@ func resourceCapacityProvider() *schema.Resource {
 func resourceCapacityProviderCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
-	partition := meta.(*conns.AWSClient).Partition
+	partition := meta.(*conns.AWSClient).Partition(ctx)
 
 	name := d.Get(names.AttrName).(string)
 	input := ecs.CreateCapacityProviderInput{
@@ -256,9 +256,9 @@ func resourceCapacityProviderDelete(ctx context.Context, d *schema.ResourceData,
 func resourceCapacityProviderImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	d.Set(names.AttrName, d.Id())
 	d.SetId(arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Service:   "ecs",
 		Resource:  "capacity-provider/" + d.Id(),
 	}.String())
@@ -267,7 +267,7 @@ func resourceCapacityProviderImport(ctx context.Context, d *schema.ResourceData,
 }
 
 func partitionFromConn(conn *ecs.Client) string {
-	return names.PartitionForRegion(conn.Options().Region)
+	return names.PartitionForRegion(conn.Options().Region).ID()
 }
 
 func findCapacityProvider(ctx context.Context, conn *ecs.Client, input *ecs.DescribeCapacityProvidersInput) (*awstypes.CapacityProvider, error) {
