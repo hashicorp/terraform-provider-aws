@@ -1664,7 +1664,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if primaryInterface == nil {
-			return sdkdiag.AppendErrorf(diags, "Failed to update enable_primary_ipv6 on %q, which does not contain a primary network interface", d.Id())
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s), enable_primary_ipv6, which does not contain a primary network interface", d.Id())
 		}
 
 		enablePrimaryIpv6 := d.Get("enable_primary_ipv6").(bool)
