@@ -78,7 +78,7 @@ func resourceSCRAMSecretAssociationRead(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	scramSecrets, err := findSCRAMSecretsByClusterARN(ctx, conn, d.Id())
+	scramSecrets, err := findSCRAMSecretAssociation(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MSK SCRAM Secret Association (%s) not found, removing from state", d.Id())
