@@ -1678,7 +1678,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) primary network interface: %s", d.Id(), err)
 		}
-
 	}
 
 	if d.HasChange("ipv6_address_count") && !d.IsNewResource() {
