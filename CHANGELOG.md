@@ -7,6 +7,7 @@ FEATURES:
 * **New Resource:** `aws_bedrock_inference_profile` ([#40294](https://github.com/hashicorp/terraform-provider-aws/issues/40294))
 * **New Resource:** `aws_cloudwatch_log_anomaly_detector` ([#40437](https://github.com/hashicorp/terraform-provider-aws/issues/40437))
 * **New Resource:** `aws_ecr_account_setting` ([#40219](https://github.com/hashicorp/terraform-provider-aws/issues/40219))
+* **New Resource:** `aws_msk_single_scram_secret_association` ([#37056](https://github.com/hashicorp/terraform-provider-aws/issues/37056))
 * **New Resource:** `aws_servicecatalogappregistry_attribute_group` ([#38183](https://github.com/hashicorp/terraform-provider-aws/issues/38183))
 * **New Resource:** `aws_servicecatalogappregistry_attribute_group_association` ([#38290](https://github.com/hashicorp/terraform-provider-aws/issues/38290))
 
