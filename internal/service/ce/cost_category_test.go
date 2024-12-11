@@ -271,7 +271,8 @@ func testAccPreCheckCostCategoryPayerAccount(ctx context.Context, t *testing.T) 
 
 	_, err := conn.ListCostCategoryDefinitions(ctx, &costexplorer.ListCostCategoryDefinitionsInput{})
 
-	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") {
+	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Linked account doesn't have access to") ||
+		tfawserr.ErrMessageContains(err, "ValidationException", "Linked accounts can only create") {
 		t.Skip("skipping tests; this AWS account must be a payer account")
 	}
 
