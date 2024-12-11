@@ -32,6 +32,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_kinesis_stream: Fix `InvalidArgumentException: NextToken and StreamName cannot be provided together` errors when the data stream has more than 1000 shards ([#40499](https://github.com/hashicorp/terraform-provider-aws/issues/40499))
+* resource/aws_ce_cost_category: Change `rule` from `TypeSet` to `TypeList` as order is significant ([#40521](https://github.com/hashicorp/terraform-provider-aws/issues/40521))
 * resource/aws_fsx_windows_file_system: Fix plan-time validation of `throughput_capacity` validation to allow values up to `12228` ([#40468](https://github.com/hashicorp/terraform-provider-aws/issues/40468))
 * resource/aws_networkfirewall_logging_configuration: Correctly manage all configured `logging_configuration.log_destination_config`s ([#40092](https://github.com/hashicorp/terraform-provider-aws/issues/40092))
 * resource/aws_rds_cluster: Fix `InvalidDBClusterStateFault` errors when deleting clusters that are members of a global cluster ([#40333](https://github.com/hashicorp/terraform-provider-aws/issues/40333))
