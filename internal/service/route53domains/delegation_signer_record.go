@@ -49,7 +49,7 @@ type delegationSignerRecordResource struct {
 	framework.WithImportByID
 }
 
-func (r *delegationSignerRecordResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (*delegationSignerRecordResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_route53domains_delegation_signer_record"
 }
 
