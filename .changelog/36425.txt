@@ -3,9 +3,5 @@ resource/aws_instance: Add `enable_primary_ipv6` argument to add support for ena
 ```
 
 ```release-note:enhancement
-resource/aws_launch_template: Add `enable_primary_ipv6` argument to add support for enabling primary IPv6 addresses for launch templates
-```
-
-```release-note:enhancement
 resource/aws_network_interface: Add `enable_primary_ipv6` argument to add support for enabling primary IPv6 addresses for network interfaces
 ```
