@@ -28,7 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.11.7
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.45.8
 	github.com/aws/aws-sdk-go-v2/service/appintegrations v1.30.7
-	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.34.1
+	github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.29.5
 	github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.7.2
 	github.com/aws/aws-sdk-go-v2/service/appmesh v1.29.7
@@ -76,7 +76,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.35.7
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.51.1
-	github.com/aws/aws-sdk-go-v2/service/connect v1.119.0
+	github.com/aws/aws-sdk-go-v2/service/connect v1.120.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.21.7
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.28.7
@@ -229,7 +229,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.33.7
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.25.7
 	github.com/aws/aws-sdk-go-v2/service/ses v1.29.1
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.38.4
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/sfn v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/shield v1.29.7
 	github.com/aws/aws-sdk-go-v2/service/signer v1.26.7
