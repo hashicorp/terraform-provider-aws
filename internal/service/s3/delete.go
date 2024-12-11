@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/aws/smithy-go"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
@@ -128,43 +129,89 @@ func forEachObjectsPage(ctx context.Context, conn *s3.Client, bucket string, fn 
 // an attempt is made to remove any S3 Object Lock legal holds.
 // Returns the number of objects deleted.
 func deletePageOfObjectVersions(ctx context.Context, conn *s3.Client, bucket string, force bool, page *s3.ListObjectVersionsOutput) (int64, error) {
-	toDelete := tfslices.ApplyToAll(page.Versions, func(v types.ObjectVersion) types.ObjectIdentifier {
-		return types.ObjectIdentifier{
+	if len(page.Versions) == 0 {
+		return 0, nil
+	}
+
+	// Typically every entry from page.Versions ends up in toDeleteBulk, so pre-allocate
+	toDeleteBulk := make([]types.ObjectIdentifier, 0, len(page.Versions))
+	var toDeleteSingly []types.ObjectIdentifier
+
+	// Keys with characters outside the valid XML character set cannot be deleted by bulk DeleteObjects, and must be deleted individually
+	// using DeleteObject.
+	for _, v := range page.Versions {
+		ident := types.ObjectIdentifier{
 			Key:       v.Key,
 			VersionId: v.VersionId,
 		}
-	})
+
+		if keyInXmlCharacterRange(aws.ToString(v.Key)) {
+			toDeleteBulk = append(toDeleteBulk, ident)
+		} else {
+			toDeleteSingly = append(toDeleteSingly, ident)
+		}
+	}
+
+	fmt.Printf("toDeleteBulk: %#v\ntoDeleteSingly: %#v\n", toDeleteBulk, toDeleteSingly)
 
 	var nObjects int64
-	if nObjects = int64(len(toDelete)); nObjects == 0 {
-		return nObjects, nil
+	var outputErrs []types.Error
+
+	for _, v := range toDeleteSingly {
+		key := aws.ToString(v.Key)
+		versionId := aws.ToString(v.VersionId)
+
+		err := deleteObjectVersion(ctx, conn, bucket, key, versionId, force)
+		if err == nil {
+			nObjects++
+			continue
+		}
+
+		if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+			return int64(len(page.Versions)), nil
+		}
+
+		var apiErr smithy.APIError
+		if errors.As(err, &apiErr) {
+			outputErrs = append(outputErrs, types.Error{
+				Code:      aws.String(apiErr.ErrorCode()),
+				Key:       v.Key,
+				VersionId: v.VersionId,
+			})
+		} else {
+			typeErr := fmt.Errorf("unexpected error type: %w", err)
+			return nObjects, newObjectVersionError(key, versionId, typeErr)
+		}
 	}
 
-	input := &s3.DeleteObjectsInput{
-		Bucket: aws.String(bucket),
-		Delete: &types.Delete{
-			Objects: toDelete,
-			Quiet:   aws.Bool(true), // Only report errors.
-		},
-	}
-	if force {
-		input.BypassGovernanceRetention = aws.Bool(force)
-	}
+	if len(toDeleteBulk) > 0 {
+		input := &s3.DeleteObjectsInput{
+			Bucket: aws.String(bucket),
+			Delete: &types.Delete{
+				Objects: toDeleteBulk,
+				Quiet:   aws.Bool(true), // Only report errors.
+			},
+		}
+		if force {
+			input.BypassGovernanceRetention = aws.Bool(force)
+		}
 
-	output, err := conn.DeleteObjects(ctx, input)
+		output, err := conn.DeleteObjects(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nObjects, nil
+		if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+			return int64(len(page.Versions)), nil
+		}
+
+		if err != nil {
+			return nObjects, fmt.Errorf("deleting S3 bucket (%s) object versions: %w", bucket, err)
+		}
+
+		nObjects += int64(len(toDeleteBulk)) - int64(len(output.Errors))
+		outputErrs = append(outputErrs, output.Errors...)
 	}
-
-	if err != nil {
-		return nObjects, fmt.Errorf("deleting S3 bucket (%s) object versions: %w", bucket, err)
-	}
-
-	nObjects -= int64(len(output.Errors))
 
 	var errs []error
-	for _, v := range output.Errors {
+	for _, v := range outputErrs {
 		code := aws.ToString(v.Code)
 		if code == errCodeNoSuchKey {
 			continue
@@ -500,4 +547,18 @@ func deleteObjectVersion(ctx context.Context, conn *s3.Client, b, k, v string, f
 	}
 
 	return err
+}
+
+func keyInXmlCharacterRange(key string) bool {
+	for _, r := range key {
+		if !(r == 0x09 ||
+			r == 0x0A ||
+			r == 0x0D ||
+			r >= 0x20 && r <= 0xD7FF ||
+			r >= 0xE000 && r <= 0xFFFD ||
+			r >= 0x10000 && r <= 0x10FFFF) {
+			return false
+		}
+	}
+	return true
 }

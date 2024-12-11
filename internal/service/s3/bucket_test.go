@@ -239,7 +239,6 @@ func TestAccS3Bucket_Basic_forceDestroyWithUnusualKeyBytes(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					testAccCheckBucketAddObjects(ctx, resourceName, "unusual-key-bytes\x10.txt"),
-					//testAccCheckBucketAddObjects(ctx, resourceName, "unusual-key-bytes\x09.txt"),
 				),
 			},
 		},
@@ -313,6 +312,7 @@ func TestAccS3Bucket_Basic_forceDestroyWithObjectLockEnabled(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, resourceName),
 					testAccCheckBucketAddObjectsWithLegalHold(ctx, resourceName, "data.txt", "prefix/more_data.txt"),
+					testAccCheckBucketAddObjectsWithLegalHold(ctx, resourceName, "unusual-key-bytes\x10.txt"),
 				),
 			},
 		},
