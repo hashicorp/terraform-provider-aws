@@ -99,7 +99,7 @@ func forEachObjectsPage(ctx context.Context, conn *s3.Client, bucket string, fn 
 	var nObjects int64
 
 	input := &s3.ListObjectsV2Input{
-		Bucket: aws.String(bucket),
+		Bucket:       aws.String(bucket),
 		EncodingType: types.EncodingTypeUrl,
 	}
 	var lastErr error
