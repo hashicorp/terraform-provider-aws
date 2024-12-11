@@ -42,7 +42,7 @@ func TestAccCECostCategory_basic(t *testing.T) {
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ce", regexache.MustCompile(`costcategory/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "effective_start"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "rule.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtRulePound, "3"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.value", "production"),
 					resource.TestCheckResourceAttr(resourceName, "rule.1.value", "staging"),
 					resource.TestCheckResourceAttr(resourceName, "rule.2.value", "testing"),
