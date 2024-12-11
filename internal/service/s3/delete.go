@@ -62,17 +62,20 @@ func forEachObjectVersionsPage(ctx context.Context, conn *s3.Client, bucket stri
 		}
 
 		// Reverse URL-encoding from requested EncodingType: "url"
-		page.Versions, err = tfslices.ApplyToAllWithError(page.Versions, func(v types.ObjectVersion) (types.ObjectVersion, error) {
+		for i, v := range page.Versions {
 			unescaped, err := url.QueryUnescape(aws.ToString(v.Key))
 			if err != nil {
-				return types.ObjectVersion{}, err
+				return 0, fmt.Errorf("listing S3 bucket (%s) object versions: unescaping object keys: %w", bucket, err)
 			}
-			v.Key = aws.String(unescaped)
-			return v, nil
-		})
+			page.Versions[i].Key = aws.String(unescaped)
+		}
 
-		if err != nil {
-			return nObjects, fmt.Errorf("listing S3 bucket (%s) object versions: unescaping object keys: %w", bucket, err)
+		for i, dm := range page.DeleteMarkers {
+			unescaped, err := url.QueryUnescape(aws.ToString(dm.Key))
+			if err != nil {
+				return 0, fmt.Errorf("listing S3 bucket (%s) object versions: unescaping object keys: %w", bucket, err)
+			}
+			page.DeleteMarkers[i].Key = aws.String(unescaped)
 		}
 
 		n, err := fn(ctx, conn, bucket, page)
@@ -129,26 +132,49 @@ func forEachObjectsPage(ctx context.Context, conn *s3.Client, bucket string, fn 
 // an attempt is made to remove any S3 Object Lock legal holds.
 // Returns the number of objects deleted.
 func deletePageOfObjectVersions(ctx context.Context, conn *s3.Client, bucket string, force bool, page *s3.ListObjectVersionsOutput) (int64, error) {
-	if len(page.Versions) == 0 {
+	toDelete := tfslices.ApplyToAll(page.Versions, func(v types.ObjectVersion) types.ObjectIdentifier {
+		return types.ObjectIdentifier{
+			Key:       v.Key,
+			VersionId: v.VersionId,
+		}
+	})
+
+	fmt.Printf("deletePageOfObjectVersions\n")
+
+	return deletePage(ctx, conn, bucket, force, toDelete)
+}
+
+// deletePageOfDeleteMarkers deletes a page (<= 1000) of S3 object delete markers.
+// Returns the number of delete markers deleted.
+func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.Client, bucket string, page *s3.ListObjectVersionsOutput) (int64, error) {
+	toDelete := tfslices.ApplyToAll(page.DeleteMarkers, func(v types.DeleteMarkerEntry) types.ObjectIdentifier {
+		return types.ObjectIdentifier{
+			Key:       v.Key,
+			VersionId: v.VersionId,
+		}
+	})
+
+	fmt.Printf("deletePageOfDeleteMarkers\n")
+
+	return deletePage(ctx, conn, bucket, false, toDelete)
+}
+
+func deletePage(ctx context.Context, conn *s3.Client, bucket string, force bool, toDelete []types.ObjectIdentifier) (int64, error) {
+	if len(toDelete) == 0 {
 		return 0, nil
 	}
 
-	// Typically every entry from page.Versions ends up in toDeleteBulk, so pre-allocate
-	toDeleteBulk := make([]types.ObjectIdentifier, 0, len(page.Versions))
+	// Typically every entry from toDelete ends up in toDeleteBulk, so pre-allocate
+	toDeleteBulk := make([]types.ObjectIdentifier, 0, len(toDelete))
 	var toDeleteSingly []types.ObjectIdentifier
 
 	// Keys with characters outside the valid XML character set cannot be deleted by bulk DeleteObjects, and must be deleted individually
 	// using DeleteObject.
-	for _, v := range page.Versions {
-		ident := types.ObjectIdentifier{
-			Key:       v.Key,
-			VersionId: v.VersionId,
-		}
-
+	for _, v := range toDelete {
 		if keyInXmlCharacterRange(aws.ToString(v.Key)) {
-			toDeleteBulk = append(toDeleteBulk, ident)
+			toDeleteBulk = append(toDeleteBulk, v)
 		} else {
-			toDeleteSingly = append(toDeleteSingly, ident)
+			toDeleteSingly = append(toDeleteSingly, v)
 		}
 	}
 
@@ -168,7 +194,7 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.Client, bucket str
 		}
 
 		if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-			return int64(len(page.Versions)), nil
+			return int64(len(toDelete)), nil
 		}
 
 		var apiErr smithy.APIError
@@ -199,7 +225,7 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.Client, bucket str
 		output, err := conn.DeleteObjects(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-			return int64(len(page.Versions)), nil
+			return int64(len(toDelete)), nil
 		}
 
 		if err != nil {
@@ -256,53 +282,6 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.Client, bucket str
 
 	if err := errors.Join(errs...); err != nil {
 		return nObjects, fmt.Errorf("deleting S3 bucket (%s) object versions: %w", bucket, err)
-	}
-
-	return nObjects, nil
-}
-
-// deletePageOfDeleteMarkers deletes a page (<= 1000) of S3 object delete markers.
-// Returns the number of delete markers deleted.
-func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.Client, bucket string, page *s3.ListObjectVersionsOutput) (int64, error) {
-	toDelete := tfslices.ApplyToAll(page.DeleteMarkers, func(v types.DeleteMarkerEntry) types.ObjectIdentifier {
-		return types.ObjectIdentifier{
-			Key:       v.Key,
-			VersionId: v.VersionId,
-		}
-	})
-
-	var nObjects int64
-	if nObjects = int64(len(toDelete)); nObjects == 0 {
-		return nObjects, nil
-	}
-
-	input := &s3.DeleteObjectsInput{
-		Bucket: aws.String(bucket),
-		Delete: &types.Delete{
-			Objects: toDelete,
-			Quiet:   aws.Bool(true), // Only report errors.
-		},
-	}
-
-	output, err := conn.DeleteObjects(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nObjects, nil
-	}
-
-	if err != nil {
-		return nObjects, fmt.Errorf("deleting S3 bucket (%s) delete markers: %w", bucket, err)
-	}
-
-	nObjects -= int64(len(output.Errors))
-
-	var errs []error
-	for _, v := range output.Errors {
-		errs = append(errs, newDeleteObjectVersionError(v))
-	}
-
-	if err := errors.Join(errs...); err != nil {
-		return nObjects, fmt.Errorf("deleting S3 bucket (%s) delete markers: %w", bucket, err)
 	}
 
 	return nObjects, nil
