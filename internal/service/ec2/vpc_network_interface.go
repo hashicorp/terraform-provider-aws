@@ -80,7 +80,6 @@ func resourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				ForceNew: true, // TODO: this can be set on an existing instance but not unset after. don't know how to model that?
 				AtLeastOneOf: []string{
 					"ipv6_address_count",
 					"ipv6_addresses",
@@ -247,6 +246,10 @@ func resourceNetworkInterface() *schema.Resource {
 				} else {
 					return false
 				}
+			}),
+			customdiff.ForceNewIf("enable_primary_ipv6", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				o, n := diff.GetChange("enable_primary_ipv6")
+				return o.(bool) && !n.(bool) // can be enabled but not disabled without recreate
 			}),
 			customdiff.ForceNewIf("private_ip_list", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				privateIPListEnabled := d.Get("private_ip_list_enabled").(bool)
@@ -826,15 +829,15 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 	if d.HasChange("enable_primary_ipv6") {
 		input := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
-			EnablePrimaryIpv6:  aws.Bool(d.Get("source_dest_check").(bool)),
+			EnablePrimaryIpv6:  aws.Bool(d.Get("enable_primary_ipv6").(bool)),
 		}
 
-		_, err := conn.ModifyNetworkInterfaceAttributeWithContext(ctx, input)
-
+		_, err := conn.ModifyNetworkInterfaceAttribute(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) EnablePrimaryIpv6: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) enable primary IPv6: %s", d.Id(), err)
 		}
 	}
+
 	if d.HasChange("ipv6_addresses") && !d.Get("ipv6_address_list_enabled").(bool) {
 		o, n := d.GetChange("ipv6_addresses")
 		if o == nil {
