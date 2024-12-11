@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_bedrockagent_knowledge_base
+```
+
+```release-note:note
+resource/aws_bedrockagent_knowledge_base: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing
+```

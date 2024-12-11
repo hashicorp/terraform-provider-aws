@@ -8,44 +8,47 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_route53_traffic_policy_document")
-func DataSourceTrafficPolicyDocument() *schema.Resource {
+// @SDKDataSource("aws_route53_traffic_policy_document", name="Traffic Policy Document")
+func dataSourceTrafficPolicyDocument() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTrafficPolicyDocumentRead,
 
 		Schema: map[string]*schema.Schema{
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(TrafficPolicyDocEndpointType_values(), false),
-						},
-						"region": {
+						names.AttrRegion: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
-						"value": {
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[trafficPolicyDocEndpointType](),
+						},
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 					},
 				},
 			},
-			"json": {
+			names.AttrJSON: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,18 +56,110 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"rule": {
+			names.AttrRule: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"id": {
+						"geo_proximity_location": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"bias": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"endpoint_reference": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"evaluate_target_health": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									names.AttrHealthCheck: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"latitude": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"longitude": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									names.AttrRegion: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"rule_reference": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						names.AttrID: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"type": {
-							Type:     schema.TypeString,
+						"items": {
+							Type:     schema.TypeSet,
 							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"endpoint_reference": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									names.AttrHealthCheck: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						names.AttrLocation: {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"continent": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"country": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"endpoint_reference": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"evaluate_target_health": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									names.AttrHealthCheck: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"is_default": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"rule_reference": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"subdivision": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
 						},
 						"primary": {
 							Type:     schema.TypeList,
@@ -80,7 +175,35 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									"health_check": {
+									names.AttrHealthCheck: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"rule_reference": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						names.AttrRegion: {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"endpoint_reference": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"evaluate_target_health": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									names.AttrHealthCheck: {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									names.AttrRegion: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -105,7 +228,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
-									"health_check": {
+									names.AttrHealthCheck: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
@@ -116,129 +239,9 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 								},
 							},
 						},
-						"location": {
-							Type:     schema.TypeSet,
+						names.AttrType: {
+							Type:     schema.TypeString,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"continent": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"country": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"endpoint_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"evaluate_target_health": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"health_check": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"is_default": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"rule_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"subdivision": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"geo_proximity_location": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"bias": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"endpoint_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"evaluate_target_health": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"health_check": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"latitude": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"longitude": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"region": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"rule_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"region": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"endpoint_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"evaluate_target_health": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"health_check": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"region": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"rule_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"items": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"endpoint_reference": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"health_check": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
-							},
 						},
 					},
 				},
@@ -251,7 +254,7 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"version": {
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "2015-10-01",
@@ -264,15 +267,16 @@ func DataSourceTrafficPolicyDocument() *schema.Resource {
 }
 
 func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	trafficDoc := &Route53TrafficPolicyDoc{}
+	var diags diag.Diagnostics
+	trafficDoc := &route53TrafficPolicyDoc{}
 
-	if v, ok := d.GetOk("endpoint"); ok {
+	if v, ok := d.GetOk(names.AttrEndpoint); ok {
 		trafficDoc.Endpoints = expandDataTrafficPolicyEndpointsDoc(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("record_type"); ok {
 		trafficDoc.RecordType = v.(string)
 	}
-	if v, ok := d.GetOk("rule"); ok {
+	if v, ok := d.GetOk(names.AttrRule); ok {
 		trafficDoc.Rules = expandDataTrafficPolicyRulesDoc(v.(*schema.Set).List())
 	}
 	if v, ok := d.GetOk("start_endpoint"); ok {
@@ -281,49 +285,49 @@ func dataSourceTrafficPolicyDocumentRead(ctx context.Context, d *schema.Resource
 	if v, ok := d.GetOk("start_rule"); ok {
 		trafficDoc.StartRule = v.(string)
 	}
-	if v, ok := d.GetOk("version"); ok {
+	if v, ok := d.GetOk(names.AttrVersion); ok {
 		trafficDoc.AWSPolicyFormatVersion = v.(string)
 	}
 
 	jsonDoc, err := json.Marshal(trafficDoc)
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	jsonString := string(jsonDoc)
 
-	d.Set("json", jsonString)
+	d.Set(names.AttrJSON, jsonString)
 
 	d.SetId(strconv.Itoa(schema.HashString(jsonString)))
 
-	return nil
+	return diags
 }
 
-func expandDataTrafficPolicyEndpointDoc(tfMap map[string]interface{}) *TrafficPolicyEndpoint {
+func expandDataTrafficPolicyEndpointDoc(tfMap map[string]interface{}) *trafficPolicyEndpoint {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &TrafficPolicyEndpoint{}
+	apiObject := &trafficPolicyEndpoint{}
 
-	if v, ok := tfMap["type"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrType]; ok && v.(string) != "" {
 		apiObject.Type = v.(string)
 	}
-	if v, ok := tfMap["region"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrRegion]; ok && v.(string) != "" {
 		apiObject.Region = v.(string)
 	}
-	if v, ok := tfMap["value"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrValue]; ok && v.(string) != "" {
 		apiObject.Value = v.(string)
 	}
 
 	return apiObject
 }
 
-func expandDataTrafficPolicyEndpointsDoc(tfList []interface{}) map[string]*TrafficPolicyEndpoint {
+func expandDataTrafficPolicyEndpointsDoc(tfList []interface{}) map[string]*trafficPolicyEndpoint {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	apiObjects := make(map[string]*TrafficPolicyEndpoint)
+	apiObjects := make(map[string]*trafficPolicyEndpoint)
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -332,7 +336,7 @@ func expandDataTrafficPolicyEndpointsDoc(tfList []interface{}) map[string]*Traff
 			continue
 		}
 
-		id := tfMap["id"].(string)
+		id := tfMap[names.AttrID].(string)
 
 		apiObject := expandDataTrafficPolicyEndpointDoc(tfMap)
 
@@ -342,14 +346,14 @@ func expandDataTrafficPolicyEndpointsDoc(tfList []interface{}) map[string]*Traff
 	return apiObjects
 }
 
-func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *TrafficPolicyRule {
+func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *trafficPolicyRule {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &TrafficPolicyRule{}
+	apiObject := &trafficPolicyRule{}
 
-	if v, ok := tfMap["type"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrType]; ok && v.(string) != "" {
 		apiObject.RuleType = v.(string)
 	}
 	if v, ok := tfMap["primary"]; ok && len(v.([]interface{})) > 0 {
@@ -358,13 +362,13 @@ func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *TrafficPolicy
 	if v, ok := tfMap["secondary"]; ok && len(v.([]interface{})) > 0 {
 		apiObject.Secondary = expandDataTrafficPolicyFailOverDoc(v.([]interface{}))
 	}
-	if v, ok := tfMap["location"]; ok && len(v.(*schema.Set).List()) > 0 {
+	if v, ok := tfMap[names.AttrLocation]; ok && len(v.(*schema.Set).List()) > 0 {
 		apiObject.Locations = expandDataTrafficPolicyLocationsDoc(v.(*schema.Set).List())
 	}
 	if v, ok := tfMap["geo_proximity_location"]; ok && len(v.(*schema.Set).List()) > 0 {
 		apiObject.GeoProximityLocations = expandDataTrafficPolicyProximitiesDoc(v.(*schema.Set).List())
 	}
-	if v, ok := tfMap["region"]; ok && len(v.(*schema.Set).List()) > 0 {
+	if v, ok := tfMap[names.AttrRegion]; ok && len(v.(*schema.Set).List()) > 0 {
 		apiObject.Regions = expandDataTrafficPolicyRegionsDoc(v.(*schema.Set).List())
 	}
 	if v, ok := tfMap["items"]; ok && len(v.(*schema.Set).List()) > 0 {
@@ -374,12 +378,12 @@ func expandDataTrafficPolicyRuleDoc(tfMap map[string]interface{}) *TrafficPolicy
 	return apiObject
 }
 
-func expandDataTrafficPolicyRulesDoc(tfList []interface{}) map[string]*TrafficPolicyRule {
+func expandDataTrafficPolicyRulesDoc(tfList []interface{}) map[string]*trafficPolicyRule {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	apiObjects := make(map[string]*TrafficPolicyRule)
+	apiObjects := make(map[string]*trafficPolicyRule)
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -388,7 +392,7 @@ func expandDataTrafficPolicyRulesDoc(tfList []interface{}) map[string]*TrafficPo
 			continue
 		}
 
-		id := tfMap["id"].(string)
+		id := tfMap[names.AttrID].(string)
 
 		apiObject := expandDataTrafficPolicyRuleDoc(tfMap)
 
@@ -398,14 +402,14 @@ func expandDataTrafficPolicyRulesDoc(tfList []interface{}) map[string]*TrafficPo
 	return apiObjects
 }
 
-func expandDataTrafficPolicyFailOverDoc(tfList []interface{}) *TrafficPolicyFailoverRule {
+func expandDataTrafficPolicyFailOverDoc(tfList []interface{}) *trafficPolicyFailoverRule {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	tfMap, _ := tfList[0].(map[string]interface{})
 
-	apiObject := &TrafficPolicyFailoverRule{}
+	apiObject := &trafficPolicyFailoverRule{}
 
 	if v, ok := tfMap["endpoint_reference"]; ok && v.(string) != "" {
 		apiObject.EndpointReference = v.(string)
@@ -416,19 +420,19 @@ func expandDataTrafficPolicyFailOverDoc(tfList []interface{}) *TrafficPolicyFail
 	if v, ok := tfMap["evaluate_target_health"]; ok && v.(bool) {
 		apiObject.EvaluateTargetHealth = aws.Bool(v.(bool))
 	}
-	if v, ok := tfMap["health_check"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrHealthCheck]; ok && v.(string) != "" {
 		apiObject.HealthCheck = v.(string)
 	}
 
 	return apiObject
 }
 
-func expandDataTrafficPolicyLocationDoc(tfMap map[string]interface{}) *TrafficPolicyGeolocationRule {
+func expandDataTrafficPolicyLocationDoc(tfMap map[string]interface{}) *trafficPolicyGeolocationRule {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &TrafficPolicyGeolocationRule{}
+	apiObject := &trafficPolicyGeolocationRule{}
 
 	if v, ok := tfMap["endpoint_reference"]; ok && v.(string) != "" {
 		apiObject.EndpointReference = v.(string)
@@ -451,19 +455,19 @@ func expandDataTrafficPolicyLocationDoc(tfMap map[string]interface{}) *TrafficPo
 	if v, ok := tfMap["evaluate_target_health"]; ok && v.(bool) {
 		apiObject.EvaluateTargetHealth = aws.Bool(v.(bool))
 	}
-	if v, ok := tfMap["health_check"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrHealthCheck]; ok && v.(string) != "" {
 		apiObject.HealthCheck = v.(string)
 	}
 
 	return apiObject
 }
 
-func expandDataTrafficPolicyLocationsDoc(tfList []interface{}) []*TrafficPolicyGeolocationRule {
+func expandDataTrafficPolicyLocationsDoc(tfList []interface{}) []*trafficPolicyGeolocationRule {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*TrafficPolicyGeolocationRule
+	var apiObjects []*trafficPolicyGeolocationRule
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -480,12 +484,12 @@ func expandDataTrafficPolicyLocationsDoc(tfList []interface{}) []*TrafficPolicyG
 	return apiObjects
 }
 
-func expandDataTrafficPolicyProximityDoc(tfMap map[string]interface{}) *TrafficPolicyGeoproximityRule {
+func expandDataTrafficPolicyProximityDoc(tfMap map[string]interface{}) *trafficPolicyGeoproximityRule {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &TrafficPolicyGeoproximityRule{}
+	apiObject := &trafficPolicyGeoproximityRule{}
 
 	if v, ok := tfMap["endpoint_reference"]; ok && v.(string) != "" {
 		apiObject.EndpointReference = v.(string)
@@ -493,7 +497,7 @@ func expandDataTrafficPolicyProximityDoc(tfMap map[string]interface{}) *TrafficP
 	if v, ok := tfMap["rule_reference"]; ok && v.(string) != "" {
 		apiObject.RuleReference = v.(string)
 	}
-	if v, ok := tfMap["region"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrRegion]; ok && v.(string) != "" {
 		apiObject.Region = v.(string)
 	}
 	if v, ok := tfMap["latitude"]; ok && v.(string) != "" {
@@ -508,19 +512,19 @@ func expandDataTrafficPolicyProximityDoc(tfMap map[string]interface{}) *TrafficP
 	if v, ok := tfMap["evaluate_target_health"]; ok && v.(bool) {
 		apiObject.EvaluateTargetHealth = aws.Bool(v.(bool))
 	}
-	if v, ok := tfMap["health_check"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrHealthCheck]; ok && v.(string) != "" {
 		apiObject.HealthCheck = v.(string)
 	}
 
 	return apiObject
 }
 
-func expandDataTrafficPolicyProximitiesDoc(tfList []interface{}) []*TrafficPolicyGeoproximityRule {
+func expandDataTrafficPolicyProximitiesDoc(tfList []interface{}) []*trafficPolicyGeoproximityRule {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*TrafficPolicyGeoproximityRule
+	var apiObjects []*trafficPolicyGeoproximityRule
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -537,12 +541,12 @@ func expandDataTrafficPolicyProximitiesDoc(tfList []interface{}) []*TrafficPolic
 	return apiObjects
 }
 
-func expandDataTrafficPolicyRegionDoc(tfMap map[string]interface{}) *TrafficPolicyLatencyRule {
+func expandDataTrafficPolicyRegionDoc(tfMap map[string]interface{}) *trafficPolicyLatencyRule {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &TrafficPolicyLatencyRule{}
+	apiObject := &trafficPolicyLatencyRule{}
 
 	if v, ok := tfMap["endpoint_reference"]; ok && v.(string) != "" {
 		apiObject.EndpointReference = v.(string)
@@ -550,25 +554,25 @@ func expandDataTrafficPolicyRegionDoc(tfMap map[string]interface{}) *TrafficPoli
 	if v, ok := tfMap["rule_reference"]; ok && v.(string) != "" {
 		apiObject.RuleReference = v.(string)
 	}
-	if v, ok := tfMap["region"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrRegion]; ok && v.(string) != "" {
 		apiObject.Region = v.(string)
 	}
 	if v, ok := tfMap["evaluate_target_health"]; ok && v.(bool) {
 		apiObject.EvaluateTargetHealth = aws.Bool(v.(bool))
 	}
-	if v, ok := tfMap["health_check"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrHealthCheck]; ok && v.(string) != "" {
 		apiObject.HealthCheck = v.(string)
 	}
 
 	return apiObject
 }
 
-func expandDataTrafficPolicyRegionsDoc(tfList []interface{}) []*TrafficPolicyLatencyRule {
+func expandDataTrafficPolicyRegionsDoc(tfList []interface{}) []*trafficPolicyLatencyRule {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*TrafficPolicyLatencyRule
+	var apiObjects []*trafficPolicyLatencyRule
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -585,29 +589,29 @@ func expandDataTrafficPolicyRegionsDoc(tfList []interface{}) []*TrafficPolicyLat
 	return apiObjects
 }
 
-func expandDataTrafficPolicyItemDoc(tfMap map[string]interface{}) *TrafficPolicyMultiValueAnswerRule {
+func expandDataTrafficPolicyItemDoc(tfMap map[string]interface{}) *trafficPolicyMultiValueAnswerRule {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &TrafficPolicyMultiValueAnswerRule{}
+	apiObject := &trafficPolicyMultiValueAnswerRule{}
 
 	if v, ok := tfMap["endpoint_reference"]; ok && v.(string) != "" {
 		apiObject.EndpointReference = v.(string)
 	}
-	if v, ok := tfMap["health_check"]; ok && v.(string) != "" {
+	if v, ok := tfMap[names.AttrHealthCheck]; ok && v.(string) != "" {
 		apiObject.HealthCheck = v.(string)
 	}
 
 	return apiObject
 }
 
-func expandDataTrafficPolicyItemsDoc(tfList []interface{}) []*TrafficPolicyMultiValueAnswerRule {
+func expandDataTrafficPolicyItemsDoc(tfList []interface{}) []*trafficPolicyMultiValueAnswerRule {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*TrafficPolicyMultiValueAnswerRule
+	var apiObjects []*trafficPolicyMultiValueAnswerRule
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})

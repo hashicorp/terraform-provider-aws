@@ -38,7 +38,7 @@ func resourceRepository() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -54,12 +54,12 @@ func resourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
@@ -69,7 +69,7 @@ func resourceRepository() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
@@ -86,17 +86,17 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	name := d.Get("repository_name").(string)
+	name := d.Get(names.AttrRepositoryName).(string)
 	input := &codecommit.CreateRepositoryInput{
 		RepositoryName: aws.String(name),
 		Tags:           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.RepositoryDescription = aws.String(v.(string))
 	}
 
@@ -133,7 +133,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading CodeCommit Repository (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", repository.Arn)
+	d.Set(names.AttrARN, repository.Arn)
 	d.Set("clone_url_http", repository.CloneUrlHttp)
 	d.Set("clone_url_ssh", repository.CloneUrlSsh)
 	if _, ok := d.GetOk("default_branch"); ok {
@@ -143,10 +143,10 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 			d.Set("default_branch", v)
 		}
 	}
-	d.Set("description", repository.RepositoryDescription)
-	d.Set("kms_key_id", repository.KmsKeyId)
+	d.Set(names.AttrDescription, repository.RepositoryDescription)
+	d.Set(names.AttrKMSKeyID, repository.KmsKeyId)
 	d.Set("repository_id", repository.RepositoryId)
-	d.Set("repository_name", repository.RepositoryName)
+	d.Set(names.AttrRepositoryName, repository.RepositoryName)
 
 	return diags
 }
@@ -155,8 +155,8 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	if d.HasChange("repository_name") {
-		newName := d.Get("repository_name").(string)
+	if d.HasChange(names.AttrRepositoryName) {
+		newName := d.Get(names.AttrRepositoryName).(string)
 		input := &codecommit.UpdateRepositoryNameInput{
 			NewName: aws.String(newName),
 			OldName: aws.String(d.Id()),
@@ -177,9 +177,9 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange("description") {
+	if d.HasChange(names.AttrDescription) {
 		input := &codecommit.UpdateRepositoryDescriptionInput{
-			RepositoryDescription: aws.String(d.Get("description").(string)),
+			RepositoryDescription: aws.String(d.Get(names.AttrDescription).(string)),
 			RepositoryName:        aws.String(d.Id()),
 		}
 
@@ -190,9 +190,9 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		}
 	}
 
-	if d.HasChange("kms_key_id") {
+	if d.HasChange(names.AttrKMSKeyID) {
 		input := &codecommit.UpdateRepositoryEncryptionKeyInput{
-			KmsKeyId:       aws.String((d.Get("kms_key_id").(string))),
+			KmsKeyId:       aws.String((d.Get(names.AttrKMSKeyID).(string))),
 			RepositoryName: aws.String(d.Id()),
 		}
 

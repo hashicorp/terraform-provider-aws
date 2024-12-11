@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -35,8 +35,9 @@ func testAccAdminAccount_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAdminAccountConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAdminAccountExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 				),
 			},
 		},
@@ -61,7 +62,8 @@ func testAccAdminAccount_disappears(t *testing.T) {
 			{
 				Config: testAccAdminAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					testAccAdminAccountExists(ctx, resourceName),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrAccountID),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffms.ResourceAdminAccount(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -72,7 +74,7 @@ func testAccAdminAccount_disappears(t *testing.T) {
 
 func testAccCheckAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_fms_admin_account" {
@@ -93,6 +95,21 @@ func testAccCheckAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc
 		}
 
 		return nil
+	}
+}
+
+func testAccAdminAccountExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		_, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
+
+		_, err := tffms.FindAdminAccount(ctx, conn)
+
+		return err
 	}
 }
 

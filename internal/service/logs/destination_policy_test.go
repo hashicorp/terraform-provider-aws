@@ -34,7 +34,7 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", names.AttrName),
 				),
 			},
 			{
@@ -47,7 +47,7 @@ func TestAccLogsDestinationPolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDestinationPolicyExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "access_policy"),
-					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination_name", "aws_cloudwatch_log_destination.test", names.AttrName),
 				),
 			},
 		},

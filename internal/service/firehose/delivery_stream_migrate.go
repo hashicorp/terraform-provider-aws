@@ -8,6 +8,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func MigrateState(
@@ -33,7 +34,7 @@ func migrateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error
 	// grab initial values
 	is.Attributes["s3_configuration.#"] = "1"
 	// Required parameters
-	is.Attributes["s3_configuration.0.role_arn"] = is.Attributes["role_arn"]
+	is.Attributes["s3_configuration.0.role_arn"] = is.Attributes[names.AttrRoleARN]
 	is.Attributes["s3_configuration.0.bucket_arn"] = is.Attributes["s3_bucket_arn"]
 
 	// Optional parameters
@@ -50,7 +51,7 @@ func migrateV0toV1(is *terraform.InstanceState) (*terraform.InstanceState, error
 		is.Attributes["s3_configuration.0.prefix"] = is.Attributes["s3_prefix"]
 	}
 
-	delete(is.Attributes, "role_arn")
+	delete(is.Attributes, names.AttrRoleARN)
 	delete(is.Attributes, "s3_bucket_arn")
 	delete(is.Attributes, "s3_buffer_size")
 	delete(is.Attributes, "s3_data_compression")

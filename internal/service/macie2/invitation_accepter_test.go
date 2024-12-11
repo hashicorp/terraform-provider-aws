@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/macie2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/macie2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -60,15 +61,15 @@ func testAccCheckInvitationAccepterExists(ctx context.Context, resourceName stri
 			return fmt.Errorf("resource (%s) has empty ID", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Client(ctx)
 		input := &macie2.GetAdministratorAccountInput{}
-		output, err := conn.GetAdministratorAccountWithContext(ctx, input)
+		output, err := conn.GetAdministratorAccount(ctx, input)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || output.Administrator == nil || aws.StringValue(output.Administrator.AccountId) == "" {
+		if output == nil || output.Administrator == nil || aws.ToString(output.Administrator.AccountId) == "" {
 			return fmt.Errorf("no administrator account found for: %s", resourceName)
 		}
 
@@ -78,7 +79,7 @@ func testAccCheckInvitationAccepterExists(ctx context.Context, resourceName stri
 
 func testAccCheckInvitationAccepterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_macie2_invitation_accepter" {
@@ -86,13 +87,13 @@ func testAccCheckInvitationAccepterDestroy(ctx context.Context) resource.TestChe
 			}
 
 			input := &macie2.GetAdministratorAccountInput{}
-			output, err := conn.GetAdministratorAccountWithContext(ctx, input)
-			if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-				tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+			output, err := conn.GetAdministratorAccount(ctx, input)
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+				errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
 				continue
 			}
 
-			if output == nil || output.Administrator == nil || aws.StringValue(output.Administrator.AccountId) != rs.Primary.Attributes["administrator_account_id"] {
+			if output == nil || output.Administrator == nil || aws.ToString(output.Administrator.AccountId) != rs.Primary.Attributes["administrator_account_id"] {
 				continue
 			}
 

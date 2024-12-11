@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dlm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dlm"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -30,21 +30,21 @@ func sweepLifecyclePolicies(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.DLMConn(ctx)
+	conn := client.DLMClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &dlm.GetLifecyclePoliciesInput{}
-	policies, err := conn.GetLifecyclePoliciesWithContext(ctx, input)
+	policies, err := conn.GetLifecyclePolicies(ctx, input)
 	if err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error listing DLM Lifecycle Policy for %s: %w", region, err))
 	}
 
 	for _, lifecyclePolicy := range policies.Policies {
-		r := ResourceLifecyclePolicy()
+		r := resourceLifecyclePolicy()
 		d := r.Data(nil)
 
-		id := aws.StringValue(lifecyclePolicy.PolicyId)
+		id := aws.ToString(lifecyclePolicy.PolicyId)
 		d.SetId(id)
 
 		if err != nil {
@@ -61,7 +61,7 @@ func sweepLifecyclePolicies(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DLM Lifecycle Policy for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DLM Lifecycle Policy sweep for %s: %s", region, errs)
 		return nil
 	}

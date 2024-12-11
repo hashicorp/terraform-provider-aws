@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -29,7 +30,7 @@ func TestAccEventsBusPolicy_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusPolicyConfig_basic(rName),
@@ -63,7 +64,7 @@ func TestAccEventsBusPolicy_ignoreEquivalent(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusPolicyConfig_order(rName),
@@ -89,7 +90,7 @@ func TestAccEventsBusPolicy_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusPolicyConfig_basic(rName),
@@ -113,7 +114,7 @@ func TestAccEventsBusPolicy_disappears_EventBus(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBusDestroy(ctx),
+		CheckDestroy:             testAccCheckBusPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBusPolicyConfig_basic(rName),
@@ -127,6 +128,32 @@ func TestAccEventsBusPolicy_disappears_EventBus(t *testing.T) {
 	})
 }
 
+func testAccCheckBusPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudwatch_event_bus_policy" {
+				continue
+			}
+
+			_, err := tfevents.FindEventBusPolicyByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EventBridge Event Bus Policy %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckBusPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
 		rs, ok := state.RootModule().Resources[n]
@@ -134,7 +161,7 @@ func testAccCheckBusPolicyExists(ctx context.Context, n string) resource.TestChe
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		_, err := tfevents.FindEventBusPolicyByName(ctx, conn, rs.Primary.ID)
 
@@ -149,7 +176,7 @@ func testAccBusPolicyDocument(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		policy, err := tfevents.FindEventBusPolicyByName(ctx, conn, rs.Primary.ID)
 
@@ -157,7 +184,7 @@ func testAccBusPolicyDocument(ctx context.Context, n string) resource.TestCheckF
 			return err
 		}
 
-		if equivalent, err := awspolicy.PoliciesAreEquivalent(rs.Primary.Attributes["policy"], aws.StringValue(policy)); err != nil || !equivalent {
+		if equivalent, err := awspolicy.PoliciesAreEquivalent(rs.Primary.Attributes[names.AttrPolicy], aws.ToString(policy)); err != nil || !equivalent {
 			return errors.New(`EventBridge Event Bus Policies not equivalent`)
 		}
 

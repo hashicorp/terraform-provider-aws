@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_redshiftserverless_custom_domain_association
+```

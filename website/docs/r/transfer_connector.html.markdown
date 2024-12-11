@@ -51,6 +51,7 @@ This resource supports the following arguments:
 * `access_role` - (Required) The IAM Role which provides read and write access to the parent directory of the file location mentioned in the StartFileTransfer request.
 * `as2_config` - (Optional) Either SFTP or AS2 is configured.The parameters to configure for the connector object. Fields documented below.
 * `logging_role` - (Optional) The IAM Role which is required for allowing the connector to turn on CloudWatch logging for Amazon S3 events.
+* `security_policy_name` - (Optional) Name of the security policy for the connector.
 * `sftp_config` - (Optional) Either SFTP or AS2 is configured.The parameters to configure for the connector object. Fields documented below.
 * `url` - (Required) The URL of the partners AS2 endpoint or SFTP endpoint.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
