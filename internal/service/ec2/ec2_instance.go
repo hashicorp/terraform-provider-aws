@@ -334,7 +334,6 @@ func resourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				ForceNew: true, // TODO: this can be set on an existing instance but not unset after. don't know how to model that?
 				AtLeastOneOf: []string{
 					"ipv6_address_count",
 					"ipv6_addresses",
@@ -916,6 +915,10 @@ func resourceInstance() *schema.Resource {
 			}),
 			customdiff.ForceNewIf("user_data_base64", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.Get("user_data_replace_on_change").(bool)
+			}),
+			customdiff.ForceNewIf("enable_primary_ipv6", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				o, n := diff.GetChange("enable_primary_ipv6")
+				return o.(bool) && !n.(bool) // can be enabled but not disabled without recreate
 			}),
 			customdiff.ForceNewIf(names.AttrInstanceType, func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				conn := meta.(*conns.AWSClient).EC2Client(ctx)
@@ -1622,10 +1625,6 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
-	if d.HasChange("enable_primary_ipv6") && !d.IsNewResource() {
-
-	}
-
 	// SourceDestCheck can only be modified on an instance without manually specified network interfaces.
 	// SourceDestCheck, in that case, is configured at the network interface level
 	if _, ok := d.GetOk("network_interface"); !ok {
@@ -1653,15 +1652,14 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange("enable_primary_ipv6") && !d.IsNewResource() {
 		instance, err := FindInstanceByID(ctx, conn, d.Id())
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
 
-		var primaryInterface *ec2.InstanceNetworkInterface
+		var primaryInterface *awstypes.InstanceNetworkInterface
 		for _, ni := range instance.NetworkInterfaces {
-			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
-				primaryInterface = ni
+			if aws.ToInt32(ni.Attachment.DeviceIndex) == 0 {
+				primaryInterface = &ni
 			}
 		}
 
@@ -1676,8 +1674,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			EnablePrimaryIpv6:  aws.Bool(enablePrimaryIpv6),
 		}
 
-		_, err = conn.ModifyNetworkInterfaceAttributeWithContext(ctx, &input)
-
+		_, err = conn.ModifyNetworkInterfaceAttribute(ctx, &input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) primary network interface: %s", d.Id(), err)
 		}
@@ -2936,6 +2933,7 @@ type instanceOpts struct {
 	ImageID                           *string
 	InstanceInitiatedShutdownBehavior awstypes.ShutdownBehavior
 	InstanceMarketOptions             *awstypes.InstanceMarketOptionsRequest
+	InstanceType                      awstypes.InstanceType
 	Ipv6AddressCount                  *int32
 	Ipv6Addresses                     []awstypes.InstanceIpv6Address
 	KeyName                           *string
