@@ -13,7 +13,7 @@ Associates a single SCRAM secret with a Managed Streaming for Kafka (MSK) cluste
 ## Example Usage
 
 ```terraform
-resource "aws_msk_scram_secret_association" "example" {
+resource "aws_msk_single_scram_secret_association" "example" {
   cluster_arn = aws_msk_cluster.example.arn
   secret_arn  = aws_secretsmanager_secret.example.arn
 }
