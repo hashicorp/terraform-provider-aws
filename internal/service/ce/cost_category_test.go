@@ -37,11 +37,12 @@ func TestAccCECostCategory_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCostCategoryConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttrSet(resourceName, "effective_start"),
 					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "ce", regexache.MustCompile(`costcategory/.+$`)),
+					resource.TestCheckResourceAttrSet(resourceName, "effective_start"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.value", "production"),
 					resource.TestCheckResourceAttr(resourceName, "rule.1.value", "staging"),
 					resource.TestCheckResourceAttr(resourceName, "rule.2.value", "testing"),
