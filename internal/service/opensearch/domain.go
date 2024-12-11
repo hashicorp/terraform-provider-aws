@@ -285,6 +285,40 @@ func resourceDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
+						"node_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"node_type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"node_config": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"count": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+												"enabled": {
+													Type:     schema.TypeBool,
+													Required: true,
+												},
+												"type": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 						"warm_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -1302,6 +1336,10 @@ func expandClusterConfig(m map[string]interface{}) *awstypes.ClusterConfig {
 		config.MultiAZWithStandbyEnabled = aws.Bool(v.(bool))
 	}
 
+	if v, ok := m["node_options"]; ok {
+		config.NodeOptions = expandNodeOptions(v.([]interface{}))
+	}
+
 	if v, ok := m["warm_enabled"]; ok {
 		isEnabled := v.(bool)
 		config.WarmEnabled = aws.Bool(isEnabled)
@@ -1363,6 +1401,43 @@ func expandColdStorageOptions(l []interface{}) *awstypes.ColdStorageOptions {
 	return ColdStorageOptions
 }
 
+func expandNodeOptions(l []interface{}) []awstypes.NodeOption {
+	if len(l) == 0 {
+		return nil
+	}
+
+	NodeOptions := make([]awstypes.NodeOption, 0)
+	for _, no := range l {
+		m := no.(map[string]interface{})
+		nt := awstypes.NodeOptionsNodeType(m["node_type"].(string))
+		NodeOptions = append(NodeOptions, awstypes.NodeOption{
+			NodeType:   nt,
+			NodeConfig: expandNodeConfig(m["node_config"].([]interface{})),
+		})
+	}
+	return NodeOptions
+}
+
+func expandNodeConfig(l []interface{}) *awstypes.NodeConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	NodeConfig := &awstypes.NodeConfig{}
+
+	isEnabled := m["enabled"].(bool)
+	NodeConfig.Enabled = aws.Bool(isEnabled)
+
+	if isEnabled {
+		NodeConfig.Count = aws.Int32(int32(m["count"].(int)))
+		NodeConfig.Type = awstypes.OpenSearchPartitionInstanceType(m["type"].(string))
+	}
+
+	return NodeConfig
+}
+
 func flattenClusterConfig(c *awstypes.ClusterConfig) []map[string]interface{} {
 	m := map[string]interface{}{
 		"zone_awareness_config":  flattenZoneAwarenessConfig(c.ZoneAwarenessConfig),
@@ -1390,6 +1465,11 @@ func flattenClusterConfig(c *awstypes.ClusterConfig) []map[string]interface{} {
 	if c.MultiAZWithStandbyEnabled != nil {
 		m["multi_az_with_standby_enabled"] = aws.ToBool(c.MultiAZWithStandbyEnabled)
 	}
+
+	if len(c.NodeOptions) > 0 {
+		m["node_options"] = flattenNodeOptions(c.NodeOptions)
+	}
+
 	if c.WarmEnabled != nil {
 		m["warm_enabled"] = aws.ToBool(c.WarmEnabled)
 	}
@@ -1421,6 +1501,39 @@ func flattenColdStorageOptions(coldStorageOptions *awstypes.ColdStorageOptions) 
 
 	m := map[string]interface{}{
 		names.AttrEnabled: aws.ToBool(coldStorageOptions.Enabled),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenNodeOptions(nodeOptions []awstypes.NodeOption) []interface{} {
+	if len(nodeOptions) == 0 {
+		return []interface{}{}
+	}
+
+	var l []interface{}
+
+	for _, n := range nodeOptions {
+		m := map[string]interface{}{}
+		m["node_config"] = flattenNodeConfig(n.NodeConfig)
+		m["node_type"] = string(n.NodeType)
+		l = append(l, m)
+	}
+
+	return l
+}
+
+func flattenNodeConfig(nodeConfig *awstypes.NodeConfig) []interface{} {
+	m := map[string]interface{}{
+		"enabled": aws.ToBool(nodeConfig.Enabled),
+	}
+
+	if nodeConfig.Count != nil {
+		m["count"] = aws.ToInt32(nodeConfig.Count)
+	}
+
+	if nodeConfig.Type != "" {
+		m["type"] = nodeConfig.Type
 	}
 
 	return []interface{}{m}
