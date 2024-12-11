@@ -67,8 +67,8 @@ github.com/aws/aws-sdk-go-v2/service/appflow v1.45.8 h1:C4Ahu+vqQMgwcKfOaxdUgn0T
 github.com/aws/aws-sdk-go-v2/service/appflow v1.45.8/go.mod h1:m9n55ulVW0oYNVhczguWuVkoaWky0znzYCn1Is2Q4l0=
 github.com/aws/aws-sdk-go-v2/service/appintegrations v1.30.7 h1:LrYSdKQMAAJs8XpSfNba7Goc0m0hOEGWoNvrOWFasEw=
 github.com/aws/aws-sdk-go-v2/service/appintegrations v1.30.7/go.mod h1:GiSlb1fm4OJ1foTOhXcDziKm2Xre4+bcG8AnQAhjUIM=
-github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.34.1 h1:8EwNbY+A/Q5myYggLJ7v9v9f00UuWoh9S04y5kre8UQ=
-github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.34.1/go.mod h1:2mMP2R86zLPAUz0TpJdsKW8XawHgs9Nk97fYJomO3o8=
+github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.34.2 h1:2ikMzzun3sqemZqT96Q2I9ofTWEbFbEx9B1GLBMJmzk=
+github.com/aws/aws-sdk-go-v2/service/applicationautoscaling v1.34.2/go.mod h1:2mMP2R86zLPAUz0TpJdsKW8XawHgs9Nk97fYJomO3o8=
 github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.29.5 h1:dxVAH0LY3XmilHw4O4eB+kYKTu3SqujSYQlyKA6PqkM=
 github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.29.5/go.mod h1:A+d2JfMEfDdWWMz3OfbK0IKtWjqoLaKlHt3ifC9pd04=
 github.com/aws/aws-sdk-go-v2/service/applicationsignals v1.7.2 h1:QL9Ak3hh3POYTr/DgOe4pn0naYOnARZ9Gy9/uIzW+Oo=
@@ -163,8 +163,8 @@ github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.40.1 h1:iH/z1Q7WYbT2MoT
 github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.40.1/go.mod h1:Epb43KiHofSehPHq6PEQZ07hcl/Euv4vUi7kEcC7J7I=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.51.1 h1:zA4KArT5FZ4ypJc8X+7MJNN3iv74K8ygmFhci64M4YI=
 github.com/aws/aws-sdk-go-v2/service/configservice v1.51.1/go.mod h1:2fOznUkaoZ2EtJimN0zizQRxQmkndSJz/SSd2x0goKo=
-github.com/aws/aws-sdk-go-v2/service/connect v1.119.0 h1:uZ2hecASZoYuuGLHa252ss5SSbFYEhcS/SSWUa/u9kE=
-github.com/aws/aws-sdk-go-v2/service/connect v1.119.0/go.mod h1:tuGtOUYMxcOObTcKDHKpzTG9EvjfXjOIEC74a6meGRk=
+github.com/aws/aws-sdk-go-v2/service/connect v1.120.0 h1:ny7ogs5eNh369uhRNfjCD7EK3EgtMDbgYXDLh74juqk=
+github.com/aws/aws-sdk-go-v2/service/connect v1.120.0/go.mod h1:tuGtOUYMxcOObTcKDHKpzTG9EvjfXjOIEC74a6meGRk=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.21.7 h1:uWiDzkr4L/KMlftI2OqmELmsv0ZGxeyi3YAo266wJzs=
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.21.7/go.mod h1:/FZ+YQmJpAdZPR4Z1tA1mIxA/SmLmUlgrn3sZOAmnfQ=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.20.1 h1:fpqsKm/4mA+oOn2IM62syUhcVZMU3Gc7tl8HTd4Ul+k=
@@ -479,8 +479,8 @@ github.com/aws/aws-sdk-go-v2/service/servicequotas v1.25.7 h1:MpCqFu4StEaeuKFfcf
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.25.7/go.mod h1:Idae0gtkk4euj6ncytZGgDkkyZKmkFasf1mbZZ0RA6s=
 github.com/aws/aws-sdk-go-v2/service/ses v1.29.1 h1:2e4bmSER1FF330Xu8p0nwnV4Ctdb0VzLQPUV15xs3iY=
 github.com/aws/aws-sdk-go-v2/service/ses v1.29.1/go.mod h1:axmD03yvc8MIBcQkETvptcdw+wySwdc8MpYzQixku2w=
-github.com/aws/aws-sdk-go-v2/service/sesv2 v1.38.4 h1:6qEG7Ee2TgPtiCRMyK0VK5ZCh5GXdsyXSpcbE+tPjpA=
-github.com/aws/aws-sdk-go-v2/service/sesv2 v1.38.4/go.mod h1:dI4OVSVcgeQXlqjRN8zspZVtYxmDis1rZwpopBeu3dc=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.39.0 h1:lhVIFyvoSBokeBmwxtIUSFLKujPOEIhXqVglvOXCGuA=
+github.com/aws/aws-sdk-go-v2/service/sesv2 v1.39.0/go.mod h1:dI4OVSVcgeQXlqjRN8zspZVtYxmDis1rZwpopBeu3dc=
 github.com/aws/aws-sdk-go-v2/service/sfn v1.34.1 h1:EsBALm4m1lGz5riWufNKWguTFOt7Nze7m0wVIzIq8wU=
 github.com/aws/aws-sdk-go-v2/service/sfn v1.34.1/go.mod h1:svXjjW4/t8lsSJa4+AUxYPevCzfw3m+z8sk4XcSsosU=
 github.com/aws/aws-sdk-go-v2/service/shield v1.29.7 h1:S4nh0xUMZyNkhm7R5r2ITaa966JUYklMGug5LQHWefk=
