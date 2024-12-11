@@ -100,6 +100,7 @@ func forEachObjectsPage(ctx context.Context, conn *s3.Client, bucket string, fn 
 
 	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
+		EncodingType: types.EncodingTypeUrl,
 	}
 	var lastErr error
 
@@ -109,6 +110,15 @@ func forEachObjectsPage(ctx context.Context, conn *s3.Client, bucket string, fn 
 
 		if err != nil {
 			return nObjects, fmt.Errorf("listing S3 bucket (%s) objects: %w", bucket, err)
+		}
+
+		// Reverse URL-encoding from requested EncodingType: "url"
+		for i, c := range page.Contents {
+			unescaped, err := url.QueryUnescape(aws.ToString(c.Key))
+			if err != nil {
+				return 0, fmt.Errorf("listing S3 bucket (%s) object: unescaping object keys: %w", bucket, err)
+			}
+			page.Contents[i].Key = aws.String(unescaped)
 		}
 
 		n, err := fn(ctx, conn, bucket, page)
@@ -155,6 +165,18 @@ func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.Client, bucket stri
 	})
 
 	fmt.Printf("deletePageOfDeleteMarkers\n")
+
+	return deletePage(ctx, conn, bucket, false, toDelete)
+}
+
+// deletePageOfObjects deletes a page (<= 1000) of S3 objects.
+// Returns the number of objects deleted.
+func deletePageOfObjects(ctx context.Context, conn *s3.Client, bucket string, page *s3.ListObjectsV2Output) (int64, error) {
+	toDelete := tfslices.ApplyToAll(page.Contents, func(v types.Object) types.ObjectIdentifier {
+		return types.ObjectIdentifier{
+			Key: v.Key,
+		}
+	})
 
 	return deletePage(ctx, conn, bucket, false, toDelete)
 }
@@ -282,52 +304,6 @@ func deletePage(ctx context.Context, conn *s3.Client, bucket string, force bool,
 
 	if err := errors.Join(errs...); err != nil {
 		return nObjects, fmt.Errorf("deleting S3 bucket (%s) object versions: %w", bucket, err)
-	}
-
-	return nObjects, nil
-}
-
-// deletePageOfObjects deletes a page (<= 1000) of S3 objects.
-// Returns the number of objects deleted.
-func deletePageOfObjects(ctx context.Context, conn *s3.Client, bucket string, page *s3.ListObjectsV2Output) (int64, error) {
-	toDelete := tfslices.ApplyToAll(page.Contents, func(v types.Object) types.ObjectIdentifier {
-		return types.ObjectIdentifier{
-			Key: v.Key,
-		}
-	})
-
-	var nObjects int64
-	if nObjects = int64(len(toDelete)); nObjects == 0 {
-		return nObjects, nil
-	}
-
-	input := &s3.DeleteObjectsInput{
-		Bucket: aws.String(bucket),
-		Delete: &types.Delete{
-			Objects: toDelete,
-			Quiet:   aws.Bool(true), // Only report errors.
-		},
-	}
-
-	output, err := conn.DeleteObjects(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nObjects, nil
-	}
-
-	if err != nil {
-		return nObjects, fmt.Errorf("deleting S3 bucket (%s) objects: %w", bucket, err)
-	}
-
-	nObjects -= int64(len(output.Errors))
-
-	var errs []error
-	for _, v := range output.Errors {
-		errs = append(errs, newDeleteObjectVersionError(v))
-	}
-
-	if err := errors.Join(errs...); err != nil {
-		return nObjects, fmt.Errorf("deleting S3 bucket (%s) objects: %w", bucket, err)
 	}
 
 	return nObjects, nil
