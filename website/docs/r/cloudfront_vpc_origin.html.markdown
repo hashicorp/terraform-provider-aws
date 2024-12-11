@@ -22,16 +22,17 @@ The following example below creates a CloudFront VPC origin for a Application Lo
 ```terraform
 resource "aws_cloudfront_vpc_origin" "alb" {
   vpc_origin_endpoint_config {
-    name = "Example VPC Origin"
-    origin_arn = aws_lb.this.arn
-    http_port = 8080
-    https_port = 8443
+    name                   = "Example VPC Origin"
+    origin_arn             = aws_lb.this.arn
+    http_port              = 8080
+    https_port             = 8443
     origin_protocol_policy = "https-only"
     origin_ssl_protocols {
       items = ["TLSv1.2"]
       quantity = 1
     }
   }
+}
 ```
 
 ## Argument Reference
@@ -62,13 +63,12 @@ This resource exports the following attributes in addition to the arguments abov
 
 [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-vpc-origins.html
 
-
 ## Import
 
 ```terraform
 import {
-  to = aws_cloudfront_vpc_origin.origin.alb
-  id = 
+  to = aws_cloudfront_vpc_origin.origin
+  id = vo_JQEa410sssUFoY6wMkx69j
 }
 ```
 

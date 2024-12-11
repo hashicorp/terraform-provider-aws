@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
@@ -29,7 +32,7 @@ import (
 )
 
 // @FrameworkResource("aws_cloudfront_vpc_origin", name="VPC Origin")
-func newCloudfrontVPCOriginResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newCloudFrontVPCOriginResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &cloudfrontVPCOriginResource{}
 
 	r.SetDefaultCreateTimeout(15 * time.Minute)
