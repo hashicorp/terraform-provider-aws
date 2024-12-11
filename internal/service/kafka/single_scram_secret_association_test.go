@@ -44,6 +44,31 @@ func TestAccKafkaSingleSCRAMSecretAssociation_basic(t *testing.T) {
 	})
 }
 
+func TestAccKafkaSingleSCRAMSecretAssociation_multiple(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource1Name := "aws_msk_single_scram_secret_association.test1"
+	resource2Name := "aws_msk_single_scram_secret_association.test2"
+	resource3Name := "aws_msk_single_scram_secret_association.test3"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSingleSCRAMSecretAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSingleSCRAMSecretAssociationConfig_multiple(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSingleSCRAMSecretAssociationExists(ctx, resource1Name),
+					testAccCheckSingleSCRAMSecretAssociationExists(ctx, resource2Name),
+					testAccCheckSingleSCRAMSecretAssociationExists(ctx, resource3Name),
+				),
+			},
+		},
+	})
+}
+
 func TestAccKafkaSingleSCRAMSecretAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -111,6 +136,31 @@ func testAccSingleSCRAMSecretAssociationConfig_basic(rName string) string {
 resource "aws_msk_single_scram_secret_association" "test" {
   cluster_arn = aws_msk_cluster.test.arn
   secret_arn  = aws_secretsmanager_secret.test[0].arn
+
+  depends_on = [aws_secretsmanager_secret_version.test]
+}
+`)
+}
+
+func testAccSingleSCRAMSecretAssociationConfig_multiple(rName string) string {
+	return acctest.ConfigCompose(testAccSCRAMSecretAssociationConfig_base(rName, 3), `
+resource "aws_msk_single_scram_secret_association" "test1" {
+  cluster_arn = aws_msk_cluster.test.arn
+  secret_arn  = aws_secretsmanager_secret.test[0].arn
+
+  depends_on = [aws_secretsmanager_secret_version.test]
+}
+
+resource "aws_msk_single_scram_secret_association" "test2" {
+  cluster_arn = aws_msk_cluster.test.arn
+  secret_arn  = aws_secretsmanager_secret.test[1].arn
+
+  depends_on = [aws_secretsmanager_secret_version.test]
+}
+
+resource "aws_msk_single_scram_secret_association" "test3" {
+  cluster_arn = aws_msk_cluster.test.arn
+  secret_arn  = aws_secretsmanager_secret.test[2].arn
 
   depends_on = [aws_secretsmanager_secret_version.test]
 }
