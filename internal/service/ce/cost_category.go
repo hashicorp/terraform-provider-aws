@@ -375,7 +375,7 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 		input := &costexplorer.UpdateCostCategoryDefinitionInput{
 			CostCategoryArn: aws.String(d.Id()),
 			EffectiveStart:  aws.String(d.Get("effective_start").(string)),
-			Rules:           expandCostCategoryRules(d.Get(names.AttrRule).(*schema.Set).List()),
+			Rules:           expandCostCategoryRules(d.Get(names.AttrRule).([]interface{})),
 			RuleVersion:     awstypes.CostCategoryRuleVersion(d.Get("rule_version").(string)),
 		}
 
