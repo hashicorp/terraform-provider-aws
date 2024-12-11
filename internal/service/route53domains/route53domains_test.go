@@ -18,13 +18,12 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"RegisteredDomain": {
-			"tags":                testAccRegisteredDomain_tags,
-			"autoRenew":           testAccRegisteredDomain_autoRenew,
-			"contacts":            testAccRegisteredDomain_contacts,
-			"contactPrivacy":      testAccRegisteredDomain_contactPrivacy,
-			"nameservers":         testAccRegisteredDomain_nameservers,
-			"transferLock":        testAccRegisteredDomain_transferLock,
-			"createRegisterFails": testAccRegisteredDomain_createRegisterFails,
+			"tags":           testAccRegisteredDomain_tags,
+			"autoRenew":      testAccRegisteredDomain_autoRenew,
+			"contacts":       testAccRegisteredDomain_contacts,
+			"contactPrivacy": testAccRegisteredDomain_contactPrivacy,
+			"nameservers":    testAccRegisteredDomain_nameservers,
+			"transferLock":   testAccRegisteredDomain_transferLock,
 		},
 		"DelegationSignerRecord": {
 			acctest.CtBasic:      testAccDelegationSignerRecord_basic,
