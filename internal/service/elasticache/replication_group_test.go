@@ -366,12 +366,7 @@ func TestAccElastiCacheReplicationGroup_Engine_RedisToValkey(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationGroupConfig_basic_engine(rName, "valkey"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationGroupExists(ctx, resourceName, &v2),
-					testAccCheckReplicationGroupNotRecreated(&v1, &v2),
-					resource.TestCheckResourceAttr(resourceName, names.AttrEngine, "valkey"),
-				),
+				Config:      testAccReplicationGroupConfig_basic_engine(rName, "valkey"),
 				ExpectError: regexache.MustCompile("must explicitly set 'engine_version' attribute"),
 			},
 			{
