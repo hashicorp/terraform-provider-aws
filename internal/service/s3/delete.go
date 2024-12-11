@@ -149,8 +149,6 @@ func deletePageOfObjectVersions(ctx context.Context, conn *s3.Client, bucket str
 		}
 	})
 
-	fmt.Printf("deletePageOfObjectVersions\n")
-
 	return deletePage(ctx, conn, bucket, force, toDelete)
 }
 
@@ -163,8 +161,6 @@ func deletePageOfDeleteMarkers(ctx context.Context, conn *s3.Client, bucket stri
 			VersionId: v.VersionId,
 		}
 	})
-
-	fmt.Printf("deletePageOfDeleteMarkers\n")
 
 	return deletePage(ctx, conn, bucket, false, toDelete)
 }
@@ -199,8 +195,6 @@ func deletePage(ctx context.Context, conn *s3.Client, bucket string, force bool,
 			toDeleteSingly = append(toDeleteSingly, v)
 		}
 	}
-
-	fmt.Printf("toDeleteBulk: %#v\ntoDeleteSingly: %#v\n", toDeleteBulk, toDeleteSingly)
 
 	var nObjects int64
 	var outputErrs []types.Error
