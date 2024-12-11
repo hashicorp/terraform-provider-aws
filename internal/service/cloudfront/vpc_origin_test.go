@@ -91,6 +91,16 @@ func testAccCheckVPCOriginDestroy(ctx context.Context, n string) resource.TestCh
 func testAccVPCOriginConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -102,21 +112,20 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "a" {
   vpc_id     = aws_vpc.test.id
   cidr_block = "10.1.1.0/24"
-  availability_zone = "ap-southeast-1a"
+  availability_zone = "data.aws_availability_zones.available.names[0]"
 }
 
 resource "aws_subnet" "b" {
   vpc_id     = aws_vpc.test.id
   cidr_block = "10.1.2.0/24"
-  availability_zone = "ap-southeast-1b"
+  availability_zone = "data.aws_availability_zones.available.names[1]"
 }
 
 resource "aws_subnet" "c" {
   vpc_id     = aws_vpc.test.id
   cidr_block = "10.1.3.0/24"
-  availability_zone = "ap-southeast-1c"
+  availability_zone = "data.aws_availability_zones.available.names[2]"
 }
-
 
 resource "aws_internet_gateway" "gw" {
   vpc_id = aws_vpc.test.id
