@@ -44,7 +44,7 @@ func TestAccKafkaSingleSCRAMSecretAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccKafkaSingleSCRAMSecretAssociation_disappers(t *testing.T) {
+func TestAccKafkaSingleSCRAMSecretAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_msk_single_scram_secret_association.test"
