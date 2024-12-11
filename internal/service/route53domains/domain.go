@@ -89,7 +89,8 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 				},
 			},
 			names.AttrDomainName: schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.CaseInsensitiveStringType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -351,7 +352,7 @@ type domainResourceModel struct {
 	BillingContact    fwtypes.ListNestedObjectValueOf[contactDetailModel] `tfsdk:"billing_contact"`
 	BillingPrivacy    types.Bool                                          `tfsdk:"billing_privacy"`
 	CreationDate      timetypes.RFC3339                                   `tfsdk:"creation_date"`
-	DomainName        types.String                                        `tfsdk:"domain_name"`
+	DomainName        fwtypes.CaseInsensitiveString                       `tfsdk:"domain_name"`
 	DurationInYears   types.Int64                                         `tfsdk:"duration_in_years"`
 	ExpirationDate    timetypes.RFC3339                                   `tfsdk:"expiration_date"`
 	ID                types.String                                        `tfsdk:"id"`
@@ -370,7 +371,7 @@ type domainResourceModel struct {
 }
 
 func (data *domainResourceModel) InitFromID() error {
-	data.DomainName = data.ID
+	data.DomainName = fwtypes.CaseInsensitiveStringValue(data.ID.ValueString())
 
 	return nil
 }
