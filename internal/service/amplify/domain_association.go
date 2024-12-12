@@ -430,7 +430,7 @@ func expandCertificateSettings(tfMap map[string]interface{}) *types.CertificateS
 		Type: types.CertificateType(tfMap[names.AttrType].(string)),
 	}
 
-	if v, ok := tfMap["custom_certificate_arn"].(string); ok {
+	if v, ok := tfMap["custom_certificate_arn"].(string); ok && v != "" {
 		apiObject.CustomCertificateArn = aws.String(v)
 	}
 
