@@ -1242,6 +1242,80 @@ func TestAccEC2Instance_ipv6AddressCountAndSingleAddressCausesError(t *testing.T
 	})
 }
 
+func TestAccEC2Instance_IPv6_primaryEnable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var original, updated awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_enablePrimaryIPv6(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_enablePrimaryIPv6(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &updated),
+					testAccCheckInstanceNotRecreated(&original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_IPv6_primaryDisable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var original, updated awstypes.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_enablePrimaryIPv6(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_enablePrimaryIPv6(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &updated),
+					testAccCheckInstanceRecreated(&original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_IPv6_supportAddressCountWithIPv4(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v awstypes.Instance
@@ -1373,12 +1447,7 @@ func TestAccEC2Instance_networkInstanceRemovingAllSecurityGroups(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccInstanceConfig_networkVPCRemoveSecurityGroupIDs(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-				),
+				Config:      testAccInstanceConfig_networkVPCRemoveSecurityGroupIDs(rName),
 				ExpectError: regexache.MustCompile(`VPC-based instances require at least one security group to be attached`),
 			},
 		},
@@ -6792,6 +6861,25 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstanceConfig_enablePrimaryIPv6(rName string, primaryIPv6 bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceVPCIPv6Config(rName),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami                 = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type       = "t2.micro"
+  subnet_id           = aws_subnet.test.id
+  enable_primary_ipv6 = %[1]t
+  ipv6_address_count  = 1
+
+  tags = {
+    Name = %[2]q
+  }
+}
+`, primaryIPv6, rName))
 }
 
 func testAccInstanceConfig_ipv6Support(rName string) string {

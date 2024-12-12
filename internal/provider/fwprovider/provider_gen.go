@@ -1620,6 +1620,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// s3tables
+
+				"s3tables": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// sagemaker
 
 				"sagemaker": schema.StringAttribute{
