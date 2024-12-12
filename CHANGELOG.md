@@ -15,6 +15,7 @@ ENHANCEMENTS:
 
 * data-source/aws_api_gateway_domain_name: Add `policy` and `domain_name_id` attributes ([#40364](https://github.com/hashicorp/terraform-provider-aws/issues/40364))
 * data-source/aws_servicecatalogappregistry_application: Add `tags` attribute ([#38243](https://github.com/hashicorp/terraform-provider-aws/issues/38243))
+* data-source/aws_sesv2_configuration_set: Add `delivery_options.max_delivery_seconds` and `tracking_options.https_policy` attributes ([#40194](https://github.com/hashicorp/terraform-provider-aws/issues/40194))
 * resource/aws_api_gateway_base_path_mapping: Add `domain_name_id` argument ([#40447](https://github.com/hashicorp/terraform-provider-aws/issues/40447))
 * resource/aws_api_gateway_domain_name: Add `policy` argument and `domain_name_id` attribute ([#40364](https://github.com/hashicorp/terraform-provider-aws/issues/40364))
 * resource/aws_api_gateway_domain_name: Support `PRIVATE` as a valid value for `endpoint_configuration.types` argument, enabling custom domain name support for private REST API endpoints ([#40364](https://github.com/hashicorp/terraform-provider-aws/issues/40364))
@@ -30,6 +31,7 @@ ENHANCEMENTS:
 * resource/aws_rds_global_cluster: Add `tags` argument and `tags_all` attribute ([#40470](https://github.com/hashicorp/terraform-provider-aws/issues/40470))
 * resource/aws_sagemaker_notebook_instance: Support `notebook-al2-v3` value for `platform_identifier` ([#40484](https://github.com/hashicorp/terraform-provider-aws/issues/40484))
 * resource/aws_servicecatalogappregistry_application: Add `tags` argument and `tags_all` attribute ([#38243](https://github.com/hashicorp/terraform-provider-aws/issues/38243))
+* resource/aws_sesv2_configuration_set: Add `delivery_options.max_delivery_seconds` and `tracking_options.https_policy` arguments ([#40194](https://github.com/hashicorp/terraform-provider-aws/issues/40194))
 
 BUG FIXES:
 
