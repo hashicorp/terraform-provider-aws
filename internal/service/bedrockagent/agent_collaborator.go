@@ -190,7 +190,7 @@ func (r *resourceAgentCollaborator) Read(ctx context.Context, request resource.R
 		return
 	}
 
-	out, err := findAgentCollaboratorByID(ctx, conn, data.ID.ValueString(), data.AgentId.ValueString(), data.AgentVersion.ValueString())
+	out, err := findAgentCollaboratorByThreePartKey(ctx, conn, data.ID.ValueString(), data.AgentId.ValueString(), data.AgentVersion.ValueString())
 	if tfresource.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
@@ -291,7 +291,7 @@ func (r *resourceAgentCollaborator) ImportState(ctx context.Context, request res
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("prepare_agent"), true)...)
 }
 
-func findAgentCollaboratorByID(ctx context.Context, conn *bedrockagent.Client, id string, agentId string, agentVersion string) (*bedrockagent.GetAgentCollaboratorOutput, error) {
+func findAgentCollaboratorByThreePartKey(ctx context.Context, conn *bedrockagent.Client, id string, agentId string, agentVersion string) (*bedrockagent.GetAgentCollaboratorOutput, error) {
 	in := &bedrockagent.GetAgentCollaboratorInput{
 		AgentId:        aws.String(agentId),
 		AgentVersion:   aws.String(agentVersion),
