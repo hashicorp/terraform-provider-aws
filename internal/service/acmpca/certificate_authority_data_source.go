@@ -184,6 +184,7 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	switch {
 	case tfawserr.ErrCodeEquals(err, "AccessDeniedException"):
 		// Handle permission issues gracefully for Resource Access Manager shared CAs.
+		// arn:aws:ram::aws:permission/AWSRAMDefaultPermissionCertificateAuthority does not include acm-pca:GetCertificateAuthorityCsr.
 	case errs.IsA[*types.InvalidStateException](err):
 		// Returned when in PENDING_CERTIFICATE status
 		// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
