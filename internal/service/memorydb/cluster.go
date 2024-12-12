@@ -381,6 +381,12 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) create: %s", d.Id(), err)
 	}
 
+	if v, ok := d.GetOk("multi_region_cluster_name"); ok {
+		if _, err := waitMultiRegionClusterAvailable(ctx, conn, v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi-Region Cluster (%s) create: %s", v.(string), err)
+		}
+	}
+
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
