@@ -73,10 +73,14 @@ func (r *resourceAgentCollaborator) Schema(ctx context.Context, request resource
 			},
 			"agent_version": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				Default:  stringdefault.StaticString("DRAFT"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			"collaborator_id": schema.StringAttribute{
+				Computed: true,
 			},
 			"collaboration_instruction": schema.StringAttribute{
 				Required: true,
@@ -172,6 +176,14 @@ func (r *resourceAgentCollaborator) Create(ctx context.Context, request resource
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	if data.PrepareAgent.ValueBool() {
+		if _, err := prepareAgent(ctx, conn, data.AgentId.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+			response.Diagnostics.AddError("preparing Agent", err.Error())
+			return
+		}
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -186,11 +198,10 @@ func (r *resourceAgentCollaborator) Read(ctx context.Context, request resource.R
 
 	if err := data.InitFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
-	out, err := findAgentCollaboratorByThreePartKey(ctx, conn, data.ID.ValueString(), data.AgentId.ValueString(), data.AgentVersion.ValueString())
+	out, err := findAgentCollaboratorByThreePartKey(ctx, conn, data.AgentId.ValueString(), data.AgentVersion.ValueString(), data.CollaboratorID.ValueString())
 	if tfresource.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
@@ -252,6 +263,13 @@ func (r *resourceAgentCollaborator) Update(ctx context.Context, request resource
 		if response.Diagnostics.HasError() {
 			return
 		}
+
+		if plan.PrepareAgent.ValueBool() {
+			if _, err := prepareAgent(ctx, conn, plan.AgentId.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts)); err != nil {
+				response.Diagnostics.AddError("preparing Agent", err.Error())
+				return
+			}
+		}
 	}
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
@@ -286,16 +304,16 @@ func (r *resourceAgentCollaborator) Delete(ctx context.Context, request resource
 }
 
 func (r *resourceAgentCollaborator) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root(names.AttrID), request.ID)...)
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 	// Set prepare_agent to default value on import
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("prepare_agent"), true)...)
 }
 
-func findAgentCollaboratorByThreePartKey(ctx context.Context, conn *bedrockagent.Client, id string, agentId string, agentVersion string) (*bedrockagent.GetAgentCollaboratorOutput, error) {
+func findAgentCollaboratorByThreePartKey(ctx context.Context, conn *bedrockagent.Client, agentId string, agentVersion string, collaboratorId string) (*bedrockagent.GetAgentCollaboratorOutput, error) {
 	in := &bedrockagent.GetAgentCollaboratorInput{
 		AgentId:        aws.String(agentId),
 		AgentVersion:   aws.String(agentVersion),
-		CollaboratorId: aws.String(id),
+		CollaboratorId: aws.String(collaboratorId),
 	}
 
 	out, err := conn.GetAgentCollaborator(ctx, in)

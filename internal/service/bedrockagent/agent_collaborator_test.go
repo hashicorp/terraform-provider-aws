@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -31,36 +31,29 @@ func TestAccBedrockAgentAgentCollaborator_basic(t *testing.T) {
 	var agentcollaborator bedrockagent.GetAgentCollaboratorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_collaborator.test"
+	model := "anthropic.claude-3-5-sonnet-20241022-v2:0"
+	description := "basic claude"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockAgentEndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentCollaboratorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentCollaboratorConfig_basic(rName),
+				Config: testAccAgentCollaboratorConfig_basic(rName, model, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "collaborator_name", rName),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -75,19 +68,20 @@ func TestAccBedrockAgentAgentCollaborator_disappears(t *testing.T) {
 	var agentcollaborator bedrockagent.GetAgentCollaboratorOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_collaborator.test"
+	model := "anthropic.claude-3-5-sonnet-20241022-v2:0"
+	description := "basic claude"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BedrockAgentEndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgentCollaboratorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentCollaboratorConfig_basic(rName),
+				Config: testAccAgentCollaboratorConfig_basic(rName, model, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentCollaboratorExists(ctx, resourceName, &agentcollaborator),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceAgentCollaborator, resourceName),
@@ -146,21 +140,6 @@ func testAccCheckAgentCollaboratorExists(ctx context.Context, name string, agent
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
-
-	input := &bedrockagent.ListAgentCollaboratorsInput{}
-
-	_, err := conn.ListAgentCollaborators(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 func testAccCheckAgentCollaboratorNotRecreated(before, after *bedrockagent.GetAgentCollaboratorOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.AgentCollaborator.CollaboratorId), aws.ToString(after.AgentCollaborator.AgentId); before != after {
@@ -171,29 +150,30 @@ func testAccCheckAgentCollaboratorNotRecreated(before, after *bedrockagent.GetAg
 	}
 }
 
-func testAccAgentCollaboratorConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
+func testAccAgentCollaboratorConfig_basic(rName, model, description string) string {
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, model, description),
+		testAccAgentAliasConfig_alias(rName),
+		fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test2" {
+  agent_collaboration         = "SUPERVISOR"
+  agent_name                  = "%[1]s-super"
+  agent_resource_role_arn     = aws_iam_role.test_agent.arn
+  description                 = %[3]q
+  idle_session_ttl_in_seconds = 500
+  instruction                 = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model            = %[2]q
+  prepare_agent               = false
 }
 
 resource "aws_bedrockagent_agent_collaborator" "test" {
-  agent_collaborator_name             = %[1]q
-  engine_type             = "ActiveBedrockAgent"
-  engine_version          = %[2]q
-  host_instance_type      = "bedrockagent.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
+  agent_id                   = aws_bedrockagent_agent.test2.agent_id
+  collaboration_instruction  = "tell the other agent what to do"
+  collaborator_name          = %[1]q
+  relay_conversation_history = "TO_COLLABORATOR"
+  
+  agent_descriptor {
+    alias_arn = aws_bedrockagent_agent_alias.test.agent_alias_arn
   }
 }
-`, rName)
+`, rName, model, description))
 }
