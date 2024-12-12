@@ -37,7 +37,7 @@ func testAccWorkforce_cognitoConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkforceExists(ctx, resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workforce/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workforce/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "cognito_config.0.client_id", "aws_cognito_user_pool_client.test", names.AttrID),
 					resource.TestCheckResourceAttrPair(resourceName, "cognito_config.0.user_pool", "aws_cognito_user_pool.test", names.AttrID),
@@ -76,7 +76,7 @@ func testAccWorkforce_oidcConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkforceExists(ctx, resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workforce/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workforce/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.authorization_endpoint", endpoint1),
@@ -103,7 +103,7 @@ func testAccWorkforce_oidcConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkforceExists(ctx, resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workforce/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workforce/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.authorization_endpoint", endpoint2),
@@ -142,7 +142,7 @@ func testAccWorkforce_oidcConfig_full(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkforceExists(ctx, resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workforce/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workforce/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.authorization_endpoint", endpoint1),
@@ -172,7 +172,7 @@ func testAccWorkforce_oidcConfig_full(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkforceExists(ctx, resourceName, &workforce),
 					resource.TestCheckResourceAttr(resourceName, "workforce_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workforce/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", regexache.MustCompile(`workforce/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cognito_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "oidc_config.0.authorization_endpoint", endpoint2),

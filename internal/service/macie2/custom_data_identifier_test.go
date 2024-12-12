@@ -42,7 +42,7 @@ func testAccCustomDataIdentifier_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
 					resource.TestCheckResourceAttr(resourceName, "regex", regex),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`custom-data-identifier/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`custom-data-identifier/.+`)),
 				),
 			},
 			{
@@ -127,7 +127,7 @@ func testAccCustomDataIdentifier_NamePrefix(t *testing.T) {
 					testAccCheckCustomDataIdentifierExists(ctx, resourceName, &macie2Output),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, namePrefix),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, namePrefix),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`custom-data-identifier/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`custom-data-identifier/.+`)),
 				),
 			},
 			{
@@ -161,7 +161,7 @@ func testAccCustomDataIdentifier_WithClassificationJob(t *testing.T) {
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`custom-data-identifier/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`custom-data-identifier/.+`)),
 				),
 			},
 			{
@@ -171,7 +171,7 @@ func testAccCustomDataIdentifier_WithClassificationJob(t *testing.T) {
 					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "terraform-"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`custom-data-identifier/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`custom-data-identifier/.+`)),
 				),
 			},
 			{
@@ -211,7 +211,7 @@ func testAccCustomDataIdentifier_WithTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key2", acctest.CtValue2),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.Key3", "value3"),
 					acctest.CheckResourceAttrRFC3339(resourceName, names.AttrCreatedAt),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "macie2", regexache.MustCompile(`custom-data-identifier/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "macie2", regexache.MustCompile(`custom-data-identifier/.+`)),
 				),
 			},
 			{

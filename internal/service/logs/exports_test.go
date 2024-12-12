@@ -15,6 +15,7 @@ var (
 	ResourceResourcePolicy       = resourceResourcePolicy
 	ResourceStream               = resourceStream
 	ResourceSubscriptionFilter   = resourceSubscriptionFilter
+	ResourceAnomalyDetector      = newResourceAnomalyDetector
 
 	FindAccountPolicyByTwoPartKey      = findAccountPolicyByTwoPartKey
 	FindDestinationByName              = findDestinationByName
@@ -24,6 +25,7 @@ var (
 	FindQueryDefinitionByTwoPartKey    = findQueryDefinitionByTwoPartKey
 	FindResourcePolicyByName           = findResourcePolicyByName
 	FindSubscriptionFilterByTwoPartKey = findSubscriptionFilterByTwoPartKey
+	FindLogAnomalyDetectorByARN        = findLogAnomalyDetectorByARN
 
 	ValidLogGroupName                      = validLogGroupName
 	ValidLogGroupNamePrefix                = validLogGroupNamePrefix

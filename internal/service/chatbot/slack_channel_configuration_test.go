@@ -66,7 +66,7 @@ func testAccSlackChannelConfiguration_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlackChannelConfigurationExists(ctx, testResourceSlackChannelConfiguration, &slackchannelconfiguration),
 					resource.TestCheckResourceAttr(testResourceSlackChannelConfiguration, "configuration_name", rName),
-					acctest.MatchResourceAttrGlobalARN(testResourceSlackChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/slack-channel/%s`, rName))),
+					acctest.MatchResourceAttrGlobalARN(ctx, testResourceSlackChannelConfiguration, "chat_configuration_arn", "chatbot", regexache.MustCompile(fmt.Sprintf(`chat-configuration/slack-channel/%s`, rName))),
 					resource.TestCheckResourceAttrPair(testResourceSlackChannelConfiguration, names.AttrIAMRoleARN, "aws_iam_role.test", names.AttrARN),
 					resource.TestCheckResourceAttr(testResourceSlackChannelConfiguration, "slack_channel_id", channelID),
 					resource.TestCheckResourceAttrSet(testResourceSlackChannelConfiguration, "slack_channel_name"),

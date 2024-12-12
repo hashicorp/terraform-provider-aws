@@ -105,7 +105,7 @@ func (r *enrollmentStatusResource) Create(ctx context.Context, request resource.
 	}
 
 	// Set values for unknowns.
-	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID)
+	data.ID = fwflex.StringValueToFramework(ctx, r.Meta().AccountID(ctx))
 
 	output, err := waitEnrollmentStatusUpdated(ctx, conn, string(input.Status), r.CreateTimeout(ctx, data.Timeouts))
 

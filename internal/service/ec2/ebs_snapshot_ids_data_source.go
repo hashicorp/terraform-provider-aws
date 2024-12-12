@@ -85,7 +85,7 @@ func dataSourceEBSSnapshotIDsRead(ctx context.Context, d *schema.ResourceData, m
 		snapshotIDs = append(snapshotIDs, aws.ToString(v.SnapshotId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, snapshotIDs)
 
 	return diags

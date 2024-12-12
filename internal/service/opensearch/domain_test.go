@@ -542,9 +542,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain awstypes.DomainStatus
 	rName := testAccRandomDomainName()
-	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -578,11 +576,7 @@ func TestAccOpenSearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: testAccDomainConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
-				),
+				Config:      testAccDomainConfig_basic(rName),
 				ExpectError: regexache.MustCompile(`OpenSearch Domain ".+" already exists`),
 			},
 		},

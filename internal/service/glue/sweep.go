@@ -193,7 +193,7 @@ func sweepConnections(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.GlueClient(ctx)
-	catalogID := client.AccountID
+	catalogID := client.AccountID(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error

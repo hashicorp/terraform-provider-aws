@@ -45,7 +45,7 @@ func TestAccRDSProxyEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "db_proxy_endpoint_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "db_proxy_name", "aws_db_proxy.test", names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "target_role", "READ_WRITE"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", regexache.MustCompile(`db-proxy-endpoint:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", regexache.MustCompile(`db-proxy-endpoint:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "vpc_subnet_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.0", names.AttrID),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_subnet_ids.*", "aws_subnet.test.1", names.AttrID),

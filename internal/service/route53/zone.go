@@ -139,7 +139,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Private Route53 Hosted Zones can only be created with their first VPC association,
 	// however we need to associate the remaining after creation.
-	vpcs := expandVPCs(d.Get("vpc").(*schema.Set).List(), meta.(*conns.AWSClient).Region)
+	vpcs := expandVPCs(d.Get("vpc").(*schema.Set).List(), meta.(*conns.AWSClient).Region(ctx))
 	if len(vpcs) > 0 {
 		input.VPC = vpcs[0]
 	}
@@ -252,7 +252,7 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChange("vpc") {
-		region := meta.(*conns.AWSClient).Region
+		region := meta.(*conns.AWSClient).Region(ctx)
 		o, n := d.GetChange("vpc")
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 

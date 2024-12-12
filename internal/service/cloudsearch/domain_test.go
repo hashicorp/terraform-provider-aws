@@ -41,7 +41,7 @@ func TestAccCloudSearchDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudsearch", fmt.Sprintf("domain/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudsearch", fmt.Sprintf("domain/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.enforce_https", acctest.CtFalse),
@@ -267,7 +267,7 @@ func TestAccCloudSearchDomain_update(t *testing.T) {
 				Config: testAccDomainConfig_allOptions(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudsearch", fmt.Sprintf("domain/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudsearch", fmt.Sprintf("domain/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.enforce_https", acctest.CtTrue),
@@ -294,7 +294,7 @@ func TestAccCloudSearchDomain_update(t *testing.T) {
 				Config: testAccDomainConfig_allOptionsUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccDomainExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudsearch", fmt.Sprintf("domain/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudsearch", fmt.Sprintf("domain/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_id"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_options.0.enforce_https", acctest.CtTrue),

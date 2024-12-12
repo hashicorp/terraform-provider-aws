@@ -146,9 +146,9 @@ func resourceHostedConfigurationVersionRead(ctx context.Context, d *schema.Resou
 	d.Set("version_number", output.VersionNumber)
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("application/%s/configurationprofile/%s/hostedconfigurationversion/%d", appID, confProfID, versionNumber),
 		Service:   "appconfig",
 	}.String()

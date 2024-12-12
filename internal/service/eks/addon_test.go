@@ -41,7 +41,7 @@ func TestAccEKSAddon_basic(t *testing.T) {
 					testAccCheckAddonExists(ctx, addonResourceName, &addon),
 					resource.TestCheckResourceAttr(addonResourceName, "addon_name", addonName),
 					resource.TestCheckResourceAttrSet(addonResourceName, "addon_version"),
-					acctest.MatchResourceAttrRegionalARN(addonResourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, addonResourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("addon/%s/%s/.+$", rName, addonName))),
 					resource.TestCheckResourceAttrPair(addonResourceName, names.AttrClusterName, clusterResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(addonResourceName, "configuration_values", ""),
 					resource.TestCheckResourceAttr(addonResourceName, "pod_identity_association.#", "0"),
@@ -381,6 +381,22 @@ func TestAccEKSAddon_podIdentityAssociation(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			{
+				Config: testAccAddonConfig_basic(rName, addonName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, resourceName, &addon),
+					resource.TestCheckResourceAttr(resourceName, "pod_identity_association.#", "0"),
+				),
+			},
+			{
+				Config: testAccAddonConfig_podIdentityAssociation(rName, addonName, serviceAccount),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, resourceName, &addon),
+					resource.TestCheckResourceAttr(resourceName, "pod_identity_association.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "pod_identity_association.0.role_arn", podIdentityRoleResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "pod_identity_association.0.service_account", serviceAccount),
+				),
+			},
 		},
 	})
 }
@@ -610,32 +626,36 @@ resource "aws_eks_addon" "test" {
 }
 
 func testAccAddonConfig_podIdentityAssociation(rName, addonName, serviceAccount string) string {
-	return acctest.ConfigCompose(testAccAddonConfig_base(rName), fmt.Sprintf(`
-resource "aws_iam_role" "test_pod_identity" {
-  name               = "test-pod-identity"
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "sts:AssumeRole",
-        "sts:TagSession"
-	  ],
-      "Principal": {
-        "Service": "pods.eks.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
+	return acctest.ConfigCompose(
+		testAccAddonConfig_base(rName),
+		fmt.Sprintf(`
+data "aws_iam_policy_document" "test_assume_role" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "sts:AssumeRole",
+      "sts:TagSession",
+    ]
+    principals {
+      type        = "Service"
+      identifiers = ["pods.eks.amazonaws.com"]
     }
-  ]
+  }
 }
-EOF
 
-  managed_policy_arns = ["arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKS_CNI_Policy"]
+resource "aws_iam_role" "test_pod_identity" {
+  name               = "%1s-pod-identity"
+  assume_role_policy = data.aws_iam_policy_document.test_assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "test-AmazonEKS_CNI_Policy" {
+  role       = aws_iam_role.test_pod_identity.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonEKS_CNI_Policy"
 }
 
 resource "aws_eks_addon" "test" {
+  depends_on = [aws_iam_role_policy_attachment.test-AmazonEKS_CNI_Policy]
+
   cluster_name = aws_eks_cluster.test.name
   addon_name   = %[2]q
 
