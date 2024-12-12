@@ -314,7 +314,7 @@ func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, app
 		timeout = 5 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.DomainStatusCreating, types.DomainStatusInProgress, types.DomainStatusRequestingCertificate),
+		Pending: enum.Slice(types.DomainStatusCreating, types.DomainStatusInProgress, types.DomainStatusRequestingCertificate, types.DomainStatusImportingCustomCertificate),
 		Target:  enum.Slice(types.DomainStatusPendingVerification, types.DomainStatusPendingDeployment, types.DomainStatusAvailable),
 		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
 		Timeout: timeout,

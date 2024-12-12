@@ -11,6 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -160,7 +161,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 	})
 }
 
-func testAccDomainAssociation_certificateSettings(t *testing.T) {
+func testAccDomainAssociation_certificateSettings_Managed(t *testing.T) {
 	ctx := acctest.Context(t)
 	key := "AMPLIFY_DOMAIN_NAME"
 	domainName := os.Getenv(key)
@@ -179,7 +180,7 @@ func testAccDomainAssociation_certificateSettings(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAssociationConfig_certificateSettings(rName, domainName, false, false),
+				Config: testAccDomainAssociationConfig_certificateSettings_Managed(rName, domainName, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
@@ -187,6 +188,51 @@ func testAccDomainAssociation_certificateSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.type", "AMPLIFY_MANAGED"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_settings.0.certificate_verification_dns_record"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.custom_certificate_arn", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_verification"},
+			},
+		},
+	})
+}
+
+func TestAccDomainAssociation_certificateSettings_Custom(t *testing.T) {
+	ctx := acctest.Context(t)
+	key := "AMPLIFY_DOMAIN_NAME"
+	domainName := os.Getenv(key)
+	if domainName == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	var domain types.DomainAssociation
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_amplify_domain_association.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(t)
+			acctest.PreCheckAlternateRegion(t, endpoints.UsEast1RegionID) // ACM certificate must be created in us-east-1
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainAssociationConfig_certificateSettings_Custom(rName, domainName, false, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.certificate_verification_dns_record", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_settings.0.custom_certificate_arn", "aws_acm_certificate.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.type", "CUSTOM"),
 				),
 			},
 			{
@@ -308,7 +354,7 @@ resource "aws_amplify_domain_association" "test" {
 `, rName, domainName, enableAutoSubDomain, waitForVerification)
 }
 
-func testAccDomainAssociationConfig_certificateSettings(rName, domainName string, enableAutoSubDomain bool, waitForVerification bool) string {
+func testAccDomainAssociationConfig_certificateSettings_Managed(rName, domainName string, enableAutoSubDomain bool, waitForVerification bool) string {
 	return fmt.Sprintf(`
 resource "aws_amplify_app" "test" {
   name = %[1]q
@@ -336,4 +382,69 @@ resource "aws_amplify_domain_association" "test" {
   wait_for_verification  = %[4]t
 }
 `, rName, domainName, enableAutoSubDomain, waitForVerification)
+}
+
+func testAccDomainAssociationConfig_certificateSettings_Custom(rName, domainName string, enableAutoSubDomain bool, waitForVerification bool) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
+resource "aws_amplify_domain_association" "test" {
+  app_id      = aws_amplify_app.test.id
+  domain_name = %[2]q
+
+  sub_domain {
+    branch_name = aws_amplify_branch.test.branch_name
+    prefix      = ""
+  }
+
+  certificate_settings {
+    type                   = "CUSTOM"
+    custom_certificate_arn = aws_acm_certificate_validation.test.certificate_arn
+  }
+
+  enable_auto_sub_domain = %[3]t
+  wait_for_verification  = %[4]t
+}
+
+resource "aws_amplify_app" "test" {
+  name = %[1]q
+}
+
+resource "aws_amplify_branch" "test" {
+  app_id      = aws_amplify_app.test.id
+  branch_name = %[1]q
+}
+
+data "aws_route53_zone" "test" {
+  provider = "awsalternate"
+
+  name         = %[2]q
+  private_zone = false
+}
+
+resource "aws_acm_certificate" "test" {
+  provider = "awsalternate"
+
+  domain_name       = %[2]q
+  validation_method = "DNS"
+}
+
+resource "aws_route53_record" "test" {
+  provider = "awsalternate"
+
+  allow_overwrite = true
+  name            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_name
+  records         = [tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_value]
+  ttl             = 60
+  type            = tolist(aws_acm_certificate.test.domain_validation_options)[0].resource_record_type
+  zone_id         = data.aws_route53_zone.test.zone_id
+}
+
+resource "aws_acm_certificate_validation" "test" {
+  provider = "awsalternate"
+
+  depends_on      = [aws_route53_record.test]
+  certificate_arn = aws_acm_certificate.test.arn
+}
+  `, rName, domainName, enableAutoSubDomain, waitForVerification))
 }
