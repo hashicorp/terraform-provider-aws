@@ -39,8 +39,8 @@ func TestAccGameLiftGameServerGroup_basic(t *testing.T) {
 				Config: testAccGameServerGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gameservergroup/.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "auto_scaling_group_arn", "autoscaling", regexache.MustCompile(`autoScalingGroup:.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "gamelift", regexache.MustCompile(`gameservergroup/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "auto_scaling_group_arn", "autoscaling", regexache.MustCompile(`autoScalingGroup:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_scaling_policy.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "balancing_strategy", string(awstypes.BalancingStrategySpotPreferred)),
 					resource.TestCheckResourceAttr(resourceName, "game_server_protection_policy", string(awstypes.GameServerProtectionPolicyNoProtection)),
@@ -520,7 +520,7 @@ func TestAccGameLiftGameServerGroup_roleARN(t *testing.T) {
 				Config: testAccGameServerGroupConfig_roleARN(rName, "test1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf(`role/%s-test1`, rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", fmt.Sprintf(`role/%s-test1`, rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test1", names.AttrARN),
 				),
 			},
@@ -534,7 +534,7 @@ func TestAccGameLiftGameServerGroup_roleARN(t *testing.T) {
 				Config: testAccGameServerGroupConfig_roleARN(rName, "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGameServerGroupExists(ctx, resourceName),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrRoleARN, "iam", fmt.Sprintf(`role/%s-test2`, rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrRoleARN, "iam", fmt.Sprintf(`role/%s-test2`, rName)),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrRoleARN, "aws_iam_role.test2", names.AttrARN),
 				),
 			},

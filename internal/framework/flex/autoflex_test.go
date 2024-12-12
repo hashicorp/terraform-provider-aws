@@ -242,6 +242,10 @@ type awsSingleStringPointer struct {
 	Field1 *string
 }
 
+type awsSingleByteSliceValue struct {
+	Field1 []byte
+}
+
 type awsSingleFloat64Value struct {
 	Field1 float64
 }

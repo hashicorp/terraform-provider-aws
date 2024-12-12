@@ -204,6 +204,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	"github.com/aws/aws-sdk-go-v2/service/s3outposts"
+	"github.com/aws/aws-sdk-go-v2/service/s3tables"
 	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/schemas"
@@ -233,6 +234,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/aws/aws-sdk-go-v2/service/swf"
 	"github.com/aws/aws-sdk-go-v2/service/synthetics"
+	"github.com/aws/aws-sdk-go-v2/service/taxsettings"
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
@@ -1051,6 +1053,10 @@ func (c *AWSClient) S3OutpostsClient(ctx context.Context) *s3outposts.Client {
 	return errs.Must(client[*s3outposts.Client](ctx, c, names.S3Outposts, make(map[string]any)))
 }
 
+func (c *AWSClient) S3TablesClient(ctx context.Context) *s3tables.Client {
+	return errs.Must(client[*s3tables.Client](ctx, c, names.S3Tables, make(map[string]any)))
+}
+
 func (c *AWSClient) SESClient(ctx context.Context) *ses.Client {
 	return errs.Must(client[*ses.Client](ctx, c, names.SES, make(map[string]any)))
 }
@@ -1165,6 +1171,10 @@ func (c *AWSClient) StorageGatewayClient(ctx context.Context) *storagegateway.Cl
 
 func (c *AWSClient) SyntheticsClient(ctx context.Context) *synthetics.Client {
 	return errs.Must(client[*synthetics.Client](ctx, c, names.Synthetics, make(map[string]any)))
+}
+
+func (c *AWSClient) TaxSettingsClient(ctx context.Context) *taxsettings.Client {
+	return errs.Must(client[*taxsettings.Client](ctx, c, names.TaxSettings, make(map[string]any)))
 }
 
 func (c *AWSClient) TimestreamInfluxDBClient(ctx context.Context) *timestreaminfluxdb.Client {

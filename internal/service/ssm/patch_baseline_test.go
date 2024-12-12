@@ -47,7 +47,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("patch-baseline-%s", name)),
@@ -81,7 +81,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB123456"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "approved_patches.*", "KB456789"),
@@ -215,6 +215,31 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 						}
 						return nil
 					},
+				),
+			},
+		},
+	})
+}
+
+func TestAccSSMPatchBaseline_approveAfterDays(t *testing.T) {
+	ctx := acctest.Context(t)
+	var baseline ssm.GetPatchBaselineOutput
+	name := sdkacctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPatchBaselineConfig_approveAfterDays(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &baseline),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.approve_after_days", "360"),
+					resource.TestCheckResourceAttr(resourceName, "approval_rule.0.patch_filter.#", "2"),
 				),
 			},
 		},
@@ -598,6 +623,32 @@ resource "aws_ssm_patch_baseline" "test" {
 
   approval_rule {
     approve_until_date  = "2020-02-02"
+    enable_non_security = true
+    compliance_level    = "CRITICAL"
+
+    patch_filter {
+      key    = "PRODUCT"
+      values = ["AmazonLinux2016.03", "AmazonLinux2016.09", "AmazonLinux2017.03", "AmazonLinux2017.09"]
+    }
+
+    patch_filter {
+      key    = "SEVERITY"
+      values = ["Critical", "Important"]
+    }
+  }
+}
+`, rName)
+}
+
+func testAccPatchBaselineConfig_approveAfterDays(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name             = %[1]q
+  operating_system = "AMAZON_LINUX"
+  description      = "Baseline containing all updates approved for production systems"
+
+  approval_rule {
+    approve_after_days  = 360
     enable_non_security = true
     compliance_level    = "CRITICAL"
 

@@ -473,6 +473,14 @@ func resourceTable() *schema.Resource {
 						"attribute_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								// AWS requires the attribute name to be set when disabling TTL but
+								// does not return it so it causes a diff.
+								if old == "" && new != "" && !d.Get("ttl.0.enabled").(bool) {
+									return true
+								}
+								return false
+							},
 						},
 						names.AttrEnabled: {
 							Type:     schema.TypeBool,
@@ -802,7 +810,7 @@ func resourceTableCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.Get("point_in_time_recovery.0.enabled").(bool) {
-		if err := updatePITR(ctx, conn, d.Id(), true, meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutCreate)); err != nil {
+		if err := updatePITR(ctx, conn, d.Id(), true, meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, resNameTable, d.Id(), fmt.Errorf("enabling point in time recovery: %w", err))
 		}
 	}
@@ -1166,7 +1174,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 			var input = &awstypes.UpdateReplicationGroupMemberAction{
 				KMSMasterKeyId: sseSpecification.KMSMasterKeyId,
-				RegionName:     aws.String(meta.(*conns.AWSClient).Region),
+				RegionName:     aws.String(meta.(*conns.AWSClient).Region(ctx)),
 			}
 			var update = awstypes.ReplicationGroupUpdate{Update: input}
 			replicaInputs = append(replicaInputs, update)
@@ -1242,7 +1250,7 @@ func resourceTableUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChange("point_in_time_recovery") {
-		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := updatePITR(ctx, conn, d.Id(), d.Get("point_in_time_recovery.0.enabled").(bool), meta.(*conns.AWSClient).Region(ctx), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, resNameTable, d.Id(), err)
 		}
 	}
@@ -1422,7 +1430,7 @@ func createReplicas(ctx context.Context, conn *dynamodb.Client, tableName string
 			return fmt.Errorf("creating replica (%s): %w", tfMap["region_name"].(string), err)
 		}
 
-		if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), timeout); err != nil {
+		if _, err := waitReplicaActive(ctx, conn, tableName, tfMap["region_name"].(string), replicaDelayDefault, timeout); err != nil {
 			return fmt.Errorf("waiting for replica (%s) creation: %w", tfMap["region_name"].(string), err)
 		}
 
@@ -2013,7 +2021,7 @@ func clearSSEDefaultKey(ctx context.Context, client *conns.AWSClient, sseList []
 
 	sse := sseList[0].(map[string]interface{})
 
-	dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", client.Region)
+	dk, err := kms.FindDefaultKeyARNForService(ctx, client.KMSClient(ctx), "dynamodb", client.Region(ctx))
 	if err != nil {
 		return sseList
 	}
@@ -2628,13 +2636,9 @@ func ttlPlantimeValidate(ttlPath cty.Path, ttl cty.Value, diags *diag.Diagnostic
 				errs.PathString(ttlPath.GetAttr("attribute_name")),
 			))
 		}
-	} else {
-		if !(attribute.IsNull() || attribute.AsString() == "") {
-			*diags = append(*diags, errs.NewAttributeConflictsWhenError(
-				ttlPath.GetAttr("attribute_name"),
-				ttlPath.GetAttr(names.AttrEnabled),
-				"false",
-			))
-		}
 	}
+
+	// !! Not a validation error for attribute_name to be set when enabled is false !!
+	// AWS *requires* attribute_name to be set when disabling TTL but does not return it, causing a diff.
+	// The diff is handled by DiffSuppressFunc of attribute_name.
 }

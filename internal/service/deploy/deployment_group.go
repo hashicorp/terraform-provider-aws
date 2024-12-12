@@ -74,7 +74,6 @@ func resourceDeploymentGroup() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"alarms": {
 							Type:     schema.TypeSet,
-							MaxItems: 10,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
@@ -577,8 +576,8 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "codedeploy",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("deploymentgroup:%s/%s", appName, groupName),
 	}.String()
 	d.Set(names.AttrARN, arn)

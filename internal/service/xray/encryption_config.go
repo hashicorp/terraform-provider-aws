@@ -67,7 +67,7 @@ func resourceEncryptionPutConfig(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "creating XRay Encryption Config: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	if _, err := waitEncryptionConfigAvailable(ctx, conn); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for XRay Encryption Config (%s) create: %s", d.Id(), err)

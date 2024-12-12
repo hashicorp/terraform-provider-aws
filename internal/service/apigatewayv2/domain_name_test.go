@@ -183,7 +183,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_basic(t *testing.T) {
 				Config: testAccDomainNameConfig_mutualTLSAuthenticationObjectVersion(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", fmt.Sprintf("/domainnames/%s.example.com", rName)),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", "/domainnames/"+domain),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, acmCertificateResourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", acmCertificateResourceName, names.AttrARN),
@@ -201,7 +201,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_basic(t *testing.T) {
 				Config: testAccDomainNameConfig_mutualTLSAuthenticationObjectVersion(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", fmt.Sprintf("/domainnames/%s.example.com", rName)),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", "/domainnames/"+domain),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, acmCertificateResourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", acmCertificateResourceName, names.AttrARN),
@@ -225,7 +225,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_basic(t *testing.T) {
 				Config: testAccDomainNameConfig_mutualTLSAuthenticationMissing(rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", fmt.Sprintf("/domainnames/%s.example.com", rName)),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", "/domainnames/"+domain),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, acmCertificateResourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", acmCertificateResourceName, names.AttrARN),
@@ -241,7 +241,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_basic(t *testing.T) {
 				Config: testAccDomainNameConfig_mutualTLSAuthenticationObjectVersion(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", fmt.Sprintf("/domainnames/%s.example.com", rName)),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", "/domainnames/"+domain),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, acmCertificateResourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", acmCertificateResourceName, names.AttrARN),
@@ -278,7 +278,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_noVersion(t *testing.
 				Config: testAccDomainNameConfig_mutualTLSAuthenticationNoObjectVersion(rName, rootDomain, domain),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", fmt.Sprintf("/domainnames/%s.example.com", rName)),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", "/domainnames/"+domain),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, acmCertificateResourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", acmCertificateResourceName, names.AttrARN),
@@ -291,6 +291,11 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_noVersion(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "mutual_tls_authentication.0.truststore_version", ""),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -319,7 +324,7 @@ func TestAccAPIGatewayV2DomainName_MutualTLSAuthentication_ownership(t *testing.
 				Config: testAccDomainNameConfig_mutualTLSAuthenticationOwnershipVerificationCert(rName, rootDomain, domain, certificate, key),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", fmt.Sprintf("/domainnames/%s.example.com", rName)),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, names.AttrARN, "apigateway", "/domainnames/"+domain),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, publicAcmCertificateResourceName, names.AttrDomainName),
 					resource.TestCheckResourceAttr(resourceName, "domain_name_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_name_configuration.0.certificate_arn", importedAcmCertificateResourceName, names.AttrARN),

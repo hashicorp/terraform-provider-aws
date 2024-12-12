@@ -99,7 +99,7 @@ func (r *accessGrantsInstanceResource) Create(ctx context.Context, request resou
 	conn := r.Meta().S3ControlClient(ctx)
 
 	if data.AccountID.ValueString() == "" {
-		data.AccountID = types.StringValue(r.Meta().AccountID)
+		data.AccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	input := &s3control.CreateAccessGrantsInstanceInput{
 		AccountId:         flex.StringFromFramework(ctx, data.AccountID),

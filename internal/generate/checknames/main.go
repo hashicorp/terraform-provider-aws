@@ -272,7 +272,7 @@ func checkDocFile(dir, name string, prefixes []DocPrefix) error {
 			sc := scanner.Text()
 			sc = strings.TrimSuffix(strings.TrimPrefix(sc, "subcategory: \""), "\"")
 			if hf != sc {
-				return fmt.Errorf("file (%s) subcategory (%s) doesn't match file name prefix, expecting %s", name, sc, hf)
+				return fmt.Errorf("file (%s) subcategory (%s) doesn't match HumanFriendly, expecting %s", name, sc, hf)
 			}
 		case 2:
 			continue

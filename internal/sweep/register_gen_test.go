@@ -134,11 +134,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rum"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalogappregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
@@ -300,11 +302,13 @@ func registerSweepers() {
 	rum.RegisterSweepers()
 	s3.RegisterSweepers()
 	s3control.RegisterSweepers()
+	s3tables.RegisterSweepers()
 	sagemaker.RegisterSweepers()
 	scheduler.RegisterSweepers()
 	schemas.RegisterSweepers()
 	secretsmanager.RegisterSweepers()
 	servicecatalog.RegisterSweepers()
+	servicecatalogappregistry.RegisterSweepers()
 	servicediscovery.RegisterSweepers()
 	ses.RegisterSweepers()
 	sesv2.RegisterSweepers()

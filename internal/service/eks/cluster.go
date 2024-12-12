@@ -5,11 +5,11 @@ package eks
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/eks/types"
@@ -54,10 +54,34 @@ func resourceCluster() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
-			customdiff.ForceNewIfChange("encryption_config", func(_ context.Context, old, new, meta interface{}) bool {
+			validateAutoModeCustomizeDiff,
+			customdiff.ForceNewIfChange("encryption_config", func(_ context.Context, old, new, meta any) bool {
 				// You cannot disable envelope encryption after enabling it. This action is irreversible.
-				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
+				return len(old.([]any)) == 1 && len(new.([]any)) == 0
 			}),
+			func(ctx context.Context, rd *schema.ResourceDiff, meta any) error {
+				if rd.Id() == "" {
+					return nil
+				}
+				oldValue, newValue := rd.GetChange("compute_config")
+
+				oldComputeConfig := expandComputeConfigRequest(oldValue.([]any))
+				newComputeConfig := expandComputeConfigRequest(newValue.([]any))
+
+				if newComputeConfig == nil || oldComputeConfig == nil {
+					return nil
+				}
+
+				oldRoleARN := aws.ToString(oldComputeConfig.NodeRoleArn)
+				newRoleARN := aws.ToString(newComputeConfig.NodeRoleArn)
+
+				if oldRoleARN != newRoleARN {
+					if err := rd.ForceNew("compute_config.0.node_role_arn"); err != nil {
+						return err
+					}
+				}
+				return nil
+			},
 		),
 
 		Timeouts: &schema.ResourceTimeout{
@@ -113,6 +137,32 @@ func resourceCluster() *schema.Resource {
 			"cluster_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"compute_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"node_pools": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(nodePoolType_Values(), false),
+							},
+						},
+						"node_role_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
 			},
 			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
@@ -189,6 +239,20 @@ func resourceCluster() *schema.Resource {
 				ConflictsWith: []string{"outpost_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"elastic_load_balancing": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+								},
+							},
+						},
 						"ip_family": {
 							Type:             schema.TypeString,
 							Optional:         true,
@@ -203,7 +267,7 @@ func resourceCluster() *schema.Resource {
 							ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.IsCIDRNetwork(12, 24),
-								validation.StringMatch(regexache.MustCompile(`^(10|172\.(1[6-9]|2[0-9]|3[0-1])|192\.168)\..*`), "must be within 10.0.0.0/8, 172.16.0.0/12, or 192.168.0.0/16"),
+								validateIPv4CIDRPrivateRange,
 							),
 						},
 						"service_ipv6_cidr": {
@@ -223,7 +287,7 @@ func resourceCluster() *schema.Resource {
 				Type:          schema.TypeList,
 				MaxItems:      1,
 				Optional:      true,
-				ConflictsWith: []string{"encryption_config", "kubernetes_network_config"},
+				ConflictsWith: []string{"encryption_config", "kubernetes_network_config", "remote_network_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"control_plane_instance_type": {
@@ -260,6 +324,63 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"remote_network_config": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				ForceNew:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"outpost_config"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"remote_node_networks": {
+							Type:     schema.TypeList,
+							MinItems: 1,
+							MaxItems: 1,
+							Required: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cidrs": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										ForceNew: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+											ValidateFunc: validation.All(
+												verify.ValidIPv4CIDRNetworkAddress,
+												validateIPv4CIDRPrivateRange,
+											),
+										},
+									},
+								},
+							},
+						},
+						"remote_pod_networks": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cidrs": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										ForceNew: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+											ValidateFunc: validation.All(
+												verify.ValidIPv4CIDRNetworkAddress,
+												validateIPv4CIDRPrivateRange,
+											),
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrRoleARN: {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -269,6 +390,28 @@ func resourceCluster() *schema.Resource {
 			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"storage_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"block_storage": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -341,6 +484,19 @@ func resourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"zonal_shift_config": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -361,6 +517,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags:                       getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("compute_config"); ok {
+		input.ComputeConfig = expandComputeConfigRequest(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("access_config"); ok {
 		input.AccessConfig = expandCreateAccessConfigRequest(v.([]interface{}))
 	}
@@ -373,12 +533,24 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.OutpostConfig = expandOutpostConfigRequest(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("remote_network_config"); ok {
+		input.RemoteNetworkConfig = expandRemoteNetworkConfigRequest(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("storage_config"); ok {
+		input.StorageConfig = expandStorageConfigRequest(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("upgrade_policy"); ok {
 		input.UpgradePolicy = expandUpgradePolicy(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrVersion); ok {
 		input.Version = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("zonal_shift_config"); ok {
+		input.ZonalShiftConfig = expandZonalShiftConfig(v.([]interface{}))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
@@ -463,6 +635,9 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if cluster.OutpostConfig != nil {
 		d.Set("cluster_id", cluster.Id)
 	}
+	if err := d.Set("compute_config", flattenComputeConfigResponse(cluster.ComputeConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
+	}
 	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
@@ -482,14 +657,23 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting outpost_config: %s", err)
 	}
 	d.Set("platform_version", cluster.PlatformVersion)
+	if err := d.Set("remote_network_config", flattenRemoteNetworkConfigResponse(cluster.RemoteNetworkConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting remote_network_config: %s", err)
+	}
 	d.Set(names.AttrRoleARN, cluster.RoleArn)
 	d.Set(names.AttrStatus, cluster.Status)
+	if err := d.Set("storage_config", flattenStorageConfigResponse(cluster.StorageConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting storage_config: %s", err)
+	}
 	if err := d.Set("upgrade_policy", flattenUpgradePolicy(cluster.UpgradePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting upgrade_policy: %s", err)
 	}
 	d.Set(names.AttrVersion, cluster.Version)
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
+	}
+	if err := d.Set("zonal_shift_config", flattenZonalShiftConfig(cluster.ZonalShiftConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting zonal_shift_config: %s", err)
 	}
 
 	setTagsOut(ctx, cluster.Tags)
@@ -542,6 +726,31 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) access configuration update (%s): %s", d.Id(), updateID, err)
 			}
+		}
+	}
+
+	if d.HasChanges("compute_config", "kubernetes_network_config", "storage_config") {
+		computeConfig := expandComputeConfigRequest(d.Get("compute_config").([]interface{}))
+		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
+		storageConfig := expandStorageConfigRequest(d.Get("storage_config").([]interface{}))
+
+		input := &eks.UpdateClusterConfigInput{
+			Name:                    aws.String(d.Id()),
+			ComputeConfig:           computeConfig,
+			KubernetesNetworkConfig: kubernetesNetworkConfig,
+			StorageConfig:           storageConfig,
+		}
+
+		output, err := conn.UpdateClusterConfig(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) compute config: %s", d.Id(), err)
+		}
+
+		updateID := aws.ToString(output.Update.Id)
+
+		if _, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) compute config update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -639,6 +848,25 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if err := updateVPCConfig(ctx, conn, d.Id(), config, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("zonal_shift_config") {
+		input := &eks.UpdateClusterConfigInput{
+			Name:             aws.String(d.Id()),
+			ZonalShiftConfig: expandZonalShiftConfig(d.Get("zonal_shift_config").([]interface{})),
+		}
+
+		output, err := conn.UpdateClusterConfig(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) zonal shift config: %s", d.Id(), err)
+		}
+
+		updateID := aws.ToString(output.Update.Id)
+
+		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) zonal shift config update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -826,10 +1054,11 @@ func waitClusterCreated(ctx context.Context, conn *eks.Client, name string, time
 
 func waitClusterDeleted(ctx context.Context, conn *eks.Client, name string, timeout time.Duration) (*types.Cluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.ClusterStatusActive, types.ClusterStatusDeleting),
-		Target:  []string{},
-		Refresh: statusCluster(ctx, conn, name),
-		Timeout: timeout,
+		Pending:    enum.Slice(types.ClusterStatusActive, types.ClusterStatusDeleting),
+		Target:     []string{},
+		Refresh:    statusCluster(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
 		// An attempt to avoid "ResourceInUseException: Cluster already exists with name: ..." errors
 		// in acceptance tests when recreating a cluster with the same randomly generated name.
 		ContinuousTargetOccurence: 3,
@@ -907,6 +1136,33 @@ func expandUpdateAccessConfigRequest(tfList []interface{}) *types.UpdateAccessCo
 	return apiObject
 }
 
+func expandComputeConfigRequest(tfList []interface{}) *types.ComputeConfigRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ComputeConfigRequest{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["node_pools"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.NodePools = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := tfMap["node_role_arn"].(string); ok && v != "" {
+		apiObject.NodeRoleArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func expandEncryptionConfig(tfList []interface{}) []types.EncryptionConfig {
 	if len(tfList) == 0 {
 		return nil
@@ -948,6 +1204,44 @@ func expandProvider(tfList []interface{}) *types.Provider {
 
 	if v, ok := tfMap["key_arn"].(string); ok && v != "" {
 		apiObject.KeyArn = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func expandStorageConfigRequest(tfList []interface{}) *types.StorageConfigRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.StorageConfigRequest{}
+
+	if v, ok := tfMap["block_storage"].([]interface{}); ok {
+		apiObject.BlockStorage = expandBlockStorage(v)
+	}
+
+	return apiObject
+}
+
+func expandBlockStorage(tfList []interface{}) *types.BlockStorage {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.BlockStorage{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
 	}
 
 	return apiObject
@@ -1035,6 +1329,10 @@ func expandKubernetesNetworkConfigRequest(tfList []interface{}) *types.Kubernete
 
 	apiObject := &types.KubernetesNetworkConfigRequest{}
 
+	if v, ok := tfMap["elastic_load_balancing"].([]interface{}); ok {
+		apiObject.ElasticLoadBalancing = expandKubernetesNetworkConfigElasticLoadBalancing(v)
+	}
+
 	if v, ok := tfMap["ip_family"].(string); ok && v != "" {
 		apiObject.IpFamily = types.IpFamily(v)
 	}
@@ -1044,6 +1342,92 @@ func expandKubernetesNetworkConfigRequest(tfList []interface{}) *types.Kubernete
 	}
 
 	return apiObject
+}
+
+func expandKubernetesNetworkConfigElasticLoadBalancing(tfList []interface{}) *types.ElasticLoadBalancing {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ElasticLoadBalancing{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandRemoteNetworkConfigRequest(tfList []interface{}) *types.RemoteNetworkConfigRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.RemoteNetworkConfigRequest{
+		RemoteNodeNetworks: expandRemoteNodeNetworks(tfMap["remote_node_networks"].([]interface{})),
+	}
+
+	if v, ok := tfMap["remote_pod_networks"].([]interface{}); ok {
+		apiObject.RemotePodNetworks = expandRemotePodNetworks(v)
+	}
+
+	return apiObject
+}
+
+func expandRemoteNodeNetworks(tfList []interface{}) []types.RemoteNodeNetwork {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.RemoteNodeNetwork
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := types.RemoteNodeNetwork{
+			Cidrs: flex.ExpandStringValueSet(tfMap["cidrs"].(*schema.Set)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandRemotePodNetworks(tfList []interface{}) []types.RemotePodNetwork {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.RemotePodNetwork
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		apiObject := types.RemotePodNetwork{
+			Cidrs: flex.ExpandStringValueSet(tfMap["cidrs"].(*schema.Set)),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
 
 func expandLogging(vEnabledLogTypes *schema.Set) *types.Logging {
@@ -1083,6 +1467,25 @@ func expandUpgradePolicy(tfList []interface{}) *types.UpgradePolicyRequest {
 	return upgradePolicyRequest
 }
 
+func expandZonalShiftConfig(tfList []interface{}) *types.ZonalShiftConfigRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	ZonalShiftConfigRequest := &types.ZonalShiftConfigRequest{}
+
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
+		ZonalShiftConfigRequest.Enabled = aws.Bool(v)
+	}
+
+	return ZonalShiftConfigRequest
+}
+
 func flattenCertificate(certificate *types.Certificate) []map[string]interface{} {
 	if certificate == nil {
 		return []map[string]interface{}{}
@@ -1090,6 +1493,20 @@ func flattenCertificate(certificate *types.Certificate) []map[string]interface{}
 
 	m := map[string]interface{}{
 		"data": aws.ToString(certificate.Data),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenComputeConfigResponse(apiObject *types.ComputeConfigResponse) []map[string]interface{} {
+	if apiObject == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
+		"node_pools":      flex.FlattenStringValueList(apiObject.NodePools),
+		"node_role_arn":   aws.ToString(apiObject.NodeRoleArn),
 	}
 
 	return []map[string]interface{}{m}
@@ -1210,9 +1627,22 @@ func flattenKubernetesNetworkConfigResponse(apiObject *types.KubernetesNetworkCo
 	}
 
 	tfMap := map[string]interface{}{
-		"service_ipv4_cidr": aws.ToString(apiObject.ServiceIpv4Cidr),
-		"service_ipv6_cidr": aws.ToString(apiObject.ServiceIpv6Cidr),
-		"ip_family":         apiObject.IpFamily,
+		"elastic_load_balancing": flattenKubernetesNetworkConfigElasticLoadBalancing(apiObject.ElasticLoadBalancing),
+		"service_ipv4_cidr":      aws.ToString(apiObject.ServiceIpv4Cidr),
+		"service_ipv6_cidr":      aws.ToString(apiObject.ServiceIpv6Cidr),
+		"ip_family":              apiObject.IpFamily,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenKubernetesNetworkConfigElasticLoadBalancing(apiObjects *types.ElasticLoadBalancing) []interface{} {
+	if apiObjects == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		names.AttrEnabled: aws.ToBool(apiObjects.Enabled),
 	}
 
 	return []interface{}{tfMap}
@@ -1232,6 +1662,55 @@ func flattenOutpostConfigResponse(apiObject *types.OutpostConfigResponse) []inte
 	return []interface{}{tfMap}
 }
 
+func flattenRemoteNetworkConfigResponse(apiObject *types.RemoteNetworkConfigResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"remote_node_networks": flattenRemoteNodeNetwork(apiObject.RemoteNodeNetworks),
+		"remote_pod_networks":  flattenRemotePodNetwork(apiObject.RemotePodNetworks),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRemoteNodeNetwork(apiObjects []types.RemoteNodeNetwork) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"cidrs": flex.FlattenStringValueList(apiObject.Cidrs),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
+func flattenRemotePodNetwork(apiObjects []types.RemotePodNetwork) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"cidrs": flex.FlattenStringValueList(apiObject.Cidrs),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
 func flattenControlPlanePlacementResponse(apiObject *types.ControlPlanePlacementResponse) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -1239,6 +1718,30 @@ func flattenControlPlanePlacementResponse(apiObject *types.ControlPlanePlacement
 
 	tfMap := map[string]interface{}{
 		names.AttrGroupName: aws.ToString(apiObject.GroupName),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenStorageConfigResponse(apiObject *types.StorageConfigResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"block_storage": flattenBlockStorage(apiObject.BlockStorage),
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenBlockStorage(apiObject *types.BlockStorage) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		names.AttrEnabled: aws.ToBool(apiObject.Enabled),
 	}
 
 	return []interface{}{tfMap}
@@ -1254,4 +1757,36 @@ func flattenUpgradePolicy(apiObject *types.UpgradePolicyResponse) []interface{} 
 	}
 
 	return []interface{}{tfMap}
+}
+
+func flattenZonalShiftConfig(apiObject *types.ZonalShiftConfigResponse) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		names.AttrEnabled: apiObject.Enabled,
+	}
+
+	return []interface{}{tfMap}
+}
+
+// InvalidParameterException: For EKS Auto Mode, please ensure that all required configs,
+// including computeConfig, kubernetesNetworkConfig, and blockStorage are all either fully enabled or fully disabled.
+func validateAutoModeCustomizeDiff(_ context.Context, d *schema.ResourceDiff, _ any) error {
+	if d.HasChanges("compute_config", "kubernetes_network_config", "storage_config") {
+		computeConfig := expandComputeConfigRequest(d.Get("compute_config").([]interface{}))
+		kubernetesNetworkConfig := expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
+		storageConfig := expandStorageConfigRequest(d.Get("storage_config").([]interface{}))
+
+		computeConfigEnabled := computeConfig != nil && computeConfig.Enabled != nil && aws.ToBool(computeConfig.Enabled)
+		kubernetesNetworkConfigEnabled := kubernetesNetworkConfig != nil && kubernetesNetworkConfig.ElasticLoadBalancing != nil && kubernetesNetworkConfig.ElasticLoadBalancing.Enabled != nil && aws.ToBool(kubernetesNetworkConfig.ElasticLoadBalancing.Enabled)
+		storageConfigEnabled := storageConfig != nil && storageConfig.BlockStorage != nil && storageConfig.BlockStorage.Enabled != nil && aws.ToBool(storageConfig.BlockStorage.Enabled)
+
+		if computeConfigEnabled != kubernetesNetworkConfigEnabled || computeConfigEnabled != storageConfigEnabled {
+			return errors.New("compute_config.enabled, kubernetes_networking_config.elastic_load_balancing.enabled, and storage_config.block_storage.enabled must all be set to either true or false")
+		}
+	}
+
+	return nil
 }

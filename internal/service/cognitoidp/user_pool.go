@@ -2291,7 +2291,11 @@ func userPoolSchemaAttributeMatchesStandardAttribute(apiObject *awstypes.SchemaA
 
 func resourceUserPoolSchemaHash(v any) int {
 	var buf bytes.Buffer
-	m := v.(map[string]any)
+	m, ok := v.(map[string]any)
+	if !ok {
+		return 0
+	}
+
 	buf.WriteString(fmt.Sprintf("%s-", m[names.AttrName].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["attribute_data_type"].(string)))
 	buf.WriteString(fmt.Sprintf("%t-", m["developer_only_attribute"].(bool)))

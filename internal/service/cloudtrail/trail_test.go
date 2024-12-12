@@ -6,6 +6,7 @@ package cloudtrail_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -38,7 +39,7 @@ func testAccTrail_basic(t *testing.T) {
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudtrail", fmt.Sprintf("trail/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudtrail", fmt.Sprintf("trail/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", acctest.CtFalse),
 					testAccCheckLogValidationEnabled(resourceName, false, &trail),
@@ -457,7 +458,7 @@ func testAccTrail_eventSelector(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "event_selector.1.data_resource.0.values.1", "s3", fmt.Sprintf("%s-2/tf2", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.type", "AWS::Lambda::Function"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.data_resource.1.values.#", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "event_selector.1.data_resource.1.values.0", "lambda", fmt.Sprintf("function:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "event_selector.1.data_resource.1.values.0", "lambda", fmt.Sprintf("function:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.exclude_management_event_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.include_management_events", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.read_write_type", "All"),
@@ -491,7 +492,7 @@ func testAccTrail_eventSelectorDynamoDB(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.type", "AWS::DynamoDB::Table"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.0.values.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "event_selector.0.data_resource.0.values.0", "dynamodb", regexache.MustCompile(`table/tf-acc-test-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "event_selector.0.data_resource.0.values.0", "dynamodb", regexache.MustCompile(`table/tf-acc-test-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "All"),
 				),
@@ -747,7 +748,7 @@ func testAccTrail_migrateV0(t *testing.T) {
 				Config: testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudtrail", fmt.Sprintf("trail/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudtrail", fmt.Sprintf("trail/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrName),
 				),
@@ -757,7 +758,7 @@ func testAccTrail_migrateV0(t *testing.T) {
 				Config:                   testAccCloudTrailConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTrailExists(ctx, resourceName, &trail),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudtrail", fmt.Sprintf("trail/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudtrail", fmt.Sprintf("trail/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrID, resourceName, names.AttrARN),
 				),
@@ -834,7 +835,7 @@ func testAccCheckLogValidationEnabled(n string, desired bool, trail *types.Trail
 			return fmt.Errorf("No enable_log_file_validation attribute defined for %s, expected %t",
 				n, desired)
 		}
-		desiredInString := fmt.Sprintf("%t", desired)
+		desiredInString := strconv.FormatBool(desired)
 		if enabled != desiredInString {
 			return fmt.Errorf("Expected log validation status %s, saved %s", desiredInString, enabled)
 		}

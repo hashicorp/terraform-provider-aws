@@ -315,10 +315,10 @@ func testAccCloudFormationStackNameImportStateIdFunc(resourceName string) resour
 }
 
 func testAccCloudFormationApplicationID() string {
-	arnRegion := names.USEast1RegionID
+	arnRegion := endpoints.UsEast1RegionID
 	arnAccountID := "297356227824"
 	if acctest.Partition() == endpoints.AwsUsGovPartitionID {
-		arnRegion = names.USGovWest1RegionID
+		arnRegion = endpoints.UsGovWest1RegionID
 		arnAccountID = "023102451235"
 	}
 

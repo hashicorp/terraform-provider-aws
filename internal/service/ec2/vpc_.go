@@ -290,7 +290,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   names.EC2,
-		Region:    meta.(*conns.AWSClient).Region,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		AccountID: ownerID,
 		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
 	}.String()

@@ -26,7 +26,7 @@ func testAccStage_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -93,7 +93,7 @@ func testAccStage_cache(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -147,7 +147,7 @@ func testAccStage_cacheSizeCacheDisabled(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -201,7 +201,7 @@ func testAccStage_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -225,7 +225,7 @@ func testAccStage_Disappears_restAPI(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -255,6 +255,7 @@ func testAccStage_accessLogSettings(t *testing.T) {
 	xml := `<request id="$context.requestId"> <ip>$context.identity.sourceIp</ip> <caller>$context.identity.caller</caller> <user>$context.identity.user</user> <requestTime>$context.requestTime</requestTime> <httpMethod>$context.httpMethod</httpMethod> <resourcePath>$context.resourcePath</resourcePath> <status>$context.status</status> <protocol>$context.protocol</protocol> <responseLength>$context.responseLength</responseLength> </request>`
 	csv := `$context.identity.sourceIp,$context.identity.caller,$context.identity.user,$context.requestTime,$context.httpMethod,$context.resourcePath,$context.protocol,$context.status,$context.responseLength,$context.requestId`
 
+	// Cannot be run in parallel, because this test uses the account-level CloudWatch Logs role ARN
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
@@ -325,7 +326,7 @@ func testAccStage_AccessLogSettings_kinesis(t *testing.T) {
 	xml := `<request id="$context.requestId"> <ip>$context.identity.sourceIp</ip> <caller>$context.identity.caller</caller> <user>$context.identity.user</user> <requestTime>$context.requestTime</requestTime> <httpMethod>$context.httpMethod</httpMethod> <resourcePath>$context.resourcePath</resourcePath> <status>$context.status</status> <protocol>$context.protocol</protocol> <responseLength>$context.responseLength</responseLength> </request>`
 	csv := `$context.identity.sourceIp,$context.identity.caller,$context.identity.user,$context.requestTime,$context.httpMethod,$context.resourcePath,$context.protocol,$context.status,$context.responseLength,$context.requestId`
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -389,7 +390,7 @@ func testAccStage_waf(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -423,8 +424,10 @@ func testAccStage_canarySettings(t *testing.T) {
 	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
+	deployment2 := "aws_api_gateway_deployment.test2"
+	deployment3 := "aws_api_gateway_deployment.test3"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -438,6 +441,7 @@ func testAccStage_canarySettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "33.33"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", "3"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment2, names.AttrID),
 				),
 			},
 			{
@@ -447,7 +451,7 @@ func testAccStage_canarySettings(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStageConfig_basic(rName),
+				Config: testAccStageConfig_canarySettingsRemoved(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.#", "0"),
@@ -459,8 +463,30 @@ func testAccStage_canarySettings(t *testing.T) {
 					testAccCheckStageExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "variables.one", "1"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "66.66"),
-					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.four", "5"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", "5"),
 					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment2, names.AttrID),
+				),
+			},
+			{
+				Config: testAccStageConfig_canarySettingsNewDeployment(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStageExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "variables.one", "1"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.percent_traffic", "66.66"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.stage_variable_overrides.one", "5"),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.0.use_stage_cache", acctest.CtFalse),
+					resource.TestCheckResourceAttrPair(resourceName, "canary_settings.0.deployment_id", deployment3, names.AttrID),
+				),
+			},
+			{
+				Config: testAccStageConfig_canarySettingsPromote(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStageExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "deployment_id", deployment3, names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, "canary_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "variables.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "variables.one", "5"),
 				),
 			},
 		},
@@ -526,7 +552,7 @@ func testAccStageImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 }
 
 func testAccStageConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccAccountConfig_role0(rName), fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 }
@@ -579,7 +605,7 @@ resource "aws_api_gateway_deployment" "test" {
     "a" = "2"
   }
 }
-`, rName))
+`, rName)
 }
 
 func testAccStageConfig_basic(rName string) string {
@@ -633,11 +659,10 @@ resource "aws_api_gateway_stage" "test" {
 }
 
 func testAccStageConfig_accessLogSettings(rName, format string) string {
-	return acctest.ConfigCompose(testAccStageConfig_base(rName), fmt.Sprintf(`
-resource "aws_cloudwatch_log_group" "test" {
-  name = %[1]q
-}
-
+	return acctest.ConfigCompose(
+		testAccStageConfig_base(rName),
+		testAccAccountConfig_role0(rName),
+		fmt.Sprintf(`
 resource "aws_api_gateway_stage" "test" {
   rest_api_id   = aws_api_gateway_rest_api.test.id
   stage_name    = "prod"
@@ -647,6 +672,14 @@ resource "aws_api_gateway_stage" "test" {
     destination_arn = aws_cloudwatch_log_group.test.arn
     format          = %[2]q
   }
+
+  depends_on = [
+    aws_api_gateway_account.test
+  ]
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
 }
 `, rName, format))
 }
@@ -718,13 +751,25 @@ resource "aws_wafregional_web_acl_association" "test" {
 }
 
 func testAccStageConfig_canarySettings(rName string) string {
-	return acctest.ConfigCompose(testAccStageConfig_base(rName), `
+	return acctest.ConfigCompose(testAccStageConfig_base(rName), fmt.Sprintf(`
+resource "aws_api_gateway_deployment" "test2" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  description = %[1]q
+
+  variables = {
+    "a" = "2"
+  }
+}
+
 resource "aws_api_gateway_stage" "test" {
   rest_api_id   = aws_api_gateway_rest_api.test.id
   stage_name    = "prod"
   deployment_id = aws_api_gateway_deployment.test.id
 
   canary_settings {
+    deployment_id   = aws_api_gateway_deployment.test2.id
     percent_traffic = "33.33"
     stage_variable_overrides = {
       one = "3"
@@ -736,20 +781,58 @@ resource "aws_api_gateway_stage" "test" {
     two = "2"
   }
 }
-`)
+`, rName))
+}
+
+func testAccStageConfig_canarySettingsRemoved(rName string) string {
+	return acctest.ConfigCompose(testAccStageConfig_base(rName), fmt.Sprintf(`
+resource "aws_api_gateway_deployment" "test2" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  description = %[1]q
+
+  variables = {
+    "a" = "2"
+  }
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.test.id
+
+  variables = {
+    one = "1"
+    two = "2"
+  }
+}
+`, rName))
 }
 
 func testAccStageConfig_canarySettingsUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccStageConfig_base(rName), `
+	return acctest.ConfigCompose(testAccStageConfig_base(rName), fmt.Sprintf(`
+resource "aws_api_gateway_deployment" "test2" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  description = %[1]q
+
+  variables = {
+    "a" = "2"
+  }
+}
+
 resource "aws_api_gateway_stage" "test" {
   rest_api_id   = aws_api_gateway_rest_api.test.id
   stage_name    = "prod"
   deployment_id = aws_api_gateway_deployment.test.id
 
   canary_settings {
+    deployment_id   = aws_api_gateway_deployment.test2.id
     percent_traffic = "66.66"
     stage_variable_overrides = {
-      four = "5"
+      one = "5"
     }
     use_stage_cache = "false"
   }
@@ -758,5 +841,76 @@ resource "aws_api_gateway_stage" "test" {
     two = "2"
   }
 }
-`)
+`, rName))
+}
+
+func testAccStageConfig_canarySettingsNewDeployment(rName string) string {
+	return acctest.ConfigCompose(testAccStageConfig_base(rName), fmt.Sprintf(`
+resource "aws_api_gateway_deployment" "test2" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  description = %[1]q
+
+  variables = {
+    "a" = "2"
+  }
+}
+
+resource "aws_api_gateway_deployment" "test3" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  description = %[1]q
+
+  variables = {
+    "a" = "2"
+  }
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.test.id
+
+  canary_settings {
+    percent_traffic = "66.66"
+    stage_variable_overrides = {
+      one = "5"
+    }
+    use_stage_cache = "false"
+    deployment_id   = aws_api_gateway_deployment.test3.id
+  }
+  variables = {
+    one = "1"
+    two = "2"
+  }
+}
+`, rName))
+}
+
+func testAccStageConfig_canarySettingsPromote(rName string) string {
+	return acctest.ConfigCompose(testAccStageConfig_base(rName), fmt.Sprintf(`
+resource "aws_api_gateway_deployment" "test3" {
+  depends_on = [aws_api_gateway_integration.test]
+
+  rest_api_id = aws_api_gateway_rest_api.test.id
+  description = %[1]q
+
+  variables = {
+    "a" = "2"
+  }
+}
+
+resource "aws_api_gateway_stage" "test" {
+  rest_api_id   = aws_api_gateway_rest_api.test.id
+  stage_name    = "prod"
+  deployment_id = aws_api_gateway_deployment.test3.id
+
+  variables = {
+    one = "5"
+    two = "2"
+  }
+}
+`, rName))
 }

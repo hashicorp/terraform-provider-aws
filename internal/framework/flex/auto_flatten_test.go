@@ -119,7 +119,6 @@ func TestFlatten(t *testing.T) {
 				errorTargetDoesNotImplementAttrValue("", reflect.TypeFor[emptyStruct](), "", reflect.TypeFor[string]()),
 			},
 		},
-
 		"empty struct Source and Target": {
 			Source:     emptyStruct{},
 			Target:     &emptyStruct{},
@@ -181,6 +180,17 @@ func TestFlatten(t *testing.T) {
 				infoConverting(reflect.TypeFor[awsSingleStringValue](), reflect.TypeFor[*tfSingleStringField]()),
 				traceMatchedFields("Field1", reflect.TypeFor[awsSingleStringValue](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
 				infoConvertingWithPath("Field1", reflect.TypeFor[string](), "Field1", reflect.TypeFor[types.String]()),
+			},
+		},
+		"single byte slice Source and single string Target": {
+			Source:     &awsSingleByteSliceValue{Field1: []byte("a")},
+			Target:     &tfSingleStringField{},
+			WantTarget: &tfSingleStringField{Field1: types.StringValue("a")},
+			expectedLogLines: []map[string]any{
+				infoFlattening(reflect.TypeFor[*awsSingleByteSliceValue](), reflect.TypeFor[*tfSingleStringField]()),
+				infoConverting(reflect.TypeFor[awsSingleByteSliceValue](), reflect.TypeFor[*tfSingleStringField]()),
+				traceMatchedFields("Field1", reflect.TypeFor[awsSingleByteSliceValue](), "Field1", reflect.TypeFor[*tfSingleStringField]()),
+				infoConvertingWithPath("Field1", reflect.TypeFor[[]byte](), "Field1", reflect.TypeFor[types.String]()),
 			},
 		},
 		"single nil *string Source and single string Target": {

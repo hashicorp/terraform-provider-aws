@@ -200,7 +200,7 @@ func testAccTransitGateway_basic(t *testing.T, semaphore tfsync.Semaphore) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayExists(ctx, resourceName, &transitGateway1),
 					resource.TestCheckResourceAttr(resourceName, "amazon_side_asn", "64512"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway/tgw-.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "ec2", regexache.MustCompile(`transit-gateway/tgw-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "association_default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "auto_accept_shared_attachments", string(awstypes.AutoAcceptSharedAttachmentsValueDisable)),
 					resource.TestCheckResourceAttr(resourceName, "default_route_table_association", string(awstypes.DefaultRouteTableAssociationValueEnable)),
@@ -208,7 +208,7 @@ func testAccTransitGateway_basic(t *testing.T, semaphore tfsync.Semaphore) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "dns_support", string(awstypes.DnsSupportValueEnable)),
 					resource.TestCheckResourceAttr(resourceName, "multicast_support", string(awstypes.MulticastSupportValueDisable)),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerID),
 					resource.TestCheckResourceAttrSet(resourceName, "propagation_default_route_table_id"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_referencing_support", string(awstypes.SecurityGroupReferencingSupportValueDisable)),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),

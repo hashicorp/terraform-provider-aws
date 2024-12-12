@@ -55,7 +55,7 @@ func dataSourceDistributionConfigurationsRead(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Distribution Configurations: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, tfslices.ApplyToAll(distributionConfigurations, func(v awstypes.DistributionConfigurationSummary) string {
 		return aws.ToString(v.Arn)
 	}))

@@ -57,6 +57,29 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"compute_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"node_pools": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"node_role_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			names.AttrCreatedAt: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -95,6 +118,18 @@ func dataSourceCluster() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"elastic_load_balancing": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+								},
+							},
+						},
 						"ip_family": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -150,6 +185,40 @@ func dataSourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"remote_network_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"remote_node_networks": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cidrs": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"remote_pod_networks": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cidrs": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrRoleARN: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -157,6 +226,26 @@ func dataSourceCluster() *schema.Resource {
 			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"storage_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"block_storage": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrEnabled: {
+										Type:     schema.TypeBool,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			"upgrade_policy": {
@@ -214,6 +303,18 @@ func dataSourceCluster() *schema.Resource {
 					},
 				},
 			},
+			"zonal_shift_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						names.AttrEnabled: {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -243,6 +344,9 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	if cluster.OutpostConfig != nil {
 		d.Set("cluster_id", cluster.Id)
 	}
+	if err := d.Set("compute_config", flattenComputeConfigResponse(cluster.ComputeConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
+	}
 	d.Set(names.AttrCreatedAt, cluster.CreatedAt.Format(time.RFC3339))
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
@@ -259,14 +363,23 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting outpost_config: %s", err)
 	}
 	d.Set("platform_version", cluster.PlatformVersion)
+	if err := d.Set("remote_network_config", flattenRemoteNetworkConfigResponse(cluster.RemoteNetworkConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting remote_network_config: %s", err)
+	}
 	d.Set(names.AttrRoleARN, cluster.RoleArn)
 	d.Set(names.AttrStatus, cluster.Status)
+	if err := d.Set("storage_config", flattenStorageConfigResponse(cluster.StorageConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting storage_config: %s", err)
+	}
 	if err := d.Set("upgrade_policy", flattenUpgradePolicy(cluster.UpgradePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting upgrade_policy: %s", err)
 	}
 	d.Set(names.AttrVersion, cluster.Version)
 	if err := d.Set(names.AttrVPCConfig, flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
+	}
+	if err := d.Set("zonal_shift_config", flattenZonalShiftConfig(cluster.ZonalShiftConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting zonal_shift_config: %s", err)
 	}
 
 	if err := d.Set(names.AttrTags, KeyValueTags(ctx, cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

@@ -76,7 +76,7 @@ func (d *securityGroupRulesDataSource) Read(ctx context.Context, request datasou
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region)
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 	data.IDs = flex.FlattenFrameworkStringValueList(ctx, tfslices.ApplyToAll(output, func(v awstypes.SecurityGroupRule) string {
 		return aws.ToString(v.SecurityGroupRuleId)
 	}))

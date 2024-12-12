@@ -43,7 +43,7 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 							resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-							acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dms", regexache.MustCompile(`replication-config:[A-Z0-9]{26}`)),
+							acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dms", regexache.MustCompile(`replication-config:[A-Z0-9]{26}`)),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.availability_zone", ""),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.0.dns_name_servers", ""),

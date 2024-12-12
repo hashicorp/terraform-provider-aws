@@ -81,7 +81,7 @@ func dataSourceSpotPriceRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("spot_price", resultSpotPrice.SpotPrice)
 	d.Set("spot_price_timestamp", (*resultSpotPrice.Timestamp).Format(time.RFC3339))
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	return diags
 }

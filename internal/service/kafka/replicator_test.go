@@ -56,6 +56,7 @@ func TestAccKafkaReplicator_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.starting_position.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topic_name_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "1"),
 				),
 			},
@@ -105,6 +106,7 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.starting_position.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topic_name_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "1"),
 				),
 			},
@@ -132,6 +134,8 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.target_compression_type", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.starting_position.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.starting_position.0.type", "EARLIEST"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topic_name_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topic_name_configuration.0.type", "IDENTICAL"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_replicate.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.topics_to_exclude.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.copy_topic_configurations", acctest.CtFalse),
@@ -628,6 +632,10 @@ resource "aws_msk_replicator" "test" {
 
       starting_position {
         type = "EARLIEST"
+      }
+
+      topic_name_configuration {
+        type = "IDENTICAL"
       }
     }
 

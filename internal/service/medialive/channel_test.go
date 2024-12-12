@@ -542,27 +542,34 @@ func TestAccMediaLiveChannel_VideoDescriptions_CodecSettings_h265Settings(t *tes
 						"width":            "1280",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.0.codec_settings.0.h265_settings.*", map[string]string{
-						"adaptive_quantization":   "LOW",
-						"afd_signaling":           "FIXED",
-						"bitrate":                 "5400000",
-						"buf_size":                "20000000",
-						"color_metadata":          "IGNORE",
-						"fixed_afd":               "AFD_0000",
-						"flicker_aq":              "ENABLED",
-						"framerate_denominator":   "1",
-						"framerate_numerator":     "50",
-						"gop_closed_cadence":      "1",
-						"gop_size":                "1.92",
-						"gop_size_units":          "SECONDS",
-						"level":                   "H265_LEVEL_AUTO",
-						"look_ahead_rate_control": "HIGH",
-						"min_i_interval":          "6",
-						names.AttrProfile:         "MAIN_10BIT",
-						"rate_control_mode":       "CBR",
-						"scan_type":               "PROGRESSIVE",
-						"scene_change_detect":     "ENABLED",
-						"slices":                  "2",
-						"tier":                    "HIGH",
+						"adaptive_quantization":      "LOW",
+						"afd_signaling":              "FIXED",
+						"bitrate":                    "5400000",
+						"buf_size":                   "20000000",
+						"color_metadata":             "IGNORE",
+						"fixed_afd":                  "AFD_0000",
+						"flicker_aq":                 "ENABLED",
+						"framerate_denominator":      "1",
+						"framerate_numerator":        "50",
+						"gop_closed_cadence":         "1",
+						"gop_size":                   "1.92",
+						"gop_size_units":             "SECONDS",
+						"level":                      "H265_LEVEL_AUTO",
+						"look_ahead_rate_control":    "HIGH",
+						"min_i_interval":             "6",
+						"min_qp":                     "0",
+						"mv_over_picture_boundaries": "ENABLED",
+						"mv_temporal_predictor":      "ENABLED",
+						names.AttrProfile:            "MAIN_10BIT",
+						"rate_control_mode":          "CBR",
+						"scan_type":                  "PROGRESSIVE",
+						"scene_change_detect":        "ENABLED",
+						"slices":                     "2",
+						"tier":                       "HIGH",
+						"tile_height":                "64",
+						"tile_padding":               "PADDED",
+						"tile_width":                 "256",
+						"treeblock_size":             "AUTO",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.0.codec_settings.0.h265_settings.0.color_space_settings.0.hdr10_settings.*", map[string]string{
 						"max_cll":  "16",
@@ -1646,11 +1653,14 @@ resource "aws_medialive_channel" "test" {
           afd_signaling = "FIXED"
           fixed_afd     = "AFD_0000"
 
-          gop_closed_cadence = 1
-          gop_size           = 1.92
-          gop_size_units     = "SECONDS"
-          min_i_interval     = 6
-          scan_type          = "PROGRESSIVE"
+          gop_closed_cadence         = 1
+          gop_size                   = 1.92
+          gop_size_units             = "SECONDS"
+          min_i_interval             = 6
+          min_qp                     = 0
+          mv_over_picture_boundaries = "ENABLED"
+          mv_temporal_predictor      = "ENABLED"
+          scan_type                  = "PROGRESSIVE"
 
           level                   = "H265_LEVEL_AUTO"
           look_ahead_rate_control = "HIGH"
@@ -1661,6 +1671,11 @@ resource "aws_medialive_channel" "test" {
 
           slices = 2
           tier   = "HIGH"
+
+          tile_height  = 64
+          tile_padding = "PADDED"
+          tile_width   = 256
+
 
           timecode_insertion = "DISABLED"
 
@@ -1683,6 +1698,8 @@ resource "aws_medialive_channel" "test" {
             timecode_burnin_position  = "BOTTOM_CENTER"
             prefix                    = "terraform-test"
           }
+
+          treeblock_size = "AUTO"
         }
       }
     }

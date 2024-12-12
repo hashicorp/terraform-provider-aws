@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -29,7 +30,8 @@ import (
 
 // @SDKResource("aws_api_gateway_stage", name="Stage")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetStageOutput", serialize=true)
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;apigateway.GetStageOutput")
+// @Testing(serialize=true, serializeParallelTests=true)
 // @Testing(importStateIdFunc=testAccStageImportStateIdFunc)
 func resourceStage() *schema.Resource {
 	return &schema.Resource{
@@ -91,6 +93,10 @@ func resourceStage() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"deployment_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"percent_traffic": {
 							Type:     schema.TypeFloat,
 							Optional: true,
@@ -189,7 +195,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("canary_settings"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CanarySettings = expandCanarySettings(v.([]interface{})[0].(map[string]interface{}), deploymentID)
+		input.CanarySettings = expandCanarySettings(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk(names.AttrDescription); ok {
@@ -300,7 +306,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
 				Path:  aws.String("/cacheClusterEnabled"),
-				Value: aws.String(fmt.Sprintf("%t", d.Get("cache_cluster_enabled").(bool))),
+				Value: aws.String(strconv.FormatBool(d.Get("cache_cluster_enabled").(bool))),
 			})
 			waitForCache = true
 		}
@@ -332,14 +338,6 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				Path:  aws.String("/deploymentId"),
 				Value: aws.String(d.Get("deployment_id").(string)),
 			})
-
-			if _, ok := d.GetOk("canary_settings"); ok {
-				operations = append(operations, types.PatchOperation{
-					Op:    types.OpReplace,
-					Path:  aws.String("/canarySettings/deploymentId"),
-					Value: aws.String(d.Get("deployment_id").(string)),
-				})
-			}
 		}
 		if d.HasChange(names.AttrDescription) {
 			operations = append(operations, types.PatchOperation{
@@ -352,7 +350,7 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			operations = append(operations, types.PatchOperation{
 				Op:    types.OpReplace,
 				Path:  aws.String("/tracingEnabled"),
-				Value: aws.String(fmt.Sprintf("%t", d.Get("xray_tracing_enabled").(bool))),
+				Value: aws.String(strconv.FormatBool(d.Get("xray_tracing_enabled").(bool))),
 			})
 		}
 		if d.HasChange("documentation_version") {
@@ -561,13 +559,13 @@ func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[
 	return result
 }
 
-func expandCanarySettings(tfMap map[string]interface{}, deploymentId string) *types.CanarySettings {
+func expandCanarySettings(tfMap map[string]interface{}) *types.CanarySettings {
 	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.CanarySettings{
-		DeploymentId: aws.String(deploymentId),
+		DeploymentId: aws.String(tfMap["deployment_id"].(string)),
 	}
 
 	if v, ok := tfMap["percent_traffic"].(float64); ok {
@@ -600,6 +598,7 @@ func flattenCanarySettings(canarySettings *types.CanarySettings) []interface{} {
 
 	settings["percent_traffic"] = canarySettings.PercentTraffic
 	settings["use_stage_cache"] = canarySettings.UseStageCache
+	settings["deployment_id"] = canarySettings.DeploymentId
 
 	return []interface{}{settings}
 }
@@ -621,6 +620,7 @@ func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldC
 			"percent_traffic":          0.0,
 			"stage_variable_overrides": make(map[string]interface{}),
 			"use_stage_cache":          false,
+			"deployment_id":            "",
 		}
 	}
 
@@ -644,10 +644,18 @@ func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldC
 		operations = append(operations, types.PatchOperation{
 			Op:    types.OpReplace,
 			Path:  aws.String("/canarySettings/useStageCache"),
-			Value: aws.String(fmt.Sprintf("%t", newUseStageCache)),
+			Value: aws.String(strconv.FormatBool(newUseStageCache)),
 		})
 	}
 
+	oldDeploymentID, newDeploymentID := oldSettings["deployment_id"].(string), newSettings["deployment_id"].(string)
+	if oldDeploymentID != newDeploymentID {
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
+			Path:  aws.String("/canarySettings/deploymentId"),
+			Value: aws.String(newDeploymentID),
+		})
+	}
 	return operations
 }
 

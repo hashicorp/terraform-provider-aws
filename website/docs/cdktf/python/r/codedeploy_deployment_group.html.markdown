@@ -239,7 +239,7 @@ This resource supports the following arguments:
 
 You can configure a deployment to stop when a **CloudWatch** alarm detects that a metric has fallen below or exceeded a defined threshold. `alarm_configuration` supports the following:
 
-* `alarms` - (Optional) A list of alarms configured for the deployment group. _A maximum of 10 alarms can be added to a deployment group_.
+* `alarms` - (Optional) A list of alarms configured for the deployment group.
 * `enabled` - (Optional) Indicates whether the alarm configuration is enabled. This option is useful when you want to temporarily deactivate alarm monitoring for a deployment group without having to add the same alarms again later.
 * `ignore_poll_alarm_failure` - (Optional) Indicates whether a deployment should continue if information about the current state of alarms cannot be retrieved from CloudWatch. The default value is `false`.
     * `true`: The deployment will proceed even if alarm status information can't be retrieved.
@@ -415,4 +415,4 @@ Using `terraform import`, import CodeDeploy Deployment Groups using `app_name`, 
 
 [1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html
 
-<!-- cache-key: cdktf-0.20.8 input-d39ab5d9261510cf741904733e7a4dc0f0ceaab9a0413d3c95e3cc9dbabae402 -->
+<!-- cache-key: cdktf-0.20.8 input-d8bdedddb53a7673bd54eacbe745d2b531c7d38e69649b2338f6c1ee7c5e3e87 -->

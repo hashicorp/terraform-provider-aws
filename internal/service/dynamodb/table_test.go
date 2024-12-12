@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -348,7 +349,7 @@ func TestAccDynamoDBTable_basic(t *testing.T) {
 				Config: testAccTableConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 						names.AttrName: rName,
@@ -411,7 +412,7 @@ func TestAccDynamoDBTable_deletion_protection(t *testing.T) {
 				Config: testAccTableConfig_enable_deletion_protection(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
 						names.AttrName: rName,
@@ -775,6 +776,10 @@ func TestAccDynamoDBTable_BillingMode_provisionedToPayPerRequestIgnoreChanges(t 
 
 func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -813,6 +818,10 @@ func TestAccDynamoDBTable_BillingModeGSI_payPerRequestToProvisioned(t *testing.T
 
 func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -848,6 +857,10 @@ func TestAccDynamoDBTable_BillingModeGSI_provisionedToPayPerRequest(t *testing.T
 
 func TestAccDynamoDBTable_BillingMode_payPerRequestBasic(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	var conf awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1008,7 +1021,7 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -1023,7 +1036,7 @@ func TestAccDynamoDBTable_streamSpecification(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -1049,7 +1062,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -1059,7 +1072,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "NEW_IMAGE"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -1069,7 +1082,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "NEW_IMAGE"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -1079,7 +1092,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -1089,7 +1102,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -1099,7 +1112,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -1109,7 +1122,7 @@ func TestAccDynamoDBTable_streamSpecificationDiffs(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stream_enabled", acctest.CtTrue),
 					resource.TestCheckResourceAttr(resourceName, "stream_view_type", "KEYS_ONLY"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrStreamARN, "dynamodb", regexache.MustCompile(fmt.Sprintf("table/%s/stream", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "stream_label"),
 				),
 			},
@@ -1557,7 +1570,7 @@ func TestAccDynamoDBTable_TTL_disabled(t *testing.T) {
 
 // TTL tests must be split since it can only be updated once per hour
 // ValidationException: Time to live has been modified multiple times within a fixed interval
-func TestAccDynamoDBTable_TTL_update(t *testing.T) {
+func TestAccDynamoDBTable_TTL_updateEnable(t *testing.T) {
 	ctx := acctest.Context(t)
 	var table awstypes.TableDescription
 	resourceName := "aws_dynamodb_table.test"
@@ -1606,6 +1619,83 @@ func TestAccDynamoDBTable_TTL_update(t *testing.T) {
 	})
 }
 
+// TestAccDynamoDBTable_TTL_updateDisable takes an hour because AWS does not allow disabling TTL
+// for an hour after it was enabled. Otherwise, it will return the following error:
+// ValidationException: Time to live has been modified multiple times within a fixed interval
+// https://github.com/hashicorp/terraform-provider-aws/issues/39195
+func TestAccDynamoDBTable_TTL_updateDisable(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var table awstypes.TableDescription
+	resourceName := "aws_dynamodb_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableConfig_timeToLive(rName, rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &table),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(rName),
+							names.AttrEnabled: knownvalue.Bool(true),
+						}),
+					})),
+				},
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				PreConfig: func() {
+					// AWS does not allow disabling TTL for an hour after it was enabled. Otherwise, it
+					// will return the following error: ValidationException: Time to live has been
+					// modified multiple times within a fixed interval
+					time.Sleep(60 * time.Minute)
+				},
+				Config: testAccTableConfig_timeToLive(rName, rName, false), // can't disable without attribute_name (2nd arg)
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &table),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(""), // set attribute_name, but returned empty; diff suppressed
+							names.AttrEnabled: knownvalue.Bool(false),
+						}),
+					})),
+				},
+			},
+			{
+				Config: testAccTableConfig_timeToLive(rName, rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInitialTableExists(ctx, resourceName, &table),
+				),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("ttl"), knownvalue.ListExact([]knownvalue.Check{
+						knownvalue.ObjectExact(map[string]knownvalue.Check{
+							"attribute_name":  knownvalue.StringExact(""),
+							names.AttrEnabled: knownvalue.Bool(false),
+						}),
+					})),
+				},
+			},
+		},
+	})
+}
+
 func TestAccDynamoDBTable_TTL_validate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1616,10 +1706,6 @@ func TestAccDynamoDBTable_TTL_validate(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTableDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccTableConfig_timeToLive(rName, "TestTTL", false),
-				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Attribute "ttl[0].attribute_name" cannot be specified when "ttl[0].enabled" is "false"`)),
-			},
 			{
 				Config:      testAccTableConfig_timeToLive(rName, "", true),
 				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Attribute "ttl[0].attribute_name" cannot have an empty value`)),
@@ -1820,8 +1906,8 @@ func TestAccDynamoDBTable_restoreCrossRegion(t *testing.T) {
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceNameRestore, names.AttrName, rNameRestore),
-					acctest.MatchResourceAttrRegionalARNRegion(resourceName, names.AttrARN, "dynamodb", acctest.Region(), regexache.MustCompile(`table/.+$`)),
-					acctest.MatchResourceAttrRegionalARNRegion(resourceNameRestore, names.AttrARN, "dynamodb", acctest.AlternateRegion(), regexache.MustCompile(`table/.+$`)),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceName, names.AttrARN, "dynamodb", acctest.Region(), regexache.MustCompile(`table/.+$`)),
+					acctest.MatchResourceAttrRegionalARNRegion(ctx, resourceNameRestore, names.AttrARN, "dynamodb", acctest.AlternateRegion(), regexache.MustCompile(`table/.+$`)),
 				),
 			},
 			{
@@ -1907,7 +1993,7 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]*regexp.Regexp{
 						names.AttrARN: regexache.MustCompile(fmt.Sprintf(`:dynamodb:%s:`, acctest.AlternateRegion())),
 					}),
@@ -1965,7 +2051,7 @@ func TestAccDynamoDBTable_Replica_singleStreamSpecification(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "replica.*", map[string]*regexp.Regexp{
 						names.AttrARN:       regexache.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s`, acctest.AlternateRegion(), rName)),
 						names.AttrStreamARN: regexache.MustCompile(fmt.Sprintf(`:dynamodb:%s:.*table/%s/stream`, acctest.AlternateRegion(), rName)),
@@ -2870,7 +2956,7 @@ func TestAccDynamoDBTable_importTable(t *testing.T) {
 				Config: testAccTableConfig_import(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "dynamodb", fmt.Sprintf("table/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),

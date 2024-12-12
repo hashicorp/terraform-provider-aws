@@ -67,7 +67,7 @@ func TestAccBatchJobDefinitionDataSource_basicARN(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "retry_strategy.0.attempts", "10"),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "1"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 				),
 			},
 			{
@@ -124,8 +124,11 @@ func TestAccBatchJobDefinitionDataSource_basicARN_EKSProperties(t *testing.T) {
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicARNEKS(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.init_containers.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.init_containers.0.image", "public.ecr.aws/amazonlinux/amazonlinux:1"),
 					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.containers.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.containers.0.image", "public.ecr.aws/amazonlinux/amazonlinux:1"),
+					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.share_process_namespace", acctest.CtFalse),
 					resource.TestCheckResourceAttr(dataSourceName, names.AttrType, "container"),
 				),
 			},

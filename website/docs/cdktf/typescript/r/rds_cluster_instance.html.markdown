@@ -90,6 +90,7 @@ This resource supports the following arguments:
 * `engineVersion` - (Optional) Database engine version. Please note that to upgrade the `engineVersion` of the instance, it must be done on the `aws_rds_cluster` `engineVersion`. Trying to upgrade in `aws_cluster_instance` will not update the `engineVersion`.
 * `engine` - (Required, Forces new resource) Name of the database engine to be used for the RDS cluster instance.
   Valid Values: `aurora-mysql`, `aurora-postgresql`, `mysql`, `postgres`.(Note that `mysql` and `postgres` are Multi-AZ RDS clusters).
+* `forceDestroy` - (Optional) Forces an instance to be destroyed when a part of a read replica cluster. **Note:** will promote the read replica to a standalone cluster before instance deletion.
 * `identifierPrefix` - (Optional, Forces new resource) Creates a unique identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `identifier` - (Optional, Forces new resource) Identifier for the RDS instance, if omitted, Terraform will assign a random, unique identifier.
 * `instanceClass` - (Required) Instance class to use. For details on CPU and memory, see [Scaling Aurora DB Instances][4]. Aurora uses `db.*` instance classes/types. Please see [AWS Documentation][7] for currently available instance classes and complete details. For Aurora Serverless v2 use `db.serverless`.
@@ -173,4 +174,4 @@ Using `terraform import`, import RDS Cluster Instances using the `identifier`. F
 % terraform import aws_rds_cluster_instance.prod_instance_1 aurora-cluster-instance-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-af19b8474f3cda3cefcac28e3c8ffea24781153c3215b6d3109609fe934d4236 -->
+<!-- cache-key: cdktf-0.20.8 input-100da29ef7b9ca016689dc7f4bbdc6ede2bfa4d4706bbe84146ceba56e3ee8e7 -->

@@ -78,7 +78,7 @@ func resourceResourcePolicyPut(condition awstypes.ExistCondition) func(context.C
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting policy request: %s", err)
 		}
-		d.SetId(meta.(*conns.AWSClient).Region)
+		d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 		return append(diags, resourceResourcePolicyRead(ctx, d, meta)...)
 	}
