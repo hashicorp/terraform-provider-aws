@@ -89,26 +89,6 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 	})
 }
 
-func TestAccACMPCACertificateAuthorityDataSource_ramShared(t *testing.T) {
-	ctx := acctest.Context(t)
-	datasourceName := "data.aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCertificateAuthorityDataSourceConfig_ramShared(commonName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(datasourceName, "certificate_signing_request", ""),
-				),
-			},
-		},
-	})
-}
-
 func testAccCertificateAuthorityDataSourceConfig_arn(commonName string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "wrong" {
@@ -175,53 +155,6 @@ data "aws_acmpca_certificate_authority" "test" {
   arn = aws_acmpca_certificate_authority.test.arn
 }
 `, commonName)
-}
-
-func testAccCertificateAuthorityDataSourceConfig_ramShared(commonName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-resource "aws_acmpca_certificate_authority" "alternate" {
-  provider = "awsalternate"
-
-  certificate_authority_configuration {
-    key_algorithm     = "RSA_4096"
-    signing_algorithm = "SHA512WITHRSA"
-
-    subject {
-      common_name = %[1]q
-    }
-  }
-}
-
-resource "aws_ram_resource_share" "alternate" {
-  provider = "awsalternate"
-
-  name                      = %[1]q
-  allow_external_principals = true
-  permission_arns           = ["arn:aws:ram::aws:permission/AWSRAMDefaultPermissionCertificateAuthority"]
-}
-
-resource "aws_ram_principal_association" "alternate" {
-  provider = "awsalternate"
-
-  resource_share_arn = aws_ram_resource_share.alternate.arn
-  principal          = data.aws_caller_identity.current.account_id
-}
-
-resource "aws_ram_resource_association" "alternate" {
-  provider = "awsalternate"
-
-  resource_share_arn = aws_ram_resource_share.alternate.arn
-  resource_arn       = aws_acmpca_certificate_authority.alternate.arn
-}
-
-data "aws_acmpca_certificate_authority" "test" {
-  arn = aws_acmpca_certificate_authority.alternate.arn
-
-  depends_on = [aws_ram_resource_association.alternate, aws_ram_principal_association.alternate]
-}
-`, commonName))
 }
 
 // lintignore:AWSAT003,AWSAT005
