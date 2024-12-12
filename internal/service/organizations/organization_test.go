@@ -187,6 +187,30 @@ func testAccOrganization_EnabledPolicyTypes(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeChatbotPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeChatbotPolicy)),
+				),
+			},
+			{
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeDeclarativePolicyEc2)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeDeclarativePolicyEc2)),
+				),
+			},
+			{
+				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeResourceControlPolicy)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOrganizationExists(ctx, resourceName, &organization),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "enabled_policy_types.0", string(awstypes.PolicyTypeResourceControlPolicy)),
+				),
+			},
+			{
 				Config: testAccOrganizationConfig_enabledPolicyTypes1(string(awstypes.PolicyTypeTagPolicy)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationExists(ctx, resourceName, &organization),
