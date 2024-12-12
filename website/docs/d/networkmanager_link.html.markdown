@@ -24,9 +24,9 @@ data "aws_networkmanager_link" "example" {
 * `global_network_id` - (Required) ID of the Global Network of the link to retrieve.
 * `link_id` - (Required) ID of the specific link to retrieve.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
 * `bandwidth` - Upload speed and download speed of the link as documented below

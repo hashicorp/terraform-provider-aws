@@ -1,22 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels
 
 import (
+	"context"
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceBotAlias() *schema.Resource {
+// @SDKDataSource("aws_lex_bot_alias", name="Bot Alias")
+func dataSourceBotAlias() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceBotAliasRead,
+		ReadWithoutTimeout: dataSourceBotAliasRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -33,19 +41,19 @@ func DataSourceBotAlias() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"created_date": {
+			names.AttrCreatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"last_updated_date": {
+			names.AttrLastUpdatedDate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validBotAliasName,
@@ -54,37 +62,38 @@ func DataSourceBotAlias() *schema.Resource {
 	}
 }
 
-func dataSourceBotAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LexModelsConn
+func dataSourceBotAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LexModelsClient(ctx)
 
 	botName := d.Get("bot_name").(string)
-	botAliasName := d.Get("name").(string)
+	botAliasName := d.Get(names.AttrName).(string)
 	d.SetId(fmt.Sprintf("%s:%s", botName, botAliasName))
 
-	resp, err := conn.GetBotAlias(&lexmodelbuildingservice.GetBotAliasInput{
+	resp, err := conn.GetBotAlias(ctx, &lexmodelbuildingservice.GetBotAliasInput{
 		BotName: aws.String(botName),
 		Name:    aws.String(botAliasName),
 	})
 	if err != nil {
-		return fmt.Errorf("error reading Lex bot alias (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lex bot alias (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "lex",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("bot:%s", d.Id()),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
 
 	d.Set("bot_name", resp.BotName)
 	d.Set("bot_version", resp.BotVersion)
 	d.Set("checksum", resp.Checksum)
-	d.Set("created_date", resp.CreatedDate.Format(time.RFC3339))
-	d.Set("description", resp.Description)
-	d.Set("last_updated_date", resp.LastUpdatedDate.Format(time.RFC3339))
-	d.Set("name", resp.Name)
+	d.Set(names.AttrCreatedDate, resp.CreatedDate.Format(time.RFC3339))
+	d.Set(names.AttrDescription, resp.Description)
+	d.Set(names.AttrLastUpdatedDate, resp.LastUpdatedDate.Format(time.RFC3339))
+	d.Set(names.AttrName, resp.Name)
 
-	return nil
+	return diags
 }

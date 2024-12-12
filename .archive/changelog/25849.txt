@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ssoadmin_permission_set: Extend timeout delay and min timeout
+```
+
+```release-note:enhancement
+resource/aws_ssoadmin_account_assignment: Extend timeout delay and min timeout
+```

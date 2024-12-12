@@ -1,34 +1,45 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
+	"slices"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kafka"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kafka"
+	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 const (
-	AssociatingSecret    = "associating"
-	DisassociatingSecret = "disassociating"
-	ScramSecretBatchSize = 10
+	scramSecretBatchSize = 10
 )
 
-func ResourceScramSecretAssociation() *schema.Resource {
+// @SDKResource("aws_msk_scram_secret_association", name="SCRAM Secret Association")
+func resourceSCRAMSecretAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceScramSecretAssociationCreate,
-		Read:   resourceScramSecretAssociationRead,
-		Update: resourceScramSecretAssociationUpdate,
-		Delete: resourceScramSecretAssociationDelete,
+		CreateWithoutTimeout: resourceSCRAMSecretAssociationCreate,
+		ReadWithoutTimeout:   resourceSCRAMSecretAssociationRead,
+		UpdateWithoutTimeout: resourceSCRAMSecretAssociationUpdate,
+		DeleteWithoutTimeout: resourceSCRAMSecretAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"cluster_arn": {
 				Type:         schema.TypeString,
@@ -48,164 +59,188 @@ func ResourceScramSecretAssociation() *schema.Resource {
 	}
 }
 
-func resourceScramSecretAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+func resourceSCRAMSecretAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	clusterArn := d.Get("cluster_arn").(string)
-	secretArnList := flex.ExpandStringSet(d.Get("secret_arn_list").(*schema.Set))
+	clusterARN := d.Get("cluster_arn").(string)
 
-	output, err := associateClusterSecrets(conn, clusterArn, secretArnList)
-	if err != nil {
-		return fmt.Errorf("error associating scram secret(s) to MSK cluster (%s): %w", clusterArn, err)
+	if err := associateSRAMSecrets(ctx, conn, clusterARN, flex.ExpandStringValueSet(d.Get("secret_arn_list").(*schema.Set))); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating MSK SCRAM Secret Association (%s): %s", clusterARN, err)
 	}
 
-	d.SetId(aws.StringValue(output.ClusterArn))
+	d.SetId(clusterARN)
 
-	if len(output.UnprocessedScramSecrets) != 0 {
-		return unprocessedScramSecretsError(output.ClusterArn, output.UnprocessedScramSecrets, AssociatingSecret)
-	}
-
-	return resourceScramSecretAssociationRead(d, meta)
+	return append(diags, resourceSCRAMSecretAssociationRead(ctx, d, meta)...)
 }
 
-func resourceScramSecretAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+func resourceSCRAMSecretAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	secretArnList, err := FindScramSecrets(conn, d.Id())
+	scramSecrets, err := findSCRAMSecretAssociation(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
-		log.Printf("[WARN] Scram secret(s) for MSK cluster (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] MSK SCRAM Secret Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
+
 	if err != nil {
-		return fmt.Errorf("error reading MSK cluster (%s) scram secret(s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK SCRAM Secret Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("cluster_arn", d.Id())
-	if err := d.Set("secret_arn_list", flex.FlattenStringSet(secretArnList)); err != nil {
-		return fmt.Errorf("error setting secret_arn_list: %w", err)
-	}
+	d.Set("secret_arn_list", scramSecrets)
 
-	return nil
+	return diags
 }
 
-func resourceScramSecretAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+func resourceSCRAMSecretAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	o, n := d.GetChange("secret_arn_list")
-	oldSet, newSet := o.(*schema.Set), n.(*schema.Set)
+	os, ns := o.(*schema.Set), n.(*schema.Set)
 
-	if newSet.Len() > 0 {
-		if newSecrets := newSet.Difference(oldSet); newSecrets.Len() > 0 {
-			output, err := associateClusterSecrets(conn, d.Id(), flex.ExpandStringSet(newSecrets))
-			if err != nil {
-				return fmt.Errorf("error associating scram secret(s) with MSK cluster (%s): %w", d.Id(), err)
-			}
-
-			if len(output.UnprocessedScramSecrets) != 0 {
-				return unprocessedScramSecretsError(output.ClusterArn, output.UnprocessedScramSecrets, AssociatingSecret)
-			}
+	if add := flex.ExpandStringValueSet(ns.Difference(os)); len(add) > 0 {
+		if err := associateSRAMSecrets(ctx, conn, d.Id(), add); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK SCRAM Secret Association (%s): %s", d.Id(), err)
 		}
 	}
 
-	if oldSet.Len() > 0 {
-		if deleteSecrets := oldSet.Difference(newSet); deleteSecrets.Len() > 0 {
-			output, err := disassociateClusterSecrets(conn, d.Id(), flex.ExpandStringSet(deleteSecrets))
-			if err != nil {
-				return fmt.Errorf("error disassociating scram secret(s) from MSK cluster (%s): %w", d.Id(), err)
-			}
-
-			if len(output.UnprocessedScramSecrets) != 0 {
-				return unprocessedScramSecretsError(output.ClusterArn, output.UnprocessedScramSecrets, DisassociatingSecret)
-			}
+	if del := flex.ExpandStringValueSet(os.Difference(ns)); len(del) > 0 {
+		if err := disassociateSRAMSecrets(ctx, conn, d.Id(), del); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK SCRAM Secret Association (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceScramSecretAssociationRead(d, meta)
+	return append(diags, resourceSCRAMSecretAssociationRead(ctx, d, meta)...)
 }
 
-func resourceScramSecretAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
+func resourceSCRAMSecretAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	secretArnList, err := FindScramSecrets(conn, d.Id())
+	err := disassociateSRAMSecrets(ctx, conn, d.Id(), flex.ExpandStringValueSet(d.Get("secret_arn_list").(*schema.Set)))
 
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("error reading scram secret(s) for MSK cluster (%s): %w", d.Id(), err)
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
 	}
 
-	if len(secretArnList) > 0 {
-		output, err := disassociateClusterSecrets(conn, d.Id(), secretArnList)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
-				return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting MSK SCRAM Secret Association (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findSCRAMSecretAssociation(ctx context.Context, conn *kafka.Client, clusterARN string) ([]string, error) {
+	output, err := findSCRAMSecretsByClusterARN(ctx, conn, clusterARN)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output) == 0 {
+		return nil, tfresource.NewEmptyResultError(nil)
+	}
+
+	return output, nil
+}
+
+func findSCRAMSecretsByClusterARN(ctx context.Context, conn *kafka.Client, clusterARN string) ([]string, error) {
+	input := &kafka.ListScramSecretsInput{
+		ClusterArn: aws.String(clusterARN),
+	}
+
+	return findSCRAMSecrets(ctx, conn, input)
+}
+
+func findSCRAMSecrets(ctx context.Context, conn *kafka.Client, input *kafka.ListScramSecretsInput) ([]string, error) {
+	var output []string
+
+	pages := kafka.NewListScramSecretsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
-			return fmt.Errorf("error disassociating scram secret(s) from MSK cluster (%s): %w", d.Id(), err)
 		}
-		if len(output.UnprocessedScramSecrets) != 0 {
-			return unprocessedScramSecretsError(output.ClusterArn, output.UnprocessedScramSecrets, DisassociatingSecret)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.SecretArnList...)
+	}
+
+	return output, nil
+}
+
+func associateSRAMSecrets(ctx context.Context, conn *kafka.Client, clusterARN string, secretARNs []string) error {
+	for chunk := range slices.Chunk(secretARNs, scramSecretBatchSize) {
+		input := &kafka.BatchAssociateScramSecretInput{
+			ClusterArn:    aws.String(clusterARN),
+			SecretArnList: chunk,
+		}
+
+		output, err := conn.BatchAssociateScramSecret(ctx, input)
+
+		if err == nil {
+			err = unprocessedScramSecretsError(output.UnprocessedScramSecrets, false)
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
-func associateClusterSecrets(conn *kafka.Kafka, clusterArn string, secretArnList []*string) (*kafka.BatchAssociateScramSecretOutput, error) {
-	output := &kafka.BatchAssociateScramSecretOutput{}
-
-	for i := 0; i < len(secretArnList); i += ScramSecretBatchSize {
-		end := i + ScramSecretBatchSize
-		if end > len(secretArnList) {
-			end = len(secretArnList)
+func disassociateSRAMSecrets(ctx context.Context, conn *kafka.Client, clusterARN string, secretARNs []string) error {
+	for chunk := range slices.Chunk(secretARNs, scramSecretBatchSize) {
+		input := &kafka.BatchDisassociateScramSecretInput{
+			ClusterArn:    aws.String(clusterARN),
+			SecretArnList: chunk,
 		}
 
-		resp, err := conn.BatchAssociateScramSecret(&kafka.BatchAssociateScramSecretInput{
-			ClusterArn:    aws.String(clusterArn),
-			SecretArnList: secretArnList[i:end],
-		})
+		output, err := conn.BatchDisassociateScramSecret(ctx, input)
+
+		if err == nil {
+			err = unprocessedScramSecretsError(output.UnprocessedScramSecrets, true)
+		}
+
 		if err != nil {
-			return nil, err
+			return err
 		}
-
-		output.ClusterArn = resp.ClusterArn
-		output.UnprocessedScramSecrets = append(output.UnprocessedScramSecrets, resp.UnprocessedScramSecrets...)
 	}
-	return output, nil
+
+	return nil
 }
 
-func disassociateClusterSecrets(conn *kafka.Kafka, clusterArn string, secretArnList []*string) (*kafka.BatchDisassociateScramSecretOutput, error) {
-	output := &kafka.BatchDisassociateScramSecretOutput{}
+func unprocessedScramSecretsError(apiObjects []types.UnprocessedScramSecret, ignoreInvalidSecretARN bool) error {
+	var errs []error
 
-	for i := 0; i < len(secretArnList); i += ScramSecretBatchSize {
-		end := i + ScramSecretBatchSize
-		if end > len(secretArnList) {
-			end = len(secretArnList)
+	for _, apiObject := range apiObjects {
+		if ignoreInvalidSecretARN && aws.ToString(apiObject.ErrorCode) == "InvalidSecretArn" {
+			continue
 		}
 
-		resp, err := conn.BatchDisassociateScramSecret(&kafka.BatchDisassociateScramSecretInput{
-			ClusterArn:    aws.String(clusterArn),
-			SecretArnList: secretArnList[i:end],
-		})
+		err := unprocessedScramSecretError(&apiObject)
+
 		if err != nil {
-			return nil, err
+			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.SecretArn), err))
 		}
-
-		output.ClusterArn = resp.ClusterArn
-		output.UnprocessedScramSecrets = append(output.UnprocessedScramSecrets, resp.UnprocessedScramSecrets...)
 	}
-	return output, nil
+
+	return errors.Join(errs...)
 }
 
-func unprocessedScramSecretsError(clusterArn *string, secrets []*kafka.UnprocessedScramSecret, action string) error {
-	var errors *multierror.Error
-
-	for _, s := range secrets {
-		secretArn, errMsg := aws.StringValue(s.SecretArn), aws.StringValue(s.ErrorMessage)
-		errors = multierror.Append(errors, fmt.Errorf("error %s MSK cluster (%s) with scram secret (%s): %s", action, aws.StringValue(clusterArn), secretArn, errMsg))
-	}
-
-	return errors.ErrorOrNil()
+func unprocessedScramSecretError(apiObject *types.UnprocessedScramSecret) error {
+	return fmt.Errorf("%s: %s", aws.ToString(apiObject.ErrorCode), aws.ToString(apiObject.ErrorMessage))
 }

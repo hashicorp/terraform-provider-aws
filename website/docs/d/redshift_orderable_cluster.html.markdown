@@ -21,7 +21,7 @@ data "aws_redshift_orderable_cluster" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_type` - (Optional) Reshift Cluster typeE.g., `multi-node` or `single-node`
 * `cluster_version` - (Optional) Redshift Cluster versionE.g., `1.0`
@@ -30,6 +30,6 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `availability_zones` - List of Availability Zone names where the Redshit Cluster is available.
+* `availability_zones` - List of Availability Zone names where the Redshift Cluster is available.

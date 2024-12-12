@@ -1,31 +1,46 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
-	"bytes"
-	"fmt"
-	"log"
+	"context"
 	"regexp"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceObject() *schema.Resource {
+// @SDKDataSource("aws_s3_object", name="Object")
+// @Tags(identifierAttribute="arn", resourceType="Object")
+func dataSourceObject() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceObjectRead,
+		ReadWithoutTimeout: dataSourceObjectRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"body": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -34,6 +49,27 @@ func DataSourceObject() *schema.Resource {
 				Computed: true,
 			},
 			"cache_control": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.ChecksumMode](),
+			},
+			"checksum_crc32": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha1": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha256": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,7 +89,7 @@ func DataSourceObject() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"content_type": {
+			names.AttrContentType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -69,7 +105,7 @@ func DataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"key": {
+			names.AttrKey: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -106,10 +142,11 @@ func DataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"storage_class": {
+			names.AttrStorageClass: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"version_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -119,22 +156,32 @@ func DataSourceObject() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceObjectRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
+	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 
-	input := s3.HeadObjectInput{
+	var optFns []func(*s3.Options)
+	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+	if arn.IsARN(bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
+		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+	}
+
+	key := sdkv1CompatibleCleanKey(d.Get(names.AttrKey).(string))
+	input := &s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
+	}
+	if v, ok := d.GetOk("checksum_mode"); ok {
+		input.ChecksumMode = types.ChecksumMode(v.(string))
 	}
 	if v, ok := d.GetOk("range"); ok {
 		input.Range = aws.String(v.(string))
@@ -143,120 +190,108 @@ func dataSourceObjectRead(d *schema.ResourceData, meta interface{}) error {
 		input.VersionId = aws.String(v.(string))
 	}
 
-	versionText := ""
-	uniqueId := bucket + "/" + key
-	if v, ok := d.GetOk("version_id"); ok {
-		versionText = fmt.Sprintf(" of version %q", v.(string))
-		uniqueId += "@" + v.(string)
-	}
+	output, err := findObject(ctx, conn, input, optFns...)
 
-	log.Printf("[DEBUG] Reading S3 Object: %s", input)
-	out, err := conn.HeadObject(&input)
 	if err != nil {
-		return fmt.Errorf("failed getting S3 Bucket (%s) Object (%s): %w", bucket, key, err)
-	}
-	if aws.BoolValue(out.DeleteMarker) {
-		return fmt.Errorf("Requested S3 object %q%s has been deleted", bucket+key, versionText)
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
-	log.Printf("[DEBUG] Received S3 object: %s", out)
+	if aws.ToBool(output.DeleteMarker) {
+		return sdkdiag.AppendErrorf(diags, "S3 Bucket (%s) Object (%s) has been deleted", bucket, key)
+	}
 
-	d.SetId(uniqueId)
+	id := bucket + "/" + d.Get(names.AttrKey).(string)
+	if v, ok := d.GetOk("version_id"); ok {
+		id += "@" + v.(string)
+	}
+	d.SetId(id)
 
-	d.Set("bucket_key_enabled", out.BucketKeyEnabled)
-	d.Set("cache_control", out.CacheControl)
-	d.Set("content_disposition", out.ContentDisposition)
-	d.Set("content_encoding", out.ContentEncoding)
-	d.Set("content_language", out.ContentLanguage)
-	d.Set("content_length", out.ContentLength)
-	d.Set("content_type", out.ContentType)
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition(ctx), bucket, key)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+	}
+	d.Set(names.AttrARN, arn.String())
+
+	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
+	d.Set("cache_control", output.CacheControl)
+	d.Set("checksum_crc32", output.ChecksumCRC32)
+	d.Set("checksum_crc32c", output.ChecksumCRC32C)
+	d.Set("checksum_sha1", output.ChecksumSHA1)
+	d.Set("checksum_sha256", output.ChecksumSHA256)
+	d.Set("content_disposition", output.ContentDisposition)
+	d.Set("content_encoding", output.ContentEncoding)
+	d.Set("content_language", output.ContentLanguage)
+	d.Set("content_length", output.ContentLength)
+	d.Set(names.AttrContentType, output.ContentType)
 	// See https://forums.aws.amazon.com/thread.jspa?threadID=44003
-	d.Set("etag", strings.Trim(aws.StringValue(out.ETag), `"`))
-	d.Set("expiration", out.Expiration)
-	d.Set("expires", out.Expires)
-	if out.LastModified != nil {
-		d.Set("last_modified", out.LastModified.Format(time.RFC1123))
+	d.Set("etag", strings.Trim(aws.ToString(output.ETag), `"`))
+	d.Set("expiration", output.Expiration)
+	d.Set("expires", output.ExpiresString) // formatted in RFC1123
+	if output.LastModified != nil {
+		d.Set("last_modified", output.LastModified.Format(time.RFC1123))
 	} else {
-		d.Set("last_modified", "")
+		d.Set("last_modified", nil)
 	}
-	d.Set("metadata", flex.PointersMapToStringList(out.Metadata))
-	d.Set("object_lock_legal_hold_status", out.ObjectLockLegalHoldStatus)
-	d.Set("object_lock_mode", out.ObjectLockMode)
-	d.Set("object_lock_retain_until_date", flattenObjectDate(out.ObjectLockRetainUntilDate))
-	d.Set("server_side_encryption", out.ServerSideEncryption)
-	d.Set("sse_kms_key_id", out.SSEKMSKeyId)
-	d.Set("version_id", out.VersionId)
-	d.Set("website_redirect_location", out.WebsiteRedirectLocation)
-
+	d.Set("metadata", output.Metadata)
+	d.Set("object_lock_legal_hold_status", output.ObjectLockLegalHoldStatus)
+	d.Set("object_lock_mode", output.ObjectLockMode)
+	d.Set("object_lock_retain_until_date", flattenObjectDate(output.ObjectLockRetainUntilDate))
+	d.Set("server_side_encryption", output.ServerSideEncryption)
+	d.Set("sse_kms_key_id", output.SSEKMSKeyId)
 	// The "STANDARD" (which is also the default) storage
 	// class when set would not be included in the results.
-	d.Set("storage_class", s3.StorageClassStandard)
-	if out.StorageClass != nil {
-		d.Set("storage_class", out.StorageClass)
+	d.Set(names.AttrStorageClass, types.ObjectStorageClassStandard)
+	if output.StorageClass != "" {
+		d.Set(names.AttrStorageClass, output.StorageClass)
 	}
+	d.Set("version_id", output.VersionId)
+	d.Set("website_redirect_location", output.WebsiteRedirectLocation)
 
-	if isContentTypeAllowed(out.ContentType) {
-		input := s3.GetObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
+	if isContentTypeAllowed(output.ContentType) {
+		downloader := manager.NewDownloader(conn, manager.WithDownloaderClientOptions(optFns...))
+		buf := manager.NewWriteAtBuffer(make([]byte, 0))
+		input := &s3.GetObjectInput{
+			Bucket:    aws.String(bucket),
+			Key:       aws.String(key),
+			VersionId: output.VersionId,
 		}
 		if v, ok := d.GetOk("range"); ok {
 			input.Range = aws.String(v.(string))
 		}
-		if out.VersionId != nil {
-			input.VersionId = out.VersionId
-		}
-		out, err := conn.GetObject(&input)
+
+		_, err := downloader.Download(ctx, buf, input)
+
 		if err != nil {
-			return fmt.Errorf("Failed getting S3 object: %w", err)
+			return sdkdiag.AppendErrorf(diags, "downloading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 		}
 
-		buf := new(bytes.Buffer)
-		bytesRead, err := buf.ReadFrom(out.Body)
-		if err != nil {
-			return fmt.Errorf("Failed reading content of S3 object (%s): %w", uniqueId, err)
-		}
-		log.Printf("[INFO] Saving %d bytes from S3 object %s", bytesRead, uniqueId)
-		d.Set("body", buf.String())
-	} else {
-		contentType := ""
-		if out.ContentType == nil {
-			contentType = "<EMPTY>"
-		} else {
-			contentType = aws.StringValue(out.ContentType)
-		}
-
-		log.Printf("[INFO] Ignoring body of S3 object %s with Content-Type %q", uniqueId, contentType)
+		d.Set("body", string(buf.Bytes()))
 	}
 
-	tags, err := ObjectListTags(conn, bucket, key)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %w", bucket, key, err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-// This is to prevent potential issues w/ binary files
-// and generally unprintable characters
-// See https://github.com/hashicorp/terraform/pull/3858#issuecomment-156856738
+// This is to prevent potential issues w/ binary files and generally unprintable characters.
+// See https://github.com/hashicorp/terraform/pull/3858#issuecomment-156856738.
 func isContentTypeAllowed(contentType *string) bool {
 	if contentType == nil {
 		return false
 	}
 
 	allowedContentTypes := []*regexp.Regexp{
-		regexp.MustCompile("^text/.+"),
-		regexp.MustCompile("^application/json$"),
+		regexache.MustCompile(`^application/atom\+xml$`),
+		regexache.MustCompile(`^application/json$`),
+		regexache.MustCompile(`^application/ld\+json$`),
+		regexache.MustCompile(`^application/x-csh$`),
+		regexache.MustCompile(`^application/x-httpd-php$`),
+		regexache.MustCompile(`^application/x-sh$`),
+		regexache.MustCompile(`^application/xhtml\+xml$`),
+		regexache.MustCompile(`^application/xml$`),
+		regexache.MustCompile(`^application/x-sql$`),
+		regexache.MustCompile(`^text/.+`),
 	}
-
 	for _, r := range allowedContentTypes {
-		if r.MatchString(*contentType) {
+		if r.MatchString(aws.ToString(contentType)) {
 			return true
 		}
 	}

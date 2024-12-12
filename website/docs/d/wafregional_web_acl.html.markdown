@@ -20,11 +20,12 @@ data "aws_wafregional_web_acl" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the WAF Regional Web ACL.
 
-## Attributes Reference
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the WAF Regional Web ACL.

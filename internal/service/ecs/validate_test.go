@@ -1,10 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidPlacementConstraint(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		constType string
 		constExpr string
@@ -22,12 +29,12 @@ func TestValidPlacementConstraint(t *testing.T) {
 		},
 		{
 			constType: "distinctInstance",
-			constExpr: "expression",
+			constExpr: names.AttrExpression,
 			Err:       false,
 		},
 		{
 			constType: "memberOf",
-			constExpr: "expression",
+			constExpr: names.AttrExpression,
 			Err:       false,
 		},
 	}
@@ -41,6 +48,8 @@ func TestValidPlacementConstraint(t *testing.T) {
 }
 
 func TestValidPlacementStrategy(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		stratType  string
 		stratField string

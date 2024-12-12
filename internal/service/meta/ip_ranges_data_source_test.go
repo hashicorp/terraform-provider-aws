@@ -1,26 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta_test
 
 import (
 	"fmt"
 	"net"
-	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfmeta "github.com/hashicorp/terraform-provider-aws/internal/service/meta"
 )
 
 func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ip_ranges.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -37,10 +41,11 @@ func TestAccMetaIPRangesDataSource_basic(t *testing.T) {
 }
 
 func TestAccMetaIPRangesDataSource_none(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ip_ranges.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -56,10 +61,11 @@ func TestAccMetaIPRangesDataSource_none(t *testing.T) {
 }
 
 func TestAccMetaIPRangesDataSource_url(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ip_ranges.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -76,10 +82,11 @@ func TestAccMetaIPRangesDataSource_url(t *testing.T) {
 }
 
 func TestAccMetaIPRangesDataSource_uppercase(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ip_ranges.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, tfmeta.PseudoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -119,9 +126,9 @@ func testAccIPRangesCheckAttributes(n string) resource.TestCheckFunc {
 		}
 
 		var (
-			regionMember      = regexp.MustCompile(`regions\.\d+`)
+			regionMember      = regexache.MustCompile(`regions\.\d+`)
 			regions, services int
-			serviceMember     = regexp.MustCompile(`services\.\d+`)
+			serviceMember     = regexache.MustCompile(`services\.\d+`)
 		)
 
 		for k, v := range a {
@@ -162,7 +169,6 @@ func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.Te
 
 		var (
 			cidrBlockSize int
-			cidrBlocks    sort.StringSlice
 			err           error
 		)
 
@@ -174,8 +180,7 @@ func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.Te
 			return fmt.Errorf("%s for eu-west-1 seem suspiciously low: %d", attribute, cidrBlockSize) // lintignore:AWSAT003
 		}
 
-		cidrBlocks = make([]string, cidrBlockSize)
-
+		cidrBlocks := make([]string, cidrBlockSize)
 		for i := range cidrBlocks {
 			cidrBlock := a[fmt.Sprintf("%s.%d", attribute, i)]
 
@@ -187,8 +192,8 @@ func testAccIPRangesCheckCIDRBlocksAttribute(name, attribute string) resource.Te
 			cidrBlocks[i] = cidrBlock
 		}
 
-		if !sort.IsSorted(cidrBlocks) {
-			return fmt.Errorf("unexpected order of %s: %s", attribute, cidrBlocks)
+		if !slices.IsSorted(cidrBlocks) {
+			return fmt.Errorf("expected %s to be sorted: %s", attribute, cidrBlocks)
 		}
 
 		return nil

@@ -43,16 +43,16 @@ resource "aws_ec2_client_vpn_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `destination_cidr_block` - (Required) The IPv4 address range, in CIDR notation, of the route destination.
 * `description` - (Optional) A brief description of the route.
 * `target_vpc_subnet_id` - (Required) The ID of the Subnet to route the traffic through. It must already be attached to the Client VPN.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the Client VPN endpoint.
 * `origin` - Indicates how the Client VPN route was added. Will be `add-route` for routes created by this resource.
@@ -62,13 +62,22 @@ In addition to all arguments above, the following attributes are exported:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `1m`)
-- `delete` - (Default `1m`)
+- `create` - (Default `4m`)
+- `delete` - (Default `4m`)
 
 ## Import
 
-AWS Client VPN routes can be imported using the endpoint ID, target subnet ID, and destination CIDR block. All values are separated by a `,`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Client VPN routes using the endpoint ID, target subnet ID, and destination CIDR block. All values are separated by a `,`. For example:
 
+```terraform
+import {
+  to = aws_ec2_client_vpn_route.example
+  id = "cvpn-endpoint-1234567890abcdef,subnet-9876543210fedcba,10.1.0.0/24"
+}
 ```
-$ terraform import aws_ec2_client_vpn_route.example cvpn-endpoint-1234567890abcdef,subnet-9876543210fedcba,10.1.0.0/24
+
+Using `terraform import`, import AWS Client VPN routes using the endpoint ID, target subnet ID, and destination CIDR block. All values are separated by a `,`. For example:
+
+```console
+% terraform import aws_ec2_client_vpn_route.example cvpn-endpoint-1234567890abcdef,subnet-9876543210fedcba,10.1.0.0/24
 ```

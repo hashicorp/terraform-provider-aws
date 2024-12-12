@@ -28,23 +28,32 @@ resource "aws_cloudfront_key_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `comment` - (Optional) A comment to describe the key group..
 * `items` - (Required) A list of the identifiers of the public keys in the key group.
 * `name` - (Required) A name to identify the key group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `etag` - The identifier for this version of the key group.
 * `id` - The identifier for the key group.
 
 ## Import
 
-CloudFront Key Group can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFront Key Group using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_key_group.example
+  id = "4b4f2r1c-315d-5c2e-f093-216t50jed10f"
+}
 ```
-$ terraform import aws_cloudfront_key_group.example 4b4f2r1c-315d-5c2e-f093-216t50jed10f
+
+Using `terraform import`, import CloudFront Key Group using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_key_group.example 4b4f2r1c-315d-5c2e-f093-216t50jed10f
 ```

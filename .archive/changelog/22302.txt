@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_user_pool: `account_recovery_setting.recovery_mechanism` is Optional+Computed
+```

@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pgpkeys
 
 import (
 	"bytes"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/ProtonMail/go-crypto/openpgp"
@@ -28,11 +32,11 @@ func EncryptShares(input [][]byte, pgpKeys []string) ([]string, [][]byte, error)
 		ctBuf := bytes.NewBuffer(nil)
 		pt, err := openpgp.Encrypt(ctBuf, []*openpgp.Entity{entity}, nil, nil, nil)
 		if err != nil {
-			return nil, nil, fmt.Errorf("error setting up encryption for PGP message: %w", err)
+			return nil, nil, fmt.Errorf("setting up encryption for PGP message: %w", err)
 		}
 		_, err = pt.Write(input[i])
 		if err != nil {
-			return nil, nil, fmt.Errorf("error encrypting PGP message: %w", err)
+			return nil, nil, fmt.Errorf("encrypting PGP message: %w", err)
 		}
 		pt.Close()
 		encryptedShares = append(encryptedShares, ctBuf.Bytes())
@@ -60,7 +64,7 @@ func GetFingerprints(pgpKeys []string, entities []*openpgp.Entity) ([]string, er
 	}
 	ret := make([]string, 0, len(entities))
 	for _, entity := range entities {
-		ret = append(ret, fmt.Sprintf("%x", entity.PrimaryKey.Fingerprint))
+		ret = append(ret, hex.EncodeToString(entity.PrimaryKey.Fingerprint))
 	}
 	return ret, nil
 }
@@ -72,11 +76,11 @@ func GetEntities(pgpKeys []string) ([]*openpgp.Entity, error) {
 	for _, keystring := range pgpKeys {
 		data, err := base64.StdEncoding.DecodeString(keystring)
 		if err != nil {
-			return nil, fmt.Errorf("error decoding given PGP key: %w", err)
+			return nil, fmt.Errorf("decoding given PGP key: %w", err)
 		}
 		entity, err := openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(data)))
 		if err != nil {
-			return nil, fmt.Errorf("error parsing given PGP key: %w", err)
+			return nil, fmt.Errorf("parsing given PGP key: %w", err)
 		}
 		ret = append(ret, entity)
 	}
@@ -91,30 +95,30 @@ func GetEntities(pgpKeys []string) ([]*openpgp.Entity, error) {
 func DecryptBytes(encodedCrypt, privKey string) (*bytes.Buffer, error) {
 	privKeyBytes, err := base64.StdEncoding.DecodeString(privKey)
 	if err != nil {
-		return nil, fmt.Errorf("error decoding base64 private key: %w", err)
+		return nil, fmt.Errorf("decoding base64 private key: %w", err)
 	}
 
 	cryptBytes, err := base64.StdEncoding.DecodeString(encodedCrypt)
 	if err != nil {
-		return nil, fmt.Errorf("error decoding base64 crypted bytes: %w", err)
+		return nil, fmt.Errorf("decoding base64 crypted bytes: %w", err)
 	}
 
 	entity, err := openpgp.ReadEntity(packet.NewReader(bytes.NewBuffer(privKeyBytes)))
 	if err != nil {
-		return nil, fmt.Errorf("error parsing private key: %w", err)
+		return nil, fmt.Errorf("parsing private key: %w", err)
 	}
 
 	entityList := &openpgp.EntityList{entity}
 	md, err := openpgp.ReadMessage(bytes.NewBuffer(cryptBytes), entityList, nil, nil)
 	if err != nil {
-		return nil, fmt.Errorf("error decrypting the messages: %w", err)
+		return nil, fmt.Errorf("decrypting the messages: %w", err)
 	}
 
 	ptBuf := bytes.NewBuffer(nil)
 	_, err = ptBuf.ReadFrom(md.UnverifiedBody)
 
 	if err != nil {
-		return nil, fmt.Errorf("error reading the messages: %w", err)
+		return nil, fmt.Errorf("reading the messages: %w", err)
 	}
 
 	return ptBuf, nil

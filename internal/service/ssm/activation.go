@@ -1,45 +1,53 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceActivation() *schema.Resource {
+// @SDKResource("aws_ssm_activation", name="Activation")
+// @Tags
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/ssm/types;awstypes;awstypes.Activation")
+// @Testing(importIgnore="activation_code")
+// @Testing(tagsUpdateForceNew=true)
+// @Testing(tagsIdentifierAttribute="id", tagsResourceType="Activation")
+func resourceActivation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceActivationCreate,
-		Read:   resourceActivationRead,
-		Delete: resourceActivationDelete,
+		CreateWithoutTimeout: resourceActivationCreate,
+		ReadWithoutTimeout:   resourceActivationRead,
+		DeleteWithoutTimeout: resourceActivationDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"activation_code": {
 				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"expired": {
-				Type:     schema.TypeBool,
 				Computed: true,
+			},
+			names.AttrDescription: {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
 			},
 			"expiration_date": {
 				Type:         schema.TypeString,
@@ -48,13 +56,17 @@ func ResourceActivation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IsRFC3339Time,
 			},
+			"expired": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"iam_role": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"registration_limit": {
-				Type:     schema.TypeInt,
+			names.AttrName: {
+				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
@@ -62,154 +74,144 @@ func ResourceActivation() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"activation_code": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"registration_limit": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceActivationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceActivationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	log.Printf("[DEBUG] SSM activation create: %s", d.Id())
-
-	activationInput := &ssm.CreateActivationInput{
-		IamRole: aws.String(d.Get("name").(string)),
+	name := d.Get(names.AttrName).(string)
+	input := &ssm.CreateActivationInput{
+		DefaultInstanceName: aws.String(name),
+		IamRole:             aws.String(d.Get("iam_role").(string)),
+		Tags:                getTagsIn(ctx),
 	}
 
-	if _, ok := d.GetOk("name"); ok {
-		activationInput.DefaultInstanceName = aws.String(d.Get("name").(string))
-	}
-
-	if _, ok := d.GetOk("description"); ok {
-		activationInput.Description = aws.String(d.Get("description").(string))
+	if v, ok := d.GetOk(names.AttrDescription); ok {
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("expiration_date"); ok {
 		t, _ := time.Parse(time.RFC3339, v.(string))
-		activationInput.ExpirationDate = aws.Time(t)
+		input.ExpirationDate = aws.Time(t)
 	}
 
-	if _, ok := d.GetOk("iam_role"); ok {
-		activationInput.IamRole = aws.String(d.Get("iam_role").(string))
+	if v, ok := d.GetOk("registration_limit"); ok {
+		input.RegistrationLimit = aws.Int32(int32(v.(int)))
 	}
 
-	if _, ok := d.GetOk("registration_limit"); ok {
-		activationInput.RegistrationLimit = aws.Int64(int64(d.Get("registration_limit").(int)))
-	}
-	if len(tags) > 0 {
-		activationInput.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	// Retry to allow iam_role to be created and policy attachment to take place
-	var resp *ssm.CreateActivationOutput
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		resp, err = conn.CreateActivation(activationInput)
-
-		if tfawserr.ErrMessageContains(err, "ValidationException", "Not existing role") {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateActivation(activationInput)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateActivation(ctx, input)
+	}, errCodeValidationException, "Nonexistent role")
 
 	if err != nil {
-		return fmt.Errorf("Error creating SSM activation: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SSM Activation (%s): %s", name, err)
 	}
 
-	if resp.ActivationId == nil {
-		return fmt.Errorf("ActivationId was nil")
-	}
-	d.SetId(aws.StringValue(resp.ActivationId))
-	d.Set("activation_code", resp.ActivationCode)
+	output := outputRaw.(*ssm.CreateActivationOutput)
 
-	return resourceActivationRead(d, meta)
+	d.SetId(aws.ToString(output.ActivationId))
+	d.Set("activation_code", output.ActivationCode)
+
+	return append(diags, resourceActivationRead(ctx, d, meta)...)
 }
 
-func resourceActivationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceActivationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-	log.Printf("[DEBUG] Reading SSM Activation: %s", d.Id())
+	activation, err := findActivationByID(ctx, conn, d.Id())
 
-	params := &ssm.DescribeActivationsInput{
-		Filters: []*ssm.DescribeActivationsFilter{
-			{
-				FilterKey: aws.String("ActivationIds"),
-				FilterValues: []*string{
-					aws.String(d.Id()),
-				},
-			},
-		},
-		MaxResults: aws.Int64(1),
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SSM Activation %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
-
-	resp, err := conn.DescribeActivations(params)
 
 	if err != nil {
-		return fmt.Errorf("Error reading SSM activation: %s", err)
-	}
-	if !d.IsNewResource() && (resp.ActivationList == nil || len(resp.ActivationList) == 0) {
-		log.Printf("[WARN] SSM Activation (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return sdkdiag.AppendErrorf(diags, "reading SSM Activation (%s): %s", d.Id(), err)
 	}
 
-	activation := resp.ActivationList[0] // Only 1 result as MaxResults is 1 above
-	d.Set("name", activation.DefaultInstanceName)
-	d.Set("description", activation.Description)
-	d.Set("expiration_date", aws.TimeValue(activation.ExpirationDate).Format(time.RFC3339))
+	d.Set(names.AttrDescription, activation.Description)
+	d.Set("expiration_date", aws.ToTime(activation.ExpirationDate).Format(time.RFC3339))
 	d.Set("expired", activation.Expired)
 	d.Set("iam_role", activation.IamRole)
-	d.Set("registration_limit", activation.RegistrationLimit)
+	d.Set(names.AttrName, activation.DefaultInstanceName)
 	d.Set("registration_count", activation.RegistrationsCount)
-	tags := KeyValueTags(activation.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	d.Set("registration_limit", activation.RegistrationLimit)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
+	setTagsOut(ctx, activation.Tags)
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceActivationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceActivationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SSM Activation: %s", d.Id())
-
-	params := &ssm.DeleteActivationInput{
+	_, err := conn.DeleteActivation(ctx, &ssm.DeleteActivationInput{
 		ActivationId: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteActivation(params)
+	if errs.IsA[*awstypes.InvalidActivation](err) {
+		return diags
+	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting SSM activation: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting SSM Activation (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findActivationByID(ctx context.Context, conn *ssm.Client, id string) (*awstypes.Activation, error) {
+	input := &ssm.DescribeActivationsInput{
+		Filters: []awstypes.DescribeActivationsFilter{
+			{
+				FilterKey:    awstypes.DescribeActivationsFilterKeysActivationIds,
+				FilterValues: []string{id},
+			},
+		},
+	}
+
+	return findActivation(ctx, conn, input)
+}
+
+func findActivation(ctx context.Context, conn *ssm.Client, input *ssm.DescribeActivationsInput) (*awstypes.Activation, error) {
+	output, err := findActivations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findActivations(ctx context.Context, conn *ssm.Client, input *ssm.DescribeActivationsInput) ([]awstypes.Activation, error) {
+	var output []awstypes.Activation
+
+	pages := ssm.NewDescribeActivationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ActivationList...)
+	}
+
+	return output, nil
 }

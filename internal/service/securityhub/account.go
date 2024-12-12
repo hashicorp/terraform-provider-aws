@@ -1,92 +1,231 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceAccount() *schema.Resource {
+// @SDKResource("aws_securityhub_account", name="Account")
+func resourceAccount() *schema.Resource {
+	resourceV0 := &schema.Resource{Schema: map[string]*schema.Schema{}}
+
 	return &schema.Resource{
-		Create: resourceAccountCreate,
-		Read:   resourceAccountRead,
-		Delete: resourceAccountDelete,
+		CreateWithoutTimeout: resourceAccountCreate,
+		ReadWithoutTimeout:   resourceAccountRead,
+		UpdateWithoutTimeout: resourceAccountUpdate,
+		DeleteWithoutTimeout: resourceAccountDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{},
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type: resourceV0.CoreConfigSchema().ImpliedType(),
+				Upgrade: func(_ context.Context, rawState map[string]interface{}, _ interface{}) (map[string]interface{}, error) {
+					if v, ok := rawState["enable_default_standards"]; !ok || v == nil {
+						rawState["enable_default_standards"] = "true"
+					}
+
+					return rawState, nil
+				},
+				Version: 0,
+			},
+		},
+
+		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"auto_enable_controls": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
+			"control_finding_generator": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.ControlFindingGenerator](),
+			},
+			"enable_default_standards": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+				Default:  true,
+			},
+		},
 	}
 }
 
-func resourceAccountCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
-	log.Print("[DEBUG] Enabling Security Hub for account")
+func resourceAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	_, err := conn.EnableSecurityHub(&securityhub.EnableSecurityHubInput{})
+	inputC := &securityhub.EnableSecurityHubInput{
+		EnableDefaultStandards: aws.Bool(d.Get("enable_default_standards").(bool)),
+	}
+
+	if v, ok := d.GetOk("control_finding_generator"); ok {
+		inputC.ControlFindingGenerator = types.ControlFindingGenerator(v.(string))
+	}
+
+	_, err := conn.EnableSecurityHub(ctx, inputC)
 
 	if err != nil {
-		return fmt.Errorf("Error enabling Security Hub for account: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Security Hub Account: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
 
-	return resourceAccountRead(d, meta)
-}
+	autoEnableControls := d.Get("auto_enable_controls").(bool)
+	inputU := &securityhub.UpdateSecurityHubConfigurationInput{
+		AutoEnableControls: aws.Bool(autoEnableControls),
+	}
 
-func resourceAccountRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
-
-	log.Printf("[DEBUG] Checking if Security Hub is enabled")
-	_, err := conn.GetEnabledStandards(&securityhub.GetEnabledStandardsInput{})
+	_, err = conn.UpdateSecurityHubConfiguration(ctx, inputU)
 
 	if err != nil {
-		// Can only read enabled standards if Security Hub is enabled
-		if tfawserr.ErrMessageContains(err, "InvalidAccessException", "not subscribed to AWS Security Hub") {
-			d.SetId("")
-			return nil
-		}
-		return fmt.Errorf("Error checking if Security Hub is enabled: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
 	}
 
-	return nil
-}
-
-func resourceAccountDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecurityHubConn
-	log.Print("[DEBUG] Disabling Security Hub for account")
-
-	err := resource.Retry(adminAccountNotFoundTimeout, func() *resource.RetryError {
-		_, err := conn.DisableSecurityHub(&securityhub.DisableSecurityHubInput{})
-
-		if tfawserr.ErrMessageContains(err, securityhub.ErrCodeInvalidInputException, "Cannot disable Security Hub on the Security Hub administrator") {
-			return resource.RetryableError(err)
-		}
+	arn := accountHubARN(ctx, meta.(*conns.AWSClient))
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err = tfresource.RetryUntilEqual(ctx, timeout, autoEnableControls, func() (bool, error) {
+		output, err := findHubByARN(ctx, conn, arn)
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return false, err
 		}
 
-		return nil
+		return aws.ToBool(output.AutoEnableControls), nil
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = conn.DisableSecurityHub(&securityhub.DisableSecurityHubInput{})
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Account (%s) update: %s", d.Id(), err)
 	}
 
-	if tfawserr.ErrCodeEquals(err, securityhub.ErrCodeResourceNotFoundException) {
-		return nil
+	return append(diags, resourceAccountRead(ctx, d, meta)...)
+}
+
+func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
+
+	arn := accountHubARN(ctx, meta.(*conns.AWSClient))
+	output, err := findHubByARN(ctx, conn, arn)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Security Hub Account %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error disabling Security Hub for account: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub Account (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	d.Set(names.AttrARN, output.HubArn)
+	d.Set("auto_enable_controls", output.AutoEnableControls)
+	d.Set("control_finding_generator", output.ControlFindingGenerator)
+	// enable_default_standards is never returned
+	d.Set("enable_default_standards", d.Get("enable_default_standards"))
+
+	return diags
+}
+
+func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
+
+	input := &securityhub.UpdateSecurityHubConfigurationInput{
+		AutoEnableControls: aws.Bool(d.Get("auto_enable_controls").(bool)),
+	}
+
+	if d.HasChange("control_finding_generator") {
+		input.ControlFindingGenerator = types.ControlFindingGenerator(d.Get("control_finding_generator").(string))
+	}
+
+	_, err := conn.UpdateSecurityHubConfiguration(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub Account (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceAccountRead(ctx, d, meta)...)
+}
+
+func resourceAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
+
+	log.Printf("[DEBUG] Deleting Security Hub Account: %s", d.Id())
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, adminAccountDeletedTimeout, func() (interface{}, error) {
+		return conn.DisableSecurityHub(ctx, &securityhub.DisableSecurityHubInput{})
+	}, errCodeInvalidInputException, "Cannot disable Security Hub on the Security Hub administrator")
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Account (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findHubByARN(ctx context.Context, conn *securityhub.Client, arn string) (*securityhub.DescribeHubOutput, error) {
+	input := &securityhub.DescribeHubInput{
+		HubArn: aws.String(arn),
+	}
+
+	return findHub(ctx, conn, input)
+}
+
+func findHub(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeHubInput) (*securityhub.DescribeHubOutput, error) {
+	output, err := conn.DescribeHub(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+// Security Hub ARN: https://docs.aws.amazon.com/service-authorization/latest/reference/list_awssecurityhub.html#awssecurityhub-resources-for-iam-policies
+func accountHubARN(ctx context.Context, c *conns.AWSClient) string {
+	return c.RegionalARN(ctx, "securityhub", "hub/default")
 }

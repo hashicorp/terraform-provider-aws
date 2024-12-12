@@ -56,6 +56,7 @@ The following arguments are required:
 * `name` - (Required) Unique name for the Cost Category.
 * `rule` - (Required) Configuration block for the Cost Category rules used to categorize costs. See below.
 * `rule_version` - (Required) Rule schema version in this particular Cost Category.
+* `effective_start`- (Optional)  The Cost Category's effective start date. It can only be a billing start date (first day of the month). If the date isn't provided, it's the first day of the current month. Dates can't be before the previous twelve months, or in the future. For example `2022-11-01T00:00:00Z`.
 
 The following arguments are optional:
 
@@ -114,20 +115,28 @@ The following arguments are optional:
 * `type` - (Optional) Parameter type.
 * `values` - (Optional) Parameter values.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the cost category.
 * `effective_end` - Effective end data of your Cost Category.
-* `effective_start` - Effective state data of your Cost Category.
 * `id` - Unique ID of the cost category.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-`aws_ce_cost_category` can be imported using the id, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_cost_category` using the id. For example:
 
+```terraform
+import {
+  to = aws_ce_cost_category.example
+  id = "costCategoryARN"
+}
 ```
-$ terraform import aws_ce_cost_category.example costCategoryARN
+
+Using `terraform import`, import `aws_ce_cost_category` using the id. For example:
+
+```console
+% terraform import aws_ce_cost_category.example costCategoryARN
 ```

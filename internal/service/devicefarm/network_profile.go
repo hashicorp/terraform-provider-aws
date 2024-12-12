@@ -1,36 +1,48 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package devicefarm
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/devicefarm"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/devicefarm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/devicefarm/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceNetworkProfile() *schema.Resource {
+// @SDKResource("aws_devicefarm_network_profile", name="Network Profile")
+// @Tags(identifierAttribute="arn")
+func resourceNetworkProfile() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceNetworkProfileCreate,
-		Read:   resourceNetworkProfileRead,
-		Update: resourceNetworkProfileUpdate,
-		Delete: resourceNetworkProfileDelete,
+		CreateWithoutTimeout: resourceNetworkProfileCreate,
+		ReadWithoutTimeout:   resourceNetworkProfileRead,
+		UpdateWithoutTimeout: resourceNetworkProfileUpdate,
+		DeleteWithoutTimeout: resourceNetworkProfileDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 16384),
@@ -56,7 +68,7 @@ func ResourceNetworkProfile() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 100),
 			},
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
@@ -87,35 +99,35 @@ func ResourceNetworkProfile() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.IntBetween(0, 100),
 			},
-			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      devicefarm.NetworkProfileTypePrivate,
-				ValidateFunc: validation.StringInSlice(devicefarm.NetworkProfileType_Values(), false),
+			names.AttrType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.NetworkProfileTypePrivate,
+				ValidateDiagFunc: enum.Validate[awstypes.NetworkProfileType](),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceNetworkProfileCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceNetworkProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
+	name := d.Get(names.AttrName).(string)
 	input := &devicefarm.CreateNetworkProfileInput{
-		Name:       aws.String(d.Get("name").(string)),
+		Name:       aws.String(name),
 		ProjectArn: aws.String(d.Get("project_arn").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("type"); ok {
-		input.Type = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrType); ok {
+		input.Type = awstypes.NetworkProfileType(v.(string))
 	}
 
 	if v, ok := d.GetOk("downlink_bandwidth_bits"); ok {
@@ -131,7 +143,7 @@ func resourceNetworkProfileCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("downlink_loss_percent"); ok {
-		input.DownlinkLossPercent = aws.Int64(int64(v.(int)))
+		input.DownlinkLossPercent = int32(v.(int))
 	}
 
 	if v, ok := d.GetOk("uplink_bandwidth_bits"); ok {
@@ -147,48 +159,44 @@ func resourceNetworkProfileCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("uplink_loss_percent"); ok {
-		input.UplinkLossPercent = aws.Int64(int64(v.(int)))
+		input.UplinkLossPercent = int32(v.(int))
 	}
 
-	out, err := conn.CreateNetworkProfile(input)
+	output, err := conn.CreateNetworkProfile(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating DeviceFarm Network Profile: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating DeviceFarm Network Profile (%s): %s", name, err)
 	}
 
-	arn := aws.StringValue(out.NetworkProfile.Arn)
-	log.Printf("[DEBUG] Successsfully Created DeviceFarm Network Profile: %s", arn)
-	d.SetId(arn)
+	d.SetId(aws.ToString(output.NetworkProfile.Arn))
 
-	if len(tags) > 0 {
-		if err := UpdateTags(conn, arn, nil, tags); err != nil {
-			return fmt.Errorf("error updating DeviceFarm Network Profile (%s) tags: %w", arn, err)
-		}
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting DeviceFarm Network Profile (%s) tags: %s", d.Id(), err)
 	}
 
-	return resourceNetworkProfileRead(d, meta)
+	return append(diags, resourceNetworkProfileRead(ctx, d, meta)...)
 }
 
-func resourceNetworkProfileRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceNetworkProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	project, err := FindNetworkProfileByARN(conn, d.Id())
+	project, err := findNetworkProfileByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DeviceFarm Network Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DeviceFarm Network Profile (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DeviceFarm Network Profile (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(project.Arn)
-	d.Set("arn", arn)
-	d.Set("name", project.Name)
-	d.Set("description", project.Description)
+	arn := aws.ToString(project.Arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, project.Name)
+	d.Set(names.AttrDescription, project.Description)
 	d.Set("downlink_bandwidth_bits", project.DownlinkBandwidthBits)
 	d.Set("downlink_delay_ms", project.DownlinkDelayMs)
 	d.Set("downlink_jitter_ms", project.DownlinkJitterMs)
@@ -197,53 +205,37 @@ func resourceNetworkProfileRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("uplink_delay_ms", project.UplinkDelayMs)
 	d.Set("uplink_jitter_ms", project.UplinkJitterMs)
 	d.Set("uplink_loss_percent", project.UplinkLossPercent)
-	d.Set("type", project.Type)
+	d.Set(names.AttrType, project.Type)
 
-	projectArn, err := decodeProjectARN(arn, "networkprofile", meta)
+	projectArn, err := decodeProjectARN(ctx, meta.(*conns.AWSClient), arn, "networkprofile")
 	if err != nil {
-		return fmt.Errorf("error decoding project_arn (%s): %w", arn, err)
+		return sdkdiag.AppendErrorf(diags, "decoding project_arn (%s): %s", arn, err)
 	}
 
 	d.Set("project_arn", projectArn)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for DeviceFarm Network Profile (%s): %w", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceNetworkProfileUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
+func resourceNetworkProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &devicefarm.UpdateNetworkProfileInput{
 			Arn: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
-		if d.HasChange("type") {
-			input.Type = aws.String(d.Get("type").(string))
+		if d.HasChange(names.AttrType) {
+			input.Type = awstypes.NetworkProfileType(d.Get(names.AttrType).(string))
 		}
 
 		if d.HasChange("downlink_bandwidth_bits") {
@@ -259,7 +251,7 @@ func resourceNetworkProfileUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		if d.HasChange("downlink_loss_percent") {
-			input.DownlinkLossPercent = aws.Int64(int64(d.Get("downlink_loss_percent").(int)))
+			input.DownlinkLossPercent = int32(d.Get("downlink_loss_percent").(int))
 		}
 
 		if d.HasChange("uplink_bandwidth_bits") {
@@ -275,42 +267,59 @@ func resourceNetworkProfileUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		if d.HasChange("uplink_loss_percent") {
-			input.UplinkLossPercent = aws.Int64(int64(d.Get("uplink_loss_percent").(int)))
+			input.UplinkLossPercent = int32(d.Get("uplink_loss_percent").(int))
 		}
 
-		log.Printf("[DEBUG] Updating DeviceFarm Network Profile: %s", d.Id())
-		_, err := conn.UpdateNetworkProfile(input)
+		_, err := conn.UpdateNetworkProfile(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("Error Updating DeviceFarm Network Profile: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating DeviceFarm Network Profile (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating DeviceFarm Network Profile (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceNetworkProfileRead(d, meta)
+	return append(diags, resourceNetworkProfileRead(ctx, d, meta)...)
 }
 
-func resourceNetworkProfileDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DeviceFarmConn
-
-	input := &devicefarm.DeleteNetworkProfileInput{
-		Arn: aws.String(d.Id()),
-	}
+func resourceNetworkProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DeviceFarmClient(ctx)
 
 	log.Printf("[DEBUG] Deleting DeviceFarm Network Profile: %s", d.Id())
-	_, err := conn.DeleteNetworkProfile(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, devicefarm.ErrCodeNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("Error deleting DeviceFarm Network Profile: %w", err)
+	_, err := conn.DeleteNetworkProfile(ctx, &devicefarm.DeleteNetworkProfileInput{
+		Arn: aws.String(d.Id()),
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting DeviceFarm Network Profile (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findNetworkProfileByARN(ctx context.Context, conn *devicefarm.Client, arn string) (*awstypes.NetworkProfile, error) {
+	input := &devicefarm.GetNetworkProfileInput{
+		Arn: aws.String(arn),
+	}
+	output, err := conn.GetNetworkProfile(ctx, input)
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.NetworkProfile == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.NetworkProfile, nil
 }

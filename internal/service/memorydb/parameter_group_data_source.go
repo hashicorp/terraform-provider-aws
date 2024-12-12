@@ -1,98 +1,93 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceParameterGroup() *schema.Resource {
+// @SDKDataSource("aws_memorydb_parameter_group", name="Parameter Group")
+// @Tags(identifierAttribute="arn")
+func dataSourceParameterGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceParameterGroupRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"family": {
+			names.AttrFamily: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"parameter": {
+			names.AttrParameter: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"value": {
+						names.AttrValue: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
 				},
-				Set: ParameterHash,
+				Set: parameterHash,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	name := d.Get("name").(string)
-
-	group, err := FindParameterGroupByName(ctx, conn, name)
+	name := d.Get(names.AttrName).(string)
+	group, err := findParameterGroupByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("MemoryDB Parameter Group", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB Parameter Group", err))
 	}
 
-	d.SetId(aws.StringValue(group.Name))
-
-	d.Set("arn", group.ARN)
-	d.Set("description", group.Description)
-	d.Set("family", group.Family)
-	d.Set("name", group.Name)
+	d.SetId(aws.ToString(group.Name))
+	d.Set(names.AttrARN, group.ARN)
+	d.Set(names.AttrDescription, group.Description)
+	d.Set(names.AttrFamily, group.Family)
+	d.Set(names.AttrName, group.Name)
 
 	userDefinedParameters := createUserDefinedParameterMap(d)
-
-	parameters, err := listParameterGroupParameters(ctx, conn, d.Get("family").(string), d.Id(), userDefinedParameters)
-	if err != nil {
-		return diag.Errorf("error listing parameters for MemoryDB Parameter Group (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("parameter", flattenParameters(parameters)); err != nil {
-		return diag.Errorf("failed to set parameter: %s", err)
-	}
-
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	parameters, err := listParameterGroupParameters(ctx, conn, d.Get(names.AttrFamily).(string), d.Id(), userDefinedParameters)
 
 	if err != nil {
-		return diag.Errorf("error listing tags for MemoryDB Parameter Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+	if err := d.Set(names.AttrParameter, flattenParameters(parameters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting parameter: %s", err)
 	}
 
-	return nil
+	return diags
 }

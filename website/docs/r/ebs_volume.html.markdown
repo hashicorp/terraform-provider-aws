@@ -27,7 +27,7 @@ resource "aws_ebs_volume" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `availability_zone` - (Required) The AZ where the EBS volume will exist.
 * `encrypted` - (Optional) If true, the disk will be encrypted.
@@ -44,12 +44,12 @@ The following arguments are supported:
 
 ~> **NOTE:** When changing the `size`, `iops` or `type` of an instance, there are [considerations](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/considerations.html) to be aware of.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The volume ID (e.g., vol-59fcb34e).
-* `arn` - The volume ARN (e.g., arn:aws:ec2:us-east-1:0123456789012:volume/vol-59fcb34e).
+* `arn` - The volume ARN (e.g., arn:aws:ec2:us-east-1:123456789012:volume/vol-59fcb34e).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -58,12 +58,21 @@ In addition to all arguments above, the following attributes are exported:
 
 - `create` - (Default `5m`)
 - `update` - (Default `5m`)
-- `delete` - (Default `5m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
-EBS Volumes can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EBS Volumes using the `id`. For example:
 
+```terraform
+import {
+  to = aws_ebs_volume.id
+  id = "vol-049df61146c4d7901"
+}
 ```
-$ terraform import aws_ebs_volume.id vol-049df61146c4d7901
+
+Using `terraform import`, import EBS Volumes using the `id`. For example:
+
+```console
+% terraform import aws_ebs_volume.id vol-049df61146c4d7901
 ```

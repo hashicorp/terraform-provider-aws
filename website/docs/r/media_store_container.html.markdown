@@ -20,14 +20,14 @@ resource "aws_media_store_container" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the container. Must contain alphanumeric characters or underscores.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the container.
 * `endpoint` - The DNS endpoint of the container.
@@ -35,8 +35,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MediaStore Container can be imported using the MediaStore Container Name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MediaStore Container using the MediaStore Container Name. For example:
 
+```terraform
+import {
+  to = aws_media_store_container.example
+  id = "example"
+}
 ```
-$ terraform import aws_media_store_container.example example
+
+Using `terraform import`, import MediaStore Container using the MediaStore Container Name. For example:
+
+```console
+% terraform import aws_media_store_container.example example
 ```

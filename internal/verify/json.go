@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
@@ -6,32 +9,39 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
+// SuppressEquivalentPolicyDiffs returns a difference suppression function that compares
+// two JSON strings representing IAM policies and returns `true` if they are semantically equivalent.
 func SuppressEquivalentPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {
-	if strings.TrimSpace(old) == "" && strings.TrimSpace(new) == "" {
+	return PolicyStringsEquivalent(old, new)
+}
+
+func PolicyStringsEquivalent(s1, s2 string) bool {
+	if strings.TrimSpace(s1) == "" && strings.TrimSpace(s2) == "" {
 		return true
 	}
 
-	if strings.TrimSpace(old) == "{}" && strings.TrimSpace(new) == "" {
+	if strings.TrimSpace(s1) == "{}" && strings.TrimSpace(s2) == "" {
 		return true
 	}
 
-	if strings.TrimSpace(old) == "" && strings.TrimSpace(new) == "{}" {
+	if strings.TrimSpace(s1) == "" && strings.TrimSpace(s2) == "{}" {
 		return true
 	}
 
-	if strings.TrimSpace(old) == "{}" && strings.TrimSpace(new) == "{}" {
+	if strings.TrimSpace(s1) == "{}" && strings.TrimSpace(s2) == "{}" {
 		return true
 	}
 
-	equivalent, err := awspolicy.PoliciesAreEquivalent(old, new)
+	equivalent, err := awspolicy.PoliciesAreEquivalent(s1, s2)
 	if err != nil {
 		return false
 	}
@@ -39,18 +49,21 @@ func SuppressEquivalentPolicyDiffs(k, old, new string, d *schema.ResourceData) b
 	return equivalent
 }
 
+// SuppressEquivalentJSONDiffs returns a difference suppression function that compares
+// two JSON strings and returns `true` if they are semantically equivalent.
 func SuppressEquivalentJSONDiffs(k, old, new string, d *schema.ResourceData) bool {
-	ob := bytes.NewBufferString("")
-	if err := json.Compact(ob, []byte(old)); err != nil {
-		return false
-	}
+	return JSONStringsEqual(old, new)
+}
 
-	nb := bytes.NewBufferString("")
-	if err := json.Compact(nb, []byte(new)); err != nil {
-		return false
+// SuppressEquivalentJSONWithEmptyDiffs returns a difference suppression function that compares
+// two JSON strings and returns `true` if they are semantically equivalent, handling empty
+// strings (`""`) and empty JSON strings (`"{}"`) as equivalent.
+// This is useful for suppressing diffs for non-IAM JSON policy documents.
+func SuppressEquivalentJSONWithEmptyDiffs(k, old, new string, d *schema.ResourceData) bool {
+	if old, new := strings.TrimSpace(old), strings.TrimSpace(new); (old == "" || old == "{}") && (new == "" || new == "{}") {
+		return true
 	}
-
-	return JSONBytesEqual(ob.Bytes(), nb.Bytes())
+	return JSONStringsEqual(old, new)
 }
 
 func SuppressEquivalentJSONOrYAMLDiffs(k, old, new string, d *schema.ResourceData) bool {
@@ -72,6 +85,9 @@ func SuppressEquivalentJSONOrYAMLDiffs(k, old, new string, d *schema.ResourceDat
 }
 
 func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
+	if v, ok := templateString.(string); ok {
+		templateString = strings.ReplaceAll(v, "\r\n", "\n")
+	}
 	if looksLikeJSONString(templateString) {
 		return structure.NormalizeJsonString(templateString.(string))
 	}
@@ -80,7 +96,21 @@ func NormalizeJSONOrYAMLString(templateString interface{}) (string, error) {
 }
 
 func looksLikeJSONString(s interface{}) bool {
-	return regexp.MustCompile(`^\s*{`).MatchString(s.(string))
+	return regexache.MustCompile(`^\s*{`).MatchString(s.(string))
+}
+
+func JSONStringsEqual(s1, s2 string) bool {
+	b1 := bytes.NewBufferString("")
+	if err := json.Compact(b1, []byte(s1)); err != nil {
+		return false
+	}
+
+	b2 := bytes.NewBufferString("")
+	if err := json.Compact(b2, []byte(s2)); err != nil {
+		return false
+	}
+
+	return JSONBytesEqual(b1.Bytes(), b2.Bytes())
 }
 
 func JSONBytesEqual(b1, b2 []byte) bool {
@@ -97,6 +127,11 @@ func JSONBytesEqual(b1, b2 []byte) bool {
 	return reflect.DeepEqual(o1, o2)
 }
 
+// SecondJSONUnlessEquivalent returns the second JSON string unless
+// the AWS policy content is deemed equivalent.
+//
+// If parsing of the policy content from the first argument fails, the
+// second is returned and no error is raised.
 func SecondJSONUnlessEquivalent(old, new string) (string, error) {
 	// valid empty JSON is "{}" not "" so handle special case to avoid
 	// Error unmarshaling policy: unexpected end of JSON input
@@ -115,6 +150,17 @@ func SecondJSONUnlessEquivalent(old, new string) (string, error) {
 	equivalent, err := awspolicy.PoliciesAreEquivalent(old, new)
 
 	if err != nil {
+		// Plugin SDK V2 based resources can set malformed policy content in state
+		// despite a failed update. In these cases, parsing the "old" content
+		// will fail. Surfacing this error during read operations causes a
+		// persistent plan-time validation error, so return the "new" content
+		// read directly from the remote resource instead.
+		//
+		// Ref: https://github.com/hashicorp/terraform-provider-aws/issues/39833
+		if errs.Contains(err, "parsing policy 1") {
+			return new, nil
+		}
+
 		return "", err
 	}
 
@@ -129,15 +175,55 @@ func SecondJSONUnlessEquivalent(old, new string) (string, error) {
 // Otherwise, it returns the new policy. Either policy is normalized.
 func PolicyToSet(exist, new string) (string, error) {
 	policyToSet, err := SecondJSONUnlessEquivalent(exist, new)
-
 	if err != nil {
 		return "", fmt.Errorf("while checking equivalency of existing policy (%s) and new policy (%s), encountered: %w", exist, new, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
-
 	if err != nil {
 		return "", fmt.Errorf("policy (%s) is invalid JSON: %w", policyToSet, err)
+	}
+
+	return policyToSet, nil
+}
+
+// LegacyPolicyNormalize returns a "normalized" JSON policy document except
+// the Version element is first in the JSON as required by AWS in many places.
+// Version not being first is one reason for this error:
+// MalformedPolicyDocument: The policy failed legacy parsing
+func LegacyPolicyNormalize(policy interface{}) (string, error) {
+	if policy == nil || policy.(string) == "" {
+		return "", nil
+	}
+
+	np, err := structure.NormalizeJsonString(policy)
+	if err != nil {
+		return policy.(string), fmt.Errorf("legacy policy (%s) is invalid JSON: %w", policy, err)
+	}
+
+	m := regexache.MustCompile(`(?s)^(\{\n?)(.*?)(,\s*)?(  )?("Version":\s*"2012-10-17")(,)?(\n)?(.*?)(\})`)
+
+	n := m.ReplaceAllString(np, `$1$4$5$3$2$6$7$8$9`)
+
+	_, err = structure.NormalizeJsonString(n)
+	if err != nil {
+		return policy.(string), fmt.Errorf("LegacyPolicyNormalize created a policy (%s) that is invalid JSON: %w", n, err)
+	}
+
+	return n, nil
+}
+
+// LegacyPolicyToSet returns the existing policy if the new policy is equivalent.
+// Otherwise, it returns the new policy. Either policy is legacy normalized.
+func LegacyPolicyToSet(exist, new string) (string, error) {
+	policyToSet, err := SecondJSONUnlessEquivalent(exist, new)
+	if err != nil {
+		return "", fmt.Errorf("while checking equivalency of existing policy (%s) and new policy (%s), encountered: %w", exist, new, err)
+	}
+
+	policyToSet, err = LegacyPolicyNormalize(policyToSet)
+	if err != nil {
+		return "", fmt.Errorf("legacy policy (%s) is invalid JSON: %w", policyToSet, err)
 	}
 
 	return policyToSet, nil

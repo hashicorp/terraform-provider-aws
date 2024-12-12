@@ -1,285 +1,293 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	RuleDeleteTimeout = 5 * time.Minute
-)
-
-func ResourceRule() *schema.Resource {
+// @SDKResource("aws_waf_rule", name="Rule")
+// @Tags(identifierAttribute="arn")
+func resourceRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRuleCreate,
-		Read:   resourceRuleRead,
-		Update: resourceRuleUpdate,
-		Delete: resourceRuleDelete,
+		CreateWithoutTimeout: resourceRuleCreate,
+		ReadWithoutTimeout:   resourceRuleRead,
+		UpdateWithoutTimeout: resourceRuleUpdate,
+		DeleteWithoutTimeout: resourceRuleDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
-			"metric_name": {
+			names.AttrMetricName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 			"predicates": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"negated": {
-							Type:     schema.TypeBool,
-							Required: true,
-						},
 						"data_id": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 128),
 						},
-						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(waf.PredicateType_Values(), false),
+						"negated": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						names.AttrType: {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.PredicateType](),
 						},
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	wr := NewRetryer(conn)
-	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		params := &waf.CreateRuleInput{
+	name := d.Get(names.AttrName).(string)
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.CreateRuleInput{
 			ChangeToken: token,
-			MetricName:  aws.String(d.Get("metric_name").(string)),
-			Name:        aws.String(d.Get("name").(string)),
+			MetricName:  aws.String(d.Get(names.AttrMetricName).(string)),
+			Name:        aws.String(name),
+			Tags:        getTagsIn(ctx),
 		}
 
-		if len(tags) > 0 {
-			params.Tags = Tags(tags.IgnoreAWS())
-		}
-
-		return conn.CreateRule(params)
+		return conn.CreateRule(ctx, input)
 	})
 
 	if err != nil {
-		return fmt.Errorf("error creating WAF Rule (%s): %w", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF Rule (%s): %s", name, err)
 	}
 
-	resp := out.(*waf.CreateRuleOutput)
-	d.SetId(aws.StringValue(resp.Rule.RuleId))
+	d.SetId(aws.ToString(output.(*waf.CreateRuleOutput).Rule.RuleId))
 
-	newPredicates := d.Get("predicates").(*schema.Set).List()
-	if len(newPredicates) > 0 {
+	if newPredicates := d.Get("predicates").(*schema.Set).List(); len(newPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateRuleResource(d.Id(), noPredicates, newPredicates, conn)
-		if err != nil {
-			return fmt.Errorf("error updating WAF Rule (%s): %w", d.Id(), err)
+		if err := updateRule(ctx, conn, d.Id(), noPredicates, newPredicates); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceRuleRead(d, meta)
+	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	params := &waf.GetRuleInput{
-		RuleId: aws.String(d.Id()),
-	}
+	rule, err := findRuleByID(ctx, conn, d.Id())
 
-	resp, err := conn.GetRule(params)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] WAF Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading WAF Rule (%s): %w", d.Id(), err)
-	}
-
-	if resp == nil || resp.Rule == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading WAF Rule (%s): not found", d.Id())
-		}
-
-		log.Printf("[WARN] WAF Rule (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return sdkdiag.AppendErrorf(diags, "reading WAF Rule (%s): %s", d.Id(), err)
 	}
 
 	var predicates []map[string]interface{}
 
-	for _, predicateSet := range resp.Rule.Predicates {
+	for _, predicateSet := range rule.Predicates {
 		predicate := map[string]interface{}{
-			"negated": *predicateSet.Negated,
-			"type":    *predicateSet.Type,
-			"data_id": *predicateSet.DataId,
+			"data_id":      aws.ToString(predicateSet.DataId),
+			"negated":      aws.ToBool(predicateSet.Negated),
+			names.AttrType: predicateSet.Type,
 		}
 		predicates = append(predicates, predicate)
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("rule/%s", d.Id()),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Resource:  "rule/" + d.Id(),
 	}.String()
-	d.Set("arn", arn)
-
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for WAF Rule (%s): %w", arn, err)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrMetricName, rule.MetricName)
+	d.Set(names.AttrName, rule.Name)
+	if err := d.Set("predicates", predicates); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting predicates: %s", err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	d.Set("predicates", predicates)
-	d.Set("name", resp.Rule.Name)
-	d.Set("metric_name", resp.Rule.MetricName)
-
-	return nil
+	return diags
 }
 
-func resourceRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	if d.HasChange("predicates") {
 		o, n := d.GetChange("predicates")
 		oldP, newP := o.(*schema.Set).List(), n.(*schema.Set).List()
-
-		err := updateRuleResource(d.Id(), oldP, newP, conn)
-		if err != nil {
-			return fmt.Errorf("error updating WAF Rule (%s): %w", d.Id(), err)
+		if err := updateRule(ctx, conn, d.Id(), oldP, newP); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating WAF Rule (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceRuleRead(d, meta)
+	return append(diags, resourceRuleRead(ctx, d, meta)...)
 }
 
-func resourceRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	oldPredicates := d.Get("predicates").(*schema.Set).List()
-	if len(oldPredicates) > 0 {
+	if oldPredicates := d.Get("predicates").(*schema.Set).List(); len(oldPredicates) > 0 {
 		noPredicates := []interface{}{}
-		err := updateRuleResource(d.Id(), oldPredicates, noPredicates, conn)
-		if err != nil {
-			return fmt.Errorf("error updating WAF Rule (%s) predicates: %w", d.Id(), err)
+		if err := updateRule(ctx, conn, d.Id(), oldPredicates, noPredicates); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	wr := NewRetryer(conn)
-	err := resource.Retry(RuleDeleteTimeout, func() *resource.RetryError {
-		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-			req := &waf.DeleteRuleInput{
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[*awstypes.WAFReferencedItemException](ctx, timeout, func() (interface{}, error) {
+		return newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+			input := &waf.DeleteRuleInput{
 				ChangeToken: token,
 				RuleId:      aws.String(d.Id()),
 			}
 
-			return conn.DeleteRule(req)
+			return conn.DeleteRule(ctx, input)
 		})
-
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, waf.ErrCodeReferencedItemException) {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
 	})
 
-	if tfresource.TimedOut(err) {
-		_, err = wr.RetryWithToken(func(token *string) (interface{}, error) {
-			req := &waf.DeleteRuleInput{
-				ChangeToken: token,
-				RuleId:      aws.String(d.Id()),
-			}
-
-			return conn.DeleteRule(req)
-		})
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return diags
 	}
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
-			return nil
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Rule (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findRuleByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.Rule, error) {
+	input := &waf.GetRuleInput{
+		RuleId: aws.String(id),
+	}
+
+	output, err := conn.GetRule(ctx, input)
+
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-		return fmt.Errorf("error deleting WAF Rule (%s): %w", d.Id(), err)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Rule == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Rule, nil
+}
+
+func updateRule(ctx context.Context, conn *waf.Client, id string, oldP, newP []interface{}) error {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.UpdateRuleInput{
+			ChangeToken: token,
+			RuleId:      aws.String(id),
+			Updates:     diffRulePredicates(oldP, newP),
+		}
+
+		return conn.UpdateRule(ctx, input)
+	})
+
+	if err != nil {
+		return fmt.Errorf("updating WAF Rule (%s): %w", id, err)
 	}
 
 	return nil
 }
 
-func updateRuleResource(id string, oldP, newP []interface{}, conn *waf.WAF) error {
-	wr := NewRetryer(conn)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		req := &waf.UpdateRuleInput{
-			ChangeToken: token,
-			RuleId:      aws.String(id),
-			Updates:     DiffRulePredicates(oldP, newP),
+func diffRulePredicates(oldP, newP []interface{}) []awstypes.RuleUpdate {
+	updates := make([]awstypes.RuleUpdate, 0)
+
+	for _, op := range oldP {
+		predicate := op.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newP, predicate); contains {
+			newP = append(newP[:idx], newP[idx+1:]...)
+			continue
 		}
 
-		return conn.UpdateRule(req)
-	})
+		updates = append(updates, awstypes.RuleUpdate{
+			Action: awstypes.ChangeActionDelete,
+			Predicate: &awstypes.Predicate{
+				Negated: aws.Bool(predicate["negated"].(bool)),
+				Type:    awstypes.PredicateType(predicate[names.AttrType].(string)),
+				DataId:  aws.String(predicate["data_id"].(string)),
+			},
+		})
+	}
 
-	return err
+	for _, np := range newP {
+		predicate := np.(map[string]interface{})
+
+		updates = append(updates, awstypes.RuleUpdate{
+			Action: awstypes.ChangeActionInsert,
+			Predicate: &awstypes.Predicate{
+				Negated: aws.Bool(predicate["negated"].(bool)),
+				Type:    awstypes.PredicateType(predicate[names.AttrType].(string)),
+				DataId:  aws.String(predicate["data_id"].(string)),
+			},
+		})
+	}
+	return updates
 }

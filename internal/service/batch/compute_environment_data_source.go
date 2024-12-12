@@ -1,102 +1,107 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceComputeEnvironment() *schema.Resource {
+// @SDKDataSource("aws_batch_compute_environment", name="Compute Environment")
+// @Tags
+// @Testing(tagsIdentifierAttribute="arn")
+func dataSourceComputeEnvironment() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceComputeEnvironmentRead,
+		ReadWithoutTimeout: dataSourceComputeEnvironmentRead,
 
 		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"compute_environment_name": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"ecs_cluster_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"service_role": {
+			names.AttrServiceRole: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"tags": tftags.TagsSchemaComputed(),
-
-			"type": {
+			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"status_reason": {
+			names.AttrStatusReason: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"state": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"update_policy": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"job_execution_timeout_minutes": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"terminate_jobs_on_update": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
 }
 
-func dataSourceComputeEnvironmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BatchConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 
-	params := &batch.DescribeComputeEnvironmentsInput{
-		ComputeEnvironments: []*string{aws.String(d.Get("compute_environment_name").(string))},
-	}
-	log.Printf("[DEBUG] Reading Batch Compute Environment: %s", params)
-	desc, err := conn.DescribeComputeEnvironments(params)
+	name := d.Get("compute_environment_name").(string)
+	computeEnvironment, err := findComputeEnvironmentDetailByName(ctx, conn, name)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): %s", name, err)
 	}
 
-	if len(desc.ComputeEnvironments) == 0 {
-		return fmt.Errorf("no matches found for name: %s", d.Get("compute_environment_name").(string))
-	}
-
-	if len(desc.ComputeEnvironments) > 1 {
-		return fmt.Errorf("multiple matches found for name: %s", d.Get("compute_environment_name").(string))
-	}
-
-	computeEnvironment := desc.ComputeEnvironments[0]
-	d.SetId(aws.StringValue(computeEnvironment.ComputeEnvironmentArn))
-	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
+	arn := aws.ToString(computeEnvironment.ComputeEnvironmentArn)
+	d.SetId(arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)
-	d.Set("service_role", computeEnvironment.ServiceRole)
-	d.Set("type", computeEnvironment.Type)
-	d.Set("status", computeEnvironment.Status)
-	d.Set("status_reason", computeEnvironment.StatusReason)
-	d.Set("state", computeEnvironment.State)
-
-	if err := d.Set("tags", KeyValueTags(computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	d.Set(names.AttrServiceRole, computeEnvironment.ServiceRole)
+	d.Set(names.AttrState, computeEnvironment.State)
+	d.Set(names.AttrStatus, computeEnvironment.Status)
+	d.Set(names.AttrStatusReason, computeEnvironment.StatusReason)
+	d.Set(names.AttrType, computeEnvironment.Type)
+	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
 	}
 
-	return nil
+	setTagsOut(ctx, computeEnvironment.Tags)
+
+	return diags
 }

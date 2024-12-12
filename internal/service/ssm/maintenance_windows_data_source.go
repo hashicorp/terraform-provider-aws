@@ -1,30 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ssm"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ssm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ssm/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceMaintenanceWindows() *schema.Resource {
+// @SDKDataSource("aws_ssm_maintenance_windows", name="Maintenance Windows")
+func dataSourceMaintenanceWindows() *schema.Resource {
 	return &schema.Resource{
-		Read: dataMaintenanceWindowsRead,
+		ReadWithoutTimeout: dataMaintenanceWindowsRead,
+
 		Schema: map[string]*schema.Schema{
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-
-						"values": {
+						names.AttrValues: {
 							Type:     schema.TypeList,
 							Required: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
@@ -32,7 +41,7 @@ func DataSourceMaintenanceWindows() *schema.Resource {
 					},
 				},
 			},
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -41,55 +50,42 @@ func DataSourceMaintenanceWindows() *schema.Resource {
 	}
 }
 
-func dataMaintenanceWindowsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func dataMaintenanceWindowsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	input := &ssm.DescribeMaintenanceWindowsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filters = expandMaintenanceWindowFilters(v.(*schema.Set).List())
 	}
 
-	var results []*ssm.MaintenanceWindowIdentity
+	var output []awstypes.MaintenanceWindowIdentity
 
-	err := conn.DescribeMaintenanceWindowsPages(input, func(page *ssm.DescribeMaintenanceWindowsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := ssm.NewDescribeMaintenanceWindowsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading SSM Maintenance Windows: %s", err)
 		}
 
-		for _, windowIdentities := range page.WindowIdentities {
-			if windowIdentities == nil {
-				continue
-			}
-
-			results = append(results, windowIdentities)
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return fmt.Errorf("error reading SSM Maintenance Windows: %w", err)
+		output = append(output, page.WindowIdentities...)
 	}
 
-	var windowIDs []string
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrIDs, tfslices.ApplyToAll(output, func(v awstypes.MaintenanceWindowIdentity) string {
+		return aws.ToString(v.WindowId)
+	}))
 
-	for _, r := range results {
-		windowIDs = append(windowIDs, aws.StringValue(r.WindowId))
-	}
-
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("ids", windowIDs)
-
-	return nil
+	return diags
 }
 
-func expandMaintenanceWindowFilters(tfList []interface{}) []*ssm.MaintenanceWindowFilter {
+func expandMaintenanceWindowFilters(tfList []interface{}) []awstypes.MaintenanceWindowFilter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*ssm.MaintenanceWindowFilter
+	var apiObjects []awstypes.MaintenanceWindowFilter
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -104,25 +100,25 @@ func expandMaintenanceWindowFilters(tfList []interface{}) []*ssm.MaintenanceWind
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandMaintenanceWindowFilter(tfMap map[string]interface{}) *ssm.MaintenanceWindowFilter {
+func expandMaintenanceWindowFilter(tfMap map[string]interface{}) *awstypes.MaintenanceWindowFilter {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &ssm.MaintenanceWindowFilter{}
+	apiObject := &awstypes.MaintenanceWindowFilter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
 
-	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Values = flex.ExpandStringList(v)
+	if v, ok := tfMap[names.AttrValues].([]interface{}); ok && len(v) > 0 {
+		apiObject.Values = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject

@@ -1,31 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/locationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/location"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/location/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_location_place_index", name="Map")
+// @Tags(identifierAttribute="index_arn")
 func ResourcePlaceIndex() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePlaceIndexCreate,
-		Read:   resourcePlaceIndexRead,
-		Update: resourcePlaceIndexUpdate,
-		Delete: resourcePlaceIndexDelete,
+		CreateWithoutTimeout: resourcePlaceIndexCreate,
+		ReadWithoutTimeout:   resourcePlaceIndexRead,
+		UpdateWithoutTimeout: resourcePlaceIndexUpdate,
+		DeleteWithoutTimeout: resourcePlaceIndexDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"create_time": {
+			names.AttrCreateTime: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -42,15 +52,15 @@ func ResourcePlaceIndex() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"intended_use": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      locationservice.IntendedUseSingleUse,
-							ValidateFunc: validation.StringInSlice(locationservice.IntendedUse_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.IntendedUse("SingleUse"),
+							ValidateDiagFunc: enum.Validate[awstypes.IntendedUse](),
 						},
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 1000),
@@ -69,19 +79,20 @@ func ResourcePlaceIndex() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourcePlaceIndexCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourcePlaceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	input := &locationservice.CreatePlaceIndexInput{}
+	input := &location.CreatePlaceIndexInput{
+		Tags: getTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("data_source"); ok {
 		input.DataSource = aws.String(v.(string))
@@ -91,7 +102,7 @@ func resourcePlaceIndexCreate(d *schema.ResourceData, meta interface{}) error {
 		input.DataSourceConfiguration = expandDataSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
@@ -99,51 +110,46 @@ func resourcePlaceIndexCreate(d *schema.ResourceData, meta interface{}) error {
 		input.IndexName = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	output, err := conn.CreatePlaceIndex(input)
+	output, err := conn.CreatePlaceIndex(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating place index: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating place index: %s", err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error creating place index: empty result")
+		return sdkdiag.AppendErrorf(diags, "creating place index: empty result")
 	}
 
-	d.SetId(aws.StringValue(output.IndexName))
+	d.SetId(aws.ToString(output.IndexName))
 
-	return resourcePlaceIndexRead(d, meta)
+	return append(diags, resourcePlaceIndexRead(ctx, d, meta)...)
 }
 
-func resourcePlaceIndexRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourcePlaceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	input := &locationservice.DescribePlaceIndexInput{
+	input := &location.DescribePlaceIndexInput{
 		IndexName: aws.String(d.Id()),
 	}
 
-	output, err := conn.DescribePlaceIndex(input)
+	output, err := conn.DescribePlaceIndex(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Location Service Place Index (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Location Service Place Index (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Location Service Place Index (%s): %s", d.Id(), err)
 	}
 
 	if output == nil {
-		return fmt.Errorf("error getting Location Service Place Index (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Location Service Place Index (%s): empty response", d.Id())
 	}
 
-	d.Set("create_time", aws.TimeValue(output.CreateTime).Format(time.RFC3339))
+	d.Set(names.AttrCreateTime, aws.ToTime(output.CreateTime).Format(time.RFC3339))
 	d.Set("data_source", output.DataSource)
 
 	if output.DataSourceConfiguration != nil {
@@ -152,104 +158,88 @@ func resourcePlaceIndexRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("data_source_configuration", nil)
 	}
 
-	d.Set("description", output.Description)
+	d.Set(names.AttrDescription, output.Description)
 	d.Set("index_arn", output.IndexArn)
 	d.Set("index_name", output.IndexName)
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, output.Tags)
 
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
+	d.Set("update_time", aws.ToTime(output.UpdateTime).Format(time.RFC3339))
 
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	d.Set("update_time", aws.TimeValue(output.UpdateTime).Format(time.RFC3339))
-
-	return nil
+	return diags
 }
 
-func resourcePlaceIndexUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+func resourcePlaceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	if d.HasChanges("data_source_configuration", "description") {
-		input := &locationservice.UpdatePlaceIndexInput{
+	if d.HasChanges("data_source_configuration", names.AttrDescription) {
+		input := &location.UpdatePlaceIndexInput{
 			IndexName: aws.String(d.Id()),
 			// Deprecated but still required by the API
-			PricingPlan: aws.String(locationservice.PricingPlanRequestBasedUsage),
+			PricingPlan: awstypes.PricingPlan("RequestBasedUsage"),
 		}
 
 		if v, ok := d.GetOk("data_source_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.DataSourceConfiguration = expandDataSourceConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		if v, ok := d.GetOk("description"); ok {
+		if v, ok := d.GetOk(names.AttrDescription); ok {
 			input.Description = aws.String(v.(string))
 		}
 
-		_, err := conn.UpdatePlaceIndex(input)
+		_, err := conn.UpdatePlaceIndex(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Location Service Place Index (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Location Service Place Index (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("index_arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Location Service Place Index (%s): %w", d.Id(), err)
-		}
-	}
-
-	return resourcePlaceIndexRead(d, meta)
+	return append(diags, resourcePlaceIndexRead(ctx, d, meta)...)
 }
 
-func resourcePlaceIndexDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LocationConn
+func resourcePlaceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LocationClient(ctx)
 
-	input := &locationservice.DeletePlaceIndexInput{
+	input := &location.DeletePlaceIndexInput{
 		IndexName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeletePlaceIndex(input)
+	_, err := conn.DeletePlaceIndex(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Location Service Place Index (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Location Service Place Index (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandDataSourceConfiguration(tfMap map[string]interface{}) *locationservice.DataSourceConfiguration {
+func expandDataSourceConfiguration(tfMap map[string]interface{}) *awstypes.DataSourceConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &locationservice.DataSourceConfiguration{}
+	apiObject := &awstypes.DataSourceConfiguration{}
 
 	if v, ok := tfMap["intended_use"].(string); ok && v != "" {
-		apiObject.IntendedUse = aws.String(v)
+		apiObject.IntendedUse = awstypes.IntendedUse(v)
 	}
 
 	return apiObject
 }
 
-func flattenDataSourceConfiguration(apiObject *locationservice.DataSourceConfiguration) map[string]interface{} {
+func flattenDataSourceConfiguration(apiObject *awstypes.DataSourceConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.IntendedUse; v != nil {
-		tfMap["intended_use"] = aws.StringValue(v)
+	tfMap := map[string]interface{}{
+		"intended_use": string(apiObject.IntendedUse),
 	}
 
 	return tfMap

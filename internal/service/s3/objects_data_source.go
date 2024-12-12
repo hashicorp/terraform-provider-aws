@@ -1,45 +1,49 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const keyRequestPageSize = 1000
 
-func DataSourceObjects() *schema.Resource {
+// @SDKDataSource("aws_s3_objects", name="Objects")
+func dataSourceObjects() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceObjectsRead,
+		ReadWithoutTimeout: dataSourceObjectsRead,
 
 		Schema: map[string]*schema.Schema{
-			"bucket": {
+			names.AttrBucket: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
+			"common_prefixes": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"delimiter": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"encoding_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"max_keys": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  1000,
-			},
-			"start_after": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.EncodingType](),
 			},
 			"fetch_owner": {
 				Type:     schema.TypeBool,
@@ -50,101 +54,127 @@ func DataSourceObjects() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"common_prefixes": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+			"max_keys": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Default:  1000,
 			},
 			"owners": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			names.AttrPrefix: {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"request_charged": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"request_payer": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.RequestPayer](),
+			},
+			"start_after": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 		},
 	}
 }
 
-func dataSourceObjectsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).S3Conn
+func dataSourceObjectsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
-	bucket := d.Get("bucket").(string)
-	prefix := d.Get("prefix").(string)
+	bucket := d.Get(names.AttrBucket).(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 
-	listInput := s3.ListObjectsV2Input{
+	var optFns []func(*s3.Options)
+	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+	if arn.IsARN(bucket) && conn.Options().Region == endpoints.AwsGlobalRegionID {
+		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+	}
+
+	input := &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
 	}
 
-	if prefix != "" {
-		listInput.Prefix = aws.String(prefix)
+	if v, ok := d.GetOk("delimiter"); ok {
+		input.Delimiter = aws.String(v.(string))
 	}
 
-	if s, ok := d.GetOk("delimiter"); ok {
-		listInput.Delimiter = aws.String(s.(string))
+	if v, ok := d.GetOk("encoding_type"); ok {
+		input.EncodingType = types.EncodingType(v.(string))
 	}
 
-	if s, ok := d.GetOk("encoding_type"); ok {
-		listInput.EncodingType = aws.String(s.(string))
+	if v, ok := d.GetOk("fetch_owner"); ok {
+		input.FetchOwner = aws.Bool(v.(bool))
 	}
 
-	// "listInput.MaxKeys" refers to max keys returned in a single request
-	// (i.e., page size), not the total number of keys returned if you page
-	// through the results. "maxKeys" does refer to total keys returned.
+	// "input.MaxKeys" refers to max keys returned in a single request
+	// (i.e. page size), not the total number of keys returned if you page
+	// through the results. "max_keys" does refer to total keys returned.
 	maxKeys := int64(d.Get("max_keys").(int))
 	if maxKeys <= keyRequestPageSize {
-		listInput.MaxKeys = aws.Int64(maxKeys)
+		input.MaxKeys = aws.Int32(int32(maxKeys))
 	}
 
-	if s, ok := d.GetOk("start_after"); ok {
-		listInput.StartAfter = aws.String(s.(string))
+	if v, ok := d.GetOk(names.AttrPrefix); ok {
+		input.Prefix = aws.String(v.(string))
 	}
 
-	if b, ok := d.GetOk("fetch_owner"); ok {
-		listInput.FetchOwner = aws.Bool(b.(bool))
+	if v, ok := d.GetOk("request_payer"); ok {
+		input.RequestPayer = types.RequestPayer(v.(string))
 	}
 
-	var commonPrefixes []string
-	var keys []string
-	var owners []string
+	if v, ok := d.GetOk("start_after"); ok {
+		input.StartAfter = aws.String(v.(string))
+	}
 
-	err := conn.ListObjectsV2Pages(&listInput, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
-		for _, commonPrefix := range page.CommonPrefixes {
-			commonPrefixes = append(commonPrefixes, aws.StringValue(commonPrefix.Prefix))
+	var nKeys int64
+	var commonPrefixes, keys, owners []string
+	var requestCharged string
+
+	pages := s3.NewListObjectsV2Paginator(conn, input)
+pageLoop:
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx, optFns...)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing S3 Bucket (%s) Objects: %s", bucket, err)
 		}
 
-		for _, object := range page.Contents {
-			keys = append(keys, aws.StringValue(object.Key))
+		requestCharged = string(page.RequestCharged)
 
-			if object.Owner != nil {
-				owners = append(owners, aws.StringValue(object.Owner.ID))
+		for _, v := range page.CommonPrefixes {
+			commonPrefixes = append(commonPrefixes, aws.ToString(v.Prefix))
+		}
+
+		for _, v := range page.Contents {
+			if nKeys >= maxKeys {
+				break pageLoop
 			}
+
+			keys = append(keys, aws.ToString(v.Key))
+
+			if v := v.Owner; v != nil {
+				owners = append(owners, aws.ToString(v.ID))
+			}
+
+			nKeys++
 		}
-
-		maxKeys = maxKeys - aws.Int64Value(page.KeyCount)
-
-		if maxKeys <= keyRequestPageSize {
-			listInput.MaxKeys = aws.Int64(maxKeys)
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return fmt.Errorf("error listing S3 Bucket (%s) Objects: %w", bucket, err)
 	}
 
 	d.SetId(bucket)
+	d.Set("common_prefixes", commonPrefixes)
+	d.Set("keys", keys)
+	d.Set("owners", owners)
+	d.Set("request_charged", requestCharged)
 
-	if err := d.Set("common_prefixes", commonPrefixes); err != nil {
-		return fmt.Errorf("error setting common_prefixes: %w", err)
-	}
-
-	if err := d.Set("keys", keys); err != nil {
-		return fmt.Errorf("error setting keys: %w", err)
-	}
-
-	if err := d.Set("owners", owners); err != nil {
-		return fmt.Errorf("error setting owners: %w", err)
-	}
-
-	return nil
+	return diags
 }

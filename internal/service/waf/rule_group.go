@@ -1,60 +1,62 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceRuleGroup() *schema.Resource {
+// @SDKResource("aws_waf_rule_group", name="Rule Group")
+// @Tags(identifierAttribute="arn")
+func resourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceRuleGroupCreate,
-		Read:   resourceRuleGroupRead,
-		Update: resourceRuleGroupUpdate,
-		Delete: resourceRuleGroupDelete,
+		CreateWithoutTimeout: resourceRuleGroupCreate,
+		ReadWithoutTimeout:   resourceRuleGroupRead,
+		UpdateWithoutTimeout: resourceRuleGroupUpdate,
+		DeleteWithoutTimeout: resourceRuleGroupDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"metric_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validMetricName,
-			},
 			"activated_rule": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"action": {
+						names.AttrAction: {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"type": {
+									names.AttrType: {
 										Type:     schema.TypeString,
 										Required: true,
 									},
 								},
 							},
 						},
-						"priority": {
+						names.AttrPriority: {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
@@ -62,193 +64,270 @@ func ResourceRuleGroup() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
-						"type": {
+						names.AttrType: {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  waf.WafRuleTypeRegular,
+							Default:  awstypes.WafRuleTypeRegular,
 						},
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrMetricName: {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validMetricName,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceRuleGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	wr := NewRetryer(conn)
-	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		params := &waf.CreateRuleGroupInput{
+	name := d.Get(names.AttrName).(string)
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.CreateRuleGroupInput{
 			ChangeToken: token,
-			MetricName:  aws.String(d.Get("metric_name").(string)),
-			Name:        aws.String(d.Get("name").(string)),
+			MetricName:  aws.String(d.Get(names.AttrMetricName).(string)),
+			Name:        aws.String(name),
+			Tags:        getTagsIn(ctx),
 		}
 
-		if len(tags) > 0 {
-			params.Tags = Tags(tags.IgnoreAWS())
-		}
-
-		return conn.CreateRuleGroup(params)
+		return conn.CreateRuleGroup(ctx, input)
 	})
-	if err != nil {
-		return err
-	}
-	resp := out.(*waf.CreateRuleGroupOutput)
-	d.SetId(aws.StringValue(resp.RuleGroup.RuleGroupId))
 
-	activatedRules := d.Get("activated_rule").(*schema.Set).List()
-	if len(activatedRules) > 0 {
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating WAF Rule Group (%s): %s", name, err)
+	}
+
+	d.SetId(aws.ToString(output.(*waf.CreateRuleGroupOutput).RuleGroup.RuleGroupId))
+
+	if activatedRules := d.Get("activated_rule").(*schema.Set).List(); len(activatedRules) > 0 {
 		noActivatedRules := []interface{}{}
-
-		err := updateRuleGroupResource(d.Id(), noActivatedRules, activatedRules, conn)
-		if err != nil {
-			return fmt.Errorf("Error Updating WAF Rule Group: %s", err)
+		if err := updateRuleGroup(ctx, conn, d.Id(), noActivatedRules, activatedRules); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceRuleGroupRead(d, meta)
+	return append(diags, resourceRuleGroupRead(ctx, d, meta)...)
 }
 
-func resourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	params := &waf.GetRuleGroupInput{
+	ruleGroup, err := findRuleGroupByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] WAF Rule Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading WAF Rule Group (%s): %s", d.Id(), err)
+	}
+
+	var activatedRules []awstypes.ActivatedRule
+	input := &waf.ListActivatedRulesInRuleGroupInput{
 		RuleGroupId: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetRuleGroup(params)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
-			log.Printf("[WARN] WAF Rule Group (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
+	err = listActivatedRulesInRuleGroupPages(ctx, conn, input, func(page *waf.ListActivatedRulesInRuleGroupOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		return err
-	}
+		activatedRules = append(activatedRules, page.ActivatedRules...)
 
-	rResp, err := conn.ListActivatedRulesInRuleGroup(&waf.ListActivatedRulesInRuleGroupInput{
-		RuleGroupId: aws.String(d.Id()),
+		return !lastPage
 	})
+
 	if err != nil {
-		return fmt.Errorf("error listing activated rules in WAF Rule Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing WAF Rule Group (%s) activated rules: %s", d.Id(), err)
 	}
 
+	if err := d.Set("activated_rule", flattenActivatedRules(activatedRules)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting activated_rule: %s", err)
+	}
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("rulegroup/%s", d.Id()),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Resource:  "rulegroup/" + d.Id(),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrMetricName, ruleGroup.MetricName)
+	d.Set(names.AttrName, ruleGroup.Name)
 
-	tags, err := ListTags(conn, arn)
-	if err != nil {
-		return fmt.Errorf("error listing tags for WAF Rule Group (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	d.Set("activated_rule", FlattenActivatedRules(rResp.ActivatedRules))
-	d.Set("name", resp.RuleGroup.Name)
-	d.Set("metric_name", resp.RuleGroup.MetricName)
-
-	return nil
+	return diags
 }
 
-func resourceRuleGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	if d.HasChange("activated_rule") {
 		o, n := d.GetChange("activated_rule")
 		oldRules, newRules := o.(*schema.Set).List(), n.(*schema.Set).List()
-
-		err := updateRuleGroupResource(d.Id(), oldRules, newRules, conn)
-		if err != nil {
-			return fmt.Errorf("Error Updating WAF Rule Group: %s", err)
+		if err := updateRuleGroup(ctx, conn, d.Id(), oldRules, newRules); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
-		}
-	}
-
-	return resourceRuleGroupRead(d, meta)
+	return append(diags, resourceRuleGroupRead(ctx, d, meta)...)
 }
 
-func resourceRuleGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	oldRules := d.Get("activated_rule").(*schema.Set).List()
-	err := deleteRuleGroup(d.Id(), oldRules, conn)
-
-	return err
-}
-
-func deleteRuleGroup(id string, oldRules []interface{}, conn *waf.WAF) error {
-	if len(oldRules) > 0 {
+	if oldRules := d.Get("activated_rule").(*schema.Set).List(); len(oldRules) > 0 {
 		noRules := []interface{}{}
-		err := updateRuleGroupResource(id, oldRules, noRules, conn)
-		if err != nil {
-			return fmt.Errorf("Error updating WAF Rule Group Predicates: %s", err)
+		if err := updateRuleGroup(ctx, conn, d.Id(), oldRules, noRules); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	wr := NewRetryer(conn)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		req := &waf.DeleteRuleGroupInput{
+	log.Printf("[INFO] Deleting WAF Rule Group: %s", d.Id())
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.DeleteRuleGroupInput{
+			ChangeToken: token,
+			RuleGroupId: aws.String(d.Id()),
+		}
+
+		return conn.DeleteRuleGroup(ctx, input)
+	})
+
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Rule Group (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findRuleGroupByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.RuleGroup, error) {
+	input := &waf.GetRuleGroupInput{
+		RuleGroupId: aws.String(id),
+	}
+
+	output, err := conn.GetRuleGroup(ctx, input)
+
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.RuleGroup == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.RuleGroup, nil
+}
+
+func updateRuleGroup(ctx context.Context, conn *waf.Client, id string, oldRules, newRules []interface{}) error {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.UpdateRuleGroupInput{
 			ChangeToken: token,
 			RuleGroupId: aws.String(id),
+			Updates:     diffRuleGroupActivatedRules(oldRules, newRules),
 		}
-		log.Printf("[INFO] Deleting WAF Rule Group")
-		return conn.DeleteRuleGroup(req)
+
+		return conn.UpdateRuleGroup(ctx, input)
 	})
+
 	if err != nil {
-		return fmt.Errorf("Error deleting WAF Rule Group: %s", err)
+		return fmt.Errorf("updating WAF Rule Group (%s): %w", id, err)
 	}
+
 	return nil
 }
 
-func updateRuleGroupResource(id string, oldRules, newRules []interface{}, conn *waf.WAF) error {
-	wr := NewRetryer(conn)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		req := &waf.UpdateRuleGroupInput{
-			ChangeToken: token,
-			RuleGroupId: aws.String(id),
-			Updates:     DiffRuleGroupActivatedRules(oldRules, newRules),
+func diffRuleGroupActivatedRules(oldRules, newRules []interface{}) []awstypes.RuleGroupUpdate {
+	updates := make([]awstypes.RuleGroupUpdate, 0)
+
+	for _, op := range oldRules {
+		rule := op.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newRules, rule); contains {
+			newRules = append(newRules[:idx], newRules[idx+1:]...)
+			continue
 		}
 
-		return conn.UpdateRuleGroup(req)
-	})
-	if err != nil {
-		return fmt.Errorf("Error Updating WAF Rule Group: %s", err)
+		updates = append(updates, awstypes.RuleGroupUpdate{
+			Action:        awstypes.ChangeActionDelete,
+			ActivatedRule: expandActivatedRule(rule),
+		})
 	}
 
-	return nil
+	for _, np := range newRules {
+		rule := np.(map[string]interface{})
+
+		updates = append(updates, awstypes.RuleGroupUpdate{
+			Action:        awstypes.ChangeActionInsert,
+			ActivatedRule: expandActivatedRule(rule),
+		})
+	}
+	return updates
+}
+
+func flattenActivatedRules(activatedRules []awstypes.ActivatedRule) []interface{} {
+	out := make([]interface{}, len(activatedRules))
+	for i, ar := range activatedRules {
+		rule := map[string]interface{}{
+			names.AttrPriority: aws.ToInt32(ar.Priority),
+			"rule_id":          aws.ToString(ar.RuleId),
+			names.AttrType:     ar.Type,
+		}
+		if ar.Action != nil {
+			rule[names.AttrAction] = []interface{}{
+				map[string]interface{}{
+					names.AttrType: string(ar.Action.Type),
+				},
+			}
+		}
+		out[i] = rule
+	}
+	return out
+}
+
+func expandActivatedRule(rule map[string]interface{}) *awstypes.ActivatedRule {
+	r := &awstypes.ActivatedRule{
+		Priority: aws.Int32(int32(rule[names.AttrPriority].(int))),
+		RuleId:   aws.String(rule["rule_id"].(string)),
+		Type:     awstypes.WafRuleType(rule[names.AttrType].(string)),
+	}
+
+	if a, ok := rule[names.AttrAction].([]interface{}); ok && len(a) > 0 {
+		m := a[0].(map[string]interface{})
+		r.Action = &awstypes.WafAction{
+			Type: awstypes.WafActionType(m[names.AttrType].(string)),
+		}
+	}
+	return r
 }

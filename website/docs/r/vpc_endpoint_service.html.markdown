@@ -39,7 +39,7 @@ resource "aws_vpc_endpoint_service" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `acceptance_required` - (Required) Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
 * `allowed_principals` - (Optional) The ARNs of one or more principals allowed to discover the endpoint service.
@@ -48,10 +48,11 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `private_dns_name` - (Optional) The private DNS name for the service.
 * `supported_ip_address_types` - (Optional) The supported IP address types. The possible values are `ipv4` and `ipv6`.
+* `supported_regions` - (Optional) The set of regions from which service consumers can access the service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC endpoint service.
 * `availability_zones` - A set of Availability Zones in which the service is available.
@@ -70,8 +71,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC Endpoint Services can be imported using the `VPC endpoint service id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Endpoint Services using the VPC endpoint service `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_endpoint_service.foo
+  id = "vpce-svc-0f97a19d3fa8220bc"
+}
 ```
-$ terraform import aws_vpc_endpoint_service.foo vpce-svc-0f97a19d3fa8220bc
+
+Using `terraform import`, import VPC Endpoint Services using the VPC endpoint service `id`. For example:
+
+```console
+% terraform import aws_vpc_endpoint_service.foo vpce-svc-0f97a19d3fa8220bc
 ```

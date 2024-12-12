@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_chimesdkvoice_sip_rule: Fix eventual consistency errors when not using `us-east-1`
+```
+
+```release-note:bug
+resource/aws_chimesdkvoice_sip_media_application: Fix eventual consistency errors when not using `us-east-1`
+```

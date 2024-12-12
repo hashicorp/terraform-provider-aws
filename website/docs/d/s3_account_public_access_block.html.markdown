@@ -19,13 +19,13 @@ data "aws_s3_account_public_access_block" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `account_id` - (Optional) AWS account ID to configure. Defaults to automatically determined account ID of the Terraform AWS provider.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS account ID
 * `block_public_acls` - Whether or not Amazon S3 should block public ACLs for buckets in this account is enabled. Returns as `true` or `false`.

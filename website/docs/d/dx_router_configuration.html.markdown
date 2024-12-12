@@ -45,9 +45,9 @@ There is currently no AWS API to retrieve the full list of `router_type_identifi
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `customer_router_config` - Instructions for configuring your router
 * `router` - Block of the router type details

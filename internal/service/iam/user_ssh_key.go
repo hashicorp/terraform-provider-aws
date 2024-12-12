@@ -1,45 +1,52 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceUserSSHKey() *schema.Resource {
+// @SDKResource("aws_iam_user_ssh_key", name="User SSH Key")
+func resourceUserSSHKey() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserSSHKeyCreate,
-		Read:   resourceUserSSHKeyRead,
-		Update: resourceUserSSHKeyUpdate,
-		Delete: resourceUserSSHKeyDelete,
+		CreateWithoutTimeout: resourceUserSSHKeyCreate,
+		ReadWithoutTimeout:   resourceUserSSHKeyRead,
+		UpdateWithoutTimeout: resourceUserSSHKeyUpdate,
+		DeleteWithoutTimeout: resourceUserSSHKeyDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: resourceUserSSHKeyImport,
+			StateContext: resourceUserSSHKeyImport,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"ssh_public_key_id": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"encoding": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.EncodingType](),
 			},
 			"fingerprint": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"username": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"public_key": {
+			names.AttrPublicKey: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,139 +58,137 @@ func ResourceUserSSHKey() *schema.Resource {
 					return strings.Trim(old, "\n") == strings.Trim(new, "\n")
 				},
 			},
-
-			"encoding": {
+			"ssh_public_key_id": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					iam.EncodingTypeSsh,
-					iam.EncodingTypePem,
-				}, false),
+				Computed: true,
 			},
-
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+			},
+			names.AttrUsername: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
 }
 
-func resourceUserSSHKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
-	username := d.Get("username").(string)
-	publicKey := d.Get("public_key").(string)
+func resourceUserSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	request := &iam.UploadSSHPublicKeyInput{
+	username := d.Get(names.AttrUsername).(string)
+	input := &iam.UploadSSHPublicKeyInput{
+		SSHPublicKeyBody: aws.String(d.Get(names.AttrPublicKey).(string)),
 		UserName:         aws.String(username),
-		SSHPublicKeyBody: aws.String(publicKey),
 	}
 
-	log.Println("[DEBUG] Create IAM User SSH Key Request:", request)
-	createResp, err := conn.UploadSSHPublicKey(request)
+	output, err := conn.UploadSSHPublicKey(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating IAM User SSH Key %s: %s", username, err)
+		return sdkdiag.AppendErrorf(diags, "uploading IAM User SSH Key (%s): %s", username, err)
 	}
 
-	d.SetId(aws.StringValue(createResp.SSHPublicKey.SSHPublicKeyId))
+	d.SetId(aws.ToString(output.SSHPublicKey.SSHPublicKeyId))
 
-	return resourceUserSSHKeyUpdate(d, meta)
-}
-
-func resourceUserSSHKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
-	username := d.Get("username").(string)
-	encoding := d.Get("encoding").(string)
-	request := &iam.GetSSHPublicKeyInput{
-		UserName:       aws.String(username),
-		SSHPublicKeyId: aws.String(d.Id()),
-		Encoding:       aws.String(encoding),
-	}
-
-	var getResp *iam.GetSSHPublicKeyOutput
-
-	err := resource.Retry(propagationTimeout, func() *resource.RetryError {
-		var err error
-
-		getResp, err = conn.GetSSHPublicKey(request)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
+	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return findSSHPublicKeyByThreePartKey(ctx, conn, d.Id(), d.Get("encoding").(string), username)
 	})
 
-	if tfresource.TimedOut(err) {
-		getResp, err = conn.GetSSHPublicKey(request)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IAM User SSH Key (%s) create: %s", d.Id(), err)
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if v, ok := d.GetOk(names.AttrStatus); ok {
+		input := &iam.UpdateSSHPublicKeyInput{
+			SSHPublicKeyId: aws.String(d.Id()),
+			Status:         awstypes.StatusType(v.(string)),
+			UserName:       aws.String(username),
+		}
+
+		_, err := conn.UpdateSSHPublicKey(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IAM User SSH Key (%s): %s", d.Id(), err)
+		}
+	}
+
+	return append(diags, resourceUserSSHKeyRead(ctx, d, meta)...)
+}
+
+func resourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+
+	encoding := d.Get("encoding").(string)
+	key, err := findSSHPublicKeyByThreePartKey(ctx, conn, d.Id(), encoding, d.Get(names.AttrUsername).(string))
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM User SSH Key (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IAM User SSH Key (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM User SSH Key (%s): %s", d.Id(), err)
 	}
 
-	if getResp == nil || getResp.SSHPublicKey == nil {
-		return fmt.Errorf("error reading IAM User SSH Key (%s): empty response", d.Id())
-	}
-
-	publicKey := aws.StringValue(getResp.SSHPublicKey.SSHPublicKeyBody)
-	if encoding == iam.EncodingTypeSsh {
+	d.Set("fingerprint", key.Fingerprint)
+	publicKey := aws.ToString(key.SSHPublicKeyBody)
+	if encoding == string(awstypes.EncodingTypeSsh) {
 		publicKey = cleanSSHKey(publicKey)
 	}
+	d.Set(names.AttrPublicKey, publicKey)
+	d.Set("ssh_public_key_id", key.SSHPublicKeyId)
+	d.Set(names.AttrStatus, key.Status)
 
-	d.Set("fingerprint", getResp.SSHPublicKey.Fingerprint)
-	d.Set("status", getResp.SSHPublicKey.Status)
-	d.Set("ssh_public_key_id", getResp.SSHPublicKey.SSHPublicKeyId)
-	d.Set("public_key", publicKey)
-	return nil
+	return diags
 }
 
-func resourceUserSSHKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChange("status") {
-		conn := meta.(*conns.AWSClient).IAMConn
+func resourceUserSSHKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-		request := &iam.UpdateSSHPublicKeyInput{
-			UserName:       aws.String(d.Get("username").(string)),
-			SSHPublicKeyId: aws.String(d.Id()),
-			Status:         aws.String(d.Get("status").(string)),
-		}
-
-		_, err := conn.UpdateSSHPublicKey(request)
-		if err != nil {
-			return fmt.Errorf("error updating IAM User SSH Key (%s): %w", d.Id(), err)
-		}
-	}
-	return resourceUserSSHKeyRead(d, meta)
-}
-
-func resourceUserSSHKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
-
-	request := &iam.DeleteSSHPublicKeyInput{
-		UserName:       aws.String(d.Get("username").(string)),
+	input := &iam.UpdateSSHPublicKeyInput{
 		SSHPublicKeyId: aws.String(d.Id()),
+		Status:         awstypes.StatusType(d.Get(names.AttrStatus).(string)),
+		UserName:       aws.String(d.Get(names.AttrUsername).(string)),
 	}
 
-	log.Println("[DEBUG] Delete IAM User SSH Key request:", request)
-	if _, err := conn.DeleteSSHPublicKey(request); err != nil {
-		return fmt.Errorf("error deleting IAM User SSH Key (%s): %w", d.Id(), err)
+	_, err := conn.UpdateSSHPublicKey(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating IAM User SSH Key (%s): %s", d.Id(), err)
 	}
-	return nil
+
+	return append(diags, resourceUserSSHKeyRead(ctx, d, meta)...)
 }
 
-func resourceUserSSHKeyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
+
+	log.Printf("[DEBUG] Deleting IAM User SSH Key: %s", d.Id())
+	_, err := conn.DeleteSSHPublicKey(ctx, &iam.DeleteSSHPublicKeyInput{
+		SSHPublicKeyId: aws.String(d.Id()),
+		UserName:       aws.String(d.Get(names.AttrUsername).(string)),
+	})
+
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM User SSH Key (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func resourceUserSSHKeyImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idParts := strings.SplitN(d.Id(), ":", 3)
 
 	if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
@@ -194,12 +199,39 @@ func resourceUserSSHKeyImport(d *schema.ResourceData, meta interface{}) ([]*sche
 	sshPublicKeyId := idParts[1]
 	encoding := idParts[2]
 
-	d.Set("username", username)
+	d.Set(names.AttrUsername, username)
 	d.Set("ssh_public_key_id", sshPublicKeyId)
 	d.Set("encoding", encoding)
 	d.SetId(sshPublicKeyId)
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func findSSHPublicKeyByThreePartKey(ctx context.Context, conn *iam.Client, id, encoding, username string) (*awstypes.SSHPublicKey, error) {
+	input := &iam.GetSSHPublicKeyInput{
+		Encoding:       awstypes.EncodingType(encoding),
+		SSHPublicKeyId: aws.String(id),
+		UserName:       aws.String(username),
+	}
+
+	output, err := conn.GetSSHPublicKey(ctx, input)
+
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.SSHPublicKey == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SSHPublicKey, nil
 }
 
 func cleanSSHKey(key string) string {

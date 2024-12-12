@@ -21,16 +21,16 @@ data "aws_cloudformation_type" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Optional) ARN of the CloudFormation Type. For example, `arn:aws:cloudformation:us-west-2::type/resource/AWS-EC2-VPC`.
 * `type` - (Optional) CloudFormation Registry Type. For example, `RESOURCE`.
 * `type_name` - (Optional) CloudFormation Type name. For example, `AWS::EC2::VPC`.
 * `version_id` - (Optional) Identifier of the CloudFormation Type version.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `default_version_id` - Identifier of the CloudFormation Type default version.
 * `deprecated_status` - Deprecation status of the CloudFormation Type.

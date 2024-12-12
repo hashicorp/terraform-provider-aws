@@ -1,26 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceDistributionConfigurations() *schema.Resource {
+// @SDKDataSource("aws_imagebuilder_distribution_configurations", name="Distribution Configurations")
+func dataSourceDistributionConfigurations() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDistributionConfigurationsRead,
+		ReadWithoutTimeout: dataSourceDistributionConfigurationsRead,
+
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
-			"names": {
+			names.AttrFilter: namevaluesfilters.Schema(),
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -29,47 +39,46 @@ func DataSourceDistributionConfigurations() *schema.Resource {
 	}
 }
 
-func dataSourceDistributionConfigurationsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceDistributionConfigurationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.ListDistributionConfigurationsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
+	if v, ok := d.GetOk(names.AttrFilter); ok {
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
-	var results []*imagebuilder.DistributionConfigurationSummary
-
-	err := conn.ListDistributionConfigurationsPages(input, func(page *imagebuilder.ListDistributionConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, distributionConfigurationSummary := range page.DistributionConfigurationSummaryList {
-			if distributionConfigurationSummary == nil {
-				continue
-			}
-
-			results = append(results, distributionConfigurationSummary)
-		}
-
-		return !lastPage
-	})
+	distributionConfigurations, err := findDistributionConfigurations(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Builder Distribution Configurations: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Distribution Configurations: %s", err)
 	}
 
-	var arns, names []string
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(distributionConfigurations, func(v awstypes.DistributionConfigurationSummary) string {
+		return aws.ToString(v.Arn)
+	}))
+	d.Set(names.AttrNames, tfslices.ApplyToAll(distributionConfigurations, func(v awstypes.DistributionConfigurationSummary) string {
+		return aws.ToString(v.Name)
+	}))
 
-	for _, r := range results {
-		arns = append(arns, aws.StringValue(r.Arn))
-		names = append(names, aws.StringValue(r.Name))
+	return diags
+}
+
+func findDistributionConfigurations(ctx context.Context, conn *imagebuilder.Client, input *imagebuilder.ListDistributionConfigurationsInput) ([]awstypes.DistributionConfigurationSummary, error) {
+	var output []awstypes.DistributionConfigurationSummary
+
+	pages := imagebuilder.NewListDistributionConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.DistributionConfigurationSummaryList...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
-	d.Set("names", names)
-
-	return nil
+	return output, nil
 }

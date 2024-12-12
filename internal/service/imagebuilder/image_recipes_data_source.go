@@ -1,85 +1,94 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceImageRecipes() *schema.Resource {
+// @SDKDataSource("aws_imagebuilder_image_recipes", name="Image Recipes")
+func dataSourceImageRecipes() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceImageRecipesRead,
+		ReadWithoutTimeout: dataSourceImageRecipesRead,
+
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
-			"names": {
+			names.AttrFilter: namevaluesfilters.Schema(),
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"owner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"Self", "Shared", "Amazon"}, false),
+			names.AttrOwner: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.Ownership](),
 			},
 		},
 	}
 }
 
-func dataSourceImageRecipesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.ListImageRecipesInput{}
 
-	if v, ok := d.GetOk("owner"); ok {
-		input.Owner = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrFilter); ok {
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
+	if v, ok := d.GetOk(names.AttrOwner); ok {
+		input.Owner = awstypes.Ownership(v.(string))
 	}
 
-	var results []*imagebuilder.ImageRecipeSummary
-
-	err := conn.ListImageRecipesPages(input, func(page *imagebuilder.ListImageRecipesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, imageRecipeSummary := range page.ImageRecipeSummaryList {
-			if imageRecipeSummary == nil {
-				continue
-			}
-
-			results = append(results, imageRecipeSummary)
-		}
-
-		return !lastPage
-	})
+	imageRecipes, err := findImageRecipes(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Builder Image Recipes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipes: %s", err)
 	}
 
-	var arns, names []string
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(imageRecipes, func(v awstypes.ImageRecipeSummary) string {
+		return aws.ToString(v.Arn)
+	}))
+	d.Set(names.AttrNames, tfslices.ApplyToAll(imageRecipes, func(v awstypes.ImageRecipeSummary) string {
+		return aws.ToString(v.Name)
+	}))
 
-	for _, r := range results {
-		arns = append(arns, aws.StringValue(r.Arn))
-		names = append(names, aws.StringValue(r.Name))
+	return diags
+}
+
+func findImageRecipes(ctx context.Context, conn *imagebuilder.Client, input *imagebuilder.ListImageRecipesInput) ([]awstypes.ImageRecipeSummary, error) {
+	var output []awstypes.ImageRecipeSummary
+
+	pages := imagebuilder.NewListImageRecipesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ImageRecipeSummaryList...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
-	d.Set("names", names)
-
-	return nil
+	return output, nil
 }

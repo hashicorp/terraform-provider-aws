@@ -1,13 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+)
 
 // These tests affect regional defaults, so they needs to be serialized
 func TestAccSSM_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"DefaultPatchBaseline": {
-			"basic":                testAccSSMDefaultPatchBaseline_basic,
-			"disappears":           testAccSSMDefaultPatchBaseline_disappears,
+			acctest.CtBasic:        testAccSSMDefaultPatchBaseline_basic,
+			acctest.CtDisappears:   testAccSSMDefaultPatchBaseline_disappears,
 			"otherOperatingSystem": testAccSSMDefaultPatchBaseline_otherOperatingSystem,
 			"patchBaselineARN":     testAccSSMDefaultPatchBaseline_patchBaselineARN,
 			"systemDefault":        testAccSSMDefaultPatchBaseline_systemDefault,
@@ -21,15 +30,5 @@ func TestAccSSM_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

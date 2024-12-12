@@ -47,7 +47,7 @@ resource "aws_cloudsearch_domain" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `endpoint_options` - (Optional) Domain endpoint options. Documented below.
 * `index_field` - (Optional) The index fields for documents added to the domain. Documented below.
@@ -74,7 +74,7 @@ This configuration block supports the following attributes:
 
 This configuration block supports the following attributes:
 
-* `name` - (Required) A unique name for the field. Field names must begin with a letter and be at least 3 and no more than 64 characters long. The allowed characters are: `a`-`z` (lower-case letters), `0`-`9`, and `_` (underscore). The name `score` is reserved and cannot be used as a field name.
+* `name` - (Required) A unique name for the field. Field names must begin with a letter and be at least 1 and no more than 64 characters long. The allowed characters are: `a`-`z` (lower-case letters), `0`-`9`, and `_` (underscore). The name `score` is reserved and cannot be used as a field name.
 * `type` - (Required) The field type. Valid values: `date`, `date-array`, `double`, `double-array`, `int`, `int-array`, `literal`, `literal-array`, `text`, `text-array`.
 * `analysis_scheme` - (Optional) The analysis scheme you want to use for a `text` field. The analysis scheme specifies the language-specific text processing options that are used during indexing.
 * `default_value` - (Optional) The default value for the field. This value is used when no value is specified for the field in the document data.
@@ -85,9 +85,9 @@ This configuration block supports the following attributes:
 * `sort` - (Optional) You can enable the property to be sortable.
 * `source_fields` - (Optional) A comma-separated list of source fields to map to the field. Specifying a source field copies data from one field to another, enabling you to use the same source data in different ways by configuring different options for the fields.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The domain's ARN.
 * `document_service_endpoint` - The service endpoint for updating documents in a search domain.
@@ -104,8 +104,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudSearch Domains can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudSearch Domains using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudsearch_domain.example
+  id = "example-domain"
+}
 ```
-$ terraform import aws_cloudsearch_domain.example example-domain
+
+Using `terraform import`, import CloudSearch Domains using the `name`. For example:
+
+```console
+% terraform import aws_cloudsearch_domain.example example-domain
 ```

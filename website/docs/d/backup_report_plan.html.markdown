@@ -20,13 +20,13 @@ data "aws_backup_report_plan" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Backup report plan name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to the arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the backup report plan.
 * `creation_time` - Date and time that a report plan is created, in Unix format and Coordinated Universal Time (UTC).
@@ -38,15 +38,20 @@ In addition to the arguments above, the following attributes are exported:
 * `tags` - Metadata that you can assign to help organize the report plans you create.
 
 ### Report Delivery Channel Attributes
-For **report_delivery_channel** the following attributes are supported:
+
+`report_delivery_channel` has the following attributes:
 
 * `formats` - List of the format of your reports: CSV, JSON, or both.
 * `s3_bucket_name` - Unique name of the S3 bucket that receives your reports.
 * `s3_key_prefix` - Prefix for where Backup Audit Manager delivers your reports to Amazon S3. The prefix is this part of the following path: s3://your-bucket-name/prefix/Backup/us-west-2/year/month/day/report-name.
 
 ### Report Setting Attributes
-For **report_setting** the following attributes are supported:
 
+`report_setting` has the following attributes:
+
+* `accounts` - (Optional) Specifies the list of accounts a report covers.
 * `framework_arns` - ARNs of the frameworks a report covers.
 * `number_of_frameworks` - Specifies the number of frameworks a report covers.
+* `organization_units` - (Optional) Specifies the list of Organizational Units a report covers.
+* `regions` - (Optional) Specifies the list of regions a report covers.
 * `report_template` - Identifies the report template for the report. Reports are built using a report template.

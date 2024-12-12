@@ -1,26 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceInfrastructureConfigurations() *schema.Resource {
+// @SDKDataSource("aws_imagebuilder_infrastructure_configurations", name="Infrastructure Configurations")
+func dataSourceInfrastructureConfigurations() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInfrastructureConfigurationsRead,
+		ReadWithoutTimeout: dataSourceInfrastructureConfigurationsRead,
+
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
-			"names": {
+			names.AttrFilter: namevaluesfilters.Schema(),
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -29,47 +39,46 @@ func DataSourceInfrastructureConfigurations() *schema.Resource {
 	}
 }
 
-func dataSourceInfrastructureConfigurationsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceInfrastructureConfigurationsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.ListInfrastructureConfigurationsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
+	if v, ok := d.GetOk(names.AttrFilter); ok {
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
-	var results []*imagebuilder.InfrastructureConfigurationSummary
-
-	err := conn.ListInfrastructureConfigurationsPages(input, func(page *imagebuilder.ListInfrastructureConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, infrastructureConfigurationSummary := range page.InfrastructureConfigurationSummaryList {
-			if infrastructureConfigurationSummary == nil {
-				continue
-			}
-
-			results = append(results, infrastructureConfigurationSummary)
-		}
-
-		return !lastPage
-	})
+	infrastructureConfigurations, err := findInfrastructureConfigurations(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Builder Infrastructure Configurations: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Infrastructure Configurations: %s", err)
 	}
 
-	var arns, names []string
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(infrastructureConfigurations, func(v awstypes.InfrastructureConfigurationSummary) string {
+		return aws.ToString(v.Arn)
+	}))
+	d.Set(names.AttrNames, tfslices.ApplyToAll(infrastructureConfigurations, func(v awstypes.InfrastructureConfigurationSummary) string {
+		return aws.ToString(v.Name)
+	}))
 
-	for _, r := range results {
-		arns = append(arns, aws.StringValue(r.Arn))
-		names = append(names, aws.StringValue(r.Name))
+	return diags
+}
+
+func findInfrastructureConfigurations(ctx context.Context, conn *imagebuilder.Client, input *imagebuilder.ListInfrastructureConfigurationsInput) ([]awstypes.InfrastructureConfigurationSummary, error) {
+	var output []awstypes.InfrastructureConfigurationSummary
+
+	pages := imagebuilder.NewListInfrastructureConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.InfrastructureConfigurationSummaryList...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
-	d.Set("names", names)
-
-	return nil
+	return output, nil
 }

@@ -24,7 +24,9 @@ data "aws_service_discovery_dns_namespace" "test" {
 * `name` - (Required) Name of the namespace.
 * `type` - (Required) Type of the namespace. Allowed values are `DNS_PUBLIC` or `DNS_PRIVATE`.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the namespace.
 * `description` - Description of the namespace.

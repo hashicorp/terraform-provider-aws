@@ -1,24 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
 package main
 
 import (
-	"bytes"
-	"encoding/csv"
-	"fmt"
-	"log"
-	"os"
-	"sort"
+	"cmp"
+	_ "embed"
+	"slices"
 	"strings"
-	"text/template"
 
-	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	filename      = `../../../website/allowed-subcategories.txt`
-	namesDataFile = "../../../names/names_data.csv"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type ServiceDatum struct {
@@ -30,77 +25,51 @@ type TemplateData struct {
 }
 
 func main() {
-	fmt.Printf("Generating %s\n", strings.TrimPrefix(filename, "../../../"))
+	const (
+		filename = `../../../website/allowed-subcategories.txt`
+	)
+	g := common.NewGenerator()
 
-	f, err := os.Open(namesDataFile)
+	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
+
+	data, err := data.ReadAllServiceData()
+
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-
-	csvReader := csv.NewReader(f)
-
-	data, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{}
 
-	for i, l := range data {
-		if i < 1 { // no header
+	for _, l := range data {
+		if l.Exclude() && !l.AllowedSubcategory() {
 			continue
 		}
 
-		if l[names.ColExclude] != "" && l[names.ColAllowedSubcategory] == "" {
+		if l.NotImplemented() {
 			continue
 		}
 
 		sd := ServiceDatum{
-			HumanFriendly: l[names.ColHumanFriendly],
+			HumanFriendly: l.HumanFriendly(),
 		}
 
 		td.Services = append(td.Services, sd)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		return td.Services[i].HumanFriendly < td.Services[j].HumanFriendly
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.HumanFriendly, b.HumanFriendly)
 	})
 
-	writeTemplate(tmpl, "allowsubcats", td)
-}
+	d := g.NewUnformattedFileDestination(filename)
 
-func writeTemplate(body string, templateName string, td TemplateData) {
-	// If the file doesn't exist, create it, or append to the file
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
+	if err := d.BufferTemplate("allowsubcats", tmpl, td); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
-	tplate, err := template.New(templateName).Parse(body)
-	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tplate.Execute(&buffer, td)
-	if err != nil {
-		log.Fatalf("error executing template: %s", err)
-	}
-
-	if _, err := f.Write(buffer.Bytes()); err != nil {
-		f.Close()
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 }
 
-var tmpl = `
-{{- range .Services }}
-{{ .HumanFriendly }}
-{{- end }}
-`
+//go:embed file.tmpl
+var tmpl string

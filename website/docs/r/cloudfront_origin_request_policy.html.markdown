@@ -40,7 +40,7 @@ resource "aws_cloudfront_origin_request_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Unique name to identify the origin request policy.
 * `comment` - (Optional) Comment to describe the origin request policy.
@@ -50,34 +50,43 @@ The following arguments are supported:
 
 ### Cookies Config
 
-`cookie_behavior` - (Required) Determines whether any cookies in viewer requests are included in the origin request key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist` `all`.
+`cookie_behavior` - (Required) Determines whether any cookies in viewer requests are included in the origin request key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`, `all`, `allExcept`.
 `cookies` - (Optional) Object that contains a list of cookie names. See [Items](#items) for more information.
 
 ### Headers Config
 
-`header_behavior` - (Required) Determines whether any HTTP headers are included in the origin request key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`, `allViewer`, `allViewerAndWhitelistCloudFront`.
+`header_behavior` - (Required) Determines whether any HTTP headers are included in the origin request key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`, `allViewer`, `allViewerAndWhitelistCloudFront`, `allExcept`.
 `headers` - (Optional) Object that contains a list of header names. See [Items](#items) for more information.
 
 ### Query String Config
 
-`query_string_behavior` - (Required) Determines whether any URL query strings in viewer requests are included in the origin request key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`, `all`.
+`query_string_behavior` - (Required) Determines whether any URL query strings in viewer requests are included in the origin request key and automatically included in requests that CloudFront sends to the origin. Valid values are `none`, `whitelist`, `all`, `allExcept`.
 `query_strings` - (Optional) Object that contains a list of query string names. See [Items](#items) for more information.
 
 ### Items
 
 `items` - (Required) List of item names (cookies, headers, or query strings).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `etag` - The current version of the origin request policy.
 * `id` - The identifier for the origin request policy.
 
 ## Import
 
-Cloudfront Origin Request Policies can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudfront Origin Request Policies using the `id`. For example:
 
+```terraform
+import {
+  to = aws_cloudfront_origin_request_policy.policy
+  id = "ccca32ef-dce3-4df3-80df-1bd3000bc4d3"
+}
 ```
-$ terraform import aws_cloudfront_origin_request_policy.policy ccca32ef-dce3-4df3-80df-1bd3000bc4d3
+
+Using `terraform import`, import Cloudfront Origin Request Policies using the `id`. For example:
+
+```console
+% terraform import aws_cloudfront_origin_request_policy.policy ccca32ef-dce3-4df3-80df-1bd3000bc4d3
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
@@ -7,6 +10,8 @@ import (
 )
 
 func TestTrimLogGroupARNWildcardSuffix(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName    string
 		InputARN    string
@@ -29,6 +34,8 @@ func TestTrimLogGroupARNWildcardSuffix(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			got := tflogs.TrimLogGroupARNWildcardSuffix(testCase.InputARN)
 
 			if got != testCase.ExpectedARN {

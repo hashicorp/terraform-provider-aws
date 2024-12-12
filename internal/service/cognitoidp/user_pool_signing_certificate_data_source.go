@@ -1,24 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceUserPoolSigningCertificate() *schema.Resource {
+// @SDKDataSource("aws_cognito_user_pool_signing_certificate", name="User Pool Signing Certificate")
+func dataSourceUserPoolSigningCertificate() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserPoolSigningCertificateRead,
+		ReadWithoutTimeout: dataSourceUserPoolSigningCertificateRead,
 
 		Schema: map[string]*schema.Schema{
-			"certificate": {
+			names.AttrCertificate: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"user_pool_id": {
+			names.AttrUserPoolID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -26,22 +37,44 @@ func DataSourceUserPoolSigningCertificate() *schema.Resource {
 	}
 }
 
-func dataSourceUserPoolSigningCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func dataSourceUserPoolSigningCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
-	userPoolID := d.Get("user_pool_id").(string)
+	userPoolID := d.Get(names.AttrUserPoolID).(string)
+	output, err := findSigningCertificateByID(ctx, conn, userPoolID)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool (%s) Signing Certificate: %s", userPoolID, err)
+	}
+
+	d.SetId(userPoolID)
+	d.Set(names.AttrCertificate, output.Certificate)
+
+	return diags
+}
+
+func findSigningCertificateByID(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolID string) (*cognitoidentityprovider.GetSigningCertificateOutput, error) {
 	input := &cognitoidentityprovider.GetSigningCertificateInput{
 		UserPoolId: aws.String(userPoolID),
 	}
 
-	output, err := conn.GetSigningCertificate(input)
+	output, err := conn.GetSigningCertificate(ctx, input)
 
-	if err != nil {
-		return fmt.Errorf("error reading Cognito User Pool (%s) Signing Certificate: %w", userPoolID, err)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	d.SetId(userPoolID)
-	d.Set("certificate", output.Certificate)
+	if err != nil {
+		return nil, err
+	}
 
-	return nil
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

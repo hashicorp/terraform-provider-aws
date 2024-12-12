@@ -68,14 +68,14 @@ The given filters must match exactly one VPC endpoint service whose data will be
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeVpcEndpointServices API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcEndpointServices.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `acceptance_required` - Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
 * `arn` - ARN of the VPC endpoint service.
@@ -84,6 +84,7 @@ In addition to all arguments above, the following attributes are exported:
 * `manages_vpc_endpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
 * `owner` - AWS account ID of the service owner or `amazon`.
 * `private_dns_name` - Private DNS name for the service.
+* `private_dns_names` - Private DNS names assigned to the VPC endpoint service.
 * `service_id` - ID of the endpoint service.
 * `supported_ip_address_types` - The supported IP address types.
 * `tags` - Map of tags assigned to the resource.

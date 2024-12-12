@@ -1,38 +1,46 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/opsworks"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v opsworks.RdsDbInstance
+	var v awstypes.RdsDbInstance
 	resourceName := "aws_opsworks_rds_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRDSDBInstanceDestroy,
+		CheckDestroy:             testAccCheckRDSDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRDSDBInstanceConfig_basic(rName, "user1", "password1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSDBInstanceExists(resourceName, &v),
+					testAccCheckRDSDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "db_password", "password1"),
 					resource.TestCheckResourceAttr(resourceName, "db_user", "user1"),
 				),
@@ -40,7 +48,7 @@ func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
 			{
 				Config: testAccRDSDBInstanceConfig_basic(rName, "user2", "password1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSDBInstanceExists(resourceName, &v),
+					testAccCheckRDSDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "db_password", "password1"),
 					resource.TestCheckResourceAttr(resourceName, "db_user", "user2"),
 				),
@@ -48,7 +56,7 @@ func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
 			{
 				Config: testAccRDSDBInstanceConfig_basic(rName, "user2", "password2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSDBInstanceExists(resourceName, &v),
+					testAccCheckRDSDBInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "db_password", "password2"),
 					resource.TestCheckResourceAttr(resourceName, "db_user", "user2"),
 				),
@@ -58,25 +66,28 @@ func TestAccOpsWorksRDSDBInstance_basic(t *testing.T) {
 }
 
 func TestAccOpsWorksRDSDBInstance_disappears(t *testing.T) {
+	acctest.Skip(t, "skipping test; Amazon OpsWorks has been deprecated and will be removed in the next major release")
+
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v opsworks.RdsDbInstance
+	var v awstypes.RdsDbInstance
 	resourceName := "aws_opsworks_rds_db_instance.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.OpsWorks) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRDSDBInstanceDestroy,
+		CheckDestroy:             testAccCheckRDSDBInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRDSDBInstanceConfig_basic(rName, "user1", "password1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRDSDBInstanceExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopsworks.ResourceRDSDBInstance(), resourceName),
+					testAccCheckRDSDBInstanceExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopsworks.ResourceRDSDBInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -84,7 +95,7 @@ func TestAccOpsWorksRDSDBInstance_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckRDSDBInstanceExists(n string, v *opsworks.RdsDbInstance) resource.TestCheckFunc {
+func testAccCheckRDSDBInstanceExists(ctx context.Context, n string, v *awstypes.RdsDbInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -95,9 +106,9 @@ func testAccCheckRDSDBInstanceExists(n string, v *opsworks.RdsDbInstance) resour
 			return fmt.Errorf("No OpsWorks RDS DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
-		output, err := tfopsworks.FindRDSDBInstanceByTwoPartKey(conn, rs.Primary.Attributes["rds_db_instance_arn"], rs.Primary.Attributes["stack_id"])
+		output, err := tfopsworks.FindRDSDBInstanceByTwoPartKey(ctx, conn, rs.Primary.Attributes["rds_db_instance_arn"], rs.Primary.Attributes["stack_id"])
 
 		if err != nil {
 			return err
@@ -109,35 +120,41 @@ func testAccCheckRDSDBInstanceExists(n string, v *opsworks.RdsDbInstance) resour
 	}
 }
 
-func testAccCheckRDSDBInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+func testAccCheckRDSDBInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_rds_db_instance" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opsworks_rds_db_instance" {
+				continue
+			}
+
+			_, err := tfopsworks.FindRDSDBInstanceByTwoPartKey(ctx, conn, rs.Primary.Attributes["rds_db_instance_arn"], rs.Primary.Attributes["stack_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("OpsWorks RDS DB Instance %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfopsworks.FindRDSDBInstanceByTwoPartKey(conn, rs.Primary.Attributes["rds_db_instance_arn"], rs.Primary.Attributes["stack_id"])
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("OpsWorks RDS DB Instance %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccRDSDBInstanceConfig_basic(rName, userName, password string) string {
 	return acctest.ConfigCompose(testAccStackConfig_basic(rName), fmt.Sprintf(`
+data "aws_rds_engine_version" "default" {
+  engine = "mysql"
+}
+
 data "aws_rds_orderable_db_instance" "test" {
-  engine         = "mysql"
-  engine_version = "8.0.25"
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
   license_model  = "general-public-license"
   storage_type   = "standard"
 
@@ -163,8 +180,8 @@ resource "aws_opsworks_rds_db_instance" "test" {
   stack_id = aws_opsworks_stack.test.id
 
   rds_db_instance_arn = aws_db_instance.test.arn
-  db_user             = %[1]q
-  db_password         = %[2]q
+  db_user             = %[2]q
+  db_password         = %[3]q
 }
-`, userName, password))
+`, rName, userName, password))
 }

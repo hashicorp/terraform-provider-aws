@@ -1,23 +1,20 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package timestreamwrite
 
 import (
-	"context"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/timestreamwrite"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_timestreamwrite_database", &resource.Sweeper{
 		Name:         "aws_timestreamwrite_database",
 		F:            sweepDatabases,
@@ -31,116 +28,83 @@ func init() {
 }
 
 func sweepDatabases(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).TimestreamWriteConn
-	ctx := context.Background()
-
-	var sweeperErrs *multierror.Error
-
 	input := &timestreamwrite.ListDatabasesInput{}
+	conn := client.TimestreamWriteClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListDatabasesPagesWithContext(ctx, input, func(page *timestreamwrite.ListDatabasesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := timestreamwrite.NewListDatabasesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Timestream Database sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, database := range page.Databases {
-			if database == nil {
-				continue
-			}
+		if err != nil {
+			return fmt.Errorf("error listing Timestream Databases (%s): %w", region, err)
+		}
 
-			dbName := aws.StringValue(database.DatabaseName)
-
-			log.Printf("[INFO] Deleting Timestream Database (%s)", dbName)
-			r := ResourceDatabase()
+		for _, v := range page.Databases {
+			r := resourceDatabase()
 			d := r.Data(nil)
-			d.SetId(dbName)
+			d.SetId(aws.ToString(v.DatabaseName))
 
-			diags := r.DeleteWithoutTimeout(ctx, d, client)
-
-			if diags != nil && diags.HasError() {
-				for _, d := range diags {
-					if d.Severity == diag.Error {
-						sweeperErr := fmt.Errorf("error deleting Timestream Database (%s): %s", dbName, d.Summary)
-						log.Printf("[ERROR] %s", sweeperErr)
-						sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-					}
-				}
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Timestream Database sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Timestream Databases: %w", err))
+		return fmt.Errorf("error sweeping Timestream Databases (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }
 
 func sweepTables(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).TimestreamWriteConn
-	ctx := context.Background()
-
-	var sweeperErrs *multierror.Error
-
 	input := &timestreamwrite.ListTablesInput{}
+	conn := client.TimestreamWriteClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListTablesPagesWithContext(ctx, input, func(page *timestreamwrite.ListTablesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := timestreamwrite.NewListTablesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Timestream Table sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, table := range page.Tables {
-			if table == nil {
-				continue
-			}
+		if err != nil {
+			return fmt.Errorf("error listing Timestream Tables (%s): %w", region, err)
+		}
 
-			tableName := aws.StringValue(table.TableName)
-			dbName := aws.StringValue(table.TableName)
-
-			log.Printf("[INFO] Deleting Timestream Table (%s) from Database (%s)", tableName, dbName)
-			r := ResourceTable()
+		for _, v := range page.Tables {
+			r := resourceTable()
 			d := r.Data(nil)
-			d.SetId(fmt.Sprintf("%s:%s", tableName, dbName))
+			d.SetId(tableCreateResourceID(aws.ToString(v.TableName), aws.ToString(v.DatabaseName)))
 
-			diags := r.DeleteWithoutTimeout(ctx, d, client)
-
-			if diags != nil && diags.HasError() {
-				for _, d := range diags {
-					if d.Severity == diag.Error {
-						sweeperErr := fmt.Errorf("error deleting Timestream Table (%s): %s", dbName, d.Summary)
-						log.Printf("[ERROR] %s", sweeperErr)
-						sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-					}
-				}
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Timestream Table sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Timestream Tables: %w", err))
+		return fmt.Errorf("error sweeping Timestream Tables (%s): %w", region, err)
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	return nil
 }

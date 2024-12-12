@@ -1,27 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
-	"fmt"
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceClusterCredentials() *schema.Resource {
+// @SDKDataSource("aws_redshift_cluster_credentials", name="Cluster Credentials")
+func dataSourceClusterCredentials() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterCredentialsRead,
+		ReadWithoutTimeout: dataSourceClusterCredentialsRead,
 
 		Schema: map[string]*schema.Schema{
 			"auto_create": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"cluster_identifier": {
+			names.AttrClusterIdentifier: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -57,36 +64,37 @@ func DataSourceClusterCredentials() *schema.Resource {
 	}
 }
 
-func dataSourceClusterCredentialsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func dataSourceClusterCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	clusterID := d.Get("cluster_identifier").(string)
+	clusterID := d.Get(names.AttrClusterIdentifier).(string)
 	input := &redshift.GetClusterCredentialsInput{
 		AutoCreate:        aws.Bool(d.Get("auto_create").(bool)),
 		ClusterIdentifier: aws.String(clusterID),
 		DbUser:            aws.String(d.Get("db_user").(string)),
-		DurationSeconds:   aws.Int64(int64(d.Get("duration_seconds").(int))),
+		DurationSeconds:   aws.Int32(int32(d.Get("duration_seconds").(int))),
 	}
 
 	if v, ok := d.GetOk("db_groups"); ok && v.(*schema.Set).Len() > 0 {
-		input.DbGroups = flex.ExpandStringSet(v.(*schema.Set))
+		input.DbGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("db_name"); ok {
 		input.DbName = aws.String(v.(string))
 	}
 
-	creds, err := conn.GetClusterCredentials(input)
+	creds, err := conn.GetClusterCredentials(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Cluster Credentials for Cluster (%s): %w", clusterID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster Credentials for Cluster (%s): %s", clusterID, err)
 	}
 
 	d.SetId(clusterID)
 
 	d.Set("db_password", creds.DbPassword)
 	d.Set("db_user", creds.DbUser)
-	d.Set("expiration", aws.TimeValue(creds.Expiration).Format(time.RFC3339))
+	d.Set("expiration", aws.ToTime(creds.Expiration).Format(time.RFC3339))
 
-	return nil
+	return diags
 }

@@ -1,35 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESV2DedicatedIPPoolDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_sesv2_dedicated_ip_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckDedicatedIPPool(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDedicatedIPPool(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy,
+		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDedicatedIPPoolDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDedicatedIPPoolExists(dataSourceName),
+					testAccCheckDedicatedIPPoolExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "pool_name", rName),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "ses", regexp.MustCompile(`dedicated-ip-pool/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, dataSourceName, names.AttrARN, "ses", regexache.MustCompile(`dedicated-ip-pool/.+`)),
 				),
 			},
 		},
@@ -43,8 +47,7 @@ resource "aws_sesv2_dedicated_ip_pool" "test" {
 }
 
 data "aws_sesv2_dedicated_ip_pool" "test" {
-  depends_on = [aws_sesv2_dedicated_ip_pool.test]
-  pool_name  = %[1]q
+  pool_name = aws_sesv2_dedicated_ip_pool.test.pool_name
 }
 `, poolName, poolName)
 }

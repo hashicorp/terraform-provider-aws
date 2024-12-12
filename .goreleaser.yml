@@ -1,7 +1,9 @@
+version: 2
 archives:
   - files:
-      # Ensure only built binary is archived
-      - 'none*'
+      # Ensure only built binary and license file are archived
+      - src: LICENSE
+        dst: LICENSE.txt
     format: zip
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 before:
@@ -36,7 +38,7 @@ builds:
       - goarch: arm64
         goos: openbsd
     ldflags:
-      - -s -w -X version.ProviderVersion={{.Version}}
+      - -s -w -X 'github.com/hashicorp/terraform-provider-aws/version.ProviderVersion={{ .Version }}'
     mod_timestamp: '{{ .CommitTimestamp }}'
 checksum:
   algorithm: sha256
@@ -76,4 +78,4 @@ signs:
     id: key-id
     signature: ${artifact}.72D7468F.sig
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"

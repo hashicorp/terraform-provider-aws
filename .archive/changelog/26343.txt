@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_redshiftdata_statement: Fix `ValidationException` errors reading expired statements 
+```

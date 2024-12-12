@@ -1,34 +1,45 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
-	"encoding/base64"
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 
-	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceCertificate() *schema.Resource {
+// @SDKResource("aws_dms_certificate", name="Certificate")
+// @Tags(identifierAttribute="certificate_arn")
+func resourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCertificateCreate,
-		Read:   resourceCertificateRead,
-		Update: resourceCertificateUpdate,
-		Delete: resourceCertificateDelete,
+		CreateWithoutTimeout: resourceCertificateCreate,
+		ReadWithoutTimeout:   resourceCertificateRead,
+		UpdateWithoutTimeout: resourceCertificateUpdate,
+		DeleteWithoutTimeout: resourceCertificateDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -38,176 +49,167 @@ func ResourceCertificate() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile("^[a-zA-Z][a-zA-Z0-9-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end in a hyphen"),
+					validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
 				),
 			},
 			"certificate_pem": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				ForceNew:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Sensitive:    true,
+				ExactlyOneOf: []string{"certificate_pem", "certificate_wallet"},
 			},
 			"certificate_wallet": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				ForceNew:  true,
-				Sensitive: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Sensitive:    true,
+				ExactlyOneOf: []string{"certificate_pem", "certificate_wallet"},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
+
 	certificateID := d.Get("certificate_id").(string)
-
-	request := &dms.ImportCertificateInput{
+	input := &dms.ImportCertificateInput{
 		CertificateIdentifier: aws.String(certificateID),
-		Tags:                  Tags(tags.IgnoreAWS()),
+		Tags:                  getTagsIn(ctx),
 	}
 
-	pem, pemSet := d.GetOk("certificate_pem")
-	wallet, walletSet := d.GetOk("certificate_wallet")
-
-	if !pemSet && !walletSet {
-		return fmt.Errorf("Must set either certificate_pem or certificate_wallet for DMS Certificate (%s)", certificateID)
-	}
-	if pemSet && walletSet {
-		return fmt.Errorf("Cannot set both certificate_pem and certificate_wallet for DMS Certificate (%s)", certificateID)
+	if v, ok := d.GetOk("certificate_pem"); ok {
+		input.CertificatePem = aws.String(v.(string))
 	}
 
-	if pemSet {
-		request.CertificatePem = aws.String(pem.(string))
-	}
-	if walletSet {
-		certWallet, err := base64.StdEncoding.DecodeString(wallet.(string))
+	if v, ok := d.GetOk("certificate_wallet"); ok {
+		v, err := itypes.Base64Decode(v.(string))
 		if err != nil {
-			return fmt.Errorf("error Base64 decoding certificate_wallet for DMS Certificate (%s): %w", certificateID, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		request.CertificateWallet = certWallet
+		input.CertificateWallet = v
 	}
 
-	_, err := conn.ImportCertificate(request)
+	_, err := conn.ImportCertificate(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating DMS certificate (%s): %w", certificateID, err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Certificate (%s): %s", certificateID, err)
 	}
 
 	d.SetId(certificateID)
-	return resourceCertificateRead(d, meta)
+
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	response, err := conn.DescribeCertificates(&dms.DescribeCertificatesInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("certificate-id"),
-				Values: []*string{aws.String(d.Id())}, // Must use d.Id() to work with import.
-			},
-		},
+	certificate, err := findCertificateByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DMS Certificate (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading DMS Certificate (%s): %s", d.Id(), err)
+	}
+
+	d.SetId(aws.ToString(certificate.CertificateIdentifier))
+	d.Set("certificate_id", certificate.CertificateIdentifier)
+	d.Set(names.AttrCertificateARN, certificate.CertificateArn)
+	if v := aws.ToString(certificate.CertificatePem); v != "" {
+		d.Set("certificate_pem", v)
+	}
+	if len(certificate.CertificateWallet) != 0 {
+		d.Set("certificate_wallet", itypes.Base64EncodeOnce(certificate.CertificateWallet))
+	}
+
+	return diags
+}
+
+func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Tags only.
+
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
+}
+
+func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
+
+	log.Printf("[DEBUG] Deleting DMS Certificate: %s", d.Id())
+	_, err := conn.DeleteCertificate(ctx, &dms.DeleteCertificateInput{
+		CertificateArn: aws.String(d.Get(names.AttrCertificateARN).(string)),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		log.Printf("[WARN] DMS Certificate (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DMS Certificate (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DMS Certificate (%s): %s", d.Id(), err)
 	}
 
-	if response == nil || len(response.Certificates) == 0 || response.Certificates[0] == nil {
-		if d.IsNewResource() {
-			return fmt.Errorf("error reading DMS Certificate (%s): not found", d.Id())
-		}
-		log.Printf("[WARN] DMS Certificate (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	err = resourceCertificateSetState(d, response.Certificates[0])
-	if err != nil {
-		return err
-	}
-
-	tags, err := ListTags(conn, d.Get("certificate_arn").(string))
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for DMS Certificate (%s): %w", d.Get("certificate_arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-
-	if d.HasChange("tags_all") {
-		arn := d.Get("certificate_arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating DMS Certificate (%s) tags: %w", arn, err)
-		}
+func findCertificateByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.Certificate, error) {
+	input := &dms.DescribeCertificatesInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("certificate-id"),
+				Values: []string{id},
+			},
+		},
 	}
 
-	return resourceCertificateRead(d, meta)
+	return findCertificate(ctx, conn, input)
 }
 
-func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-
-	request := &dms.DeleteCertificateInput{
-		CertificateArn: aws.String(d.Get("certificate_arn").(string)),
-	}
-
-	_, err := conn.DeleteCertificate(request)
+func findCertificate(ctx context.Context, conn *dms.Client, input *dms.DescribeCertificatesInput) (*awstypes.Certificate, error) {
+	output, err := findCertificates(ctx, conn, input)
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-			return nil
-		}
-		return fmt.Errorf("error deleting DMS Certificate (%s): %w", d.Id(), err)
+		return nil, err
 	}
 
-	return nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func resourceCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) error {
-	d.SetId(aws.StringValue(cert.CertificateIdentifier))
+func findCertificates(ctx context.Context, conn *dms.Client, input *dms.DescribeCertificatesInput) ([]awstypes.Certificate, error) {
+	var output []awstypes.Certificate
 
-	d.Set("certificate_id", cert.CertificateIdentifier)
-	d.Set("certificate_arn", cert.CertificateArn)
+	pages := dms.NewDescribeCertificatesPaginator(conn, input)
 
-	if aws.StringValue(cert.CertificatePem) != "" {
-		d.Set("certificate_pem", cert.CertificatePem)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Certificates...)
 	}
-	if cert.CertificateWallet != nil && len(cert.CertificateWallet) != 0 {
-		d.Set("certificate_wallet", verify.Base64Encode(cert.CertificateWallet))
-	}
 
-	return nil
+	return output, nil
 }

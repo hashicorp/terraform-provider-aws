@@ -1,38 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceHostedPrivateVirtualInterface() *schema.Resource {
+// @SDKResource("aws_dx_hosted_private_virtual_interface", name="Hosted Private Virtual Interface")
+func resourceHostedPrivateVirtualInterface() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostedPrivateVirtualInterfaceCreate,
-		Read:   resourceHostedPrivateVirtualInterfaceRead,
-		Delete: resourceHostedPrivateVirtualInterfaceDelete,
+		CreateWithoutTimeout: resourceHostedPrivateVirtualInterfaceCreate,
+		ReadWithoutTimeout:   resourceHostedPrivateVirtualInterfaceRead,
+		DeleteWithoutTimeout: resourceHostedPrivateVirtualInterfaceDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: resourceHostedPrivateVirtualInterfaceImport,
+			StateContext: resourceHostedPrivateVirtualInterfaceImport,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"address_family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					directconnect.AddressFamilyIpv4,
-					directconnect.AddressFamilyIpv6,
-				}, false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AddressFamily](),
 			},
 			"amazon_address": {
 				Type:     schema.TypeString,
@@ -40,7 +49,7 @@ func ResourceHostedPrivateVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -63,7 +72,7 @@ func ResourceHostedPrivateVirtualInterface() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
-			"connection_id": {
+			names.AttrConnectionID: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -85,12 +94,12 @@ func ResourceHostedPrivateVirtualInterface() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntInSlice([]int{1500, 9001}),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"owner_account_id": {
+			names.AttrOwnerAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
@@ -111,119 +120,121 @@ func ResourceHostedPrivateVirtualInterface() *schema.Resource {
 	}
 }
 
-func resourceHostedPrivateVirtualInterfaceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedPrivateVirtualInterfaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	req := &directconnect.AllocatePrivateVirtualInterfaceInput{
-		ConnectionId: aws.String(d.Get("connection_id").(string)),
-		NewPrivateVirtualInterfaceAllocation: &directconnect.NewPrivateVirtualInterfaceAllocation{
-			AddressFamily:        aws.String(d.Get("address_family").(string)),
-			Asn:                  aws.Int64(int64(d.Get("bgp_asn").(int))),
-			Mtu:                  aws.Int64(int64(d.Get("mtu").(int))),
-			VirtualInterfaceName: aws.String(d.Get("name").(string)),
-			Vlan:                 aws.Int64(int64(d.Get("vlan").(int))),
+	input := &directconnect.AllocatePrivateVirtualInterfaceInput{
+		ConnectionId: aws.String(d.Get(names.AttrConnectionID).(string)),
+		NewPrivateVirtualInterfaceAllocation: &awstypes.NewPrivateVirtualInterfaceAllocation{
+			AddressFamily:        awstypes.AddressFamily(d.Get("address_family").(string)),
+			Asn:                  int32(d.Get("bgp_asn").(int)),
+			Mtu:                  aws.Int32(int32(d.Get("mtu").(int))),
+			VirtualInterfaceName: aws.String(d.Get(names.AttrName).(string)),
+			Vlan:                 int32(d.Get("vlan").(int)),
 		},
-		OwnerAccount: aws.String(d.Get("owner_account_id").(string)),
+		OwnerAccount: aws.String(d.Get(names.AttrOwnerAccountID).(string)),
 	}
+
 	if v, ok := d.GetOk("amazon_address"); ok {
-		req.NewPrivateVirtualInterfaceAllocation.AmazonAddress = aws.String(v.(string))
+		input.NewPrivateVirtualInterfaceAllocation.AmazonAddress = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("bgp_auth_key"); ok {
-		req.NewPrivateVirtualInterfaceAllocation.AuthKey = aws.String(v.(string))
+		input.NewPrivateVirtualInterfaceAllocation.AuthKey = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("customer_address"); ok {
-		req.NewPrivateVirtualInterfaceAllocation.CustomerAddress = aws.String(v.(string))
+		input.NewPrivateVirtualInterfaceAllocation.CustomerAddress = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("mtu"); ok {
-		req.NewPrivateVirtualInterfaceAllocation.Mtu = aws.Int64(int64(v.(int)))
+		input.NewPrivateVirtualInterfaceAllocation.Mtu = aws.Int32(int32(v.(int)))
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect hosted private virtual interface: %s", req)
-	resp, err := conn.AllocatePrivateVirtualInterface(req)
+	output, err := conn.AllocatePrivateVirtualInterface(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error creating Direct Connect hosted private virtual interface: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Direct Connect Hosted Private Virtual Interface: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.VirtualInterfaceId))
+	d.SetId(aws.ToString(output.VirtualInterfaceId))
 
-	if err := hostedPrivateVirtualInterfaceWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+	if _, err := waitHostedPrivateVirtualInterfaceAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Hosted Private Virtual Interface (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceHostedPrivateVirtualInterfaceRead(d, meta)
+	return append(diags, resourceHostedPrivateVirtualInterfaceRead(ctx, d, meta)...)
 }
 
-func resourceHostedPrivateVirtualInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedPrivateVirtualInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(d.Id(), conn)
-	if err != nil {
-		return err
-	}
-	if vif == nil {
-		log.Printf("[WARN] Direct Connect hosted private virtual interface (%s) not found, removing from state", d.Id())
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Direct Connect Hosted Private Virtual Interface (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Hosted Private Virtual Interface (%s): %s", d.Id(), err)
 	}
 
 	d.Set("address_family", vif.AddressFamily)
 	d.Set("amazon_address", vif.AmazonAddress)
-	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vif.AmazonSideAsn), 10))
+	d.Set("amazon_side_asn", flex.Int64ToStringValue(vif.AmazonSideAsn))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "directconnect",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("aws_device", vif.AwsDeviceV2)
 	d.Set("bgp_asn", vif.Asn)
 	d.Set("bgp_auth_key", vif.AuthKey)
-	d.Set("connection_id", vif.ConnectionId)
+	d.Set(names.AttrConnectionID, vif.ConnectionId)
 	d.Set("customer_address", vif.CustomerAddress)
 	d.Set("jumbo_frame_capable", vif.JumboFrameCapable)
 	d.Set("mtu", vif.Mtu)
-	d.Set("name", vif.VirtualInterfaceName)
-	d.Set("owner_account_id", vif.OwnerAccount)
+	d.Set(names.AttrName, vif.VirtualInterfaceName)
+	d.Set(names.AttrOwnerAccountID, vif.OwnerAccount)
 	d.Set("vlan", vif.Vlan)
 
-	return nil
+	return diags
 }
 
-func resourceHostedPrivateVirtualInterfaceDelete(d *schema.ResourceData, meta interface{}) error {
-	return virtualInterfaceDelete(d, meta)
+func resourceHostedPrivateVirtualInterfaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	return virtualInterfaceDelete(ctx, d, meta)
 }
 
-func resourceHostedPrivateVirtualInterfaceImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedPrivateVirtualInterfaceImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(d.Id(), conn)
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
 	if err != nil {
 		return nil, err
 	}
-	if vif == nil {
-		return nil, fmt.Errorf("virtual interface (%s) not found", d.Id())
-	}
 
-	if vifType := aws.StringValue(vif.VirtualInterfaceType); vifType != "private" {
+	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "private" {
 		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
 	}
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func hostedPrivateVirtualInterfaceWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return virtualInterfaceWaitUntilAvailable(
+func waitHostedPrivateVirtualInterfaceAvailable(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.VirtualInterface, error) {
+	return waitVirtualInterfaceAvailable(
+		ctx,
 		conn,
-		vifId,
+		id,
+		enum.Slice(awstypes.VirtualInterfaceStatePending),
+		enum.Slice(awstypes.VirtualInterfaceStateAvailable, awstypes.VirtualInterfaceStateConfirming, awstypes.VirtualInterfaceStateDown),
 		timeout,
-		[]string{
-			directconnect.VirtualInterfaceStatePending,
-		},
-		[]string{
-			directconnect.VirtualInterfaceStateAvailable,
-			directconnect.VirtualInterfaceStateConfirming,
-			directconnect.VirtualInterfaceStateDown,
-		})
+	)
 }

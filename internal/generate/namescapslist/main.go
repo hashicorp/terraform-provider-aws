@@ -1,27 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
 package main
 
 import (
-	"bytes"
+	"cmp"
 	_ "embed"
-	"encoding/csv"
 	"fmt"
-	"log"
-	"os"
-	"sort"
+	"slices"
 	"strings"
-	"text/template"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 )
 
 //go:embed header.tmpl
 var header string
 
+//go:embed file.tmpl
+var tmpl string
+
 const (
-	filename     = "../../../names/caps.md"
-	capsDataFile = "../../../names/caps.csv"
-	maxBadCaps   = 31
+	maxBadCaps = 31
 )
 
 type CapsDatum struct {
@@ -35,29 +37,39 @@ type TemplateData struct {
 }
 
 func main() {
-	fmt.Printf("Generating %s\n", strings.TrimPrefix(filename, "../../../"))
+	const (
+		filename     = "../../../names/caps.md"
+		capsDataFile = "../../../names/caps.csv"
+	)
+	g := common.NewGenerator()
 
-	badCaps := readBadCaps()
+	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
+
+	badCaps, err := readBadCaps(capsDataFile)
+
+	if err != nil {
+		g.Fatalf("error reading %s: %s", capsDataFile, err)
+	}
 
 	td := TemplateData{}
 	td.BadCaps = badCaps
 
-	writeTemplate(header+tmpl, "namescapslist", td)
-}
+	d := g.NewUnformattedFileDestination(filename)
 
-func readBadCaps() []CapsDatum {
-	cf, err := os.Open(capsDataFile)
-	if err != nil {
-		log.Fatal(err)
+	if err := d.BufferTemplate("namescapslist", header+"\n"+tmpl+"\n", td); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
-	defer cf.Close()
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
+	}
+}
 
-	csvReader := csv.NewReader(cf)
+func readBadCaps(filename string) ([]CapsDatum, error) {
+	caps, err := common.ReadAllCSVData(filename)
 
-	caps, err := csvReader.ReadAll()
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	var capsList []CapsDatum
@@ -80,11 +92,12 @@ func readBadCaps() []CapsDatum {
 		})
 	}
 
-	sort.SliceStable(capsList, func(i, j int) bool {
-		if len(capsList[i].Wrong) == len(capsList[j].Wrong) {
-			return capsList[i].Wrong < capsList[j].Wrong
-		}
-		return len(capsList[j].Wrong) < len(capsList[i].Wrong)
+	slices.SortStableFunc(capsList, func(a, b CapsDatum) int {
+		return cmp.Or(
+			// Reverse length order
+			cmp.Compare(len(b.Wrong), len(a.Wrong)),
+			cmp.Compare(a.Wrong, b.Wrong),
+		)
 	})
 
 	onChunk := -1
@@ -97,50 +110,12 @@ func readBadCaps() []CapsDatum {
 		capsList[i].Test = fmt.Sprintf(`%s%d`, "caps", onChunk)
 	}
 
-	sort.SliceStable(capsList, func(i, j int) bool {
-		if strings.EqualFold(capsList[i].Wrong, capsList[j].Wrong) {
-			return capsList[i].Wrong < capsList[j].Wrong
-		}
-		return strings.ToLower(capsList[i].Wrong) < strings.ToLower(capsList[j].Wrong)
+	slices.SortStableFunc(capsList, func(a, b CapsDatum) int {
+		return cmp.Or(
+			cmp.Compare(strings.ToLower(a.Wrong), strings.ToLower(b.Wrong)),
+			cmp.Compare(a.Wrong, b.Wrong),
+		)
 	})
 
-	return capsList
+	return capsList, nil
 }
-
-func writeTemplate(body string, templateName string, td TemplateData) {
-	// If the file doesn't exist, create it, or truncate the file
-	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
-	}
-
-	tplate, err := template.New(templateName).Parse(body)
-	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tplate.Execute(&buffer, td)
-	if err != nil {
-		log.Fatalf("error executing template: %s", err)
-	}
-
-	if _, err := f.Write(buffer.Bytes()); err != nil {
-		f.Close()
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
-	}
-}
-
-var tmpl = `
-The caps enforced are as follows:
-
-| Wrong | Right | Test# |
-| --- | --- | --- |
-{{- range .BadCaps }}
-| {{ .Wrong }} | {{ .Right }} | {{ .Test }} |
-{{- end }}
-`

@@ -1,13 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
 func TestInstanceMigrateState(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
@@ -19,34 +25,34 @@ func TestInstanceMigrateState(t *testing.T) {
 			Attributes: map[string]string{
 				// EBS
 				"block_device.#": "2",
-				"block_device.3851383343.delete_on_termination": "true",
+				"block_device.3851383343.delete_on_termination": acctest.CtTrue,
 				"block_device.3851383343.device_name":           "/dev/sdx",
-				"block_device.3851383343.encrypted":             "false",
+				"block_device.3851383343.encrypted":             acctest.CtFalse,
 				"block_device.3851383343.snapshot_id":           "",
 				"block_device.3851383343.virtual_name":          "",
 				"block_device.3851383343.volume_size":           "5",
 				"block_device.3851383343.volume_type":           "standard",
 				// Ephemeral
-				"block_device.3101711606.delete_on_termination": "false",
+				"block_device.3101711606.delete_on_termination": acctest.CtFalse,
 				"block_device.3101711606.device_name":           "/dev/sdy",
-				"block_device.3101711606.encrypted":             "false",
+				"block_device.3101711606.encrypted":             acctest.CtFalse,
 				"block_device.3101711606.snapshot_id":           "",
 				"block_device.3101711606.virtual_name":          "ephemeral0",
 				"block_device.3101711606.volume_size":           "",
 				"block_device.3101711606.volume_type":           "",
 				// Root
-				"block_device.56575650.delete_on_termination": "true",
+				"block_device.56575650.delete_on_termination": acctest.CtTrue,
 				"block_device.56575650.device_name":           "/dev/sda1",
-				"block_device.56575650.encrypted":             "false",
+				"block_device.56575650.encrypted":             acctest.CtFalse,
 				"block_device.56575650.snapshot_id":           "",
 				"block_device.56575650.volume_size":           "10",
 				"block_device.56575650.volume_type":           "standard",
 			},
 			Expected: map[string]string{
 				"ebs_block_device.#": "1",
-				"ebs_block_device.3851383343.delete_on_termination":  "true",
+				"ebs_block_device.3851383343.delete_on_termination":  acctest.CtTrue,
 				"ebs_block_device.3851383343.device_name":            "/dev/sdx",
-				"ebs_block_device.3851383343.encrypted":              "false",
+				"ebs_block_device.3851383343.encrypted":              acctest.CtFalse,
 				"ebs_block_device.3851383343.snapshot_id":            "",
 				"ebs_block_device.3851383343.volume_size":            "5",
 				"ebs_block_device.3851383343.volume_type":            "standard",
@@ -54,7 +60,7 @@ func TestInstanceMigrateState(t *testing.T) {
 				"ephemeral_block_device.2458403513.device_name":      "/dev/sdy",
 				"ephemeral_block_device.2458403513.virtual_name":     "ephemeral0",
 				"root_block_device.#":                                "1",
-				"root_block_device.3018388612.delete_on_termination": "true",
+				"root_block_device.3018388612.delete_on_termination": acctest.CtTrue,
 				"root_block_device.3018388612.device_name":           "/dev/sda1",
 				"root_block_device.3018388612.snapshot_id":           "",
 				"root_block_device.3018388612.volume_size":           "10",
@@ -66,18 +72,18 @@ func TestInstanceMigrateState(t *testing.T) {
 			Attributes: map[string]string{
 				// EBS
 				"block_device.#": "2",
-				"block_device.3851383343.delete_on_termination": "true",
+				"block_device.3851383343.delete_on_termination": acctest.CtTrue,
 				"block_device.3851383343.device_name":           "/dev/sdx",
-				"block_device.3851383343.encrypted":             "false",
+				"block_device.3851383343.encrypted":             acctest.CtFalse,
 				"block_device.3851383343.snapshot_id":           "",
 				"block_device.3851383343.virtual_name":          "",
 				"block_device.3851383343.volume_size":           "5",
 				"block_device.3851383343.volume_type":           "standard",
 				"block_device.3851383343.iops":                  "",
 				// Ephemeral
-				"block_device.3101711606.delete_on_termination": "false",
+				"block_device.3101711606.delete_on_termination": acctest.CtFalse,
 				"block_device.3101711606.device_name":           "/dev/sdy",
-				"block_device.3101711606.encrypted":             "false",
+				"block_device.3101711606.encrypted":             acctest.CtFalse,
 				"block_device.3101711606.snapshot_id":           "",
 				"block_device.3101711606.virtual_name":          "ephemeral0",
 				"block_device.3101711606.volume_size":           "",
@@ -85,7 +91,7 @@ func TestInstanceMigrateState(t *testing.T) {
 				"block_device.3101711606.iops":                  "",
 				// Root
 				"root_block_device.#":                                "1",
-				"root_block_device.3018388612.delete_on_termination": "true",
+				"root_block_device.3018388612.delete_on_termination": acctest.CtTrue,
 				"root_block_device.3018388612.device_name":           "/dev/sda1",
 				"root_block_device.3018388612.snapshot_id":           "",
 				"root_block_device.3018388612.volume_size":           "10",
@@ -94,9 +100,9 @@ func TestInstanceMigrateState(t *testing.T) {
 			},
 			Expected: map[string]string{
 				"ebs_block_device.#": "1",
-				"ebs_block_device.3851383343.delete_on_termination":  "true",
+				"ebs_block_device.3851383343.delete_on_termination":  acctest.CtTrue,
 				"ebs_block_device.3851383343.device_name":            "/dev/sdx",
-				"ebs_block_device.3851383343.encrypted":              "false",
+				"ebs_block_device.3851383343.encrypted":              acctest.CtFalse,
 				"ebs_block_device.3851383343.snapshot_id":            "",
 				"ebs_block_device.3851383343.volume_size":            "5",
 				"ebs_block_device.3851383343.volume_type":            "standard",
@@ -104,7 +110,7 @@ func TestInstanceMigrateState(t *testing.T) {
 				"ephemeral_block_device.2458403513.device_name":      "/dev/sdy",
 				"ephemeral_block_device.2458403513.virtual_name":     "ephemeral0",
 				"root_block_device.#":                                "1",
-				"root_block_device.3018388612.delete_on_termination": "true",
+				"root_block_device.3018388612.delete_on_termination": acctest.CtTrue,
 				"root_block_device.3018388612.device_name":           "/dev/sda1",
 				"root_block_device.3018388612.snapshot_id":           "",
 				"root_block_device.3018388612.volume_size":           "10",
@@ -137,6 +143,8 @@ func TestInstanceMigrateState(t *testing.T) {
 }
 
 func TestInstanceMigrateState_empty(t *testing.T) {
+	t.Parallel()
+
 	var is *terraform.InstanceState
 	var meta interface{}
 

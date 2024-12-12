@@ -1,12 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 )
 
 func TestParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName            string
 		InputID             string
@@ -32,14 +38,16 @@ func TestParseResourceID(t *testing.T) {
 		},
 		{
 			TestName:            "valid ID with bucket and bucket owner",
-			InputID:             tfs3.CreateResourceID("example", "123456789012"),
+			InputID:             tfs3.CreateResourceID("example", acctest.Ct12Digit),
 			ExpectedBucket:      "example",
-			ExpectedBucketOwner: "123456789012",
+			ExpectedBucketOwner: acctest.Ct12Digit,
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotBucket, gotExpectedBucketOwner, err := tfs3.ParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectError {

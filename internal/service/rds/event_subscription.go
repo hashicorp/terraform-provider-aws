@@ -1,32 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceEventSubscription() *schema.Resource {
+// @SDKResource("aws_db_event_subscription", name="Event Subscription")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
+func resourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEventSubscriptionCreate,
-		Read:   resourceEventSubscriptionRead,
-		Update: resourceEventSubscriptionUpdate,
-		Delete: resourceEventSubscriptionDelete,
+		CreateWithoutTimeout: resourceEventSubscriptionCreate,
+		ReadWithoutTimeout:   resourceEventSubscriptionRead,
+		UpdateWithoutTimeout: resourceEventSubscriptionUpdate,
+		DeleteWithoutTimeout: resourceEventSubscriptionDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -36,7 +48,7 @@ func ResourceEventSubscription() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,7 +56,7 @@ func ResourceEventSubscription() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"enabled": {
+			names.AttrEnabled: {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
@@ -54,21 +66,21 @@ func ResourceEventSubscription() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"name": {
+			names.AttrName: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name_prefix"},
+				ConflictsWith: []string{names.AttrNamePrefix},
 				ValidateFunc:  validEventSubscriptionName,
 			},
-			"name_prefix": {
+			names.AttrNamePrefix: {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"name"},
-				ValidateFunc:  validEventSubscriptionName,
+				ConflictsWith: []string{names.AttrName},
+				ValidateFunc:  validEventSubscriptionNamePrefix,
 			},
 			"sns_topic": {
 				Type:         schema.TypeString,
@@ -80,208 +92,309 @@ func ResourceEventSubscription() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"source_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(rds.SourceType_Values(), false),
+			names.AttrSourceType: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.SourceType](),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	name := create.Name(d.Get(names.AttrName).(string), d.Get(names.AttrNamePrefix).(string))
 	input := &rds.CreateEventSubscriptionInput{
-		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		Enabled:          aws.Bool(d.Get(names.AttrEnabled).(bool)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic").(string)),
 		SubscriptionName: aws.String(name),
+		Tags:             getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("event_categories"); ok && v.(*schema.Set).Len() > 0 {
-		input.EventCategories = flex.ExpandStringSet(v.(*schema.Set))
+		input.EventCategories = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("source_ids"); ok && v.(*schema.Set).Len() > 0 {
-		input.SourceIds = flex.ExpandStringSet(v.(*schema.Set))
+		input.SourceIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("source_type"); ok {
+	if v, ok := d.GetOk(names.AttrSourceType); ok {
 		input.SourceType = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating RDS Event Subscription: %s", input)
-	output, err := conn.CreateEventSubscription(input)
+	output, err := conn.CreateEventSubscription(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating RDS Event Subscription (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS Event Subscription (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
+	d.SetId(aws.ToString(output.EventSubscription.CustSubscriptionId))
 
-	if _, err = waitEventSubscriptionCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for RDS Event Subscription (%s) create: %w", d.Id(), err)
+	if _, err := waitEventSubscriptionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Event Subscription (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceEventSubscriptionRead(d, meta)
+	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	sub, err := FindEventSubscriptionByID(conn, d.Id())
+	sub, err := findEventSubscriptionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading RDS Event Subscription (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading RDS Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(sub.EventSubscriptionArn)
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, sub.EventSubscriptionArn)
 	d.Set("customer_aws_id", sub.CustomerAwsId)
-	d.Set("enabled", sub.Enabled)
-	d.Set("event_categories", aws.StringValueSlice(sub.EventCategoriesList))
-	d.Set("name", sub.CustSubscriptionId)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(sub.CustSubscriptionId)))
+	d.Set(names.AttrEnabled, sub.Enabled)
+	d.Set("event_categories", sub.EventCategoriesList)
+	d.Set(names.AttrName, sub.CustSubscriptionId)
+	d.Set(names.AttrNamePrefix, create.NamePrefixFromName(aws.ToString(sub.CustSubscriptionId)))
 	d.Set("sns_topic", sub.SnsTopicArn)
-	d.Set("source_ids", aws.StringValueSlice(sub.SourceIdsList))
-	d.Set("source_type", sub.SourceType)
+	d.Set("source_ids", sub.SourceIdsList)
+	d.Set(names.AttrSourceType, sub.SourceType)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for RDS Event Subscription (%s): %w", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "source_ids") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, "source_ids") {
 		input := &rds.ModifyEventSubscriptionInput{
 			SubscriptionName: aws.String(d.Id()),
 		}
 
-		input.Enabled = aws.Bool(d.Get("enabled").(bool))
+		input.Enabled = aws.Bool(d.Get(names.AttrEnabled).(bool))
 
 		if d.HasChange("event_categories") {
-			input.EventCategories = flex.ExpandStringSet(d.Get("event_categories").(*schema.Set))
-			input.SourceType = aws.String(d.Get("source_type").(string))
+			input.EventCategories = flex.ExpandStringValueSet(d.Get("event_categories").(*schema.Set))
+			input.SourceType = aws.String(d.Get(names.AttrSourceType).(string))
 		}
 
-		if d.HasChange("source_type") {
-			input.SourceType = aws.String(d.Get("source_type").(string))
+		if d.HasChange(names.AttrSourceType) {
+			input.SourceType = aws.String(d.Get(names.AttrSourceType).(string))
 		}
 
 		if d.HasChange("sns_topic") {
 			input.SnsTopicArn = aws.String(d.Get("sns_topic").(string))
 		}
 
-		log.Printf("[DEBUG] Updating RDS Event Subscription: %s", input)
-		_, err := conn.ModifyEventSubscription(input)
+		_, err := conn.ModifyEventSubscription(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating RDS Event Subscription (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RDS Event Subscription (%s): %s", d.Id(), err)
 		}
 
-		if _, err = waitEventSubscriptionUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for RDS Event Subscription (%s) update: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating RDS Event Subscription (%s) tags: %w", d.Get("arn").(string), err)
+		if _, err := waitEventSubscriptionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for RDS Event Subscription (%s) update: %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("source_ids") {
 		o, n := d.GetChange("source_ids")
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-		add := ns.Difference(os).List()
-		del := os.Difference(ns).List()
+		os, ns := o.(*schema.Set), n.(*schema.Set)
+		add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
 		for _, del := range del {
-			del := del.(string)
-			_, err := conn.RemoveSourceIdentifierFromSubscription(&rds.RemoveSourceIdentifierFromSubscriptionInput{
+			input := &rds.RemoveSourceIdentifierFromSubscriptionInput{
 				SourceIdentifier: aws.String(del),
 				SubscriptionName: aws.String(d.Id()),
-			})
+			}
+
+			_, err := conn.RemoveSourceIdentifierFromSubscription(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error removing RDS Event Subscription (%s) source ID (%s): %w", d.Id(), del, err)
+				return sdkdiag.AppendErrorf(diags, "removing RDS Event Subscription (%s) source ID (%s): %s", d.Id(), del, err)
 			}
 		}
 
 		for _, add := range add {
-			add := add.(string)
-			_, err := conn.AddSourceIdentifierToSubscription(&rds.AddSourceIdentifierToSubscriptionInput{
+			input := &rds.AddSourceIdentifierToSubscriptionInput{
 				SourceIdentifier: aws.String(add),
 				SubscriptionName: aws.String(d.Id()),
-			})
+			}
+
+			_, err := conn.AddSourceIdentifierToSubscription(ctx, input)
 
 			if err != nil {
-				return fmt.Errorf("error adding RDS Event Subscription (%s) source ID (%s): %w", d.Id(), add, err)
+				return sdkdiag.AppendErrorf(diags, "adding RDS Event Subscription (%s) source ID (%s): %s", d.Id(), add, err)
 			}
 		}
 	}
 
-	return nil
+	return diags
 }
 
-func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RDSConn
+func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS Event Subscription: (%s)", d.Id())
-	_, err := conn.DeleteEventSubscription(&rds.DeleteEventSubscriptionInput{
+	_, err := conn.DeleteEventSubscription(ctx, &rds.DeleteEventSubscriptionInput{
 		SubscriptionName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeSubscriptionNotFoundFault) {
-		return nil
+	if errs.IsA[*types.SubscriptionNotFoundFault](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting RDS Event Subscription (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting RDS Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitEventSubscriptionDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for RDS Event Subscription (%s) delete: %w", d.Id(), err)
+	if _, err := waitEventSubscriptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RDS Event Subscription (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findEventSubscriptionByID(ctx context.Context, conn *rds.Client, id string) (*types.EventSubscription, error) {
+	input := &rds.DescribeEventSubscriptionsInput{
+		SubscriptionName: aws.String(id),
+	}
+	output, err := findEventSubscription(ctx, conn, input, tfslices.PredicateTrue[*types.EventSubscription]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.CustSubscriptionId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findEventSubscription(ctx context.Context, conn *rds.Client, input *rds.DescribeEventSubscriptionsInput, filter tfslices.Predicate[*types.EventSubscription]) (*types.EventSubscription, error) {
+	output, err := findEventSubscriptions(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findEventSubscriptions(ctx context.Context, conn *rds.Client, input *rds.DescribeEventSubscriptionsInput, filter tfslices.Predicate[*types.EventSubscription]) ([]types.EventSubscription, error) {
+	var output []types.EventSubscription
+
+	pages := rds.NewDescribeEventSubscriptionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.SubscriptionNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.EventSubscriptionsList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func statusEventSubscription(ctx context.Context, conn *rds.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findEventSubscriptionByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.Status), nil
+	}
+}
+
+func waitEventSubscriptionCreated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusCreating},
+		Target:     []string{eventSubscriptionStatusActive},
+		Refresh:    statusEventSubscription(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventSubscriptionDeleted(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusDeleting},
+		Target:     []string{},
+		Refresh:    statusEventSubscription(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventSubscriptionUpdated(ctx context.Context, conn *rds.Client, id string, timeout time.Duration) (*types.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{eventSubscriptionStatusModifying},
+		Target:                    []string{eventSubscriptionStatusActive},
+		Refresh:                   statusEventSubscription(ctx, conn, id),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		Delay:                     30 * time.Second,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
 }

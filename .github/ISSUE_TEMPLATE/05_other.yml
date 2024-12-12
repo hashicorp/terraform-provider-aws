@@ -1,6 +1,5 @@
 name: "Other"
 description: "Choose this option if your issue does not fit the description of the others."
-labels: ["needs-triage"]
 body:
   - type: markdown
     attributes:

@@ -1,23 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
 	"context"
-	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/organizations"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/organizations/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceDelegatedServices() *schema.Resource {
+// @SDKDataSource("aws_organizations_delegated_services", name="Delegated Services")
+func dataSourceDelegatedServices() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDelegatedServicesRead,
 		Schema: map[string]*schema.Schema{
-			"account_id": {
+			names.AttrAccountID: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidAccountID,
@@ -43,46 +49,62 @@ func DataSourceDelegatedServices() *schema.Resource {
 }
 
 func dataSourceDelegatedServicesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).OrganizationsConn
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OrganizationsClient(ctx)
 
-	input := &organizations.ListDelegatedServicesForAccountInput{
-		AccountId: aws.String(d.Get("account_id").(string)),
-	}
+	accountID := d.Get(names.AttrAccountID).(string)
+	output, err := findDelegatedServicesByAccountID(ctx, conn, accountID)
 
-	var delegators []*organizations.DelegatedService
-	err := conn.ListDelegatedServicesForAccountPagesWithContext(ctx, input, func(page *organizations.ListDelegatedServicesForAccountOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		delegators = append(delegators, page.DelegatedServices...)
-
-		return !lastPage
-	})
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error describing organizations delegated services: %w", err))
+		return sdkdiag.AppendErrorf(diags, "reading Organizations Delegated Services (%s): %s", accountID, err)
 	}
 
-	if err = d.Set("delegated_services", flattenDelegatedServices(delegators)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting delegated_services: %w", err))
+	d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
+	if err = d.Set("delegated_services", flattenDelegatedServices(output)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting delegated_services: %s", err)
 	}
-
-	d.SetId(meta.(*conns.AWSClient).AccountID)
 
 	return nil
 }
 
-func flattenDelegatedServices(delegatedServices []*organizations.DelegatedService) []map[string]interface{} {
-	if len(delegatedServices) == 0 {
+func findDelegatedServicesByAccountID(ctx context.Context, conn *organizations.Client, accountID string) ([]awstypes.DelegatedService, error) {
+	input := &organizations.ListDelegatedServicesForAccountInput{
+		AccountId: aws.String(accountID),
+	}
+
+	return findDelegatedServices(ctx, conn, input)
+}
+
+func findDelegatedServices(ctx context.Context, conn *organizations.Client, input *organizations.ListDelegatedServicesForAccountInput) ([]awstypes.DelegatedService, error) {
+	var output []awstypes.DelegatedService
+
+	pages := organizations.NewListDelegatedServicesForAccountPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.DelegatedServices...)
+	}
+
+	return output, nil
+}
+
+func flattenDelegatedServices(apiObjects []awstypes.DelegatedService) []map[string]interface{} {
+	if len(apiObjects) == 0 {
 		return nil
 	}
 
-	var result []map[string]interface{}
-	for _, delegated := range delegatedServices {
-		result = append(result, map[string]interface{}{
-			"delegation_enabled_date": aws.TimeValue(delegated.DelegationEnabledDate).Format(time.RFC3339),
-			"service_principal":       aws.StringValue(delegated.ServicePrincipal),
+	var tfList []map[string]interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]interface{}{
+			"delegation_enabled_date": aws.ToTime(apiObject.DelegationEnabledDate).Format(time.RFC3339),
+			"service_principal":       aws.ToString(apiObject.ServicePrincipal),
 		})
 	}
-	return result
+
+	return tfList
 }

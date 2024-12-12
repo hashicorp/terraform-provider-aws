@@ -1,166 +1,157 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dataexchange
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dataexchange"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dataexchange"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dataexchange/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dataexchange_data_set", name="Data Set")
+// @Tags(identifierAttribute="arn")
 func ResourceDataSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDataSetCreate,
-		Read:   resourceDataSetRead,
-		Update: resourceDataSetUpdate,
-		Delete: resourceDataSetDelete,
+		CreateWithoutTimeout: resourceDataSetCreate,
+		ReadWithoutTimeout:   resourceDataSetRead,
+		UpdateWithoutTimeout: resourceDataSetUpdate,
+		DeleteWithoutTimeout: resourceDataSetDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"asset_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(dataexchange.AssetType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AssetType](),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 16348),
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDataSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataExchangeConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceDataSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
 	input := &dataexchange.CreateDataSetInput{
-		Name:        aws.String(d.Get("name").(string)),
-		AssetType:   aws.String(d.Get("asset_type").(string)),
-		Description: aws.String(d.Get("description").(string)),
+		Name:        aws.String(d.Get(names.AttrName).(string)),
+		AssetType:   awstypes.AssetType(d.Get("asset_type").(string)),
+		Description: aws.String(d.Get(names.AttrDescription).(string)),
+		Tags:        getTagsIn(ctx),
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	out, err := conn.CreateDataSet(input)
+	out, err := conn.CreateDataSet(ctx, input)
 	if err != nil {
-		return fmt.Errorf("Error creating DataExchange DataSet: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataExchange DataSet: %s", err)
 	}
 
-	d.SetId(aws.StringValue(out.Id))
+	d.SetId(aws.ToString(out.Id))
 
-	return resourceDataSetRead(d, meta)
+	return append(diags, resourceDataSetRead(ctx, d, meta)...)
 }
 
-func resourceDataSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataExchangeConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
-	dataSet, err := FindDataSetById(conn, d.Id())
+	dataSet, err := FindDataSetById(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataExchange DataSet (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataExchange DataSet (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataExchange DataSet (%s): %s", d.Id(), err)
 	}
 
 	d.Set("asset_type", dataSet.AssetType)
-	d.Set("name", dataSet.Name)
-	d.Set("description", dataSet.Description)
-	d.Set("arn", dataSet.Arn)
+	d.Set(names.AttrName, dataSet.Name)
+	d.Set(names.AttrDescription, dataSet.Description)
+	d.Set(names.AttrARN, dataSet.Arn)
 
-	tags := KeyValueTags(dataSet.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, dataSet.Tags)
 
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceDataSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataExchangeConn
+func resourceDataSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		input := &dataexchange.UpdateDataSetInput{
 			DataSetId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
+		if d.HasChange(names.AttrName) {
+			input.Name = aws.String(d.Get(names.AttrName).(string))
 		}
 
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange(names.AttrDescription) {
+			input.Description = aws.String(d.Get(names.AttrDescription).(string))
 		}
 
 		log.Printf("[DEBUG] Updating DataExchange DataSet: %s", d.Id())
-		_, err := conn.UpdateDataSet(input)
+		_, err := conn.UpdateDataSet(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Error Updating DataExchange DataSet: %w", err)
+			return sdkdiag.AppendErrorf(diags, "updating DataExchange DataSet (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating DataExchange DataSet (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceDataSetRead(d, meta)
+	return append(diags, resourceDataSetRead(ctx, d, meta)...)
 }
 
-func resourceDataSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataExchangeConn
+func resourceDataSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataExchangeClient(ctx)
 
 	input := &dataexchange.DeleteDataSetInput{
 		DataSetId: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting DataExchange DataSet: %s", d.Id())
-	_, err := conn.DeleteDataSet(input)
+	_, err := conn.DeleteDataSet(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, dataexchange.ErrCodeResourceNotFoundException) {
-			return nil
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return diags
 		}
-		return fmt.Errorf("Error deleting DataExchange DataSet: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataExchange DataSet: %s", err)
 	}
 
-	return nil
+	return diags
 }

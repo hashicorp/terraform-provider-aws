@@ -1,36 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecrpublic_test
 
 import (
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECRPublicAuthorizationTokenDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ecrpublic_authorization_token.repo"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckRegion(t, endpoints.UsEast1RegionID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAuthorizationTokenDataSourceConfig_basic,
+				Config: testAccAuthorizationTokenDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "user_name"),
-					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexp.MustCompile(`AWS`)),
-					resource.TestCheckResourceAttrSet(dataSourceName, "password"),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrUserName),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrUserName, regexache.MustCompile(`AWS`)),
+					resource.TestCheckResourceAttrSet(dataSourceName, names.AttrPassword),
 				),
 			},
 		},
 	})
 }
 
-var testAccAuthorizationTokenDataSourceConfig_basic = `
-data "aws_ecrpublic_authorization_token" "repo" {}
+func testAccAuthorizationTokenDataSourceConfig_basic() string {
+	return `data "aws_ecrpublic_authorization_token" "repo" {}
 `
+}

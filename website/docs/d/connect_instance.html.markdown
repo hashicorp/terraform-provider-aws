@@ -11,6 +11,7 @@ description: |-
 Provides details about a specific Amazon Connect Instance.
 
 ## Example Usage
+
 By instance_alias
 
 ```hcl
@@ -31,15 +32,15 @@ data "aws_connect_instance" "foo" {
 
 ~> **NOTE:** One of either `instance_id` or `instance_alias` is required.
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `instance_id` - (Optional) Returns information on a specific connect instance by id
 
 * `instance_alias` - (Optional) Returns information on a specific connect instance by alias
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `created_time` - When the instance was created.
 * `arn` - ARN of the instance.
@@ -54,3 +55,4 @@ In addition to all arguments above, the following attributes are exported:
 * `use_custom_tts_voices` - Whether use custom tts voices is enabled.
 * `status` - State of the instance.
 * `service_role` - Service role of the instance.
+* `tags` - A map of tags to assigned to the instance.

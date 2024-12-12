@@ -1,37 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/redshift"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/redshift/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceHSMConfiguration() *schema.Resource {
+// @SDKResource("aws_redshift_hsm_configuration", name="HSM Configuration")
+// @Tags(identifierAttribute="arn")
+func resourceHSMConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHSMConfigurationCreate,
-		Read:   resourceHSMConfigurationRead,
-		Update: resourceHSMConfigurationUpdate,
-		Delete: resourceHSMConfigurationDelete,
+		CreateWithoutTimeout: resourceHSMConfigurationCreate,
+		ReadWithoutTimeout:   resourceHSMConfigurationRead,
+		UpdateWithoutTimeout: resourceHSMConfigurationUpdate,
+		DeleteWithoutTimeout: resourceHSMConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -62,117 +72,100 @@ func ResourceHSMConfiguration() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceHSMConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceHSMConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	hsmConfigurationID := d.Get("hsm_configuration_identifier").(string)
 	input := &redshift.CreateHsmConfigurationInput{
-		Description:                aws.String(d.Get("description").(string)),
+		Description:                aws.String(d.Get(names.AttrDescription).(string)),
 		HsmConfigurationIdentifier: aws.String(hsmConfigurationID),
 		HsmIpAddress:               aws.String(d.Get("hsm_ip_address").(string)),
 		HsmPartitionName:           aws.String(d.Get("hsm_partition_name").(string)),
 		HsmPartitionPassword:       aws.String(d.Get("hsm_partition_password").(string)),
 		HsmServerPublicCertificate: aws.String(d.Get("hsm_server_public_certificate").(string)),
+		Tags:                       getTagsIn(ctx),
 	}
 
-	input.Tags = Tags(tags.IgnoreAWS())
-
-	output, err := conn.CreateHsmConfiguration(input)
+	output, err := conn.CreateHsmConfiguration(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating Redshift HSM Configuration (%s): %s", hsmConfigurationID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Redshift HSM Configuration (%s): %s", hsmConfigurationID, err)
 	}
 
-	d.SetId(aws.StringValue(output.HsmConfiguration.HsmConfigurationIdentifier))
+	d.SetId(aws.ToString(output.HsmConfiguration.HsmConfigurationIdentifier))
 
-	return resourceHSMConfigurationRead(d, meta)
+	return append(diags, resourceHSMConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceHSMConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceHSMConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
-	hsmConfiguration, err := FindHSMConfigurationByID(conn, d.Id())
+	hsmConfiguration, err := findHSMConfigurationByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift HSM Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift HSM Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift HSM Configuration (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   redshift.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   names.Redshift,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("hsmconfiguration:%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 	d.Set("hsm_configuration_identifier", hsmConfiguration.HsmConfigurationIdentifier)
 	d.Set("hsm_ip_address", hsmConfiguration.HsmIpAddress)
 	d.Set("hsm_partition_name", hsmConfiguration.HsmPartitionName)
-	d.Set("description", hsmConfiguration.Description)
+	d.Set(names.AttrDescription, hsmConfiguration.Description)
 	d.Set("hsm_partition_password", d.Get("hsm_partition_password").(string))
 	d.Set("hsm_server_public_certificate", d.Get("hsm_server_public_certificate").(string))
 
-	tags := KeyValueTags(hsmConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, hsmConfiguration.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceHSMConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceHSMConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("updating Redshift HSM Configuration (%s) tags: %w", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceHSMConfigurationRead(d, meta)
+	return append(diags, resourceHSMConfigurationRead(ctx, d, meta)...)
 }
 
-func resourceHSMConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func resourceHSMConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Redshift HSM Configuration: %s", d.Id())
-	_, err := conn.DeleteHsmConfiguration(&redshift.DeleteHsmConfigurationInput{
+	_, err := conn.DeleteHsmConfiguration(ctx, &redshift.DeleteHsmConfigurationInput{
 		HsmConfigurationIdentifier: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeHsmConfigurationNotFoundFault) {
-		return nil
+	if errs.IsA[*awstypes.HsmConfigurationNotFoundFault](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting Redshift HSM Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Redshift HSM Configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

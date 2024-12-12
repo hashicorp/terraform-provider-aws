@@ -71,7 +71,7 @@ resource "aws_api_gateway_method_settings" "example" {
 
 ### Managing the API Logging CloudWatch Log Group
 
-API Gateway provides the ability to [enable CloudWatch API logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html). To manage the CloudWatch Log Group when this feature is enabled, the [`aws_cloudwatch_log_group` resource](/docs/providers/aws/r/cloudwatch_log_group.html) can be used where the name matches the API Gateway naming convention. If the CloudWatch Log Group previously exists, the [`aws_cloudwatch_log_group` resource can be imported into Terraform](/docs/providers/aws/r/cloudwatch_log_group.html#import) as a one time operation and recreation of the environment can occur without import.
+API Gateway provides the ability to [enable CloudWatch API logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html). To manage the CloudWatch Log Group when this feature is enabled, the [`aws_cloudwatch_log_group` resource](/docs/providers/aws/r/cloudwatch_log_group.html) can be used where the name matches the API Gateway naming convention. If the CloudWatch Log Group previously exists, import the [`aws_cloudwatch_log_group` resource into Terraform](/docs/providers/aws/r/cloudwatch_log_group.html#import) as a one time operation. You can recreate the environment without import.
 
 -> The below configuration uses [`depends_on`](https://www.terraform.io/language/meta-arguments/depends_on) to prevent ordering issues with API Gateway automatically creating the log group first and a variable for naming consistency. Other ordering and naming methodologies may be more appropriate for your environment.
 
@@ -101,7 +101,7 @@ resource "aws_cloudwatch_log_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) ID of the associated REST API
 * `stage_name` - (Required) Name of the stage
@@ -125,13 +125,14 @@ For more information on configuring the log format rules visit the AWS [document
 
 ### Canary Settings
 
+* `deployment_id` - (Required) ID of the deployment that the canary points to.
 * `percent_traffic` - (Optional) Percent `0.0` - `100.0` of traffic to divert to the canary deployment.
 * `stage_variable_overrides` - (Optional) Map of overridden stage `variables` (including new variables) for the canary deployment.
 * `use_stage_cache` - (Optional) Whether the canary deployment uses the stage cache. Defaults to false.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN
 * `id` - ID of the stage
@@ -145,8 +146,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_api_gateway_stage` can be imported using `REST-API-ID/STAGE-NAME`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_stage` using `REST-API-ID/STAGE-NAME`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_stage.example
+  id = "12345abcde/example"
+}
 ```
-$ terraform import aws_api_gateway_stage.example 12345abcde/example
+
+Using `terraform import`, import `aws_api_gateway_stage` using `REST-API-ID/STAGE-NAME`. For example:
+
+```console
+% terraform import aws_api_gateway_stage.example 12345abcde/example
 ```

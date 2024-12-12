@@ -1,28 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
-	"encoding/base64"
-	"fmt"
-	"log"
+	"context"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceAuthorizationToken() *schema.Resource {
+// @SDKDataSource("aws_ecr_authorization_token", name="Authorization Token")
+func dataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAuthorizationTokenRead,
+		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
 
 		Schema: map[string]*schema.Schema{
-			"registry_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"authorization_token": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+			"expires_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrPassword: {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -31,55 +42,49 @@ func DataSourceAuthorizationToken() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"expires_at": {
+			"registry_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"user_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"password": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
 			},
 		},
 	}
 }
 
-func dataSourceAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ECRConn
-	params := &ecr.GetAuthorizationTokenInput{}
-	if v, ok := d.GetOk("registry_id"); ok {
-		params.RegistryIds = []*string{aws.String(v.(string))}
-	}
-	log.Printf("[DEBUG] Getting ECR authorization token")
-	out, err := conn.GetAuthorizationToken(params)
+func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
+
+	out, err := conn.GetAuthorizationToken(ctx, &ecr.GetAuthorizationTokenInput{})
+
 	if err != nil {
-		return fmt.Errorf("error getting ECR authorization token: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading ECR Authorization Token: %s", err)
 	}
-	log.Printf("[DEBUG] Received ECR AuthorizationData %v", out.AuthorizationData)
+
 	authorizationData := out.AuthorizationData[0]
-	authorizationToken := aws.StringValue(authorizationData.AuthorizationToken)
-	expiresAt := aws.TimeValue(authorizationData.ExpiresAt).Format(time.RFC3339)
-	proxyEndpoint := aws.StringValue(authorizationData.ProxyEndpoint)
-	authBytes, err := base64.URLEncoding.DecodeString(authorizationToken)
+	authorizationToken := aws.ToString(authorizationData.AuthorizationToken)
+	expiresAt := aws.ToTime(authorizationData.ExpiresAt).Format(time.RFC3339)
+	proxyEndpoint := aws.ToString(authorizationData.ProxyEndpoint)
+	authBytes, err := itypes.Base64Decode(authorizationToken)
 	if err != nil {
 		d.SetId("")
-		return fmt.Errorf("error decoding ECR authorization token: %w", err)
+		return sdkdiag.AppendErrorf(diags, "decoding ECR authorization token: %s", err)
 	}
 	basicAuthorization := strings.Split(string(authBytes), ":")
 	if len(basicAuthorization) != 2 {
-		return fmt.Errorf("unknown ECR authorization token format")
+		return sdkdiag.AppendErrorf(diags, "unknown ECR authorization token format")
 	}
 	userName := basicAuthorization[0]
 	password := basicAuthorization[1]
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("authorization_token", authorizationToken)
 	d.Set("proxy_endpoint", proxyEndpoint)
 	d.Set("expires_at", expiresAt)
-	d.Set("user_name", userName)
-	d.Set("password", password)
-	return nil
+	d.Set(names.AttrUserName, userName)
+	d.Set(names.AttrPassword, password)
+
+	return diags
 }

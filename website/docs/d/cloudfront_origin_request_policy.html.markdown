@@ -30,14 +30,14 @@ data "aws_cloudfront_origin_request_policy" "ua_referer" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - Unique name to identify the origin request policy.
 * `id` - Identifier for the origin request policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `comment` - Comment to describe the origin request policy.
 * `cookies_config` - Object that determines whether any cookies in viewer requests (and if so, which cookies) are included in the origin request key and automatically included in requests that CloudFront sends to the origin. See [Cookies Config](#cookies-config) for more information.

@@ -1,21 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceDirectory() *schema.Resource {
+// @SDKDataSource("aws_workspaces_directory", name="Directory")
+// @Tags(identifierAttribute="id")
+func dataSourceDirectory() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDirectoryRead,
+		ReadWithoutTimeout: dataSourceDirectoryRead,
 
 		Schema: map[string]*schema.Schema{
-			"alias": {
+			names.AttrAlias: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -53,6 +59,26 @@ func DataSourceDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"saml_properties": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"relay_state_parameter_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						names.AttrStatus: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_access_url": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"self_service_permissions": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -81,12 +107,12 @@ func DataSourceDirectory() *schema.Resource {
 					},
 				},
 			},
-			"subnet_ids": {
+			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"workspace_access_properties": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -163,62 +189,40 @@ func DataSourceDirectory() *schema.Resource {
 	}
 }
 
-func dataSourceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	directoryID := d.Get("directory_id").(string)
+	directory, err := findDirectoryByID(ctx, conn, directoryID)
 
-	rawOutput, state, err := StatusDirectoryState(conn, directoryID)()
 	if err != nil {
-		return fmt.Errorf("error getting WorkSpaces Directory (%s): %w", directoryID, err)
-	}
-	if state == workspaces.WorkspaceDirectoryStateDeregistered {
-		return fmt.Errorf("WorkSpaces directory %s was not found", directoryID)
+		return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Directory (%s): %s", directoryID, err)
 	}
 
 	d.SetId(directoryID)
-
-	directory := rawOutput.(*workspaces.WorkspaceDirectory)
+	d.Set(names.AttrAlias, directory.Alias)
 	d.Set("directory_id", directory.DirectoryId)
-	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
-	d.Set("iam_role_id", directory.IamRoleId)
-	d.Set("registration_code", directory.RegistrationCode)
 	d.Set("directory_name", directory.DirectoryName)
 	d.Set("directory_type", directory.DirectoryType)
-	d.Set("alias", directory.Alias)
-
-	if err := d.Set("subnet_ids", flex.FlattenStringSet(directory.SubnetIds)); err != nil {
-		return fmt.Errorf("error setting subnet_ids: %w", err)
+	d.Set("dns_ip_addresses", directory.DnsIpAddresses)
+	d.Set("iam_role_id", directory.IamRoleId)
+	d.Set("ip_group_ids", directory.IpGroupIds)
+	d.Set("registration_code", directory.RegistrationCode)
+	if err := d.Set("self_service_permissions", flattenSelfservicePermissions(directory.SelfservicePermissions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting self_service_permissions: %s", err)
 	}
-
-	if err := d.Set("self_service_permissions", FlattenSelfServicePermissions(directory.SelfservicePermissions)); err != nil {
-		return fmt.Errorf("error setting self_service_permissions: %w", err)
+	if err := d.Set("saml_properties", flattenSAMLProperties(directory.SamlProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting saml_properties: %s", err)
 	}
-
-	if err := d.Set("workspace_access_properties", FlattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
-		return fmt.Errorf("error setting workspace_access_properties: %w", err)
+	d.Set(names.AttrSubnetIDs, directory.SubnetIds)
+	if err := d.Set("workspace_access_properties", flattenWorkspaceAccessProperties(directory.WorkspaceAccessProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting workspace_access_properties: %s", err)
 	}
-
-	if err := d.Set("workspace_creation_properties", FlattenWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
-		return fmt.Errorf("error setting workspace_creation_properties: %w", err)
+	if err := d.Set("workspace_creation_properties", flattenDefaultWorkspaceCreationProperties(directory.WorkspaceCreationProperties)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting workspace_creation_properties: %s", err)
 	}
+	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
 
-	if err := d.Set("ip_group_ids", flex.FlattenStringSet(directory.IpGroupIds)); err != nil {
-		return fmt.Errorf("error setting ip_group_ids: %w", err)
-	}
-
-	if err := d.Set("dns_ip_addresses", flex.FlattenStringSet(directory.DnsIpAddresses)); err != nil {
-		return fmt.Errorf("error setting dns_ip_addresses: %w", err)
-	}
-
-	tags, err := ListTags(conn, d.Id())
-	if err != nil {
-		return fmt.Errorf("error listing tags: %w", err)
-	}
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	return nil
+	return diags
 }

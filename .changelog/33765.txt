@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_transit_gateway_route : Fix TGW route search filter to avoid routes being missed when more than 1,000 static routes are in a TGW route table
+```

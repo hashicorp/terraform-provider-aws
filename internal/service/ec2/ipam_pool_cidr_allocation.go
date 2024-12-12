@@ -1,30 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
+// @SDKResource("aws_vpc_ipam_pool_cidr_allocation", name="IPAM Pool CIDR Allocation")
+func resourceIPAMPoolCIDRAllocation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIPAMPoolCIDRAllocationCreate,
-		Read:   resourceIPAMPoolCIDRAllocationRead,
-		Delete: resourceIPAMPoolCIDRAllocationDelete,
+		CreateWithoutTimeout: resourceIPAMPoolCIDRAllocationCreate,
+		ReadWithoutTimeout:   resourceIPAMPoolCIDRAllocationRead,
+		DeleteWithoutTimeout: resourceIPAMPoolCIDRAllocationDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -36,10 +45,10 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 				ConflictsWith: []string{"netmask_length"},
 				ValidateFunc: validation.Any(
 					verify.ValidIPv4CIDRNetworkAddress,
-					validation.IsCIDRNetwork(0, 32),
+					verify.ValidIPv6CIDRNetworkAddress,
 				),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
@@ -53,7 +62,7 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 					ValidateFunc: validation.Any(
 						verify.ValidIPv4CIDRNetworkAddress,
 						// Follow the numbers used for netmask_length
-						validation.IsCIDRNetwork(0, 32),
+						validation.IsCIDRNetwork(0, 128),
 					),
 				},
 			},
@@ -70,18 +79,19 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				ForceNew:      true,
-				ValidateFunc:  validation.IntBetween(0, 32),
+				Computed:      true,
+				ValidateFunc:  validation.IntBetween(0, 128),
 				ConflictsWith: []string{"cidr"},
 			},
-			"resource_id": {
+			names.AttrResourceID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_owner": {
+			names.AttrResourceOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_type": {
+			names.AttrResourceType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -89,12 +99,13 @@ func ResourceIPAMPoolCIDRAllocation() *schema.Resource {
 	}
 }
 
-func resourceIPAMPoolCIDRAllocationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceIPAMPoolCIDRAllocationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	ipamPoolID := d.Get("ipam_pool_id").(string)
 	input := &ec2.AllocateIpamPoolCidrInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		IpamPoolId:  aws.String(ipamPoolID),
 	}
 
@@ -102,102 +113,119 @@ func resourceIPAMPoolCIDRAllocationCreate(d *schema.ResourceData, meta interface
 		input.Cidr = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("disallowed_cidrs"); ok && v.(*schema.Set).Len() > 0 {
-		input.DisallowedCidrs = flex.ExpandStringSet(v.(*schema.Set))
+		input.DisallowedCidrs = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v := d.Get("netmask_length"); v != 0 {
-		input.NetmaskLength = aws.Int64(int64(v.(int)))
+		input.NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	output, err := conn.AllocateIpamPoolCidr(input)
+	output, err := conn.AllocateIpamPoolCidr(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating IPAM Pool CIDR Allocation: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating IPAM Pool CIDR Allocation: %s", err)
 	}
-	d.SetId(IPAMPoolCIDRAllocationCreateResourceID(aws.StringValue(output.IpamPoolAllocation.IpamPoolAllocationId), ipamPoolID))
 
-	return resourceIPAMPoolCIDRAllocationRead(d, meta)
+	allocationID := aws.ToString(output.IpamPoolAllocation.IpamPoolAllocationId)
+	d.SetId(ipamPoolCIDRAllocationCreateResourceID(allocationID, ipamPoolID))
+
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return findIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, ipamPoolID)
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for IPAM Pool CIDR Allocation (%s) create: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceIPAMPoolCIDRAllocationRead(ctx, d, meta)...)
 }
 
-func resourceIPAMPoolCIDRAllocationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceIPAMPoolCIDRAllocationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
-
+	allocationID, poolID, err := ipamPoolCIDRAllocationParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	allocation, err := FindIPAMPoolAllocationByTwoPartKey(conn, allocationID, poolID)
+	allocation, err := findIPAMPoolAllocationByTwoPartKey(ctx, conn, allocationID, poolID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IPAM Pool CIDR Allocation (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading IPAM Pool CIDR Allocation (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IPAM Pool CIDR Allocation (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cidr", allocation.Cidr)
+	cidr := aws.ToString(allocation.Cidr)
+	d.Set("cidr", cidr)
+	d.Set(names.AttrDescription, allocation.Description)
 	d.Set("ipam_pool_allocation_id", allocation.IpamPoolAllocationId)
 	d.Set("ipam_pool_id", poolID)
-	if v := allocation.ResourceId; v != nil {
-		d.Set("resource_id", v)
-	}
-	if v := allocation.ResourceOwner; v != nil {
-		d.Set("resource_owner", v)
-	}
-	if v := allocation.ResourceType; v != nil {
-		d.Set("resource_type", v)
+	d.Set("netmask_length", nil)
+	if parts := strings.Split(cidr, "/"); len(parts) == 2 {
+		if v, err := strconv.Atoi(parts[1]); err == nil {
+			d.Set("netmask_length", v)
+		} else {
+			log.Printf("[WARN] Unable to parse CIDR (%s) netmask length: %s", cidr, err)
+		}
+	} else {
+		log.Printf("[WARN] Invalid CIDR block format: %s", cidr)
 	}
 
-	return nil
+	d.Set(names.AttrResourceID, allocation.ResourceId)
+	d.Set(names.AttrResourceOwner, allocation.ResourceOwner)
+	d.Set(names.AttrResourceType, allocation.ResourceType)
+
+	return diags
 }
 
-func resourceIPAMPoolCIDRAllocationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceIPAMPoolCIDRAllocationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	allocationID, poolID, err := IPAMPoolCIDRAllocationParseResourceID(d.Id())
-
+	allocationID, poolID, err := ipamPoolCIDRAllocationParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting IPAM Pool CIDR Allocation: %s", d.Id())
-	_, err = conn.ReleaseIpamPoolAllocation(&ec2.ReleaseIpamPoolAllocationInput{
+	_, err = conn.ReleaseIpamPoolAllocation(ctx, &ec2.ReleaseIpamPoolAllocationInput{
 		Cidr:                 aws.String(d.Get("cidr").(string)),
 		IpamPoolAllocationId: aws.String(allocationID),
 		IpamPoolId:           aws.String(poolID),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidIPAMPoolIdNotFound) || tfawserr.ErrMessageContains(err, errCodeInvalidParameterCombination, "No allocation found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting IPAM Pool CIDR Allocation (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IPAM Pool CIDR Allocation (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const ipamPoolCIDRAllocationIDSeparator = "_"
 
-func IPAMPoolCIDRAllocationCreateResourceID(allocationID, poolID string) string {
+func ipamPoolCIDRAllocationCreateResourceID(allocationID, poolID string) string {
 	parts := []string{allocationID, poolID}
 	id := strings.Join(parts, ipamPoolCIDRAllocationIDSeparator)
 
 	return id
 }
 
-func IPAMPoolCIDRAllocationParseResourceID(id string) (string, string, error) {
+func ipamPoolCIDRAllocationParseResourceID(id string) (string, string, error) {
 	parts := strings.Split(id, ipamPoolCIDRAllocationIDSeparator)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {

@@ -1,32 +1,54 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
-	"fmt"
+	"context"
+	"errors"
 	"log"
-	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lambda"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lambda/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceProvisionedConcurrencyConfig() *schema.Resource {
+// @SDKResource("aws_lambda_provisioned_concurrency_config", name="Provisioned Concurrency Config")
+func resourceProvisionedConcurrencyConfig() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceProvisionedConcurrencyConfigCreate,
-		Read:   resourceProvisionedConcurrencyConfigRead,
-		Update: resourceProvisionedConcurrencyConfigUpdate,
-		Delete: resourceProvisionedConcurrencyConfigDelete,
+		CreateWithoutTimeout: resourceProvisionedConcurrencyConfigCreate,
+		ReadWithoutTimeout:   resourceProvisionedConcurrencyConfigRead,
+		UpdateWithoutTimeout: resourceProvisionedConcurrencyConfigUpdate,
+		DeleteWithoutTimeout: resourceProvisionedConcurrencyConfigDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(15 * time.Minute),
 			Update: schema.DefaultTimeout(15 * time.Minute),
+		},
+
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceProvisionedConcurrencyConfigV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: provisionedConcurrencyConfigStateUpgradeV0,
+				Version: 0,
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -47,167 +69,203 @@ func ResourceProvisionedConcurrencyConfig() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
+			names.AttrSkipDestroy: {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 	}
 }
 
-func resourceProvisionedConcurrencyConfigCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+const (
+	provisionedConcurrencyConfigResourceIDPartCount = 2
+)
+
+func resourceProvisionedConcurrencyConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
+
 	functionName := d.Get("function_name").(string)
 	qualifier := d.Get("qualifier").(string)
-
+	id, err := flex.FlattenResourceId([]string{functionName, qualifier}, provisionedConcurrencyConfigResourceIDPartCount, true)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	input := &lambda.PutProvisionedConcurrencyConfigInput{
 		FunctionName:                    aws.String(functionName),
-		ProvisionedConcurrentExecutions: aws.Int64(int64(d.Get("provisioned_concurrent_executions").(int))),
+		ProvisionedConcurrentExecutions: aws.Int32(int32(d.Get("provisioned_concurrent_executions").(int))),
 		Qualifier:                       aws.String(qualifier),
 	}
 
-	_, err := conn.PutProvisionedConcurrencyConfig(input)
-
-	if err != nil {
-		return fmt.Errorf("error putting Lambda Provisioned Concurrency Config (%s:%s): %s", functionName, qualifier, err)
+	if _, err := conn.PutProvisionedConcurrencyConfig(ctx, input); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Lambda Provisioned Concurrency Config (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", functionName, qualifier))
+	d.SetId(id)
 
-	if err := waitForProvisionedConcurrencyConfigStatusReady(conn, functionName, qualifier, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Lambda Provisioned Concurrency Config (%s) to be ready: %s", d.Id(), err)
+	if _, err := waitProvisionedConcurrencyConfigReady(ctx, conn, functionName, qualifier, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Provisioned Concurrency Config (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceProvisionedConcurrencyConfigRead(d, meta)
+	return append(diags, resourceProvisionedConcurrencyConfigRead(ctx, d, meta)...)
 }
 
-func resourceProvisionedConcurrencyConfigRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceProvisionedConcurrencyConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), provisionedConcurrencyConfigResourceIDPartCount, false)
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &lambda.GetProvisionedConcurrencyConfigInput{
-		FunctionName: aws.String(functionName),
-		Qualifier:    aws.String(qualifier),
-	}
+	functionName, qualifier := parts[0], parts[1]
 
-	output, err := conn.GetProvisionedConcurrencyConfig(input)
+	output, err := findProvisionedConcurrencyConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 
-	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException) || tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Lambda Provisioned Concurrency Config (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error getting Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 
 	d.Set("function_name", functionName)
 	d.Set("provisioned_concurrent_executions", output.AllocatedProvisionedConcurrentExecutions)
 	d.Set("qualifier", qualifier)
 
-	return nil
+	return diags
 }
 
-func resourceProvisionedConcurrencyConfigUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceProvisionedConcurrencyConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), provisionedConcurrencyConfigResourceIDPartCount, false)
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	functionName, qualifier := parts[0], parts[1]
 
 	input := &lambda.PutProvisionedConcurrencyConfigInput{
 		FunctionName:                    aws.String(functionName),
-		ProvisionedConcurrentExecutions: aws.Int64(int64(d.Get("provisioned_concurrent_executions").(int))),
+		ProvisionedConcurrentExecutions: aws.Int32(int32(d.Get("provisioned_concurrent_executions").(int))),
 		Qualifier:                       aws.String(qualifier),
 	}
 
-	_, err = conn.PutProvisionedConcurrencyConfig(input)
+	_, err = conn.PutProvisionedConcurrencyConfig(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error putting Lambda Provisioned Concurrency Config (%s:%s): %s", functionName, qualifier, err)
+		return sdkdiag.AppendErrorf(diags, "updating Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForProvisionedConcurrencyConfigStatusReady(conn, functionName, qualifier, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Lambda Provisioned Concurrency Config (%s) to be ready: %s", d.Id(), err)
+	if _, err := waitProvisionedConcurrencyConfigReady(ctx, conn, functionName, qualifier, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Lambda Provisioned Concurrency Config (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceProvisionedConcurrencyConfigRead(d, meta)
+	return append(diags, resourceProvisionedConcurrencyConfigRead(ctx, d, meta)...)
 }
 
-func resourceProvisionedConcurrencyConfigDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LambdaConn
+func resourceProvisionedConcurrencyConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).LambdaClient(ctx)
 
-	functionName, qualifier, err := ProvisionedConcurrencyConfigParseID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), provisionedConcurrencyConfigResourceIDPartCount, false)
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &lambda.DeleteProvisionedConcurrencyConfigInput{
+	functionName, qualifier := parts[0], parts[1]
+
+	if v, ok := d.GetOk(names.AttrSkipDestroy); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining Lambda Provisioned Concurrency Config %q", d.Id())
+		return diags
+	}
+
+	log.Printf("[INFO] Deleting Lambda Provisioned Concurrency Config: %s", d.Id())
+	_, err = conn.DeleteProvisionedConcurrencyConfig(ctx, &lambda.DeleteProvisionedConcurrencyConfigInput{
+		FunctionName: aws.String(functionName),
+		Qualifier:    aws.String(qualifier),
+	})
+
+	if errs.IsA[*awstypes.ProvisionedConcurrencyConfigNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Lambda Provisioned Concurrency Config (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client, input *lambda.GetProvisionedConcurrencyConfigInput) (*lambda.GetProvisionedConcurrencyConfigOutput, error) {
+	output, err := conn.GetProvisionedConcurrencyConfig(ctx, input)
+
+	if errs.IsA[*awstypes.ProvisionedConcurrencyConfigNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findProvisionedConcurrencyConfigByTwoPartKey(ctx context.Context, conn *lambda.Client, functionName, qualifier string) (*lambda.GetProvisionedConcurrencyConfigOutput, error) {
+	input := &lambda.GetProvisionedConcurrencyConfigInput{
 		FunctionName: aws.String(functionName),
 		Qualifier:    aws.String(qualifier),
 	}
 
-	_, err = conn.DeleteProvisionedConcurrencyConfig(input)
-
-	if tfawserr.ErrCodeEquals(err, lambda.ErrCodeProvisionedConcurrencyConfigNotFoundException) || tfawserr.ErrCodeEquals(err, lambda.ErrCodeResourceNotFoundException) {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error putting Lambda Provisioned Concurrency Config (%s:%s): %s", functionName, qualifier, err)
-	}
-
-	return nil
+	return findProvisionedConcurrencyConfig(ctx, conn, input)
 }
 
-func ProvisionedConcurrencyConfigParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ":", 2)
-
-	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected FUNCTION_NAME:QUALIFIER", id)
-	}
-
-	return parts[0], parts[1], nil
-}
-
-func refreshProvisionedConcurrencyConfigStatus(conn *lambda.Lambda, functionName, qualifier string) resource.StateRefreshFunc {
+func statusProvisionedConcurrencyConfig(ctx context.Context, conn *lambda.Client, functionName, qualifier string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		input := &lambda.GetProvisionedConcurrencyConfigInput{
-			FunctionName: aws.String(functionName),
-			Qualifier:    aws.String(qualifier),
-		}
+		output, err := findProvisionedConcurrencyConfigByTwoPartKey(ctx, conn, functionName, qualifier)
 
-		output, err := conn.GetProvisionedConcurrencyConfig(input)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
 
 		if err != nil {
-			return "", "", err
+			return nil, "", err
 		}
 
-		status := aws.StringValue(output.Status)
-
-		if status == lambda.ProvisionedConcurrencyStatusEnumFailed {
-			return output, status, fmt.Errorf("status reason: %s", aws.StringValue(output.StatusReason))
-		}
-
-		return output, status, nil
+		return output, string(output.Status), nil
 	}
 }
 
-func waitForProvisionedConcurrencyConfigStatusReady(conn *lambda.Lambda, functionName, qualifier string, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{lambda.ProvisionedConcurrencyStatusEnumInProgress},
-		Target:  []string{lambda.ProvisionedConcurrencyStatusEnumReady},
-		Refresh: refreshProvisionedConcurrencyConfigStatus(conn, functionName, qualifier),
+func waitProvisionedConcurrencyConfigReady(ctx context.Context, conn *lambda.Client, functionName, qualifier string, timeout time.Duration) (*lambda.GetProvisionedConcurrencyConfigOutput, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ProvisionedConcurrencyStatusEnumInProgress),
+		Target:  enum.Slice(awstypes.ProvisionedConcurrencyStatusEnumReady),
+		Refresh: statusProvisionedConcurrencyConfig(ctx, conn, functionName, qualifier),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	return err
+	if output, ok := outputRaw.(*lambda.GetProvisionedConcurrencyConfigOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
+	}
+
+	return nil, err
 }

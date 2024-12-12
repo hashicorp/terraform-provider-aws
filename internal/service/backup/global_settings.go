@@ -1,23 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
-	"fmt"
+	"context"
+	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go-v2/service/backup"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func ResourceGlobalSettings() *schema.Resource {
+// @SDKResource("aws_backup_global_settings", name="Global Settings")
+func resourceGlobalSettings() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGlobalSettingsUpdate,
-		Update: resourceGlobalSettingsUpdate,
-		Read:   resourceGlobalSettingsRead,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceGlobalSettingsUpdate,
+		UpdateWithoutTimeout: resourceGlobalSettingsUpdate,
+		ReadWithoutTimeout:   resourceGlobalSettingsRead,
+		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -30,34 +38,61 @@ func ResourceGlobalSettings() *schema.Resource {
 	}
 }
 
-func resourceGlobalSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
 	input := &backup.UpdateGlobalSettingsInput{
-		GlobalSettings: flex.ExpandStringMap(d.Get("global_settings").(map[string]interface{})),
+		GlobalSettings: flex.ExpandStringValueMap(d.Get("global_settings").(map[string]interface{})),
 	}
 
-	_, err := conn.UpdateGlobalSettings(input)
+	_, err := conn.UpdateGlobalSettings(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error setting Backup Global Settings (%s): %w", meta.(*conns.AWSClient).AccountID, err)
+		return sdkdiag.AppendErrorf(diags, "updating Backup Global Settings: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	if d.IsNewResource() {
+		d.SetId(meta.(*conns.AWSClient).AccountID(ctx))
+	}
 
-	return resourceGlobalSettingsRead(d, meta)
+	return append(diags, resourceGlobalSettingsRead(ctx, d, meta)...)
 }
 
-func resourceGlobalSettingsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupClient(ctx)
 
-	resp, err := conn.DescribeGlobalSettings(&backup.DescribeGlobalSettingsInput{})
+	output, err := findGlobalSettings(ctx, conn)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Backup Global Settings (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		return fmt.Errorf("error reading Backup Global Settings (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Backup Global Settings (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("global_settings", aws.StringValueMap(resp.GlobalSettings)); err != nil {
-		return fmt.Errorf("error setting global_settings: %w", err)
+	if err := d.Set("global_settings", output); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting global_settings: %s", err)
 	}
 
-	return nil
+	return diags
+}
+
+func findGlobalSettings(ctx context.Context, conn *backup.Client) (map[string]string, error) {
+	input := &backup.DescribeGlobalSettingsInput{}
+	output, err := conn.DescribeGlobalSettings(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.GlobalSettings == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.GlobalSettings, nil
 }

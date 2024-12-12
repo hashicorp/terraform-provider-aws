@@ -1,26 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceSecrets() *schema.Resource {
+// @SDKDataSource("aws_secretsmanager_secrets", name="Secrets")
+func dataSourceSecrets() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSecretsRead,
+		ReadWithoutTimeout: dataSourceSecretsRead,
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
-			"names": {
+			names.AttrFilter: namevaluesfilters.Schema(),
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -29,47 +38,34 @@ func DataSourceSecrets() *schema.Resource {
 	}
 }
 
-func dataSourceSecretsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SecretsManagerConn
+func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	input := &secretsmanager.ListSecretsInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).SecretsmanagerFilters()
+	if v, ok := d.GetOk(names.AttrFilter); ok {
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).SecretsManagerFilters()
 	}
 
-	var results []*secretsmanager.SecretListEntry
+	var results []types.SecretListEntry
 
-	err := conn.ListSecretsPages(input, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := secretsmanager.NewListSecretsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing Secrets Manager Secrets: %s", err)
 		}
 
-		for _, secretListEntry := range page.SecretList {
-			if secretListEntry == nil {
-				continue
-			}
-
-			results = append(results, secretListEntry)
+		if page != nil {
+			results = append(results, page.SecretList...)
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return fmt.Errorf("listing Secrets Manager Secrets: %w", err)
 	}
 
-	var arns, names []string
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(results, func(v types.SecretListEntry) string { return aws.ToString(v.ARN) }))
+	d.Set(names.AttrNames, tfslices.ApplyToAll(results, func(v types.SecretListEntry) string { return aws.ToString(v.Name) }))
 
-	for _, r := range results {
-		arns = append(arns, aws.StringValue(r.ARN))
-		names = append(names, aws.StringValue(r.Name))
-	}
-
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
-	d.Set("names", names)
-
-	return nil
+	return diags
 }

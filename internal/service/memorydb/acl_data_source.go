@@ -1,23 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceACL() *schema.Resource {
+// @SDKDataSource("aws_memorydb_acl", name="ACL")
+// @Tags(identifierAttribute="arn")
+func dataSourceACL() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceACLRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -25,11 +31,11 @@ func DataSourceACL() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"user_names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -40,33 +46,21 @@ func DataSourceACL() *schema.Resource {
 }
 
 func dataSourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MemoryDBConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
 
-	name := d.Get("name").(string)
-
-	acl, err := FindACLByName(ctx, conn, name)
+	name := d.Get(names.AttrName).(string)
+	acl, err := findACLByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("MemoryDB ACL", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MemoryDB ACL", err))
 	}
 
-	d.SetId(aws.StringValue(acl.Name))
-
-	d.Set("arn", acl.ARN)
+	d.SetId(aws.ToString(acl.Name))
+	d.Set(names.AttrARN, acl.ARN)
 	d.Set("minimum_engine_version", acl.MinimumEngineVersion)
-	d.Set("name", acl.Name)
-	d.Set("user_names", flex.FlattenStringSet(acl.UserNames))
+	d.Set(names.AttrName, acl.Name)
+	d.Set("user_names", acl.UserNames)
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil {
-		return diag.Errorf("error listing tags for MemoryDB ACL (%s): %s", d.Id(), err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
-	}
-
-	return nil
+	return diags
 }

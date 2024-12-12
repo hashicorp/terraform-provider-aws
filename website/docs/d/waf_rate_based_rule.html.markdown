@@ -21,11 +21,12 @@ data "aws_waf_rate_based_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Required) Name of the WAF rate based rule.
 
-## Attributes Reference
-In addition to all arguments above, the following attributes are exported:
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the WAF rate based rule.

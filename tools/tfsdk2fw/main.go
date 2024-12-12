@@ -1,27 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package main
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
 	"flag"
 	"fmt"
-	"go/format"
 	"io"
 	"os"
 	"path"
-	"sort"
 	"strings"
-	"text/template"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw/naming"
-	"github.com/mitchellh/cli"
+	"golang.org/x/exp/slices"
 )
-
-// TODO
-// * timeouts
 
 var (
 	dataSourceType = flag.String("data-source", "", "Data Source type")
@@ -48,30 +45,29 @@ func main() {
 	name := args[1]
 	outputFilename := args[2]
 
-	ui := &cli.BasicUi{
-		Reader:      os.Stdin,
-		Writer:      os.Stdout,
-		ErrorWriter: os.Stderr,
-	}
+	// ui := &cli.BasicUi{
+	// 	Reader:      os.Stdin,
+	// 	Writer:      os.Stdout,
+	// 	ErrorWriter: os.Stderr,
+	// }
+	g := common.NewGenerator()
 	migrator := &migrator{
+		Generator:   g,
 		Name:        name,
 		PackageName: packageName,
-		Ui:          ui,
 	}
 
 	p, err := provider.New(context.Background())
 
 	if err != nil {
-		ui.Error(err.Error())
-		os.Exit(1)
+		g.Fatalf(err.Error())
 	}
 
 	if v := *dataSourceType; v != "" {
 		resource, ok := p.DataSourcesMap[v]
 
 		if !ok {
-			ui.Error(fmt.Sprintf("data source type %s not found", v))
-			os.Exit(2)
+			g.Fatalf("data source type %s not found", v)
 		}
 
 		migrator.IsDataSource = true
@@ -82,8 +78,7 @@ func main() {
 		resource, ok := p.ResourcesMap[v]
 
 		if !ok {
-			ui.Error(fmt.Sprintf("resource type %s not found", v))
-			os.Exit(2)
+			g.Fatalf("resource type %s not found", v)
 		}
 
 		migrator.Resource = resource
@@ -92,19 +87,18 @@ func main() {
 	}
 
 	if err := migrator.migrate(outputFilename); err != nil {
-		ui.Error(fmt.Sprintf("error migrating Terraform %s schema: %s", *resourceType, err))
-		os.Exit(1)
+		g.Fatalf("error migrating Terraform %s schema: %s", *resourceType, err)
 	}
 }
 
 type migrator struct {
+	Generator    *common.Generator
 	IsDataSource bool
 	Name         string
 	PackageName  string
 	Resource     *schema.Resource
 	Template     string
 	TFTypeName   string
-	Ui           cli.Ui
 }
 
 // migrate generates an identical schema into the specified output file.
@@ -125,55 +119,23 @@ func (m *migrator) migrate(outputFilename string) error {
 		return err
 	}
 
-	return m.applyTemplate(outputFilename, templateData)
-}
+	d := m.Generator.NewGoFileDestination(outputFilename)
 
-func (m *migrator) applyTemplate(filename string, templateData *templateData) error {
-	tmpl, err := template.New("schema").Parse(m.Template)
-
-	if err != nil {
-		return fmt.Errorf("parsing schema template: %w", err)
+	if err := d.BufferTemplate("schema", m.Template, templateData); err != nil {
+		return err
 	}
 
-	var buffer bytes.Buffer
-	err = tmpl.Execute(&buffer, templateData)
-
-	if err != nil {
-		return fmt.Errorf("executing template: %w", err)
-	}
-
-	generatedFileContents, err := format.Source(buffer.Bytes())
-
-	if err != nil {
-		m.infof("%s", buffer.String())
-		return fmt.Errorf("formatting generated source code: %w", err)
-	}
-
-	f, err := os.Create(filename)
-
-	if err != nil {
-		return fmt.Errorf("creating file (%s): %w", filename, err)
-	}
-
-	defer f.Close()
-
-	_, err = f.Write(generatedFileContents)
-
-	if err != nil {
-		return fmt.Errorf("writing to file (%s): %w", filename, err)
-	}
-
-	return nil
+	return d.Write()
 }
 
 func (m *migrator) generateTemplateData() (*templateData, error) {
 	sbSchema := strings.Builder{}
 	sbStruct := strings.Builder{}
 	emitter := &emitter{
+		Generator:    m.Generator,
 		IsDataSource: m.IsDataSource,
 		SchemaWriter: &sbSchema,
 		StructWriter: &sbStruct,
-		Ui:           m.Ui,
 	}
 
 	err := emitter.emitSchemaForResource(m.Resource)
@@ -183,9 +145,14 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 	}
 
 	templateData := &templateData{
+		DefaultCreateTimeout:         emitter.DefaultCreateTimeout,
+		DefaultReadTimeout:           emitter.DefaultReadTimeout,
+		DefaultUpdateTimeout:         emitter.DefaultUpdateTimeout,
+		DefaultDeleteTimeout:         emitter.DefaultDeleteTimeout,
 		EmitResourceImportState:      m.Resource.Importer != nil,
 		EmitResourceModifyPlan:       !m.IsDataSource && emitter.HasTopLevelTagsAllMap && emitter.HasTopLevelTagsMap,
 		EmitResourceUpdateSkeleton:   m.Resource.Update != nil || m.Resource.UpdateContext != nil || m.Resource.UpdateWithoutTimeout != nil,
+		HasTimeouts:                  emitter.HasTimeouts,
 		ImportFrameworkAttr:          emitter.ImportFrameworkAttr,
 		ImportProviderFrameworkTypes: emitter.ImportProviderFrameworkTypes,
 		Name:                         m.Name,
@@ -195,22 +162,46 @@ func (m *migrator) generateTemplateData() (*templateData, error) {
 		TFTypeName:                   m.TFTypeName,
 	}
 
+	for _, v := range emitter.FrameworkPlanModifierPackages {
+		if !slices.Contains(templateData.FrameworkPlanModifierPackages, v) {
+			templateData.FrameworkPlanModifierPackages = append(templateData.FrameworkPlanModifierPackages, v)
+		}
+	}
+	for _, v := range emitter.FrameworkValidatorsPackages {
+		if !slices.Contains(templateData.FrameworkValidatorsPackages, v) {
+			templateData.FrameworkValidatorsPackages = append(templateData.FrameworkValidatorsPackages, v)
+		}
+	}
+	for _, v := range emitter.GoImports {
+		if !slices.Contains(templateData.GoImports, v) {
+			templateData.GoImports = append(templateData.GoImports, v)
+		}
+	}
+
 	return templateData, nil
 }
 
 func (m *migrator) infof(format string, a ...interface{}) {
-	m.Ui.Info(fmt.Sprintf(format, a...))
+	m.Generator.Infof(format, a...)
 }
 
 type emitter struct {
-	HasTopLevelTagsAllMap        bool
-	HasTopLevelTagsMap           bool
-	ImportFrameworkAttr          bool
-	ImportProviderFrameworkTypes bool
-	IsDataSource                 bool
-	SchemaWriter                 io.Writer
-	StructWriter                 io.Writer
-	Ui                           cli.Ui
+	DefaultCreateTimeout          int64
+	DefaultReadTimeout            int64
+	DefaultUpdateTimeout          int64
+	DefaultDeleteTimeout          int64
+	Generator                     *common.Generator
+	FrameworkPlanModifierPackages []string // Package names for any terraform-plugin-framework plan modifiers. May contain duplicates.
+	FrameworkValidatorsPackages   []string // Package names for any terraform-plugin-framework-validators validators. May contain duplicates.
+	GoImports                     []goImport
+	HasTimeouts                   bool
+	HasTopLevelTagsAllMap         bool
+	HasTopLevelTagsMap            bool
+	ImportFrameworkAttr           bool
+	ImportProviderFrameworkTypes  bool
+	IsDataSource                  bool
+	SchemaWriter                  io.Writer
+	StructWriter                  io.Writer
 }
 
 // emitSchemaForResource generates the Plugin Framework code for a Plugin SDK Resource and emits the generated code to the emitter's Writer.
@@ -225,7 +216,24 @@ func (e *emitter) emitSchemaForResource(resource *schema.Resource) error {
 		}
 	}
 
-	fprintf(e.SchemaWriter, "tfsdk.Schema{\n")
+	if v := resource.Timeouts; v != nil {
+		e.HasTimeouts = true
+
+		if v := v.Create; v != nil {
+			e.DefaultCreateTimeout = int64(*v)
+		}
+		if v := v.Read; v != nil {
+			e.DefaultReadTimeout = int64(*v)
+		}
+		if v := v.Update; v != nil {
+			e.DefaultUpdateTimeout = int64(*v)
+		}
+		if v := v.Delete; v != nil {
+			e.DefaultDeleteTimeout = int64(*v)
+		}
+	}
+
+	fprintf(e.SchemaWriter, "schema.Schema{\n")
 
 	err := e.emitAttributesAndBlocks(nil, resource.Schema)
 
@@ -256,12 +264,12 @@ func (e *emitter) emitSchemaForResource(resource *schema.Resource) error {
 func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*schema.Schema) error {
 	isTopLevelAttribute := len(path) == 0
 
-	// At this point we are emitting code for a tfsdk.Block or Schema.
+	// At this point we are emitting code for a schema.Block or Schema.
 	names := make([]string, 0)
 	for name := range schema {
 		names = append(names, name)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
 	emittedFieldName := false
 	for _, name := range names {
@@ -272,7 +280,7 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 		}
 
 		if !emittedFieldName {
-			fprintf(e.SchemaWriter, "Attributes: map[string]tfsdk.Attribute{\n")
+			fprintf(e.SchemaWriter, "Attributes: map[string]schema.Attribute{\n")
 			emittedFieldName = true
 		}
 
@@ -307,7 +315,7 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 		}
 
 		if !emittedFieldName {
-			fprintf(e.SchemaWriter, "Blocks: map[string]tfsdk.Block{\n")
+			fprintf(e.SchemaWriter, "Blocks: map[string]schema.Block{\n")
 			emittedFieldName = true
 		}
 
@@ -335,41 +343,51 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 	isComputedOnly := property.Computed && !property.Optional
 	isTopLevelAttribute := len(path) == 1
 	var planModifiers []string
+	var defaultSpec string
+	var fwPlanModifierPackage, fwPlanModifierType, fwValidatorsPackage, fwValidatorType string
 
-	// At this point we are emitting code for the values of a tfsdk.Schema's Attributes (map[string]tfsdk.Attribute).
-	fprintf(e.SchemaWriter, "{\n")
-
+	// At this point we are emitting code for the values of a schema.Schema's Attributes (map[string]schema.Attribute).
 	switch v := property.Type; v {
 	//
 	// Primitive types.
 	//
 	case schema.TypeBool:
-		fprintf(e.SchemaWriter, "Type:types.BoolType,\n")
+		fprintf(e.SchemaWriter, "schema.BoolAttribute{\n")
 
 		if isTopLevelAttribute {
 			fprintf(e.StructWriter, "types.Bool")
 		}
 
+		fwPlanModifierPackage = "boolplanmodifier"
+		fwPlanModifierType = "Bool"
+
 	case schema.TypeFloat:
-		fprintf(e.SchemaWriter, "Type:types.Float64Type,\n")
+		fprintf(e.SchemaWriter, "schema.Float64Attribute{\n")
 
 		if isTopLevelAttribute {
 			fprintf(e.StructWriter, "types.Float64")
 		}
 
+		fwPlanModifierPackage = "float64planmodifier"
+		fwPlanModifierType = "Float64"
+
 	case schema.TypeInt:
-		fprintf(e.SchemaWriter, "Type:types.Int64Type,\n")
+		fprintf(e.SchemaWriter, "schema.Int64Attribute{\n")
 
 		if isTopLevelAttribute {
 			fprintf(e.StructWriter, "types.Int64")
 		}
+
+		fwPlanModifierPackage = "int64planmodifier"
+		fwPlanModifierType = "Int64"
 
 	case schema.TypeString:
 		// Computed-only ARN attributes are easiest handled as strings.
 		if (attributeName == "arn" || strings.HasSuffix(attributeName, "_arn")) && !isComputedOnly {
 			e.ImportProviderFrameworkTypes = true
 
-			fprintf(e.SchemaWriter, "Type:fwtypes.ARNType,\n")
+			fprintf(e.SchemaWriter, "schema.StringAttribute{\n")
+			fprintf(e.SchemaWriter, "CustomType:fwtypes.ARNType,\n")
 
 			if isTopLevelAttribute {
 				fprintf(e.StructWriter, "fwtypes.ARN")
@@ -379,38 +397,61 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 				fprintf(e.SchemaWriter, "// TODO framework.IDAttribute()\n")
 			}
 
-			fprintf(e.SchemaWriter, "Type:types.StringType,\n")
+			fprintf(e.SchemaWriter, "schema.StringAttribute{\n")
 
 			if isTopLevelAttribute {
 				fprintf(e.StructWriter, "types.String")
 			}
 		}
 
+		fwPlanModifierPackage = "stringplanmodifier"
+		fwPlanModifierType = "String"
+
 	//
 	// Complex types.
 	//
 	case schema.TypeList, schema.TypeMap, schema.TypeSet:
-		var aggregateType, typeName string
+		var aggregateSchemaFactory, typeName string
 
 		switch v {
 		case schema.TypeList:
-			aggregateType = "types.ListType"
+			aggregateSchemaFactory = "schema.ListAttribute{"
 			typeName = "list"
+
 			if isTopLevelAttribute {
 				fprintf(e.StructWriter, "types.List")
 			}
+
+			fwPlanModifierPackage = "listplanmodifier"
+			fwPlanModifierType = "List"
+			fwValidatorsPackage = "listvalidator"
+			fwValidatorType = "List"
+
 		case schema.TypeMap:
-			aggregateType = "types.MapType"
+			aggregateSchemaFactory = "schema.MapAttribute{"
 			typeName = "map"
+
 			if isTopLevelAttribute {
 				fprintf(e.StructWriter, "types.Map")
 			}
+
+			fwPlanModifierPackage = "mapplanmodifier"
+			fwPlanModifierType = "Map"
+			fwValidatorsPackage = "mapvalidator"
+			fwValidatorType = "Map"
+
 		case schema.TypeSet:
-			aggregateType = "types.SetType"
+			aggregateSchemaFactory = "schema.SetAttribute{"
 			typeName = "set"
+
 			if isTopLevelAttribute {
 				fprintf(e.StructWriter, "types.Set")
 			}
+
+			fwPlanModifierPackage = "setplanmodifier"
+			fwPlanModifierType = "Set"
+			fwValidatorsPackage = "setvalidator"
+			fwValidatorType = "Set"
 		}
 
 		switch v := property.Elem.(type) {
@@ -448,17 +489,19 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 				return unsupportedTypeError(path, fmt.Sprintf("(Attribute) %s of %s", typeName, v.String()))
 			}
 
-			fprintf(e.SchemaWriter, "Type:%s{ElemType:%s},\n", aggregateType, elementType)
+			fprintf(e.SchemaWriter, "%s\n", aggregateSchemaFactory)
+			fprintf(e.SchemaWriter, "ElementType:%s,\n", elementType)
 
 		case *schema.Resource:
 			// We get here for Computed-only nested blocks or when ConfigMode is SchemaConfigModeBlock.
-			fprintf(e.SchemaWriter, "Type:%s{ElemType:", aggregateType)
+			fprintf(e.SchemaWriter, "%s\n", aggregateSchemaFactory)
+			fprintf(e.SchemaWriter, "ElementType:")
 
 			if err := e.emitComputedOnlyBlock(path, v.Schema); err != nil {
 				return err
 			}
 
-			fprintf(e.SchemaWriter, "},\n")
+			fprintf(e.SchemaWriter, ",\n")
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("(Attribute) %s of %T", typeName, v))
@@ -474,6 +517,10 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 
 	if property.Optional {
 		fprintf(e.SchemaWriter, "Optional:true,\n")
+	}
+
+	if def := property.Default; def != nil {
+		property.Computed = true
 	}
 
 	if property.Computed {
@@ -492,37 +539,69 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
 	}
 
+	if maxItems, minItems := property.MaxItems, property.MinItems; maxItems > 0 || minItems > 0 && fwValidatorsPackage != "" && fwValidatorType != "" {
+		e.FrameworkValidatorsPackages = append(e.FrameworkValidatorsPackages, fwValidatorsPackage)
+
+		fprintf(e.SchemaWriter, "Validators:[]validator.%s{\n", fwValidatorType)
+		if minItems > 0 {
+			fprintf(e.SchemaWriter, "%s.SizeAtLeast(%d),\n", fwValidatorsPackage, minItems)
+		}
+		if maxItems > 0 {
+			fprintf(e.SchemaWriter, "%s.SizeAtMost(%d),\n", fwValidatorsPackage, maxItems)
+		}
+		fprintf(e.SchemaWriter, "},\n")
+	}
+
 	if attributeName == "id" && isTopLevelAttribute && !e.IsDataSource {
-		planModifiers = append(planModifiers, "resource.UseStateForUnknown()")
+		planModifiers = append(planModifiers, fmt.Sprintf("%s.UseStateForUnknown()", fwPlanModifierPackage))
+		e.FrameworkPlanModifierPackages = append(e.FrameworkPlanModifierPackages, fwPlanModifierPackage)
 	}
 
 	if property.ForceNew {
-		planModifiers = append(planModifiers, "resource.RequiresReplace()")
+		planModifiers = append(planModifiers, fmt.Sprintf("%s.RequiresReplace()", fwPlanModifierPackage))
+		e.FrameworkPlanModifierPackages = append(e.FrameworkPlanModifierPackages, fwPlanModifierPackage)
+	}
+
+	if def := property.Default; def != nil {
+		switch v := def.(type) {
+		case bool:
+			e.GoImports = append(e.GoImports, goImport{
+				Path: "github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault",
+			})
+			defaultSpec = fmt.Sprintf("booldefault.StaticBool(%t)", v)
+		case int:
+			e.GoImports = append(e.GoImports, goImport{
+				Path: "github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default",
+			})
+			defaultSpec = fmt.Sprintf("int64default.StaticInt64(%d)", v)
+		case float64:
+			e.GoImports = append(e.GoImports, goImport{
+				Path: "github.com/hashicorp/terraform-plugin-framework/resource/schema/float64default",
+			})
+			defaultSpec = fmt.Sprintf("float64default.StaticFloat64(%f)", v)
+		case string:
+			e.GoImports = append(e.GoImports, goImport{
+				Path: "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault",
+			})
+			defaultSpec = fmt.Sprintf("stringdefault.StaticString(%q)", v)
+		default:
+			fprintf(e.SchemaWriter, "// TODO Default: %#[1]v (%[1]T),\n", def)
+		}
 	}
 
 	if len(planModifiers) > 0 {
-		fprintf(e.SchemaWriter, "PlanModifiers:[]tfsdk.AttributePlanModifier{\n")
+		fprintf(e.SchemaWriter, "PlanModifiers:[]planmodifier.%s{\n", fwPlanModifierType)
 		for _, planModifier := range planModifiers {
 			fprintf(e.SchemaWriter, "%s,\n", planModifier)
 		}
 		fprintf(e.SchemaWriter, "},\n")
 	}
 
-	// Features that we can't (yet) migrate:
-
-	if def := property.Default; def != nil {
-		switch def.(type) {
-		case bool:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
-		case int:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
-		case float64:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
-		case string:
-			fprintf(e.SchemaWriter, "// TODO Default:%#v,\n", def)
-		default:
-		}
+	if defaultSpec != "" {
+		fprintf(e.SchemaWriter, "Default: %s,\n", defaultSpec)
 	}
+
+	// Features that we can't (yet) migrate:
 
 	if property.ValidateFunc != nil || property.ValidateDiagFunc != nil {
 		fprintf(e.SchemaWriter, "// TODO Validate,\n")
@@ -536,9 +615,10 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 // emitBlockProperty generates the Plugin Framework code for a Plugin SDK Block's property
 // and emits the generated code to the emitter's Writer.
 func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) error {
-	// At this point we are emitting code for the values of a tfsdk.Block or Schema's Blocks (map[string]tfsdk.Block).
-	fprintf(e.SchemaWriter, "{\n")
+	var planModifiers []string
+	var fwPlanModifierPackage, fwPlanModifierType, fwValidatorsPackage, fwValidatorType string
 
+	// At this point we are emitting code for the values of a schema.Block or Schema's Blocks (map[string]schema.Block).
 	switch v := property.Type; v {
 	//
 	// Complex types.
@@ -546,13 +626,21 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 	case schema.TypeList:
 		switch v := property.Elem.(type) {
 		case *schema.Resource:
+			fwPlanModifierPackage = "listplanmodifier"
+			fwPlanModifierType = "List"
+			fwValidatorsPackage = "listvalidator"
+			fwValidatorType = "List"
+
+			fprintf(e.SchemaWriter, "schema.ListNestedBlock{\n")
+			fprintf(e.SchemaWriter, "NestedObject:schema.NestedBlockObject{\n")
+
 			err := e.emitAttributesAndBlocks(path, v.Schema)
 
 			if err != nil {
 				return err
 			}
 
-			fprintf(e.SchemaWriter, "NestingMode:tfsdk.BlockNestingModeList,\n")
+			fprintf(e.SchemaWriter, "},\n")
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("(Block) list of %T", v))
@@ -561,13 +649,21 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 	case schema.TypeSet:
 		switch v := property.Elem.(type) {
 		case *schema.Resource:
+			fwPlanModifierPackage = "setplanmodifier"
+			fwPlanModifierType = "Set"
+			fwValidatorsPackage = "setvalidator"
+			fwValidatorType = "Set"
+
+			fprintf(e.SchemaWriter, "schema.SetNestedBlock{\n")
+			fprintf(e.SchemaWriter, "NestedObject:schema.NestedBlockObject{\n")
+
 			err := e.emitAttributesAndBlocks(path, v.Schema)
 
 			if err != nil {
 				return err
 			}
 
-			fprintf(e.SchemaWriter, "NestingMode:tfsdk.BlockNestingModeSet,\n")
+			fprintf(e.SchemaWriter, "},\n")
 
 		default:
 			return unsupportedTypeError(path, fmt.Sprintf("(Block) set of %T", v))
@@ -590,20 +686,38 @@ func (e *emitter) emitBlockProperty(path []string, property *schema.Schema) erro
 		property.MinItems = 0
 	}
 
-	if maxItems := property.MaxItems; maxItems > 0 {
-		fprintf(e.SchemaWriter, "MaxItems:%d,\n", maxItems)
-	}
-
-	if minItems := property.MinItems; minItems > 0 {
-		fprintf(e.SchemaWriter, "MinItems:%d,\n", minItems)
-	}
-
 	if description := property.Description; description != "" {
 		fprintf(e.SchemaWriter, "Description:%q,\n", description)
 	}
 
 	if deprecationMessage := property.Deprecated; deprecationMessage != "" {
 		fprintf(e.SchemaWriter, "DeprecationMessage:%q,\n", deprecationMessage)
+	}
+
+	if maxItems, minItems := property.MaxItems, property.MinItems; maxItems > 0 || minItems > 0 && fwValidatorsPackage != "" && fwValidatorType != "" {
+		e.FrameworkValidatorsPackages = append(e.FrameworkValidatorsPackages, fwValidatorsPackage)
+
+		fprintf(e.SchemaWriter, "Validators:[]validator.%s{\n", fwValidatorType)
+		if minItems > 0 {
+			fprintf(e.SchemaWriter, "%s.SizeAtLeast(%d),\n", fwValidatorsPackage, minItems)
+		}
+		if maxItems > 0 {
+			fprintf(e.SchemaWriter, "%s.SizeAtMost(%d),\n", fwValidatorsPackage, maxItems)
+		}
+		fprintf(e.SchemaWriter, "},\n")
+	}
+
+	if property.ForceNew {
+		planModifiers = append(planModifiers, fmt.Sprintf("%s.RequiresReplace()", fwPlanModifierPackage))
+		e.FrameworkPlanModifierPackages = append(e.FrameworkPlanModifierPackages, fwPlanModifierPackage)
+	}
+
+	if len(planModifiers) > 0 {
+		fprintf(e.SchemaWriter, "PlanModifiers:[]planmodifier.%s{\n", fwPlanModifierType)
+		for _, planModifier := range planModifiers {
+			fprintf(e.SchemaWriter, "%s,\n", planModifier)
+		}
+		fprintf(e.SchemaWriter, "},\n")
 	}
 
 	if def := property.Default; def != nil {
@@ -624,7 +738,7 @@ func (e *emitter) emitComputedOnlyBlock(path []string, schema map[string]*schema
 	for name := range schema {
 		names = append(names, name)
 	}
-	sort.Strings(names)
+	slices.Sort(names)
 
 	fprintf(e.SchemaWriter, "types.ObjectType{\n")
 
@@ -740,7 +854,7 @@ func (e *emitter) emitComputedOnlyBlockProperty(path []string, property *schema.
 
 // warnf emits a formatted warning message to the UI.
 func (e *emitter) warnf(format string, a ...interface{}) {
-	e.Ui.Warn(fmt.Sprintf(format, a...))
+	e.Generator.Warnf(format, a...)
 }
 
 // fprintf writes a formatted string to a Writer.
@@ -786,20 +900,33 @@ func unsupportedTypeError(path []string, typ string) error {
 }
 
 type templateData struct {
-	EmitResourceImportState      bool
-	EmitResourceModifyPlan       bool
-	EmitResourceUpdateSkeleton   bool
-	ImportFrameworkAttr          bool
-	ImportProviderFrameworkTypes bool
-	Name                         string // e.g. Instance
-	PackageName                  string // e.g. ec2
-	Schema                       string
-	Struct                       string
-	TFTypeName                   string // e.g. aws_instance
+	DefaultCreateTimeout          int64
+	DefaultReadTimeout            int64
+	DefaultUpdateTimeout          int64
+	DefaultDeleteTimeout          int64
+	EmitResourceImportState       bool
+	EmitResourceModifyPlan        bool
+	EmitResourceUpdateSkeleton    bool
+	FrameworkPlanModifierPackages []string
+	FrameworkValidatorsPackages   []string
+	GoImports                     []goImport
+	HasTimeouts                   bool
+	ImportFrameworkAttr           bool
+	ImportProviderFrameworkTypes  bool
+	Name                          string // e.g. Instance
+	PackageName                   string // e.g. ec2
+	Schema                        string
+	Struct                        string
+	TFTypeName                    string // e.g. aws_instance
 }
 
-//go:embed datasource.tmpl
+//go:embed datasource.gtpl
 var datasourceImpl string
 
-//go:embed resource.tmpl
+//go:embed resource.gtpl
 var resourceImpl string
+
+type goImport struct {
+	Path  string
+	Alias string
+}

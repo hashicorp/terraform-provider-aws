@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_cluster"
 description: |-
@@ -24,9 +24,9 @@ The following arguments are required:
 
 * `name` - (Required) Name of the cluster.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Same as `name`.
 * `arn` - ARN of the cluster.
@@ -35,9 +35,11 @@ In addition, the following attributes are exported:
 * `cluster_endpoint`
     * `address` - DNS hostname of the cluster configuration endpoint.
     * `port` - Port number that the cluster configuration endpoint is listening on.
+* `data_tiering` - True when data tiering is enabled.
 * `description` - Description for the cluster.
-* `engine_patch_version` - Patch version number of the Redis engine used by the cluster.
-* `engine_version` - Version number of the Redis engine used by the cluster.
+* `engine_patch_version` - Patch version number of the engine used by the cluster.
+* `engine` - Engine that will run on cluster nodes.
+* `engine_version` - Version number of the engine used by the cluster.
 * `final_snapshot_name` - Name of the final cluster snapshot to be created when this resource is deleted. If omitted, no final snapshot will be made.
 * `kms_key_arn` - ARN of the KMS key used to encrypt the cluster at rest.
 * `maintenance_window` - Weekly time range during which maintenance on the cluster is performed. Specify as a range in the format `ddd:hh24:mi-ddd:hh24:mi` (24H Clock UTC). Example: `sun:23:00-mon:01:30`.

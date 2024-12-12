@@ -40,23 +40,32 @@ EOF
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `certificate_body` – (Required) The contents of the signing certificate in PEM-encoded format.
 * `status` – (Optional)  The status you want to assign to the certificate. `Active` means that the certificate can be used for programmatic calls to Amazon Web Services `Inactive` means that the certificate cannot be used.
 * `user_name` – (Required) The name of the user the signing certificate is for.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `certificate_id` - The ID for the signing certificate.
 * `id` - The `certificate_id:user_name`
 
 ## Import
 
-IAM Signing Certificates can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Signing Certificates using the `id`. For example:
 
+```terraform
+import {
+  to = aws_iam_signing_certificate.certificate
+  id = "IDIDIDIDID:user-name"
+}
 ```
-$ terraform import aws_iam_signing_certificate.certificate IDIDIDIDID:user-name
+
+Using `terraform import`, import IAM Signing Certificates using the `id`. For example:
+
+```console
+% terraform import aws_iam_signing_certificate.certificate IDIDIDIDID:user-name
 ```

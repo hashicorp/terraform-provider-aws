@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 // WARNING: As of 01/2022, the MemoryDB API does not provide a formal definition
@@ -6,119 +9,66 @@ package memorydb
 // unlikely to be exhaustive.
 
 const (
-	ACLStatusActive    = "active"
-	ACLStatusCreating  = "creating"
-	ACLStatusDeleting  = "deleting"
-	ACLStatusModifying = "modifying"
+	aclStatusActive    = "active"
+	aclStatusCreating  = "creating"
+	aclStatusDeleting  = "deleting"
+	aclStatusModifying = "modifying"
 )
-
-func ACLStatus_Values() []string {
-	return []string{
-		ACLStatusActive,
-		ACLStatusCreating,
-		ACLStatusDeleting,
-		ACLStatusModifying,
-	}
-}
 
 const (
-	ClusterStatusAvailable    = "available"
-	ClusterStatusCreating     = "creating"
-	ClusterStatusDeleting     = "deleting"
-	ClusterStatusSnapshotting = "snapshotting"
-	ClusterStatusUpdating     = "updating"
+	clusterStatusAvailable    = "available"
+	clusterStatusCreating     = "creating"
+	clusterStatusDeleting     = "deleting"
+	clusterStatusSnapshotting = "snapshotting"
+	clusterStatusUpdating     = "updating"
 )
-
-func ClusterStatus_Values() []string {
-	return []string{
-		ClusterStatusAvailable,
-		ClusterStatusCreating,
-		ClusterStatusDeleting,
-		ClusterStatusSnapshotting,
-		ClusterStatusUpdating,
-	}
-}
 
 const (
-	ClusterParameterGroupStatusApplying = "applying"
-	ClusterParameterGroupStatusInSync   = "in-sync"
+	clusterParameterGroupStatusApplying = "applying"
+	clusterParameterGroupStatusInSync   = "in-sync"
 )
-
-func ClusterParameterGroupStatus_Values() []string {
-	return []string{
-		ClusterParameterGroupStatusApplying,
-		ClusterParameterGroupStatusInSync,
-	}
-}
 
 const (
-	ClusterSecurityGroupStatusActive    = "active"
-	ClusterSecurityGroupStatusModifying = "modifying"
+	clusterSecurityGroupStatusActive    = "active"
+	clusterSecurityGroupStatusModifying = "modifying"
 )
-
-func ClusterSecurityGroupStatus_Values() []string {
-	return []string{
-		ClusterSecurityGroupStatusActive,
-		ClusterSecurityGroupStatusModifying,
-	}
-}
 
 const (
-	ClusterShardStatusAvailable = "available"
-	ClusterShardStatusCreating  = "creating"
-	ClusterShardStatusDeleting  = "deleting"
-	ClusterShardStatusModifying = "modifying"
+	clusterShardStatusAvailable = "available"
+	clusterShardStatusCreating  = "creating"
+	clusterShardStatusDeleting  = "deleting"
+	clusterShardStatusModifying = "modifying"
 )
-
-func ClusterShardStatus_Values() []string {
-	return []string{
-		ClusterShardStatusAvailable,
-		ClusterShardStatusCreating,
-		ClusterShardStatusDeleting,
-		ClusterShardStatusModifying,
-	}
-}
 
 const (
-	ClusterSNSTopicStatusActive   = "ACTIVE"
-	ClusterSNSTopicStatusInactive = "INACTIVE"
+	clusterSNSTopicStatusActive   = "ACTIVE"
+	clusterSNSTopicStatusInactive = "INACTIVE"
 )
-
-func ClusterSNSTopicStatus_Values() []string {
-	return []string{
-		ClusterSNSTopicStatusActive,
-		ClusterSNSTopicStatusInactive,
-	}
-}
 
 const (
-	SnapshotStatusAvailable = "available"
-	SnapshotStatusCopying   = "copying"
-	SnapshotStatusCreating  = "creating"
-	SnapshotStatusDeleting  = "deleting"
-	SnapshotStatusRestoring = "restoring"
+	snapshotStatusAvailable = "available"
+	snapshotStatusCopying   = "copying"
+	snapshotStatusCreating  = "creating"
+	snapshotStatusDeleting  = "deleting"
+	snapshotStatusRestoring = "restoring"
 )
-
-func SnapshotStatus_Values() []string {
-	return []string{
-		SnapshotStatusCreating,
-		SnapshotStatusAvailable,
-		SnapshotStatusRestoring,
-		SnapshotStatusCopying,
-		SnapshotStatusDeleting,
-	}
-}
 
 const (
-	UserStatusActive    = "active"
-	UserStatusDeleting  = "deleting"
-	UserStatusModifying = "modifying"
+	userStatusActive    = "active"
+	userStatusDeleting  = "deleting"
+	userStatusModifying = "modifying"
 )
 
-func UserStatus_Values() []string {
-	return []string{
-		UserStatusActive,
-		UserStatusDeleting,
-		UserStatusModifying,
+type clusterEngine string
+
+const (
+	clusterEngineRedis  clusterEngine = "redis"
+	clusterEngineValkey clusterEngine = "valkey"
+)
+
+func (clusterEngine) Values() []clusterEngine {
+	return []clusterEngine{
+		clusterEngineRedis,
+		clusterEngineValkey,
 	}
 }

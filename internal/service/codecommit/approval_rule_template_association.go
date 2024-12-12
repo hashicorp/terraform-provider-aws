@@ -1,27 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codecommit
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codecommit"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codecommit"
+	"github.com/aws/aws-sdk-go-v2/service/codecommit/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceApprovalRuleTemplateAssociation() *schema.Resource {
+// @SDKResource("aws_codecommit_approval_rule_template_association", name="Approval Rule Template Association")
+func resourceApprovalRuleTemplateAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceApprovalRuleTemplateAssociationCreate,
-		Read:   resourceApprovalRuleTemplateAssociationRead,
-		Delete: resourceApprovalRuleTemplateAssociationDelete,
+		CreateWithoutTimeout: resourceApprovalRuleTemplateAssociationCreate,
+		ReadWithoutTimeout:   resourceApprovalRuleTemplateAssociationRead,
+		DeleteWithoutTimeout: resourceApprovalRuleTemplateAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -31,100 +43,152 @@ func ResourceApprovalRuleTemplateAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
-			"repository_name": {
+			names.AttrRepositoryName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
-					validation.StringMatch(regexp.MustCompile(`[\w\.-]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`[\w\.-]+`), ""),
 				),
 			},
 		},
 	}
 }
 
-func resourceApprovalRuleTemplateAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+func resourceApprovalRuleTemplateAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
 	approvalRuleTemplateName := d.Get("approval_rule_template_name").(string)
-	repositoryName := d.Get("repository_name").(string)
-
+	repositoryName := d.Get(names.AttrRepositoryName).(string)
+	id := approvalRuleTemplateAssociationCreateResourceID(approvalRuleTemplateName, repositoryName)
 	input := &codecommit.AssociateApprovalRuleTemplateWithRepositoryInput{
 		ApprovalRuleTemplateName: aws.String(approvalRuleTemplateName),
 		RepositoryName:           aws.String(repositoryName),
 	}
 
-	_, err := conn.AssociateApprovalRuleTemplateWithRepository(input)
+	_, err := conn.AssociateApprovalRuleTemplateWithRepository(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error associating CodeCommit Approval Rule Template (%s) with repository (%s): %w", approvalRuleTemplateName, repositoryName, err)
+		return sdkdiag.AppendErrorf(diags, "creating CodeCommit Approval Rule Template Association (%s): %s", id, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s,%s", approvalRuleTemplateName, repositoryName))
+	d.SetId(id)
 
-	return resourceApprovalRuleTemplateAssociationRead(d, meta)
+	return append(diags, resourceApprovalRuleTemplateAssociationRead(ctx, d, meta)...)
 }
 
-func resourceApprovalRuleTemplateAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+func resourceApprovalRuleTemplateAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	approvalRuleTemplateName, repositoryName, err := ApprovalRuleTemplateAssociationParseID(d.Id())
-
+	approvalRuleTemplateName, repositoryName, err := approvalRuleTemplateAssociationParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	err = FindApprovalRuleTemplateAssociation(conn, approvalRuleTemplateName, repositoryName)
+	_, err = findApprovalRuleTemplateAssociationByTwoPartKey(ctx, conn, approvalRuleTemplateName, repositoryName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeCommit Approval Rule Template Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading CodeCommit Approval Rule Template Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeCommit Approval Rule Template Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("approval_rule_template_name", approvalRuleTemplateName)
-	d.Set("repository_name", repositoryName)
+	d.Set(names.AttrRepositoryName, repositoryName)
 
-	return nil
+	return diags
 }
 
-func resourceApprovalRuleTemplateAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CodeCommitConn
+func resourceApprovalRuleTemplateAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CodeCommitClient(ctx)
 
-	approvalRuleTemplateName, repositoryName, err := ApprovalRuleTemplateAssociationParseID(d.Id())
-
+	approvalRuleTemplateName, repositoryName, err := approvalRuleTemplateAssociationParseResourceID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &codecommit.DisassociateApprovalRuleTemplateFromRepositoryInput{
+	log.Printf("[INFO] Deleting CodeCommit Approval Rule Template Association: %s", d.Id())
+	_, err = conn.DisassociateApprovalRuleTemplateFromRepository(ctx, &codecommit.DisassociateApprovalRuleTemplateFromRepositoryInput{
 		ApprovalRuleTemplateName: aws.String(approvalRuleTemplateName),
 		RepositoryName:           aws.String(repositoryName),
-	}
+	})
 
-	_, err = conn.DisassociateApprovalRuleTemplateFromRepository(input)
-
-	if tfawserr.ErrCodeEquals(err, codecommit.ErrCodeApprovalRuleTemplateDoesNotExistException, codecommit.ErrCodeRepositoryDoesNotExistException) {
-		return nil
+	if errs.IsA[*types.ApprovalRuleTemplateDoesNotExistException](err) || errs.IsA[*types.RepositoryDoesNotExistException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error disassociating CodeCommit Approval Rule Template (%s) from repository (%s): %w", approvalRuleTemplateName, repositoryName, err)
+		return sdkdiag.AppendErrorf(diags, "deleting CodeCommit Approval Rule Template Association (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func ApprovalRuleTemplateAssociationParseID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ",", 2)
+const approvalRuleTemplateAssociationResourceIDSeparator = ","
+
+func approvalRuleTemplateAssociationCreateResourceID(approvalRuleTemplateName, repositoryName string) string {
+	parts := []string{approvalRuleTemplateName, repositoryName}
+	id := strings.Join(parts, approvalRuleTemplateAssociationResourceIDSeparator)
+
+	return id
+}
+
+func approvalRuleTemplateAssociationParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, approvalRuleTemplateAssociationResourceIDSeparator, 2)
+
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
-		return "", "", fmt.Errorf("unexpected format of ID (%s), expected APPROVAL_RULE_TEMPLATE_NAME,REPOSITORY_NAME", id)
+		return "", "", fmt.Errorf("unexpected format of ID (%s), expected APPROVAL_RULE_TEMPLATE_NAME%[2]sREPOSITORY_NAME", id, approvalRuleTemplateAssociationResourceIDSeparator)
 	}
 
 	return parts[0], parts[1], nil
+}
+
+func findApprovalRuleTemplateAssociationByTwoPartKey(ctx context.Context, conn *codecommit.Client, approvalRuleTemplateName, repositoryName string) (*string, error) {
+	input := &codecommit.ListRepositoriesForApprovalRuleTemplateInput{
+		ApprovalRuleTemplateName: aws.String(approvalRuleTemplateName),
+	}
+
+	output, err := findApprovalRuleTemplateRepositories(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	output = tfslices.Filter(output, func(v string) bool {
+		return v == repositoryName
+	})
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findApprovalRuleTemplateRepositories(ctx context.Context, conn *codecommit.Client, input *codecommit.ListRepositoriesForApprovalRuleTemplateInput) ([]string, error) {
+	var output []string
+
+	pages := codecommit.NewListRepositoriesForApprovalRuleTemplatePaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.ApprovalRuleTemplateDoesNotExistException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.RepositoryNames...)
+	}
+
+	return output, nil
 }

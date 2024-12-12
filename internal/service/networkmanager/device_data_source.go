@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -6,15 +9,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceDevice() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_device", name="Device")
+func dataSourceDevice() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDeviceRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,7 +40,7 @@ func DataSourceDevice() *schema.Resource {
 					},
 				},
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -46,12 +52,12 @@ func DataSourceDevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -78,8 +84,8 @@ func DataSourceDevice() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
-			"type": {
+			names.AttrTags: tftags.TagsSchemaComputed(),
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -92,44 +98,46 @@ func DataSourceDevice() *schema.Resource {
 }
 
 func dataSourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	deviceID := d.Get("device_id").(string)
-	device, err := FindDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
+	device, err := findDeviceByTwoPartKey(ctx, conn, globalNetworkID, deviceID)
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager Device (%s): %s", deviceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Device (%s): %s", deviceID, err)
 	}
 
 	d.SetId(deviceID)
-	d.Set("arn", device.DeviceArn)
+	d.Set(names.AttrARN, device.DeviceArn)
 	if device.AWSLocation != nil {
 		if err := d.Set("aws_location", []interface{}{flattenAWSLocation(device.AWSLocation)}); err != nil {
-			return diag.Errorf("error setting aws_location: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting aws_location: %s", err)
 		}
 	} else {
 		d.Set("aws_location", nil)
 	}
-	d.Set("description", device.Description)
+	d.Set(names.AttrDescription, device.Description)
 	d.Set("device_id", device.DeviceId)
 	if device.Location != nil {
-		if err := d.Set("location", []interface{}{flattenLocation(device.Location)}); err != nil {
-			return diag.Errorf("error setting location: %s", err)
+		if err := d.Set(names.AttrLocation, []interface{}{flattenLocation(device.Location)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
-		d.Set("location", nil)
+		d.Set(names.AttrLocation, nil)
 	}
 	d.Set("model", device.Model)
 	d.Set("serial_number", device.SerialNumber)
 	d.Set("site_id", device.SiteId)
-	d.Set("type", device.Type)
+	d.Set(names.AttrType, device.Type)
 	d.Set("vendor", device.Vendor)
 
-	if err := d.Set("tags", KeyValueTags(device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, device.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

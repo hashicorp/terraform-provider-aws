@@ -1,30 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kinesisvideo
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kinesisvideo"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kinesisvideo"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/kinesisvideo/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceStream() *schema.Resource {
+// @SDKResource("aws_kinesis_video_stream", name="Stream")
+// @Tags(identifierAttribute="id")
+func resourceStream() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceStreamCreate,
-		Read:   resourceStreamRead,
-		Update: resourceStreamUpdate,
-		Delete: resourceStreamDelete,
+		CreateWithoutTimeout: resourceStreamCreate,
+		ReadWithoutTimeout:   resourceStreamRead,
+		UpdateWithoutTimeout: resourceStreamUpdate,
+		DeleteWithoutTimeout: resourceStreamDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -36,249 +48,274 @@ func ResourceStream() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"name": {
+			names.AttrCreationTime: {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
-
 			"data_retention_in_hours": {
 				Type:     schema.TypeInt,
 				Optional: true,
 				ForceNew: true,
 				Default:  0,
 			},
-
-			"device_name": {
+			names.AttrDeviceName: {
 				Type:     schema.TypeString,
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
-
-			"kms_key_id": {
+			names.AttrKMSKeyID: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
-
 			"media_type": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
-			"creation_time": {
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags": tftags.TagsSchema(),
-
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceStreamCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisVideoConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceStreamCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
-	createOpts := &kinesisvideo.CreateStreamInput{
-		StreamName:           aws.String(d.Get("name").(string)),
-		DataRetentionInHours: aws.Int64(int64(d.Get("data_retention_in_hours").(int))),
+	name := d.Get(names.AttrName).(string)
+	input := &kinesisvideo.CreateStreamInput{
+		DataRetentionInHours: aws.Int32(int32(d.Get("data_retention_in_hours").(int))),
+		StreamName:           aws.String(name),
+		Tags:                 getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("device_name"); ok {
-		createOpts.DeviceName = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrDeviceName); ok {
+		input.DeviceName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("kms_key_id"); ok {
-		createOpts.KmsKeyId = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("media_type"); ok {
-		createOpts.MediaType = aws.String(v.(string))
+		input.MediaType = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		createOpts.Tags = Tags(tags.IgnoreAWS())
-	}
+	output, err := conn.CreateStream(ctx, input)
 
-	resp, err := conn.CreateStream(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Kinesis Video Stream: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Kinesis Video Stream (%s): %s", name, err)
 	}
 
-	arn := aws.StringValue(resp.StreamARN)
-	d.SetId(arn)
+	d.SetId(aws.ToString(output.StreamARN))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{kinesisvideo.StatusCreating},
-		Target:     []string{kinesisvideo.StatusActive},
-		Refresh:    StreamStateRefresh(conn, arn),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+	if _, err := waitStreamCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Video Stream (%s) create: %s", d.Id(), err)
 	}
 
-	if _, err = stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for creating Kinesis Video Stream (%s): %s", d.Id(), err)
-	}
-
-	return resourceStreamRead(d, meta)
+	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
-func resourceStreamRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisVideoConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
-	descOpts := &kinesisvideo.DescribeStreamInput{
-		StreamARN: aws.String(d.Id()),
-	}
+	stream, err := findStreamByARN(ctx, conn, d.Id())
 
-	resp, err := conn.DescribeStream(descOpts)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, kinesisvideo.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kinesis Video Stream (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
-	if err != nil {
-		return fmt.Errorf("Error describing Kinesis Video Stream (%s): %w", d.Id(), err)
-	}
-
-	d.Set("name", resp.StreamInfo.StreamName)
-	d.Set("data_retention_in_hours", resp.StreamInfo.DataRetentionInHours)
-	d.Set("device_name", resp.StreamInfo.DeviceName)
-	d.Set("kms_key_id", resp.StreamInfo.KmsKeyId)
-	d.Set("media_type", resp.StreamInfo.MediaType)
-	d.Set("arn", resp.StreamInfo.StreamARN)
-	if err := d.Set("creation_time", resp.StreamInfo.CreationTime.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting creation_time: %w", err)
-	}
-	d.Set("version", resp.StreamInfo.Version)
-
-	tags, err := ListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for Kinesis Video Stream (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Kinesis Video Stream (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	d.Set(names.AttrARN, stream.StreamARN)
+	d.Set(names.AttrCreationTime, stream.CreationTime.Format(time.RFC3339))
+	d.Set("data_retention_in_hours", stream.DataRetentionInHours)
+	d.Set(names.AttrDeviceName, stream.DeviceName)
+	d.Set(names.AttrKMSKeyID, stream.KmsKeyId)
+	d.Set("media_type", stream.MediaType)
+	d.Set(names.AttrName, stream.StreamName)
+	d.Set(names.AttrVersion, stream.Version)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceStreamUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisVideoConn
+func resourceStreamUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
-	updateOpts := &kinesisvideo.UpdateStreamInput{
-		StreamARN:      aws.String(d.Id()),
-		CurrentVersion: aws.String(d.Get("version").(string)),
-	}
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
+		input := &kinesisvideo.UpdateStreamInput{
+			CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
+			StreamARN:      aws.String(d.Id()),
+		}
 
-	if v, ok := d.GetOk("device_name"); ok {
-		updateOpts.DeviceName = aws.String(v.(string))
-	}
+		if v, ok := d.GetOk(names.AttrDeviceName); ok {
+			input.DeviceName = aws.String(v.(string))
+		}
 
-	if v, ok := d.GetOk("media_type"); ok {
-		updateOpts.MediaType = aws.String(v.(string))
-	}
+		if v, ok := d.GetOk("media_type"); ok {
+			input.MediaType = aws.String(v.(string))
+		}
 
-	if _, err := conn.UpdateStream(updateOpts); err != nil {
-		return fmt.Errorf("Error updating Kinesis Video Stream (%s): %w", d.Id(), err)
-	}
+		_, err := conn.UpdateStream(ctx, input)
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Kinesis Video Stream (%s): %s", d.Id(), err)
+		}
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating Kinesis Video Stream (%s) tags: %w", d.Id(), err)
+		if _, err := waitStreamUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Video Stream (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{kinesisvideo.StatusUpdating},
-		Target:     []string{kinesisvideo.StatusActive},
-		Refresh:    StreamStateRefresh(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutUpdate),
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for updating Kinesis Video Stream (%s): %w", d.Id(), err)
-	}
-
-	return resourceStreamRead(d, meta)
+	return append(diags, resourceStreamRead(ctx, d, meta)...)
 }
 
-func resourceStreamDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KinesisVideoConn
+func resourceStreamDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KinesisVideoClient(ctx)
 
-	if _, err := conn.DeleteStream(&kinesisvideo.DeleteStreamInput{
+	log.Printf("[DEBUG] Deleting Kinesis Video Stream: %s", d.Id())
+	_, err := conn.DeleteStream(ctx, &kinesisvideo.DeleteStreamInput{
+		CurrentVersion: aws.String(d.Get(names.AttrVersion).(string)),
 		StreamARN:      aws.String(d.Id()),
-		CurrentVersion: aws.String(d.Get("version").(string)),
-	}); err != nil {
-		if tfawserr.ErrCodeEquals(err, kinesisvideo.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-		return fmt.Errorf("Error deleting Kinesis Video Stream (%s): %w", d.Id(), err)
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{kinesisvideo.StatusDeleting},
-		Target:     []string{"DELETED"},
-		Refresh:    StreamStateRefresh(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Kinesis Video Stream (%s): %s", d.Id(), err)
 	}
 
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for deleting Kinesis Video Stream (%s): %w", d.Id(), err)
+	if _, err := waitStreamDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Kinesis Video Stream (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func StreamStateRefresh(conn *kinesisvideo.KinesisVideo, arn string) resource.StateRefreshFunc {
+func findStreamByARN(ctx context.Context, conn *kinesisvideo.Client, arn string) (*awstypes.StreamInfo, error) {
+	input := &kinesisvideo.DescribeStreamInput{
+		StreamARN: aws.String(arn),
+	}
+
+	return findStream(ctx, conn, input)
+}
+
+func findStream(ctx context.Context, conn *kinesisvideo.Client, input *kinesisvideo.DescribeStreamInput) (*awstypes.StreamInfo, error) {
+	output, err := conn.DescribeStream(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.StreamInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.StreamInfo, nil
+}
+
+func statusStream(ctx context.Context, conn *kinesisvideo.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		emptyResp := &kinesisvideo.DescribeStreamInput{}
+		output, err := findStreamByARN(ctx, conn, arn)
 
-		resp, err := conn.DescribeStream(&kinesisvideo.DescribeStreamInput{
-			StreamARN: aws.String(arn),
-		})
-		if tfawserr.ErrCodeEquals(err, kinesisvideo.ErrCodeResourceNotFoundException) {
-			return emptyResp, "DELETED", nil
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
+
 		if err != nil {
 			return nil, "", err
 		}
 
-		return resp, aws.StringValue(resp.StreamInfo.Status), nil
+		return output, string(output.Status), nil
 	}
+}
+
+func waitStreamCreated(ctx context.Context, conn *kinesisvideo.Client, arn string, timeout time.Duration) (*awstypes.StreamInfo, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.StatusCreating),
+		Target:     enum.Slice(awstypes.StatusActive),
+		Refresh:    statusStream(ctx, conn, arn),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.StreamInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitStreamUpdated(ctx context.Context, conn *kinesisvideo.Client, arn string, timeout time.Duration) (*awstypes.StreamInfo, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.StatusUpdating),
+		Target:     enum.Slice(awstypes.StatusActive),
+		Refresh:    statusStream(ctx, conn, arn),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.StreamInfo); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitStreamDeleted(ctx context.Context, conn *kinesisvideo.Client, arn string, timeout time.Duration) (*awstypes.StreamInfo, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.StatusDeleting),
+		Target:     []string{},
+		Refresh:    statusStream(ctx, conn, arn),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.StreamInfo); ok {
+		return output, err
+	}
+
+	return nil, err
 }

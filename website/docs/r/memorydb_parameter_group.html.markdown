@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_parameter_group"
 description: |-
@@ -45,9 +45,9 @@ The following arguments are optional:
 * `name` - (Required) The name of the parameter.
 * `value` - (Required) The value of the parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Same as `name`.
 * `arn` - The ARN of the parameter group.
@@ -55,8 +55,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Use the `name` to import a parameter group. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a parameter group using the `name`. For example:
 
+```terraform
+import {
+  to = aws_memorydb_parameter_group.example
+  id = "my-parameter-group"
+}
 ```
-$ terraform import aws_memorydb_parameter_group.example my-parameter-group
+
+Using `terraform import`, import a parameter group using the `name`. For example:
+
+```console
+% terraform import aws_memorydb_parameter_group.example my-parameter-group
 ```

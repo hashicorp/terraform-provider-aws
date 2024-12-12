@@ -1,26 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/namevaluesfilters"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceImagePipelines() *schema.Resource {
+// @SDKDataSource("aws_imagebuilder_image_pipelines", name="Image Pipelines")
+func dataSourceImagePipelines() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceImagePipelinesRead,
+		ReadWithoutTimeout: dataSourceImagePipelinesRead,
+
 		Schema: map[string]*schema.Schema{
-			"arns": {
+			names.AttrARNs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
-			"names": {
+			names.AttrFilter: namevaluesfilters.Schema(),
+			names.AttrNames: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -29,47 +39,46 @@ func DataSourceImagePipelines() *schema.Resource {
 	}
 }
 
-func dataSourceImagePipelinesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceImagePipelinesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.ListImagePipelinesInput{}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
+	if v, ok := d.GetOk(names.AttrFilter); ok {
+		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
-	var results []*imagebuilder.ImagePipeline
-
-	err := conn.ListImagePipelinesPages(input, func(page *imagebuilder.ListImagePipelinesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, imagePipeline := range page.ImagePipelineList {
-			if imagePipeline == nil {
-				continue
-			}
-
-			results = append(results, imagePipeline)
-		}
-
-		return !lastPage
-	})
+	imagePipelines, err := findImagePipelines(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Builder Image Pipelines: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Pipelines: %s", err)
 	}
 
-	var arns, names []string
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	d.Set(names.AttrARNs, tfslices.ApplyToAll(imagePipelines, func(v awstypes.ImagePipeline) string {
+		return aws.ToString(v.Arn)
+	}))
+	d.Set(names.AttrNames, tfslices.ApplyToAll(imagePipelines, func(v awstypes.ImagePipeline) string {
+		return aws.ToString(v.Name)
+	}))
 
-	for _, r := range results {
-		arns = append(arns, aws.StringValue(r.Arn))
-		names = append(names, aws.StringValue(r.Name))
+	return diags
+}
+
+func findImagePipelines(ctx context.Context, conn *imagebuilder.Client, input *imagebuilder.ListImagePipelinesInput) ([]awstypes.ImagePipeline, error) {
+	var output []awstypes.ImagePipeline
+
+	pages := imagebuilder.NewListImagePipelinesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ImagePipelineList...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
-	d.Set("arns", arns)
-	d.Set("names", names)
-
-	return nil
+	return output, nil
 }

@@ -1,18 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
 	"context"
-	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iot"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iot/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceIndexingConfiguration() *schema.Resource {
+// @SDKResource("aws_iot_indexing_configuration", name="Indexing Configuration")
+func resourceIndexingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIndexingConfigurationPut,
 		ReadWithoutTimeout:   resourceIndexingConfigurationRead,
@@ -20,7 +29,7 @@ func ResourceIndexingConfiguration() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -36,14 +45,14 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(iot.FieldType_Values(), false),
+									names.AttrType: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
 									},
 								},
 							},
@@ -54,22 +63,22 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(iot.FieldType_Values(), false),
+									names.AttrType: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
 									},
 								},
 							},
 						},
 						"thing_group_indexing_mode": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(iot.ThingGroupIndexingMode_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ThingGroupIndexingMode](),
 						},
 					},
 				},
@@ -87,23 +96,45 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(iot.FieldType_Values(), false),
+									names.AttrType: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
 									},
 								},
 							},
 						},
 						"device_defender_indexing_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      iot.DeviceDefenderIndexingModeOff,
-							ValidateFunc: validation.StringInSlice(iot.DeviceDefenderIndexingMode_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.DeviceDefenderIndexingModeOff,
+							ValidateDiagFunc: enum.Validate[awstypes.DeviceDefenderIndexingMode](),
+						},
+						names.AttrFilter: {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"named_shadow_names": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MinItems: 1,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 64),
+												validation.StringMatch(regexache.MustCompile(`^[$a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens (^[$a-zA-Z0-9:_-]+)"),
+											),
+										},
+									},
+								},
+							},
 						},
 						"managed_field": {
 							Type:     schema.TypeSet,
@@ -111,34 +142,34 @@ func ResourceIndexingConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"name": {
+									names.AttrName: {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
-									"type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(iot.FieldType_Values(), false),
+									names.AttrType: {
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.FieldType](),
 									},
 								},
 							},
 						},
 						"named_shadow_indexing_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      iot.NamedShadowIndexingModeOff,
-							ValidateFunc: validation.StringInSlice(iot.NamedShadowIndexingMode_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.NamedShadowIndexingModeOff,
+							ValidateDiagFunc: enum.Validate[awstypes.NamedShadowIndexingMode](),
 						},
 						"thing_connectivity_indexing_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      iot.ThingConnectivityIndexingModeOff,
-							ValidateFunc: validation.StringInSlice(iot.ThingConnectivityIndexingMode_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.ThingConnectivityIndexingModeOff,
+							ValidateDiagFunc: enum.Validate[awstypes.ThingConnectivityIndexingMode](),
 						},
 						"thing_indexing_mode": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(iot.ThingIndexingMode_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ThingIndexingMode](),
 						},
 					},
 				},
@@ -149,7 +180,9 @@ func ResourceIndexingConfiguration() *schema.Resource {
 }
 
 func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
 
 	input := &iot.UpdateIndexingConfigurationInput{}
 
@@ -161,51 +194,56 @@ func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceDat
 		input.ThingIndexingConfiguration = expandThingIndexingConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] Updating IoT Indexing Configuration: %s", input)
-	_, err := conn.UpdateIndexingConfigurationWithContext(ctx, input)
+	_, err := conn.UpdateIndexingConfiguration(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("error updating IoT Indexing Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating IoT Indexing Configuration: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	if d.IsNewResource() {
+		d.SetId(meta.(*conns.AWSClient).Region(ctx))
+	}
 
-	return resourceIndexingConfigurationRead(ctx, d, meta)
+	return append(diags, resourceIndexingConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceIndexingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	var diags diag.Diagnostics
 
-	output, err := conn.GetIndexingConfigurationWithContext(ctx, &iot.GetIndexingConfigurationInput{})
+	conn := meta.(*conns.AWSClient).IoTClient(ctx)
+
+	output, err := conn.GetIndexingConfiguration(ctx, &iot.GetIndexingConfigurationInput{})
 
 	if err != nil {
-		return diag.Errorf("error reading IoT Indexing Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Indexing Configuration (%s): %s", d.Id(), err)
 	}
 
 	if output.ThingGroupIndexingConfiguration != nil {
 		if err := d.Set("thing_group_indexing_configuration", []interface{}{flattenThingGroupIndexingConfiguration(output.ThingGroupIndexingConfiguration)}); err != nil {
-			return diag.Errorf("error setting thing_group_indexing_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting thing_group_indexing_configuration: %s", err)
 		}
 	} else {
 		d.Set("thing_group_indexing_configuration", nil)
 	}
 	if output.ThingIndexingConfiguration != nil {
 		if err := d.Set("thing_indexing_configuration", []interface{}{flattenThingIndexingConfiguration(output.ThingIndexingConfiguration)}); err != nil {
-			return diag.Errorf("error setting thing_indexing_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting thing_indexing_configuration: %s", err)
 		}
 	} else {
 		d.Set("thing_indexing_configuration", nil)
 	}
 
-	return nil
+	return diags
 }
 
-func flattenThingGroupIndexingConfiguration(apiObject *iot.ThingGroupIndexingConfiguration) map[string]interface{} {
+func flattenThingGroupIndexingConfiguration(apiObject *awstypes.ThingGroupIndexingConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]interface{}{
+		"thing_group_indexing_mode": apiObject.ThingGroupIndexingMode,
+	}
 
 	if v := apiObject.CustomFields; v != nil {
 		tfMap["custom_field"] = flattenFields(v)
@@ -215,66 +253,63 @@ func flattenThingGroupIndexingConfiguration(apiObject *iot.ThingGroupIndexingCon
 		tfMap["managed_field"] = flattenFields(v)
 	}
 
-	if v := apiObject.ThingGroupIndexingMode; v != nil {
-		tfMap["thing_group_indexing_mode"] = aws.StringValue(v)
-	}
-
 	return tfMap
 }
 
-func flattenThingIndexingConfiguration(apiObject *iot.ThingIndexingConfiguration) map[string]interface{} {
+func flattenThingIndexingConfiguration(apiObject *awstypes.ThingIndexingConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]interface{}{
+		"device_defender_indexing_mode":    apiObject.DeviceDefenderIndexingMode,
+		"named_shadow_indexing_mode":       apiObject.NamedShadowIndexingMode,
+		"thing_connectivity_indexing_mode": apiObject.ThingConnectivityIndexingMode,
+		"thing_indexing_mode":              apiObject.ThingIndexingMode,
+	}
 
 	if v := apiObject.CustomFields; v != nil {
 		tfMap["custom_field"] = flattenFields(v)
 	}
 
-	if v := apiObject.DeviceDefenderIndexingMode; v != nil {
-		tfMap["device_defender_indexing_mode"] = aws.StringValue(v)
+	if v := apiObject.Filter; v != nil {
+		tfMap[names.AttrFilter] = []interface{}{flattenIndexingFilter(v)}
 	}
 
 	if v := apiObject.ManagedFields; v != nil {
 		tfMap["managed_field"] = flattenFields(v)
 	}
 
-	if v := apiObject.NamedShadowIndexingMode; v != nil {
-		tfMap["named_shadow_indexing_mode"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.ThingConnectivityIndexingMode; v != nil {
-		tfMap["thing_connectivity_indexing_mode"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.ThingIndexingMode; v != nil {
-		tfMap["thing_indexing_mode"] = aws.StringValue(v)
-	}
-
 	return tfMap
 }
 
-func flattenField(apiObject *iot.Field) map[string]interface{} {
+func flattenIndexingFilter(apiObject *awstypes.IndexingFilter) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
+
+	if v := apiObject.NamedShadowNames; v != nil {
+		tfMap["named_shadow_names"] = aws.StringSlice(v)
+	}
+
+	return tfMap
+}
+
+func flattenField(apiObject awstypes.Field) map[string]interface{} {
+	tfMap := map[string]interface{}{
+		names.AttrType: apiObject.Type,
+	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap[names.AttrName] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenFields(apiObjects []*iot.Field) []interface{} {
+func flattenFields(apiObjects []awstypes.Field) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -282,22 +317,18 @@ func flattenFields(apiObjects []*iot.Field) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenField(apiObject))
 	}
 
 	return tfList
 }
 
-func expandThingGroupIndexingConfiguration(tfMap map[string]interface{}) *iot.ThingGroupIndexingConfiguration {
+func expandThingGroupIndexingConfiguration(tfMap map[string]interface{}) *awstypes.ThingGroupIndexingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &iot.ThingGroupIndexingConfiguration{}
+	apiObject := &awstypes.ThingGroupIndexingConfiguration{}
 
 	if v, ok := tfMap["custom_field"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.CustomFields = expandFields(v.List())
@@ -308,25 +339,29 @@ func expandThingGroupIndexingConfiguration(tfMap map[string]interface{}) *iot.Th
 	}
 
 	if v, ok := tfMap["thing_group_indexing_mode"].(string); ok && v != "" {
-		apiObject.ThingGroupIndexingMode = aws.String(v)
+		apiObject.ThingGroupIndexingMode = awstypes.ThingGroupIndexingMode(v)
 	}
 
 	return apiObject
 }
 
-func expandThingIndexingConfiguration(tfMap map[string]interface{}) *iot.ThingIndexingConfiguration {
+func expandThingIndexingConfiguration(tfMap map[string]interface{}) *awstypes.ThingIndexingConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &iot.ThingIndexingConfiguration{}
+	apiObject := &awstypes.ThingIndexingConfiguration{}
 
 	if v, ok := tfMap["custom_field"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.CustomFields = expandFields(v.List())
 	}
 
 	if v, ok := tfMap["device_defender_indexing_mode"].(string); ok && v != "" {
-		apiObject.DeviceDefenderIndexingMode = aws.String(v)
+		apiObject.DeviceDefenderIndexingMode = awstypes.DeviceDefenderIndexingMode(v)
+	}
+
+	if v, ok := tfMap[names.AttrFilter]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		apiObject.Filter = expandIndexingFilter(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["managed_field"].(*schema.Set); ok && v.Len() > 0 {
@@ -334,44 +369,58 @@ func expandThingIndexingConfiguration(tfMap map[string]interface{}) *iot.ThingIn
 	}
 
 	if v, ok := tfMap["named_shadow_indexing_mode"].(string); ok && v != "" {
-		apiObject.NamedShadowIndexingMode = aws.String(v)
+		apiObject.NamedShadowIndexingMode = awstypes.NamedShadowIndexingMode(v)
 	}
 
 	if v, ok := tfMap["thing_connectivity_indexing_mode"].(string); ok && v != "" {
-		apiObject.ThingConnectivityIndexingMode = aws.String(v)
+		apiObject.ThingConnectivityIndexingMode = awstypes.ThingConnectivityIndexingMode(v)
 	}
 
 	if v, ok := tfMap["thing_indexing_mode"].(string); ok && v != "" {
-		apiObject.ThingIndexingMode = aws.String(v)
+		apiObject.ThingIndexingMode = awstypes.ThingIndexingMode(v)
 	}
 
 	return apiObject
 }
 
-func expandField(tfMap map[string]interface{}) *iot.Field {
+func expandIndexingFilter(tfMap map[string]interface{}) *awstypes.IndexingFilter {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &iot.Field{}
+	apiObject := &awstypes.IndexingFilter{}
 
-	if v, ok := tfMap["name"].(string); ok && v != "" {
-		apiObject.Name = aws.String(v)
-	}
-
-	if v, ok := tfMap["type"].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
+	if v, ok := tfMap["named_shadow_names"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.NamedShadowNames = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
 }
 
-func expandFields(tfList []interface{}) []*iot.Field {
+func expandField(tfMap map[string]interface{}) *awstypes.Field {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.Field{}
+
+	if v, ok := tfMap[names.AttrName].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+		apiObject.Type = awstypes.FieldType(v)
+	}
+
+	return apiObject
+}
+
+func expandFields(tfList []interface{}) []awstypes.Field {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*iot.Field
+	var apiObjects []awstypes.Field
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -386,7 +435,7 @@ func expandFields(tfList []interface{}) []*iot.Field {
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects

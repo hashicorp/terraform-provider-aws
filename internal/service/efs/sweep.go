@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package efs
 
@@ -7,15 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/efs"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/efs"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_efs_access_point", &resource.Sweeper{
 		Name: "aws_efs_access_point",
 		F:    sweepAccessPoints,
@@ -27,6 +26,7 @@ func init() {
 		Dependencies: []string{
 			"aws_efs_mount_target",
 			"aws_efs_access_point",
+			"aws_m2_environment",
 		},
 	})
 
@@ -37,161 +37,154 @@ func init() {
 }
 
 func sweepAccessPoints(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EFSConn
-	var sweeperErrs *multierror.Error
-
-	var errors error
+	conn := client.EFSClient(ctx)
 	input := &efs.DescribeFileSystemsInput{}
-	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
-		for _, filesystem := range page.FileSystems {
-			id := aws.StringValue(filesystem.FileSystemId)
-			log.Printf("[INFO] Deleting access points for EFS File System: %s", id)
+	sweepResources := make([]sweep.Sweepable, 0)
 
+	pages := efs.NewDescribeFileSystemsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EFS Access Point sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EFS File Systems (%s): %w", region, err)
+		}
+
+		for _, v := range page.FileSystems {
 			input := &efs.DescribeAccessPointsInput{
-				FileSystemId: filesystem.FileSystemId,
+				FileSystemId: v.FileSystemId,
 			}
-			for {
-				out, err := conn.DescribeAccessPoints(input)
+
+			pages := efs.NewDescribeAccessPointsPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
 				if err != nil {
-					errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS access points on File System %q: %w", id, err))
-					break
+					continue
 				}
 
-				if out == nil || len(out.AccessPoints) == 0 {
-					log.Printf("[INFO] No EFS access points to sweep on File System %q", id)
-					break
-				}
-
-				for _, AccessPoint := range out.AccessPoints {
-					id := aws.StringValue(AccessPoint.AccessPointId)
-
-					log.Printf("[INFO] Deleting EFS access point: %s", id)
-					r := ResourceAccessPoint()
+				for _, v := range page.AccessPoints {
+					r := resourceAccessPoint()
 					d := r.Data(nil)
-					d.SetId(id)
-					err := r.Delete(d, client)
+					d.SetId(aws.ToString(v.AccessPointId))
 
-					if err != nil {
-						log.Printf("[ERROR] %s", err)
-						sweeperErrs = multierror.Append(sweeperErrs, err)
-						continue
-					}
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
-				if out.NextToken == nil {
-					break
-				}
-				input.NextToken = out.NextToken
 			}
 		}
-		return true
-	})
-	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EFS Acess Points (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepFileSystems(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EFSConn
-	var sweeperErrs *multierror.Error
-
+	conn := client.EFSClient(ctx)
 	input := &efs.DescribeFileSystemsInput{}
-	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
-		for _, filesystem := range page.FileSystems {
-			id := aws.StringValue(filesystem.FileSystemId)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-			log.Printf("[INFO] Deleting EFS File System: %s", id)
+	pages := efs.NewDescribeFileSystemsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-			r := ResourceFileSystem()
-			d := r.Data(nil)
-			d.SetId(id)
-			err := r.Delete(d, client)
-
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EFS File System sweep for %s: %s", region, err)
+			return nil
 		}
-		return true
-	})
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving EFS File Systems: %w", err))
+
+		if err != nil {
+			return fmt.Errorf("error listing EFS File Systems (%s): %w", region, err)
+		}
+
+		for _, v := range page.FileSystems {
+			r := resourceFileSystem()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.FileSystemId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
-	return sweeperErrs.ErrorOrNil()
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EFS File Systems (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepMountTargets(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).EFSConn
-
-	var errors error
+	conn := client.EFSClient(ctx)
 	input := &efs.DescribeFileSystemsInput{}
-	err = conn.DescribeFileSystemsPages(input, func(page *efs.DescribeFileSystemsOutput, lastPage bool) bool {
-		for _, filesystem := range page.FileSystems {
-			id := aws.StringValue(filesystem.FileSystemId)
-			log.Printf("[INFO] Deleting Mount Targets for EFS File System: %s", id)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-			var errors error
+	pages := efs.NewDescribeFileSystemsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping EFS Mount Target sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing EFS File Systems (%s): %w", region, err)
+		}
+
+		for _, v := range page.FileSystems {
 			input := &efs.DescribeMountTargetsInput{
-				FileSystemId: filesystem.FileSystemId,
+				FileSystemId: v.FileSystemId,
 			}
-			for {
-				out, err := conn.DescribeMountTargets(input)
+
+			pages := efs.NewDescribeMountTargetsPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
 				if err != nil {
-					errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS Mount Targets on File System %q: %w", id, err))
-					break
+					continue
 				}
 
-				if out == nil || len(out.MountTargets) == 0 {
-					log.Printf("[INFO] No EFS Mount Targets to sweep on File System %q", id)
-					break
+				for _, v := range page.MountTargets {
+					r := resourceMountTarget()
+					d := r.Data(nil)
+					d.SetId(aws.ToString(v.MountTargetId))
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
-				for _, mounttarget := range out.MountTargets {
-					id := aws.StringValue(mounttarget.MountTargetId)
-
-					log.Printf("[INFO] Deleting EFS Mount Target: %s", id)
-					_, err := conn.DeleteMountTarget(&efs.DeleteMountTargetInput{
-						MountTargetId: mounttarget.MountTargetId,
-					})
-					if err != nil {
-						errors = multierror.Append(errors, fmt.Errorf("error deleting EFS Mount Target %q: %w", id, err))
-						continue
-					}
-
-					err = WaitForDeleteMountTarget(conn, id, mountTargetDeleteTimeout)
-					if err != nil {
-						errors = multierror.Append(errors, fmt.Errorf("error waiting for EFS Mount Target %q to delete: %w", id, err))
-						continue
-					}
-				}
-
-				if out.NextMarker == nil {
-					break
-				}
-				input.Marker = out.NextMarker
 			}
 		}
-		return true
-	})
-	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS File Systems: %w", err))
 	}
 
-	return errors
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EFS Mount Targets (%s): %w", region, err)
+	}
+
+	return nil
 }

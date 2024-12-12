@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_app: Correctly list all apps so as not to lose track in an environment where there are many apps
+```

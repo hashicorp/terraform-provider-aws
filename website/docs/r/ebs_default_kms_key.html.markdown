@@ -27,18 +27,27 @@ resource "aws_ebs_default_kms_key" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `key_arn` - (Required, ForceNew) The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use to encrypt the EBS volume.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-The EBS default KMS CMK can be imported with the KMS key ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the EBS default KMS CMK using the KMS key ARN. For example:
+
+```terraform
+import {
+  to = aws_ebs_default_kms_key.example
+  id = "arn:aws:kms:us-east-1:123456789012:key/abcd-1234"
+}
+```
+
+Using `terraform import`, import the EBS default KMS CMK using the KMS key ARN. For example:
 
 ```console
-$ terraform import aws_ebs_default_kms_key.example arn:aws:kms:us-east-1:123456789012:key/abcd-1234
+% terraform import aws_ebs_default_kms_key.example arn:aws:kms:us-east-1:123456789012:key/abcd-1234
 ```

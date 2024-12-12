@@ -26,6 +26,11 @@ resource "aws_workspaces_directory" "example" {
     Example = true
   }
 
+  saml_properties {
+    user_access_url = "https://sso.example.com/"
+    status          = "ENABLED"
+  }
+
   self_service_permissions {
     change_compute_type  = true
     increase_volume_size = true
@@ -145,15 +150,22 @@ resource "aws_workspaces_ip_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `directory_id` - (Required) The directory identifier for registration in WorkSpaces service.
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
-* `ip_group_ids` - The identifiers of the IP access control groups associated with the directory.
+* `ip_group_ids` – (Optional) The identifiers of the IP access control groups associated with the directory.
 * `tags` – (Optional) A map of tags assigned to the WorkSpaces directory. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `saml_properties` – (Optional) Configuration of SAML authentication integration. Defined below.
 * `self_service_permissions` – (Optional) Permissions to enable or disable self-service capabilities. Defined below.
 * `workspace_access_properties` – (Optional) Specifies which devices and operating systems users can use to access their WorkSpaces. Defined below.
 * `workspace_creation_properties` – (Optional) Default properties that are used for creating WorkSpaces. Defined below.
+
+### saml_properties
+
+* `relay_state_parameter_name` - (Optional) The relay state parameter name supported by the SAML 2.0 identity provider (IdP). Default `RelayState`.
+* `status` - (Optional) Status of SAML 2.0 authentication. Default `DISABLED`.
+* `user_access_url` - (Optional) The SAML 2.0 identity provider (IdP) user access URL.
 
 ### self_service_permissions
 
@@ -184,9 +196,9 @@ The following arguments are supported:
 * `enable_maintenance_mode` – (Optional) Indicates whether maintenance mode is enabled for your WorkSpaces. For more information, see [WorkSpace Maintenance](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspace-maintenance.html)..
 * `user_enabled_as_local_administrator` – (Optional) Indicates whether users are local administrators of their WorkSpaces.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The WorkSpaces directory identifier.
 * `alias` - The directory alias.
@@ -202,8 +214,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Workspaces directory can be imported using the directory ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Workspaces directory using the directory ID. For example:
 
+```terraform
+import {
+  to = aws_workspaces_directory.main
+  id = "d-4444444444"
+}
 ```
-$ terraform import aws_workspaces_directory.main d-4444444444
+
+Using `terraform import`, import Workspaces directory using the directory ID. For example:
+
+```console
+% terraform import aws_workspaces_directory.main d-4444444444
 ```

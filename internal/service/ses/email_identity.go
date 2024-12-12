@@ -1,32 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceEmailIdentity() *schema.Resource {
+// @SDKResource("aws_ses_email_identity", name="Email Identity")
+func resourceEmailIdentity() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEmailIdentityCreate,
-		Read:   resourceEmailIdentityRead,
-		Delete: resourceEmailIdentityDelete,
+		CreateWithoutTimeout: resourceEmailIdentityCreate,
+		ReadWithoutTimeout:   resourceEmailIdentityRead,
+		DeleteWithoutTimeout: resourceEmailIdentityDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"email": {
+			names.AttrEmail: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -38,75 +50,98 @@ func ResourceEmailIdentity() *schema.Resource {
 	}
 }
 
-func resourceEmailIdentityCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceEmailIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	email := d.Get("email").(string)
-	email = strings.TrimSuffix(email, ".")
-
-	createOpts := &ses.VerifyEmailIdentityInput{
+	email := strings.TrimSuffix(d.Get(names.AttrEmail).(string), ".")
+	input := &ses.VerifyEmailIdentityInput{
 		EmailAddress: aws.String(email),
 	}
 
-	_, err := conn.VerifyEmailIdentity(createOpts)
+	_, err := conn.VerifyEmailIdentity(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("Error requesting SES email identity verification: %s", err)
+		return sdkdiag.AppendErrorf(diags, "requesting SES Email Identity (%s) verification: %s", email, err)
 	}
 
 	d.SetId(email)
 
-	return resourceEmailIdentityRead(d, meta)
+	return append(diags, resourceEmailIdentityRead(ctx, d, meta)...)
 }
 
-func resourceEmailIdentityRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceEmailIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	email := d.Id()
-	d.Set("email", email)
+	_, err := findIdentityVerificationAttributesByIdentity(ctx, conn, d.Id())
 
-	readOpts := &ses.GetIdentityVerificationAttributesInput{
-		Identities: []*string{
-			aws.String(email),
-		},
-	}
-
-	response, err := conn.GetIdentityVerificationAttributes(readOpts)
-	if err != nil {
-		log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
-		return err
-	}
-
-	_, ok := response.VerificationAttributes[email]
-	if !ok {
-		log.Printf("[WARN] Email not listed in response when fetching verification attributes for %s", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SES Email Identity (%s) verification not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading SES Email Identity (%s) verification: %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
 		Service:   "ses",
 	}.String()
-	d.Set("arn", arn)
-	return nil
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrEmail, d.Id())
+
+	return diags
 }
 
-func resourceEmailIdentityDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceEmailIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	email := d.Get("email").(string)
+	log.Printf("[DEBUG] Deleting SES Email Identity: %s", d.Id())
+	_, err := conn.DeleteIdentity(ctx, &ses.DeleteIdentityInput{
+		Identity: aws.String(d.Id()),
+	})
 
-	deleteOpts := &ses.DeleteIdentityInput{
-		Identity: aws.String(email),
-	}
-
-	_, err := conn.DeleteIdentity(deleteOpts)
 	if err != nil {
-		return fmt.Errorf("Error deleting SES email identity: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting SES Email Identity (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findIdentityVerificationAttributesByIdentity(ctx context.Context, conn *ses.Client, identity string) (*awstypes.IdentityVerificationAttributes, error) {
+	input := &ses.GetIdentityVerificationAttributesInput{
+		Identities: []string{identity},
+	}
+	output, err := findIdentityVerificationAttributes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if v, ok := output[identity]; ok {
+		return &v, nil
+	}
+
+	return nil, &retry.NotFoundError{}
+}
+
+func findIdentityVerificationAttributes(ctx context.Context, conn *ses.Client, input *ses.GetIdentityVerificationAttributesInput) (map[string]awstypes.IdentityVerificationAttributes, error) {
+	output, err := conn.GetIdentityVerificationAttributes(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.VerificationAttributes == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.VerificationAttributes, nil
 }

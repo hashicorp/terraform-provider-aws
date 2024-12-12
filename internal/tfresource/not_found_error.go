@@ -1,10 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfresource
 
 import (
 	"errors"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
 type EmptyResultError struct {
@@ -29,12 +34,12 @@ func (e *EmptyResultError) Is(err error) bool {
 }
 
 func (e *EmptyResultError) As(target interface{}) bool {
-	t, ok := target.(**resource.NotFoundError)
+	t, ok := target.(**retry.NotFoundError)
 	if !ok {
 		return false
 	}
 
-	*t = &resource.NotFoundError{
+	*t = &retry.NotFoundError{
 		Message:     e.Error(),
 		LastRequest: e.LastRequest,
 	}
@@ -66,12 +71,12 @@ func (e *TooManyResultsError) Is(err error) bool {
 }
 
 func (e *TooManyResultsError) As(target interface{}) bool {
-	t, ok := target.(**resource.NotFoundError)
+	t, ok := target.(**retry.NotFoundError)
 	if !ok {
 		return false
 	}
 
-	*t = &resource.NotFoundError{
+	*t = &retry.NotFoundError{
 		Message:     e.Error(),
 		LastRequest: e.LastRequest,
 	}
@@ -89,5 +94,47 @@ func SingularDataSourceFindError(resourceType string, err error) error {
 		return fmt.Errorf("no matching %[1]s found", resourceType)
 	}
 
-	return fmt.Errorf("error reading %s: %w", resourceType, err)
+	return fmt.Errorf("reading %s: %w", resourceType, err)
+}
+
+// foundFunc is function that returns false if the specified value causes a `NotFound` error to be returned.
+type foundFunc[T any] tfslices.Predicate[*T]
+
+// AssertMaybeSingleValueResult returns the single non-nil value in the specified slice, or `None` if the slice is empty.
+// Returns a `NotFound` error otherwise.
+func AssertMaybeSingleValueResult[T any](a []T) (option.Option[T], error) {
+	if l := len(a); l == 0 {
+		return option.None[T](), nil
+	} else if l > 1 {
+		return nil, NewTooManyResultsError(l, nil)
+	}
+
+	return option.Some(a[0]), nil
+}
+
+// AssertSingleValueResult returns a pointer to the single value in the specified slice of values.
+// Returns a `NotFound` error otherwise.
+func AssertSingleValueResult[T any](a []T, fs ...foundFunc[T]) (*T, error) {
+	if l := len(a); l == 0 {
+		return nil, NewEmptyResultError(nil)
+	} else if l > 1 {
+		return nil, NewTooManyResultsError(l, nil)
+	} else {
+		v := &a[0]
+		for _, f := range fs {
+			if !f(v) {
+				return nil, NewEmptyResultError(nil)
+			}
+		}
+		return v, nil
+	}
+}
+
+// AssertFirstValueResult returns a pointer to the first value in the specified slice of values.
+// Returns a `NotFound` error otherwise.
+func AssertFirstValueResult[T any](a []T) (*T, error) {
+	if l := len(a); l == 0 {
+		return nil, NewEmptyResultError(nil)
+	}
+	return &a[0], nil
 }

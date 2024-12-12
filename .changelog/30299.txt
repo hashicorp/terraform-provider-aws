@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_fsx_openzfs_file_system: Fix `iops` validation in `disk_iops_configuration` to allow values for `SINGLE_AZ_1` and `SINGLE_AZ_2`
+```

@@ -1,22 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func ResourceAccountAlias() *schema.Resource {
+// @SDKResource("aws_iam_account_alias", name="Account Alias")
+func resourceAccountAlias() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAccountAliasCreate,
-		Read:   resourceAccountAliasRead,
-		Delete: resourceAccountAliasDelete,
+		CreateWithoutTimeout: resourceAccountAliasCreate,
+		ReadWithoutTimeout:   resourceAccountAliasRead,
+		DeleteWithoutTimeout: resourceAccountAliasDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -30,64 +36,67 @@ func ResourceAccountAlias() *schema.Resource {
 	}
 }
 
-func resourceAccountAliasCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceAccountAliasCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	account_alias := d.Get("account_alias").(string)
+	accountAlias := d.Get("account_alias").(string)
 
 	params := &iam.CreateAccountAliasInput{
-		AccountAlias: aws.String(account_alias),
+		AccountAlias: aws.String(accountAlias),
 	}
 
-	_, err := conn.CreateAccountAlias(params)
+	_, err := conn.CreateAccountAlias(ctx, params)
 
 	if err != nil {
-		return fmt.Errorf("Error creating account alias with name '%s': %w", account_alias, err)
+		return sdkdiag.AppendErrorf(diags, "creating account alias with name '%s': %s", accountAlias, err)
 	}
 
-	d.SetId(account_alias)
+	d.SetId(accountAlias)
 
-	return nil
+	return diags
 }
 
-func resourceAccountAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceAccountAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	params := &iam.ListAccountAliasesInput{}
 
-	resp, err := conn.ListAccountAliases(params)
+	resp, err := conn.ListAccountAliases(ctx, params)
 
 	if err != nil {
-		return fmt.Errorf("Error listing account aliases: %w", err)
+		return sdkdiag.AppendErrorf(diags, "listing account aliases: %s", err)
 	}
 
 	if !d.IsNewResource() && (resp == nil || len(resp.AccountAliases) == 0) {
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	account_alias := aws.StringValue(resp.AccountAliases[0])
+	accountAlias := resp.AccountAliases[0]
 
-	d.SetId(account_alias)
-	d.Set("account_alias", account_alias)
+	d.SetId(accountAlias)
+	d.Set("account_alias", accountAlias)
 
-	return nil
+	return diags
 }
 
-func resourceAccountAliasDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func resourceAccountAliasDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	account_alias := d.Get("account_alias").(string)
+	accountAlias := d.Get("account_alias").(string)
 
 	params := &iam.DeleteAccountAliasInput{
-		AccountAlias: aws.String(account_alias),
+		AccountAlias: aws.String(accountAlias),
 	}
 
-	_, err := conn.DeleteAccountAlias(params)
+	_, err := conn.DeleteAccountAlias(ctx, params)
 
 	if err != nil {
-		return fmt.Errorf("Error deleting account alias with name '%s': %s", account_alias, err)
+		return sdkdiag.AppendErrorf(diags, "deleting account alias with name '%s': %s", accountAlias, err)
 	}
 
-	return nil
+	return diags
 }

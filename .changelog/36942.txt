@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_codebuild_project: Add GitLab and GitLab Self Managed support to the `report_build_status` and `build_status_config` arguments
+```

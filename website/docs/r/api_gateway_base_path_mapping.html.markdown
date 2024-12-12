@@ -41,29 +41,65 @@ resource "aws_api_gateway_base_path_mapping" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) Already-registered domain name to connect the API to.
 * `api_id` - (Required) ID of the API to connect.
 * `stage_name` - (Optional) Name of a specific deployment stage to expose at the given path. If omitted, callers may select any stage by including its name as a path element after the base path.
 * `base_path` - (Optional) Path segment that must be prepended to the path when accessing the API via this mapping. If omitted, the API is exposed at the root of the given domain.
+* `domain_name_id` - (Optional) The identifier for the domain name resource. Supported only for private custom domain names.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-`aws_api_gateway_base_path_mapping` can be imported by using the domain name and base path, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_base_path_mapping` using the domain name and base path or domain name, base path and domain name ID (for private custom domain names). For example:
 
-For empty `base_path` (e.g., root path (`/`)):
+For an empty `base_path` or, in other words, a root path (`/`):
 
+```terraform
+import {
+  to = aws_api_gateway_base_path_mapping.example
+  id = "example.com/"
+}
 ```
-$ terraform import aws_api_gateway_base_path_mapping.example example.com/
+
+For a non-root `base_path`:
+
+```terraform
+import {
+  to = aws_api_gateway_base_path_mapping.example
+  id = "example.com/base-path"
+}
 ```
 
-Otherwise:
+For a non-root `base_path` and a private custom domain name:
 
+```terraform
+import {
+  to = aws_api_gateway_base_path_mapping.example
+  id = "api.internal.example.com/base-path/abcde12345"
+}
 ```
-$ terraform import aws_api_gateway_base_path_mapping.example example.com/base-path
+
+Using `terraform import`, import `aws_api_gateway_base_path_mapping` using the domain name and base path or domain name, base path and domain name ID (for private custom domain names). For example:
+
+For an empty `base_path` or, in other words, a root path (`/`):
+
+```console
+% terraform import aws_api_gateway_base_path_mapping.example example.com/
+```
+
+For a non-root `base_path`:
+
+```console
+% terraform import aws_api_gateway_base_path_mapping.example example.com/base-path
+```
+
+For a non-root `base_path` and a private custom domain name:
+
+```console
+% terraform import aws_api_gateway_base_path_mapping.example api.internal.example.com/base-path/abcde12345
 ```

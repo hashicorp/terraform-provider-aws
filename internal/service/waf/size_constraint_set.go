@@ -1,146 +1,282 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/waf"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/waf"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/waf/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceSizeConstraintSet() *schema.Resource {
+// @SDKResource("aws_waf_size_constraint_set", name="Size Constraint Set")
+func resourceSizeConstraintSet() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSizeConstraintSetCreate,
-		Read:   resourceSizeConstraintSetRead,
-		Update: resourceSizeConstraintSetUpdate,
-		Delete: resourceSizeConstraintSetDelete,
+		CreateWithoutTimeout: resourceSizeConstraintSetCreate,
+		ReadWithoutTimeout:   resourceSizeConstraintSetRead,
+		UpdateWithoutTimeout: resourceSizeConstraintSetUpdate,
+		DeleteWithoutTimeout: resourceSizeConstraintSetDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: SizeConstraintSetSchema(),
+		Schema: map[string]*schema.Schema{
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"size_constraints": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"comparison_operator": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"field_to_match": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"data": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									names.AttrType: {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						names.AttrSize: {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"text_transformation": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
-func resourceSizeConstraintSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	log.Printf("[INFO] Creating SizeConstraintSet: %s", d.Get("name").(string))
-
-	wr := NewRetryer(conn)
-	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		params := &waf.CreateSizeConstraintSetInput{
+	name := d.Get(names.AttrName).(string)
+	output, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.CreateSizeConstraintSetInput{
 			ChangeToken: token,
-			Name:        aws.String(d.Get("name").(string)),
+			Name:        aws.String(name),
 		}
 
-		return conn.CreateSizeConstraintSet(params)
+		return conn.CreateSizeConstraintSet(ctx, input)
 	})
+
 	if err != nil {
-		return fmt.Errorf("Error creating SizeConstraintSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating WAF Size Constraint Set (%s): %s", name, err)
 	}
-	resp := out.(*waf.CreateSizeConstraintSetOutput)
 
-	d.SetId(aws.StringValue(resp.SizeConstraintSet.SizeConstraintSetId))
+	d.SetId(aws.ToString(output.(*waf.CreateSizeConstraintSetOutput).SizeConstraintSet.SizeConstraintSetId))
 
-	return resourceSizeConstraintSetUpdate(d, meta)
+	return append(diags, resourceSizeConstraintSetUpdate(ctx, d, meta)...)
 }
 
-func resourceSizeConstraintSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
-	log.Printf("[INFO] Reading SizeConstraintSet: %s", d.Get("name").(string))
-	params := &waf.GetSizeConstraintSetInput{
-		SizeConstraintSetId: aws.String(d.Id()),
+func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
+
+	sizeConstraintSet, err := findSizeConstraintSetByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] WAF Size Constraint Set (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	resp, err := conn.GetSizeConstraintSet(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == waf.ErrCodeNonexistentItemException {
-			log.Printf("[WARN] WAF SizeConstraintSet (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading WAF Size Constraint Set (%s): %s", d.Id(), err)
 	}
-
-	d.Set("name", resp.SizeConstraintSet.Name)
-	d.Set("size_constraints", FlattenSizeConstraints(resp.SizeConstraintSet.SizeConstraints))
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "waf",
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("sizeconstraintset/%s", d.Id()),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Resource:  "sizeconstraintset/" + d.Id(),
 	}
-	d.Set("arn", arn.String())
+	d.Set(names.AttrARN, arn.String())
+	d.Set(names.AttrName, sizeConstraintSet.Name)
+	if err := d.Set("size_constraints", flattenSizeConstraints(sizeConstraintSet.SizeConstraints)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting size_constraints: %s", err)
+	}
 
-	return nil
+	return diags
 }
 
-func resourceSizeConstraintSetUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
 	if d.HasChange("size_constraints") {
 		o, n := d.GetChange("size_constraints")
 		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
-
-		err := updateSizeConstraintSetResource(d.Id(), oldConstraints, newConstraints, conn)
-		if err != nil {
-			return fmt.Errorf("Error updating SizeConstraintSet: %s", err)
+		if err := updateSizeConstraintSet(ctx, conn, d.Id(), oldConstraints, newConstraints); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceSizeConstraintSetRead(d, meta)
+	return append(diags, resourceSizeConstraintSetRead(ctx, d, meta)...)
 }
 
-func resourceSizeConstraintSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFConn
+func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFClient(ctx)
 
-	oldConstraints := d.Get("size_constraints").(*schema.Set).List()
-
-	if len(oldConstraints) > 0 {
-		noConstraints := []interface{}{}
-		err := updateSizeConstraintSetResource(d.Id(), oldConstraints, noConstraints, conn)
-		if err != nil {
-			return fmt.Errorf("Error deleting SizeConstraintSet: %s", err)
+	if oldConstraints := d.Get("size_constraints").(*schema.Set).List(); len(oldConstraints) > 0 {
+		if err := updateSizeConstraintSet(ctx, conn, d.Id(), oldConstraints, []interface{}{}); err != nil && !errs.IsA[*awstypes.WAFNonexistentItemException](err) && !errs.IsA[*awstypes.WAFNonexistentContainerException](err) {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	wr := NewRetryer(conn)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		req := &waf.DeleteSizeConstraintSetInput{
+	log.Printf("[INFO] Deleting WAF Size Constraint Set: %s", d.Id())
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.DeleteSizeConstraintSetInput{
 			ChangeToken:         token,
 			SizeConstraintSetId: aws.String(d.Id()),
 		}
-		return conn.DeleteSizeConstraintSet(req)
+
+		return conn.DeleteSizeConstraintSet(ctx, input)
 	})
+
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return diags
+	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting SizeConstraintSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Size Constraint Set (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findSizeConstraintSetByID(ctx context.Context, conn *waf.Client, id string) (*awstypes.SizeConstraintSet, error) {
+	input := &waf.GetSizeConstraintSetInput{
+		SizeConstraintSetId: aws.String(id),
+	}
+
+	output, err := conn.GetSizeConstraintSet(ctx, input)
+
+	if errs.IsA[*awstypes.WAFNonexistentItemException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.SizeConstraintSet == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.SizeConstraintSet, nil
+}
+
+func updateSizeConstraintSet(ctx context.Context, conn *waf.Client, id string, oldS, newS []interface{}) error {
+	_, err := newRetryer(conn).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.UpdateSizeConstraintSetInput{
+			ChangeToken:         token,
+			SizeConstraintSetId: aws.String(id),
+			Updates:             diffSizeConstraints(oldS, newS),
+		}
+
+		return conn.UpdateSizeConstraintSet(ctx, input)
+	})
+
+	if err != nil {
+		return fmt.Errorf("updating WAF Size Constraint Set (%s): %w", id, err)
 	}
 
 	return nil
 }
 
-func updateSizeConstraintSetResource(id string, oldS, newS []interface{}, conn *waf.WAF) error {
-	wr := NewRetryer(conn)
-	_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
-		req := &waf.UpdateSizeConstraintSetInput{
-			ChangeToken:         token,
-			SizeConstraintSetId: aws.String(id),
-			Updates:             DiffSizeConstraints(oldS, newS),
+func diffSizeConstraints(oldS, newS []interface{}) []awstypes.SizeConstraintSetUpdate {
+	updates := make([]awstypes.SizeConstraintSetUpdate, 0)
+
+	for _, os := range oldS {
+		constraint := os.(map[string]interface{})
+
+		if idx, contains := sliceContainsMap(newS, constraint); contains {
+			newS = append(newS[:idx], newS[idx+1:]...)
+			continue
 		}
 
-		log.Printf("[INFO] Updating WAF Size Constraint constraints: %s", req)
-		return conn.UpdateSizeConstraintSet(req)
-	})
-	if err != nil {
-		return fmt.Errorf("Error updating SizeConstraintSet: %s", err)
+		updates = append(updates, awstypes.SizeConstraintSetUpdate{
+			Action: awstypes.ChangeActionDelete,
+			SizeConstraint: &awstypes.SizeConstraint{
+				FieldToMatch:       expandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				ComparisonOperator: awstypes.ComparisonOperator(constraint["comparison_operator"].(string)),
+				Size:               int64(constraint[names.AttrSize].(int)),
+				TextTransformation: awstypes.TextTransformation(constraint["text_transformation"].(string)),
+			},
+		})
 	}
 
-	return nil
+	for _, ns := range newS {
+		constraint := ns.(map[string]interface{})
+
+		updates = append(updates, awstypes.SizeConstraintSetUpdate{
+			Action: awstypes.ChangeActionInsert,
+			SizeConstraint: &awstypes.SizeConstraint{
+				FieldToMatch:       expandFieldToMatch(constraint["field_to_match"].([]interface{})[0].(map[string]interface{})),
+				ComparisonOperator: awstypes.ComparisonOperator(constraint["comparison_operator"].(string)),
+				Size:               int64(constraint[names.AttrSize].(int)),
+				TextTransformation: awstypes.TextTransformation(constraint["text_transformation"].(string)),
+			},
+		})
+	}
+	return updates
+}
+
+func flattenSizeConstraints(sc []awstypes.SizeConstraint) []interface{} {
+	out := make([]interface{}, len(sc))
+	for i, c := range sc {
+		m := make(map[string]interface{})
+		m["comparison_operator"] = c.ComparisonOperator
+		if c.FieldToMatch != nil {
+			m["field_to_match"] = flattenFieldToMatch(c.FieldToMatch)
+		}
+		m[names.AttrSize] = c.Size
+		m["text_transformation"] = c.TextTransformation
+		out[i] = m
+	}
+	return out
 }

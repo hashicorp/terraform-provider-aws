@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_parameter_group"
 description: |-
@@ -24,9 +24,9 @@ The following arguments are required:
 
 * `name` - (Required) Name of the parameter group.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - Name of the parameter group.
 * `arn` - ARN of the parameter group.

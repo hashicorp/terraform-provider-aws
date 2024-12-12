@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -6,19 +9,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceSite() *schema.Resource {
+// @SDKDataSource("aws_networkmanager_site", name="Site")
+func dataSourceSite() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSiteRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -26,12 +32,12 @@ func DataSourceSite() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"location": {
+			names.AttrLocation: {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"address": {
+						names.AttrAddress: {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -50,39 +56,41 @@ func DataSourceSite() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceSiteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).NetworkManagerConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).NetworkManagerClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
 	siteID := d.Get("site_id").(string)
-	site, err := FindSiteByTwoPartKey(ctx, conn, globalNetworkID, siteID)
+	site, err := findSiteByTwoPartKey(ctx, conn, globalNetworkID, siteID)
 
 	if err != nil {
-		return diag.Errorf("error reading Network Manager Site (%s): %s", siteID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Site (%s): %s", siteID, err)
 	}
 
 	d.SetId(siteID)
-	d.Set("arn", site.SiteArn)
-	d.Set("description", site.Description)
+	d.Set(names.AttrARN, site.SiteArn)
+	d.Set(names.AttrDescription, site.Description)
 	d.Set("global_network_id", site.GlobalNetworkId)
 	if site.Location != nil {
-		if err := d.Set("location", []interface{}{flattenLocation(site.Location)}); err != nil {
-			return diag.Errorf("error setting location: %s", err)
+		if err := d.Set(names.AttrLocation, []interface{}{flattenLocation(site.Location)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
-		d.Set("location", nil)
+		d.Set(names.AttrLocation, nil)
 	}
 	d.Set("site_id", site.SiteId)
 
-	if err := d.Set("tags", KeyValueTags(site.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("error setting tags: %s", err)
+	if err := d.Set(names.AttrTags, KeyValueTags(ctx, site.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

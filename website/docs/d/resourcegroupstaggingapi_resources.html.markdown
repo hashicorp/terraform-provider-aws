@@ -39,7 +39,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `exclude_compliant_resources` - (Optional) Specifies whether to exclude resources that are compliant with the tag policy. You can use this parameter only if the `include_compliance_details` argument is also set to `true`.
 * `include_compliance_details` - (Optional) Specifies whether to include details regarding the compliance with the effective tag policy.
@@ -57,9 +57,9 @@ If you don't specify a `tag_filter`, the response includes all resources that we
 * `key` - (Required) One part of a key-value pair that makes up a tag.
 * `values` - (Optional) Optional part of a key-value pair that make up a tag.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `resource_tag_mapping_list` - List of objects matching the search criteria.
     * `compliance_details` - List of objects with information that shows whether a resource is compliant with the effective tag policy, including details on any noncompliant tag keys.

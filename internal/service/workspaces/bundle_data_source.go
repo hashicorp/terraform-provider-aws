@@ -1,44 +1,66 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceBundle() *schema.Resource {
+// @SDKDataSource("aws_workspaces_bundle", name="Bundle")
+func dataSourceBundle() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceWorkspaceBundleRead,
+		ReadWithoutTimeout: dataSourceWorkspaceBundleRead,
 
 		Schema: map[string]*schema.Schema{
 			"bundle_id": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ConflictsWith: []string{"owner", "name"},
-			},
-			"name": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"bundle_id"},
-			},
-			"owner": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"bundle_id"},
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
+				ConflictsWith: []string{names.AttrOwner, names.AttrName},
 			},
 			"compute_type": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"name": {
+						names.AttrName: {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+			names.AttrDescription: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrName: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"bundle_id"},
+			},
+			names.AttrOwner: {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"bundle_id"},
+			},
+			"root_storage": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -57,108 +79,115 @@ func DataSourceBundle() *schema.Resource {
 					},
 				},
 			},
-			"root_storage": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 		},
 	}
 }
 
-func dataSourceWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WorkSpacesConn
+func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	var bundle *workspaces.WorkspaceBundle
+	var bundle *types.WorkspaceBundle
+	var err error
 
-	if bundleID, ok := d.GetOk("bundle_id"); ok {
-		resp, err := conn.DescribeWorkspaceBundles(&workspaces.DescribeWorkspaceBundlesInput{
-			BundleIds: []*string{aws.String(bundleID.(string))},
-		})
-		if err != nil {
-			return err
-		}
-
-		if len(resp.Bundles) != 1 {
-			return fmt.Errorf("expected 1 result for Workspace bundle %q, found %d", bundleID, len(resp.Bundles))
-		}
-
-		bundle = resp.Bundles[0]
-
-		if bundle == nil {
-			return fmt.Errorf("no Workspace bundle with ID %q found", bundleID)
-		}
+	if v, ok := d.GetOk("bundle_id"); ok {
+		bundle, err = findBundleByID(ctx, conn, v.(string))
 	}
 
-	if name, ok := d.GetOk("name"); ok {
+	if v, ok := d.GetOk(names.AttrName); ok {
+		name := v.(string)
 		input := &workspaces.DescribeWorkspaceBundlesInput{}
-
-		if owner, ok := d.GetOk("owner"); ok {
-			input.Owner = aws.String(owner.(string))
+		if v, ok := d.GetOk(names.AttrOwner); ok {
+			input.Owner = aws.String(v.(string))
 		}
 
-		name := name.(string)
-		err := conn.DescribeWorkspaceBundlesPages(input, func(out *workspaces.DescribeWorkspaceBundlesOutput, lastPage bool) bool {
-			for _, b := range out.Bundles {
-				if aws.StringValue(b.Name) == name {
-					bundle = b
-					return true
-				}
-			}
-
-			return !lastPage
+		bundle, err = findBundle(ctx, conn, input, func(v *types.WorkspaceBundle) bool {
+			return aws.ToString(v.Name) == name
 		})
-		if err != nil {
-			return err
-		}
-
-		if bundle == nil {
-			return fmt.Errorf("no Workspace bundle with name %q found", name)
-		}
 	}
 
-	d.SetId(aws.StringValue(bundle.BundleId))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("WorkSpaces Bundle", err))
+	}
+
+	d.SetId(aws.ToString(bundle.BundleId))
 	d.Set("bundle_id", bundle.BundleId)
-	d.Set("description", bundle.Description)
-	d.Set("name", bundle.Name)
-	d.Set("owner", bundle.Owner)
-
-	computeType := make([]map[string]interface{}, 1)
+	tfMap := make([]map[string]interface{}, 1)
 	if bundle.ComputeType != nil {
-		computeType[0] = map[string]interface{}{
-			"name": aws.StringValue(bundle.ComputeType.Name),
+		tfMap[0] = map[string]interface{}{
+			names.AttrName: string(bundle.ComputeType.Name),
 		}
 	}
-	if err := d.Set("compute_type", computeType); err != nil {
-		return fmt.Errorf("error setting compute_type: %w", err)
+	if err := d.Set("compute_type", tfMap); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting compute_type: %s", err)
 	}
-
-	rootStorage := make([]map[string]interface{}, 1)
+	d.Set(names.AttrDescription, bundle.Description)
+	d.Set(names.AttrName, bundle.Name)
+	d.Set(names.AttrOwner, bundle.Owner)
+	tfMap = make([]map[string]interface{}, 1)
 	if bundle.RootStorage != nil {
-		rootStorage[0] = map[string]interface{}{
-			"capacity": aws.StringValue(bundle.RootStorage.Capacity),
+		tfMap[0] = map[string]interface{}{
+			"capacity": aws.ToString(bundle.RootStorage.Capacity),
 		}
 	}
-	if err := d.Set("root_storage", rootStorage); err != nil {
-		return fmt.Errorf("error setting root_storage: %w", err)
+	if err := d.Set("root_storage", tfMap); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting root_storage: %s", err)
 	}
-
-	userStorage := make([]map[string]interface{}, 1)
+	tfMap = make([]map[string]interface{}, 1)
 	if bundle.UserStorage != nil {
-		userStorage[0] = map[string]interface{}{
-			"capacity": aws.StringValue(bundle.UserStorage.Capacity),
+		tfMap[0] = map[string]interface{}{
+			"capacity": aws.ToString(bundle.UserStorage.Capacity),
 		}
 	}
-	if err := d.Set("user_storage", userStorage); err != nil {
-		return fmt.Errorf("error setting user_storage: %w", err)
+	if err := d.Set("user_storage", tfMap); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting user_storage: %s", err)
 	}
 
-	return nil
+	return diags
+}
+
+func findBundleByID(ctx context.Context, conn *workspaces.Client, id string) (*types.WorkspaceBundle, error) {
+	input := &workspaces.DescribeWorkspaceBundlesInput{
+		BundleIds: []string{id},
+	}
+
+	output, err := findBundles(ctx, conn, input, tfslices.PredicateTrue[*types.WorkspaceBundle]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+// findBundle returns the first bundle that matches the filter.
+func findBundle(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspaceBundlesInput, filter tfslices.Predicate[*types.WorkspaceBundle]) (*types.WorkspaceBundle, error) {
+	output, err := findBundles(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertFirstValueResult(output)
+}
+
+func findBundles(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeWorkspaceBundlesInput, filter tfslices.Predicate[*types.WorkspaceBundle]) ([]types.WorkspaceBundle, error) {
+	var output []types.WorkspaceBundle
+
+	pages := workspaces.NewDescribeWorkspaceBundlesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Bundles {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

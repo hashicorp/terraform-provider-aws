@@ -1,16 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidRoleProfileName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"tf-test-role-profile-1",
 	}
 
 	for _, s := range validNames {
-		_, errors := validRolePolicyName(s, "name")
+		_, errors := validRolePolicyName(s, names.AttrName)
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid IAM role policy name: %v", s, errors)
 		}
@@ -22,7 +29,7 @@ func TestValidRoleProfileName(t *testing.T) {
 	}
 
 	for _, s := range invalidNames {
-		_, errors := validRolePolicyName(s, "name")
+		_, errors := validRolePolicyName(s, names.AttrName)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid IAM role policy name: %v", s, errors)
 		}
@@ -30,6 +37,8 @@ func TestValidRoleProfileName(t *testing.T) {
 }
 
 func TestValidAccountAlias(t *testing.T) {
+	t.Parallel()
+
 	validAliases := []string{
 		"tf-alias",
 		"0tf-alias1",
@@ -59,6 +68,8 @@ func TestValidAccountAlias(t *testing.T) {
 }
 
 func TestValidOpenIDURL(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -85,7 +96,7 @@ func TestValidOpenIDURL(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validOpenIDURL(tc.Value, "url")
+		_, errors := validOpenIDURL(tc.Value, names.AttrURL)
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d of OpenID URL validation errors, got %d", tc.ErrCount, len(errors))
@@ -94,6 +105,8 @@ func TestValidOpenIDURL(t *testing.T) {
 }
 
 func TestValidRolePolicyRoleName(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -111,7 +124,7 @@ func TestValidRolePolicyRoleName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		_, errors := validRolePolicyRole(tc.Value, "role")
+		_, errors := validRolePolicyRole(tc.Value, names.AttrRole)
 
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d Role Policy role name validation errors, got %d", tc.ErrCount, len(errors))

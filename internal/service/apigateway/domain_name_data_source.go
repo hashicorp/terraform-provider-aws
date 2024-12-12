@@ -1,30 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
-	"fmt"
+	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// cloudFrontRoute53ZoneID defines the route 53 zone ID for CloudFront. This
-// is used to set the zone_id attribute.
-const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
-
-func DataSourceDomainName() *schema.Resource {
+// @SDKDataSource("aws_api_gateway_domain_name", name="Domain Name")
+// @Tags
+// @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
+// @Testing(tlsKey=true, tlsKeyDomain="rName")
+// @Testing(tagsIdentifierAttribute="arn")
+func dataSourceDomainName() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDomainNameRead,
+		ReadWithoutTimeout: dataSourceDomainNameRead,
+
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_arn": {
+			names.AttrCertificateARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -44,9 +50,14 @@ func DataSourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
+			names.AttrDomainName: {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"domain_name_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"endpoint_configuration": {
 				Type:     schema.TypeList,
@@ -60,6 +71,10 @@ func DataSourceDomainName() *schema.Resource {
 						},
 					},
 				},
+			},
+			names.AttrPolicy: {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"regional_certificate_arn": {
 				Type:     schema.TypeString,
@@ -81,60 +96,48 @@ func DataSourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	input := &apigateway.GetDomainNameInput{}
-
-	if v, ok := d.GetOk("domain_name"); ok {
-		input.DomainName = aws.String(v.(string))
+	var domainNameID string
+	domainName := d.Get(names.AttrDomainName).(string)
+	if v, ok := d.GetOk("domain_name_id"); ok {
+		domainNameID = v.(string)
 	}
-
-	domainName, err := conn.GetDomainName(input)
+	output, err := findDomainNameByTwoPartKey(ctx, conn, domainName, domainNameID)
 
 	if err != nil {
-		return fmt.Errorf("error getting API Gateway Domain Name: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", domainNameCreateResourceID(domainName, domainNameID), err)
 	}
 
-	d.SetId(aws.StringValue(domainName.DomainName))
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/domainnames/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
-	d.Set("certificate_arn", domainName.CertificateArn)
-	d.Set("certificate_name", domainName.CertificateName)
-
-	if domainName.CertificateUploadDate != nil {
-		d.Set("certificate_upload_date", domainName.CertificateUploadDate.Format(time.RFC3339))
+	d.SetId(aws.ToString(output.DomainName))
+	d.Set(names.AttrARN, domainNameARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	d.Set(names.AttrCertificateARN, output.CertificateArn)
+	d.Set("certificate_name", output.CertificateName)
+	if output.CertificateUploadDate != nil {
+		d.Set("certificate_upload_date", output.CertificateUploadDate.Format(time.RFC3339))
 	}
-
-	d.Set("cloudfront_domain_name", domainName.DistributionDomainName)
-	d.Set("cloudfront_zone_id", cloudFrontRoute53ZoneID)
-	d.Set("domain_name", domainName.DomainName)
-
-	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
-		return fmt.Errorf("error setting endpoint_configuration: %w", err)
+	d.Set("cloudfront_domain_name", output.DistributionDomainName)
+	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set(names.AttrDomainName, output.DomainName)
+	d.Set("domain_name_id", output.DomainNameId)
+	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
+	d.Set(names.AttrPolicy, output.Policy)
+	d.Set("regional_certificate_arn", output.RegionalCertificateArn)
+	d.Set("regional_certificate_name", output.RegionalCertificateName)
+	d.Set("regional_domain_name", output.RegionalDomainName)
+	d.Set("regional_zone_id", output.RegionalHostedZoneId)
+	d.Set("security_policy", output.SecurityPolicy)
 
-	d.Set("regional_certificate_arn", domainName.RegionalCertificateArn)
-	d.Set("regional_certificate_name", domainName.RegionalCertificateName)
-	d.Set("regional_domain_name", domainName.RegionalDomainName)
-	d.Set("regional_zone_id", domainName.RegionalHostedZoneId)
-	d.Set("security_policy", domainName.SecurityPolicy)
+	setTagsOut(ctx, output.Tags)
 
-	if err := d.Set("tags", KeyValueTags(domainName.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	return nil
+	return diags
 }

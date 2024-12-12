@@ -1,196 +1,221 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mediastore
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/mediastore"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/mediastore/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_media_store_container", name="Container")
+// @Tags(identifierAttribute="arn")
 func ResourceContainer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceContainerCreate,
-		Read:   resourceContainerRead,
-		Update: resourceContainerUpdate,
-		Delete: resourceContainerDelete,
+		CreateWithoutTimeout: resourceContainerCreate,
+		ReadWithoutTimeout:   resourceContainerRead,
+		UpdateWithoutTimeout: resourceContainerUpdate,
+		DeleteWithoutTimeout: resourceContainerDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
-			"name": {
+			names.AttrName: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^\w+$`), "must contain alphanumeric characters or underscores"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^\w+$`), "must contain alphanumeric characters or underscores"),
 			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"endpoint": {
+			names.AttrEndpoint: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceContainerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceContainerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MediaStoreClient(ctx)
 
 	input := &mediastore.CreateContainerInput{
-		ContainerName: aws.String(d.Get("name").(string)),
+		ContainerName: aws.String(d.Get(names.AttrName).(string)),
+		Tags:          getTagsIn(ctx),
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	resp, err := conn.CreateContainer(input)
+	resp, err := conn.CreateContainer(ctx, input)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating MediaStore Container: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.Container.Name))
+	d.SetId(aws.ToString(resp.Container.Name))
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{mediastore.ContainerStatusCreating},
-		Target:     []string{mediastore.ContainerStatusActive},
-		Refresh:    containerRefreshStatusFunc(conn, d.Id()),
+	_, err = waitContainerActive(ctx, conn, d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating MediaStore Container (%s): waiting for completion: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceContainerRead(ctx, d, meta)...)
+}
+
+func resourceContainerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MediaStoreClient(ctx)
+
+	resp, err := findContainerByName(ctx, conn, d.Id())
+
+	if tfresource.NotFound(err) {
+		log.Printf("[WARN] No Container found: %s, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading MediaStore Container %s: %s", d.Id(), err)
+	}
+
+	arn := aws.ToString(resp.ARN)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, resp.Name)
+	d.Set(names.AttrEndpoint, resp.Endpoint)
+
+	return diags
+}
+
+func resourceContainerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Tags only.
+
+	return append(diags, resourceContainerRead(ctx, d, meta)...)
+}
+
+func resourceContainerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).MediaStoreClient(ctx)
+
+	input := &mediastore.DeleteContainerInput{
+		ContainerName: aws.String(d.Id()),
+	}
+	_, err := conn.DeleteContainer(ctx, input)
+
+	if errs.IsA[*awstypes.ContainerNotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting MediaStore Container (%s): %s", d.Id(), err)
+	}
+
+	_, err = waitContainerDeleted(ctx, conn, d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting MediaStore Container (%s): waiting for completion: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func containerRefreshStatusFunc(ctx context.Context, conn *mediastore.Client, cn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		resp, err := findContainerByName(ctx, conn, cn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return resp, string(resp.Status), nil
+	}
+}
+
+func findContainerByName(ctx context.Context, conn *mediastore.Client, id string) (*awstypes.Container, error) {
+	input := &mediastore.DescribeContainerInput{
+		ContainerName: aws.String(id),
+	}
+
+	output, err := conn.DescribeContainer(ctx, input)
+
+	if errs.IsA[*awstypes.ContainerNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Container == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Container, nil
+}
+
+func waitContainerActive(ctx context.Context, conn *mediastore.Client, id string) (*awstypes.Container, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.ContainerStatusCreating),
+		Target:     enum.Slice(awstypes.ContainerStatusActive),
+		Refresh:    containerRefreshStatusFunc(ctx, conn, id),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if v, ok := outputRaw.(*awstypes.Container); ok {
+		return v, err
 	}
 
-	return resourceContainerRead(d, meta)
+	return nil, err
 }
 
-func resourceContainerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	input := &mediastore.DescribeContainerInput{
-		ContainerName: aws.String(d.Id()),
-	}
-	resp, err := conn.DescribeContainer(input)
-	if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
-		log.Printf("[WARN] No Container found: %s, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("Error describing media store container %s: %s", d.Id(), err)
+func waitContainerDeleted(ctx context.Context, conn *mediastore.Client, id string) (*awstypes.Container, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.ContainerStatusDeleting),
+		Target:     []string{},
+		Refresh:    containerRefreshStatusFunc(ctx, conn, id),
+		Timeout:    10 * time.Minute,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
 	}
 
-	arn := aws.StringValue(resp.Container.ARN)
-	d.Set("arn", arn)
-	d.Set("name", resp.Container.Name)
-	d.Set("endpoint", resp.Container.Endpoint)
-
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for media store container (%s): %s", arn, err)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if v, ok := outputRaw.(*awstypes.Container); ok {
+		return v, err
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
-}
-
-func resourceContainerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
-
-	arn := d.Get("arn").(string)
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating media store container (%s) tags: %s", arn, err)
-		}
-	}
-
-	return resourceContainerRead(d, meta)
-}
-
-func resourceContainerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).MediaStoreConn
-
-	input := &mediastore.DeleteContainerInput{
-		ContainerName: aws.String(d.Id()),
-	}
-	_, err := conn.DeleteContainer(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
-			return nil
-		}
-		return err
-	}
-
-	dcinput := &mediastore.DescribeContainerInput{
-		ContainerName: aws.String(d.Id()),
-	}
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DescribeContainer(dcinput)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
-				return nil
-			}
-			return resource.NonRetryableError(err)
-		}
-		return resource.RetryableError(fmt.Errorf("Media Store Container (%s) still exists", d.Id()))
-	})
-	if tfresource.TimedOut(err) {
-		_, err = conn.DescribeContainer(dcinput)
-	}
-	if err != nil {
-		return fmt.Errorf("error waiting for Media Store Container (%s) deletion: %s", d.Id(), err)
-	}
-
-	return nil
-}
-
-func containerRefreshStatusFunc(conn *mediastore.MediaStore, cn string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &mediastore.DescribeContainerInput{
-			ContainerName: aws.String(cn),
-		}
-		resp, err := conn.DescribeContainer(input)
-		if err != nil {
-			return nil, "failed", err
-		}
-		return resp, *resp.Container.Status, nil
-	}
+	return nil, err
 }

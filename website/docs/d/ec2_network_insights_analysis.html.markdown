@@ -21,7 +21,7 @@ data "aws_ec2_network_insights_analysis" "example" {
 ## Argument Reference
 
 The arguments of this data source act as filters for querying the available
-Network Insights Analyses. The given filters must match exactly one Network Insights Analysis
+Network Insights Analyzes. The given filters must match exactly one Network Insights Analysis
 whose data will be exported as attributes.
 
 * `network_insights_analysis_id` - (Optional) ID of the Network Insights Analysis to select.
@@ -29,14 +29,14 @@ whose data will be exported as attributes.
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the EC2 [`DescribeNetworkInsightsAnalyses`](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeNetworkInsightsAnalyses.html) API Reference.
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `alternate_path_hints` - Potential intermediate components of a feasible path.
 * `arn` - ARN of the selected Network Insights Analysis.

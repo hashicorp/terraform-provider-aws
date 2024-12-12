@@ -1,17 +1,24 @@
-package dms
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package dms_test
 
 import (
 	"testing"
+
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
 )
 
 func TestValidEndpointID(t *testing.T) {
+	t.Parallel()
+
 	validIds := []string{
 		"tf-test-endpoint-1",
 		"tfTestEndpoint",
 	}
 
 	for _, s := range validIds {
-		_, errors := validEndpointID(s, "endpoint_id")
+		_, errors := tfdms.ValidEndpointID(s, "endpoint_id")
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid endpoint id: %v", s, errors)
 		}
@@ -28,7 +35,7 @@ func TestValidEndpointID(t *testing.T) {
 	}
 
 	for _, s := range invalidIds {
-		_, errors := validEndpointID(s, "endpoint_id")
+		_, errors := tfdms.ValidEndpointID(s, "endpoint_id")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid endpoint id: %v", s, errors)
 		}
@@ -36,13 +43,15 @@ func TestValidEndpointID(t *testing.T) {
 }
 
 func TestValidReplicationInstanceID(t *testing.T) {
+	t.Parallel()
+
 	validIds := []string{
 		"tf-test-replication-instance-1",
 		"tfTestReplicaitonInstance",
 	}
 
 	for _, s := range validIds {
-		_, errors := validReplicationInstanceID(s, "replicaiton_instance_id")
+		_, errors := tfdms.ValidReplicationInstanceID(s, "replicaiton_instance_id")
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid replication instance id: %v", s, errors)
 		}
@@ -59,7 +68,7 @@ func TestValidReplicationInstanceID(t *testing.T) {
 	}
 
 	for _, s := range invalidIds {
-		_, errors := validReplicationInstanceID(s, "replication_instance_id")
+		_, errors := tfdms.ValidReplicationInstanceID(s, "replication_instance_id")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid replication instance id: %v", s, errors)
 		}
@@ -67,6 +76,8 @@ func TestValidReplicationInstanceID(t *testing.T) {
 }
 
 func TestValidReplicationSubnetGroupID(t *testing.T) {
+	t.Parallel()
+
 	validIds := []string{
 		"tf-test-replication-subnet-group-1",
 		"tf_test_replication_subnet_group_1",
@@ -76,7 +87,7 @@ func TestValidReplicationSubnetGroupID(t *testing.T) {
 	}
 
 	for _, s := range validIds {
-		_, errors := validReplicationSubnetGroupID(s, "replication_subnet_group_id")
+		_, errors := tfdms.ValidReplicationSubnetGroupID(s, "replication_subnet_group_id")
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid replication subnet group id: %v", s, errors)
 		}
@@ -89,7 +100,7 @@ func TestValidReplicationSubnetGroupID(t *testing.T) {
 	}
 
 	for _, s := range invalidIds {
-		_, errors := validReplicationSubnetGroupID(s, "replication_subnet_group_id")
+		_, errors := tfdms.ValidReplicationSubnetGroupID(s, "replication_subnet_group_id")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid replication subnet group id: %v", s, errors)
 		}
@@ -97,13 +108,15 @@ func TestValidReplicationSubnetGroupID(t *testing.T) {
 }
 
 func TestValidReplicationTaskID(t *testing.T) {
+	t.Parallel()
+
 	validIds := []string{
 		"tf-test-replication-task-1",
 		"tfTestReplicationTask",
 	}
 
 	for _, s := range validIds {
-		_, errors := validReplicationTaskID(s, "replication_task_id")
+		_, errors := tfdms.ValidReplicationTaskID(s, "replication_task_id")
 		if len(errors) > 0 {
 			t.Fatalf("%q should be a valid replication task id: %v", s, errors)
 		}
@@ -120,7 +133,7 @@ func TestValidReplicationTaskID(t *testing.T) {
 	}
 
 	for _, s := range invalidIds {
-		_, errors := validReplicationTaskID(s, "replication_task_id")
+		_, errors := tfdms.ValidReplicationTaskID(s, "replication_task_id")
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be a valid replication task id: %v", s, errors)
 		}

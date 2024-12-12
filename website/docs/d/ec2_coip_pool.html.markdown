@@ -48,14 +48,14 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   A COIP Pool will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
 
 All of the argument attributes except `filter` blocks are also exported as
 result attributes. This data source will complete the data by populating
 any fields that are not included in the configuration with the data for
 the selected COIP Pool.
 
-In addition, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the COIP pool
 * `pool_cidrs` - Set of CIDR blocks in pool

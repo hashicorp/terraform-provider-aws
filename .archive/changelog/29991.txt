@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_api_gateway_integration: Fix bug that cleared unchanged `cache_key_parameters` values on Update
+```

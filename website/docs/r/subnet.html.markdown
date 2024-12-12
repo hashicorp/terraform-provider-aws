@@ -35,18 +35,18 @@ resource, it is recommended to reference that resource's `vpc_id` attribute to e
 ```terraform
 resource "aws_vpc_ipv4_cidr_block_association" "secondary_cidr" {
   vpc_id     = aws_vpc.main.id
-  cidr_block = "172.2.0.0/16"
+  cidr_block = "172.20.0.0/16"
 }
 
 resource "aws_subnet" "in_secondary_cidr" {
   vpc_id     = aws_vpc_ipv4_cidr_block_association.secondary_cidr.vpc_id
-  cidr_block = "172.2.0.0/24"
+  cidr_block = "172.20.0.0/24"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `assign_ipv6_address_on_creation` - (Optional) Specify true to indicate
     that network interfaces created in the specified subnet should be
@@ -56,6 +56,7 @@ The following arguments are supported:
 * `cidr_block` - (Optional) The IPv4 CIDR block for the subnet.
 * `customer_owned_ipv4_pool` - (Optional) The customer owned IPv4 address pool. Typically used with the `map_customer_owned_ip_on_launch` argument. The `outpost_arn` argument must be specified when configured.
 * `enable_dns64` - (Optional) Indicates whether DNS queries made to the Amazon-provided DNS Resolver in this subnet should return synthetic IPv6 addresses for IPv4-only destinations. Default: `false`.
+* `enable_lni_at_device_index` - (Optional) Indicates the device position for local network interfaces in this subnet. For example, 1 indicates local network interfaces in this subnet are the secondary network interface (eth1). A local network interface cannot be the primary network interface (eth0).
 * `enable_resource_name_dns_aaaa_record_on_launch` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records. Default: `false`.
 * `enable_resource_name_dns_a_record_on_launch` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS A records. Default: `false`.
 * `ipv6_cidr_block` - (Optional) The IPv6 network range for the subnet,
@@ -70,9 +71,9 @@ The following arguments are supported:
 * `vpc_id` - (Required) The VPC ID.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the subnet
 * `arn` - The ARN of the subnet.
@@ -89,8 +90,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Subnets can be imported using the `subnet id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import subnets using the subnet `id`. For example:
 
+```terraform
+import {
+  to = aws_subnet.public_subnet
+  id = "subnet-9d4a7b6c"
+}
 ```
-$ terraform import aws_subnet.public_subnet subnet-9d4a7b6c
+
+Using `terraform import`, import subnets using the subnet `id`. For example:
+
+```console
+% terraform import aws_subnet.public_subnet subnet-9d4a7b6c
 ```

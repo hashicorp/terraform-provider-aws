@@ -1,24 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceIPAMPreviewNextCIDR() *schema.Resource {
+// @SDKResource("aws_vpc_ipam_preview_next_cidr, name="IPAM Preview Next CIDR")
+func resourceIPAMPreviewNextCIDR() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIPAMPreviewNextCIDRCreate,
-		Read:   resourceIPAMPreviewNextCIDRRead,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceIPAMPreviewNextCIDRCreate,
+		ReadWithoutTimeout:   resourceIPAMPreviewNextCIDRRead,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Schema: map[string]*schema.Schema{
 			"cidr": {
 				Type:     schema.TypeString,
@@ -59,53 +66,55 @@ func ResourceIPAMPreviewNextCIDR() *schema.Resource {
 	}
 }
 
-func resourceIPAMPreviewNextCIDRCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceIPAMPreviewNextCIDRCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 	poolId := d.Get("ipam_pool_id").(string)
 
 	input := &ec2.AllocateIpamPoolCidrInput{
-		ClientToken:     aws.String(resource.UniqueId()),
+		ClientToken:     aws.String(id.UniqueId()),
 		IpamPoolId:      aws.String(poolId),
 		PreviewNextCidr: aws.Bool(true),
 	}
 
 	if v, ok := d.GetOk("disallowed_cidrs"); ok && v.(*schema.Set).Len() > 0 {
-		input.DisallowedCidrs = flex.ExpandStringSet(v.(*schema.Set))
+		input.DisallowedCidrs = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("netmask_length"); ok {
-		input.NetmaskLength = aws.Int64(int64(v.(int)))
+		input.NetmaskLength = aws.Int32(int32(v.(int)))
 	}
 
-	output, err := conn.AllocateIpamPoolCidr(input)
+	output, err := conn.AllocateIpamPoolCidr(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("Error allocating cidr from IPAM pool (%s): %w", d.Get("ipam_pool_id").(string), err)
+		return sdkdiag.AppendErrorf(diags, "allocating cidr from IPAM pool (%s): %s", d.Get("ipam_pool_id").(string), err)
 	}
 
 	if output == nil || output.IpamPoolAllocation == nil {
-		return fmt.Errorf("error allocating from ipam pool (%s): empty response", poolId)
+		return sdkdiag.AppendErrorf(diags, "allocating from ipam pool (%s): empty response", poolId)
 	}
 
 	cidr := output.IpamPoolAllocation.Cidr
 
 	d.Set("cidr", cidr)
-	d.SetId(encodeIPAMPreviewNextCIDRID(aws.StringValue(cidr), poolId))
+	d.SetId(encodeIPAMPreviewNextCIDRID(aws.ToString(cidr), poolId))
 
-	return resourceIPAMPreviewNextCIDRRead(d, meta)
+	return append(diags, resourceIPAMPreviewNextCIDRRead(ctx, d, meta)...)
 }
 
-func resourceIPAMPreviewNextCIDRRead(d *schema.ResourceData, meta interface{}) error {
+func resourceIPAMPreviewNextCIDRRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	cidr, poolId, err := decodeIPAMPreviewNextCIDRID(d.Id())
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EC2 IPAM Preview Next CIDR: %s", err)
 	}
 
 	d.Set("cidr", cidr)
 	d.Set("ipam_pool_id", poolId)
 
-	return nil
+	return diags
 }
 
 func encodeIPAMPreviewNextCIDRID(cidr, poolId string) string {

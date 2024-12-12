@@ -1,33 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
 package main
 
 import (
-	"bytes"
+	"cmp"
 	_ "embed"
-	"encoding/csv"
-	"fmt"
-	"go/format"
-	"log"
-	"os"
-	"sort"
-	"text/template"
+	"slices"
 
-	"github.com/hashicorp/terraform-provider-aws/names"
-)
-
-const (
-	filename      = `awsclient_gen.go`
-	namesDataFile = "../../names/names_data.csv"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type ServiceDatum struct {
-	SDKVersion        string
 	GoPackage         string
-	GoPackageOverride string
 	ProviderNameUpper string
-	ClientTypeName    string
 }
 
 type TemplateData struct {
@@ -35,98 +25,55 @@ type TemplateData struct {
 }
 
 func main() {
-	fmt.Printf("Generating internal/conns/%s\n", filename)
+	const (
+		filename = `awsclient_gen.go`
+	)
+	g := common.NewGenerator()
 
-	f, err := os.Open(namesDataFile)
+	g.Infof("Generating internal/conns/%s", filename)
+
+	data, err := data.ReadAllServiceData()
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-
-	csvReader := csv.NewReader(f)
-
-	data, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{}
 
-	for i, l := range data {
-		if i < 1 { // skip header
+	for _, l := range data {
+		if l.Exclude() {
 			continue
 		}
 
-		if l[names.ColExclude] != "" {
+		if l.NotImplemented() && !l.EndpointOnly() {
 			continue
 		}
 
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
+		if l.IsClientSDKV1() {
 			continue
 		}
 
-		if l[names.ColClientSDKV1] != "" {
-			td.Services = append(td.Services, ServiceDatum{
-				ProviderNameUpper: l[names.ColProviderNameUpper],
-				SDKVersion:        "1",
-				GoPackage:         l[names.ColGoV1Package],
-				ClientTypeName:    l[names.ColGoV1ClientTypeName],
-			})
+		s := ServiceDatum{
+			ProviderNameUpper: l.ProviderNameUpper(),
+			GoPackage:         l.GoPackageName(),
 		}
-		if l[names.ColClientSDKV2] != "" {
-			sd := ServiceDatum{
-				ProviderNameUpper: l[names.ColProviderNameUpper],
-				SDKVersion:        "2",
-				GoPackage:         l[names.ColGoV2Package],
-				ClientTypeName:    "Client",
-			}
-			if l[names.ColClientSDKV1] != "" {
-				// Use `sdkv2` instead of `v2` to prevent collisions with e.g., `elbv2`
-				sd.GoPackageOverride = fmt.Sprintf("%s_sdkv2", l[names.ColGoV2Package])
-			}
-			td.Services = append(td.Services, sd)
-		}
+
+		td.Services = append(td.Services, s)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderNameUpper < td.Services[j].ProviderNameUpper
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.ProviderNameUpper, b.ProviderNameUpper)
 	})
 
-	writeTemplate(tmpl, "awsclient", td)
-}
+	d := g.NewGoFileDestination(filename)
 
-func writeTemplate(body string, templateName string, td TemplateData) {
-	f, err := os.OpenFile(filename, os.O_TRUNC|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
+	if err := d.BufferTemplate("awsclient", tmpl, td); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 
-	tplate, err := template.New(templateName).Parse(body)
-	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tplate.Execute(&buffer, td)
-	if err != nil {
-		log.Fatalf("error executing template: %s", err)
-	}
-
-	contents, err := format.Source(buffer.Bytes())
-	if err != nil {
-		log.Fatalf("error formatting generated file: %s", err)
-	}
-
-	if _, err := f.Write(contents); err != nil {
-		f.Close()
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 }
 
-//go:embed file.tmpl
+//go:embed file.gtpl
 var tmpl string

@@ -1,19 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/elbv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
-
-var HostedZoneIdPerRegionALBMap = map[string]string{
+var hostedZoneIDPerRegionALBMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z268VQBMOI5EKX",
 	endpoints.ApEast1RegionID:      "Z3DQVH9N71FHZ0",
 	endpoints.ApNortheast1RegionID: "Z14GRHDCWA56QT",
@@ -24,7 +30,10 @@ var HostedZoneIdPerRegionALBMap = map[string]string{
 	endpoints.ApSoutheast1RegionID: "Z1LMS91P8CMLE5",
 	endpoints.ApSoutheast2RegionID: "Z1GM3OXH4ZPM65",
 	endpoints.ApSoutheast3RegionID: "Z08888821HLRG5A9ZRTER",
+	endpoints.ApSoutheast4RegionID: "Z09517862IB2WZLPXG76F",
+	endpoints.ApSoutheast5RegionID: "Z06010284QMVVW7WO5J",
 	endpoints.CaCentral1RegionID:   "ZQSVJUPU6J1EY",
+	endpoints.CaWest1RegionID:      "Z06473681N0SF6OS049SD",
 	endpoints.CnNorth1RegionID:     "Z1GDH35T77C1KE",
 	endpoints.CnNorthwest1RegionID: "ZM7IZAIOVVDZF",
 	endpoints.EuCentral1RegionID:   "Z215JYRZR1TBD5",
@@ -35,6 +44,7 @@ var HostedZoneIdPerRegionALBMap = map[string]string{
 	endpoints.EuWest1RegionID:      "Z32O12XQLNTSW2",
 	endpoints.EuWest2RegionID:      "ZHURV8PSTC4K8",
 	endpoints.EuWest3RegionID:      "Z3Q77PNBQS71R4",
+	endpoints.IlCentral1RegionID:   "Z09170902867EHPV2DABU",
 	endpoints.MeCentral1RegionID:   "Z08230872XQRWHG2XF6I",
 	endpoints.MeSouth1RegionID:     "ZS929ML54UICD",
 	endpoints.SaEast1RegionID:      "Z2P70J7HTTTPLU",
@@ -47,8 +57,7 @@ var HostedZoneIdPerRegionALBMap = map[string]string{
 }
 
 // See https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region
-
-var HostedZoneIdPerRegionNLBMap = map[string]string{
+var hostedZoneIDPerRegionNLBMap = map[string]string{
 	endpoints.AfSouth1RegionID:     "Z203XCE67M25HM",
 	endpoints.ApEast1RegionID:      "Z12Y7K3UBGUAD1",
 	endpoints.ApNortheast1RegionID: "Z31USIVHYNEOWT",
@@ -59,7 +68,10 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 	endpoints.ApSoutheast1RegionID: "ZKVM4W9LS7TM",
 	endpoints.ApSoutheast2RegionID: "ZCT6FZBF4DROD",
 	endpoints.ApSoutheast3RegionID: "Z01971771FYVNCOVWJU1G",
+	endpoints.ApSoutheast4RegionID: "Z01156963G8MIIL7X90IV",
+	endpoints.ApSoutheast5RegionID: "Z026317210H9ACVTRO6FB",
 	endpoints.CaCentral1RegionID:   "Z2EPGBW3API2WT",
+	endpoints.CaWest1RegionID:      "Z02754302KBB00W2LKWZ9",
 	endpoints.CnNorth1RegionID:     "Z3QFB96KMJ7ED6",
 	endpoints.CnNorthwest1RegionID: "ZQEIKTCZ8352D",
 	endpoints.EuCentral1RegionID:   "Z3F0SRJ5LGBH90",
@@ -70,6 +82,7 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 	endpoints.EuWest1RegionID:      "Z2IFOLAFXWLO4F",
 	endpoints.EuWest2RegionID:      "ZD4D7Y8KGAS4G",
 	endpoints.EuWest3RegionID:      "Z1CMS0P5QUZ6D5",
+	endpoints.IlCentral1RegionID:   "Z0313266YDI6ZRHTGQY4",
 	endpoints.MeCentral1RegionID:   "Z00282643NTTLPANJJG2P",
 	endpoints.MeSouth1RegionID:     "Z3QSRYVP46NYYV",
 	endpoints.SaEast1RegionID:      "ZTK26PT1VY4CU",
@@ -81,12 +94,13 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 	endpoints.UsWest2RegionID:      "Z18D5FSROUN65G",
 }
 
-func DataSourceHostedZoneID() *schema.Resource {
+// @SDKDataSource("aws_lb_hosted_zone_id", name="Hosted Zone ID")
+func dataSourceHostedZoneID() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceHostedZoneIDRead,
+		ReadWithoutTimeout: dataSourceHostedZoneIDRead,
 
 		Schema: map[string]*schema.Schema{
-			"region": {
+			names.AttrRegion: {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidRegionName,
@@ -94,37 +108,40 @@ func DataSourceHostedZoneID() *schema.Resource {
 			"load_balancer_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      elbv2.LoadBalancerTypeEnumApplication,
-				ValidateFunc: validation.StringInSlice([]string{elbv2.LoadBalancerTypeEnumApplication, elbv2.LoadBalancerTypeEnumNetwork}, false),
+				Default:      awstypes.LoadBalancerTypeEnumApplication,
+				ValidateFunc: validation.StringInSlice(enum.Slice[awstypes.LoadBalancerTypeEnum](awstypes.LoadBalancerTypeEnumApplication, awstypes.LoadBalancerTypeEnumNetwork), false),
 			},
 		},
 	}
 }
 
-func dataSourceHostedZoneIDRead(d *schema.ResourceData, meta interface{}) error {
-	region := meta.(*conns.AWSClient).Region
-	if v, ok := d.GetOk("region"); ok {
+func dataSourceHostedZoneIDRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	region := meta.(*conns.AWSClient).Region(ctx)
+	if v, ok := d.GetOk(names.AttrRegion); ok {
 		region = v.(string)
 	}
 
-	lbType := elbv2.LoadBalancerTypeEnumApplication
+	lbType := awstypes.LoadBalancerTypeEnumApplication
 	if v, ok := d.GetOk("load_balancer_type"); ok {
-		lbType = v.(string)
+		lbType = awstypes.LoadBalancerTypeEnum(v.(string))
 	}
 
-	if lbType == elbv2.LoadBalancerTypeEnumApplication {
-		if zoneId, ok := HostedZoneIdPerRegionALBMap[region]; ok {
-			d.SetId(zoneId)
+	switch lbType {
+	case awstypes.LoadBalancerTypeEnumApplication:
+		if v, ok := hostedZoneIDPerRegionALBMap[region]; ok {
+			d.SetId(v)
 		} else {
-			return fmt.Errorf("unsupported AWS Region: %s", region)
+			return sdkdiag.AppendErrorf(diags, "unsupported AWS Region: %s", region)
 		}
-	} else if lbType == elbv2.LoadBalancerTypeEnumNetwork {
-		if zoneId, ok := HostedZoneIdPerRegionNLBMap[region]; ok {
-			d.SetId(zoneId)
+	case awstypes.LoadBalancerTypeEnumNetwork:
+		if v, ok := hostedZoneIDPerRegionNLBMap[region]; ok {
+			d.SetId(v)
 		} else {
-			return fmt.Errorf("unsupported AWS Region: %s", region)
+			return sdkdiag.AppendErrorf(diags, "unsupported AWS Region: %s", region)
 		}
 	}
 
-	return nil
+	return diags
 }

@@ -12,7 +12,7 @@ Provides an Amazon MQ broker resource. This resources also manages users for the
 
 -> For more information on Amazon MQ, see [Amazon MQ documentation](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/welcome.html).
 
-~> **NOTE:** Amazon MQ currently places limits on **RabbitMQ** brokers. For example, a RabbitMQ broker cannot have: instances with an associated IP address of an ENI attached to the broker, an associated LDAP server to authenticate and authorize broker connections, storage type `EFS`, audit logging, or `configuration` blocks. Although this resource allows you to create RabbitMQ users, RabbitMQ users cannot have console access or groups. Also, Amazon MQ does not return information about RabbitMQ users so drift detection is not possible.
+~> **NOTE:** Amazon MQ currently places limits on **RabbitMQ** brokers. For example, a RabbitMQ broker cannot have: instances with an associated IP address of an ENI attached to the broker, an associated LDAP server to authenticate and authorize broker connections, storage type `EFS`, or audit logging. Although this resource allows you to create RabbitMQ users, RabbitMQ users cannot have console access or groups. Also, Amazon MQ does not return information about RabbitMQ users so drift detection is not possible.
 
 ~> **NOTE:** Changes to an MQ Broker can occur when you change a parameter, such as `configuration` or `user`, and are reflected in the next maintenance window. Because of this, Terraform may report a difference in its planning phase because a modification has not yet taken place. You can use the `apply_immediately` flag to instruct the service to apply the change immediately (see documentation below). Using `apply_immediately` can result in a brief downtime as the broker reboots.
 
@@ -32,7 +32,7 @@ resource "aws_mq_broker" "example" {
   }
 
   engine_type        = "ActiveMQ"
-  engine_version     = "5.15.9"
+  engine_version     = "5.17.6"
   host_instance_type = "mq.t2.micro"
   security_groups    = [aws_security_group.test.id]
 
@@ -57,7 +57,7 @@ resource "aws_mq_broker" "example" {
   }
 
   engine_type        = "ActiveMQ"
-  engine_version     = "5.15.9"
+  engine_version     = "5.17.6"
   storage_type       = "ebs"
   host_instance_type = "mq.m5.large"
   security_groups    = [aws_security_group.test.id]
@@ -69,13 +69,65 @@ resource "aws_mq_broker" "example" {
 }
 ```
 
+### Cross-Region Data Replication
+
+```terraform
+resource "aws_mq_broker" "example_primary" {
+  # primary broker configured in an alternate region
+  provider = awsalternate
+
+  apply_immediately  = true
+  broker_name        = "example_primary"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.17.6"
+  host_instance_type = "mq.m5.large"
+  security_groups    = [aws_security_group.example_primary.id]
+  deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
+
+  user {
+    username = "ExampleUser"
+    password = "MindTheGap"
+  }
+  user {
+    username         = "ExampleReplicationUser"
+    password         = "Example12345"
+    replication_user = true
+  }
+}
+
+resource "aws_mq_broker" "example" {
+  apply_immediately  = true
+  broker_name        = "example"
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.17.6"
+  host_instance_type = "mq.m5.large"
+  security_groups    = [aws_security_group.example.id]
+  deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
+
+  data_replication_mode               = "CRDR"
+  data_replication_primary_broker_arn = aws_mq_broker.primary.arn
+
+  user {
+    username = "ExampleUser"
+    password = "MindTheGap"
+  }
+  user {
+    username         = "ExampleReplicationUser"
+    password         = "Example12345"
+    replication_user = true
+  }
+}
+```
+
+See the [AWS MQ documentation](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/crdr-for-active-mq.html) on cross-region data replication for additional details.
+
 ## Argument Reference
 
 The following arguments are required:
 
 * `broker_name` - (Required) Name of the broker.
 * `engine_type` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
-* `engine_version` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.15.0`.
+* `engine_version` - (Required) Version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions. For example, `5.17.6`.
 * `host_instance_type` - (Required) Broker's instance type. For example, `mq.t3.micro`, `mq.m5.large`.
 * `user` - (Required) Configuration block for broker users. For `engine_type` of `RabbitMQ`, Amazon MQ does not return broker users preventing this resource from making user updates and drift detection. Detailed below.
 
@@ -84,7 +136,9 @@ The following arguments are optional:
 * `apply_immediately` - (Optional) Specifies whether any broker modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `authentication_strategy` - (Optional) Authentication strategy used to secure the broker. Valid values are `simple` and `ldap`. `ldap` is not supported for `engine_type` `RabbitMQ`.
 * `auto_minor_version_upgrade` - (Optional) Whether to automatically upgrade to new minor versions of brokers as Amazon MQ makes releases available.
-* `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ActiveMQ` only. Detailed below.
+* `configuration` - (Optional) Configuration block for broker configuration. Applies to `engine_type` of `ActiveMQ` and `RabbitMQ` only. Detailed below.
+* `data_replication_mode` - (Optional)  Defines whether this broker is a part of a data replication pair. Valid values are `CRDR` and `NONE`.
+* `data_replication_primary_broker_arn` - (Optional) The Amazon Resource Name (ARN) of the primary broker that is used to replicate data from in a data replication pair, and is applied to the replica broker. Must be set when `data_replication_mode` is `CRDR`.
 * `deployment_mode` - (Optional) Deployment mode of the broker. Valid values are `SINGLE_INSTANCE`, `ACTIVE_STANDBY_MULTI_AZ`, and `CLUSTER_MULTI_AZ`. Default is `SINGLE_INSTANCE`.
 * `encryption_options` - (Optional) Configuration block containing encryption options. Detailed below.
 * `ldap_server_metadata` - (Optional) Configuration block for the LDAP server used to authenticate and authorize connections to the broker. Not supported for `engine_type` `RabbitMQ`. Detailed below. (Currently, AWS may not process changes to LDAP server metadata.)
@@ -146,13 +200,14 @@ The following arguments are required:
 * `console_access` - (Optional) Whether to enable access to the [ActiveMQ Web Console](http://activemq.apache.org/web-console.html) for the user. Applies to `engine_type` of `ActiveMQ` only.
 * `groups` - (Optional) List of groups (20 maximum) to which the ActiveMQ user belongs. Applies to `engine_type` of `ActiveMQ` only.
 * `password` - (Required) Password of the user. It must be 12 to 250 characters long, at least 4 unique characters, and must not contain commas.
+* `replication_user` - (Optional) Whether to set set replication user. Defaults to `false`.
 * `username` - (Required) Username of the user.
 
 ~> **NOTE:** AWS currently does not support updating RabbitMQ users. Updates to users can only be in the RabbitMQ UI.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the broker.
 * `id` - Unique ID that Amazon MQ generates for the broker.
@@ -168,6 +223,7 @@ In addition to all arguments above, the following attributes are exported:
             * `wss://broker-id.mq.us-west-2.amazonaws.com:61619`
         * For `RabbitMQ`:
             * `amqps://broker-id.mq.us-west-2.amazonaws.com:5671`
+* `pending_data_replication_mode` - (Optional) The data replication mode that will be applied after reboot.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -180,8 +236,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MQ Brokers can be imported using their broker id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MQ Brokers using their broker id. For example:
 
+```terraform
+import {
+  to = aws_mq_broker.example
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc"
+}
 ```
-$ terraform import aws_mq_broker.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+
+Using `terraform import`, import MQ Brokers using their broker id. For example:
+
+```console
+% terraform import aws_mq_broker.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```

@@ -1,5 +1,5 @@
 ---
-subcategory: "MemoryDB for Redis"
+subcategory: "MemoryDB"
 layout: "aws"
 page_title: "AWS: aws_memorydb_subnet_group"
 description: |-
@@ -44,9 +44,9 @@ The following arguments are optional:
 * `description` - (Optional) Description for the subnet group. Defaults to `"Managed by Terraform"`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the subnet group.
 * `arn` - The ARN of the subnet group.
@@ -55,8 +55,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Use the `name` to import a subnet group. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a subnet group using its `name`. For example:
 
+```terraform
+import {
+  to = aws_memorydb_subnet_group.example
+  id = "my-subnet-group"
+}
 ```
-$ terraform import aws_memorydb_subnet_group.example my-subnet-group
+
+Using `terraform import`, import a subnet group using its `name`. For example:
+
+```console
+% terraform import aws_memorydb_subnet_group.example my-subnet-group
 ```

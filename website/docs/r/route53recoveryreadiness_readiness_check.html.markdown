@@ -30,23 +30,32 @@ The following arguments are optional:
 
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the readiness_check
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-## Import
-
-Route53 Recovery Readiness readiness checks can be imported via the readiness check name, e.g.,
-
-```
-$ terraform import aws_route53recoveryreadiness_readiness_check.my-cw-alarm-check
-```
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `delete` - (Default `5m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Recovery Readiness readiness checks using the readiness check name. For example:
+
+```terraform
+import {
+  to = aws_route53recoveryreadiness_readiness_check.my-cw-alarm-check
+  id = "example"
+}
+```
+
+Using `terraform import`, import Route53 Recovery Readiness readiness checks using the readiness check name. For example:
+
+```console
+% terraform import aws_route53recoveryreadiness_readiness_check.my-cw-alarm-check example
+```

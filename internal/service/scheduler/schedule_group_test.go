@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package scheduler_test
 
 import (
@@ -8,12 +11,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -22,26 +27,27 @@ import (
 )
 
 func TestAccSchedulerScheduleGroup_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var scheduleGroup scheduler.GetScheduleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduleGroupDestroy,
+		CheckDestroy:             testAccCheckScheduleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduleGroupExists(resourceName, &scheduleGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "scheduler", regexp.MustCompile(regexp.QuoteMeta(`schedule-group/`+rName))),
-					resource.TestCheckResourceAttrWith(resourceName, "creation_date", func(actual string) error {
+					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule-group/`+rName))),
+					resource.TestCheckResourceAttrWith(resourceName, names.AttrCreationDate, func(actual string) error {
 						expect := scheduleGroup.CreationDate.Format(time.RFC3339)
 						if actual != expect {
 							return fmt.Errorf("expected value to be a formatted date")
@@ -55,9 +61,9 @@ func TestAccSchedulerScheduleGroup_basic(t *testing.T) {
 						}
 						return nil
 					}),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ACTIVE"),
 				),
 			},
 			{
@@ -70,25 +76,26 @@ func TestAccSchedulerScheduleGroup_basic(t *testing.T) {
 }
 
 func TestAccSchedulerScheduleGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var scheduleGroup scheduler.GetScheduleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduleGroupDestroy,
+		CheckDestroy:             testAccCheckScheduleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduleGroupExists(resourceName, &scheduleGroup),
-					acctest.CheckResourceDisappears(acctest.Provider, tfscheduler.ResourceScheduleGroup(), resourceName),
+					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfscheduler.ResourceScheduleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -97,25 +104,26 @@ func TestAccSchedulerScheduleGroup_disappears(t *testing.T) {
 }
 
 func TestAccSchedulerScheduleGroup_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
 	var scheduleGroup scheduler.GetScheduleGroupOutput
 	resourceName := "aws_scheduler_schedule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduleGroupDestroy,
+		CheckDestroy:             testAccCheckScheduleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleGroupConfig_nameGenerated,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduleGroupExists(resourceName, &scheduleGroup),
-					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", resource.UniqueIdPrefix),
+					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
+					acctest.CheckResourceAttrNameGenerated(resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, id.UniqueIdPrefix),
 				),
 			},
 			{
@@ -128,25 +136,26 @@ func TestAccSchedulerScheduleGroup_nameGenerated(t *testing.T) {
 }
 
 func TestAccSchedulerScheduleGroup_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	var scheduleGroup scheduler.GetScheduleGroupOutput
 	resourceName := "aws_scheduler_schedule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduleGroupDestroy,
+		CheckDestroy:             testAccCheckScheduleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccScheduleGroupConfig_namePrefix("tf-acc-test-prefix-"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduleGroupExists(resourceName, &scheduleGroup),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", "tf-acc-test-prefix-"),
+					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, names.AttrName, "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrNamePrefix, "tf-acc-test-prefix-"),
 				),
 			},
 			{
@@ -159,26 +168,27 @@ func TestAccSchedulerScheduleGroup_namePrefix(t *testing.T) {
 }
 
 func TestAccSchedulerScheduleGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var scheduleGroup scheduler.GetScheduleGroupOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(names.SchedulerEndpointID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchedulerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckScheduleGroupDestroy,
+		CheckDestroy:             testAccCheckScheduleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccScheduleGroupConfig_tags1(rName, "key1", "value1"),
+				Config: testAccScheduleGroupConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduleGroupExists(resourceName, &scheduleGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
 			{
@@ -187,12 +197,12 @@ func TestAccSchedulerScheduleGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccScheduleGroupConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduleGroupExists(resourceName, &scheduleGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -201,11 +211,11 @@ func TestAccSchedulerScheduleGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccScheduleGroupConfig_tags1(rName, "key2", "value2"),
+				Config: testAccScheduleGroupConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckScheduleGroupExists(resourceName, &scheduleGroup),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 			{
@@ -217,33 +227,34 @@ func TestAccSchedulerScheduleGroup_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckScheduleGroupDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient
-	ctx := context.Background()
+func testAccCheckScheduleGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_scheduler_schedule_group" {
-			continue
-		}
-
-		_, err := conn.GetScheduleGroup(ctx, &scheduler.GetScheduleGroupInput{
-			Name: aws.String(rs.Primary.ID),
-		})
-		if err != nil {
-			var nfe *types.ResourceNotFoundException
-			if errors.As(err, &nfe) {
-				return nil
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_scheduler_schedule_group" {
+				continue
 			}
-			return err
+
+			_, err := conn.GetScheduleGroup(ctx, &scheduler.GetScheduleGroupInput{
+				Name: aws.String(rs.Primary.ID),
+			})
+			if err != nil {
+				var nfe *types.ResourceNotFoundException
+				if errors.As(err, &nfe) {
+					return nil
+				}
+				return err
+			}
+
+			return create.Error(names.Scheduler, create.ErrActionCheckingDestroyed, tfscheduler.ResNameScheduleGroup, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
-		return create.Error(names.Scheduler, create.ErrActionCheckingDestroyed, tfscheduler.ResNameScheduleGroup, rs.Primary.ID, errors.New("not destroyed"))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckScheduleGroupExists(name string, schedulegroup *scheduler.GetScheduleGroupOutput) resource.TestCheckFunc {
+func testAccCheckScheduleGroupExists(ctx context.Context, name string, schedulegroup *scheduler.GetScheduleGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -254,8 +265,8 @@ func testAccCheckScheduleGroupExists(name string, schedulegroup *scheduler.GetSc
 			return create.Error(names.Scheduler, create.ErrActionCheckingExistence, tfscheduler.ResNameScheduleGroup, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient
-		ctx := context.Background()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient(ctx)
+
 		resp, err := conn.GetScheduleGroup(ctx, &scheduler.GetScheduleGroupInput{
 			Name: aws.String(rs.Primary.ID),
 		})
@@ -270,9 +281,8 @@ func testAccCheckScheduleGroupExists(name string, schedulegroup *scheduler.GetSc
 	}
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient
-	ctx := context.Background()
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).SchedulerClient(ctx)
 
 	input := &scheduler.ListScheduleGroupsInput{}
 	_, err := conn.ListScheduleGroups(ctx, input)

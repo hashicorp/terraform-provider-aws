@@ -6,7 +6,7 @@ description: |-
   Provides details about an AWS Backup selection.
 ---
 
-# Data source: aws_backup_selection
+# Data Source: aws_backup_selection
 
 Use this data source to get information on an existing backup selection.
 
@@ -21,14 +21,14 @@ data "aws_backup_selection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `plan_id` - (Required) Backup plan ID associated with the selection of resources.
 * `selection_id` - (Required) Backup selection ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are available:
+This data source exports the following attributes in addition to the arguments above:
 
 * `name` - Display name of a resource selection document.
 * `iam_role_arn` - ARN of the IAM role that AWS Backup uses to authenticate when restoring and backing up the target resource. See the [AWS Backup Developer Guide](https://docs.aws.amazon.com/aws-backup/latest/devguide/access-control.html#managed-policies) for additional information about using AWS managed policies or creating custom policies attached to the IAM role.

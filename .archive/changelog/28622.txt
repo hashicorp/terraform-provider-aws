@@ -1,0 +1,7 @@
+```release-note:new-data-source
+aws_fsx_windows_file_system
+```
+
+```release-note:bug
+resource/aws_fsx_windows_file_system: Increase `throughput_capacity` first to avoid `BadRequest` errors
+```

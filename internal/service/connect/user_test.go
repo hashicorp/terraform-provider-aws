@@ -1,23 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccUser_basic(t *testing.T) {
-	var v connect.DescribeUserOutput
+	ctx := acctest.Context(t)
+	var v awstypes.User
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -27,30 +32,30 @@ func testAccUser_basic(t *testing.T) {
 	resourceName := "aws_connect_user.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					testAccCheckUserExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "directory_user_id"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", "example"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.last_name", "example2"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName5),
-					resource.TestCheckResourceAttr(resourceName, "password", "Password123"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrInstanceID, "aws_connect_instance.test", names.AttrID),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName5),
+					resource.TestCheckResourceAttr(resourceName, names.AttrPassword, "Password123"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", "0"),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", connect.PhoneTypeSoftPhone),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", string(awstypes.PhoneTypeSoftPhone)),
 					resource.TestCheckResourceAttrPair(resourceName, "routing_profile_id", "data.aws_connect_routing_profile.test", "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.agent", "security_profile_id"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttrSet(resourceName, "user_id"),
 				),
@@ -60,7 +65,8 @@ func testAccUser_basic(t *testing.T) {
 }
 
 func testAccUser_updateHierarchyGroupId(t *testing.T) {
-	var v connect.DescribeUserOutput
+	ctx := acctest.Context(t)
+	var v awstypes.User
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -70,15 +76,15 @@ func testAccUser_updateHierarchyGroupId(t *testing.T) {
 	resourceName := "aws_connect_user.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_hierarchyGroupID(rName, rName2, rName3, rName4, rName5, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
+					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_group_id", "aws_connect_user_hierarchy_group.parent", "hierarchy_group_id"),
 				),
 			},
@@ -86,12 +92,12 @@ func testAccUser_updateHierarchyGroupId(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
 				Config: testAccUserConfig_hierarchyGroupID(rName, rName2, rName3, rName4, rName5, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
+					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "hierarchy_group_id", "aws_connect_user_hierarchy_group.child", "hierarchy_group_id"),
 				),
 			},
@@ -100,7 +106,8 @@ func testAccUser_updateHierarchyGroupId(t *testing.T) {
 }
 
 func testAccUser_updateIdentityInfo(t *testing.T) {
-	var v connect.DescribeUserOutput
+	ctx := acctest.Context(t)
+	var v awstypes.User
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -117,15 +124,15 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 	resourceName := "aws_connect_user.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, emailOriginal, firstNameOriginal, lastNameOriginal),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
+					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", emailOriginal),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", firstNameOriginal),
@@ -136,12 +143,12 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
 				Config: testAccUserConfig_identityInfo(rName, rName2, rName3, rName4, rName5, emailUpdated, firstNameUpdated, lastNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
+					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.email", emailUpdated),
 					resource.TestCheckResourceAttr(resourceName, "identity_info.0.first_name", firstNameUpdated),
@@ -153,7 +160,8 @@ func testAccUser_updateIdentityInfo(t *testing.T) {
 }
 
 func testAccUser_updatePhoneConfig(t *testing.T) {
-	var v connect.DescribeUserOutput
+	ctx := acctest.Context(t)
+	var v awstypes.User
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -161,60 +169,60 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 	rName5 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	after_contact_work_time_limit_original := 0
 	auto_accept_original := false
-	desk_phone_number_original := "+112345678912"
+	desk_phone_number_original := "+12345678912"
 	after_contact_work_time_limit_updated := 1
 	auto_accept_updated := true
-	desk_phone_number_updated := "+112345678913"
+	desk_phone_number_updated := "+12345678913"
 
 	resourceName := "aws_connect_user.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
+					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", "0"),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", connect.PhoneTypeSoftPhone),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", string(awstypes.PhoneTypeSoftPhone)),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
 				Config: testAccUserConfig_phoneDeskPhone(rName, rName2, rName3, rName4, rName5, after_contact_work_time_limit_original, auto_accept_original, desk_phone_number_original),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
+					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", strconv.Itoa(after_contact_work_time_limit_original)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.auto_accept", strconv.FormatBool(auto_accept_original)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.desk_phone_number", desk_phone_number_original),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", connect.PhoneTypeDeskPhone),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", string(awstypes.PhoneTypeDeskPhone)),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
 				Config: testAccUserConfig_phoneDeskPhone(rName, rName2, rName3, rName4, rName5, after_contact_work_time_limit_updated, auto_accept_updated, desk_phone_number_updated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
+					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", strconv.Itoa(after_contact_work_time_limit_updated)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.auto_accept", strconv.FormatBool(auto_accept_updated)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.desk_phone_number", desk_phone_number_updated),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", connect.PhoneTypeDeskPhone),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", string(awstypes.PhoneTypeDeskPhone)),
 				),
 			},
 		},
@@ -222,7 +230,8 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 }
 
 func testAccUser_updateSecurityProfileIds(t *testing.T) {
-	var v connect.DescribeUserOutput
+	ctx := acctest.Context(t)
+	var v awstypes.User
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -232,15 +241,15 @@ func testAccUser_updateSecurityProfileIds(t *testing.T) {
 	resourceName := "aws_connect_user.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_securityProfileIDs(rName, rName2, rName3, rName4, rName5, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
+					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.agent", "security_profile_id"),
 				),
@@ -249,12 +258,12 @@ func testAccUser_updateSecurityProfileIds(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
 				Config: testAccUserConfig_securityProfileIDs(rName, rName2, rName3, rName4, rName5, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
+					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "2"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.agent", "security_profile_id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.call_center_manager", "security_profile_id"),
@@ -264,12 +273,12 @@ func testAccUser_updateSecurityProfileIds(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
 				Config: testAccUserConfig_securityProfileIDs(rName, rName2, rName3, rName4, rName5, "third"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
+					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "3"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.agent", "security_profile_id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.call_center_manager", "security_profile_id"),
@@ -281,7 +290,8 @@ func testAccUser_updateSecurityProfileIds(t *testing.T) {
 }
 
 func testAccUser_updateRoutingProfileId(t *testing.T) {
-	var v connect.DescribeUserOutput
+	ctx := acctest.Context(t)
+	var v awstypes.User
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -291,15 +301,15 @@ func testAccUser_updateRoutingProfileId(t *testing.T) {
 	resourceName := "aws_connect_user.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_routingProfileID(rName, rName2, rName3, rName4, rName5, "first"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
+					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "routing_profile_id", "aws_connect_routing_profile.test", "routing_profile_id"),
 				),
 			},
@@ -307,12 +317,12 @@ func testAccUser_updateRoutingProfileId(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
 				Config: testAccUserConfig_routingProfileID(rName, rName2, rName3, rName4, rName5, "second"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
+					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "routing_profile_id", "data.aws_connect_routing_profile.test", "routing_profile_id"),
 				),
 			},
@@ -321,7 +331,8 @@ func testAccUser_updateRoutingProfileId(t *testing.T) {
 }
 
 func testAccUser_updateTags(t *testing.T) {
-	var v connect.DescribeUserOutput
+	ctx := acctest.Context(t)
+	var v awstypes.User
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -331,16 +342,16 @@ func testAccUser_updateTags(t *testing.T) {
 	resourceName := "aws_connect_user.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					testAccCheckUserExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 				),
 			},
@@ -348,13 +359,13 @@ func testAccUser_updateTags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"password"},
+				ImportStateVerifyIgnore: []string{names.AttrPassword},
 			},
 			{
 				Config: testAccUserConfig_tags(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					testAccCheckUserExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2a"),
 				),
@@ -362,8 +373,8 @@ func testAccUser_updateTags(t *testing.T) {
 			{
 				Config: testAccUserConfig_tagsUpdated(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					testAccCheckUserExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "Value2b"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "Value3"),
@@ -374,7 +385,8 @@ func testAccUser_updateTags(t *testing.T) {
 }
 
 func testAccUser_disappears(t *testing.T) {
-	var v connect.DescribeUserOutput
+	ctx := acctest.Context(t)
+	var v awstypes.User
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -383,16 +395,16 @@ func testAccUser_disappears(t *testing.T) {
 	resourceName := "aws_connect_user.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserConfig_basic(rName, rName2, rName3, rName4, rName5),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceUser(), resourceName),
+					testAccCheckUserExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceUser(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -400,71 +412,51 @@ func testAccUser_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUserExists(resourceName string, function *connect.DescribeUserOutput) resource.TestCheckFunc {
+func testAccCheckUserExists(ctx context.Context, n string, v *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Connect User not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Connect User ID not set")
-		}
-		instanceID, userID, err := tfconnect.UserParseID(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+
+		output, err := tfconnect.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["user_id"])
 
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
-
-		params := &connect.DescribeUserInput{
-			UserId:     aws.String(userID),
-			InstanceId: aws.String(instanceID),
-		}
-
-		getFunction, err := conn.DescribeUser(params)
-		if err != nil {
-			return err
-		}
-
-		*function = *getFunction
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckUserDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_connect_user" {
-			continue
+func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_connect_user" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
+
+			_, err := tfconnect.FindUserByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrInstanceID], rs.Primary.Attributes["user_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Connect User %s still exists", rs.Primary.ID)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
-
-		instanceID, userID, err := tfconnect.UserParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		params := &connect.DescribeUserInput{
-			UserId:     aws.String(userID),
-			InstanceId: aws.String(instanceID),
-		}
-
-		_, err = conn.DescribeUser(params)
-
-		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccUserConfig_base(rName, rName2, rName3, rName4 string) string {

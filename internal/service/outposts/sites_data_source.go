@@ -1,20 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/outposts"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceSites() *schema.Resource {
+// @SDKDataSource("aws_outposts_sites", name="Sites")
+func dataSourceSites() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSitesRead,
+		ReadWithoutTimeout: dataSourceSitesRead,
 
 		Schema: map[string]*schema.Schema{
-			"ids": {
+			names.AttrIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -23,38 +30,32 @@ func DataSourceSites() *schema.Resource {
 	}
 }
 
-func dataSourceSitesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).OutpostsConn
+func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).OutpostsClient(ctx)
 
 	input := &outposts.ListSitesInput{}
 
 	var ids []string
 
-	err := conn.ListSitesPages(input, func(page *outposts.ListSitesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := outposts.NewListSitesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing Outposts Sites: %s", err)
 		}
 
 		for _, site := range page.Sites {
-			if site == nil {
-				continue
-			}
-
-			ids = append(ids, aws.StringValue(site.SiteId))
+			ids = append(ids, aws.ToString(site.SiteId))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return fmt.Errorf("error listing Outposts Sites: %w", err)
 	}
 
-	if err := d.Set("ids", ids); err != nil {
-		return fmt.Errorf("error setting ids: %w", err)
+	if err := d.Set(names.AttrIDs, ids); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ids: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
-	return nil
+	return diags
 }

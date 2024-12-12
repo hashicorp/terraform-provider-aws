@@ -1,22 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceInfrastructureConfiguration() *schema.Resource {
+// @SDKDataSource("aws_imagebuilder_infrastructure_configuration", name="Infrastructure Configuration")
+// @Tags
+func dataSourceInfrastructureConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInfrastructureConfigurationRead,
+		ReadWithoutTimeout: dataSourceInfrastructureConfigurationRead,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: verify.ValidARN,
@@ -29,7 +36,7 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,11 +79,11 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"s3_bucket_name": {
+									names.AttrS3BucketName: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
-									"s3_key_prefix": {
+									names.AttrS3KeyPrefix: {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
@@ -86,25 +93,25 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 					},
 				},
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"resource_tags": tftags.TagsSchemaComputed(),
-			"security_group_ids": {
+			names.AttrResourceTags: tftags.TagsSchemaComputed(),
+			names.AttrSecurityGroupIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"sns_topic_arn": {
+			names.AttrSNSTopicARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"subnet_id": {
+			names.AttrSubnetID: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"terminate_instance_on_failure": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -113,55 +120,47 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 	}
 }
 
-func dataSourceInfrastructureConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
-	input := &imagebuilder.GetInfrastructureConfigurationInput{}
-
-	if v, ok := d.GetOk("arn"); ok {
-		input.InfrastructureConfigurationArn = aws.String(v.(string))
-	}
-
-	output, err := conn.GetInfrastructureConfiguration(input)
+	arn := d.Get(names.AttrARN).(string)
+	infrastructureConfiguration, err := findInfrastructureConfigurationByARN(ctx, conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error getting Image Builder Infrastructure Configuration (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Infrastructure Configuration (%s): %s", arn, err)
 	}
 
-	if output == nil || output.InfrastructureConfiguration == nil {
-		return fmt.Errorf("error getting Image Builder Infrastructure Configuration (%s): empty response", d.Id())
-	}
-
-	infrastructureConfiguration := output.InfrastructureConfiguration
-
-	d.SetId(aws.StringValue(infrastructureConfiguration.Arn))
-	d.Set("arn", infrastructureConfiguration.Arn)
+	d.SetId(aws.ToString(infrastructureConfiguration.Arn))
+	d.Set(names.AttrARN, infrastructureConfiguration.Arn)
 	d.Set("date_created", infrastructureConfiguration.DateCreated)
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
-	d.Set("description", infrastructureConfiguration.Description)
-
+	d.Set(names.AttrDescription, infrastructureConfiguration.Description)
 	if infrastructureConfiguration.InstanceMetadataOptions != nil {
-		d.Set("instance_metadata_options", []interface{}{flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions)})
+		if err := d.Set("instance_metadata_options", []interface{}{flattenInstanceMetadataOptions(infrastructureConfiguration.InstanceMetadataOptions)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting instance_metadata_options: %s", err)
+		}
 	} else {
 		d.Set("instance_metadata_options", nil)
 	}
-
 	d.Set("instance_profile_name", infrastructureConfiguration.InstanceProfileName)
-	d.Set("instance_types", aws.StringValueSlice(infrastructureConfiguration.InstanceTypes))
+	d.Set("instance_types", infrastructureConfiguration.InstanceTypes)
 	d.Set("key_pair", infrastructureConfiguration.KeyPair)
 	if infrastructureConfiguration.Logging != nil {
-		d.Set("logging", []interface{}{flattenLogging(infrastructureConfiguration.Logging)})
+		if err := d.Set("logging", []interface{}{flattenLogging(infrastructureConfiguration.Logging)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting logging: %s", err)
+		}
 	} else {
 		d.Set("logging", nil)
 	}
-	d.Set("name", infrastructureConfiguration.Name)
-	d.Set("resource_tags", KeyValueTags(infrastructureConfiguration.ResourceTags).Map())
-	d.Set("security_group_ids", aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
-	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
-	d.Set("subnet_id", infrastructureConfiguration.SubnetId)
-	d.Set("tags", KeyValueTags(infrastructureConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	d.Set(names.AttrName, infrastructureConfiguration.Name)
+	d.Set(names.AttrResourceTags, KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
+	d.Set(names.AttrSecurityGroupIDs, infrastructureConfiguration.SecurityGroupIds)
+	d.Set(names.AttrSNSTopicARN, infrastructureConfiguration.SnsTopicArn)
+	d.Set(names.AttrSubnetID, infrastructureConfiguration.SubnetId)
 	d.Set("terminate_instance_on_failure", infrastructureConfiguration.TerminateInstanceOnFailure)
 
-	return nil
+	setTagsOut(ctx, infrastructureConfiguration.Tags)
+
+	return diags
 }

@@ -1,133 +1,110 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ses/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceDomainIdentityVerification() *schema.Resource {
+// @SDKResource("aws_ses_domain_identity_verification", name="Domain Identity Verification")
+func resourceDomainIdentityVerification() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceDomainIdentityVerificationCreate,
-		Read:   resourceDomainIdentityVerificationRead,
-		Delete: resourceDomainIdentityVerificationDelete,
+		CreateWithoutTimeout: resourceDomainIdentityVerificationCreate,
+		ReadWithoutTimeout:   resourceDomainIdentityVerificationRead,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain": {
+			names.AttrDomain: {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+				ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 			},
 		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(45 * time.Minute),
 		},
 	}
 }
 
-func getIdentityVerificationAttributes(conn *ses.SES, domainName string) (*ses.IdentityVerificationAttributes, error) {
-	input := &ses.GetIdentityVerificationAttributesInput{
-		Identities: []*string{
-			aws.String(domainName),
-		},
-	}
+func resourceDomainIdentityVerificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	response, err := conn.GetIdentityVerificationAttributes(input)
-	if err != nil {
-		return nil, fmt.Errorf("Error getting identity verification attributes: %s", err)
-	}
+	domainName := d.Get(names.AttrDomain).(string)
+	_, err := tfresource.RetryUntilEqual(ctx, d.Timeout(schema.TimeoutCreate), awstypes.VerificationStatusSuccess, func() (awstypes.VerificationStatus, error) {
+		att, err := findIdentityVerificationAttributesByIdentity(ctx, conn, domainName)
 
-	return response.VerificationAttributes[domainName], nil
-}
-
-func resourceDomainIdentityVerificationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
-	domainName := d.Get("domain").(string)
-	err := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		att, err := getIdentityVerificationAttributes(conn, domainName)
 		if err != nil {
-			return resource.NonRetryableError(fmt.Errorf("Error getting identity verification attributes: %s", err))
+			return "", err
 		}
 
-		if att == nil {
-			return resource.NonRetryableError(fmt.Errorf("SES Domain Identity %s not found in AWS", domainName))
-		}
-
-		if aws.StringValue(att.VerificationStatus) != ses.VerificationStatusSuccess {
-			return resource.RetryableError(fmt.Errorf("Expected domain verification Success, but was in state %s", aws.StringValue(att.VerificationStatus)))
-		}
-
-		return nil
+		return att.VerificationStatus, nil
 	})
-	if tfresource.TimedOut(err) {
-		var att *ses.IdentityVerificationAttributes
-		att, err = getIdentityVerificationAttributes(conn, domainName)
 
-		if att != nil && aws.StringValue(att.VerificationStatus) != ses.VerificationStatusSuccess {
-			return fmt.Errorf("Expected domain verification Success, but was in state %s", aws.StringValue(att.VerificationStatus))
-		}
-	}
 	if err != nil {
-		return fmt.Errorf("Error creating SES domain identity verification: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating SES Domain Identity Verification (%s): %s", domainName, err)
 	}
 
-	log.Printf("[INFO] Domain verification successful for %s", domainName)
 	d.SetId(domainName)
-	return resourceDomainIdentityVerificationRead(d, meta)
+
+	return append(diags, resourceDomainIdentityVerificationRead(ctx, d, meta)...)
 }
 
-func resourceDomainIdentityVerificationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SESConn
+func resourceDomainIdentityVerificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SESClient(ctx)
 
-	domainName := d.Id()
-	d.Set("domain", domainName)
+	att, err := findIdentityVerificationAttributesByIdentity(ctx, conn, d.Id())
 
-	att, err := getIdentityVerificationAttributes(conn, domainName)
+	if err == nil {
+		if status := att.VerificationStatus; status != awstypes.VerificationStatusSuccess {
+			err = &retry.NotFoundError{
+				Message: string(status),
+			}
+		}
+	}
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SES Domain Identity Verification (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		log.Printf("[WARN] Error fetching identity verification attributes for %s: %s", d.Id(), err)
-		return err
-	}
-
-	if att == nil {
-		log.Printf("[WARN] Domain not listed in response when fetching verification attributes for %s", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if aws.StringValue(att.VerificationStatus) != ses.VerificationStatusSuccess {
-		log.Printf("[WARN] Expected domain verification Success, but was %s, tainting verification", aws.StringValue(att.VerificationStatus))
-		d.SetId("")
-		return nil
+		return sdkdiag.AppendErrorf(diags, "reading SES Domain Identity Verification (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ses",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("identity/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrDomain, d.Id())
 
-	return nil
-}
-
-func resourceDomainIdentityVerificationDelete(d *schema.ResourceData, meta interface{}) error {
-	// No need to do anything, domain identity will be deleted when aws_ses_domain_identity is deleted
-	return nil
+	return diags
 }

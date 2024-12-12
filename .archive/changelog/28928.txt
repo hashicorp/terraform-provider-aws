@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_elasticache_user: Add `authentication_mode` argument
+```
+
+```release-note:bug
+resource/aws_elasticache_user: Change `user_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```

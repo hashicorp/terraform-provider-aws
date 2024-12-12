@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_db_instances: Add ability to filter by `tags`
+```
+
+```release-note:enhancement
+data-source/aws_db_instance: Add ability to filter by `tags`
+```

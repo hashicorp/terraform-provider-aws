@@ -27,7 +27,7 @@ data "aws_fsx_openzfs_snapshot" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `most_recent` - (Optional) If more than one result is returned, use the most recent snapshot.
 
@@ -36,9 +36,9 @@ The following arguments are supported:
 * `filter` - (Optional) One or more name/value pairs to filter off of. The
 supported names are file-system-id or volume-id.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the snapshot.
 * `creation_time` - Time that the resource was created.

@@ -1,17 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceConstraint() *schema.Resource {
+// @SDKDataSource("aws_servicecatalog_constraint", name="Constraint")
+func dataSourceConstraint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceConstraintRead,
+		ReadWithoutTimeout: dataSourceConstraintRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(ConstraintReadTimeout),
@@ -21,23 +28,23 @@ func DataSourceConstraint() *schema.Resource {
 			"accept_language": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      AcceptLanguageEnglish,
-				ValidateFunc: validation.StringInSlice(AcceptLanguage_Values(), false),
+				Default:      acceptLanguageEnglish,
+				ValidateFunc: validation.StringInSlice(acceptLanguage_Values(), false),
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 			},
-			"id": {
+			names.AttrID: {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"owner": {
+			names.AttrOwner: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"parameters": {
+			names.AttrParameters: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -49,11 +56,11 @@ func DataSourceConstraint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
+			names.AttrStatus: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"type": {
+			names.AttrType: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -61,39 +68,40 @@ func DataSourceConstraint() *schema.Resource {
 	}
 }
 
-func dataSourceConstraintRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
-	output, err := WaitConstraintReady(conn, d.Get("accept_language").(string), d.Get("id").(string), d.Timeout(schema.TimeoutRead))
+	output, err := waitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Get(names.AttrID).(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog Constraint: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Constraint: %s", err)
 	}
 
 	if output == nil || output.ConstraintDetail == nil {
-		return fmt.Errorf("error getting Service Catalog Constraint: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Constraint: empty response")
 	}
 
 	acceptLanguage := d.Get("accept_language").(string)
 
 	if acceptLanguage == "" {
-		acceptLanguage = AcceptLanguageEnglish
+		acceptLanguage = acceptLanguageEnglish
 	}
 
 	d.Set("accept_language", acceptLanguage)
 
-	d.Set("parameters", output.ConstraintParameters)
-	d.Set("status", output.Status)
+	d.Set(names.AttrParameters, output.ConstraintParameters)
+	d.Set(names.AttrStatus, output.Status)
 
 	detail := output.ConstraintDetail
 
-	d.Set("description", detail.Description)
-	d.Set("owner", detail.Owner)
+	d.Set(names.AttrDescription, detail.Description)
+	d.Set(names.AttrOwner, detail.Owner)
 	d.Set("portfolio_id", detail.PortfolioId)
 	d.Set("product_id", detail.ProductId)
-	d.Set("type", detail.Type)
+	d.Set(names.AttrType, detail.Type)
 
-	d.SetId(aws.StringValue(detail.ConstraintId))
+	d.SetId(aws.ToString(detail.ConstraintId))
 
-	return nil
+	return diags
 }

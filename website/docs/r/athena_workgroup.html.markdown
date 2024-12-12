@@ -34,7 +34,7 @@ resource "aws_athena_workgroup" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the workgroup.
 * `configuration` - (Optional) Configuration block with various settings for the workgroup. Documented below.
@@ -48,6 +48,7 @@ The following arguments are supported:
 * `bytes_scanned_cutoff_per_query` - (Optional) Integer for the upper data usage limit (cutoff) for the amount of bytes a single query in a workgroup is allowed to scan. Must be at least `10485760`.
 * `enforce_workgroup_configuration` - (Optional) Boolean whether the settings for the workgroup override client-side settings. For more information, see [Workgroup Settings Override Client-Side Settings](https://docs.aws.amazon.com/athena/latest/ug/workgroups-settings-override.html). Defaults to `true`.
 * `engine_version` - (Optional) Configuration block for the Athena Engine Versioning. For more information, see [Athena Engine Versioning](https://docs.aws.amazon.com/athena/latest/ug/engine-versions.html). See [Engine Version](#engine-version) below.
+* `execution_role` - (Optional) Role used in a notebook session for accessing the user's resources.
 * `publish_cloudwatch_metrics_enabled` - (Optional) Boolean whether Amazon CloudWatch metrics are enabled for the workgroup. Defaults to `true`.
 * `result_configuration` - (Optional) Configuration block with result settings. See [Result Configuration](#result-configuration) below.
 * `requester_pays_enabled` - (Optional) If set to true , allows members assigned to a workgroup to reference Amazon S3 Requester Pays buckets in queries. If set to false , workgroup members cannot query data from Requester Pays buckets, and queries that retrieve data from Requester Pays buckets cause an error. The default is false . For more information about Requester Pays buckets, see [Requester Pays Buckets](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) in the Amazon Simple Storage Service Developer Guide.
@@ -72,9 +73,9 @@ The following arguments are supported:
 * `encryption_option` - (Required) Whether Amazon S3 server-side encryption with Amazon S3-managed keys (`SSE_S3`), server-side encryption with KMS-managed keys (`SSE_KMS`), or client-side encryption with KMS-managed keys (`CSE_KMS`) is used. If a query runs in a workgroup and the workgroup overrides client-side settings, then the workgroup's setting for encryption is used. It specifies whether query results must be encrypted, for all queries that run in this workgroup.
 * `kms_key_arn` - (Optional) For `SSE_KMS` and `CSE_KMS`, this is the KMS key ARN.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the workgroup
 * `configuration` - Configuration block with various settings for the workgroup
@@ -85,8 +86,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Athena Workgroups can be imported using their name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Athena Workgroups using their name. For example:
 
+```terraform
+import {
+  to = aws_athena_workgroup.example
+  id = "example"
+}
 ```
-$ terraform import aws_athena_workgroup.example example
+
+Using `terraform import`, import Athena Workgroups using their name. For example:
+
+```console
+% terraform import aws_athena_workgroup.example example
 ```

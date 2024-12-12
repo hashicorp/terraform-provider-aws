@@ -1,31 +1,44 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/directconnect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceHostedTransitVirtualInterfaceAccepter() *schema.Resource {
+// @SDKResource("aws_dx_hosted_transit_virtual_interface_accepter", name="Hosted Transit Virtual Interface Accepter")
+// @Tags(identifierAttribute="arn")
+func resourceHostedTransitVirtualInterfaceAccepter() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceHostedTransitVirtualInterfaceAccepterCreate,
-		Read:   resourceHostedTransitVirtualInterfaceAccepterRead,
-		Update: resourceHostedTransitVirtualInterfaceAccepterUpdate,
-		Delete: resourceHostedTransitVirtualInterfaceAccepterDelete,
+		CreateWithoutTimeout: resourceHostedTransitVirtualInterfaceAccepterCreate,
+		ReadWithoutTimeout:   resourceHostedTransitVirtualInterfaceAccepterRead,
+		UpdateWithoutTimeout: resourceHostedTransitVirtualInterfaceAccepterUpdate,
+		DeleteWithoutTimeout: schema.NoopContext,
+
 		Importer: &schema.ResourceImporter{
-			State: resourceHostedTransitVirtualInterfaceAccepterImport,
+			StateContext: resourceHostedTransitVirtualInterfaceAccepterImport,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -34,8 +47,8 @@ func ResourceHostedTransitVirtualInterfaceAccepter() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"virtual_interface_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -52,134 +65,114 @@ func ResourceHostedTransitVirtualInterfaceAccepter() *schema.Resource {
 	}
 }
 
-func resourceHostedTransitVirtualInterfaceAccepterCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceHostedTransitVirtualInterfaceAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vifId := d.Get("virtual_interface_id").(string)
-	req := &directconnect.ConfirmTransitVirtualInterfaceInput{
+	vifID := d.Get("virtual_interface_id").(string)
+	input := &directconnect.ConfirmTransitVirtualInterfaceInput{
 		DirectConnectGatewayId: aws.String(d.Get("dx_gateway_id").(string)),
-		VirtualInterfaceId:     aws.String(vifId),
+		VirtualInterfaceId:     aws.String(vifID),
 	}
 
-	log.Printf("[DEBUG] Accepting Direct Connect hosted transit virtual interface: %s", req)
-	_, err := conn.ConfirmTransitVirtualInterface(req)
+	_, err := conn.ConfirmTransitVirtualInterface(ctx, input)
+
 	if err != nil {
-		return fmt.Errorf("error accepting Direct Connect hosted transit virtual interface (%s): %s", vifId, err)
+		return sdkdiag.AppendErrorf(diags, "accepting Direct Connect Hosted Transit Virtual Interface (%s): %s", vifID, err)
 	}
 
-	d.SetId(vifId)
+	d.SetId(vifID)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "directconnect",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
-	if err := hostedTransitVirtualInterfaceAccepterWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+	if _, err := waitHostedTransitVirtualInterfaceAccepterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Direct Connect Hosted Transit Virtual Interface Accepter (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceHostedTransitVirtualInterfaceAccepterUpdate(d, meta)
+	if err := createTags(ctx, conn, arn, getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Direct Connect Hosted Transit Virtual Interface (%s) tags: %s", arn, err)
+	}
+
+	return append(diags, resourceHostedTransitVirtualInterfaceAccepterUpdate(ctx, d, meta)...)
 }
 
-func resourceHostedTransitVirtualInterfaceAccepterRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceHostedTransitVirtualInterfaceAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-	vif, err := virtualInterfaceRead(d.Id(), conn)
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Direct Connect Hosted Transit Virtual Interface (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Hosted Transit Virtual Interface (%s): %s", d.Id(), err)
 	}
-	if vif == nil {
-		log.Printf("[WARN] Direct Connect transit virtual interface (%s) not found, removing from state", d.Id())
+
+	if state := vif.VirtualInterfaceState; state != awstypes.VirtualInterfaceStateAvailable && state != awstypes.VirtualInterfaceStateDown {
+		log.Printf("[WARN] Direct Connect virtual interface (%s) is '%s', removing from state", d.Id(), state)
 		d.SetId("")
-		return nil
-	}
-	vifState := aws.StringValue(vif.VirtualInterfaceState)
-	if vifState != directconnect.VirtualInterfaceStateAvailable && vifState != directconnect.VirtualInterfaceStateDown {
-		log.Printf("[WARN] Direct Connect virtual interface (%s) is '%s', removing from state", vifState, d.Id())
-		d.SetId("")
-		return nil
+		return diags
 	}
 
 	d.Set("dx_gateway_id", vif.DirectConnectGatewayId)
 	d.Set("virtual_interface_id", vif.VirtualInterfaceId)
 
-	arn := d.Get("arn").(string)
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Direct Connect hosted transit virtual interface (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceHostedTransitVirtualInterfaceAccepterUpdate(d *schema.ResourceData, meta interface{}) error {
-	if err := virtualInterfaceUpdate(d, meta); err != nil {
-		return err
+func resourceHostedTransitVirtualInterfaceAccepterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	diags = append(diags, virtualInterfaceUpdate(ctx, d, meta)...)
+	if diags.HasError() {
+		return diags
 	}
 
-	return resourceHostedTransitVirtualInterfaceAccepterRead(d, meta)
+	return append(diags, resourceHostedTransitVirtualInterfaceAccepterRead(ctx, d, meta)...)
 }
 
-func resourceHostedTransitVirtualInterfaceAccepterDelete(d *schema.ResourceData, meta interface{}) error {
-	log.Printf("[WARN] Will not delete Direct Connect virtual interface. Terraform will remove this resource from the state file, however resources may remain.")
-	return nil
-}
+func resourceHostedTransitVirtualInterfaceAccepterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
-func resourceHostedTransitVirtualInterfaceAccepterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+	vif, err := findVirtualInterfaceByID(ctx, conn, d.Id())
 
-	vif, err := virtualInterfaceRead(d.Id(), conn)
 	if err != nil {
 		return nil, err
 	}
-	if vif == nil {
-		return nil, fmt.Errorf("virtual interface (%s) not found", d.Id())
-	}
 
-	if vifType := aws.StringValue(vif.VirtualInterfaceType); vifType != "transit" {
+	if vifType := aws.ToString(vif.VirtualInterfaceType); vifType != "transit" {
 		return nil, fmt.Errorf("virtual interface (%s) has incorrect type: %s", d.Id(), vifType)
 	}
 
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   "directconnect",
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
 	}.String()
-	d.Set("arn", arn)
+	d.Set(names.AttrARN, arn)
 
 	return []*schema.ResourceData{d}, nil
 }
 
-func hostedTransitVirtualInterfaceAccepterWaitUntilAvailable(conn *directconnect.DirectConnect, vifId string, timeout time.Duration) error {
-	return virtualInterfaceWaitUntilAvailable(
+func waitHostedTransitVirtualInterfaceAccepterAvailable(ctx context.Context, conn *directconnect.Client, id string, timeout time.Duration) (*awstypes.VirtualInterface, error) {
+	return waitVirtualInterfaceAvailable(
+		ctx,
 		conn,
-		vifId,
+		id,
+		enum.Slice(awstypes.VirtualInterfaceStateConfirming, awstypes.VirtualInterfaceStatePending),
+		enum.Slice(awstypes.VirtualInterfaceStateAvailable, awstypes.VirtualInterfaceStateDown),
 		timeout,
-		[]string{
-			directconnect.VirtualInterfaceStateConfirming,
-			directconnect.VirtualInterfaceStatePending,
-		},
-		[]string{
-			directconnect.VirtualInterfaceStateAvailable,
-			directconnect.VirtualInterfaceStateDown,
-		})
+	)
 }

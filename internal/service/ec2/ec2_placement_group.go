@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -5,35 +8,44 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourcePlacementGroup() *schema.Resource {
+// @SDKResource("aws_placement_group", name="Placement Group")
+// @Tags(identifierAttribute="placement_group_id")
+// @Testing(tagsTest=false)
+func resourcePlacementGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourcePlacementGroupCreate,
-		Read:   resourcePlacementGroupRead,
-		Update: resourcePlacementGroupUpdate,
-		Delete: resourcePlacementGroupDelete,
+		CreateWithoutTimeout: resourcePlacementGroupCreate,
+		ReadWithoutTimeout:   resourcePlacementGroupRead,
+		UpdateWithoutTimeout: resourcePlacementGroupUpdate,
+		DeleteWithoutTimeout: resourcePlacementGroupDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -51,19 +63,20 @@ func ResourcePlacementGroup() *schema.Resource {
 				Computed: true,
 			},
 			"spread_level": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.SpreadLevel_Values(), false),
+				Type:             schema.TypeString,
+				Computed:         true,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.SpreadLevel](),
 			},
 			"strategy": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(ec2.PlacementStrategy_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.PlacementStrategy](),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.All(
@@ -73,139 +86,120 @@ func ResourcePlacementGroup() *schema.Resource {
 	}
 }
 
-func resourcePlacementGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourcePlacementGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	name := d.Get("name").(string)
+	name := d.Get(names.AttrName).(string)
 	input := &ec2.CreatePlacementGroupInput{
 		GroupName:         aws.String(name),
-		Strategy:          aws.String(d.Get("strategy").(string)),
-		TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypePlacementGroup),
+		Strategy:          awstypes.PlacementStrategy(d.Get("strategy").(string)),
+		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypePlacementGroup),
 	}
 
 	if v, ok := d.GetOk("partition_count"); ok {
-		input.PartitionCount = aws.Int64(int64(v.(int)))
+		input.PartitionCount = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("spread_level"); ok {
-		input.SpreadLevel = aws.String(v.(string))
+		input.SpreadLevel = awstypes.SpreadLevel(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Placement Group: %s", input)
-	_, err := conn.CreatePlacementGroup(input)
+	_, err := conn.CreatePlacementGroup(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Placement Group (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Placement Group (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	_, err = WaitPlacementGroupCreated(conn, d.Id())
+	_, err = waitPlacementGroupCreated(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Placement Group (%s) create: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Placement Group (%s) create: %s", d.Id(), err)
 	}
 
-	return resourcePlacementGroupRead(d, meta)
+	return append(diags, resourcePlacementGroupRead(ctx, d, meta)...)
 }
 
-func resourcePlacementGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourcePlacementGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	pg, err := FindPlacementGroupByName(conn, d.Id())
+	pg, err := findPlacementGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Placement Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Placement Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Placement Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("name", pg.GroupName)
+	arn := arn.ARN{
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Service:   names.EC2,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
+		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
+	}.String()
+	d.Set(names.AttrARN, arn)
+	d.Set(names.AttrName, pg.GroupName)
 	d.Set("partition_count", pg.PartitionCount)
 	d.Set("placement_group_id", pg.GroupId)
 	d.Set("spread_level", pg.SpreadLevel)
 	d.Set("strategy", pg.Strategy)
 
-	tags := KeyValueTags(pg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, pg.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("placement-group/%s", d.Id()),
-	}.String()
-
-	d.Set("arn", arn)
-
-	return nil
+	return diags
 }
 
-func resourcePlacementGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourcePlacementGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(conn, d.Get("placement_group_id").(string), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Placement Group (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourcePlacementGroupRead(d, meta)
+	return append(diags, resourcePlacementGroupRead(ctx, d, meta)...)
 }
 
-func resourcePlacementGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourcePlacementGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Placement Group: %s", d.Id())
-	_, err := conn.DeletePlacementGroup(&ec2.DeletePlacementGroupInput{
+	_, err := conn.DeletePlacementGroup(ctx, &ec2.DeletePlacementGroupInput{
 		GroupName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPlacementGroupUnknown) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Placement Group (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Placement Group (%s): %s", d.Id(), err)
 	}
 
-	_, err = WaitPlacementGroupDeleted(conn, d.Id())
+	_, err = waitPlacementGroupDeleted(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error waiting for EC2 Placement Group (%s) delete: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Placement Group (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourcePlacementGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.Id() == "" {
-		if partitionCount, strategy := diff.Get("partition_count").(int), diff.Get("strategy").(string); partitionCount > 0 && strategy != ec2.PlacementGroupStrategyPartition {
+		if partitionCount, strategy := diff.Get("partition_count").(int), diff.Get("strategy").(string); partitionCount > 0 && strategy != string(awstypes.PlacementGroupStrategyPartition) {
 			return fmt.Errorf("partition_count must not be set when strategy = %q", strategy)
 		}
 	}
 
 	if diff.Id() == "" {
-		if spreadLevel, strategy := diff.Get("spread_level").(string), diff.Get("strategy").(string); spreadLevel != "" && strategy != ec2.PlacementGroupStrategySpread {
+		if spreadLevel, strategy := diff.Get("spread_level").(string), diff.Get("strategy").(string); spreadLevel != "" && strategy != string(awstypes.PlacementGroupStrategySpread) {
 			return fmt.Errorf("spread_level must not be set when strategy = %q", strategy)
 		}
 	}

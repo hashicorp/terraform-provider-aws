@@ -1,92 +1,110 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceReplicationInstance() *schema.Resource {
+// @SDKResource("aws_dms_replication_instance", name="Replication Instance")
+// @Tags(identifierAttribute="replication_instance_arn")
+// @Testing(importIgnore="apply_immediately")
+func resourceReplicationInstance() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReplicationInstanceCreate,
-		Read:   resourceReplicationInstanceRead,
-		Update: resourceReplicationInstanceUpdate,
-		Delete: resourceReplicationInstanceDelete,
+		CreateWithoutTimeout: resourceReplicationInstanceCreate,
+		ReadWithoutTimeout:   resourceReplicationInstanceRead,
+		UpdateWithoutTimeout: resourceReplicationInstanceUpdate,
+		DeleteWithoutTimeout: resourceReplicationInstanceDelete,
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(40 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
 			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"allocated_storage": {
+			names.AttrAllocatedStorage: {
 				Type:         schema.TypeInt,
-				Computed:     true,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(5, 6144),
 			},
-			"allow_major_version_upgrade": {
+			names.AttrAllowMajorVersionUpgrade: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"apply_immediately": {
+			names.AttrApplyImmediately: {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"auto_minor_version_upgrade": {
+			names.AttrAutoMinorVersionUpgrade: {
 				Type:     schema.TypeBool,
+				Optional: true,
 				Computed: true,
-				Optional: true,
 			},
-			"availability_zone": {
+			names.AttrAvailabilityZone: {
 				Type:     schema.TypeString,
-				Computed: true,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
-			"engine_version": {
+			names.AttrEngineVersion: {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 			},
-			"kms_key_arn": {
+			names.AttrKMSKeyARN: {
 				Type:         schema.TypeString,
-				Computed:     true,
 				Optional:     true,
+				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"multi_az": {
 				Type:     schema.TypeBool,
-				Computed: true,
 				Optional: true,
+				Computed: true,
 			},
-			"preferred_maintenance_window": {
+			"network_type": {
 				Type:         schema.TypeString,
-				Computed:     true,
 				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(networkType_Values(), false),
+			},
+			names.AttrPreferredMaintenanceWindow: {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: verify.ValidOnceAWeekWindowFormat,
 			},
-			"publicly_accessible": {
+			names.AttrPubliclyAccessible: {
 				Type:     schema.TypeBool,
-				Computed: true,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"replication_instance_arn": {
@@ -107,28 +125,27 @@ func ResourceReplicationInstance() *schema.Resource {
 			},
 			"replication_instance_private_ips": {
 				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"replication_instance_public_ips": {
 				Type:     schema.TypeList,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"replication_subnet_group_id": {
 				Type:     schema.TypeString,
-				Computed: true,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
-			"vpc_security_group_ids": {
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrVPCSecurityGroupIDs: {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-				Computed: true,
 				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 
@@ -136,297 +153,238 @@ func ResourceReplicationInstance() *schema.Resource {
 	}
 }
 
-func resourceReplicationInstanceCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	request := &dms.CreateReplicationInstanceInput{
-		AutoMinorVersionUpgrade:       aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
-		PubliclyAccessible:            aws.Bool(d.Get("publicly_accessible").(bool)),
+	replicationInstanceID := d.Get("replication_instance_id").(string)
+	input := &dms.CreateReplicationInstanceInput{
+		AutoMinorVersionUpgrade:       aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool)),
+		PubliclyAccessible:            aws.Bool(d.Get(names.AttrPubliclyAccessible).(bool)),
 		MultiAZ:                       aws.Bool(d.Get("multi_az").(bool)),
 		ReplicationInstanceClass:      aws.String(d.Get("replication_instance_class").(string)),
-		ReplicationInstanceIdentifier: aws.String(d.Get("replication_instance_id").(string)),
-		Tags:                          Tags(tags.IgnoreAWS()),
+		ReplicationInstanceIdentifier: aws.String(replicationInstanceID),
+		Tags:                          getTagsIn(ctx),
 	}
 
 	// WARNING: GetOk returns the zero value for the type if the key is omitted in config. This means for optional
 	// keys that the zero value is valid we cannot know if the zero value was in the config and cannot allow the API
 	// to set the default value. See GitHub Issue #5694 https://github.com/hashicorp/terraform/issues/5694
 
-	if v, ok := d.GetOk("allocated_storage"); ok {
-		request.AllocatedStorage = aws.Int64(int64(v.(int)))
+	if v, ok := d.GetOk(names.AttrAllocatedStorage); ok {
+		input.AllocatedStorage = aws.Int32(int32(v.(int)))
 	}
-	if v, ok := d.GetOk("availability_zone"); ok {
-		request.AvailabilityZone = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrAvailabilityZone); ok {
+		input.AvailabilityZone = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("engine_version"); ok {
-		request.EngineVersion = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
+		input.EngineVersion = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("kms_key_arn"); ok {
-		request.KmsKeyId = aws.String(v.(string))
+	if v, ok := d.GetOk(names.AttrKMSKeyARN); ok {
+		input.KmsKeyId = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
-		request.PreferredMaintenanceWindow = aws.String(v.(string))
+	if v, ok := d.GetOk("network_type"); ok {
+		input.NetworkType = aws.String(v.(string))
+	}
+	if v, ok := d.GetOk(names.AttrPreferredMaintenanceWindow); ok {
+		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("replication_subnet_group_id"); ok {
-		request.ReplicationSubnetGroupIdentifier = aws.String(v.(string))
+		input.ReplicationSubnetGroupIdentifier = aws.String(v.(string))
 	}
-	if v, ok := d.GetOk("vpc_security_group_ids"); ok {
-		request.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk(names.AttrVPCSecurityGroupIDs); ok {
+		input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	log.Println("[DEBUG] DMS create replication instance:", request)
+	_, err := conn.CreateReplicationInstance(ctx, input)
 
-	_, err := conn.CreateReplicationInstance(request)
 	if err != nil {
-		return fmt.Errorf("error creating DMS Replication Instance: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Replication Instance (%s): %s", replicationInstanceID, err)
 	}
 
-	d.SetId(d.Get("replication_instance_id").(string))
+	d.SetId(replicationInstanceID)
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "modifying"},
-		Target:     []string{"available"},
-		Refresh:    resourceReplicationInstanceStateRefreshFunc(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
+	if _, err := waitReplicationInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Instance (%s) create: %s", d.Id(), err)
 	}
 
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for DMS Replication Instance (%s) creation: %s", d.Id(), err)
-	}
-
-	return resourceReplicationInstanceRead(d, meta)
+	return append(diags, resourceReplicationInstanceRead(ctx, d, meta)...)
 }
 
-func resourceReplicationInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceReplicationInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	response, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
-		Filters: []*dms.Filter{
-			{
-				Name:   aws.String("replication-instance-id"),
-				Values: []*string{aws.String(d.Id())}, // Must use d.Id() to work with import.
-			},
-		},
-	})
+	instance, err := findReplicationInstanceByID(ctx, conn, d.Id())
 
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error describing DMS Replication Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Replication Instance (%s): %s", d.Id(), err)
 	}
 
-	if response == nil || len(response.ReplicationInstances) == 0 || response.ReplicationInstances[0] == nil {
-		log.Printf("[WARN] DMS Replication Instance (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	instance := response.ReplicationInstances[0]
-
-	d.Set("allocated_storage", instance.AllocatedStorage)
-	d.Set("auto_minor_version_upgrade", instance.AutoMinorVersionUpgrade)
-	d.Set("availability_zone", instance.AvailabilityZone)
-	d.Set("engine_version", instance.EngineVersion)
-	d.Set("kms_key_arn", instance.KmsKeyId)
+	d.Set(names.AttrAllocatedStorage, instance.AllocatedStorage)
+	d.Set(names.AttrAutoMinorVersionUpgrade, instance.AutoMinorVersionUpgrade)
+	d.Set(names.AttrAvailabilityZone, instance.AvailabilityZone)
+	d.Set(names.AttrEngineVersion, instance.EngineVersion)
+	d.Set(names.AttrKMSKeyARN, instance.KmsKeyId)
 	d.Set("multi_az", instance.MultiAZ)
-	d.Set("preferred_maintenance_window", instance.PreferredMaintenanceWindow)
-	d.Set("publicly_accessible", instance.PubliclyAccessible)
+	d.Set("network_type", instance.NetworkType)
+	d.Set(names.AttrPreferredMaintenanceWindow, instance.PreferredMaintenanceWindow)
+	d.Set(names.AttrPubliclyAccessible, instance.PubliclyAccessible)
 	d.Set("replication_instance_arn", instance.ReplicationInstanceArn)
 	d.Set("replication_instance_class", instance.ReplicationInstanceClass)
 	d.Set("replication_instance_id", instance.ReplicationInstanceIdentifier)
-
-	if err := d.Set("replication_instance_private_ips", aws.StringValueSlice(instance.ReplicationInstancePrivateIpAddresses)); err != nil {
-		return fmt.Errorf("error setting replication_instance_private_ips: %s", err)
-	}
-
-	if err := d.Set("replication_instance_public_ips", aws.StringValueSlice(instance.ReplicationInstancePublicIpAddresses)); err != nil {
-		return fmt.Errorf("error setting replication_instance_private_ips: %s", err)
-	}
-
+	d.Set("replication_instance_private_ips", instance.ReplicationInstancePrivateIpAddresses)
+	d.Set("replication_instance_public_ips", instance.ReplicationInstancePublicIpAddresses)
 	d.Set("replication_subnet_group_id", instance.ReplicationSubnetGroup.ReplicationSubnetGroupIdentifier)
+	vpcSecurityGroupIDs := tfslices.ApplyToAll(instance.VpcSecurityGroups, func(v awstypes.VpcSecurityGroupMembership) string {
+		return aws.ToString(v.VpcSecurityGroupId)
+	})
+	d.Set(names.AttrVPCSecurityGroupIDs, vpcSecurityGroupIDs)
 
-	vpc_security_group_ids := []string{}
-	for _, sg := range instance.VpcSecurityGroups {
-		vpc_security_group_ids = append(vpc_security_group_ids, aws.StringValue(sg.VpcSecurityGroupId))
-	}
-
-	if err := d.Set("vpc_security_group_ids", vpc_security_group_ids); err != nil {
-		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
-	}
-
-	tags, err := ListTags(conn, d.Get("replication_instance_arn").(string))
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for DMS Replication Instance (%s): %s", d.Get("replication_instance_arn").(string), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceReplicationInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceReplicationInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	request := &dms.ModifyReplicationInstanceInput{
-		ApplyImmediately:       aws.Bool(d.Get("apply_immediately").(bool)),
-		ReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
-	}
-	hasChanges := false
-
-	if d.HasChange("auto_minor_version_upgrade") {
-		request.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
-		hasChanges = true
-	}
-
-	if d.HasChange("allocated_storage") {
-		if v, ok := d.GetOk("allocated_storage"); ok {
-			request.AllocatedStorage = aws.Int64(int64(v.(int)))
-			hasChanges = true
-		}
-	}
-
-	if v, ok := d.GetOk("allow_major_version_upgrade"); ok {
-		request.AllowMajorVersionUpgrade = aws.Bool(v.(bool))
+	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll, names.AttrAllowMajorVersionUpgrade) {
 		// Having allowing_major_version_upgrade by itself should not trigger ModifyReplicationInstance
 		// as it results in InvalidParameterCombination: No modifications were requested
-	}
-
-	if d.HasChange("engine_version") {
-		if v, ok := d.GetOk("engine_version"); ok {
-			request.EngineVersion = aws.String(v.(string))
-			hasChanges = true
+		input := &dms.ModifyReplicationInstanceInput{
+			AllowMajorVersionUpgrade: d.Get(names.AttrAllowMajorVersionUpgrade).(bool),
+			ApplyImmediately:         d.Get(names.AttrApplyImmediately).(bool),
+			ReplicationInstanceArn:   aws.String(d.Get("replication_instance_arn").(string)),
 		}
-	}
 
-	if d.HasChange("multi_az") {
-		request.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
-		hasChanges = true
-	}
-
-	if d.HasChange("preferred_maintenance_window") {
-		if v, ok := d.GetOk("preferred_maintenance_window"); ok {
-			request.PreferredMaintenanceWindow = aws.String(v.(string))
-			hasChanges = true
+		if d.HasChange(names.AttrAllocatedStorage) {
+			input.AllocatedStorage = aws.Int32(int32(d.Get(names.AttrAllocatedStorage).(int)))
 		}
-	}
 
-	if d.HasChange("replication_instance_class") {
-		request.ReplicationInstanceClass = aws.String(d.Get("replication_instance_class").(string))
-		hasChanges = true
-	}
-
-	if d.HasChange("vpc_security_group_ids") {
-		if v, ok := d.GetOk("vpc_security_group_ids"); ok {
-			request.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
-			hasChanges = true
+		if d.HasChange(names.AttrAutoMinorVersionUpgrade) {
+			input.AutoMinorVersionUpgrade = aws.Bool(d.Get(names.AttrAutoMinorVersionUpgrade).(bool))
 		}
-	}
 
-	if d.HasChange("tags_all") {
-		arn := d.Get("replication_instance_arn").(string)
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return fmt.Errorf("error updating DMS Replication Instance (%s) tags: %s", arn, err)
+		if d.HasChange(names.AttrEngineVersion) {
+			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
 		}
-	}
 
-	if hasChanges {
-		_, err := conn.ModifyReplicationInstance(request)
+		if d.HasChange("multi_az") {
+			input.MultiAZ = aws.Bool(d.Get("multi_az").(bool))
+		}
+
+		if d.HasChange("network_type") {
+			input.NetworkType = aws.String(d.Get("network_type").(string))
+		}
+
+		if d.HasChange(names.AttrPreferredMaintenanceWindow) {
+			input.PreferredMaintenanceWindow = aws.String(d.Get(names.AttrPreferredMaintenanceWindow).(string))
+		}
+
+		if d.HasChange("replication_instance_class") {
+			input.ReplicationInstanceClass = aws.String(d.Get("replication_instance_class").(string))
+		}
+
+		if d.HasChange(names.AttrVPCSecurityGroupIDs) {
+			input.VpcSecurityGroupIds = flex.ExpandStringValueSet(d.Get(names.AttrVPCSecurityGroupIDs).(*schema.Set))
+		}
+
+		_, err := conn.ModifyReplicationInstance(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error modifying DMS Replication Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating DMS Replication Instance (%s): %s", d.Id(), err)
 		}
 
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"modifying", "upgrading"},
-			Target:     []string{"available"},
-			Refresh:    resourceReplicationInstanceStateRefreshFunc(conn, d.Id()),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			MinTimeout: 10 * time.Second,
-			Delay:      30 * time.Second, // Wait 30 secs before starting
-		}
-
-		// Wait, catching any errors
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf("error waiting for DMS Replication Instance (%s) modification: %s", d.Id(), err)
+		if _, err := waitReplicationInstanceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Instance (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceReplicationInstanceRead(d, meta)
+	return append(diags, resourceReplicationInstanceRead(ctx, d, meta)...)
 }
 
-func resourceReplicationInstanceDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceReplicationInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSClient(ctx)
 
-	request := &dms.DeleteReplicationInstanceInput{
+	log.Printf("[DEBUG] Deleting DMS Replication Instance: %s", d.Id())
+	_, err := conn.DeleteReplicationInstance(ctx, &dms.DeleteReplicationInstanceInput{
 		ReplicationInstanceArn: aws.String(d.Get("replication_instance_arn").(string)),
-	}
+	})
 
-	log.Printf("[DEBUG] DMS delete replication instance: %#v", request)
-
-	_, err := conn.DeleteReplicationInstance(request)
-
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DMS Replication Instance (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DMS Replication Instance (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"deleting"},
-		Target:     []string{},
-		Refresh:    resourceReplicationInstanceStateRefreshFunc(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second, // Wait 30 secs before starting
+	if _, err := waitReplicationInstanceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Replication Instance (%s) delete: %s", d.Id(), err)
 	}
 
-	// Wait, catching any errors
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for DMS Replication Instance (%s) deletion: %s", d.Id(), err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceReplicationInstanceStateRefreshFunc(conn *dms.DatabaseMigrationService, replicationInstanceID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := conn.DescribeReplicationInstances(&dms.DescribeReplicationInstancesInput{
-			Filters: []*dms.Filter{
-				{
-					Name:   aws.String("replication-instance-id"),
-					Values: []*string{aws.String(replicationInstanceID)},
-				},
+func findReplicationInstanceByID(ctx context.Context, conn *dms.Client, id string) (*awstypes.ReplicationInstance, error) {
+	input := &dms.DescribeReplicationInstancesInput{
+		Filters: []awstypes.Filter{
+			{
+				Name:   aws.String("replication-instance-id"),
+				Values: []string{id},
 			},
-		})
+		},
+	}
 
-		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+	return findReplicationInstance(ctx, conn, input)
+}
+
+func findReplicationInstance(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationInstancesInput) (*awstypes.ReplicationInstance, error) {
+	output, err := findReplicationInstances(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findReplicationInstances(ctx context.Context, conn *dms.Client, input *dms.DescribeReplicationInstancesInput) ([]awstypes.ReplicationInstance, error) {
+	var output []awstypes.ReplicationInstance
+
+	pages := dms.NewDescribeReplicationInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.ReplicationInstances...)
+	}
+
+	return output, nil
+}
+
+func statusReplicationInstance(ctx context.Context, conn *dms.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findReplicationInstanceByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -434,10 +392,63 @@ func resourceReplicationInstanceStateRefreshFunc(conn *dms.DatabaseMigrationServ
 			return nil, "", err
 		}
 
-		if v == nil || len(v.ReplicationInstances) == 0 || v.ReplicationInstances[0] == nil {
-			return nil, "", nil
-		}
-
-		return v, aws.StringValue(v.ReplicationInstances[0].ReplicationInstanceStatus), nil
+		return output, aws.ToString(output.ReplicationInstanceStatus), nil
 	}
+}
+
+func waitReplicationInstanceCreated(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationInstance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationInstanceStatusCreating, replicationInstanceStatusModifying},
+		Target:     []string{replicationInstanceStatusAvailable},
+		Refresh:    statusReplicationInstance(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ReplicationInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicationInstanceUpdated(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationInstance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationInstanceStatusModifying, replicationInstanceStatusUpgrading},
+		Target:     []string{replicationInstanceStatusAvailable},
+		Refresh:    statusReplicationInstance(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ReplicationInstance); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicationInstanceDeleted(ctx context.Context, conn *dms.Client, id string, timeout time.Duration) (*awstypes.ReplicationInstance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{replicationInstanceStatusDeleting},
+		Target:     []string{},
+		Refresh:    statusReplicationInstance(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second, // Wait 30 secs before starting
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.ReplicationInstance); ok {
+		return output, err
+	}
+
+	return nil, err
 }

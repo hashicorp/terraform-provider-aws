@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_policy: Fix intermittent `couldn't find resource` errors on resource Create
+```

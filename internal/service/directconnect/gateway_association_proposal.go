@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -6,35 +9,41 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/directconnect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/directconnect/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-func ResourceGatewayAssociationProposal() *schema.Resource {
+// @SDKResource("aws_dx_gateway_association_proposal", name="Gateway Association Proposal")
+func resourceGatewayAssociationProposal() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGatewayAssociationProposalCreate,
-		Read:   resourceGatewayAssociationProposalRead,
-		Delete: resourceGatewayAssociationProposalDelete,
+		CreateWithoutTimeout: resourceGatewayAssociationProposalCreate,
+		ReadWithoutTimeout:   resourceGatewayAssociationProposalRead,
+		DeleteWithoutTimeout: resourceGatewayAssociationProposalDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceGatewayAssociationProposalImport,
+			StateContext: resourceGatewayAssociationProposalImport,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
 			// Accepting the proposal with overridden prefixes changes the returned RequestedAllowedPrefixesToDirectConnectGateway value (allowed_prefixes attribute).
 			// We only want to force a new resource if this value changes and the current proposal state is "requested".
-			customdiff.ForceNewIf("allowed_prefixes", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
-				conn := meta.(*conns.AWSClient).DirectConnectConn
+			customdiff.ForceNewIf("allowed_prefixes", func(ctx context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 				log.Printf("[DEBUG] CustomizeDiff for Direct Connect Gateway Association Proposal (%s) allowed_prefixes", d.Id())
 
-				output, err := FindGatewayAssociationProposalByID(conn, d.Id())
+				output, err := findGatewayAssociationProposalByID(ctx, conn, d.Id())
 
 				if tfresource.NotFound(err) {
 					// Proposal may be end-of-life and removed by AWS.
@@ -46,7 +55,7 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 					return false
 				}
 
-				return aws.StringValue(output.ProposalState) == directconnect.GatewayAssociationProposalStateRequested
+				return output.ProposalState == awstypes.DirectConnectGatewayAssociationProposalStateRequested
 			}),
 		),
 
@@ -57,29 +66,24 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"associated_gateway_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"associated_gateway_owner_account_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"associated_gateway_type": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"dx_gateway_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
 			"dx_gateway_owner_account_id": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -90,8 +94,9 @@ func ResourceGatewayAssociationProposal() *schema.Resource {
 	}
 }
 
-func resourceGatewayAssociationProposalCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceGatewayAssociationProposalCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	directConnectGatewayID := d.Get("dx_gateway_id").(string)
 	associatedGatewayID := d.Get("associated_gateway_id").(string)
@@ -105,39 +110,39 @@ func resourceGatewayAssociationProposalCreate(d *schema.ResourceData, meta inter
 		input.AddAllowedPrefixesToDirectConnectGateway = expandRouteFilterPrefixes(v.(*schema.Set).List())
 	}
 
-	log.Printf("[DEBUG] Creating Direct Connect Gateway Association Proposal: %s", input)
-	output, err := conn.CreateDirectConnectGatewayAssociationProposal(input)
+	output, err := conn.CreateDirectConnectGatewayAssociationProposal(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Direct Connect Gateway Association Proposal (%s/%s): %w", directConnectGatewayID, associatedGatewayID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Direct Connect Gateway Association Proposal (%s/%s): %s", directConnectGatewayID, associatedGatewayID, err)
 	}
 
-	d.SetId(aws.StringValue(output.DirectConnectGatewayAssociationProposal.ProposalId))
+	d.SetId(aws.ToString(output.DirectConnectGatewayAssociationProposal.ProposalId))
 
-	return resourceGatewayAssociationProposalRead(d, meta)
+	return append(diags, resourceGatewayAssociationProposalRead(ctx, d, meta)...)
 }
 
-func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceGatewayAssociationProposalRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	// First attempt to find by proposal ID.
-	output, err := FindGatewayAssociationProposalByID(conn, d.Id())
+	output, err := findGatewayAssociationProposalByID(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
 		// Attempt to find an existing association.
 		directConnectGatewayID := d.Get("dx_gateway_id").(string)
 		associatedGatewayID := d.Get("associated_gateway_id").(string)
 
-		output, err := FindGatewayAssociationByGatewayIDAndAssociatedGatewayID(conn, directConnectGatewayID, associatedGatewayID)
+		output, err := findGatewayAssociationByGatewayIDAndAssociatedGatewayID(ctx, conn, directConnectGatewayID, associatedGatewayID)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Direct Connect Gateway Association Proposal (%s) not found, removing from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
 
 		if err != nil {
-			return fmt.Errorf("error reading Direct Connect Gateway Association (%s/%s): %w", directConnectGatewayID, associatedGatewayID, err)
+			return sdkdiag.AppendErrorf(diags, "reading Direct Connect Gateway Association (%s/%s): %s", directConnectGatewayID, associatedGatewayID, err)
 		}
 
 		// Once accepted, AWS will delete the proposal after after some time (days?).
@@ -146,7 +151,7 @@ func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interfa
 		log.Printf("[INFO] Direct Connect Gateway Association Proposal (%s) has reached end-of-life and has been removed by AWS", d.Id())
 
 		if err := d.Set("allowed_prefixes", flattenRouteFilterPrefixes(output.AllowedPrefixesToDirectConnectGateway)); err != nil {
-			return fmt.Errorf("error setting allowed_prefixes: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting allowed_prefixes: %s", err)
 		}
 
 		d.Set("associated_gateway_id", output.AssociatedGateway.Id)
@@ -155,10 +160,10 @@ func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interfa
 		d.Set("dx_gateway_id", output.DirectConnectGatewayId)
 		d.Set("dx_gateway_owner_account_id", output.DirectConnectGatewayOwnerAccount)
 	} else if err != nil {
-		return fmt.Errorf("error reading Direct Connect Gateway Association Proposal (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Direct Connect Gateway Association Proposal (%s): %s", d.Id(), err)
 	} else {
 		if err := d.Set("allowed_prefixes", flattenRouteFilterPrefixes(output.RequestedAllowedPrefixesToDirectConnectGateway)); err != nil {
-			return fmt.Errorf("error setting allowed_prefixes: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting allowed_prefixes: %s", err)
 		}
 
 		d.Set("associated_gateway_id", output.AssociatedGateway.Id)
@@ -168,71 +173,30 @@ func resourceGatewayAssociationProposalRead(d *schema.ResourceData, meta interfa
 		d.Set("dx_gateway_owner_account_id", output.DirectConnectGatewayOwnerAccount)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceGatewayAssociationProposalDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DirectConnectConn
+func resourceGatewayAssociationProposalDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DirectConnectClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Direct Connect Gateway Association Proposal: %s", d.Id())
-	_, err := conn.DeleteDirectConnectGatewayAssociationProposal(&directconnect.DeleteDirectConnectGatewayAssociationProposalInput{
+	_, err := conn.DeleteDirectConnectGatewayAssociationProposal(ctx, &directconnect.DeleteDirectConnectGatewayAssociationProposalInput{
 		ProposalId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, directconnect.ErrCodeClientException, "is not found") {
-		return nil
+	if errs.IsAErrorMessageContains[*awstypes.DirectConnectClientException](err, "is not found") {
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Direct Connect Gateway Association Proposal (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Direct Connect Gateway Association Proposal (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func expandRouteFilterPrefixes(tfList []interface{}) []*directconnect.RouteFilterPrefix {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []*directconnect.RouteFilterPrefix
-
-	for _, tfStringRaw := range tfList {
-		tfString, ok := tfStringRaw.(string)
-
-		if !ok {
-			continue
-		}
-
-		apiObject := &directconnect.RouteFilterPrefix{
-			Cidr: aws.String(tfString),
-		}
-
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func flattenRouteFilterPrefixes(apiObjects []*directconnect.RouteFilterPrefix) []interface{} {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []interface{}
-
-	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		tfList = append(tfList, aws.StringValue(apiObject.Cidr))
-	}
-
-	return tfList
-}
-
-func resourceGatewayAssociationProposalImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceGatewayAssociationProposalImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	switch parts := strings.Split(strings.ToLower(d.Id()), "/"); len(parts) {
 	case 1:
 		break
@@ -256,4 +220,100 @@ func resourceGatewayAssociationProposalImport(d *schema.ResourceData, meta inter
 	}
 
 	return []*schema.ResourceData{d}, nil
+}
+
+func findGatewayAssociationProposalByID(ctx context.Context, conn *directconnect.Client, id string) (*awstypes.DirectConnectGatewayAssociationProposal, error) {
+	input := &directconnect.DescribeDirectConnectGatewayAssociationProposalsInput{
+		ProposalId: aws.String(id),
+	}
+
+	output, err := findGatewayAssociationProposal(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DirectConnectGatewayAssociationProposal]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.ProposalState; state == awstypes.DirectConnectGatewayAssociationProposalStateDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	if output.AssociatedGateway == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findGatewayAssociationProposal(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, filter tfslices.Predicate[*awstypes.DirectConnectGatewayAssociationProposal]) (*awstypes.DirectConnectGatewayAssociationProposal, error) {
+	output, err := findGatewayAssociationProposals(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findGatewayAssociationProposals(ctx context.Context, conn *directconnect.Client, input *directconnect.DescribeDirectConnectGatewayAssociationProposalsInput, filter tfslices.Predicate[*awstypes.DirectConnectGatewayAssociationProposal]) ([]awstypes.DirectConnectGatewayAssociationProposal, error) {
+	var output []awstypes.DirectConnectGatewayAssociationProposal
+
+	err := describeDirectConnectGatewayAssociationProposalsPages(ctx, conn, input, func(page *directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DirectConnectGatewayAssociationProposals {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func expandRouteFilterPrefixes(tfList []interface{}) []awstypes.RouteFilterPrefix {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []awstypes.RouteFilterPrefix
+
+	for _, tfStringRaw := range tfList {
+		tfString, ok := tfStringRaw.(string)
+		if !ok {
+			continue
+		}
+
+		apiObject := awstypes.RouteFilterPrefix{
+			Cidr: aws.String(tfString),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func flattenRouteFilterPrefixes(apiObjects []awstypes.RouteFilterPrefix) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, aws.ToString(apiObject.Cidr))
+	}
+
+	return tfList
 }

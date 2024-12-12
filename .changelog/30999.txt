@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_route_table: Fix `reading Route Table (rtb-abcd1234): couldn't find resource` errors when reading new resource
+```

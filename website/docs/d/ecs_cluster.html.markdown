@@ -21,17 +21,19 @@ data "aws_ecs_cluster" "ecs-mongo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_name` - (Required) Name of the ECS Cluster
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the ECS Cluster
 * `status` - Status of the ECS Cluster
 * `pending_tasks_count` - Number of pending tasks for the ECS Cluster
 * `running_tasks_count` - Number of running tasks for the ECS Cluster
 * `registered_container_instances_count` - The number of registered container instances for the ECS Cluster
-* `setting` - Settings associated with the ECS Cluster.
+* `service_connect_defaults` - The default Service Connect namespace
+* `setting` - Settings associated with the ECS Cluster
+* `tags` - Key-value map of resource tags

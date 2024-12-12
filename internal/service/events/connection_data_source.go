@@ -1,31 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
-	"fmt"
-	"log"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func DataSourceConnection() *schema.Resource {
+// @SDKDataSource("aws_cloudwatch_event_connection", name="Connection)
+func dataSourceConnection() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceConnectionRead,
+		ReadWithoutTimeout: dataSourceConnectionRead,
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"authorization_type": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			names.AttrName: {
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"secret_arn": {
 				Type:     schema.TypeString,
@@ -35,29 +39,23 @@ func DataSourceConnection() *schema.Resource {
 	}
 }
 
-func dataSourceConnectionRead(d *schema.ResourceData, meta interface{}) error {
-	d.SetId(d.Get("name").(string))
+func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).EventsConn
+	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	input := &eventbridge.DescribeConnectionInput{
-		Name: aws.String(d.Id()),
-	}
+	name := d.Get(names.AttrName).(string)
+	output, err := findConnectionByName(ctx, conn, name)
 
-	log.Printf("[DEBUG] Reading EventBridge connection (%s)", d.Id())
-	output, err := conn.DescribeConnection(input)
 	if err != nil {
-		return fmt.Errorf("error getting EventBridge connection (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EventBridge Connection (%s): %s", name, err)
 	}
 
-	if output == nil {
-		return fmt.Errorf("error getting EventBridge connection (%s): empty response", d.Id())
-	}
-
-	log.Printf("[DEBUG] Found EventBridge connection: %#v", *output)
-	d.Set("arn", output.ConnectionArn)
-	d.Set("secret_arn", output.SecretArn)
-	d.Set("name", output.Name)
+	d.SetId(name)
+	d.Set(names.AttrARN, output.ConnectionArn)
 	d.Set("authorization_type", output.AuthorizationType)
-	return nil
+	d.Set(names.AttrName, output.Name)
+	d.Set("secret_arn", output.SecretArn)
+
+	return diags
 }
