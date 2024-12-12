@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -268,42 +269,42 @@ func resourceConfigurationSetRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("configuration_set_name", output.ConfigurationSetName)
 	if output.DeliveryOptions != nil {
 		if err := d.Set("delivery_options", []interface{}{flattenDeliveryOptions(output.DeliveryOptions)}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSet, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting delivery_options: %s", err)
 		}
 	} else {
 		d.Set("delivery_options", nil)
 	}
 	if output.ReputationOptions != nil {
 		if err := d.Set("reputation_options", []interface{}{flattenReputationOptions(output.ReputationOptions)}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSet, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting reputation_options: %s", err)
 		}
 	} else {
 		d.Set("reputation_options", nil)
 	}
 	if output.SendingOptions != nil {
 		if err := d.Set("sending_options", []interface{}{flattenSendingOptions(output.SendingOptions)}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSet, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting sending_options: %s", err)
 		}
 	} else {
 		d.Set("sending_options", nil)
 	}
 	if output.SuppressionOptions != nil {
 		if err := d.Set("suppression_options", []interface{}{flattenSuppressionOptions(output.SuppressionOptions)}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSet, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting suppression_options: %s", err)
 		}
 	} else {
 		d.Set("suppression_options", nil)
 	}
 	if output.TrackingOptions != nil {
 		if err := d.Set("tracking_options", []interface{}{flattenTrackingOptions(output.TrackingOptions)}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSet, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting tracking_options: %s", err)
 		}
 	} else {
 		d.Set("tracking_options", nil)
 	}
 	if output.VdmOptions != nil {
 		if err := d.Set("vdm_options", []interface{}{flattenVDMOptions(output.VdmOptions)}); err != nil {
-			return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, resNameConfigurationSet, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting vdm_options: %s", err)
 		}
 	} else {
 		d.Set("vdm_options", nil)
