@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_lb_listener: Add `advertise_ca_subject_names` attribute to the
+`mutual_authentication` block
+```
