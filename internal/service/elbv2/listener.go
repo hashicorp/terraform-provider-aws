@@ -351,6 +351,11 @@ func resourceListener() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"advertise_ca_subject_names": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"ignore_client_certificate_expiry": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -1097,10 +1102,15 @@ func expandMutualAuthenticationAttributes(l []interface{}) *awstypes.MutualAuthe
 			TrustStoreArn: aws.String(tfMap["trust_store_arn"].(string)),
 		}
 	default:
+		advertiseTrustStoreMode := awstypes.AdvertiseTrustStoreCaNamesEnumOff
+		if tfMap["advertise_ca_subject_names"].(bool) {
+			advertiseTrustStoreMode = awstypes.AdvertiseTrustStoreCaNamesEnumOn
+		}
 		return &awstypes.MutualAuthenticationAttributes{
 			Mode:                          aws.String(mode),
 			TrustStoreArn:                 aws.String(tfMap["trust_store_arn"].(string)),
 			IgnoreClientCertificateExpiry: aws.Bool(tfMap["ignore_client_certificate_expiry"].(bool)),
+			AdvertiseTrustStoreCaNames:    advertiseTrustStoreMode,
 		}
 	}
 }
@@ -1280,6 +1290,9 @@ func flattenMutualAuthenticationAttributes(description *awstypes.MutualAuthentic
 	}
 	if description.IgnoreClientCertificateExpiry != nil {
 		m["ignore_client_certificate_expiry"] = aws.ToBool(description.IgnoreClientCertificateExpiry)
+	}
+	if description.AdvertiseTrustStoreCaNames == awstypes.AdvertiseTrustStoreCaNamesEnumOn {
+		m["advertise_ca_subject_names"] = true
 	}
 
 	return []interface{}{m}
