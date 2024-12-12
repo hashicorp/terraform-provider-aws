@@ -5,14 +5,12 @@ package acmpca
 
 import (
 	"context"
-	"errors"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -178,24 +176,19 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		d.Set(names.AttrCertificateChain, outputGCACert.CertificateChain)
 	}
 
-	// Attempt to get the CSR if permitted
+	// Attempt to get the CSR (if permitted).
 	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	})
 
-	// Handle permission issues gracefully for Resource Access Manager shared CAs
-	if err != nil {
-		// If the error is due to insufficient permissions, log a warning and continue without setting the CSR
-		var awsErr awserr.Error
-		if errors.As(err, &awsErr) && awsErr.Code() == "AccessDeniedException" {
-			log.Printf("[WARN] Skipping CSR retrieval due to lack of GetCertificateAuthorityCsr permission for RAM-shared CA: %s", certificateAuthorityARN)
-		} else {
-			// Returned when in PENDING_CERTIFICATE status
-			// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
-			if !errs.IsA[*types.InvalidStateException](err) {
-				return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate Signing Request: %s", d.Id(), err)
-			}
-		}
+	switch {
+	case tfawserr.ErrCodeEquals(err, "AccessDeniedException"):
+		// Handle permission issues gracefully for Resource Access Manager shared CAs.
+	case errs.IsA[*types.InvalidStateException](err):
+		// Returned when in PENDING_CERTIFICATE status
+		// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
+	case err != nil:
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate Signing Request: %s", d.Id(), err)
 	}
 
 	d.Set("certificate_signing_request", "")
