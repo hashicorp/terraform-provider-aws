@@ -1,4 +1,9 @@
 ## 5.82.0 (Unreleased)
+
+BUG FIXES:
+
+* data-source/aws_acmpca_certificate_authority: Ignore `AccessDeniedException: ... is not authorized to perform: acm-pca:GetCertificateAuthorityCsr on resource: ...` errors for RAM-shared CAs ([#39952](https://github.com/hashicorp/terraform-provider-aws/issues/39952))
+
 ## 5.81.0 (December 12, 2024)
 
 FEATURES:
