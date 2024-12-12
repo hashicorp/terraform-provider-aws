@@ -6,275 +6,394 @@ package memorydb
 import (
 	"context"
 	"errors"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/memorydb/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_memorydb_multi_region_cluster", name="MultiRegionCluster")
+// @FrameworkResource("aws_memorydb_multi_region_cluster", name="Multi Region Cluster")
 // @Tags(identifierAttribute="arn")
-func resourceMultiRegionCluster() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceMultiRegionClusterCreate,
-		ReadWithoutTimeout:   resourceMultiRegionClusterRead,
-		UpdateWithoutTimeout: resourceMultiRegionClusterUpdate,
-		DeleteWithoutTimeout: resourceMultiRegionClusterDelete,
+func newMultiRegionClusterResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &multiRegionClusterResource{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+	r.SetDefaultCreateTimeout(120 * time.Minute)
+	r.SetDefaultUpdateTimeout(120 * time.Minute)
+	r.SetDefaultDeleteTimeout(120 * time.Minute)
+
+	return r, nil
+}
+
+const (
+	ResNameMultiRegionCluster = "Multi Region Cluster"
+)
+
+type multiRegionClusterResource struct {
+	framework.ResourceWithConfigure
+	framework.WithTimeouts
+}
+
+func (*multiRegionClusterResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_memorydb_multi_region_cluster"
+}
+
+func (r *multiRegionClusterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrID: framework.IDAttribute(),
+			names.AttrARN: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"multi_region_cluster_name": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrDescription: schema.StringAttribute{
+				Computed: true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Default: stringdefault.StaticString("Managed by Terraform"),
+			},
+			names.AttrEngine: schema.StringAttribute{
+				Computed: true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					enum.FrameworkValidate[clusterEngine](),
+				},
+			},
+			names.AttrEngineVersion: schema.StringAttribute{
+				Computed: true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"multi_region_cluster_name_suffix": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrStatus: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"multi_region_parameter_group_name": schema.StringAttribute{
+				Computed: true,
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"node_type": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"num_shards": schema.Int64Attribute{
+				Computed: true,
+				Optional: true,
+			},
+			"update_strategy": schema.StringAttribute{
+				Optional: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.UpdateStrategy](),
+				},
+			},
+			"tls_enabled": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(120 * time.Minute),
-			Update: schema.DefaultTimeout(120 * time.Minute),
-			Delete: schema.DefaultTimeout(120 * time.Minute),
-		},
-
-		CustomizeDiff: verify.SetTagsDiff,
-
-		SchemaFunc: func() map[string]*schema.Schema {
-			return map[string]*schema.Schema{
-				names.AttrARN: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				names.AttrName: {
-					Type:     schema.TypeString,
-					Computed: true,
-				},
-				names.AttrDescription: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Default:  "Managed by Terraform",
-				},
-				names.AttrEngine: {
-					Type:             schema.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ValidateDiagFunc: enum.Validate[clusterEngine](),
-				},
-				names.AttrEngineVersion: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				names.AttrNameSuffix: {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				names.AttrParameterGroupName: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"node_type": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"num_shards": {
-					Type:     schema.TypeInt,
-					Optional: true,
-					Computed: true,
-				},
-				"update_strategy": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					ValidateDiagFunc: enum.Validate[awstypes.UpdateStrategy](),
-				},
-				names.AttrStatus: {
-					Type:     schema.TypeString,
-					Optional: true,
-					Computed: true,
-				},
-				"tls_enabled": {
-					Type:     schema.TypeBool,
-					Optional: true,
-					Default:  true,
-					ForceNew: true,
-				},
-				names.AttrTags:    tftags.TagsSchema(),
-				names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			}
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
 
-func resourceMultiRegionClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
+func (r *multiRegionClusterResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().MemoryDBClient(ctx)
 
-	input := &memorydb.CreateMultiRegionClusterInput{
-		MultiRegionClusterNameSuffix: aws.String(d.Get(names.AttrNameSuffix).(string)),
-		NodeType:                     aws.String(d.Get("node_type").(string)),
-		TLSEnabled:                   aws.Bool(d.Get("tls_enabled").(bool)),
-		Tags:                         getTagsIn(ctx),
+	var plan multiRegionClusterResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk(names.AttrDescription); ok {
-		input.Description = aws.String(v.(string))
+	var input memorydb.CreateMultiRegionClusterInput
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
+	input.Tags = getTagsIn(ctx)
 
-	if v, ok := d.GetOk(names.AttrEngine); ok {
-		input.Engine = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk(names.AttrEngineVersion); ok {
-		input.EngineVersion = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk(names.AttrParameterGroupName); ok {
-		input.MultiRegionParameterGroupName = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("num_shards"); ok {
-		input.NumShards = aws.Int32(int32(v.(int)))
-	}
-
-	output, err := conn.CreateMultiRegionCluster(ctx, input)
-
+	out, err := conn.CreateMultiRegionCluster(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Multi Region cluster: %s", err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionCreating, ResNameMultiRegionCluster, plan.MultiRegionClusterName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil || out.MultiRegionCluster.ARN == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionCreating, ResNameMultiRegionCluster, plan.MultiRegionClusterName.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
 	}
 
-	d.SetId(aws.ToString(output.MultiRegionCluster.MultiRegionClusterName))
+	plan.ID = flex.StringToFramework(ctx, out.MultiRegionCluster.MultiRegionClusterName)
+	plan.NumShards = flex.Int32ToFramework(ctx, out.MultiRegionCluster.NumberOfShards)
 
-	if _, err := waitMultiRegionClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi Region cluster (%s) create: %s", d.Id(), err)
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	statusOut, err := waitMultiRegionClusterAvailable(ctx, conn, plan.ID.ValueString(), createTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionWaitingForCreation, ResNameMultiRegionCluster, plan.MultiRegionClusterName.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	return append(diags, resourceMultiRegionClusterRead(ctx, d, meta)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, statusOut, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func resourceMultiRegionClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
+func (r *multiRegionClusterResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().MemoryDBClient(ctx)
 
-	cluster, err := findMultiRegionClusterByName(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] MemoryDB Multi Region cluster (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	var state multiRegionClusterResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
+	out, err := findMultiRegionClusterByName(ctx, conn, state.ID.ValueString())
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading MemoryDB Multi Region cluster (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionSetting, ResNameMultiRegionCluster, state.MultiRegionClusterName.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	d.Set(names.AttrARN, cluster.ARN)
-	d.Set(names.AttrName, cluster.MultiRegionClusterName)
-	d.Set(names.AttrDescription, cluster.Description)
-	d.Set(names.AttrEngine, cluster.Engine)
-	d.Set(names.AttrEngineVersion, cluster.EngineVersion)
-	d.Set("node_type", cluster.NodeType)
-	d.Set("num_shards", cluster.NumberOfShards)
-	d.Set(names.AttrParameterGroupName, cluster.MultiRegionParameterGroupName)
-	d.Set("tls_enabled", cluster.TLSEnabled)
-	d.Set(names.AttrStatus, cluster.Status)
-
-	// These attributes aren't returned by the API, so we retain the current value.
-	suffix, err := suffixAfterHyphen(*cluster.MultiRegionClusterName)
+	suffix, err := suffixAfterHyphen(*out.MultiRegionClusterName)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "extracting suffix from Multi Region Cluster name: %s", err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionSetting, ResNameMultiRegionCluster, state.MultiRegionClusterName.String(), err),
+			err.Error(),
+		)
+		return
 	}
-	d.Set(names.AttrNameSuffix, suffix)
-	d.Set("update_strategy", d.Get("update_strategy"))
+	state.MultiRegionClusterNameSuffix = flex.StringToFramework(ctx, &suffix)
+	state.NumShards = flex.Int32ToFramework(ctx, out.NumberOfShards)
 
-	return diags
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func resourceMultiRegionClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
+func (r *multiRegionClusterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().MemoryDBClient(ctx)
 
-	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
-		input := &memorydb.UpdateMultiRegionClusterInput{
-			MultiRegionClusterName: aws.String(d.Id()),
+	var plan, state multiRegionClusterResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.MultiRegionClusterName.Equal(state.MultiRegionClusterName) ||
+		!plan.Description.Equal(state.Description) ||
+		!plan.Engine.Equal(state.EngineVersion) ||
+		!plan.MultiRegionParameterGroupName.Equal(state.MultiRegionParameterGroupName) ||
+		!plan.NodeType.Equal(state.NodeType) ||
+		!plan.NumShards.Equal(state.NumShards) ||
+		!plan.UpdateStrategy.Equal(state.UpdateStrategy) {
+		input := memorydb.UpdateMultiRegionClusterInput{
+			MultiRegionClusterName: state.MultiRegionClusterName.ValueStringPointer(),
 		}
 
-		if d.HasChange(names.AttrDescription) {
-			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		if !plan.MultiRegionClusterName.Equal(state.MultiRegionClusterName) {
+			input.MultiRegionClusterName = plan.MultiRegionClusterName.ValueStringPointer()
 		}
 
-		if d.HasChange(names.AttrEngineVersion) {
-			input.EngineVersion = aws.String(d.Get(names.AttrEngineVersion).(string))
+		if !plan.Description.Equal(state.Description) {
+			input.Description = plan.Description.ValueStringPointer()
 		}
 
-		if d.HasChange("num_shards") {
+		if !plan.Engine.Equal(state.Engine) {
+			input.EngineVersion = plan.EngineVersion.ValueStringPointer()
+		}
+
+		if !plan.MultiRegionParameterGroupName.Equal(state.MultiRegionParameterGroupName) {
+			input.MultiRegionParameterGroupName = plan.MultiRegionParameterGroupName.ValueStringPointer()
+		}
+
+		if !plan.NodeType.Equal(state.NodeType) {
+			input.NodeType = plan.NodeType.ValueStringPointer()
+		}
+
+		if !plan.NumShards.Equal(state.NumShards) {
 			input.ShardConfiguration = &awstypes.ShardConfigurationRequest{
-				ShardCount: int32(d.Get("num_shards").(int)),
+				ShardCount: int32(*plan.NumShards.ValueInt64Pointer()),
 			}
 		}
 
-		if d.HasChange("node_type") {
-			input.NodeType = aws.String(d.Get("node_type").(string))
+		if !plan.UpdateStrategy.Equal(state.UpdateStrategy) {
+			input.UpdateStrategy = awstypes.UpdateStrategy(plan.UpdateStrategy.ValueString())
 		}
 
-		if d.HasChange("node_type") {
-			input.NodeType = aws.String(d.Get("node_type").(string))
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
 
-		if d.HasChange(names.AttrParameterGroupName) {
-			input.MultiRegionParameterGroupName = aws.String(d.Get(names.AttrParameterGroupName).(string))
-		}
-
-		if d.HasChange("update_strategy") {
-			input.UpdateStrategy = awstypes.UpdateStrategy(d.Get("update_strategy").(string))
-		}
-
-		_, err := conn.UpdateMultiRegionCluster(ctx, input)
-
+		_, err := conn.UpdateMultiRegionCluster(ctx, &input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating MemoryDB Multi Region Cluster (%s): %s", d.Id(), err)
-		}
-
-		if _, err := waitMultiRegionClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi Region Cluster (%s) update: %s", d.Id(), err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.MemoryDB, create.ErrActionUpdating, ResNameMultiRegionCluster, plan.MultiRegionClusterName.String(), err),
+				err.Error(),
+			)
+			return
 		}
 	}
 
-	return append(diags, resourceMultiRegionClusterRead(ctx, d, meta)...)
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	statusOut, err := waitMultiRegionClusterAvailable(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionWaitingForUpdate, ResNameMultiRegionCluster, plan.MultiRegionClusterName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, statusOut, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func resourceMultiRegionClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MemoryDBClient(ctx)
+func (r *multiRegionClusterResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().MemoryDBClient(ctx)
 
-	input := &memorydb.DeleteMultiRegionClusterInput{
-		MultiRegionClusterName: aws.String(d.Id()),
+	var state multiRegionClusterResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	log.Printf("[DEBUG] Deleting MemoryDB Multi Region Cluster: (%s)", d.Id())
-	_, err := conn.DeleteMultiRegionCluster(ctx, input)
-
-	if errs.IsA[*awstypes.MultiRegionClusterNotFoundFault](err) {
-		return diags
+	input := memorydb.DeleteMultiRegionClusterInput{
+		MultiRegionClusterName: state.MultiRegionClusterName.ValueStringPointer(),
 	}
 
+	_, err := conn.DeleteMultiRegionCluster(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB Multi Region Cluster (%s): %s", d.Id(), err)
+		if errs.IsA[*awstypes.MultiRegionClusterNotFoundFault](err) {
+			return
+		}
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionDeleting, ResNameMultiRegionCluster, state.MultiRegionClusterName.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	if _, err := waitMultiRegionClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi Region Cluster (%s) delete: %s", d.Id(), err)
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+	_, err = waitMultiRegionClusterDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionWaitingForDeletion, ResNameMultiRegionCluster, state.MultiRegionClusterName.String(), err),
+			err.Error(),
+		)
+		return
 	}
+}
 
-	return diags
+func (r *multiRegionClusterResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+}
+
+func (r *multiRegionClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
+}
+
+type multiRegionClusterResourceModel struct {
+	ID                            types.String   `tfsdk:"id"`
+	ARN                           types.String   `tfsdk:"arn"`
+	MultiRegionClusterName        types.String   `tfsdk:"multi_region_cluster_name"`
+	MultiRegionClusterNameSuffix  types.String   `tfsdk:"multi_region_cluster_name_suffix"`
+	Description                   types.String   `tfsdk:"description"`
+	Engine                        types.String   `tfsdk:"engine"`
+	EngineVersion                 types.String   `tfsdk:"engine_version"`
+	MultiRegionParameterGroupName types.String   `tfsdk:"multi_region_parameter_group_name"`
+	NodeType                      types.String   `tfsdk:"node_type"`
+	NumShards                     types.Int64    `tfsdk:"num_shards"`
+	UpdateStrategy                types.String   `tfsdk:"update_strategy"`
+	Status                        types.String   `tfsdk:"status"`
+	TLSEnabled                    types.Bool     `tfsdk:"tls_enabled"`
+	Tags                          tftags.Map     `tfsdk:"tags"`
+	TagsAll                       tftags.Map     `tfsdk:"tags_all"`
+	Timeouts                      timeouts.Value `tfsdk:"timeouts"`
 }
 
 func findMultiRegionClusterByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.MultiRegionCluster, error) {
@@ -338,7 +457,7 @@ func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name s
 
 func waitMultiRegionClusterAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.MultiRegionCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Delay:   90 * time.Second,
+		Delay:   20 * time.Second,
 		Pending: []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
 		Target:  []string{clusterStatusAvailable},
 		Refresh: statusMultiRegionCluster(ctx, conn, name),
@@ -356,7 +475,7 @@ func waitMultiRegionClusterAvailable(ctx context.Context, conn *memorydb.Client,
 
 func waitMultiRegionClusterDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.MultiRegionCluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Delay:   90 * time.Second,
+		Delay:   20 * time.Second,
 		Pending: []string{clusterStatusDeleting},
 		Target:  []string{},
 		Refresh: statusMultiRegionCluster(ctx, conn, name),

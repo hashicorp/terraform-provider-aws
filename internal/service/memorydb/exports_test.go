@@ -7,7 +7,7 @@ package memorydb
 var (
 	ResourceACL                = resourceACL
 	ResourceCluster            = resourceCluster
-	ResourceMultiRegionCluster = resourceMultiRegionCluster
+	ResourceMultiRegionCluster = newMultiRegionClusterResource
 	ResourceParameterGroup     = resourceParameterGroup
 	ResourceSnapshot           = resourceSnapshot
 	ResourceSubnetGroup        = resourceSubnetGroup
