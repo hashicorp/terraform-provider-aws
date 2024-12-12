@@ -94,6 +94,7 @@ func testAccCheckVPCOriginDestroy(ctx context.Context, n string) resource.TestCh
 func testAccVPCOriginConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 
+
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -113,20 +114,20 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "a" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.1.1.0/24"
   availability_zone = "data.aws_availability_zones.available.names[0]"
 }
 
 resource "aws_subnet" "b" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.1.2.0/24"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.1.2.0/24"
   availability_zone = "data.aws_availability_zones.available.names[1]"
 }
 
 resource "aws_subnet" "c" {
-  vpc_id     = aws_vpc.test.id
-  cidr_block = "10.1.3.0/24"
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = "10.1.3.0/24"
   availability_zone = "data.aws_availability_zones.available.names[2]"
 }
 
@@ -163,7 +164,7 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
 }
 
 resource "aws_lb" "this" {
-  name               =  %[1]q
+  name               = %[1]q
   internal           = true
   load_balancer_type = "application"
   security_groups    = [aws_security_group.allow_tls.id]
@@ -176,13 +177,13 @@ resource "aws_lb" "this" {
 
 resource "aws_cloudfront_vpc_origin" "this" {
   vpc_origin_endpoint_config {
-    name = %[1]q
-    origin_arn = aws_lb.this.arn
-    http_port = 8080
-    https_port = 8443
+    name                   = %[1]q
+    origin_arn             = aws_lb.this.arn
+    http_port              = 8080
+    https_port             = 8443
     origin_protocol_policy = "https-only"
     origin_ssl_protocols {
-      items = ["TLSv1.2"]
+      items    = ["TLSv1.2"]
       quantity = 1
     }
   }
