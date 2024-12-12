@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_amplify_domain_association: Prevent permanent diff when `certificate_settings` not set.
+```
