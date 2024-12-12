@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_vpc_endpoint_security_group_association")
-func ResourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
+// @SDKResource("aws_vpc_endpoint_security_group_association", name="VPC Endpoint Security Group Association")
+func resourceVPCEndpointSecurityGroupAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCEndpointSecurityGroupAssociationCreate,
 		ReadWithoutTimeout:   resourceVPCEndpointSecurityGroupAssociationRead,
@@ -97,7 +97,7 @@ func resourceVPCEndpointSecurityGroupAssociationCreate(ctx context.Context, d *s
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(VPCEndpointSecurityGroupAssociationCreateID(vpcEndpointID, securityGroupID))
+	d.SetId(vpcEndpointSecurityGroupAssociationCreateID(vpcEndpointID, securityGroupID))
 
 	if replaceDefaultAssociation {
 		// Delete the existing VPC endpoint/default security group association.

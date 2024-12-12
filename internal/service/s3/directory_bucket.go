@@ -30,7 +30,7 @@ import (
 
 var (
 	// e.g. example--usw2-az2--x-s3
-	directoryBucketNameRegex = regexache.MustCompile(`^([0-9a-z.-]+)--([a-z]+\d+-az\d+)--x-s3$`)
+	directoryBucketNameRegex = regexache.MustCompile(`^(?:[0-9a-z.-]+)--(?:[0-9a-za-z]+(?:-[0-9a-za-z]+)+)--x-s3$`)
 )
 
 func isDirectoryBucket(bucket string) bool {
@@ -46,6 +46,7 @@ func newDirectoryBucketResource(context.Context) (resource.ResourceWithConfigure
 
 type directoryBucketResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpUpdate[directoryBucketResourceModel] // Only 'force_destroy' can be updated.
 	framework.WithImportByID
 }
 
@@ -128,17 +129,13 @@ func (r *directoryBucketResource) Schema(ctx context.Context, request resource.S
 
 func (r *directoryBucketResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data directoryBucketResourceModel
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	locationInfoData, diags := data.Location.ToPtr(ctx)
-
 	response.Diagnostics.Append(diags...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -168,7 +165,7 @@ func (r *directoryBucketResource) Create(ctx context.Context, request resource.C
 	}
 
 	// Set values for unknowns.
-	data.ARN = types.StringValue(r.arn(data.Bucket.ValueString()))
+	data.ARN = types.StringValue(r.arn(ctx, data.Bucket.ValueString()))
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -176,9 +173,7 @@ func (r *directoryBucketResource) Create(ctx context.Context, request resource.C
 
 func (r *directoryBucketResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data directoryBucketResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -207,7 +202,7 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 	}
 
 	// Set attributes for import.
-	data.ARN = types.StringValue(r.arn(data.Bucket.ValueString()))
+	data.ARN = types.StringValue(r.arn(ctx, data.Bucket.ValueString()))
 
 	// No API to return bucket type, location etc.
 	data.DataRedundancy = fwtypes.StringEnumValue(awstypes.DataRedundancySingleAvailabilityZone)
@@ -222,29 +217,9 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *directoryBucketResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new directoryBucketResourceModel
-
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
-}
-
 func (r *directoryBucketResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data directoryBucketResourceModel
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -284,8 +259,8 @@ func (r *directoryBucketResource) Delete(ctx context.Context, request resource.D
 }
 
 // arn returns the ARN of the specified bucket.
-func (r *directoryBucketResource) arn(bucket string) string {
-	return r.RegionalARN("s3express", fmt.Sprintf("bucket/%s", bucket))
+func (r *directoryBucketResource) arn(ctx context.Context, bucket string) string {
+	return r.Meta().RegionalARN(ctx, "s3express", fmt.Sprintf("bucket/%s", bucket))
 }
 
 type directoryBucketResourceModel struct {

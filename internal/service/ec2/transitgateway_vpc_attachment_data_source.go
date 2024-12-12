@@ -48,6 +48,10 @@ func dataSourceTransitGatewayVPCAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"security_group_referencing_support": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrSubnetIDs: {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -76,7 +80,7 @@ func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Re
 
 	input := &ec2.DescribeTransitGatewayVpcAttachmentsInput{}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -99,12 +103,13 @@ func dataSourceTransitGatewayVPCAttachmentRead(ctx context.Context, d *schema.Re
 	d.Set("appliance_mode_support", transitGatewayVPCAttachment.Options.ApplianceModeSupport)
 	d.Set("dns_support", transitGatewayVPCAttachment.Options.DnsSupport)
 	d.Set("ipv6_support", transitGatewayVPCAttachment.Options.Ipv6Support)
+	d.Set("security_group_referencing_support", transitGatewayVPCAttachment.Options.SecurityGroupReferencingSupport)
 	d.Set(names.AttrSubnetIDs, transitGatewayVPCAttachment.SubnetIds)
 	d.Set(names.AttrTransitGatewayID, transitGatewayVPCAttachment.TransitGatewayId)
 	d.Set(names.AttrVPCID, transitGatewayVPCAttachment.VpcId)
 	d.Set("vpc_owner_id", transitGatewayVPCAttachment.VpcOwnerId)
 
-	setTagsOutV2(ctx, transitGatewayVPCAttachment.Tags)
+	setTagsOut(ctx, transitGatewayVPCAttachment.Tags)
 
 	return diags
 }

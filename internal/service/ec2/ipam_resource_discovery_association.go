@@ -95,7 +95,7 @@ func resourceIPAMResourceDiscoveryAssociationCreate(ctx context.Context, d *sche
 		ClientToken:             aws.String(id.UniqueId()),
 		IpamId:                  aws.String(ipamID),
 		IpamResourceDiscoveryId: aws.String(ipamResourceDiscoveryID),
-		TagSpecifications:       getTagSpecificationsInV2(ctx, awstypes.ResourceTypeIpamResourceDiscoveryAssociation),
+		TagSpecifications:       getTagSpecificationsIn(ctx, awstypes.ResourceTypeIpamResourceDiscoveryAssociation),
 	}
 
 	output, err := conn.AssociateIpamResourceDiscovery(ctx, input)
@@ -138,7 +138,7 @@ func resourceIPAMResourceDiscoveryAssociationRead(ctx context.Context, d *schema
 	d.Set(names.AttrOwnerID, rda.OwnerId)
 	d.Set(names.AttrState, rda.State)
 
-	setTagsOutV2(ctx, rda.Tags)
+	setTagsOut(ctx, rda.Tags)
 
 	return diags
 }

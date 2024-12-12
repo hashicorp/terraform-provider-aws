@@ -11,49 +11,48 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/evidently"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/evidently/types"
-	"github.com/aws/aws-sdk-go/service/cloudwatchevidently"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func waitFeatureCreated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+func waitFeatureCreated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Feature, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
-		Target:  []string{cloudwatchevidently.FeatureStatusAvailable},
+		Target:  enum.Slice(awstypes.FeatureStatusAvailable),
 		Refresh: statusFeature(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudwatchevidently.Feature); ok {
+	if output, ok := outputRaw.(*awstypes.Feature); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitFeatureUpdated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+func waitFeatureUpdated(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Feature, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{cloudwatchevidently.FeatureStatusUpdating},
-		Target:  []string{cloudwatchevidently.FeatureStatusAvailable},
+		Pending: enum.Slice(awstypes.FeatureStatusUpdating),
+		Target:  enum.Slice(awstypes.FeatureStatusAvailable),
 		Refresh: statusFeature(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudwatchevidently.Feature); ok {
+	if output, ok := outputRaw.(*awstypes.Feature); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitFeatureDeleted(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*cloudwatchevidently.Feature, error) {
+func waitFeatureDeleted(ctx context.Context, conn *evidently.Client, id string, timeout time.Duration) (*awstypes.Feature, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{cloudwatchevidently.FeatureStatusAvailable},
+		Pending: enum.Slice(awstypes.FeatureStatusAvailable),
 		Target:  []string{},
 		Refresh: statusFeature(ctx, conn, id),
 		Timeout: timeout,
@@ -61,7 +60,7 @@ func waitFeatureDeleted(ctx context.Context, conn *evidently.Client, id string, 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*cloudwatchevidently.Feature); ok {
+	if output, ok := outputRaw.(*awstypes.Feature); ok {
 		return output, err
 	}
 
@@ -167,7 +166,7 @@ func waitProjectUpdated(ctx context.Context, conn *evidently.Client, nameOrARN s
 
 func waitProjectDeleted(ctx context.Context, conn *evidently.Client, nameOrARN string, timeout time.Duration) (*awstypes.Project, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{cloudwatchevidently.ProjectStatusAvailable},
+		Pending: enum.Slice(awstypes.ProjectStatusAvailable),
 		Target:  []string{},
 		Refresh: statusProject(ctx, conn, nameOrARN),
 		Timeout: timeout,

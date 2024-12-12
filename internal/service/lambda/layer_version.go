@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfio "github.com/hashicorp/terraform-provider-aws/internal/io"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -169,7 +170,7 @@ func resourceLayerVersionCreate(ctx context.Context, d *schema.ResourceData, met
 		conns.GlobalMutexKV.Lock(mutexLayerKey)
 		defer conns.GlobalMutexKV.Unlock(mutexLayerKey)
 
-		file, err := readFileContents(filename.(string))
+		file, err := tfio.ReadFileContents(filename.(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading ZIP file (%s): %s", filename, err)
 		}

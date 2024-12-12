@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -31,7 +31,7 @@ var hostedZoneIDPerRegionMap = map[string]string{
 	endpoints.EuWest3RegionID:      "Z087117439MBKHYM69QS6",
 }
 
-// @FrameworkDataSource(name="Hosted Zone ID")
+// @FrameworkDataSource("aws_apprunner_hosted_zone_id", name="Hosted Zone ID")
 func newHostedZoneIDDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &hostedZoneIDDataSource{}, nil
 }
@@ -65,7 +65,7 @@ func (d *hostedZoneIDDataSource) Read(ctx context.Context, request datasource.Re
 
 	var region string
 	if data.Region.IsNull() {
-		region = d.Meta().Region
+		region = d.Meta().Region(ctx)
 	} else {
 		region = data.Region.ValueString()
 	}

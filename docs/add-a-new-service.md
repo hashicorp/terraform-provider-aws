@@ -76,8 +76,6 @@ If an AWS service must be created in a non-standard way, for example, the servic
 
 1. Add a file `internal/<service>/service_package.go` that contains an API client factory function, for example:
 
-=== "AWS Go SDK V2 (Preferred)"
-
     ```go
     package costoptimizationhub
 
@@ -93,42 +91,22 @@ If an AWS service must be created in a non-standard way, for example, the servic
     func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*costoptimizationhub.Client, error) {
         cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-        return costoptimizationhub.NewFromConfig(cfg, func(o *costoptimizationhub.Options) {
-            if endpoint := config["endpoint"].(string); endpoint != "" {
-                o.BaseEndpoint = aws.String(endpoint)
-            } else if config["partition"].(string) == names.StandardPartitionID {
-                // Cost Optimization Hub endpoint is available only in us-east-1 Region.
-                o.Region = names.USEast1RegionID
-            }
-        }), nil
-    }
-    ```
-
-=== "AWS Go SDK V1"
-
-    ```go
-    package globalaccelerator
-    
-    import (
-        "context"
-    
-        aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-        endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
-        session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-        globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
-    )
-    
-    // NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-    func (p *servicePackage) NewConn(ctx context.Context) (*globalaccelerator_sdkv1.GlobalAccelerator, error) {
-        sess := p.config["session"].(*session_sdkv1.Session)
-        config := &aws_sdkv1.Config{Endpoint: aws_sdkv1.String(p.config["endpoint"].(string))}
-    
-        // Force "global" services to correct Regions.
-        if p.config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-            config.Region = aws_sdkv1.String(endpoints_sdkv1.UsWest2RegionID)
-        }
-    
-        return globalaccelerator_sdkv1.New(sess.Copy(config)), nil
+        return costoptimizationhub.NewFromConfig(cfg,
+            costoptimizationhub.WithEndpointResolverV2(newEndpointResolverSDKv2()),
+            withBaseEndpoint(config[names.AttrEndpoint].(string)),
+            func(o *costoptimizationhub.Options) {
+                if config["partition"].(string) == names.StandardPartitionID {
+                    // Cost Optimization Hub endpoint is available only in us-east-1 Region.
+                    if cfg.Region != names.USEast1RegionID {
+                        tflog.Info(ctx, "overriding region", map[string]any{
+                            "original_region": cfg.Region,
+                            "override_region": names.USEast1RegionID,
+                        })
+                        o.Region = names.USEast1RegionID
+                    }
+                }
+            },
+        ), nil
     }
     ```
 
@@ -138,32 +116,38 @@ If an AWS service must be customized after creation, for example, retry handling
 
 1. Add a file `internal/<service>/service_package.go` that contains an API client customization function, for example:
 
-=== "AWS Go SDK V1"
+```go
+package shield
 
-    ```go
-    package chime
-    
-    import (
-    	"context"
-    
-    	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-    	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
-    	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
-    	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-    )
-    
-    // CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
-    func (p *servicePackage) CustomizeConn(ctx context.Context, conn *chime_sdkv1.Chime) (*chime_sdkv1.Chime, error) {
-    	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-    		// When calling CreateVoiceConnector across multiple resources,
-    		// the API can randomly return a BadRequestException without an explanation
-    		if r.Operation.Name == "CreateVoiceConnector" {
-    			if tfawserr.ErrMessageContains(r.Error, chime_sdkv1.ErrCodeBadRequestException, "Service received a bad request") {
-    				r.Retryable = aws_sdkv1.Bool(true)
-    			}
-    		}
-    	})
-    
-    	return conn, nil
-    }
-    ```
+import (
+	"context"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*shield.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+
+	return shield.NewFromConfig(cfg,
+		shield.WithEndpointResolverV2(newEndpointResolverV2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *shield.Options) {
+			// Force "global" services to correct Regions.
+			if config["partition"].(string) == endpoints.AwsPartitionID {
+				if cfg.Region != names.USEast1RegionID {
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": names.USEast1RegionID,
+					})
+					o.Region = names.USEast1RegionID
+				}
+			}
+		},
+	), nil
+}
+```

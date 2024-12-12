@@ -46,6 +46,7 @@ resource "aws_lb_listener" "front_end" {
   load_balancer_arn = aws_lb.front_end.arn
   port              = "443"
   protocol          = "TLS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = "arn:aws:iam::187416307283:server-certificate/test_cert_rab3wuqwgja25ct3n4jdj2tzu4"
   alpn_policy       = "HTTP2Preferred"
 
@@ -252,20 +253,21 @@ resource "aws_lb_listener" "example" {
 
 The following arguments are required:
 
-* `default_action` - (Required) Configuration block for default actions. Detailed below.
+* `default_action` - (Required) Configuration block for default actions. See below.
 * `load_balancer_arn` - (Required, Forces New Resource) ARN of the load balancer.
 
 The following arguments are optional:
 
 * `alpn_policy` - (Optional)  Name of the Application-Layer Protocol Negotiation (ALPN) policy. Can be set if `protocol` is `TLS`. Valid values are `HTTP1Only`, `HTTP2Only`, `HTTP2Optional`, `HTTP2Preferred`, and `None`.
 * `certificate_arn` - (Optional) ARN of the default SSL server certificate. Exactly one certificate is required if the protocol is HTTPS. For adding additional SSL certificates, see the [`aws_lb_listener_certificate` resource](/docs/providers/aws/r/lb_listener_certificate.html).
-* `mutual_authentication` - (Optional) The mutual authentication configuration information. Detailed below.
+* `mutual_authentication` - (Optional) The mutual authentication configuration information. See below.
 * `port` - (Optional) Port on which the load balancer is listening. Not valid for Gateway Load Balancers.
 * `protocol` - (Optional) Protocol for connections from clients to the load balancer. For Application Load Balancers, valid values are `HTTP` and `HTTPS`, with a default of `HTTP`. For Network Load Balancers, valid values are `TCP`, `TLS`, `UDP`, and `TCP_UDP`. Not valid to use `UDP` or `TCP_UDP` if dual-stack mode is enabled. Not valid for Gateway Load Balancers.
-* `ssl_policy` - (Optional) Name of the SSL Policy for the listener. Required if `protocol` is `HTTPS` or `TLS`.
+* `ssl_policy` - (Optional) Name of the SSL Policy for the listener. Required if `protocol` is `HTTPS` or `TLS`. Default is `ELBSecurityPolicy-2016-08`.
+* `tcp_idle_timeout_seconds` - (Optional) TCP idle timeout value in seconds. Can only be set if protocol is `TCP` on Network Load Balancer, or with a Gateway Load Balancer. Not supported for Application Load Balancers. Valid values are between `60` and `6000` inclusive. Default: `350`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-~> **NOTE::** Please note that listeners that are attached to Application Load Balancers must use either `HTTP` or `HTTPS` protocols while listeners that are attached to Network Load Balancers must use the `TCP` protocol.
+~> **Note::** When a `Name` key is specified in the map, the AWS Console maps the value to the `Name Tag` column value inside the `Listener Rules` table within a specific load balancer listener page. Otherwise, the value resolves to `Default`.
 
 ### default_action
 
@@ -275,22 +277,13 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `authenticate_cognito` - (Optional) Configuration block for using Amazon Cognito to authenticate users. Specify only when `type` is `authenticate-cognito`. Detailed below.
-* `authenticate_oidc` - (Optional) Configuration block for an identity provider that is compliant with OpenID Connect (OIDC). Specify only when `type` is `authenticate-oidc`. Detailed below.
+* `authenticate_cognito` - (Optional) Configuration block for using Amazon Cognito to authenticate users. Specify only when `type` is `authenticate-cognito`. See below.
+* `authenticate_oidc` - (Optional) Configuration block for an identity provider that is compliant with OpenID Connect (OIDC). Specify only when `type` is `authenticate-oidc`. See below.
 * `fixed_response` - (Optional) Information for creating an action that returns a custom HTTP response. Required if `type` is `fixed-response`.
-* `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups.
-  Specify only if `type` is `forward`.
-  Cannot be specified with `target_group_arn`.
-  Detailed below.
-* `order` - (Optional) Order for the action.
-  The action with the lowest value for order is performed first.
-  Valid values are between `1` and `50000`.
-  Defaults to the position in the list of actions.
-* `redirect` - (Optional) Configuration block for creating a redirect action. Required if `type` is `redirect`. Detailed below.
-* `target_group_arn` - (Optional) ARN of the Target Group to which to route traffic.
-  Specify only if `type` is `forward` and you want to route to a single target group.
-  To route to one or more target groups, use a `forward` block instead.
-  Cannot be specified with `forward`.
+* `forward` - (Optional) Configuration block for creating an action that distributes requests among one or more target groups. Specify only if `type` is `forward`. See below.
+* `order` - (Optional) Order for the action. The action with the lowest value for order is performed first. Valid values are between `1` and `50000`. Defaults to the position in the list of actions.
+* `redirect` - (Optional) Configuration block for creating a redirect action. Required if `type` is `redirect`. See below.
+* `target_group_arn` - (Optional) ARN of the Target Group to which to route traffic. Specify only if `type` is `forward` and you want to route to a single target group. To route to one or more target groups, use a `forward` block instead. Can be specified with `forward` but ARNs must match.
 
 #### authenticate_cognito
 
@@ -302,7 +295,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `authentication_request_extra_params` - (Optional) Query parameters to include in the redirect request to the authorization endpoint. Max: 10. Detailed below.
+* `authentication_request_extra_params` - (Optional) Query parameters to include in the redirect request to the authorization endpoint. Max: 10. See below.
 * `on_unauthenticated_request` - (Optional) Behavior if the user is not authenticated. Valid values are `deny`, `allow` and `authenticate`.
 * `scope` - (Optional) Set of user claims to be requested from the IdP.
 * `session_cookie_name` - (Optional) Name of the cookie used to maintain session information.
@@ -347,11 +340,11 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `target_group` - (Required) Set of 1-5 target group blocks. Detailed below.
+* `target_group` - (Required) Set of 1-5 target group blocks. See below.
 
 The following arguments are optional:
 
-* `stickiness` - (Optional) Configuration block for target group stickiness for the rule. Detailed below.
+* `stickiness` - (Optional) Configuration block for target group stickiness for the rule. See below.
 
 ##### target_group
 
@@ -402,6 +395,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the listener (matches `id`).
 * `id` - ARN of the listener (matches `arn`).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+~> **Note:** When importing a listener with a forward-type default action, you must include both a top-level target group ARN and a `forward` block with a `target_group` and `arn` to avoid import differences.
 
 ## Import
 

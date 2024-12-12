@@ -95,7 +95,7 @@ func (d *dataSourceVoices) Read(ctx context.Context, req datasource.ReadRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	data.ID = types.StringValue(d.Meta().AccountID)
+	data.ID = types.StringValue(d.Meta().AccountID(ctx))
 
 	input := &polly.DescribeVoicesInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, data, input)...)

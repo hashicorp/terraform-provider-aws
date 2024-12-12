@@ -20,6 +20,7 @@ import (
 
 // @SDKDataSource("aws_iam_role", name="Role")
 // @Tags
+// @Testing(tagsIdentifierAttribute="name", tagsResourceType="Role")
 func dataSourceRole() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRoleRead,

@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -74,57 +74,33 @@ func TestAccEC2OutpostsLocalGatewayRoute_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckLocalGatewayRouteExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckLocalGatewayRouteExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Local Gateway Route ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		localGatewayRouteTableID, destination, err := tfec2.DecodeLocalGatewayRouteID(rs.Primary.ID)
+		_, err := tfec2.FindLocalGatewayRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["local_gateway_route_table_id"], rs.Primary.Attributes["destination_cidr_block"])
 
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-
-		route, err := tfec2.GetLocalGatewayRoute(ctx, conn, localGatewayRouteTableID, destination)
-
-		if err != nil {
-			return err
-		}
-
-		if route == nil {
-			return fmt.Errorf("EC2 Local Gateway Route (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccCheckLocalGatewayRouteDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ec2_local_gateway_route" {
 				continue
 			}
 
-			localGatewayRouteTableID, destination, err := tfec2.DecodeLocalGatewayRouteID(rs.Primary.ID)
+			_, err := tfec2.FindLocalGatewayRouteByTwoPartKey(ctx, conn, rs.Primary.Attributes["local_gateway_route_table_id"], rs.Primary.Attributes["destination_cidr_block"])
 
-			if err != nil {
-				return err
-			}
-
-			route, err := tfec2.GetLocalGatewayRoute(ctx, conn, localGatewayRouteTableID, destination)
-
-			if tfawserr.ErrCodeEquals(err, "InvalidRouteTableID.NotFound") {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -132,11 +108,7 @@ func testAccCheckLocalGatewayRouteDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			if route == nil {
-				continue
-			}
-
-			return fmt.Errorf("EC2 Local Gateway Route (%s) still exists", rs.Primary.ID)
+			return fmt.Errorf("EC2 Local Gateway Route still exists: %s", rs.Primary.ID)
 		}
 
 		return nil

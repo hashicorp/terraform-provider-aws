@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/sagemaker"
+	"github.com/aws/aws-sdk-go-v2/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -36,9 +36,9 @@ func TestAccSageMakerHumanTaskUI_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
 					resource.TestCheckResourceAttr(resourceName, "human_task_ui_name", rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("human-task-ui/%s", rName)),
-					resource.TestCheckResourceAttr(resourceName, "ui_template.#", acctest.Ct1),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct0),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "sagemaker", fmt.Sprintf("human-task-ui/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "ui_template.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 				),
 			},
 			{
@@ -67,7 +67,7 @@ func TestAccSageMakerHumanTaskUI_tags(t *testing.T) {
 				Config: testAccHumanTaskUIConfig_tags1(rName, acctest.CtKey1, acctest.CtValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
 				),
 			},
@@ -81,7 +81,7 @@ func TestAccSageMakerHumanTaskUI_tags(t *testing.T) {
 				Config: testAccHumanTaskUIConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
@@ -90,7 +90,7 @@ func TestAccSageMakerHumanTaskUI_tags(t *testing.T) {
 				Config: testAccHumanTaskUIConfig_tags1(rName, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
@@ -124,7 +124,7 @@ func TestAccSageMakerHumanTaskUI_disappears(t *testing.T) {
 
 func testAccCheckHumanTaskUIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_sagemaker_human_task_ui" {
@@ -159,7 +159,7 @@ func testAccCheckHumanTaskUIExists(ctx context.Context, n string, humanTaskUi *s
 			return fmt.Errorf("No SageMaker HumanTaskUi ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerClient(ctx)
 
 		output, err := tfsagemaker.FindHumanTaskUIByName(ctx, conn, rs.Primary.ID)
 

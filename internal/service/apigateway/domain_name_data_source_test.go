@@ -36,6 +36,7 @@ func TestAccAPIGatewayDomainNameDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "cloudfront_domain_name", dataSourceName, "cloudfront_domain_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "cloudfront_zone_id", dataSourceName, "cloudfront_zone_id"),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrDomainName, dataSourceName, names.AttrDomainName),
+					resource.TestCheckResourceAttrPair(resourceName, "domain_name_id", dataSourceName, "domain_name_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "endpoint_configuration.#", dataSourceName, "endpoint_configuration.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "regional_certificate_arn", dataSourceName, "regional_certificate_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "regional_certificate_name", dataSourceName, "regional_certificate_name"),

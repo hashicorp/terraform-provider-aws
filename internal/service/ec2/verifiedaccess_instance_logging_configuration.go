@@ -22,11 +22,11 @@ import (
 )
 
 const (
-	DefaultLogVersionValue = "ocsf-1.0.0-rc.2"
+	defaultVerifiedAccessLogVersion = "ocsf-1.0.0-rc.2"
 )
 
 // @SDKResource("aws_verifiedaccess_instance_logging_configuration", name="Verified Access Instance Logging Configuration")
-func ResourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
+func resourceVerifiedAccessInstanceLoggingConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessInstanceLoggingConfigurationCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessInstanceLoggingConfigurationRead,
@@ -237,7 +237,7 @@ func resourceVerifiedAccessInstanceLoggingConfigurationDelete(ctx context.Contex
 		// reset log_version because ocsf-0.1 is not compatible with enabling include_trust_context
 		// without reset, if practitioners previously applied and destroyed with ocsf-0.1,
 		// ocsf-0.1 will be the new "default" value, leading to errors with include_trust_context
-		LogVersion: aws.String(DefaultLogVersionValue),
+		LogVersion: aws.String(defaultVerifiedAccessLogVersion),
 	}
 
 	uuid, err := uuid.GenerateUUID()

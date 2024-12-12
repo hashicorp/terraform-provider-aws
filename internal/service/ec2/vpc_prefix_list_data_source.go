@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_prefix_list")
-func DataSourcePrefixList() *schema.Resource {
+// @SDKDataSource("aws_prefix_list", name="Prefix List")
+func dataSourcePrefixList() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePrefixListRead,
 
@@ -53,7 +53,7 @@ func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta 
 	input := &ec2.DescribePrefixListsInput{}
 
 	if v, ok := d.GetOk(names.AttrName); ok {
-		input.Filters = append(input.Filters, newAttributeFilterListV2(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"prefix-list-name": v.(string),
 		})...)
 	}
@@ -62,7 +62,7 @@ func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.PrefixListIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 

@@ -5,7 +5,7 @@ package networkmanager
 
 import (
 	"encoding/json"
-	"sort"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
@@ -14,7 +14,7 @@ type coreNetworkPolicyDocument struct {
 	Version                  string                                     `json:"version,omitempty"`
 	CoreNetworkConfiguration *coreNetworkPolicyCoreNetworkConfiguration `json:"core-network-configuration"`
 	Segments                 []*coreNetworkPolicySegment                `json:"segments"`
-	NetworkFunctionGroups    []*coreNetworkPolicyNetworkFunctionGroup   `json:"network-function-groups"`
+	NetworkFunctionGroups    []*coreNetworkPolicyNetworkFunctionGroup   `json:"network-function-groups,omitempty"`
 	SegmentActions           []*coreNetworkPolicySegmentAction          `json:"segment-actions,omitempty"`
 	AttachmentPolicies       []*coreNetworkPolicyAttachmentPolicy       `json:"attachment-policies,omitempty"`
 }
@@ -70,8 +70,8 @@ type coreNetworkPolicySegmentActionVia struct {
 	WithEdgeOverrides     []*coreNetworkPolicySegmentActionViaEdgeOverride `json:"with-edge-overrides,omitempty"`
 }
 type coreNetworkPolicySegmentActionViaEdgeOverride struct {
-	EdgeSets interface{} `json:"edge-sets,omitempty"`
-	UseEdge  string      `json:"use-edge,omitempty"`
+	EdgeSets        [][]string `json:"edge-sets,omitempty"`
+	UseEdgeLocation string     `json:"use-edge-location,omitempty"`
 }
 
 type coreNetworkPolicyAttachmentPolicy struct {
@@ -100,6 +100,7 @@ type coreNetworkPolicyAttachmentPolicyAction struct {
 func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 	type Alias coreNetworkPolicySegmentAction
 	var share interface{}
+	var whenSentTo *coreNetworkPolicySegmentActionWhenSentTo
 
 	if v := c.ShareWith; v != nil {
 		v := v.([]string)
@@ -114,6 +115,17 @@ func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 		}
 	}
 
+	if v := c.WhenSentTo; v != nil {
+		if s := v.Segments; s != nil {
+			s := s.([]string)
+			if s[0] == "*" {
+				whenSentTo = &coreNetworkPolicySegmentActionWhenSentTo{Segments: s[0]}
+			} else {
+				whenSentTo = c.WhenSentTo
+			}
+		}
+	}
+
 	return json.Marshal(&Alias{
 		Action:                c.Action,
 		Mode:                  c.Mode,
@@ -122,13 +134,14 @@ func (c coreNetworkPolicySegmentAction) MarshalJSON() ([]byte, error) {
 		Segment:               c.Segment,
 		ShareWith:             share,
 		Via:                   c.Via,
-		WhenSentTo:            c.WhenSentTo,
+		WhenSentTo:            whenSentTo,
 	})
 }
 
 func coreNetworkPolicyExpandStringList(configured []interface{}) interface{} {
 	vs := flex.ExpandStringValueList(configured)
-	sort.Sort(sort.Reverse(sort.StringSlice(vs)))
+	slices.Sort(vs)
+	slices.Reverse(vs)
 
 	return vs
 }

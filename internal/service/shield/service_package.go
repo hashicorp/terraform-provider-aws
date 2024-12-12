@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -16,22 +17,20 @@ import (
 func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*shield.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws.Config))
 
-	// Force "global" services to correct Regions.
-	if config["partition"].(string) == names.StandardPartitionID {
-		cfg.Region = names.USEast1RegionID
-	}
-
-	return shield.NewFromConfig(cfg, func(o *shield.Options) {
-		if endpoint := config[names.AttrEndpoint].(string); endpoint != "" {
-			tflog.Debug(ctx, "setting endpoint", map[string]any{
-				"tf_aws.endpoint": endpoint,
-			})
-			o.BaseEndpoint = aws.String(endpoint)
-
-			if o.EndpointOptions.UseFIPSEndpoint == aws.FIPSEndpointStateEnabled {
-				tflog.Debug(ctx, "endpoint set, ignoring UseFIPSEndpoint setting")
-				o.EndpointOptions.UseFIPSEndpoint = aws.FIPSEndpointStateDisabled
+	return shield.NewFromConfig(cfg,
+		shield.WithEndpointResolverV2(newEndpointResolverV2()),
+		withBaseEndpoint(config[names.AttrEndpoint].(string)),
+		func(o *shield.Options) {
+			// Force "global" services to correct Regions.
+			if config["partition"].(string) == endpoints.AwsPartitionID {
+				if cfg.Region != endpoints.UsEast1RegionID {
+					tflog.Info(ctx, "overriding region", map[string]any{
+						"original_region": cfg.Region,
+						"override_region": endpoints.UsEast1RegionID,
+					})
+					o.Region = endpoints.UsEast1RegionID
+				}
 			}
-		}
-	}), nil
+		},
+	), nil
 }

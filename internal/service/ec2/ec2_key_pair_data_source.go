@@ -77,7 +77,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 	input := &ec2.DescribeKeyPairsInput{}
 
 	if v, ok := d.GetOk(names.AttrFilter); ok {
-		input.Filters = newCustomFilterListV2(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("key_name"); ok {
@@ -101,10 +101,10 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(aws.ToString(keyPair.KeyPairId))
 	keyName := aws.ToString(keyPair.KeyName)
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "ec2",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		Region:    meta.(*conns.AWSClient).Region(ctx),
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  "key-pair/" + keyName,
 	}.String()
 	d.Set(names.AttrARN, arn)
@@ -116,7 +116,7 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("key_type", keyPair.KeyType)
 	d.Set(names.AttrPublicKey, keyPair.PublicKey)
 
-	setTagsOutV2(ctx, keyPair.Tags)
+	setTagsOut(ctx, keyPair.Tags)
 
 	return diags
 }

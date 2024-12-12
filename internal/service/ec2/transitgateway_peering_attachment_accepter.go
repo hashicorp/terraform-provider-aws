@@ -86,7 +86,7 @@ func resourceTransitGatewayPeeringAttachmentAccepterCreate(ctx context.Context, 
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Peering Attachment (%s) update: %s", d.Id(), err)
 	}
 
-	if err := createTagsV2(ctx, conn, d.Id(), getTagsInV2(ctx)); err != nil {
+	if err := createTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting EC2 Transit Gateway Peering Attachment (%s) tags: %s", d.Id(), err)
 	}
 
@@ -122,7 +122,7 @@ func resourceTransitGatewayPeeringAttachmentAccepterRead(ctx context.Context, d 
 	d.Set(names.AttrTransitGatewayAttachmentID, transitGatewayPeeringAttachment.TransitGatewayAttachmentId)
 	d.Set(names.AttrTransitGatewayID, transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
 
-	setTagsOutV2(ctx, transitGatewayPeeringAttachment.Tags)
+	setTagsOut(ctx, transitGatewayPeeringAttachment.Tags)
 
 	return diags
 }

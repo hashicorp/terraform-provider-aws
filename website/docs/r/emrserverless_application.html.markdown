@@ -68,6 +68,7 @@ The following arguments are required:
 * `auto_stop_configuration` – (Optional) The configuration for an application to automatically stop after a certain amount of time being idle.
 * `image_configuration` – (Optional) The image configuration applied to all worker types.
 * `initial_capacity` – (Optional) The capacity to initialize when the application is created.
+* `interactive_configuration` – (Optional) Enables the interactive use cases to use when running an application.
 * `maximum_capacity` – (Optional) The maximum capacity to allocate when the application is created. This is cumulative across all workers at any given point in time, not just when an application is created. No new resources will be created once any one of the defined limits is hit.
 * `name` – (Required) The name of the application.
 * `network_configuration` – (Optional) The network configuration for customer VPC connectivity.
@@ -108,6 +109,11 @@ The following arguments are required:
 
 * `worker_configuration` - (Optional) The resource configuration of the initial capacity configuration.
 * `worker_count` - (Required) The number of workers in the initial capacity configuration.
+
+### interactive_configuration Arguments
+
+* `livy_endpoint_enabled` - (Optional) Enables an Apache Livy endpoint that you can connect to and run interactive jobs.
+* `studio_enabled` - (Optional) Enables you to connect an application to Amazon EMR Studio to run interactive workloads in a notebook.
 
 ##### worker_configuration Arguments
 

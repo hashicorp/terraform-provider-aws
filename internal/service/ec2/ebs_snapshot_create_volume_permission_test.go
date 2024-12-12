@@ -98,13 +98,7 @@ func testAccCheckSnapshotCreateVolumePermissionDestroy(ctx context.Context) reso
 				continue
 			}
 
-			snapshotID, accountID, err := tfec2.EBSSnapshotCreateVolumePermissionParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfec2.FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
+			_, err := tfec2.FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrSnapshotID], rs.Primary.Attributes[names.AttrAccountID])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -128,19 +122,9 @@ func testAccSnapshotCreateVolumePermissionExists(ctx context.Context, n string) 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EBS Snapshot CreateVolumePermission ID is set")
-		}
-
-		snapshotID, accountID, err := tfec2.EBSSnapshotCreateVolumePermissionParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		_, err = tfec2.FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, snapshotID, accountID)
+		_, err := tfec2.FindCreateSnapshotCreateVolumePermissionByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrSnapshotID], rs.Primary.Attributes[names.AttrAccountID])
 
 		return err
 	}

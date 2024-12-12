@@ -270,7 +270,7 @@ func (r *dataLakeResource) Read(ctx context.Context, request resource.ReadReques
 
 	// Transparent tagging fails with "ResourceNotFoundException: The request failed because the specified resource doesn't exist."
 	// if the data lake's AWS Region isn't the configured one.
-	if region := configuration.Region.ValueString(); region != r.Meta().Region {
+	if region := configuration.Region.ValueString(); region != r.Meta().Region(ctx) {
 		if tags, err := listTags(ctx, conn, data.ID.ValueString(), func(o *securitylake.Options) { o.Region = region }); err == nil {
 			setTagsOut(ctx, Tags(tags))
 		}
@@ -327,12 +327,17 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 	}
 
 	conn := r.Meta().SecurityLakeClient(ctx)
-
-	input := &securitylake.DeleteDataLakeInput{
-		Regions: []string{errs.Must(regionFromARNString(data.ID.ValueString()))},
+	region, err := regionFromARNString(data.ID.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Security Lake Data Lake (%s)", data.ID.ValueString()), err.Error())
+		return
 	}
 
-	_, err := retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteDataLakeOutput, error) {
+	input := &securitylake.DeleteDataLakeInput{
+		Regions: []string{region},
+	}
+
+	_, err = retryDataLakeConflictWithMutex(ctx, func() (*securitylake.DeleteDataLakeOutput, error) {
 		return conn.DeleteDataLake(ctx, input)
 	})
 
@@ -362,8 +367,13 @@ func (r *dataLakeResource) ModifyPlan(ctx context.Context, req resource.ModifyPl
 }
 
 func findDataLakeByARN(ctx context.Context, conn *securitylake.Client, arn string) (*awstypes.DataLakeResource, error) {
+	region, err := regionFromARNString(arn)
+	if err != nil {
+		return nil, err
+	}
+
 	input := &securitylake.ListDataLakesInput{
-		Regions: []string{errs.Must(regionFromARNString(arn))},
+		Regions: []string{region},
 	}
 
 	return findDataLake(ctx, conn, input, func(v *awstypes.DataLakeResource) bool {
@@ -378,11 +388,11 @@ func findDataLake(ctx context.Context, conn *securitylake.Client, input *securit
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securitylake.ListDataLakesInput, filter tfslices.Predicate[*awstypes.DataLakeResource]) ([]*awstypes.DataLakeResource, error) {
-	var dataLakes []*awstypes.DataLakeResource
+func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securitylake.ListDataLakesInput, filter tfslices.Predicate[*awstypes.DataLakeResource]) ([]awstypes.DataLakeResource, error) {
+	var dataLakes []awstypes.DataLakeResource
 
 	output, err := conn.ListDataLakes(ctx, input)
 
@@ -395,8 +405,7 @@ func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securi
 	}
 
 	for _, v := range output.DataLakes {
-		v := v
-		if v := &v; filter(v) {
+		if filter(&v) {
 			dataLakes = append(dataLakes, v)
 		}
 	}
@@ -526,8 +535,8 @@ type dataLakeResourceModel struct {
 	ID                      types.String                                                `tfsdk:"id"`
 	MetaStoreManagerRoleARN fwtypes.ARN                                                 `tfsdk:"meta_store_manager_role_arn"`
 	S3BucketARN             types.String                                                `tfsdk:"s3_bucket_arn"`
-	Tags                    types.Map                                                   `tfsdk:"tags"`
-	TagsAll                 types.Map                                                   `tfsdk:"tags_all"`
+	Tags                    tftags.Map                                                  `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                  `tfsdk:"tags_all"`
 	Timeouts                timeouts.Value                                              `tfsdk:"timeouts"`
 }
 

@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"reflect"
 	"strings"
 	"time"
 
@@ -28,13 +27,14 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_docdb_cluster", name="Cluster")
 // @Tags(identifierAttribute="arn")
-func ResourceCluster() *schema.Resource {
+func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
@@ -243,7 +243,7 @@ func ResourceCluster() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(RestoreType_Values(), false),
+							ValidateFunc: validation.StringInSlice(restoreType_Values(), false),
 						},
 						"source_cluster_identifier": {
 							Type:     schema.TypeString,
@@ -369,6 +369,11 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
 			input.KmsKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("master_password"); ok {
+			inputM.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbCluster = true
 		}
 
 		if v, ok := d.GetOk(names.AttrPort); ok {
@@ -859,7 +864,7 @@ func findDBClusterByID(ctx context.Context, conn *docdb.Client, id string) (*aws
 	input := &docdb.DescribeDBClustersInput{
 		DBClusterIdentifier: aws.String(id),
 	}
-	output, err := findDBCluster(ctx, conn, input, tfslices.PredicateTrue[awstypes.DBCluster]())
+	output, err := findDBCluster(ctx, conn, input, tfslices.PredicateTrue[*awstypes.DBCluster]())
 
 	if err != nil {
 		return nil, err
@@ -878,12 +883,12 @@ func findDBClusterByID(ctx context.Context, conn *docdb.Client, id string) (*aws
 func findClusterByARN(ctx context.Context, conn *docdb.Client, arn string) (*awstypes.DBCluster, error) {
 	input := &docdb.DescribeDBClustersInput{}
 
-	return findDBCluster(ctx, conn, input, func(v awstypes.DBCluster) bool {
+	return findDBCluster(ctx, conn, input, func(v *awstypes.DBCluster) bool {
 		return aws.ToString(v.DBClusterArn) == arn
 	})
 }
 
-func findDBCluster(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClustersInput, filter tfslices.Predicate[awstypes.DBCluster]) (*awstypes.DBCluster, error) {
+func findDBCluster(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClustersInput, filter tfslices.Predicate[*awstypes.DBCluster]) (*awstypes.DBCluster, error) {
 	output, err := findDBClusters(ctx, conn, input, filter)
 
 	if err != nil {
@@ -893,7 +898,7 @@ func findDBCluster(ctx context.Context, conn *docdb.Client, input *docdb.Describ
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClustersInput, filter tfslices.Predicate[awstypes.DBCluster]) ([]awstypes.DBCluster, error) {
+func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.DescribeDBClustersInput, filter tfslices.Predicate[*awstypes.DBCluster]) ([]awstypes.DBCluster, error) {
 	var output []awstypes.DBCluster
 
 	pages := docdb.NewDescribeDBClustersPaginator(conn, input)
@@ -912,7 +917,7 @@ func findDBClusters(ctx context.Context, conn *docdb.Client, input *docdb.Descri
 		}
 
 		for _, v := range page.DBClusters {
-			if !reflect.ValueOf(v).IsZero() && filter(v) {
+			if !itypes.IsZero(&v) && filter(&v) {
 				output = append(output, v)
 			}
 		}

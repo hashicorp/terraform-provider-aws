@@ -44,11 +44,11 @@ func dataSourceEBSVolumesRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	input := &ec2.DescribeVolumesInput{}
 
-	input.Filters = append(input.Filters, newTagFilterListV2(
-		TagsV2(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 
@@ -68,7 +68,7 @@ func dataSourceEBSVolumesRead(ctx context.Context, d *schema.ResourceData, meta 
 		volumeIDs = append(volumeIDs, aws.ToString(v.VolumeId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, volumeIDs)
 
 	return diags

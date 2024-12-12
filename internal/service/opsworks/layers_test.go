@@ -7,7 +7,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/service/opsworks"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opsworks/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccCheckLayerExists(ctx context.Context, n string, v *opsworks.Layer) resource.TestCheckFunc {
+func testAccCheckLayerExists(ctx context.Context, n string, v *awstypes.Layer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -27,7 +27,7 @@ func testAccCheckLayerExists(ctx context.Context, n string, v *opsworks.Layer) r
 			return fmt.Errorf("No OpsWorks Layer ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
 		output, err := tfopsworks.FindLayerByID(ctx, conn, rs.Primary.ID)
 
@@ -42,7 +42,7 @@ func testAccCheckLayerExists(ctx context.Context, n string, v *opsworks.Layer) r
 }
 
 func testAccCheckLayerDestroy(ctx context.Context, resourceType string, s *terraform.State) error { // nosemgrep:ci.semgrep.acctest.naming.destroy-check-signature
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksClient(ctx)
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != resourceType {

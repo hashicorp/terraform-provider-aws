@@ -28,7 +28,7 @@ import (
 // @SDKResource("aws_verifiedaccess_trust_provider", name="Verified Access Trust Provider")
 // @Tags(identifierAttribute="id")
 // @Testing(tagsTest=false)
-func ResourceVerifiedAccessTrustProvider() *schema.Resource {
+func resourceVerifiedAccessTrustProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVerifiedAccessTrustProviderCreate,
 		ReadWithoutTimeout:   resourceVerifiedAccessTrustProviderRead,
@@ -149,7 +149,7 @@ func resourceVerifiedAccessTrustProviderCreate(ctx context.Context, d *schema.Re
 	input := &ec2.CreateVerifiedAccessTrustProviderInput{
 		ClientToken:         aws.String(id.UniqueId()),
 		PolicyReferenceName: aws.String(d.Get("policy_reference_name").(string)),
-		TagSpecifications:   getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessTrustProvider),
+		TagSpecifications:   getTagSpecificationsIn(ctx, types.ResourceTypeVerifiedAccessTrustProvider),
 		TrustProviderType:   types.TrustProviderType(d.Get("trust_provider_type").(string)),
 	}
 
@@ -220,7 +220,7 @@ func resourceVerifiedAccessTrustProviderRead(ctx context.Context, d *schema.Reso
 	d.Set("trust_provider_type", output.TrustProviderType)
 	d.Set("user_trust_provider_type", output.UserTrustProviderType)
 
-	setTagsOutV2(ctx, output.Tags)
+	setTagsOut(ctx, output.Tags)
 
 	return diags
 }

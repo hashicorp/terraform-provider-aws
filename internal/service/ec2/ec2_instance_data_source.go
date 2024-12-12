@@ -27,6 +27,8 @@ import (
 
 // @SDKDataSource("aws_instance", name="Instance")
 // @Tags
+// @Testing(generator=false)
+// @Testing(tagsIdentifierAttribute="id")
 func dataSourceInstance() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceRead,
@@ -412,12 +414,12 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	input := &ec2.DescribeInstancesInput{}
 
 	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
-		input.Filters = append(input.Filters, newTagFilterListV2(
-			TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
+		input.Filters = append(input.Filters, newTagFilterList(
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	input.Filters = append(input.Filters, newCustomFilterListV2(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get(names.AttrFilter).(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
@@ -450,10 +452,10 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	// ARN
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
+		Region:    meta.(*conns.AWSClient).Region(ctx),
 		Service:   names.EC2,
-		AccountID: meta.(*conns.AWSClient).AccountID,
+		AccountID: meta.(*conns.AWSClient).AccountID(ctx),
 		Resource:  fmt.Sprintf("instance/%s", d.Id()),
 	}
 	d.Set(names.AttrARN, arn.String())
@@ -546,7 +548,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		d.Set("monitoring", monitoringState == names.AttrEnabled || monitoringState == "pending")
 	}
 
-	setTagsOutV2(ctx, instance.Tags)
+	setTagsOut(ctx, instance.Tags)
 
 	// Security Groups
 	if err := readSecurityGroups(ctx, d, instance, conn); err != nil {

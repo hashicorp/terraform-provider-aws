@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"log"
 	"slices"
-	"sort"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -140,7 +139,7 @@ func resourceZoneCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	// Private Route53 Hosted Zones can only be created with their first VPC association,
 	// however we need to associate the remaining after creation.
-	vpcs := expandVPCs(d.Get("vpc").(*schema.Set).List(), meta.(*conns.AWSClient).Region)
+	vpcs := expandVPCs(d.Get("vpc").(*schema.Set).List(), meta.(*conns.AWSClient).Region(ctx))
 	if len(vpcs) > 0 {
 		input.VPC = vpcs[0]
 	}
@@ -193,7 +192,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	zoneID := cleanZoneID(aws.ToString(output.HostedZone.Id))
 	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
+		Partition: meta.(*conns.AWSClient).Partition(ctx),
 		Service:   "route53",
 		Resource:  "hostedzone/" + zoneID,
 	}.String()
@@ -226,7 +225,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	d.Set("primary_name_server", nameServers[0])
-	sort.Strings(nameServers)
+	slices.Sort(nameServers)
 	d.Set("name_servers", nameServers)
 	if err := d.Set("vpc", flattenVPCs(output.VPCs)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc: %s", err)
@@ -253,7 +252,7 @@ func resourceZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChange("vpc") {
-		region := meta.(*conns.AWSClient).Region
+		region := meta.(*conns.AWSClient).Region(ctx)
 		o, n := d.GetChange("vpc")
 		os, ns := o.(*schema.Set), n.(*schema.Set)
 
@@ -383,8 +382,7 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.C
 	const (
 		chunkSize = 100
 	)
-	chunks := tfslices.Chunks(resourceRecordSets, chunkSize)
-	for _, chunk := range chunks {
+	for chunk := range slices.Chunk(resourceRecordSets, chunkSize) {
 		changes := tfslices.ApplyToAll(chunk, func(v awstypes.ResourceRecordSet) awstypes.Change {
 			return awstypes.Change{
 				Action:            awstypes.ChangeActionDelete,

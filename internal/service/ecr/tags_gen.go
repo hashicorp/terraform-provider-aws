@@ -98,12 +98,12 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 }
 
 // createTags creates ecr service tags for new resources.
-func createTags(ctx context.Context, conn *ecr.Client, identifier string, tags []awstypes.Tag) error {
+func createTags(ctx context.Context, conn *ecr.Client, identifier string, tags []awstypes.Tag, optFns ...func(*ecr.Options)) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+	return updateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags), optFns...)
 }
 
 // updateTags updates ecr service tags.

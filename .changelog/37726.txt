@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_endpoint_configuration: Add support for `InputAndOutput` in `capture_mode`
+```
