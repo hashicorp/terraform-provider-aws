@@ -44,6 +44,10 @@ func testAccDomainAssociation_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(`apps/.+/domains/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_settings.0.certificate_verification_dns_record"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.custom_certificate_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.type", "AMPLIFY_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_sub_domain", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "sub_domain.#", "1"),
