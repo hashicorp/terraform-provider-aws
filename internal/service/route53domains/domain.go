@@ -5,14 +5,19 @@ package route53domains
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53domains/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -22,10 +27,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -181,6 +189,11 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 			"billing_contact":    contactDetailBlock(ctx, false),
 			"registrant_contact": contactDetailBlock(ctx, true),
 			"tech_contact":       contactDetailBlock(ctx, true),
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -289,10 +302,37 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
+	conn := r.Meta().Route53DomainsClient(ctx)
+
 	domainName := fwflex.StringValueFromFramework(ctx, data.DomainName)
+	input := &route53domains.RegisterDomainInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	input.PrivacyProtectAdminContact = fwflex.BoolFromFramework(ctx, data.AdminPrivacy)
+	input.PrivacyProtectBillingContact = fwflex.BoolFromFramework(ctx, data.BillingPrivacy)
+	input.PrivacyProtectRegistrantContact = fwflex.BoolFromFramework(ctx, data.RegistrantPrivacy)
+	input.PrivacyProtectTechContact = fwflex.BoolFromFramework(ctx, data.TechPrivacy)
+
+	output, err := conn.RegisterDomain(ctx, input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating Route 53 Domains Domain (%s)", domainName), err.Error())
+
+		return
+	}
 
 	// Set values for unknowns.
 	data.ID = fwflex.StringValueToFramework(ctx, strings.ToLower(domainName))
+
+	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Route 53 Domains Domain (%s) create", domainName), err.Error())
+
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -312,7 +352,27 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 
 	conn := r.Meta().Route53DomainsClient(ctx)
 
+	domainName := fwflex.StringValueFromFramework(ctx, data.DomainName)
+	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s)", domainName), err.Error())
+
+		return
+	}
+
 	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -335,6 +395,31 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 	var data domainResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().Route53DomainsClient(ctx)
+
+	domainName := fwflex.StringValueFromFramework(ctx, data.DomainName)
+	input := &route53domains.DeleteDomainInput{
+		DomainName: aws.String(domainName),
+	}
+
+	output, err := conn.DeleteDomain(ctx, input)
+
+	if errs.IsAErrorMessageContains[*awstypes.InvalidInput](err, "not found") {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 Domains Domain (%s)", domainName), err.Error())
+
+		return
+	}
+
+	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Route 53 Domains Domain (%s) delete", domainName), err.Error())
+
 		return
 	}
 }
@@ -365,6 +450,7 @@ type domainResourceModel struct {
 	StatusList        fwtypes.ListOfString                                `tfsdk:"status_list"`
 	TechContact       fwtypes.ListNestedObjectValueOf[contactDetailModel] `tfsdk:"tech_contact"`
 	TechPrivacy       types.Bool                                          `tfsdk:"tech_privacy"`
+	Timeouts          timeouts.Value                                      `tfsdk:"timeouts"`
 	TransferLock      types.Bool                                          `tfsdk:"transfer_lock"`
 	UpdatedDate       timetypes.RFC3339                                   `tfsdk:"updated_date"`
 	WhoIsServer       types.String                                        `tfsdk:"whois_server"`
