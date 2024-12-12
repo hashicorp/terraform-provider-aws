@@ -180,19 +180,17 @@ func DataSourcePermissions() *schema.Resource {
 				},
 			},
 			names.AttrPermissions: {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Permission](),
+					Type: schema.TypeString,
 				},
 			},
 			"permissions_with_grant_option": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.Permission](),
+					Type: schema.TypeString,
 				},
 			},
 			names.AttrPrincipal: {
