@@ -41,7 +41,7 @@ func testAccDomainAssociation_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
 					resource.TestCheckResourceAttr(resourceName, "certificate_settings.#", "1"),
@@ -88,7 +88,7 @@ func testAccDomainAssociation_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfamplify.ResourceDomainAssociation(), resourceName),
 				),
@@ -118,7 +118,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
@@ -139,7 +139,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 			},
 			{
 				Config: testAccDomainAssociationConfig_updated(rName, domainName, true, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
@@ -180,7 +180,7 @@ func testAccDomainAssociation_certificateSettings(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainAssociationConfig_certificateSettings(rName, domainName, false, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
