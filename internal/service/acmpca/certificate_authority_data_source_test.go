@@ -91,6 +91,7 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 
 func TestAccACMPCACertificateAuthorityDataSource_ramShared(t *testing.T) {
 	ctx := acctest.Context(t)
+	datasourceName := "data.aws_acmpca_certificate_authority.test"
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -99,8 +100,10 @@ func TestAccACMPCACertificateAuthorityDataSource_ramShared(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCertificateAuthorityDataSourceConfig_ramShared(commonName),
-				ExpectError: regexache.MustCompile(`AccessDeniedException`),
+				Config: testAccCertificateAuthorityDataSourceConfig_ramShared(commonName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "certificate_signing_request", ""),
+				),
 			},
 		},
 	})
