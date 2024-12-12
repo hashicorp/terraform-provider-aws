@@ -15,9 +15,9 @@ Terraform resource for managing an AWS Network Manager Direct Connect (DX) Gatew
 
 ```terraform
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
-  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
-  edge_locations = [data.aws_region.current.name]
+  edge_locations             = [data.aws_region.current.name]
 }
 ```
 
@@ -49,9 +49,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -60,12 +60,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_networkmanager_dx_gateway_attachment.example
-  id = "dx_gateway_attachment-id-12345678"
+  id = "attachment-1a2b3c4d5e6f7g"
 }
 ```
 
 Using `terraform import`, import Network Manager DX Gateway Attachment using the `example_id_arg`. For example:
 
 ```console
-% terraform import aws_networkmanager_dx_gateway_attachment.example dx_gateway_attachment-id-12345678
+% terraform import aws_networkmanager_dx_gateway_attachment.example attachment-1a2b3c4d5e6f7g
 ```
