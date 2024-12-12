@@ -3,36 +3,7 @@
 
 package networkmanager
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/networkmanager/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"regexp"
@@ -42,13 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	// "google.golang.org/grpc/balancer/grpclb/state"
-
-	// "github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 
-	// "github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -70,7 +37,7 @@ import (
 // @FrameworkResource(name="DX Gateway Attachment")
 func newResourceDXGatewayAttachment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDXGatewayAttachment{}
-	
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -266,6 +233,7 @@ func (r *resourceDXGatewayAttachment) Update(ctx context.Context, req resource.U
 		return
 	}
 
+	// Attachment must be in an Available state to be modified
 	// Only edge locations can be modified
 	if !plan.EdgeLocations.Equal(state.EdgeLocations) {
 
@@ -292,10 +260,15 @@ func (r *resourceDXGatewayAttachment) Update(ctx context.Context, req resource.U
 
 		plan.ARN = flex.StringToFramework(ctx, out.DirectConnectGatewayAttachment.Attachment.ResourceArn)
 		plan.ID = flex.StringToFramework(ctx, out.DirectConnectGatewayAttachment.Attachment.AttachmentId)
+
+		resp.Diagnostics.Append(flex.Flatten(ctx, out.DirectConnectGatewayAttachment.Attachment, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	_, err := waitDXGatewayAttachmentUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	status, err := waitDXGatewayAttachmentUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionWaitingForUpdate, ResNameDXGatewayAttachment, plan.ID.String(), err),
@@ -303,6 +276,9 @@ func (r *resourceDXGatewayAttachment) Update(ctx context.Context, req resource.U
 		)
 		return
 	}
+
+	// Set state attribute once resource update has completed
+	plan.State = flex.StringToFramework(ctx, (*string)(&status.Attachment.State))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -316,7 +292,12 @@ func (r *resourceDXGatewayAttachment) Delete(ctx context.Context, req resource.D
 		return
 	}
 
+	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+
 	output, stateErr := findDXGatewayAttachmentByID(ctx, conn, state.ID.ValueString())
+	if errs.IsA[*awstypes.ResourceNotFoundException](stateErr) {
+		return
+	}
 	if stateErr != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionReading, ResNameDXGatewayAttachment, state.ID.String(), stateErr),
@@ -325,9 +306,8 @@ func (r *resourceDXGatewayAttachment) Delete(ctx context.Context, req resource.D
 		return
 	}
 
+	// Get current attachment state attribute
 	state.State = flex.StringToFramework(ctx, (*string)(&output.Attachment.State))
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 
 	// If attachment state is pending acceptance, reject the attachment before deleting
 	if attachmentState := awstypes.AttachmentState(state.State.ValueString()); attachmentState == awstypes.AttachmentStatePendingAttachmentAcceptance || attachmentState == awstypes.AttachmentStatePendingTagAcceptance {
@@ -404,7 +384,7 @@ func waitDXGatewayAttachmentCreated(ctx context.Context, conn *networkmanager.Cl
 
 func waitDXGatewayAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.AttachmentStateUpdating),
+		Pending:                   enum.Slice(awstypes.AttachmentStateUpdating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingTagAcceptance),
 		Refresh:                   statusDXGatewayAttachment(ctx, conn, id),
 		Timeout:                   timeout,
@@ -438,7 +418,7 @@ func waitDXGatewayAttachmentDeleted(ctx context.Context, conn *networkmanager.Cl
 
 func waitDXGatewayAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStatePendingAttachmentAcceptance),
+		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStateUpdating),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
 		Refresh: statusDXGatewayAttachment(ctx, conn, id),
 		Timeout: timeout,

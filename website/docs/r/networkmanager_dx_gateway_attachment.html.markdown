@@ -3,26 +3,21 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_dx_gateway_attachment"
 description: |-
-  Terraform resource for managing an AWS Network Manager DX Gateway Attachment.
+  Terraform resource for managing an AWS Network Manager Direct Connect Gateway Attachment.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
 # Resource: aws_networkmanager_dx_gateway_attachment
 
-Terraform resource for managing an AWS Network Manager DX Gateway Attachment.
+Terraform resource for managing an AWS Network Manager Direct Connect (DX) Gateway Attachment.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_networkmanager_dx_gateway_attachment" "example" {
+resource "aws_networkmanager_dx_gateway_attachment" "test" {
+  core_network_id = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
+  edge_locations = [data.aws_region.current.name]
 }
 ```
 
@@ -30,18 +25,25 @@ resource "aws_networkmanager_dx_gateway_attachment" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `core_network_id` - (Required) ID of the Cloud WAN core network to which the Direct Connect gateway attachment should be attached.
+* `direct_connect_gateway_arn` - (Required) ARN of the Direct Connect gateway attachment.
+* `edge_locations` - (Required) One or more core network edge locations to associate with the Direct Connect gateway attachment.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `tags` - (Optional) Key-value tags for the attachment. If configured with a provider `default_tags` configuration block present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the DX Gateway Attachment. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `attachment_policy_rule_number` - Policy rule number associated with the attachment.
+* `attachment_type` - Type of attachment.
+* `core_network_arn` - ARN of the core network for the attachment.
+* `network_function_group_name` - Name of the network function group with which the attachment is associated
+* `owner_account_id` - ID of the attachment account owner.
+* `segment_name` - Name of the segment attachment.
+* `state` - State of the attachment.
 
 ## Timeouts
 
