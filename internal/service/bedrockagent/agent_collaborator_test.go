@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,7 +28,7 @@ func TestAccBedrockAgentAgentCollaborator_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var agentcollaborator bedrockagent.GetAgentCollaboratorOutput
+	var agentcollaborator types.AgentCollaborator
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_collaborator.test"
 	model := "anthropic.claude-3-5-sonnet-20241022-v2:0"
@@ -65,7 +65,7 @@ func TestAccBedrockAgentAgentCollaborator_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var agentcollaborator bedrockagent.GetAgentCollaboratorOutput
+	var agentcollaborator types.AgentCollaborator
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_collaborator.test"
 	model := "anthropic.claude-3-5-sonnet-20241022-v2:0"
@@ -116,7 +116,7 @@ func testAccCheckAgentCollaboratorDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-func testAccCheckAgentCollaboratorExists(ctx context.Context, name string, agentcollaborator *bedrockagent.GetAgentCollaboratorOutput) resource.TestCheckFunc {
+func testAccCheckAgentCollaboratorExists(ctx context.Context, name string, agentcollaborator *types.AgentCollaborator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -140,9 +140,9 @@ func testAccCheckAgentCollaboratorExists(ctx context.Context, name string, agent
 	}
 }
 
-func testAccCheckAgentCollaboratorNotRecreated(before, after *bedrockagent.GetAgentCollaboratorOutput) resource.TestCheckFunc {
+func testAccCheckAgentCollaboratorNotRecreated(before, after *types.AgentCollaborator) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.AgentCollaborator.CollaboratorId), aws.ToString(after.AgentCollaborator.AgentId); before != after {
+		if before, after := aws.ToString(before.CollaboratorId), aws.ToString(after.AgentId); before != after {
 			return create.Error(names.BedrockAgent, create.ErrActionCheckingNotRecreated, tfbedrockagent.ResNameAgentCollaborator, before, errors.New("recreated"))
 		}
 
@@ -163,6 +163,10 @@ resource "aws_bedrockagent_agent" "test2" {
   instruction                 = file("${path.module}/test-fixtures/instruction.txt")
   foundation_model            = %[2]q
   prepare_agent               = false
+
+  depends_on = [
+    aws_bedrockagent_agent_alias.test
+  ]
 }
 
 resource "aws_bedrockagent_agent_collaborator" "test" {
@@ -174,6 +178,10 @@ resource "aws_bedrockagent_agent_collaborator" "test" {
   agent_descriptor {
     alias_arn = aws_bedrockagent_agent_alias.test.agent_alias_arn
   }
+
+  depends_on = [
+    aws_bedrockagent_agent.test2
+  ]
 }
 `, rName, model, description))
 }

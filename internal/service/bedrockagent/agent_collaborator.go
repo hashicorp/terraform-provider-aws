@@ -309,7 +309,7 @@ func (r *resourceAgentCollaborator) ImportState(ctx context.Context, request res
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("prepare_agent"), true)...)
 }
 
-func findAgentCollaboratorByThreePartKey(ctx context.Context, conn *bedrockagent.Client, agentId string, agentVersion string, collaboratorId string) (*bedrockagent.GetAgentCollaboratorOutput, error) {
+func findAgentCollaboratorByThreePartKey(ctx context.Context, conn *bedrockagent.Client, agentId string, agentVersion string, collaboratorId string) (*awstypes.AgentCollaborator, error) {
 	in := &bedrockagent.GetAgentCollaboratorInput{
 		AgentId:        aws.String(agentId),
 		AgentVersion:   aws.String(agentVersion),
@@ -332,7 +332,7 @@ func findAgentCollaboratorByThreePartKey(ctx context.Context, conn *bedrockagent
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out, nil
+	return out.AgentCollaborator, nil
 }
 
 type agentCollaboratorResourceModel struct {
