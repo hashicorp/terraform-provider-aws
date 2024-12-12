@@ -214,24 +214,13 @@ func testAccCheckDXGatewayAttachmentDestroy(ctx context.Context) resource.TestCh
 
 			_, err := tfnetworkmanager.FindDXGatewayAttachmentByID(ctx, conn, rs.Primary.ID)
 
-			// input := &networkmanager.GetDirectConnectGatewayAttachmentInput{
-			// 	AttachmentId: aws.String(rs.Primary.ID),
-			// }
-			// _, err := conn.GetDirectConnectGatewayAttachment(ctx, input)
-
 			if tfresource.NotFound(err) {
 				continue
 			}
 
-			// if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			// 	return nil
-			// }
-
 			if err != nil {
 				return create.Error(names.NetworkManager, create.ErrActionCheckingDestroyed, tfnetworkmanager.ResNameDXGatewayAttachment, rs.Primary.ID, err)
 			}
-
-			// return create.Error(names.NetworkManager, create.ErrActionCheckingDestroyed, tfnetworkmanager.ResNameDXGatewayAttachment, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
