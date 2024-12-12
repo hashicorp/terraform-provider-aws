@@ -5,280 +5,415 @@ package rds
 
 import (
 	"context"
-	"log"
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rds"
-	"github.com/aws/aws-sdk-go-v2/service/rds/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/rds/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_db_cluster_snapshot_copy", name="DB Cluster Snapshot Copy")
+// @FrameworkResource("aws_rds_cluster_snapshot_copy", name="Cluster Snapshot Copy")
 // @Tags(identifierAttribute="db_cluster_snapshot_arn")
 // @Testing(tagsTest=false)
-func resourceClusterSnapshotCopy() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceClusterSnapshotCopyCreate,
-		ReadWithoutTimeout:   resourceClusterSnapshotCopyRead,
-		UpdateWithoutTimeout: resourceClusterSnapshotCopyUpdate,
-		DeleteWithoutTimeout: resourceClusterSnapshotCopyDelete,
+func newResourceClusterSnapshotCopy(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceClusterSnapshotCopy{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	r.SetDefaultCreateTimeout(20 * time.Minute)
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(20 * time.Minute),
-		},
+	return r, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrAllocatedStorage: {
-				Type:     schema.TypeInt,
+const (
+	ResNameClusterSnapshotCopy = "Cluster Snapshot Copy"
+)
+
+type resourceClusterSnapshotCopy struct {
+	framework.ResourceWithConfigure
+	framework.WithTimeouts
+}
+
+func (r *resourceClusterSnapshotCopy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_rds_cluster_snapshot_copy"
+}
+
+func (r *resourceClusterSnapshotCopy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			names.AttrAllocatedStorage: schema.Int64Attribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
-			"copy_tags": {
-				Type:     schema.TypeBool,
+			"copy_tags": schema.BoolAttribute{
 				Optional: true,
-				ForceNew: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
+				},
 			},
-			"db_cluster_snapshot_arn": {
-				Type:     schema.TypeString,
+			"db_cluster_snapshot_arn": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"destination_region": {
-				Type:     schema.TypeString,
+			"destination_region": schema.StringAttribute{
 				Optional: true,
-				ForceNew: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			names.AttrStorageEncrypted: {
-				Type:     schema.TypeBool,
+			names.AttrEngine: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			names.AttrEngine: {
-				Type:     schema.TypeString,
+			names.AttrEngineVersion: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			names.AttrEngineVersion: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrKMSKeyID: {
-				Type:     schema.TypeString,
+			names.AttrID: framework.IDAttribute(),
+			names.AttrKMSKeyID: schema.StringAttribute{
 				Optional: true,
-				ForceNew: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			"license_model": {
-				Type:     schema.TypeString,
+			"license_model": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"presigned_url": {
-				Type:     schema.TypeString,
+			"presigned_url": schema.StringAttribute{
 				Optional: true,
-				ForceNew: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			"shared_accounts": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+			"shared_accounts": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
 			},
-			"source_db_cluster_snapshot_identifier": {
-				Type:     schema.TypeString,
+			"snapshot_type": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"source_db_cluster_snapshot_identifier": schema.StringAttribute{
 				Required: true,
-				ForceNew: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			"source_region": {
-				Type:     schema.TypeString,
+			names.AttrStorageEncrypted: schema.BoolAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"snapshot_type": {
-				Type:     schema.TypeString,
+			names.AttrStorageType: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			names.AttrStorageType: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"target_db_cluster_snapshot_identifier": {
-				Type:     schema.TypeString,
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"target_db_cluster_snapshot_identifier": schema.StringAttribute{
 				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z][\w-]+`), "must contain only alphanumeric, and hyphen (-) characters"),
-				),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 255),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z][\w-]+`), "must contain only alphanumeric, and hyphen (-) characters"),
+				},
 			},
-			names.AttrVPCID: {
-				Type:     schema.TypeString,
+			names.AttrVPCID: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+			}),
+		},
 	}
 }
 
-func resourceClusterSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+func (r *resourceClusterSnapshotCopy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data resourceClusterSnapshotCopyData
+	conn := r.Meta().RDSClient(ctx)
 
-	targetDBClusterSnapshotID := d.Get("target_db_cluster_snapshot_identifier").(string)
-	input := &rds.CopyDBClusterSnapshotInput{
-		SourceDBClusterSnapshotIdentifier: aws.String(d.Get("source_db_cluster_snapshot_identifier").(string)),
-		Tags:                              getTagsIn(ctx),
-		TargetDBClusterSnapshotIdentifier: aws.String(targetDBClusterSnapshotID),
-		CopyTags:                          aws.Bool(d.Get("copy_tags").(bool)),
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("copy_tags"); ok {
-		input.CopyTags = aws.Bool(v.(bool))
+	in := &rds.CopyDBClusterSnapshotInput{}
+	resp.Diagnostics.Append(flex.Expand(ctx, data, in)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
+	in.Tags = getTagsIn(ctx)
 
-	if v, ok := d.GetOk(names.AttrKMSKeyID); ok {
-		input.KmsKeyId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("presigned_url"); ok {
-		input.PreSignedUrl = aws.String(v.(string))
-	} else if v, ok := d.GetOk("destination_region"); ok {
+	if !data.DestinationRegion.IsNull() && data.PresignedURL.IsNull() {
 		output, err := rds.NewPresignClient(conn, func(o *rds.PresignOptions) {
 			o.ClientOptions = append(o.ClientOptions, func(o *rds.Options) {
-				o.Region = v.(string)
+				o.Region = data.DestinationRegion.ValueString()
 			})
-		}).PresignCopyDBClusterSnapshot(ctx, input)
+		}).PresignCopyDBClusterSnapshot(ctx, in)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "presigning RDS DB Cluster Snapshot Copy (%s) request: %s", targetDBClusterSnapshotID, err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionCreating, ResNameClusterSnapshotCopy, data.TargetDBClusterSnapshotIdentifier.String(), err),
+				err.Error(),
+			)
+			return
 		}
 
-		input.PreSignedUrl = aws.String(output.URL)
+		in.PreSignedUrl = aws.String(output.URL)
 	}
 
-	output, err := conn.CopyDBClusterSnapshot(ctx, input)
-
+	out, err := conn.CopyDBClusterSnapshot(ctx, in)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating RDS DB Cluster Snapshot Copy (%s): %s", targetDBClusterSnapshotID, err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionCreating, ResNameClusterSnapshotCopy, data.TargetDBClusterSnapshotIdentifier.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil || out.DBClusterSnapshot == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionCreating, ResNameClusterSnapshotCopy, data.TargetDBClusterSnapshotIdentifier.String(), err),
+			errors.New("empty output").Error(),
+		)
+		return
 	}
 
-	d.SetId(aws.ToString(output.DBClusterSnapshot.DBClusterSnapshotIdentifier))
+	resp.Diagnostics.Append(flex.Flatten(ctx, out.DBClusterSnapshot, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	data.ID = types.StringValue(aws.ToString(out.DBClusterSnapshot.DBClusterSnapshotIdentifier))
 
-	if _, err := waitDBClusterSnapshotCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Snapshot Copy (%s) create: %s", d.Id(), err)
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+	if _, err := waitDBClusterSnapshotCreated(ctx, conn, data.ID.ValueString(), createTimeout); err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionWaitingForCreation, ResNameClusterSnapshotCopy, data.TargetDBClusterSnapshotIdentifier.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	if v, ok := d.GetOk("shared_accounts"); ok && v.(*schema.Set).Len() > 0 {
+	if !data.SharedAccounts.IsNull() {
+		toAdd := []string{}
+		resp.Diagnostics.Append(data.SharedAccounts.ElementsAs(ctx, &toAdd, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		input := &rds.ModifyDBClusterSnapshotAttributeInput{
-			AttributeName:               aws.String("restore"),
-			DBClusterSnapshotIdentifier: aws.String(d.Id()),
-			ValuesToAdd:                 flex.ExpandStringValueSet(v.(*schema.Set)),
+			AttributeName:               aws.String(dbSnapshotAttributeNameRestore),
+			DBClusterSnapshotIdentifier: data.TargetDBClusterSnapshotIdentifier.ValueStringPointer(),
+			ValuesToAdd:                 toAdd,
 		}
 
-		_, err := conn.ModifyDBClusterSnapshotAttribute(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
+		if _, err := conn.ModifyDBClusterSnapshotAttribute(ctx, input); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionCreating, ResNameClusterSnapshotCopy, data.TargetDBClusterSnapshotIdentifier.String(), err),
+				err.Error(),
+			)
+			return
 		}
 	}
 
-	return append(diags, resourceClusterSnapshotCopyRead(ctx, d, meta)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func resourceClusterSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+func (r *resourceClusterSnapshotCopy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data resourceClusterSnapshotCopyData
+	conn := r.Meta().RDSClient(ctx)
 
-	snapshot, err := findDBClusterSnapshotByID(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] RDS DB Cluster Snapshot (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
+	out, err := findDBClusterSnapshotByID(ctx, conn, data.ID.ValueString())
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshot Copy (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionReading, ResNameClusterSnapshotCopy, data.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	// Account for variance in naming between the AWS Create and Describe APIs
+	data.SourceDBClusterSnapshotIdentifier = flex.StringToFramework(ctx, out.SourceDBClusterSnapshotArn)
+	data.TargetDBClusterSnapshotIdentifier = flex.StringToFramework(ctx, out.DBClusterSnapshotIdentifier)
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	arn := aws.ToString(snapshot.DBClusterSnapshotArn)
-	d.Set(names.AttrAllocatedStorage, snapshot.AllocatedStorage)
-	d.Set("db_cluster_snapshot_arn", arn)
-	d.Set(names.AttrStorageEncrypted, snapshot.StorageEncrypted)
-	d.Set(names.AttrEngine, snapshot.Engine)
-	d.Set(names.AttrEngineVersion, snapshot.EngineVersion)
-	d.Set(names.AttrKMSKeyID, snapshot.KmsKeyId)
-	d.Set("license_model", snapshot.LicenseModel)
-	d.Set("snapshot_type", snapshot.SnapshotType)
-	d.Set("source_db_cluster_snapshot_identifier", snapshot.SourceDBClusterSnapshotArn)
-	d.Set(names.AttrStorageType, snapshot.StorageType)
-	d.Set("target_db_cluster_snapshot_identifier", snapshot.DBClusterSnapshotIdentifier)
-	d.Set(names.AttrVPCID, snapshot.VpcId)
-
-	attribute, err := findDBClusterSnapshotAttributeByTwoPartKey(ctx, conn, d.Id(), dbSnapshotAttributeNameRestore)
-	switch {
-	case err == nil:
-		d.Set("shared_accounts", attribute.AttributeValues)
-	case tfresource.NotFound(err):
-	default:
-		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
+	outAttr, err := findDBClusterSnapshotAttributeByTwoPartKey(ctx, conn, data.ID.ValueString(), dbSnapshotAttributeNameRestore)
+	if err != nil && !tfresource.NotFound(err) {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionReading, ResNameClusterSnapshotCopy, data.ID.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	return diags
+	if len(outAttr.AttributeValues) > 0 {
+		resp.Diagnostics.Append(flex.Flatten(ctx, outAttr.AttributeValues, &data.SharedAccounts)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func resourceClusterSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+func (r *resourceClusterSnapshotCopy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new resourceClusterSnapshotCopyData
+	conn := r.Meta().RDSClient(ctx)
 
-	if d.HasChange("shared_accounts") {
-		o, n := d.GetChange("shared_accounts")
-		os, ns := o.(*schema.Set), n.(*schema.Set)
-		add, del := ns.Difference(os), os.Difference(ns)
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !old.SharedAccounts.Equal(new.SharedAccounts) {
+		var have, want []string
+		resp.Diagnostics.Append(old.SharedAccounts.ElementsAs(ctx, &have, false)...)
+		resp.Diagnostics.Append(new.SharedAccounts.ElementsAs(ctx, &want, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		toAdd, toRemove, _ := intflex.DiffSlices(have, want, func(s1, s2 string) bool { return s1 == s2 })
+
 		input := &rds.ModifyDBClusterSnapshotAttributeInput{
-			AttributeName:               aws.String("restore"),
-			DBClusterSnapshotIdentifier: aws.String(d.Id()),
-			ValuesToAdd:                 flex.ExpandStringValueSet(add),
-			ValuesToRemove:              flex.ExpandStringValueSet(del),
+			AttributeName:               aws.String(dbSnapshotAttributeNameRestore),
+			DBClusterSnapshotIdentifier: new.TargetDBClusterSnapshotIdentifier.ValueStringPointer(),
+			ValuesToAdd:                 toAdd,
+			ValuesToRemove:              toRemove,
 		}
 
-		_, err := conn.ModifyDBClusterSnapshotAttribute(ctx, input)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
+		if _, err := conn.ModifyDBClusterSnapshotAttribute(ctx, input); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.RDS, create.ErrActionUpdating, ResNameClusterSnapshotCopy, new.ID.String(), err),
+				err.Error(),
+			)
+			return
 		}
 	}
 
-	return append(diags, resourceClusterSnapshotCopyRead(ctx, d, meta)...)
+	// StorageType can be null, and UseStateForUnknown takes no action
+	// on null state values. Explicitly pass through the null value in
+	// this case to prevent "invalid result object after apply" errors
+	if old.StorageType.IsNull() {
+		new.StorageType = types.StringNull()
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
-func resourceClusterSnapshotCopyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSClient(ctx)
+func (r *resourceClusterSnapshotCopy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data resourceClusterSnapshotCopyData
+	conn := r.Meta().RDSClient(ctx)
 
-	log.Printf("[DEBUG] Deleting RDS DB Cluster Snapshot Copy: %s", d.Id())
-	_, err := conn.DeleteDBClusterSnapshot(ctx, &rds.DeleteDBClusterSnapshotInput{
-		DBClusterSnapshotIdentifier: aws.String(d.Id()),
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Debug(ctx, fmt.Sprintf("deleting %s", ResNameClusterSnapshotCopy), map[string]interface{}{
+		names.AttrID: data.ID.ValueString(),
 	})
 
-	if errs.IsA[*types.DBClusterSnapshotNotFoundFault](err) {
-		return diags
-	}
-
+	_, err := conn.DeleteDBClusterSnapshot(ctx, &rds.DeleteDBClusterSnapshotInput{
+		DBClusterSnapshotIdentifier: data.ID.ValueStringPointer(),
+	})
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting RDS DB Cluster Snapshot Copy (%s): %s", d.Id(), err)
-	}
+		if errs.IsA[*awstypes.DBClusterSnapshotNotFoundFault](err) {
+			return
+		}
 
-	return diags
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.RDS, create.ErrActionDeleting, ResNameClusterSnapshotCopy, data.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
+func (r *resourceClusterSnapshotCopy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), req, resp)
+}
+
+func (r *resourceClusterSnapshotCopy) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
+}
+
+type resourceClusterSnapshotCopyData struct {
+	AllocatedStorage                  types.Int64  `tfsdk:"allocated_storage"`
+	CopyTags                          types.Bool   `tfsdk:"copy_tags"`
+	DBClusterSnapshotARN              types.String `tfsdk:"db_cluster_snapshot_arn"`
+	DestinationRegion                 types.String `tfsdk:"destination_region"`
+	Engine                            types.String `tfsdk:"engine"`
+	EngineVersion                     types.String `tfsdk:"engine_version"`
+	ID                                types.String `tfsdk:"id"`
+	KMSKeyID                          types.String `tfsdk:"kms_key_id"`
+	LicenseModel                      types.String `tfsdk:"license_model"`
+	PresignedURL                      types.String `tfsdk:"presigned_url"`
+	SharedAccounts                    types.Set    `tfsdk:"shared_accounts"`
+	SnapshotType                      types.String `tfsdk:"snapshot_type"`
+	SourceDBClusterSnapshotIdentifier types.String `tfsdk:"source_db_cluster_snapshot_identifier"`
+	StorageEncrypted                  types.Bool   `tfsdk:"storage_encrypted"`
+	StorageType                       types.String `tfsdk:"storage_type"`
+	Tags                              tftags.Map   `tfsdk:"tags"`
+	TagsAll                           tftags.Map   `tfsdk:"tags_all"`
+	TargetDBClusterSnapshotIdentifier types.String `tfsdk:"target_db_cluster_snapshot_identifier"`
+	VPCID                             types.String `tfsdk:"vpc_id"`
+
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }

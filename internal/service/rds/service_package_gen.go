@@ -33,6 +33,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newResourceClusterSnapshotCopy,
+			Name:    "Cluster Snapshot Copy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "db_cluster_snapshot_arn",
+			},
+		},
+		{
 			Factory: newResourceExportTask,
 		},
 		{
@@ -127,14 +134,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceClusterSnapshot,
 			TypeName: "aws_db_cluster_snapshot",
 			Name:     "DB Cluster Snapshot",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "db_cluster_snapshot_arn",
-			},
-		},
-		{
-			Factory:  resourceClusterSnapshotCopy,
-			TypeName: "aws_db_cluster_snapshot_copy",
-			Name:     "DB Cluster Snapshot Copy",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "db_cluster_snapshot_arn",
 			},
