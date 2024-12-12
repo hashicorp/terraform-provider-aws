@@ -334,6 +334,13 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
+	if err := createTags(ctx, conn, domainName, getTagsIn(ctx)); err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("setting Route 53 Domains Domain (%s) tags", domainName), err.Error())
+
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
