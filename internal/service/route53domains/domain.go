@@ -455,6 +455,8 @@ type domainResourceModel struct {
 	RegistrarURL      types.String                                        `tfsdk:"registrar_url"`
 	Reseller          types.String                                        `tfsdk:"reseller"`
 	StatusList        fwtypes.ListOfString                                `tfsdk:"status_list"`
+	Tags              tftags.Map                                          `tfsdk:"tags"`
+	TagsAll           tftags.Map                                          `tfsdk:"tags_all"`
 	TechContact       fwtypes.ListNestedObjectValueOf[contactDetailModel] `tfsdk:"tech_contact"`
 	TechPrivacy       types.Bool                                          `tfsdk:"tech_privacy"`
 	Timeouts          timeouts.Value                                      `tfsdk:"timeouts"`
