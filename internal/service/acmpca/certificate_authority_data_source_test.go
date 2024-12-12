@@ -91,33 +91,16 @@ func TestAccACMPCACertificateAuthorityDataSource_s3ObjectACL(t *testing.T) {
 
 func TestAccACMPCACertificateAuthorityDataSource_ramShared(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_acmpca_certificate_authority.test"
-	datasourceName := "data.aws_acmpca_certificate_authority.test"
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAlternateAccount(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCertificateAuthorityDataSourceConfig_ramShared(commonName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrARN, resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCertificate, resourceName, names.AttrCertificate),
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrCertificateChain, resourceName, names.AttrCertificateChain),
-					resource.TestCheckResourceAttr(resourceName, "certificate_signing_request", ""),
-					resource.TestCheckResourceAttrPair(datasourceName, "not_after", resourceName, "not_after"),
-					resource.TestCheckResourceAttrPair(datasourceName, "not_before", resourceName, "not_before"),
-					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.#", resourceName, "revocation_configuration.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.0.crl_configuration.#", resourceName, "revocation_configuration.0.crl_configuration.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "revocation_configuration.0.crl_configuration.0.enabled", resourceName, "revocation_configuration.0.crl_configuration.0.enabled"),
-					resource.TestCheckResourceAttrPair(datasourceName, "serial", resourceName, "serial"),
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrStatus, resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),
-					resource.TestCheckResourceAttrPair(datasourceName, names.AttrType, resourceName, names.AttrType),
-					resource.TestCheckResourceAttrPair(datasourceName, "usage_mode", resourceName, "usage_mode"),
-				),
+				Config:      testAccCertificateAuthorityDataSourceConfig_ramShared(commonName),
+				ExpectError: regexache.MustCompile(`AccessDeniedException`),
 			},
 		},
 	})
@@ -192,7 +175,7 @@ data "aws_acmpca_certificate_authority" "test" {
 }
 
 func testAccCertificateAuthorityDataSourceConfig_ramShared(commonName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource "aws_acmpca_certificate_authority" "alternate" {
@@ -211,7 +194,7 @@ resource "aws_acmpca_certificate_authority" "alternate" {
 resource "aws_ram_resource_share" "alternate" {
   provider = "awsalternate"
 
-  name                      = "alternate"
+  name                      = %[1]q
   allow_external_principals = true
   permission_arns           = ["arn:aws:ram::aws:permission/AWSRAMDefaultPermissionCertificateAuthority"]
 }
@@ -232,8 +215,10 @@ resource "aws_ram_resource_association" "alternate" {
 
 data "aws_acmpca_certificate_authority" "test" {
   arn = aws_acmpca_certificate_authority.alternate.arn
+
+  depends_on = [aws_ram_resource_association.alternate, aws_ram_principal_association.alternate]
 }
-`, commonName)
+`, commonName))
 }
 
 // lintignore:AWSAT003,AWSAT005
