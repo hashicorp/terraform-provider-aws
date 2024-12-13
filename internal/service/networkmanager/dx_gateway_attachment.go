@@ -5,36 +5,35 @@ package networkmanager
 
 import (
 	"context"
-	"errors"
-	"regexp"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="DX Gateway Attachment")
-func newResourceDXGatewayAttachment(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDXGatewayAttachment{}
+// @FrameworkResource(name="Direct Connect Gateway Attachment")
+func newDirectConnectGatewayAttachmentResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &directConnectGatewayAttachmentResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -43,70 +42,74 @@ func newResourceDXGatewayAttachment(_ context.Context) (resource.ResourceWithCon
 	return r, nil
 }
 
-const (
-	ResNameDXGatewayAttachment = "DX Gateway Attachment"
-)
-
-type resourceDXGatewayAttachment struct {
+type directConnectGatewayAttachmentResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 	framework.WithImportByID
 }
 
-func (r *resourceDXGatewayAttachment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_networkmanager_dx_gateway_attachment"
+func (*directConnectGatewayAttachmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_networkmanager_dx_gateway_attachment"
 }
 
-func (r *resourceDXGatewayAttachment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *directConnectGatewayAttachmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"attachment_policy_rule_number": schema.Int64Attribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 			},
 			"attachment_type": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"core_network_arn": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"core_network_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(0, 50),
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^core-network-([0-9a-f]{8,17})$`),
-						"must be a valid core network id",
-					),
-				},
 			},
 			"direct_connect_gateway_arn": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(0, 500),
-					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^arn:[^:]{1,63}:directconnect::[^:]{0,63}:dx-gateway\/[0-9a-f]{8}-([0-9a-f]{4}-){3}[0-9a-f]{12}$`),
-						"must be a valid Direct Connect gateway ARN",
-					),
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"edge_locations": schema.ListAttribute{
-				ElementType: types.StringType,
+				CustomType:  fwtypes.ListOfStringType,
 				Required:    true,
+				ElementType: types.StringType,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"network_function_group_name": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"owner_account_id": schema.StringAttribute{
+			names.AttrOwnerAccountID: schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"segment_name": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"state": schema.StringAttribute{
 				Computed: true,
@@ -122,239 +125,186 @@ func (r *resourceDXGatewayAttachment) Schema(ctx context.Context, req resource.S
 	}
 }
 
-func (r *resourceDXGatewayAttachment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *directConnectGatewayAttachmentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data directConnectGatewayAttachmentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().NetworkManagerClient(ctx)
 
-	var plan resourceDXGatewayAttachmentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	input := &networkmanager.CreateDirectConnectGatewayAttachmentInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &networkmanager.CreateDirectConnectGatewayAttachmentInput{
-		CoreNetworkId:           aws.String(plan.CoreNetworkID.ValueString()),
-		DirectConnectGatewayArn: aws.String(plan.DirectConnectGatewayARN.ValueString()),
-		EdgeLocations:           flex.ExpandFrameworkStringValueList(ctx, plan.EdgeLocations),
-	}
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.Tags = getTagsIn(ctx)
 
-	out, err := conn.CreateDirectConnectGatewayAttachment(ctx, in)
+	output, err := conn.CreateDirectConnectGatewayAttachment(ctx, input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionCreating, ResNameDXGatewayAttachment, plan.DirectConnectGatewayARN.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.DirectConnectGatewayAttachment == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionCreating, ResNameDXGatewayAttachment, plan.DirectConnectGatewayARN.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError("creating Network Manager Direct Connect Gateway Attachment", err.Error())
+
 		return
 	}
 
-	a := out.DirectConnectGatewayAttachment.Attachment
+	// Set values for unknowns.
+	data.ID = fwflex.StringToFramework(ctx, output.DirectConnectGatewayAttachment.Attachment.AttachmentId)
 
-	plan.ARN = flex.StringToFramework(ctx, a.ResourceArn)
-	plan.ID = flex.StringToFramework(ctx, a.AttachmentId)
-	plan.AttachmentType = flex.StringToFramework(ctx, (*string)(&a.AttachmentType))
-	plan.AttachmentPolicyRuleNumber = flex.Int32ToFramework(ctx, a.AttachmentPolicyRuleNumber)
-	plan.CoreNetworkARN = flex.StringToFramework(ctx, a.CoreNetworkArn)
-	plan.CoreNetworkID = flex.StringToFramework(ctx, a.CoreNetworkId)
-	plan.NetworkFunctionGroupName = flex.StringToFramework(ctx, a.NetworkFunctionGroupName)
-	plan.OwnerAccountId = flex.StringToFramework(ctx, a.OwnerAccountId)
-	plan.SegmentName = flex.StringToFramework(ctx, a.SegmentName)
+	dxgwAttachment, err := waitDirectConnectGatewayAttachmentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	status, waitErr := waitDirectConnectGatewayAttachmentCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if waitErr != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionWaitingForCreation, ResNameDXGatewayAttachment, plan.DirectConnectGatewayARN.String(), waitErr),
-			waitErr.Error(),
-		)
+	if err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Manager Direct Connect Gateway Attachment (%s) create", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	// Set state attribute once resource creation has completed
-	plan.State = flex.StringToFramework(ctx, (*string)(&status.Attachment.State))
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, dxgwAttachment.Attachment, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceDXGatewayAttachment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().NetworkManagerClient(ctx)
-
-	var state resourceDXGatewayAttachmentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data directConnectGatewayAttachmentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findDirectConnectGatewayAttachmentByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().NetworkManagerClient(ctx)
+
+	dxgwAttachment, err := findDirectConnectGatewayAttachmentByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionSetting, ResNameDXGatewayAttachment, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	a := out.Attachment
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, dxgwAttachment.Attachment, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	state.ARN = flex.StringToFramework(ctx, a.ResourceArn)
-	state.AttachmentPolicyRuleNumber = flex.Int32ToFramework(ctx, a.AttachmentPolicyRuleNumber)
-	state.AttachmentType = flex.StringToFramework(ctx, (*string)(&a.AttachmentType))
-	state.CoreNetworkARN = flex.StringToFramework(ctx, a.CoreNetworkArn)
-	state.CoreNetworkID = flex.StringToFramework(ctx, a.CoreNetworkId)
-	state.DirectConnectGatewayARN = flex.StringToFramework(ctx, out.DirectConnectGatewayArn)
-	state.EdgeLocations = flex.FlattenFrameworkStringValueList(ctx, a.EdgeLocations)
-	state.ID = flex.StringToFramework(ctx, a.AttachmentId)
-	state.NetworkFunctionGroupName = flex.StringToFramework(ctx, a.NetworkFunctionGroupName)
-	state.OwnerAccountId = flex.StringToFramework(ctx, a.OwnerAccountId)
-	state.SegmentName = flex.StringToFramework(ctx, a.SegmentName)
-	state.State = flex.StringToFramework(ctx, (*string)(&a.State))
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceDXGatewayAttachment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().NetworkManagerClient(ctx)
-
-	var plan, state resourceDXGatewayAttachmentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *directConnectGatewayAttachmentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new directConnectGatewayAttachmentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().NetworkManagerClient(ctx)
 
 	// Attachment must be in an Available state to be modified
 	// Only edge locations can be modified
-	if !plan.EdgeLocations.Equal(state.EdgeLocations) {
-
-		in := &networkmanager.UpdateDirectConnectGatewayAttachmentInput{
-			AttachmentId:  aws.String(plan.ID.ValueString()),
-			EdgeLocations: flex.ExpandFrameworkStringValueList(ctx, plan.EdgeLocations),
+	if !new.EdgeLocations.Equal(old.EdgeLocations) {
+		input := &networkmanager.UpdateDirectConnectGatewayAttachmentInput{
+			AttachmentId:  aws.String(new.ID.ValueString()),
+			EdgeLocations: fwflex.ExpandFrameworkStringValueList(ctx, new.EdgeLocations),
 		}
 
-		out, err := conn.UpdateDirectConnectGatewayAttachment(ctx, in)
+		_, err := conn.UpdateDirectConnectGatewayAttachment(ctx, input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.NetworkManager, create.ErrActionUpdating, ResNameDXGatewayAttachment, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.DirectConnectGatewayAttachment == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.NetworkManager, create.ErrActionUpdating, ResNameDXGatewayAttachment, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Network Manager Direct Connect Gateway Attachment (%s)", new.ID.ValueString()), err.Error())
+
 			return
 		}
 
-		plan.ARN = flex.StringToFramework(ctx, out.DirectConnectGatewayAttachment.Attachment.ResourceArn)
-		plan.ID = flex.StringToFramework(ctx, out.DirectConnectGatewayAttachment.Attachment.AttachmentId)
+		dxgwAttachment, err := waitDirectConnectGatewayAttachmentUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out.DirectConnectGatewayAttachment.Attachment, &plan)...)
-		if resp.Diagnostics.HasError() {
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Manager Direct Connect Gateway Attachment (%s) update", new.ID.ValueString()), err.Error())
+
 			return
 		}
+
+		// Set values for unknowns.
+		new.State = fwflex.StringValueToFramework(ctx, dxgwAttachment.Attachment.State)
 	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	status, err := waitDirectConnectGatewayAttachmentUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionWaitingForUpdate, ResNameDXGatewayAttachment, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	// Set state attribute once resource update has completed
-	plan.State = flex.StringToFramework(ctx, (*string)(&status.Attachment.State))
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceDXGatewayAttachment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *directConnectGatewayAttachmentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data directConnectGatewayAttachmentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().NetworkManagerClient(ctx)
 
-	var state resourceDXGatewayAttachmentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	dxgwAttachment, err := findDirectConnectGatewayAttachmentByID(ctx, conn, data.ID.ValueString())
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-
-	output, stateErr := findDirectConnectGatewayAttachmentByID(ctx, conn, state.ID.ValueString())
-	if errs.IsA[*awstypes.ResourceNotFoundException](stateErr) {
-		return
-	}
-	if stateErr != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionReading, ResNameDXGatewayAttachment, state.ID.String(), stateErr),
-			stateErr.Error(),
-		)
-		return
-	}
-
-	// Get current attachment state attribute
-	state.State = flex.StringToFramework(ctx, (*string)(&output.Attachment.State))
-
-	// If attachment state is pending acceptance, reject the attachment before deleting
-	if attachmentState := awstypes.AttachmentState(state.State.ValueString()); attachmentState == awstypes.AttachmentStatePendingAttachmentAcceptance || attachmentState == awstypes.AttachmentStatePendingTagAcceptance {
-		_, err := conn.RejectAttachment(ctx, &networkmanager.RejectAttachmentInput{
-			AttachmentId: aws.String(state.ID.ValueString()),
-		})
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.NetworkManager, "detaching", ResNameDXGatewayAttachment, state.ID.String(), err),
-				err.Error(),
-			)
-		}
-
-		if _, err := waitDirectConnectGatewayAttachmentRejected(ctx, conn, state.ID.ValueString(), deleteTimeout); err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.NetworkManager, "waiting for attachment to be rejected", ResNameDXGatewayAttachment, state.ID.String(), err),
-				err.Error(),
-			)
-		}
-	}
-
-	const (
-		timeout = 5 * time.Minute
-	)
-
-	in := &networkmanager.DeleteAttachmentInput{
-		AttachmentId: aws.String(state.ID.ValueString()),
-	}
-
-	_, err := conn.DeleteAttachment(ctx, in)
 
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Network Manager Direct Connect Gateway Attachment (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	// If attachment state is pending acceptance, reject the attachment before deleting.
+	if state := dxgwAttachment.Attachment.State; state == awstypes.AttachmentStatePendingAttachmentAcceptance || state == awstypes.AttachmentStatePendingTagAcceptance {
+		input := &networkmanager.RejectAttachmentInput{
+			AttachmentId: aws.String(data.ID.ValueString()),
+		}
+
+		_, err := conn.RejectAttachment(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("rejecting Network Manager Direct Connect Gateway Attachment (%s)", data.ID.ValueString()), err.Error())
+
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionDeleting, ResNameDXGatewayAttachment, state.ID.String(), err),
-			err.Error(),
-		)
+
+		if _, err := waitDirectConnectGatewayAttachmentRejected(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Manager Direct Connect Gateway Attachment (%s) reject", data.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
+
+	_, err = conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
+		AttachmentId: aws.String(data.ID.ValueString()),
+	})
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Network Manager Direct Connect Gateway Attachment (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	_, err = waitDirectConnectGatewayAttachmentDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionWaitingForDeletion, ResNameDXGatewayAttachment, state.ID.String(), err),
-			err.Error(),
-		)
+	if _, err := waitDirectConnectGatewayAttachmentDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Network Manager Direct Connect Gateway Attachment (%s) delete", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
@@ -488,28 +438,18 @@ func waitDirectConnectGatewayAttachmentRejected(ctx context.Context, conn *netwo
 	return nil, err
 }
 
-type resourceDXGatewayAttachmentData struct {
-	ARN                        types.String   `tfsdk:"arn"`
-	AttachmentPolicyRuleNumber types.Int64    `tfsdk:"attachment_policy_rule_number"`
-	AttachmentType             types.String   `tfsdk:"attachment_type"`
-	CoreNetworkARN             types.String   `tfsdk:"core_network_arn"`
-	CoreNetworkID              types.String   `tfsdk:"core_network_id"`
-	DirectConnectGatewayARN    types.String   `tfsdk:"direct_connect_gateway_arn"`
-	EdgeLocations              types.List     `tfsdk:"edge_locations"`
-	ID                         types.String   `tfsdk:"id"`
-	NetworkFunctionGroupName   types.String   `tfsdk:"network_function_group_name"`
-	OwnerAccountId             types.String   `tfsdk:"owner_account_id"`
-	SegmentName                types.String   `tfsdk:"segment_name"`
-	State                      types.String   `tfsdk:"state"`
-	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
-}
-
-type complexArgumentData struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
-}
-
-var complexArgumentAttrTypes = map[string]attr.Type{
-	"nested_required": types.StringType,
-	"nested_optional": types.StringType,
+type directConnectGatewayAttachmentResourceModel struct {
+	ARN                        types.String         `tfsdk:"arn"`
+	AttachmentPolicyRuleNumber types.Int64          `tfsdk:"attachment_policy_rule_number"`
+	AttachmentType             types.String         `tfsdk:"attachment_type"`
+	CoreNetworkARN             types.String         `tfsdk:"core_network_arn"`
+	CoreNetworkID              types.String         `tfsdk:"core_network_id"`
+	DirectConnectGatewayARN    fwtypes.ARN          `tfsdk:"direct_connect_gateway_arn"`
+	EdgeLocations              fwtypes.ListOfString `tfsdk:"edge_locations"`
+	ID                         types.String         `tfsdk:"id"`
+	NetworkFunctionGroupName   types.String         `tfsdk:"network_function_group_name"`
+	OwnerAccountId             types.String         `tfsdk:"owner_account_id"`
+	SegmentName                types.String         `tfsdk:"segment_name"`
+	State                      types.String         `tfsdk:"state"`
+	Timeouts                   timeouts.Value       `tfsdk:"timeouts"`
 }

@@ -154,10 +154,6 @@ func testAccCheckSiteToSiteVPNAttachmentExists(ctx context.Context, n string, v 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network Manager Site To Site VPN Attachment ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
 		output, err := tfnetworkmanager.FindSiteToSiteVPNAttachmentByID(ctx, conn, rs.Primary.ID)

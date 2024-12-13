@@ -5,36 +5,32 @@ package networkmanager_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccNetworkManagerDXGatewayAttachment_basic(t *testing.T) {
+func TestAccNetworkManagerDirectConnectGatewayAttachment_basic(t *testing.T) {
+	t.Parallel()
+
 	const (
 		resourceName            = "aws_networkmanager_dx_gateway_attachment.test"
 		coreNetworkResourceName = "aws_networkmanager_core_network.test"
 		dxGatewayResourceName   = "aws_dx_gateway.test"
 	)
-
-	t.Parallel()
-
-	testcases := map[string]struct {
+	testCases := map[string]struct {
 		acceptanceRequired bool
 		expectedState      awstypes.AttachmentState
 	}{
@@ -42,14 +38,13 @@ func TestAccNetworkManagerDXGatewayAttachment_basic(t *testing.T) {
 			acceptanceRequired: true,
 			expectedState:      awstypes.AttachmentStatePendingAttachmentAcceptance,
 		},
-
 		"acceptance_not_required": {
 			acceptanceRequired: false,
 			expectedState:      awstypes.AttachmentStateAvailable,
 		},
 	}
 
-	for name, testcase := range testcases { //nolint:paralleltest // false positive
+	for name, tc := range testCases { //nolint:paralleltest // false positive
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -59,12 +54,12 @@ func TestAccNetworkManagerDXGatewayAttachment_basic(t *testing.T) {
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				CheckDestroy:             testAccCheckDXGatewayAttachmentDestroy(ctx),
+				CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
 				Steps: []resource.TestStep{
 					{
-						Config: testAccDXGWAttachmentConfig_basic(rName, testcase.acceptanceRequired),
+						Config: testAccDirectConnectGatewayAttachmentConfig_basic(rName, tc.acceptanceRequired),
 						Check: resource.ComposeAggregateTestCheckFunc(
-							testAccCheckDXGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+							testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
 							acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dx-gateway/.+`)),
 							resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 							resource.TestCheckResourceAttr(resourceName, "attachment_type", "DIRECT_CONNECT_GATEWAY"),
@@ -74,7 +69,7 @@ func TestAccNetworkManagerDXGatewayAttachment_basic(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, "edge_locations.0", acctest.Region()),
 							acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
 							resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
-							resource.TestCheckResourceAttr(resourceName, names.AttrState, string(testcase.expectedState)),
+							resource.TestCheckResourceAttr(resourceName, names.AttrState, string(tc.expectedState)),
 							resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 						),
 					},
@@ -89,27 +84,22 @@ func TestAccNetworkManagerDXGatewayAttachment_basic(t *testing.T) {
 	}
 }
 
-func TestAccNetworkManagerDXGatewayAttachment_disappears(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
-
+func TestAccNetworkManagerDirectConnectGatewayAttachment_disappears(t *testing.T) {
 	t.Parallel()
 
-	testcases := map[string]struct {
+	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
+	testCases := map[string]struct {
 		acceptanceRequired bool
 	}{
 		"acceptance_required": {
 			acceptanceRequired: true,
 		},
-
 		"acceptance_not_required": {
 			acceptanceRequired: false,
 		},
 	}
 
-	for name, testcase := range testcases { //nolint:paralleltest // false positive
+	for name, tc := range testCases { //nolint:paralleltest // false positive
 		t.Run(name, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
@@ -119,13 +109,13 @@ func TestAccNetworkManagerDXGatewayAttachment_disappears(t *testing.T) {
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 				ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				CheckDestroy:             testAccCheckDXGatewayAttachmentDestroy(ctx),
+				CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
 				Steps: []resource.TestStep{
 					{
-						Config: testAccDXGWAttachmentConfig_basic(rName, testcase.acceptanceRequired),
+						Config: testAccDirectConnectGatewayAttachmentConfig_basic(rName, tc.acceptanceRequired),
 						Check: resource.ComposeTestCheckFunc(
-							testAccCheckDXGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
-							acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceDXGatewayAttachment, resourceName),
+							testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+							acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceDirectConnectGatewayAttachment, resourceName),
 						),
 						ExpectNonEmptyPlan: true,
 						ConfigPlanChecks: resource.ConfigPlanChecks{
@@ -140,27 +130,26 @@ func TestAccNetworkManagerDXGatewayAttachment_disappears(t *testing.T) {
 	}
 }
 
-func TestAccNetworkManagerDXGatewayAttachment_update(t *testing.T) {
-	// Only edge locations can be updated
+func TestAccNetworkManagerDirectConnectGatewayAttachment_update(t *testing.T) {
+	// Only edge locations can be updated.
 	ctx := acctest.Context(t)
 	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
 	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
 	coreNetworkResourceName := "aws_networkmanager_core_network.test"
-	edgeLocation1 := "us-east-1"
-	edgeLocation2 := "us-west-2"
+	edgeLocation1 := endpoints.UsEast1RegionID
+	edgeLocation2 := endpoints.UsWest2RegionID
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDXGatewayAttachmentDestroy(ctx),
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDXGWAttachmentConfig_multipleEdgeLocations(rName, edgeLocation1, edgeLocation2),
+				Config: testAccDirectConnectGatewayAttachmentConfig_multipleEdgeLocations(rName, edgeLocation1, edgeLocation2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDXGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dx-gateway/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "DIRECT_CONNECT_GATEWAY"),
@@ -179,9 +168,9 @@ func TestAccNetworkManagerDXGatewayAttachment_update(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDXGWAttachmentConfig_multipleEdgeLocationsUpdated(rName, edgeLocation1, edgeLocation2),
+				Config: testAccDirectConnectGatewayAttachmentConfig_multipleEdgeLocationsUpdated(rName, edgeLocation1, edgeLocation2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckDXGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
 					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dx-gateway/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "DIRECT_CONNECT_GATEWAY"),
@@ -203,7 +192,7 @@ func TestAccNetworkManagerDXGatewayAttachment_update(t *testing.T) {
 	})
 }
 
-func testAccCheckDXGatewayAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckDirectConnectGatewayAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
 
@@ -219,97 +208,40 @@ func testAccCheckDXGatewayAttachmentDestroy(ctx context.Context) resource.TestCh
 			}
 
 			if err != nil {
-				return create.Error(names.NetworkManager, create.ErrActionCheckingDestroyed, tfnetworkmanager.ResNameDXGatewayAttachment, rs.Primary.ID, err)
+				return err
 			}
+
+			return fmt.Errorf("Network Manager Direct Connect Gateway Attachment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDXGatewayAttachmentExists(ctx context.Context, name string, dxgatewayattachment *awstypes.DirectConnectGatewayAttachment) resource.TestCheckFunc {
+func testAccCheckDirectConnectGatewayAttachmentExists(ctx context.Context, n string, v *awstypes.DirectConnectGatewayAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.NetworkManager, create.ErrActionCheckingExistence, tfnetworkmanager.ResNameDXGatewayAttachment, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.NetworkManager, create.ErrActionCheckingExistence, tfnetworkmanager.ResNameDXGatewayAttachment, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
-		resp, err := conn.GetDirectConnectGatewayAttachment(ctx, &networkmanager.GetDirectConnectGatewayAttachmentInput{
-			AttachmentId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfnetworkmanager.FindDirectConnectGatewayAttachmentByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.NetworkManager, create.ErrActionCheckingExistence, tfnetworkmanager.ResNameDXGatewayAttachment, rs.Primary.ID, err)
+			return err
 		}
 
-		*dxgatewayattachment = *resp.DirectConnectGatewayAttachment
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccDXGWAttachmentConfig_basic(rName string, requireAcceptance bool) string {
-	return acctest.ConfigCompose(
-		testAccDXGWAttachmentConfig_base(rName, requireAcceptance), `
-resource "aws_networkmanager_dx_gateway_attachment" "test" {
-  core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
-  edge_locations             = [data.aws_region.current.name]
-}
-`)
-}
-
-func testAccDXGWAttachmentConfig_Accepted_basic(rName string, requireAcceptance bool) string {
-	return acctest.ConfigCompose(
-		testAccDXGWAttachmentConfig_base(rName, requireAcceptance), `
-resource "aws_networkmanager_dx_gateway_attachment" "test" {
-  core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
-  edge_locations             = [data.aws_region.current.name]
-}
-
-resource "aws_networkmanager_attachment_accepter" "test" {
-  attachment_id   = aws_networkmanager_dx_gateway_attachment.test.id
-  attachment_type = aws_networkmanager_dx_gateway_attachment.test.attachment_type
-}
-`)
-}
-
-func testAccDXGWAttachmentConfig_multipleEdgeLocations(rName string, edgeLocation1, edgeLocation2 string) string {
-	return acctest.ConfigCompose(
-		testAccDXGWAttachmentConfig_multiRegionBase(rName, edgeLocation1, edgeLocation2),
-		fmt.Sprintf(`
-resource "aws_networkmanager_dx_gateway_attachment" "test" {
-  core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
-  edge_locations             = [%[1]q]
-}
-`, edgeLocation1))
-}
-
-func testAccDXGWAttachmentConfig_multipleEdgeLocationsUpdated(rName string, edgeLocation1, edgeLocation2 string) string {
-	return acctest.ConfigCompose(
-		testAccDXGWAttachmentConfig_multiRegionBase(rName, edgeLocation1, edgeLocation2),
-		fmt.Sprintf(`
-resource "aws_networkmanager_dx_gateway_attachment" "test" {
-  core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
-  edge_locations             = [%[1]q, %[2]q]
-}
-`, edgeLocation1, edgeLocation2))
-}
-
-func testAccDXGWAttachmentConfig_base(rName string, requireAcceptance bool) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+func testAccDirectConnectGatewayAttachmentConfig_base(rName string, requireAcceptance bool) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_region" "current" {}
-
 data "aws_caller_identity" "current" {}
 
 resource "aws_dx_gateway" "test" {
@@ -375,12 +307,9 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 `, rName, requireAcceptance))
 }
 
-func testAccDXGWAttachmentConfig_multiRegionBase(rName string, edgeLocation1, edgeLocation2 string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+func testAccDirectConnectGatewayAttachmentConfig_multiRegionBase(rName string, edgeLocation1, edgeLocation2 string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_region" "current" {}
-
 data "aws_caller_identity" "current" {}
 
 resource "aws_dx_gateway" "test" {
@@ -448,4 +377,49 @@ data "aws_networkmanager_core_network_policy_document" "test" {
   }
 }
 `, rName, edgeLocation1, edgeLocation2))
+}
+
+func testAccDirectConnectGatewayAttachmentConfig_basic(rName string, requireAcceptance bool) string {
+	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_base(rName, requireAcceptance), `
+resource "aws_networkmanager_dx_gateway_attachment" "test" {
+  core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
+  edge_locations             = [data.aws_region.current.name]
+}
+`)
+}
+
+func testAccDirectConnectGatewayAttachmentConfig_Accepted_basic(rName string, requireAcceptance bool) string {
+	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_base(rName, requireAcceptance), `
+resource "aws_networkmanager_dx_gateway_attachment" "test" {
+  core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
+  edge_locations             = [data.aws_region.current.name]
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_dx_gateway_attachment.test.id
+  attachment_type = aws_networkmanager_dx_gateway_attachment.test.attachment_type
+}
+`)
+}
+
+func testAccDirectConnectGatewayAttachmentConfig_multipleEdgeLocations(rName string, edgeLocation1, edgeLocation2 string) string {
+	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_multiRegionBase(rName, edgeLocation1, edgeLocation2), fmt.Sprintf(`
+resource "aws_networkmanager_dx_gateway_attachment" "test" {
+  core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
+  edge_locations             = [%[1]q]
+}
+`, edgeLocation1))
+}
+
+func testAccDirectConnectGatewayAttachmentConfig_multipleEdgeLocationsUpdated(rName string, edgeLocation1, edgeLocation2 string) string {
+	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_multiRegionBase(rName, edgeLocation1, edgeLocation2), fmt.Sprintf(`
+resource "aws_networkmanager_dx_gateway_attachment" "test" {
+  core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
+  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
+  edge_locations             = [%[1]q, %[2]q]
+}
+`, edgeLocation1, edgeLocation2))
 }

@@ -100,6 +100,11 @@ type ListValueOf[T attr.Value] struct {
 	basetypes.ListValue
 }
 
+type (
+	ListOfString = ListValueOf[basetypes.StringValue]
+	ListOfARN    = ListValueOf[ARN]
+)
+
 func (v ListValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(ListValueOf[T])
 
