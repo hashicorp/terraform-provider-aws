@@ -77,6 +77,11 @@ The following arguments are optional:
 * `xks_proxy_uri_path` - (Optional) Specifies the base path to the proxy APIs for this external key store. To find this value, see the documentation for your external key store proxy. This argument is required for all custom key stores with a `custom_key_store_type` of `EXTERNAL_KEY_STORE`.
 * `xks_proxy_vpc_endpoint_service_name` - (Optional) Specifies the name of the Amazon VPC endpoint service for interface endpoints that is used to communicate with your external key store proxy (XKS proxy). This argument is required when the value of `custom_key_store_type` is `EXTERNAL_KEY_STORE` and the value of `xks_proxy_connectivity` is `VPC_ENDPOINT_SERVICE`.
 
+The `xks_proxy_authentication_credential` block supports the following arguments:
+
+* `access_key_id` - (Required) A unique identifier for the raw secret access key.
+* `raw_secret_access_key` - (Required) A secret string of 43-64 characters.
+
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
