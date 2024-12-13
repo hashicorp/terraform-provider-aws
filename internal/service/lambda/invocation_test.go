@@ -185,7 +185,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
-					testAccCheckInvocationResultUpdatedSSMParam(ssmParamResourceName, "value1"),
+					testAccCheckInvocationResultUpdatedSSMParam(ssmParamResourceName, acctest.CtValue1),
 				),
 			},
 			{
@@ -406,7 +406,7 @@ func testAccCheckInvocationResultUpdatedSSMParam(name, expectedValue string) res
 			return fmt.Errorf("SSM parameter %s not created", name)
 		}
 
-		value, ok := rs.Primary.Attributes["value"]
+		value, ok := rs.Primary.Attributes[names.AttrValue]
 		if !ok {
 			return fmt.Errorf("SSM parameter attribute 'value' is empty, expected: %s", expectedValue)
 		}
