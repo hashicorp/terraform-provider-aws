@@ -27,11 +27,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource(name="Direct Connect Gateway Attachment")
+// @Tags(identifierAttribute="arn")
 func newDirectConnectGatewayAttachmentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &directConnectGatewayAttachmentResource{}
 
@@ -114,6 +116,8 @@ func (r *directConnectGatewayAttachmentResource) Schema(ctx context.Context, req
 			"state": schema.StringAttribute{
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
@@ -202,6 +206,8 @@ func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, reque
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	setTagsOut(ctx, dxgwAttachment.Attachment.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -451,5 +457,7 @@ type directConnectGatewayAttachmentResourceModel struct {
 	OwnerAccountId             types.String         `tfsdk:"owner_account_id"`
 	SegmentName                types.String         `tfsdk:"segment_name"`
 	State                      types.String         `tfsdk:"state"`
+	Tags                       tftags.Map           `tfsdk:"tags"`
+	TagsAll                    tftags.Map           `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value       `tfsdk:"timeouts"`
 }

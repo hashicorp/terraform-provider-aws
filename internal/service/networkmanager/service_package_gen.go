@@ -23,6 +23,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newDirectConnectGatewayAttachmentResource,
 			Name:    "Direct Connect Gateway Attachment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 	}
 }
