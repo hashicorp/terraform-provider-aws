@@ -30,7 +30,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         if: |
           steps.community_check.outputs.maintainer == 'false'
-          && contains(github.event.issue.labels.*.name, 'stale') || contains(github.event.issue.labels.*.name, 'waiting-response')
+          && (contains(github.event.issue.labels.*.name, 'stale') || contains(github.event.issue.labels.*.name, 'waiting-response'))
         run: gh $COMMAND edit ${{ github.event.issue.html_url }} --remove-label stale,waiting-response
 
       - name: Notify Slack Feed on Maintainer Comment
