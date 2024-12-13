@@ -63,12 +63,10 @@ func resourceAttachmentAccepter() *schema.Resource {
 			},
 			"edge_location": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"edge_locations": {
 				Type:     schema.TypeList,
-				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
