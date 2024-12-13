@@ -64,7 +64,7 @@ func (r *resourceAgentCollaborator) Metadata(_ context.Context, request resource
 func (r *resourceAgentCollaborator) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"agent_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -123,7 +123,7 @@ func (r *resourceAgentCollaborator) Schema(ctx context.Context, request resource
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
