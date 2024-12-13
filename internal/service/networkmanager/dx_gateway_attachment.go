@@ -139,7 +139,7 @@ func (r *directConnectGatewayAttachmentResource) Create(ctx context.Context, req
 	conn := r.Meta().NetworkManagerClient(ctx)
 
 	input := &networkmanager.CreateDirectConnectGatewayAttachmentInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -280,7 +280,7 @@ func (r *directConnectGatewayAttachmentResource) Delete(ctx context.Context, req
 	// If attachment state is pending acceptance, reject the attachment before deleting.
 	if state := dxgwAttachment.Attachment.State; state == awstypes.AttachmentStatePendingAttachmentAcceptance || state == awstypes.AttachmentStatePendingTagAcceptance {
 		input := &networkmanager.RejectAttachmentInput{
-			AttachmentId: data.ID.ValueStringPointer(),
+			AttachmentId: fwflex.StringFromFramework(ctx, data.ID),
 		}
 
 		_, err := conn.RejectAttachment(ctx, input)
@@ -299,7 +299,7 @@ func (r *directConnectGatewayAttachmentResource) Delete(ctx context.Context, req
 	}
 
 	_, err = conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
-		AttachmentId: data.ID.ValueStringPointer(),
+		AttachmentId: fwflex.StringFromFramework(ctx, data.ID),
 	})
 
 	if err != nil {
