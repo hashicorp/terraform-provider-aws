@@ -175,8 +175,8 @@ func resourceCustomKeyStoreRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading KMS Custom Key Store (%s): %s", d.Id(), err)
 	}
 
-	d.Set("cloud_hsm_cluster_id", output.CloudHsmClusterId)
 	d.Set("custom_key_store_name", output.CustomKeyStoreName)
+	d.Set("cloud_hsm_cluster_id", output.CloudHsmClusterId)
 	d.Set("custom_key_store_type", output.CustomKeyStoreType)
 	d.Set("key_store_password", d.Get("key_store_password"))
 	d.Set("trust_anchor_certificate", output.TrustAnchorCertificate)
@@ -194,8 +194,11 @@ func resourceCustomKeyStoreUpdate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).KMSClient(ctx)
 
 	input := &kms.UpdateCustomKeyStoreInput{
-		CloudHsmClusterId: aws.String(d.Get("cloud_hsm_cluster_id").(string)),
-		CustomKeyStoreId:  aws.String(d.Id()),
+		CustomKeyStoreId: aws.String(d.Id()),
+	}
+
+	if d.HasChange("cloud_hsm_cluster_id") {
+		input.CloudHsmClusterId = aws.String(d.Get("cloud_hsm_cluster_id").(string))
 	}
 
 	if d.HasChange("custom_key_store_name") {
@@ -303,24 +306,22 @@ func expandXksProxyAuthenticationCredential(l []interface{}) *awstypes.XksProxyA
 	}
 
 	tfMap, ok := l[0].(map[string]interface{})
-
 	if !ok {
 		return nil
 	}
 
 	result := &awstypes.XksProxyAuthenticationCredentialType{}
 
-	if v, ok := tfMap["access_key_id"].(string); ok {
-		result.AccessKeyId = aws.String(v)
+	if accessKeyId, ok := tfMap["access_key_id"].(string); ok {
+		result.AccessKeyId = aws.String(accessKeyId)
 	}
 
-	if v, ok := tfMap["raw_secret_access_key"].(string); ok {
-		result.RawSecretAccessKey = aws.String(v)
+	if rawSecretAccessKey, ok := tfMap["raw_secret_access_key"].(string); ok {
+		result.RawSecretAccessKey = aws.String(rawSecretAccessKey)
 	}
 
 	return result
 }
-
 func flattenXksProxyAuthenticationCredential(config *awstypes.XksProxyAuthenticationCredentialType) []interface{} {
 	if config == nil {
 		return []interface{}{}
