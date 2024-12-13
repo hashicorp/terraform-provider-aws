@@ -10,29 +10,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
-func DiffSuppressKey(_, oldValue, newValue string, _ *schema.ResourceData) bool {
+func diffSuppressKey(_, oldValue, newValue string, _ *schema.ResourceData) bool {
 	if oldValue == newValue {
 		return true
 	}
 
-	oldId := oldValue
+	oldID := oldValue
 	if arn.IsARN(oldValue) {
-		oldId = keyIdFromARN(oldValue)
+		oldID = keyIDFromARN(oldValue)
 	}
 
-	newId := newValue
+	newID := newValue
 	if arn.IsARN(newValue) {
-		newId = keyIdFromARN(newValue)
+		newID = keyIDFromARN(newValue)
 	}
 
-	if oldId == newId {
+	if oldID == newID {
 		return true
 	}
 
 	return false
 }
 
-func DiffSuppressAlias(_, oldValue, newValue string, _ *schema.ResourceData) bool {
+func diffSuppressAlias(_, oldValue, newValue string, _ *schema.ResourceData) bool {
 	if oldValue == newValue {
 		return true
 	}
@@ -54,30 +54,30 @@ func DiffSuppressAlias(_, oldValue, newValue string, _ *schema.ResourceData) boo
 	return false
 }
 
-func DiffSuppressKeyOrAlias(k, oldValue, newValue string, d *schema.ResourceData) bool {
+func diffSuppressKeyOrAlias(k, oldValue, newValue string, d *schema.ResourceData) bool {
 	if arn.IsARN(newValue) {
 		if isKeyARN(newValue) {
-			return DiffSuppressKey(k, oldValue, newValue, d)
+			return diffSuppressKey(k, oldValue, newValue, d)
 		} else {
-			return DiffSuppressAlias(k, oldValue, newValue, d)
+			return diffSuppressAlias(k, oldValue, newValue, d)
 		}
 	} else if isAliasName(newValue) {
-		return DiffSuppressAlias(k, oldValue, newValue, d)
+		return diffSuppressAlias(k, oldValue, newValue, d)
 	}
-	return DiffSuppressKey(k, oldValue, newValue, d)
+	return diffSuppressKey(k, oldValue, newValue, d)
 }
 
-func keyIdFromARN(s string) string {
+func keyIDFromARN(s string) string {
 	arn, err := arn.Parse(s)
 	if err != nil {
 		return ""
 	}
 
-	return keyIdFromARNResource(arn.Resource)
+	return keyIDFromARNResource(arn.Resource)
 }
 
-func keyIdFromARNResource(s string) string {
-	matches := keyIdResourceRegex.FindStringSubmatch(s)
+func keyIDFromARNResource(s string) string {
+	matches := keyIDResourceRegex.FindStringSubmatch(s)
 	if matches == nil || len(matches) != 2 {
 		return ""
 	}
@@ -108,11 +108,11 @@ func isKeyARN(s string) bool {
 		return false
 	}
 
-	return keyIdFromARNResource(parsedARN.Resource) != ""
+	return keyIDFromARNResource(parsedARN.Resource) != ""
 }
 
 func isAliasName(s string) bool {
-	return strings.HasPrefix(s, "alias/")
+	return strings.HasPrefix(s, aliasNamePrefix)
 }
 
 func isAliasARN(s string) bool {

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -28,7 +29,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,10 +37,10 @@ func TestAccS3BucketIntelligentTieringConfiguration_basic(t *testing.T) {
 				Config: testAccBucketIntelligentTieringConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketIntelligentTieringConfigurationExists(ctx, resourceName, &itc),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, bucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.0.access_tier", "DEEP_ARCHIVE_ACCESS"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.0.days", "180"),
@@ -62,7 +63,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,7 +88,7 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,12 +96,12 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 				Config: testAccBucketIntelligentTieringConfigurationConfig_filterPrefix(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketIntelligentTieringConfigurationExists(ctx, resourceName, &itc),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, bucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "p1/"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Disabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Disabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
 						"access_tier": "DEEP_ARCHIVE_ACCESS",
@@ -117,13 +118,13 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 				Config: testAccBucketIntelligentTieringConfigurationConfig_filterPrefixAndTag(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketIntelligentTieringConfigurationExists(ctx, resourceName, &itc),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, bucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "p2/"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.Environment", "test"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
 						"access_tier": "ARCHIVE_ACCESS",
@@ -139,13 +140,13 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 				Config: testAccBucketIntelligentTieringConfigurationConfig_filterTag(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketIntelligentTieringConfigurationExists(ctx, resourceName, &itc),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, bucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.Environment", "acctest"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Disabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Disabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
 						"access_tier": "DEEP_ARCHIVE_ACCESS",
@@ -157,14 +158,14 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 				Config: testAccBucketIntelligentTieringConfigurationConfig_filterPrefixAndTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketIntelligentTieringConfigurationExists(ctx, resourceName, &itc),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, bucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "p3/"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.Environment1", "test"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.Environment2", "acctest"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
 						"access_tier": "ARCHIVE_ACCESS",
@@ -176,20 +177,38 @@ func TestAccS3BucketIntelligentTieringConfiguration_Filter(t *testing.T) {
 				Config: testAccBucketIntelligentTieringConfigurationConfig_filterTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketIntelligentTieringConfigurationExists(ctx, resourceName, &itc),
-					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "bucket"),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrBucket, bucketResourceName, names.AttrBucket),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.Environment1", "acctest"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.tags.Environment2", "test"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, "Enabled"),
 					resource.TestCheckResourceAttr(resourceName, "tiering.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "tiering.*", map[string]string{
 						"access_tier": "DEEP_ARCHIVE_ACCESS",
 						"days":        "365",
 					}),
 				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketIntelligentTieringConfiguration_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketIntelligentTieringConfigurationConfig_directoryBucket(rName),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
 			},
 		},
 	})
@@ -208,6 +227,9 @@ func testAccCheckBucketIntelligentTieringConfigurationExists(ctx context.Context
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		output, err := tfs3.FindIntelligentTieringConfiguration(ctx, conn, bucket, name)
 
@@ -223,9 +245,9 @@ func testAccCheckBucketIntelligentTieringConfigurationExists(ctx context.Context
 
 func testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_intelligent_tiering_configuration" {
 				continue
 			}
@@ -233,6 +255,10 @@ func testAccCheckBucketIntelligentTieringConfigurationDestroy(ctx context.Contex
 			bucket, name, err := tfs3.BucketIntelligentTieringConfigurationParseResourceID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindIntelligentTieringConfiguration(ctx, conn, bucket, name)
@@ -403,4 +429,26 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 `, rName)
+}
+
+func testAccBucketIntelligentTieringConfigurationConfig_directoryBucket(rName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_bucket_intelligent_tiering_configuration" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  name   = %[1]q
+
+  tiering {
+    access_tier = "DEEP_ARCHIVE_ACCESS"
+    days        = 180
+  }
+}
+`, rName))
 }

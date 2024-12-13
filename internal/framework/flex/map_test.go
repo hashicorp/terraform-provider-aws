@@ -50,10 +50,19 @@ func TestExpandFrameworkStringMap(t *testing.T) {
 			}),
 			expected: nil,
 		},
+		"null element": {
+			input: types.MapValueMust(types.StringType, map[string]attr.Value{
+				"one": types.StringValue("GET"),
+				"two": types.StringNull(),
+			}),
+			expected: map[string]*string{
+				"one": aws.String("GET"),
+				"two": nil,
+			},
+		},
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -105,7 +114,6 @@ func TestExpandFrameworkStringValueMap(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -147,7 +155,6 @@ func TestFlattenFrameworkStringMap(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -189,7 +196,6 @@ func TestFlattenFrameworkStringValueMap(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
@@ -231,7 +237,6 @@ func TestFlattenFrameworkStringValueMapLegacy(t *testing.T) {
 	}
 
 	for name, test := range tests {
-		name, test := name, test
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 

@@ -14,14 +14,15 @@ Provides a resource to create a routing table entry (a route) in a VPC routing t
 
 ~> **NOTE on `gateway_id` attribute:** The AWS API is very forgiving with the resource ID passed in the `gateway_id` attribute. For example an `aws_route` resource can be created with an [`aws_nat_gateway`](nat_gateway.html) or [`aws_egress_only_internet_gateway`](egress_only_internet_gateway.html) ID specified for the `gateway_id` attribute. Specifying anything other than an [`aws_internet_gateway`](internet_gateway.html) or [`aws_vpn_gateway`](vpn_gateway.html) ID will lead to Terraform reporting a permanent diff between your configuration and recorded state, as the AWS API returns the more-specific attribute. If you are experiencing constant diffs with an `aws_route` resource, the first thing to check is that the correct attribute is being specified.
 
+~> **NOTE on combining `vpc_endpoint_id` and `destination_prefix_list_id` attributes:** To associate a Gateway VPC Endpoint (such as S3) with destination prefix list, use the [`aws_vpc_endpoint_route_table_association`](vpc_endpoint_route_table_association.html) resource instead.
+
 ## Example Usage
 
 ```terraform
 resource "aws_route" "r" {
-  route_table_id            = "rtb-4fbb3ac4"
+  route_table_id            = aws_route_table.testing.id
   destination_cidr_block    = "10.0.1.0/22"
   vpc_peering_connection_id = "pcx-45ff3dc1"
-  depends_on                = [aws_route_table.testing]
 }
 ```
 

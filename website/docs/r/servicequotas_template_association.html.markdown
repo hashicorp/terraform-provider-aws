@@ -34,17 +34,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Quotas Template Association using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Quotas Template Association using the `id`. For example:
 
 ```terraform
 import {
   to = aws_servicequotas_template_association.example
-  id = "012345678901"
+  id = "123456789012"
 }
 ```
 
 Using `terraform import`, import Service Quotas Template Association using the `id`. For example:
 
 ```console
-% terraform import aws_servicequotas_template_association.example 012345678901 
+% terraform import aws_servicequotas_template_association.example 123456789012 
 ```

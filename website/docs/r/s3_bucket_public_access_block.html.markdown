@@ -10,6 +10,8 @@ description: |-
 
 Manages S3 bucket-level Public Access Block configuration. For more information about these settings, see the [AWS S3 Block Public Access documentation](https://docs.aws.amazon.com/AmazonS3/latest/dev/access-control-block-public-access.html).
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```terraform

@@ -78,6 +78,7 @@ Lambda actions support the following:
 S3 actions support the following:
 
 * `bucket_name` - (Required) The name of the S3 bucket
+* `iam_role_arn` - (Optional) The ARN of the IAM role to be used by Amazon Simple Email Service while writing to the Amazon S3 bucket, optionally encrypting your mail via the provided customer managed key, and publishing to the Amazon SNS topic
 * `kms_key_arn` - (Optional) The ARN of the KMS key
 * `object_key_prefix` - (Optional) The key prefix of the S3 bucket
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify

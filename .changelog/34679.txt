@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_cloudwatch_log_group: Add `log_group_class` argument
+```

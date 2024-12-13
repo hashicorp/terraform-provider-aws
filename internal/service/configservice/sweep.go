@@ -4,23 +4,34 @@
 package configservice
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/configservice"
+	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func RegisterSweepers() {
 	resource.AddTestSweepers("aws_config_aggregate_authorization", &resource.Sweeper{
 		Name: "aws_config_aggregate_authorization",
 		F:    sweepAggregateAuthorizations,
+	})
+
+	resource.AddTestSweepers("aws_config_config_rule", &resource.Sweeper{
+		Name: "aws_config_config_rule",
+		F:    sweepConfigRules,
+		Dependencies: []string{
+			"aws_config_remediation_configuration",
+		},
 	})
 
 	resource.AddTestSweepers("aws_config_configuration_aggregator", &resource.Sweeper{
@@ -33,12 +44,22 @@ func RegisterSweepers() {
 		F:    sweepConfigurationRecorder,
 	})
 
+	resource.AddTestSweepers("aws_config_conformance_pack", &resource.Sweeper{
+		Name: "aws_config_conformance_pack",
+		F:    sweepConformancePacks,
+	})
+
 	resource.AddTestSweepers("aws_config_delivery_channel", &resource.Sweeper{
 		Name: "aws_config_delivery_channel",
+		F:    sweepDeliveryChannels,
 		Dependencies: []string{
 			"aws_config_configuration_recorder",
 		},
-		F: sweepDeliveryChannels,
+	})
+
+	resource.AddTestSweepers("aws_config_remediation_configuration", &resource.Sweeper{
+		Name: "aws_config_remediation_configuration",
+		F:    sweepRemediationConfigurations,
 	})
 }
 
@@ -46,35 +67,86 @@ func sweepAggregateAuthorizations(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.ConfigServiceConn(ctx)
+	conn := client.ConfigServiceClient(ctx)
+	input := &configservice.DescribeAggregationAuthorizationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	aggregateAuthorizations, err := DescribeAggregateAuthorizations(ctx, conn)
-	if err != nil {
-		if awsv1.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Config Aggregate Authorizations sweep for %s: %s", region, err)
+	pages := configservice.NewDescribeAggregationAuthorizationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ConfigService Aggregate Authorization sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving config aggregate authorizations: %s", err)
-	}
 
-	if len(aggregateAuthorizations) == 0 {
-		log.Print("[DEBUG] No config aggregate authorizations to sweep")
-		return nil
-	}
-
-	log.Printf("[INFO] Found %d config aggregate authorizations", len(aggregateAuthorizations))
-
-	for _, auth := range aggregateAuthorizations {
-		log.Printf("[INFO] Deleting config authorization %s", *auth.AggregationAuthorizationArn)
-		_, err := conn.DeleteAggregationAuthorizationWithContext(ctx, &configservice.DeleteAggregationAuthorizationInput{
-			AuthorizedAccountId: auth.AuthorizedAccountId,
-			AuthorizedAwsRegion: auth.AuthorizedAwsRegion,
-		})
 		if err != nil {
-			return fmt.Errorf("Error deleting config aggregate authorization %s: %s", *auth.AggregationAuthorizationArn, err)
+			return fmt.Errorf("error listing ConfigService Aggregate Authorizations (%s): %w", region, err)
 		}
+
+		for _, v := range page.AggregationAuthorizations {
+			r := resourceAggregateAuthorization()
+			d := r.Data(nil)
+			d.SetId(aggregateAuthorizationCreateResourceID(aws.ToString(v.AuthorizedAccountId), aws.ToString(v.AuthorizedAwsRegion)))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ConfigService Aggregate Authorizations (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepConfigRules(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.ConfigServiceClient(ctx)
+	input := &configservice.DescribeConfigRulesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := configservice.NewDescribeConfigRulesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ConfigService Config Rule sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing ConfigService Config Rules (%s): %w", region, err)
+		}
+
+		for _, v := range page.ConfigRules {
+			name := aws.ToString(v.ConfigRuleName)
+
+			if createdBy := aws.ToString(v.CreatedBy); createdBy != "" {
+				log.Printf("[INFO] Skipping ConfigService Config Rule %s: CreatedBy=%s", name, createdBy)
+				continue
+			}
+
+			r := resourceConfigRule()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ConfigService Config Rules (%s): %w", region, err)
 	}
 
 	return nil
@@ -84,39 +156,62 @@ func sweepConfigurationAggregators(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.ConfigServiceConn(ctx)
+	conn := client.ConfigServiceClient(ctx)
+	input := &configservice.DescribeConfigurationAggregatorsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	resp, err := conn.DescribeConfigurationAggregatorsWithContext(ctx, &configservice.DescribeConfigurationAggregatorsInput{})
-	if err != nil {
-		if awsv1.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Config Configuration Aggregators sweep for %s: %s", region, err)
+	pages := configservice.NewDescribeConfigurationAggregatorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ConfigService Configuration Aggregator sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving config configuration aggregators: %s", err)
-	}
-
-	if len(resp.ConfigurationAggregators) == 0 {
-		log.Print("[DEBUG] No config configuration aggregators to sweep")
-		return nil
-	}
-
-	log.Printf("[INFO] Found %d config configuration aggregators", len(resp.ConfigurationAggregators))
-
-	for _, agg := range resp.ConfigurationAggregators {
-		log.Printf("[INFO] Deleting config configuration aggregator %s", *agg.ConfigurationAggregatorName)
-		_, err := conn.DeleteConfigurationAggregatorWithContext(ctx, &configservice.DeleteConfigurationAggregatorInput{
-			ConfigurationAggregatorName: agg.ConfigurationAggregatorName,
-		})
 
 		if err != nil {
-			return fmt.Errorf("error deleting config configuration aggregator %s: %w",
-				aws.StringValue(agg.ConfigurationAggregatorName), err)
+			return fmt.Errorf("error listing ConfigService Configuration Aggregators (%s): %w", region, err)
 		}
+
+		for _, v := range page.ConfigurationAggregators {
+			r := resourceConfigurationAggregator()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.ConfigurationAggregatorName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ConfigService Configuration Aggregators (%s): %w", region, err)
 	}
 
 	return nil
+}
+
+type configurationRecorderSweeper struct {
+	client *conns.AWSClient
+	name   string
+}
+
+func (s *configurationRecorderSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
+	r := resourceConfigurationRecorderStatus()
+	d := r.Data(nil)
+	d.SetId(s.name)
+
+	if err := sdk.NewSweepResource(r, d, s.client).Delete(ctx, timeout, optFns...); err != nil {
+		return err
+	}
+
+	r = resourceConfigurationRecorder()
+	d = r.Data(nil)
+	d.SetId(s.name)
+
+	return sdk.NewSweepResource(r, d, s.client).Delete(ctx, timeout, optFns...)
 }
 
 func sweepConfigurationRecorder(region string) error {
@@ -125,39 +220,70 @@ func sweepConfigurationRecorder(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.ConfigServiceConn(ctx)
+	conn := client.ConfigServiceClient(ctx)
+	input := &configservice.DescribeConfigurationRecordersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	req := &configservice.DescribeConfigurationRecordersInput{}
-	resp, err := conn.DescribeConfigurationRecordersWithContext(ctx, req)
-	if err != nil {
-		if awsv1.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Config Configuration Recorders sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error describing Configuration Recorders: %s", err)
-	}
+	output, err := conn.DescribeConfigurationRecorders(ctx, input)
 
-	if len(resp.ConfigurationRecorders) == 0 {
-		log.Print("[DEBUG] No AWS Config Configuration Recorder to sweep")
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping ConfigService Configuration Recorder sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, cr := range resp.ConfigurationRecorders {
-		_, err := conn.StopConfigurationRecorderWithContext(ctx, &configservice.StopConfigurationRecorderInput{
-			ConfigurationRecorderName: cr.Name,
-		})
-		if err != nil {
-			return err
+	if err != nil {
+		return fmt.Errorf("error listing ConfigService Configuration Recorders (%s): %w", region, err)
+	}
+
+	for _, v := range output.ConfigurationRecorders {
+		sweepResources = append(sweepResources, &configurationRecorderSweeper{client: client, name: aws.ToString(v.Name)})
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ConfigService Configuration Recorders (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepConformancePacks(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.ConfigServiceClient(ctx)
+	input := &configservice.DescribeConformancePacksInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := configservice.NewDescribeConformancePacksPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ConfigService Conformance Pack sweep for %s: %s", region, err)
+			return nil
 		}
 
-		_, err = conn.DeleteConfigurationRecorderWithContext(ctx, &configservice.DeleteConfigurationRecorderInput{
-			ConfigurationRecorderName: cr.Name,
-		})
 		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Configuration Recorder (%s): %s",
-				*cr.Name, err)
+			return fmt.Errorf("error listing ConfigService Conformance Packs (%s): %w", region, err)
 		}
+
+		for _, v := range page.ConformancePackDetails {
+			r := resourceConformancePack()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.ConformancePackName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ConfigService Conformance Packs (%s): %w", region, err)
 	}
 
 	return nil
@@ -169,45 +295,100 @@ func sweepDeliveryChannels(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.ConfigServiceConn(ctx)
+	conn := client.ConfigServiceClient(ctx)
+	input := &configservice.DescribeDeliveryChannelsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	req := &configservice.DescribeDeliveryChannelsInput{}
-	var resp *configservice.DescribeDeliveryChannelsOutput
-	err = retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
-		var err error
-		resp, err = conn.DescribeDeliveryChannelsWithContext(ctx, req)
-		if err != nil {
-			// ThrottlingException: Rate exceeded
-			if tfawserr.ErrMessageContains(err, "ThrottlingException", "Rate exceeded") {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
+	output, err := conn.DescribeDeliveryChannels(ctx, input)
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping ConfigService Delivery Channel sweep for %s: %s", region, err)
 		return nil
-	})
+	}
+
 	if err != nil {
-		if awsv1.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping Config Delivery Channels sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error describing Delivery Channels: %s", err)
+		return fmt.Errorf("error listing ConfigService Delivery Channels (%s): %w", region, err)
 	}
 
-	if len(resp.DeliveryChannels) == 0 {
-		log.Print("[DEBUG] No AWS Config Delivery Channel to sweep")
-		return nil
+	for _, v := range output.DeliveryChannels {
+		r := resourceDeliveryChannel()
+		d := r.Data(nil)
+		d.SetId(aws.ToString(v.Name))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	for _, dc := range resp.DeliveryChannels {
-		_, err := conn.DeleteDeliveryChannelWithContext(ctx, &configservice.DeleteDeliveryChannelInput{
-			DeliveryChannelName: dc.Name,
-		})
-		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Delivery Channel (%s): %s",
-				*dc.Name, err)
-		}
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ConfigService Delivery Channels (%s): %w", region, err)
 	}
 
 	return nil
+}
+
+func sweepRemediationConfigurations(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.ConfigServiceClient(ctx)
+	input := &configservice.DescribeConfigRulesInput{}
+	var sweeperErrs *multierror.Error
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := configservice.NewDescribeConfigRulesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ConfigService Remediation Configuration sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing ConfigService Config Rules (%s): %w", region, err))
+			break
+		}
+
+		for _, v := range page.ConfigRules {
+			name := aws.ToString(v.ConfigRuleName)
+
+			if createdBy := aws.ToString(v.CreatedBy); createdBy != "" {
+				log.Printf("[INFO] Skipping ConfigService Config Rule %s: CreatedBy=%s", name, createdBy)
+				continue
+			}
+
+			input := &configservice.DescribeRemediationConfigurationsInput{
+				ConfigRuleNames: []string{name},
+			}
+			output, err := conn.DescribeRemediationConfigurations(ctx, input)
+
+			if awsv2.SkipSweepError(err) {
+				break
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing ConfigService Remediation Configurations (%s): %w", region, err))
+				break
+			}
+
+			for _, v := range output.RemediationConfigurations {
+				r := resourceRemediationConfiguration()
+				d := r.Data(nil)
+				d.SetId(aws.ToString(v.ConfigRuleName))
+
+				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			}
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping ConfigService Remediation Configurations (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
 }

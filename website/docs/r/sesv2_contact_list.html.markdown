@@ -40,11 +40,11 @@ resource "aws_sesv2_contact_list" "example" {
 
 The following arguments are required:
 
-* `contact_list_name` - (Required) The name of the contact list.
+* `contact_list_name` - (Required) Name of the contact list.
 
 The following arguments are optional:
 
-* `description` - (Optional) A description of what the contact list is about.
+* `description` - (Optional) Description of what the contact list is about.
 * `tags` - (Optional) Key-value map of resource tags for the contact list. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `topic` - (Optional) Configuration block(s) with topic for the contact list. Detailed below.
 
@@ -52,24 +52,25 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `default_subscription_status` - (Required) The default subscription status to be applied to a contact if the contact has not noted their preference for subscribing to a topic.
-* `display_name` - (Required) The name of the topic the contact will see.
-* `topic_name` - (Required) The name of the topic.
+* `default_subscription_status` - (Required) Default subscription status to be applied to a contact if the contact has not noted their preference for subscribing to a topic.
+* `display_name` - (Required) Name of the topic the contact will see.
+* `topic_name` - (Required) Name of the topic.
 
 The following arguments are optional:
 
-* `description` - (Optional) A description of what the topic is about, which the contact will see.
+* `description` - (Optional) Description of what the topic is about, which the contact will see.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `created_timestamp` - A timestamp noting when the contact list was created in ISO 8601 format.
-* `last_updated_timestamp` - A timestamp noting the last time the contact list was updated in ISO 8601 format.
+* `created_timestamp` - Timestamp noting when the contact list was created in ISO 8601 format.
+* `id` - Name of the contact list.
+* `last_updated_timestamp` - Timestamp noting the last time the contact list was updated in ISO 8601 format.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Contact List using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SESv2 (Simple Email V2) Contact List using the `id`. For example:
 
 ```terraform
 import {
@@ -78,7 +79,7 @@ import {
 }
 ```
 
-Using `terraform import`, import SESv2 (Simple Email V2) Contact List using the `example_id_arg`. For example:
+Using `terraform import`, import SESv2 (Simple Email V2) Contact List using the `id`. For example:
 
 ```console
 % terraform import aws_sesv2_contact_list.example example

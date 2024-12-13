@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -28,52 +28,45 @@ func sweepCertificateAuthorities(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
-	conn := client.ACMPCAConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &acmpca.ListCertificateAuthoritiesInput{}
+	conn := client.ACMPCAClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListCertificateAuthoritiesPagesWithContext(ctx, input, func(page *acmpca.ListCertificateAuthoritiesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := acmpca.NewListCertificateAuthoritiesPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ACM PCA Certificate Authority sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, item := range page.CertificateAuthorities {
-			if item == nil {
+		if err != nil {
+			return fmt.Errorf("error listing ACM PCA Certificate Authorities (%s): %w", region, err)
+		}
+
+		for _, v := range page.CertificateAuthorities {
+			arn := aws.ToString(v.Arn)
+
+			if v.Status == awstypes.CertificateAuthorityStatusDeleted {
+				log.Printf("[INFO] Skipping ACM PCA Certificate Authority %s: Status=%s", arn, string(v.Status))
 				continue
 			}
 
-			if aws.StringValue(item.Status) == acmpca.CertificateAuthorityStatusDeleted {
-				continue
-			}
-
-			arn := aws.StringValue(item.Arn)
-
-			r := ResourceCertificateAuthority()
+			r := resourceCertificateAuthority()
 			d := r.Data(nil)
 			d.SetId(arn)
-			d.Set("permanent_deletion_time_in_days", 7) //nolint:gomnd
+			d.Set("permanent_deletion_time_in_days", 7) //nolint:mnd // 7 days is the default value
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+	}
 
-		return !lastPage
-	})
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing ACM PCA Certificate Authorities: %w", err))
+		return fmt.Errorf("error sweeping ACM PCA Certificate Authorities (%s): %w", region, err)
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping ACM PCA Certificate Authorities for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping ACM PCA Certificate Authorities sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }

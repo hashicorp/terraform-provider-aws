@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_s3_bucket_object: Remove the call to `kms:DescribeKey` for the S3 default AWS managed key (`alias/aws/s3`) on Read
+```
+
+```release-note:enhancement
+resource/aws_s3_object: Remove the call to `kms:DescribeKey` for the S3 default AWS managed key (`alias/aws/s3`) on Read
+```
+
+```release-note:enhancement
+resource/aws_s3_object_copy: Remove the call to `kms:DescribeKey` for the S3 default AWS managed key (`alias/aws/s3`) on Read
+```

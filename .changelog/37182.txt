@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Increase default Delete timeout to 45 minutes
+```
+
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Use the configured Delete timeout when detaching from any global replication group
+```

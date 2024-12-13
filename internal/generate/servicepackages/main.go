@@ -7,20 +7,18 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
 	"flag"
 	"fmt"
 	"os"
-	"sort"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 func main() {
-	const (
-		namesDataFile = `../../names/names_data.csv`
-	)
 	filename := `service_packages_gen.go`
 
 	flag.Parse()
@@ -35,31 +33,19 @@ func main() {
 
 	g.Infof("Generating %s/%s", packageName, filename)
 
-	data, err := common.ReadAllCSVData(namesDataFile)
+	data, err := data.ReadAllServiceData()
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{
 		PackageName: packageName,
 	}
 
-	for i, l := range data {
-		if i < 1 { // no header
-			continue
-		}
-
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
-			continue
-		}
-
+	for _, l := range data {
 		// See internal/generate/namesconsts/main.go.
-		p := l[names.ColProviderPackageCorrect]
-
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
-		}
+		p := l.ProviderPackage()
 
 		spdFile := fmt.Sprintf("../service/%s/service_package_gen.go", p)
 
@@ -74,13 +60,13 @@ func main() {
 		td.Services = append(td.Services, s)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderPackage < td.Services[j].ProviderPackage
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.ProviderPackage, b.ProviderPackage)
 	})
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("servicepackages", tmpl, td); err != nil {
+	if err := d.BufferTemplate("servicepackages", tmpl, td); err != nil {
 		g.Fatalf("error generating service packages list: %s", err)
 	}
 

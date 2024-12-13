@@ -6,9 +6,8 @@ package sweep
 import (
 	"context"
 
-	"github.com/hashicorp/go-hclog"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-log/tfsdklog"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/internal/log"
 )
 
 func Context(region string) context.Context {
@@ -16,18 +15,7 @@ func Context(region string) context.Context {
 
 	ctx = tfsdklog.RegisterStdlogSink(ctx)
 
-	ctx = logger(ctx, "sweeper", region)
-
-	return ctx
-}
-
-func logger(ctx context.Context, loggerName, region string) context.Context {
-	ctx = tfsdklog.NewRootProviderLogger(ctx,
-		tfsdklog.WithLevel(hclog.Debug),
-		tfsdklog.WithLogName(loggerName),
-		tfsdklog.WithoutLocation(),
-	)
-	ctx = tflog.SetField(ctx, "sweeper_region", region)
+	ctx = log.Logger(ctx, "sweeper", region)
 
 	return ctx
 }

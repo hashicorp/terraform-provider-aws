@@ -65,6 +65,7 @@ This resource supports the following arguments:
 * `storageTier` - (Optional) The name of the storage tier. Valid values are `archive` and `standard`. Default value is `standard`.
 * `permanentRestore` - (Optional) Indicates whether to permanently restore an archived snapshot.
 * `temporaryRestoreDays` - (Optional) Specifies the number of days for which to temporarily restore an archived snapshot. Required for temporary restores only. The snapshot will be automatically re-archived after this period.
+* `completion_duration_minutes` - (Optional) Specifies a completion duration to initiate a time-based snapshot copy. Time-based snapshot copy operations complete within the specified duration.  Value must be between 15 and 2880 minutes, in 15 minute increments only.
 * `tags` - A map of tags for the snapshot. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -74,7 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
 * `id` - The snapshot ID (e.g., snap-59fcb34e).
 * `ownerId` - The AWS account ID of the snapshot owner.
-* `ownerAlias` - Value from an Amazon-maintained list (`amazon`, `awsMarketplace`, `microsoft`) of snapshot owners.
+* `ownerAlias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.
 * `volumeSize` - The size of the drive in GiBs.
 * `dataEncryptionKeyId` - The data encryption key identifier for the snapshot.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
@@ -83,7 +84,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
-<!-- cache-key: cdktf-0.18.0 input-6584e150a20694a655473ad745eb449af2bb52af49f6c18028f8aa482965ddc1 -->
+<!-- cache-key: cdktf-0.20.8 input-cc52e21d26a308769ce570150ef272202eac3fdcf39d45642d8f474294a657b4 -->

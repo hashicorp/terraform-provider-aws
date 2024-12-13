@@ -7,15 +7,16 @@
 package main
 
 import (
+	"cmp"
 	_ "embed"
 	"errors"
 	"fmt"
 	"io/fs"
 	"os"
-	"sort"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type ServiceDatum struct {
@@ -29,8 +30,7 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename      = `register_gen_test.go`
-		namesDataFile = "../../names/names_data.csv"
+		filename = `register_gen_test.go`
 	)
 	g := common.NewGenerator()
 
@@ -38,34 +38,22 @@ func main() {
 
 	g.Infof("Generating %s/%s", packageName, filename)
 
-	data, err := common.ReadAllCSVData(namesDataFile)
+	data, err := data.ReadAllServiceData()
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{
 		PackageName: packageName,
 	}
 
-	for i, l := range data {
-		if i < 1 { // no header
+	for _, l := range data {
+		if l.Exclude() {
 			continue
 		}
 
-		if l[names.ColExclude] != "" {
-			continue
-		}
-
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
-			continue
-		}
-
-		p := l[names.ColProviderPackageCorrect]
-
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
-		}
+		p := l.ProviderPackage()
 
 		if _, err := os.Stat(fmt.Sprintf("../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
@@ -83,13 +71,13 @@ func main() {
 		td.Services = append(td.Services, s)
 	}
 
-	sort.SliceStable(td.Services, func(i, j int) bool {
-		return td.Services[i].ProviderPackage < td.Services[j].ProviderPackage
+	slices.SortStableFunc(td.Services, func(a, b ServiceDatum) int {
+		return cmp.Compare(a.ProviderPackage, b.ProviderPackage)
 	})
 
 	d := g.NewGoFileDestination(filename)
 
-	if err := d.WriteTemplate("sweeperregistration", tmpl, td); err != nil {
+	if err := d.BufferTemplate("sweeperregistration", tmpl, td); err != nil {
 		g.Fatalf("generating file (%s): %s", filename, err)
 	}
 

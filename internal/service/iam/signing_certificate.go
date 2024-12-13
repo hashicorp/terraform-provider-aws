@@ -10,19 +10,21 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_iam_signing_certificate")
-func ResourceSigningCertificate() *schema.Resource {
+// @SDKResource("aws_iam_signing_certificate", name="Signing Certificate")
+func resourceSigningCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningCertificateCreate,
 		ReadWithoutTimeout:   resourceSigningCertificateRead,
@@ -43,13 +45,13 @@ func ResourceSigningCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      iam.StatusTypeActive,
-				ValidateFunc: validation.StringInSlice(iam.StatusType_Values(), false),
+			names.AttrStatus: {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.StatusTypeActive,
+				ValidateDiagFunc: enum.Validate[awstypes.StatusType](),
 			},
-			"user_name": {
+			names.AttrUserName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -60,31 +62,30 @@ func ResourceSigningCertificate() *schema.Resource {
 
 func resourceSigningCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	createOpts := &iam.UploadSigningCertificateInput{
 		CertificateBody: aws.String(d.Get("certificate_body").(string)),
-		UserName:        aws.String(d.Get("user_name").(string)),
+		UserName:        aws.String(d.Get(names.AttrUserName).(string)),
 	}
 
-	log.Printf("[DEBUG] Creating IAM Signing Certificate with opts: %s", createOpts)
-	resp, err := conn.UploadSigningCertificateWithContext(ctx, createOpts)
+	resp, err := conn.UploadSigningCertificate(ctx, createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "uploading IAM Signing Certificate: %s", err)
 	}
 
 	cert := resp.Certificate
 	certId := cert.CertificateId
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(certId), aws.StringValue(cert.UserName)))
+	d.SetId(fmt.Sprintf("%s:%s", aws.ToString(certId), aws.ToString(cert.UserName)))
 
-	if v, ok := d.GetOk("status"); ok && v.(string) != iam.StatusTypeActive {
+	if v, ok := d.GetOk(names.AttrStatus); ok && v.(string) != string(awstypes.StatusTypeActive) {
 		updateInput := &iam.UpdateSigningCertificateInput{
 			CertificateId: certId,
-			UserName:      aws.String(d.Get("user_name").(string)),
-			Status:        aws.String(v.(string)),
+			UserName:      aws.String(d.Get(names.AttrUserName).(string)),
+			Status:        awstypes.StatusType(v.(string)),
 		}
 
-		_, err := conn.UpdateSigningCertificateWithContext(ctx, updateInput)
+		_, err := conn.UpdateSigningCertificate(ctx, updateInput)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "settings IAM Signing Certificate status: %s", err)
 		}
@@ -95,7 +96,7 @@ func resourceSigningCertificateCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceSigningCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
@@ -116,19 +117,19 @@ func resourceSigningCertificateRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading IAM Signing Certificate (%s): %s", d.Id(), err)
 	}
 
-	resp := outputRaw.(*iam.SigningCertificate)
+	resp := outputRaw.(*awstypes.SigningCertificate)
 
 	d.Set("certificate_body", resp.CertificateBody)
 	d.Set("certificate_id", resp.CertificateId)
-	d.Set("user_name", resp.UserName)
-	d.Set("status", resp.Status)
+	d.Set(names.AttrUserName, resp.UserName)
+	d.Set(names.AttrStatus, resp.Status)
 
 	return diags
 }
 
 func resourceSigningCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
 	if err != nil {
@@ -138,10 +139,10 @@ func resourceSigningCertificateUpdate(ctx context.Context, d *schema.ResourceDat
 	updateInput := &iam.UpdateSigningCertificateInput{
 		CertificateId: aws.String(certId),
 		UserName:      aws.String(userName),
-		Status:        aws.String(d.Get("status").(string)),
+		Status:        awstypes.StatusType(d.Get(names.AttrStatus).(string)),
 	}
 
-	_, err = conn.UpdateSigningCertificateWithContext(ctx, updateInput)
+	_, err = conn.UpdateSigningCertificate(ctx, updateInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating IAM Signing Certificate (%s): %s", d.Id(), err)
 	}
@@ -151,7 +152,7 @@ func resourceSigningCertificateUpdate(ctx context.Context, d *schema.ResourceDat
 
 func resourceSigningCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	log.Printf("[INFO] Deleting IAM Signing Certificate: %s", d.Id())
 
 	certId, userName, err := DecodeSigningCertificateId(d.Id())
@@ -164,8 +165,8 @@ func resourceSigningCertificateDelete(ctx context.Context, d *schema.ResourceDat
 		UserName:      aws.String(userName),
 	}
 
-	if _, err := conn.DeleteSigningCertificateWithContext(ctx, input); err != nil {
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if _, err := conn.DeleteSigningCertificate(ctx, input); err != nil {
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting IAM Signing Certificate (%s): %s", d.Id(), err)

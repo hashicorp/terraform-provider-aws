@@ -16,8 +16,8 @@ import (
 	"fmt"
 	"strings"
 
-	awsarn "github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	awsarn "github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 )
 
 // Canonicalize validates IAM resources are appropriate for the authenticator

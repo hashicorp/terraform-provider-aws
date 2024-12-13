@@ -132,7 +132,8 @@ The following arguments are optional:
 * `post_confirmation` - (Optional) Post-confirmation AWS Lambda trigger.
 * `pre_authentication` - (Optional) Pre-authentication AWS Lambda trigger.
 * `pre_sign_up` - (Optional) Pre-registration AWS Lambda trigger.
-* `pre_token_generation` - (Optional) Allow to customize identity token claims before token generation.
+* `pre_token_generation` - (Optional) Allow to customize identity token claims before token generation. Set this parameter for legacy purposes; for new instances of pre token generation triggers, set the lambda_arn of `pre_token_generation_config`.
+* `pre_token_generation_config` - (Optional) Allow to customize access tokens. See [pre_token_configuration_type](#pre_token_configuration_type)
 * `user_migration` - (Optional) User migration Lambda config type.
 * `verify_auth_challenge_response` - (Optional) Verifies the authentication challenge response.
 * `kms_key_id` - (Optional) The Amazon Resource Name of Key Management Service Customer master keys. Amazon Cognito uses the key to encrypt codes and temporary passwords sent to CustomEmailSender and CustomSMSSender.
@@ -149,9 +150,17 @@ The following arguments are optional:
 * `lambda_arn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to send SMS notifications to users.
 * `lambda_version` - (Required) The Lambda version represents the signature of the "request" attribute in the "event" information Amazon Cognito passes to your custom SMS Lambda function. The only supported value is `V1_0`.
 
+#### pre_token_configuration_type
+
+* `lambda_arn` - (Required) The Lambda Amazon Resource Name of the Lambda function that Amazon Cognito triggers to customize access tokens. If you also set an ARN in `pre_token_generation`, its value must be identical to this one.
+* `lambda_version` - (Required) The Lambda version represents the signature of the "version" attribute in the "event" information Amazon Cognito passes to your pre Token Generation Lambda function. The supported values are `V1_0`, `V2_0`.
+
 ### password_policy
 
 * `minimum_length` - (Optional) Minimum length of the password policy that you have set.
+* `password_history_size` - (Optional) Number of previous passwords that you want Amazon Cognito to restrict each user from reusing. Users can't set a password that matches any of number of previous passwords specified by this argument. A value of 0 means that password history is not enforced. Valid values are between 0 and 24.
+
+  **Note:** This argument requires advanced security features to be active in the user pool.
 * `require_lowercase` - (Optional) Whether you have required users to use at least one lowercase letter in their password.
 * `require_numbers` - (Optional) Whether you have required users to use at least one number in their password.
 * `require_symbols` - (Optional) Whether you have required users to use at least one symbol in their password.

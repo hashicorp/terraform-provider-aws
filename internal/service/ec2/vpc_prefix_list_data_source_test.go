@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCPrefixListDataSource_basic(t *testing.T) {
@@ -19,16 +19,16 @@ func TestAccVPCPrefixListDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPrefixListDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(ds1Name, "cidr_blocks.#", 0),
-					resource.TestCheckResourceAttrSet(ds1Name, "name"),
+					resource.TestCheckResourceAttrSet(ds1Name, names.AttrName),
 					acctest.CheckResourceAttrGreaterThanValue(ds2Name, "cidr_blocks.#", 0),
-					resource.TestCheckResourceAttrSet(ds2Name, "name"),
+					resource.TestCheckResourceAttrSet(ds2Name, names.AttrName),
 				),
 			},
 		},
@@ -42,16 +42,16 @@ func TestAccVPCPrefixListDataSource_filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCPrefixListDataSourceConfig_filter,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrGreaterThanValue(ds1Name, "cidr_blocks.#", 0),
-					resource.TestCheckResourceAttrSet(ds1Name, "name"),
+					resource.TestCheckResourceAttrSet(ds1Name, names.AttrName),
 					acctest.CheckResourceAttrGreaterThanValue(ds2Name, "cidr_blocks.#", 0),
-					resource.TestCheckResourceAttrSet(ds2Name, "name"),
+					resource.TestCheckResourceAttrSet(ds2Name, names.AttrName),
 				),
 			},
 		},
@@ -62,7 +62,7 @@ func TestAccVPCPrefixListDataSource_nameDoesNotOverrideFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
