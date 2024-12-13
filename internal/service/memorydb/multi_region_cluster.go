@@ -259,13 +259,9 @@ func (r *multiRegionClusterResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	if !plan.MultiRegionClusterName.Equal(state.MultiRegionClusterName) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.Engine.Equal(state.EngineVersion) ||
-		!plan.MultiRegionParameterGroupName.Equal(state.MultiRegionParameterGroupName) ||
+	if !plan.MultiRegionParameterGroupName.Equal(state.MultiRegionParameterGroupName) ||
 		!plan.NodeType.Equal(state.NodeType) ||
-		!plan.NumShards.Equal(state.NumShards) ||
-		!plan.UpdateStrategy.Equal(state.UpdateStrategy) {
+		!plan.NumShards.Equal(state.NumShards) {
 		input := memorydb.UpdateMultiRegionClusterInput{
 			MultiRegionClusterName: state.MultiRegionClusterName.ValueStringPointer(),
 		}

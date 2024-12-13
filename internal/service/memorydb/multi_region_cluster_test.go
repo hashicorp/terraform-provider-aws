@@ -113,7 +113,7 @@ func TestAccMemoryDBMultiRegionCluster_description(t *testing.T) {
 		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiRegionClusterConfig_description(rName, 1),
+				Config: testAccMultiRegionClusterConfig_description(rName, "Also managed by Terraform", 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Also managed by Terraform"),
@@ -127,7 +127,7 @@ func TestAccMemoryDBMultiRegionCluster_description(t *testing.T) {
 				ImportStateVerifyIgnore: []string{names.AttrTags, names.AttrTagsAll},
 			},
 			{
-				Config: testAccMultiRegionClusterConfig_description(rName, 2),
+				Config: testAccMultiRegionClusterConfig_description(rName, "Also managed by Terraform, but now with an updated description", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Also managed by Terraform, but now with an updated description"),
@@ -417,20 +417,20 @@ resource "aws_memorydb_multi_region_cluster" "test" {
 }
 
 // Sets `num_shards` to also test an update of the resource
-func testAccMultiRegionClusterConfig_description(rName string, numShards int) string {
+func testAccMultiRegionClusterConfig_description(rName, description string, numShards int) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
   node_type   = "db.r7g.xlarge"
-  description = "Also managed by Terraform"
+  description = %[2]q
 
-  num_shards = %[2]d
+  num_shards = %[3]d
 
   tags = {
     Test = "test"
   }
 }
-`, rName, numShards)
+`, rName, description, numShards)
 }
 
 func testAccMultiRegionClusterConfig_numShards(rName string, numShards int) string {
