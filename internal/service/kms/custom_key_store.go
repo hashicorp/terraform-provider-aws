@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -54,7 +55,8 @@ func resourceCustomKeyStore() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(customKeyStoreType_Values(), false)),
+				Default:          awstypes.CustomKeyStoreTypeAwsCloudhsm,
+				ValidateDiagFunc: enum.Validate[awstypes.CustomKeyStoreType](),
 			},
 			"key_store_password": {
 				Type:             schema.TypeString,
@@ -86,7 +88,7 @@ func resourceCustomKeyStore() *schema.Resource {
 			"xks_proxy_connectivity": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(proxyConnectivityType_Values(), false)),
+				ValidateDiagFunc: enum.Validate[awstypes.XksProxyConnectivityType](),
 			},
 			"xks_proxy_uri_endpoint": {
 				Type:     schema.TypeString,
