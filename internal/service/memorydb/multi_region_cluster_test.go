@@ -430,7 +430,7 @@ resource "aws_memorydb_multi_region_cluster" "test" {
     Test = "test"
   }
 }
-`, rName)
+`, rName, numShards)
 }
 
 func testAccMultiRegionClusterConfig_numShards(rName string, numShards int) string {
