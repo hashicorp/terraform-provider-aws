@@ -615,7 +615,6 @@ service "mgn" {
   provider_package_correct = "mgn"
   doc_prefix               = ["mgn_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "appstream" {
