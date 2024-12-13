@@ -90,14 +90,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.35.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.40.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.51.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/connect v1.120.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/connect v1.121.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.21.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.20.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.28.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.45.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.11.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.44.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.44.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/databasemigrationservice v1.45.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/databrew v1.33.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dataexchange v1.33.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/datapipeline v1.25.7 // indirect
@@ -139,11 +139,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.37.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.26.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.29.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/glue v1.103.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/glue v1.104.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.26.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.27.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.31.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/guardduty v1.52.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.52.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.28.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.38.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.27.7 // indirect
@@ -192,14 +192,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.33.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/neptune v1.35.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.15.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.44.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.32.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.7.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/oam v1.15.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearch v1.45.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.17.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/opsworks v1.26.7 // indirect
-	github.com/aws/aws-sdk-go-v2/service/organizations v1.36.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/organizations v1.36.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/osis v1.14.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/outposts v1.47.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.16.2 // indirect
@@ -226,7 +226,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.25.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.16.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.46.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.27.7 // indirect
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.28.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53profiles v1.4.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53recoverycontrolconfig v1.25.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53recoveryreadiness v1.21.7 // indirect
@@ -314,7 +314,7 @@ require (
 	github.com/hashicorp/hcl/v2 v2.23.0 // indirect
 	github.com/hashicorp/logutils v1.0.0 // indirect
 	github.com/hashicorp/terraform-exec v0.21.0 // indirect
-	github.com/hashicorp/terraform-json v0.23.0 // indirect
+	github.com/hashicorp/terraform-json v0.24.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework v1.13.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1 // indirect
