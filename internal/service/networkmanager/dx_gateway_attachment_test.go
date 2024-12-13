@@ -212,7 +212,7 @@ func testAccCheckDXGatewayAttachmentDestroy(ctx context.Context) resource.TestCh
 				continue
 			}
 
-			_, err := tfnetworkmanager.FindDXGatewayAttachmentByID(ctx, conn, rs.Primary.ID)
+			_, err := tfnetworkmanager.FindDirectConnectGatewayAttachmentByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

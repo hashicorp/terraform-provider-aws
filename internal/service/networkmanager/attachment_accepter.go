@@ -147,7 +147,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 		d.SetId(attachmentID)
 
 	case awstypes.AttachmentTypeDirectConnectGateway:
-		dxgwAttachment, err := findDXGatewayAttachmentByID(ctx, conn, attachmentID)
+		dxgwAttachment, err := findDirectConnectGatewayAttachmentByID(ctx, conn, attachmentID)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Network Manager Direct Connect Gateway Attachment (%s): %s", attachmentID, err)
@@ -193,7 +193,7 @@ func resourceAttachmentAccepterCreate(ctx context.Context, d *schema.ResourceDat
 			}
 
 		case awstypes.AttachmentTypeDirectConnectGateway:
-			if _, err := waitDXGatewayAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
+			if _, err := waitDirectConnectGatewayAttachmentAvailable(ctx, conn, attachmentID, d.Timeout(schema.TimeoutCreate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Direct Connect Gateway Attachment (%s) create: %s", attachmentID, err)
 			}
 		}
@@ -276,7 +276,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		d.Set("edge_location", a.EdgeLocation)
 
 	case awstypes.AttachmentTypeDirectConnectGateway:
-		dxgwAttachment, err := findDXGatewayAttachmentByID(ctx, conn, d.Id())
+		dxgwAttachment, err := findDirectConnectGatewayAttachmentByID(ctx, conn, d.Id())
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			log.Printf("[WARN] Network Manager Direct Connect Gateway Attachment %s not found, removing from state", d.Id())

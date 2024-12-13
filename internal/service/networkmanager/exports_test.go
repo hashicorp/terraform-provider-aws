@@ -30,7 +30,7 @@ var (
 	FindCoreNetworkPolicyByTwoPartKey                    = findCoreNetworkPolicyByTwoPartKey
 	FindCustomerGatewayAssociationByTwoPartKey           = findCustomerGatewayAssociationByTwoPartKey
 	FindDeviceByTwoPartKey                               = findDeviceByTwoPartKey
-	FindDXGatewayAttachmentByID                          = findDXGatewayAttachmentByID
+	FindDirectConnectGatewayAttachmentByID               = findDirectConnectGatewayAttachmentByID
 	FindGlobalNetworkByID                                = findGlobalNetworkByID
 	FindLinkAssociationByThreePartKey                    = findLinkAssociationByThreePartKey
 	FindLinkByTwoPartKey                                 = findLinkByTwoPartKey

@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -51,6 +50,7 @@ const (
 type resourceDXGatewayAttachment struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *resourceDXGatewayAttachment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -166,7 +166,7 @@ func (r *resourceDXGatewayAttachment) Create(ctx context.Context, req resource.C
 	plan.SegmentName = flex.StringToFramework(ctx, a.SegmentName)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	status, waitErr := waitDXGatewayAttachmentCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	status, waitErr := waitDirectConnectGatewayAttachmentCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if waitErr != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionWaitingForCreation, ResNameDXGatewayAttachment, plan.DirectConnectGatewayARN.String(), waitErr),
@@ -190,7 +190,7 @@ func (r *resourceDXGatewayAttachment) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	out, err := findDXGatewayAttachmentByID(ctx, conn, state.ID.ValueString())
+	out, err := findDirectConnectGatewayAttachmentByID(ctx, conn, state.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -267,7 +267,7 @@ func (r *resourceDXGatewayAttachment) Update(ctx context.Context, req resource.U
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	status, err := waitDXGatewayAttachmentUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	status, err := waitDirectConnectGatewayAttachmentUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionWaitingForUpdate, ResNameDXGatewayAttachment, plan.ID.String(), err),
@@ -293,7 +293,7 @@ func (r *resourceDXGatewayAttachment) Delete(ctx context.Context, req resource.D
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 
-	output, stateErr := findDXGatewayAttachmentByID(ctx, conn, state.ID.ValueString())
+	output, stateErr := findDirectConnectGatewayAttachmentByID(ctx, conn, state.ID.ValueString())
 	if errs.IsA[*awstypes.ResourceNotFoundException](stateErr) {
 		return
 	}
@@ -320,7 +320,7 @@ func (r *resourceDXGatewayAttachment) Delete(ctx context.Context, req resource.D
 			)
 		}
 
-		if _, err := waitDXGatewayAttachmentRejected(ctx, conn, state.ID.ValueString(), deleteTimeout); err != nil {
+		if _, err := waitDirectConnectGatewayAttachmentRejected(ctx, conn, state.ID.ValueString(), deleteTimeout); err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.NetworkManager, "waiting for attachment to be rejected", ResNameDXGatewayAttachment, state.ID.String(), err),
 				err.Error(),
@@ -349,7 +349,7 @@ func (r *resourceDXGatewayAttachment) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	_, err = waitDXGatewayAttachmentDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitDirectConnectGatewayAttachmentDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.NetworkManager, create.ErrActionWaitingForDeletion, ResNameDXGatewayAttachment, state.ID.String(), err),
@@ -359,97 +359,35 @@ func (r *resourceDXGatewayAttachment) Delete(ctx context.Context, req resource.D
 	}
 }
 
-func (r *resourceDXGatewayAttachment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func findDirectConnectGatewayAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.DirectConnectGatewayAttachment, error) {
+	input := &networkmanager.GetDirectConnectGatewayAttachmentInput{
+		AttachmentId: aws.String(id),
+	}
+
+	output, err := conn.GetDirectConnectGatewayAttachment(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.DirectConnectGatewayAttachment == nil || output.DirectConnectGatewayAttachment.Attachment == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DirectConnectGatewayAttachment, nil
 }
 
-func waitDXGatewayAttachmentCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
-		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
-		Refresh:                   statusDXGatewayAttachment(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitDXGatewayAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.AttachmentStateUpdating, awstypes.AttachmentStatePendingNetworkUpdate),
-		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingTagAcceptance),
-		Refresh:                   statusDXGatewayAttachment(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitDXGatewayAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AttachmentStateDeleting),
-		Target:  []string{},
-		Refresh: statusDXGatewayAttachment(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitDXGatewayAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStateUpdating),
-		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
-		Refresh: statusDXGatewayAttachment(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitDXGatewayAttachmentRejected(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStateAvailable),
-		Target:  enum.Slice(awstypes.AttachmentStateRejected),
-		Refresh: statusDXGatewayAttachment(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusDXGatewayAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+func statusDirectConnectGatewayAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findDXGatewayAttachmentByID(ctx, conn, id)
+		output, err := findDirectConnectGatewayAttachmentByID(ctx, conn, id)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -458,32 +396,96 @@ func statusDXGatewayAttachment(ctx context.Context, conn *networkmanager.Client,
 			return nil, "", err
 		}
 
-		return out, aws.ToString((*string)(&out.Attachment.State)), nil
+		return output, string(output.Attachment.State), nil
 	}
 }
 
-func findDXGatewayAttachmentByID(ctx context.Context, conn *networkmanager.Client, id string) (*awstypes.DirectConnectGatewayAttachment, error) {
-	in := &networkmanager.GetDirectConnectGatewayAttachmentInput{
-		AttachmentId: aws.String(id),
+func waitDirectConnectGatewayAttachmentCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
+		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
+		Refresh:                   statusDirectConnectGatewayAttachment(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
 	}
 
-	out, err := conn.GetDirectConnectGatewayAttachment(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-		return nil, err
+	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
+		return output, err
 	}
 
-	if out == nil || out.DirectConnectGatewayAttachment.Attachment == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	return nil, err
+}
+
+func waitDirectConnectGatewayAttachmentUpdated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.AttachmentStateUpdating, awstypes.AttachmentStatePendingNetworkUpdate),
+		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingTagAcceptance),
+		Refresh:                   statusDirectConnectGatewayAttachment(ctx, conn, id),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
 	}
 
-	return out.DirectConnectGatewayAttachment, nil
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDirectConnectGatewayAttachmentDeleted(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AttachmentStateDeleting),
+		Target:  []string{},
+		Refresh: statusDirectConnectGatewayAttachment(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDirectConnectGatewayAttachmentAvailable(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStateUpdating),
+		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
+		Refresh: statusDirectConnectGatewayAttachment(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if ooutputt, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
+		return ooutputt, err
+	}
+
+	return nil, err
+}
+
+func waitDirectConnectGatewayAttachmentRejected(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.DirectConnectGatewayAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStateAvailable),
+		Target:  enum.Slice(awstypes.AttachmentStateRejected),
+		Refresh: statusDirectConnectGatewayAttachment(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DirectConnectGatewayAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 type resourceDXGatewayAttachmentData struct {
