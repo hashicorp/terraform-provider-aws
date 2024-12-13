@@ -57,7 +57,7 @@ func (*directConnectGatewayAttachmentResource) Metadata(_ context.Context, reque
 func (r *directConnectGatewayAttachmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"attachment_policy_rule_number": schema.Int64Attribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.Int64{
@@ -113,14 +113,14 @@ func (r *directConnectGatewayAttachmentResource) Schema(ctx context.Context, req
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"state": schema.StringAttribute{
+			names.AttrState: schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
 				Delete: true,
@@ -229,7 +229,7 @@ func (r *directConnectGatewayAttachmentResource) Update(ctx context.Context, req
 	// Only edge locations can be modified
 	if !new.EdgeLocations.Equal(old.EdgeLocations) {
 		input := &networkmanager.UpdateDirectConnectGatewayAttachmentInput{
-			AttachmentId:  aws.String(new.ID.ValueString()),
+			AttachmentId:  new.ID.ValueStringPointer(),
 			EdgeLocations: fwflex.ExpandFrameworkStringValueList(ctx, new.EdgeLocations),
 		}
 
@@ -280,7 +280,7 @@ func (r *directConnectGatewayAttachmentResource) Delete(ctx context.Context, req
 	// If attachment state is pending acceptance, reject the attachment before deleting.
 	if state := dxgwAttachment.Attachment.State; state == awstypes.AttachmentStatePendingAttachmentAcceptance || state == awstypes.AttachmentStatePendingTagAcceptance {
 		input := &networkmanager.RejectAttachmentInput{
-			AttachmentId: aws.String(data.ID.ValueString()),
+			AttachmentId: data.ID.ValueStringPointer(),
 		}
 
 		_, err := conn.RejectAttachment(ctx, input)
@@ -299,7 +299,7 @@ func (r *directConnectGatewayAttachmentResource) Delete(ctx context.Context, req
 	}
 
 	_, err = conn.DeleteAttachment(ctx, &networkmanager.DeleteAttachmentInput{
-		AttachmentId: aws.String(data.ID.ValueString()),
+		AttachmentId: data.ID.ValueStringPointer(),
 	})
 
 	if err != nil {
