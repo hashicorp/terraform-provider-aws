@@ -185,7 +185,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON),
-					testAccCheckInvocationResultUpdatedSsmParam(ssmParamResourceName, "value1"),
+					testAccCheckInvocationResultUpdatedSSMParam(ssmParamResourceName, "value1"),
 				),
 			},
 			{
@@ -196,7 +196,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDUpdateInput(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInvocationResult(resourceName, resultJSON2),
-					testAccCheckInvocationResultUpdatedSsmParam(ssmParamResourceName, "valueB"),
+					testAccCheckInvocationResultUpdatedSSMParam(ssmParamResourceName, "valueB"),
 				),
 			},
 		},
@@ -399,7 +399,7 @@ func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, 
 	}
 }
 
-func testAccCheckInvocationResultUpdatedSsmParam(name, expectedValue string) resource.TestCheckFunc {
+func testAccCheckInvocationResultUpdatedSSMParam(name, expectedValue string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
