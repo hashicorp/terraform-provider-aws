@@ -1,5 +1,9 @@
 ## 5.82.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_rds_cluster_snapshot_copy` ([#40398](https://github.com/hashicorp/terraform-provider-aws/issues/40398))
+
 BUG FIXES:
 
 * data-source/aws_acmpca_certificate_authority: Ignore `AccessDeniedException: ... is not authorized to perform: acm-pca:GetCertificateAuthorityCsr on resource: ...` errors for RAM-shared CAs ([#39952](https://github.com/hashicorp/terraform-provider-aws/issues/39952))
