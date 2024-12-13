@@ -236,7 +236,6 @@ func (r *resourceAgentCollaborator) Update(ctx context.Context, request resource
 		!plan.CollaborationInstruction.Equal(state.CollaborationInstruction) ||
 		!plan.CollaboratorName.Equal(state.CollaboratorName) ||
 		!plan.RelayConversationHistory.Equal(state.RelayConversationHistory) {
-
 		var input bedrockagent.UpdateAgentCollaboratorInput
 		response.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
 		if response.Diagnostics.HasError() {
