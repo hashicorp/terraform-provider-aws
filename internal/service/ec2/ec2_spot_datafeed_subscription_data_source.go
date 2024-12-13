@@ -48,7 +48,7 @@ func (d *dataSourceSpotDataFeedSubscription) Schema(ctx context.Context, req dat
 
 func (d *dataSourceSpotDataFeedSubscription) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().EC2Client(ctx)
-	accountID := d.Meta().AccountID
+	accountID := d.Meta().AccountID(ctx)
 
 	var data dataSourceSpotDataFeedSubscriptionModel
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)

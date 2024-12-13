@@ -208,6 +208,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/s3outposts"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/s3tables"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/scheduler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
@@ -240,6 +241,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/taxsettings"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamquery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
@@ -458,6 +460,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		s3.ServicePackage(ctx),
 		s3control.ServicePackage(ctx),
 		s3outposts.ServicePackage(ctx),
+		s3tables.ServicePackage(ctx),
 		sagemaker.ServicePackage(ctx),
 		scheduler.ServicePackage(ctx),
 		schemas.ServicePackage(ctx),
@@ -490,6 +493,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		synthetics.ServicePackage(ctx),
 		taxsettings.ServicePackage(ctx),
 		timestreaminfluxdb.ServicePackage(ctx),
+		timestreamquery.ServicePackage(ctx),
 		timestreamwrite.ServicePackage(ctx),
 		transcribe.ServicePackage(ctx),
 		transfer.ServicePackage(ctx),

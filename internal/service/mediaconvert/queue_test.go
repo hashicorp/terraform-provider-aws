@@ -36,7 +36,7 @@ func TestAccMediaConvertQueue_basic(t *testing.T) {
 				Config: testAccQueueConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "mediaconvert", regexache.MustCompile(`queues/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "mediaconvert", regexache.MustCompile(`queues/.+`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "pricing_plan", string(types.PricingPlanOnDemand)),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "0"),

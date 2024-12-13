@@ -39,7 +39,7 @@ func TestAccCloudFrontRealtimeLogConfig_basic(t *testing.T) {
 				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.stream_type", "Kinesis"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", "1"),
@@ -108,7 +108,7 @@ func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 				Config: testAccRealtimeLogConfigConfig_basic(rName, samplingRate1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.stream_type", "Kinesis"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", "1"),
@@ -125,7 +125,7 @@ func TestAccCloudFrontRealtimeLogConfig_updates(t *testing.T) {
 				Config: testAccRealtimeLogConfigConfig_updated(rName, samplingRate2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRealtimeLogConfigExists(ctx, resourceName, &v),
-					acctest.CheckResourceAttrGlobalARN(resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
+					acctest.CheckResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "cloudfront", fmt.Sprintf("realtime-log-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.stream_type", "Kinesis"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint.0.kinesis_stream_config.#", "1"),

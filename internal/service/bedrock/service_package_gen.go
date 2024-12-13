@@ -74,6 +74,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: "guardrail_arn",
 			},
 		},
+		{
+			Factory: newResourceInferenceProfile,
+			Name:    "Inference Profile",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
 	}
 }
 

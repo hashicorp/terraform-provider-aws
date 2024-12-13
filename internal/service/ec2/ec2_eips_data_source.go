@@ -82,7 +82,7 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("allocation_ids", allocationIDs)
 	d.Set("public_ips", publicIPs)
 

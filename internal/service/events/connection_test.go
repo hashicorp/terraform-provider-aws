@@ -76,7 +76,7 @@ func TestAccEventsConnection_apiKey(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
 					testAccCheckConnectionRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
@@ -159,7 +159,7 @@ func TestAccEventsConnection_basic(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
 					testAccCheckConnectionRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
@@ -324,7 +324,7 @@ func TestAccEventsConnection_oAuth(t *testing.T) {
 				),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &v2),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "events", regexache.MustCompile(fmt.Sprintf("connection/%s/%s", nameModified, uuidRegex))),
 					testAccCheckConnectionRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, nameModified),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, descriptionModified),
