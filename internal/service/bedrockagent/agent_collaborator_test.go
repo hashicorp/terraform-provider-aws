@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -135,16 +134,6 @@ func testAccCheckAgentCollaboratorExists(ctx context.Context, name string, agent
 		}
 
 		*agentcollaborator = *resp
-
-		return nil
-	}
-}
-
-func testAccCheckAgentCollaboratorNotRecreated(before, after *types.AgentCollaborator) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.CollaboratorId), aws.ToString(after.AgentId); before != after {
-			return create.Error(names.BedrockAgent, create.ErrActionCheckingNotRecreated, tfbedrockagent.ResNameAgentCollaborator, before, errors.New("recreated"))
-		}
 
 		return nil
 	}
