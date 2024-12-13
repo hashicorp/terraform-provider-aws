@@ -146,7 +146,7 @@ func dataSourcePolicyDocument() *schema.Resource {
 							"sid": {
 								Type:         schema.TypeString,
 								Optional:     true,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), "must only include alphanumeric characters"),
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]*$`), "must only include alphanumeric characters"),
 							},
 						},
 					},
