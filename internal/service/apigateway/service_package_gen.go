@@ -130,6 +130,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  resourceDomainNameAccessAssociation,
+			TypeName: "aws_api_gateway_domain_name_access_association",
+			Name:     "Domain Name Access Association",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
+		},
+		{
 			Factory:  resourceGatewayResponse,
 			TypeName: "aws_api_gateway_gateway_response",
 			Name:     "Gateway Response",
