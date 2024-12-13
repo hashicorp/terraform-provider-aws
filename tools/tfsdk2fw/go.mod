@@ -268,6 +268,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.30.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/taxsettings v1.7.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb v1.7.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/timestreamquery v1.29.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.29.8 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.41.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.54.0 // indirect
@@ -318,7 +319,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.2.0 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1 // indirect
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0 // indirect
-	github.com/hashicorp/terraform-plugin-framework-validators v0.15.0 // indirect
+	github.com/hashicorp/terraform-plugin-framework-validators v0.16.0 // indirect
 	github.com/hashicorp/terraform-plugin-go v0.25.0 // indirect
 	github.com/hashicorp/terraform-plugin-log v0.9.0 // indirect
 	github.com/hashicorp/terraform-plugin-mux v0.17.0 // indirect
