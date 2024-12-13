@@ -445,7 +445,6 @@ func waitDirectConnectGatewayAttachmentRejected(ctx context.Context, conn *netwo
 }
 
 type directConnectGatewayAttachmentResourceModel struct {
-	ARN                        types.String         `tfsdk:"arn"`
 	AttachmentPolicyRuleNumber types.Int64          `tfsdk:"attachment_policy_rule_number"`
 	AttachmentType             types.String         `tfsdk:"attachment_type"`
 	CoreNetworkARN             types.String         `tfsdk:"core_network_arn"`
@@ -455,6 +454,7 @@ type directConnectGatewayAttachmentResourceModel struct {
 	ID                         types.String         `tfsdk:"id"`
 	NetworkFunctionGroupName   types.String         `tfsdk:"network_function_group_name"`
 	OwnerAccountId             types.String         `tfsdk:"owner_account_id"`
+	ResourceARN                types.String         `tfsdk:"arn"`
 	SegmentName                types.String         `tfsdk:"segment_name"`
 	State                      types.String         `tfsdk:"state"`
 	Tags                       tftags.Map           `tfsdk:"tags"`
