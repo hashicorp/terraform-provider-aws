@@ -174,14 +174,10 @@ resource "aws_bedrockagent_agent_collaborator" "test" {
   collaboration_instruction  = "tell the other agent what to do"
   collaborator_name          = %[1]q
   relay_conversation_history = "TO_COLLABORATOR"
-  
+
   agent_descriptor {
     alias_arn = aws_bedrockagent_agent_alias.test.agent_alias_arn
   }
-
-  depends_on = [
-    aws_bedrockagent_agent.test2
-  ]
 }
 `, rName, model, description))
 }
