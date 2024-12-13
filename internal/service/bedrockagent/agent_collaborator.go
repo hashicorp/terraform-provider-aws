@@ -6,7 +6,6 @@ package bedrockagent
 import (
 	"context"
 	"errors"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
