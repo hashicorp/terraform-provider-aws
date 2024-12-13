@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_route53_query_log: Add `arn` attribute.
+```
+
+```release-note:bug
+resource/aws_route53_query_log: Properly remove from state when resource does not exist
+```

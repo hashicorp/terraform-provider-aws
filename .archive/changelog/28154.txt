@@ -1,0 +1,19 @@
+```release-note:new-resource
+aws_sagemaker_space
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_domain: Add `default_space_settings` and `default_user_settings.jupyter_server_app_settings.code_repository` arguments
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_user_profile: Add `user_settings.jupyter_server_app_settings.code_repository` argument
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_app: Add `space_name` argument
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_app: Make `user_profile_name` optional
+```

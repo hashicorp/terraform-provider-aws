@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_elasticache_cluster: Add `log_delivery_configuration` argument
+```
+
+```release-note:enhancement
+data-source/aws_elasticache_cluster: Add `log_delivery_configuration` attribute
+```
+
+```release-note:enhancement
+resource/aws_elasticache_replication_group: Add `log_delivery_configuration` argument
+```
+
+```release-note:enhancement
+data-source/aws_elasticache_replication_group: Add `log_delivery_configuration` attribute
+```

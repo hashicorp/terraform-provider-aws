@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_iot_role_alias: Increase the maximum allowed value of the `credential_duration` argument to `43200` (12 hours)
+```

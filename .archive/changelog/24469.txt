@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_kms_alias: Fix reserved prefix used in `name` and `name_prefix` plan time validation
+```

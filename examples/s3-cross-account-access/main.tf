@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   required_version = ">= 0.12"
 }
@@ -14,8 +17,15 @@ resource "aws_s3_bucket" "prod" {
   provider = aws.prod
 
   bucket = var.bucket_name
-  acl    = "private"
+}
 
+resource "aws_s3_bucket_acl" "prod_bucket_acl" {
+  bucket = aws_s3_bucket.prod.id
+  acl    = "private"
+}
+
+resource "aws_s3_bucket_policy" "prod_bucket_policy" {
+  bucket = aws_s3_bucket.prod.id
   policy = <<POLICY
 {
   "Version": "2012-10-17",
@@ -34,8 +44,10 @@ resource "aws_s3_bucket" "prod" {
 POLICY
 }
 
-resource "aws_s3_bucket_object" "prod" {
+resource "aws_s3_object" "prod" {
   provider = aws.prod
+
+  depends_on = [aws_s3_bucket_policy.prod_bucket_policy]
 
   bucket = aws_s3_bucket.prod.id
   key    = "object-uploaded-via-prod-creds"
@@ -50,8 +62,10 @@ provider "aws" {
   secret_key = var.test_secret_key
 }
 
-resource "aws_s3_bucket_object" "test" {
+resource "aws_s3_object" "test" {
   provider = aws.test
+
+  depends_on = [aws_s3_bucket_policy.prod_bucket_policy]
 
   bucket = aws_s3_bucket.prod.id
   key    = "object-uploaded-via-test-creds"

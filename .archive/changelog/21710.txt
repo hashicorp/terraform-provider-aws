@@ -1,0 +1,15 @@
+```release-note:bug
+data-source/aws_route: Fix lack of pagination when describing route tables
+```
+
+```release-note:bug
+resource/aws_default_route_table: Fix lack of pagination when describing route tables
+```
+
+```release-note:bug
+resource/aws_route_table: Fix lack of pagination when describing route tables
+```
+
+```release-note:bug
+resource/aws_route_table_association: Fix lack of pagination when describing route tables
+```

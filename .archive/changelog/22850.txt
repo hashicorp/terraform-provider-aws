@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_s3_object
+```
+
+```release-note:new-data-source
+aws_s3_object
+```
+
+```release-note:new-data-source
+aws_s3_objects
+```

@@ -1,0 +1,7 @@
+```release-note:bug
+provider: Limits size of HTTP response bodies in logs to 4 KB
+```
+
+```release-note:enhancement
+provider: Increases size of HTTP request bodies in logs to 1 KB
+```

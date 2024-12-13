@@ -1,0 +1,3 @@
+```release-note:breaking-change
+resource/aws_wafv2_web_acl_logging_configuration: The `redacted_fields.all_query_arguments`, `redacted_fields.body` and `redacted_fields.single_query_argument` attributes have been removed
+```

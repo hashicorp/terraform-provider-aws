@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_mwaa_environment: Consider `CREATING_SNAPSHOT` a valid pending state for resource update
+```
+
+```release-note:note
+resource/aws_mwaa_environment: Upgrading your environment to a new major version of Apache Airflow forces replacement of the resource
+```

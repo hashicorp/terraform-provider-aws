@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudwatch_log_destination_policy: Add `force_update` argument.
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_log_destination_policy: Add plan time validation for `access_policy`.
+```

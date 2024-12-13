@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_fms_admin_account: Add configurable timeouts
+```
+
+```release-note:bug
+resource/aws_fms_policy: Prevent erroneous diffs on `security_service_policy_data.managed_service_data`
+```

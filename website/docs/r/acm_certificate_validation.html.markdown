@@ -1,5 +1,5 @@
 ---
-subcategory: "ACM"
+subcategory: "ACM (Certificate Manager)"
 layout: "aws"
 page_title: "AWS: aws_acm_certificate_validation"
 description: |-
@@ -17,12 +17,11 @@ deploy the required validation records and wait for validation to complete.
 
 ~> **WARNING:** This resource implements a part of the validation workflow. It does not represent a real-world entity in AWS, therefore changing or deleting this resource on its own has no immediate effect.
 
-
 ## Example Usage
 
 ### DNS Validation with Route 53
 
-```hcl
+```terraform
 resource "aws_acm_certificate" "example" {
   domain_name       = "example.com"
   validation_method = "DNS"
@@ -64,7 +63,7 @@ resource "aws_lb_listener" "example" {
 
 ### Alternative Domains DNS Validation with Route 53
 
-```hcl
+```terraform
 resource "aws_acm_certificate" "example" {
   domain_name               = "example.com"
   subject_alternative_names = ["www.example.com", "example.org"]
@@ -115,7 +114,7 @@ resource "aws_lb_listener" "example" {
 
 In this situation, the resource is simply a waiter for manual email approval of ACM certificates.
 
-```hcl
+```terraform
 resource "aws_acm_certificate" "example" {
   domain_name       = "example.com"
   validation_method = "EMAIL"
@@ -128,20 +127,19 @@ resource "aws_acm_certificate_validation" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `certificate_arn` - (Required) The ARN of the certificate that is being validated.
+* `certificate_arn` - (Required) ARN of the certificate that is being validated.
 * `validation_record_fqdns` - (Optional) List of FQDNs that implement the validation. Only valid for DNS validation method ACM certificates. If this is set, the resource can implement additional sanity checks and has an explicit dependency on the resource that is implementing the validation
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The time at which the certificate was issued
+* `id` - Time at which the certificate was issued
 
 ## Timeouts
 
-`acm_certificate_validation` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `45m`) How long to wait for a certificate to be issued.
+- `create` - (Default `75m`)

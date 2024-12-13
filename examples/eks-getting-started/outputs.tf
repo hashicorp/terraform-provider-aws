@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 #
 # Outputs
 #
@@ -41,12 +44,12 @@ users:
 - name: aws
   user:
     exec:
-      apiVersion: client.authentication.k8s.io/v1alpha1
+      apiVersion: client.authentication.k8s.io/v1beta1
       command: aws-iam-authenticator
       args:
         - "token"
         - "-i"
-        - "${var.cluster-name}"
+        - "${var.cluster_name}"
 KUBECONFIG
 }
 

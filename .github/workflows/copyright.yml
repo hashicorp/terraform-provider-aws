@@ -1,0 +1,53 @@
+name: Copyright Checks
+
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  pull_request:
+    paths-ignore:
+      - .ci/**
+      - .github/**
+      - .teamcity/**
+      - .release/**
+      - infrastructure/repository/labels-service.tf
+      - .goreleaser.yml
+
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
+
+jobs:
+  copywrite:
+    name: add headers check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
+        with:
+          go-version-file: go.mod
+      # See also: https://github.com/actions/setup-go/issues/54
+      - name: go env
+        run: |
+          echo "GOCACHE=$(go env GOCACHE)" >> $GITHUB_ENV
+      - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-GOCACHE-${{ hashFiles('go.sum') }}-${{ hashFiles('internal/**') }}
+      - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: go install github.com/hashicorp/copywrite@latest
+      - run: copywrite headers
+      - name: Check for Git Differences
+        run: |
+          git diff --compact-summary --exit-code || \
+            (echo; echo "Unexpected difference in directories after adding copyright headers. Run 'copywrite headers' command and commit."; exit 1)

@@ -18,23 +18,22 @@ Manages selection conditions for AWS Backup plan resources.
 
 The below example creates an IAM role with the default managed IAM Policy for allowing AWS Backup to create backups.
 
-```hcl
+```terraform
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["backup.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
 resource "aws_iam_role" "example" {
   name               = "example"
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": ["sts:AssumeRole"],
-      "Effect": "allow",
-      "Principal": {
-        "Service": ["backup.amazonaws.com"]
-      }
-    }
-  ]
-}
-POLICY
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
 resource "aws_iam_role_policy_attachment" "example" {
@@ -51,7 +50,7 @@ resource "aws_backup_selection" "example" {
 
 ### Selecting Backups By Tag
 
-```hcl
+```terraform
 resource "aws_backup_selection" "example" {
   iam_role_arn = aws_iam_role.example.arn
   name         = "tf_example_backup_selection"
@@ -65,9 +64,39 @@ resource "aws_backup_selection" "example" {
 }
 ```
 
+### Selecting Backups By Conditions
+
+```terraform
+resource "aws_backup_selection" "example" {
+  iam_role_arn = aws_iam_role.example.arn
+  name         = "tf_example_backup_selection"
+  plan_id      = aws_backup_plan.example.id
+  resources    = ["*"]
+
+  condition {
+    string_equals {
+      key   = "aws:ResourceTag/Component"
+      value = "rds"
+    }
+    string_like {
+      key   = "aws:ResourceTag/Application"
+      value = "app*"
+    }
+    string_not_equals {
+      key   = "aws:ResourceTag/Backup"
+      value = "false"
+    }
+    string_not_like {
+      key   = "aws:ResourceTag/Environment"
+      value = "test*"
+    }
+  }
+}
+```
+
 ### Selecting Backups By Resource
 
-```hcl
+```terraform
 resource "aws_backup_selection" "example" {
   iam_role_arn = aws_iam_role.example.arn
   name         = "tf_example_backup_selection"
@@ -81,15 +110,33 @@ resource "aws_backup_selection" "example" {
 }
 ```
 
+### Selecting Backups By Not Resource
+
+```terraform
+resource "aws_backup_selection" "example" {
+  iam_role_arn = aws_iam_role.example.arn
+  name         = "tf_example_backup_selection"
+  plan_id      = aws_backup_plan.example.id
+
+  not_resources = [
+    aws_db_instance.example.arn,
+    aws_ebs_volume.example.arn,
+    aws_efs_file_system.example.arn,
+  ]
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The display name of a resource selection document.
 * `plan_id` - (Required) The backup plan ID to be associated with the selection of resources.
 * `iam_role_arn` - (Required) The ARN of the IAM role that AWS Backup uses to authenticate when restoring and backing up the target resource. See the [AWS Backup Developer Guide](https://docs.aws.amazon.com/aws-backup/latest/devguide/access-control.html#managed-policies) for additional information about using AWS managed policies or creating custom policies attached to the IAM role.
 * `selection_tag` - (Optional) Tag-based conditions used to specify a set of resources to assign to a backup plan.
-* `resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to assign to a backup plan..
+* `condition` - (Optional) A list of conditions that you define to assign resources to your backup plans using tags.
+* `resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to assign to a backup plan.
+* `not_resources` - (Optional) An array of strings that either contain Amazon Resource Names (ARNs) or match patterns of resources to exclude from a backup plan.
 
 Tag conditions (`selection_tag`) support the following:
 
@@ -97,16 +144,25 @@ Tag conditions (`selection_tag`) support the following:
 * `key` - (Required) The key in a key-value pair.
 * `value` - (Required) The value in a key-value pair.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Backup Selection identifier
 
 ## Import
 
-Backup selection can be imported using the role plan_id and id separated by `|`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup selection using the role plan_id and id separated by `|`. For example:
 
+```terraform
+import {
+  to = aws_backup_selection.example
+  id = "plan-id|selection-id"
+}
 ```
-$ terraform import aws_backup_selection.example plan-id|selection-id
+
+Using `terraform import`, import Backup selection using the role plan_id and id separated by `|`. For example:
+
+```console
+% terraform import aws_backup_selection.example plan-id|selection-id
 ```

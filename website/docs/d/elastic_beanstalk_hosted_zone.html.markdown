@@ -12,16 +12,18 @@ Use this data source to get the ID of an [elastic beanstalk hosted zone](http://
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_elastic_beanstalk_hosted_zone" "current" {}
 ```
 
 ## Argument Reference
 
-* `region` - (Optional) The region you'd like the zone for. By default, fetches the current region.
+* `region` - (Optional) Region you'd like the zone for. By default, fetches the current region.
 
-## Attributes Reference
+## Attribute Reference
 
-* `id` - The ID of the hosted zone.
+This data source exports the following attributes in addition to the arguments above:
 
-* `region` - The region of the hosted zone.
+* `id` - ID of the hosted zone.
+
+* `region` - Region of the hosted zone.

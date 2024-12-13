@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_eks_addon: Add `PRESERVE` option to `resolve_conflicts` argument.
+```

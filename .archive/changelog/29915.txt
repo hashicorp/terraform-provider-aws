@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_endpoint_configuration: Fix `variant_name` generation when unset
+```

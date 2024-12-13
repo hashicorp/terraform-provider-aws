@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_ram_resource_share: Add `resource_share_status` argument.
+```

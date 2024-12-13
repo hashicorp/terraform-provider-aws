@@ -1,0 +1,60 @@
+---
+subcategory: "Device Farm"
+layout: "aws"
+page_title: "AWS: aws_devicefarm_upload"
+description: |-
+  Provides a Devicefarm upload
+---
+
+# Resource: aws_devicefarm_upload
+
+Provides a resource to manage AWS Device Farm Uploads.
+
+~> **NOTE:** AWS currently has limited regional support for Device Farm (e.g., `us-west-2`). See [AWS Device Farm endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/devicefarm.html) for information on supported regions.
+
+## Example Usage
+
+```terraform
+resource "aws_devicefarm_project" "example" {
+  name = "example"
+}
+
+resource "aws_devicefarm_upload" "example" {
+  name        = "example"
+  project_arn = aws_devicefarm_project.example.arn
+  type        = "APPIUM_JAVA_TESTNG_TEST_SPEC"
+}
+```
+
+## Argument Reference
+
+* `content_type` - (Optional) The upload's content type (for example, application/octet-stream).
+* `name` - (Required) The upload's file name. The name should not contain any forward slashes (/). If you are uploading an iOS app, the file name must end with the .ipa extension. If you are uploading an Android app, the file name must end with the .apk extension. For all others, the file name must end with the .zip file extension.
+* `project_arn` - (Required) The ARN of the project for the upload.
+* `type` - (Required) The upload's upload type. See [AWS Docs](https://docs.aws.amazon.com/devicefarm/latest/APIReference/API_CreateUpload.html#API_CreateUpload_RequestSyntax) for valid list of values.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - The Amazon Resource Name of this upload.
+* `url` - The presigned Amazon S3 URL that was used to store a file using a PUT request.
+* `category` - The upload's category.
+* `metadata` - The upload's metadata. For example, for Android, this contains information that is parsed from the manifest and is displayed in the AWS Device Farm console after the associated app is uploaded.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DeviceFarm Uploads using their ARN. For example:
+
+```terraform
+import {
+  to = aws_devicefarm_upload.example
+  id = "arn:aws:devicefarm:us-west-2:123456789012:upload:4fa784c7-ccb4-4dbf-ba4f-02198320daa1"
+}
+```
+
+Using `terraform import`, import DeviceFarm Uploads using their ARN. For example:
+
+```console
+% terraform import aws_devicefarm_upload.example arn:aws:devicefarm:us-west-2:123456789012:upload:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
+```

@@ -12,7 +12,7 @@ Information about Outposts Instance Types.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_outposts_outpost_instance_types" "example" {
   arn = data.aws_outposts_outpost.example.arn
 }
@@ -22,10 +22,10 @@ data "aws_outposts_outpost_instance_types" "example" {
 
 The following arguments are required:
 
-* `arn` - (Required) Outpost Amazon Resource Name (ARN).
+* `arn` - (Required) Outpost ARN.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `instance_types` - Set of instance types.

@@ -1,0 +1,11 @@
+```release-note:breaking-change
+resource/aws_connect_hours_of_operation: The hours_of_operation_arn attribute is renamed to arn
+```
+
+```release-note:breaking-change
+data-source/aws_connect_hours_of_operation: The hours_of_operation_arn attribute is renamed to arn
+```
+
+```release-note:note
+resource/aws_connect_hours_of_operation: Timeout support has been removed as it is not needed for this resource
+```

@@ -1,0 +1,11 @@
+```release-note:note
+data-source/aws_elasticache_replication_group: The `replication_group_description` attribute has been deprecated. All configurations using `replication_group_description` should be updated to use the `description` attribute instead
+```
+
+```release-note:note
+data-source/aws_elasticache_replication_group: The `number_cache_clusters` attribute has been deprecated. All configurations using `number_cache_clusters` should be updated to use the `num_cache_clusters` attribute instead
+```
+
+```release-note:enhancement
+data-source/aws_elasticache_replication_group: Add `description`, `num_cache_clusters`, `num_node_groups`, and `replicas_per_node_group` attributes
+```

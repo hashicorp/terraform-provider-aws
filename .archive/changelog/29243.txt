@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket: Fix crash when `logging` is empty
+```

@@ -1,0 +1,7 @@
+```release-note:enhancement
+data-source/aws_identitystore_group: Add `alternate_identifier` argument and `description` attribute
+```
+
+```release-note:note
+data-source/aws_identitystore_group: The `filter` argument has been deprecated. Use the `alternate_identifier` argument instead
+ ```

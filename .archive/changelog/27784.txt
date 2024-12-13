@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sesv2_email_identity_feedback_attributes: Fix invalid resource ID in error messages when creating the resource
+```

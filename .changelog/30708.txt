@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_quicksight_data_set: Correctly persist `create_columns_operation.expression` field
+```

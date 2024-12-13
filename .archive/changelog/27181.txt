@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_globalaccelerator_accelerator: Add `ip_addresses` argument in support of [BYOIP addresses](https://docs.aws.amazon.com/global-accelerator/latest/dg/using-byoip.html)
+```

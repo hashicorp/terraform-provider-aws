@@ -1,5 +1,5 @@
 ---
-subcategory: "Elastic Load Balancing (ELB Classic)"
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_elb"
 description: |-
@@ -18,7 +18,7 @@ with it, etc.
 
 ## Example Usage
 
-```hcl
+```terraform
 variable "lb_name" {
   type    = string
   default = ""
@@ -31,11 +31,11 @@ data "aws_elb" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `name` - (Required) The unique name of the load balancer.
+* `name` - (Required) Unique name of the load balancer.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [ELB Resource](/docs/providers/aws/r/elb.html) for details on the
 returned attributes - they are identical.

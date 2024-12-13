@@ -1,77 +1,69 @@
-name: Acceptance Test Linting
+name: Acceptance Test Directory Linting
 on:
   push:
     branches:
-      - master
+      - main
       - "release/**"
   pull_request:
     paths:
       - .github/workflows/acctest-terraform-lint.yml
-      - aws/*_test.go
-      - scripts/validate-terraform.sh
-      - tools/go.mod
+      - .ci/.tflint.hcl
+      - .ci/tools/go.mod
+      - go.sum
+      - 'internal/service/**/*.tf'
 
-env:
-  GO_VERSION: "1.15"
-  GO111MODULE: on
+## NOTE: !!!
+## When changing these workflows, ensure that the following is updated:
+##   - Documentation: docs/continuous-integration.md
+##   - Documentation: docs/makefile-cheat-sheet.md
+##   - Makefile: ./GNUmakefile
 
 jobs:
   terrafmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
         with:
-          go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
+          go-version-file: go.mod
+      - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd tools && go install github.com/katbyte/terrafmt
-      # - run: terrafmt diff ./aws --check --pattern '*_test.go' --fmtcompat
-      - run: |
-          find ./aws -type f -name '*_test.go' \
-            | sort -u \
-            | grep -v resource_aws_apigatewayv2_domain_name_test.go \
-            | grep -v resource_aws_ecs_capacity_provider_test.go \
-            | grep -v resource_aws_efs_file_system_test.go \
-            | grep -v resource_aws_kinesis_stream_test.go \
-            | grep -v resource_aws_kms_grant_test.go \
-            | grep -v resource_aws_quicksight_user_test.go \
-            | grep -v resource_aws_route_table_test.go \
-            | grep -v resource_aws_s3_bucket_object_test.go \
-            | grep -v resource_aws_sns_platform_application_test.go \
-            | xargs -I {} terrafmt diff --check --fmtcompat {}
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
 
-  validate-terraform:
+      - run: terraform fmt -recursive -check
+
+  tflint:
+    name: Validate Acceptance Test Terraform
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-go@v2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
         with:
-          go-version: ${{ env.GO_VERSION }}
-      - uses: actions/cache@v2
+          go-version-file: go.mod
+      - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         continue-on-error: true
         timeout-minutes: 2
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
-      - run: cd tools && go install github.com/katbyte/terrafmt
-      - run: cd tools && go install github.com/terraform-linters/tflint
+      - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        name: Cache plugin dir
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
+
+      - run: cd .ci/tools && go install github.com/terraform-linters/tflint
+
+      - run: tflint --config .ci/.tflint.hcl --init
+
       - run: |
-          find ./aws -type f -name '*_test.go' \
-            | sort -u \
-            | grep -v resource_aws_apigatewayv2_domain_name_test.go \
-            | grep -v resource_aws_ecs_capacity_provider_test.go \
-            | grep -v resource_aws_efs_file_system_test.go \
-            | grep -v resource_aws_elasticache_cluster_test.go \
-            | grep -v resource_aws_kinesis_stream_test.go \
-            | grep -v resource_aws_kms_grant_test.go \
-            | grep -v resource_aws_lambda_permission_test.go \
-            | grep -v resource_aws_quicksight_user_test.go \
-            | grep -v resource_aws_route_table_test.go \
-            | grep -v resource_aws_s3_bucket_object_test.go \
-            | grep -v resource_aws_sns_platform_application_test.go \
-            | ./scripts/validate-terraform.sh
+          # tflint always resolves config flies relative to the working directory when using --recursive
+          TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
+          tflint --config  "${TFLINT_CONFIG}" --chdir=./internal/service --recursive

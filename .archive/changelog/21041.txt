@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_sagemaker_studio_lifecycle_config
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_domain: Add `default_user_settings.jupyter_server_app_settings.lifecycle_config_arns` and `default_user_settings.kernel_gateway_app_settings.lifecycle_config_arns` arguments
+```
+
+```release-note:enhancement
+resource/aws_user_profile: Add `user_settings.jupyter_server_app_settings.lifecycle_config_arns` and `user_settings.kernel_gateway_app_settings.lifecycle_config_arns` arguments
+```

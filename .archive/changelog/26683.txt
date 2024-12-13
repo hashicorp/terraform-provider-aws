@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_ec2_managed_prefix_list: Fixes bug where an error is returned for regions with more than 100 managed prefix lists
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_group: Wait for correct number of ELBs when `wait_for_elb_capacity` is configured
+```

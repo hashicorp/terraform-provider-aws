@@ -1,0 +1,19 @@
+```release-note:bug
+resource/aws_config_configuration_recorder: Fix `panic: interface conversion: interface {} is nil, not map[string]interface {}` when `recording_group.exclusion_by_resource_types` is empty
+```
+
+```release-note:enhancement
+resource/aws_config_configuration_recorder: Add plan-time validation of `aws_config_organization_custom_rule.lambda_function_arn`
+```
+
+```release-note:bug
+resource/aws_config_rule: Change `name` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```
+
+```release-note:new-resource
+aws_config_retention_configuration
+```
+
+```release-note:bug
+resource/aws_config_rule: Fix `InvalidParameterValueException: PolicyText is required when Owner is CUSTOM_POLICY` errors on resource Update
+```

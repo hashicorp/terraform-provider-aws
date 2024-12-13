@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_cluster: Fix bug preventing describing clusters in ISO regions
+```

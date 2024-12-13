@@ -1,0 +1,23 @@
+```release-note:bug
+resource/aws_appmesh_gateway_route: Use configured `mesh_owner` when deleting shared gateway route
+```
+
+```release-note:bug
+resource/aws_appmesh_route: Use configured `mesh_owner` value when deleting shared route
+```
+
+```release-note:bug
+resource/aws_appmesh_virtual_gateway: Use configured `mesh_owner` value when deleting shared virtual gateway
+```
+
+```release-note:bug
+resource/aws_appmesh_virtual_node: Use configured `mesh_owner` value when deleting shared virtual node
+```
+
+```release-note:bug
+resource/aws_appmesh_virtual_router: Use configured `mesh_owner` value when deleting shared virtual router
+```
+
+```release-note:bug
+resource/aws_appmesh_virtual_service: Use configured `mesh_owner` value when deleting shared virtual service
+```

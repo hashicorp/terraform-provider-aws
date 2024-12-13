@@ -22,12 +22,12 @@ To work around this you can either create each environment in a separate AWS acc
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "default" {
   bucket = "tftest.applicationversion.bucket"
 }
 
-resource "aws_s3_bucket_object" "default" {
+resource "aws_s3_object" "default" {
   bucket = aws_s3_bucket.default.id
   key    = "beanstalk/go-v1.zip"
   source = "go-v1.zip"
@@ -43,25 +43,29 @@ resource "aws_elastic_beanstalk_application_version" "default" {
   application = "tf-test-name"
   description = "application version created by terraform"
   bucket      = aws_s3_bucket.default.id
-  key         = aws_s3_bucket_object.default.id
+  key         = aws_s3_object.default.id
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `name` - (Required) A unique name for the this Application Version.
 * `application` - (Required) Name of the Beanstalk Application the version is associated with.
-* `description` - (Optional) Short description of the Application Version.
 * `bucket` - (Required) S3 bucket that contains the Application Version source bundle.
 * `key` - (Required) S3 object that is the Application Version source bundle.
-* `force_delete` - (Optional) On delete, force an Application Version to be deleted when it may be in use
-  by multiple Elastic Beanstalk Environments.
-* `tags` - Key-value map of tags for the Elastic Beanstalk Application Version.
+* `name` - (Required) Unique name for the this Application Version.
 
-## Attributes Reference
+The following arguments are optional:
 
-In addition to all arguments above, the following attributes are exported:
+* `description` - (Optional) Short description of the Application Version.
+* `force_delete` - (Optional) On delete, force an Application Version to be deleted when it may be in use by multiple Elastic Beanstalk Environments.
+* `process` - (Optional) Pre-processes and validates the environment manifest (env.yaml ) and configuration files (*.config files in the .ebextensions folder) in the source bundle. Validating configuration files can identify issues prior to deploying the application version to an environment. You must turn processing on for application versions that you create using AWS CodeBuild or AWS CodeCommit. For application versions built from a source bundle in Amazon S3, processing is optional. It validates Elastic Beanstalk configuration files. It doesn’t validate your application’s configuration files, like proxy server or Docker configuration.
+* `tags` - (Optional) Key-value map of tags for the Elastic Beanstalk Application Version. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-* `arn` - The ARN assigned by AWS for this Elastic Beanstalk Application.
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN assigned by AWS for this Elastic Beanstalk Application.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).

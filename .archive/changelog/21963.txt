@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_synthetics_canary: Add `artifact_config` argument.
+```
+
+```release-note:enhancement
+resource/aws_synthetics_canary: Make `artifact_s3_location` updateable.
+```

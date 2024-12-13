@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ec2_client_vpn_endpoint: Add `self_service_portal` and `authentication_options.self_service_saml_provider_arn` arguments to support self-service portal
+```

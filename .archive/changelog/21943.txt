@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_cloudfront_distribution: Correct `hosted_zone_id` for AWS China regions
+```
+
+```release-note:bug
+data-source/aws_cloudfront_distribution: Correct `hosted_zone_id` for AWS China regions
+```

@@ -1,0 +1,106 @@
+---
+subcategory: "FSx"
+layout: "aws"
+page_title: "AWS: aws_fsx_data_repository_association"
+description: |-
+  Manages a FSx for Lustre Data Repository Association.
+---
+
+# Resource: aws_fsx_data_repository_association
+
+Manages a FSx for Lustre Data Repository Association. See [Linking your file system to an S3 bucket](https://docs.aws.amazon.com/fsx/latest/LustreGuide/create-dra-linked-data-repo.html) for more information.
+
+~> **NOTE:** Data Repository Associations are only compatible with AWS FSx for Lustre File Systems and `PERSISTENT_2` deployment type.
+
+## Example Usage
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "my-bucket"
+}
+
+resource "aws_s3_bucket_acl" "example" {
+  bucket = aws_s3_bucket.example.id
+  acl    = "private"
+}
+
+resource "aws_fsx_lustre_file_system" "example" {
+  storage_capacity = 1200
+  subnet_ids       = [aws_subnet.example.id]
+  deployment_type  = "PERSISTENT_2"
+
+  per_unit_storage_throughput = 125
+}
+
+resource "aws_fsx_data_repository_association" "example" {
+  file_system_id       = aws_fsx_lustre_file_system.example.id
+  data_repository_path = "s3://${aws_s3_bucket.example.id}"
+  file_system_path     = "/my-bucket"
+
+  s3 {
+    auto_export_policy {
+      events = ["NEW", "CHANGED", "DELETED"]
+    }
+
+    auto_import_policy {
+      events = ["NEW", "CHANGED", "DELETED"]
+    }
+  }
+}
+```
+
+## Argument Reference
+
+This resource supports the following arguments:
+
+* `batch_import_meta_data_on_create` - (Optional) Set to true to run an import data repository task to import metadata from the data repository to the file system after the data repository association is created. Defaults to `false`.
+* `data_repository_path` - (Required) The path to the Amazon S3 data repository that will be linked to the file system. The path must be an S3 bucket s3://myBucket/myPrefix/. This path specifies where in the S3 data repository files will be imported from or exported to. The same S3 bucket cannot be linked more than once to the same file system.
+* `file_system_id` - (Required) The ID of the Amazon FSx file system to on which to create a data repository association.
+* `file_system_path` - (Required) A path on the file system that points to a high-level directory (such as `/ns1/`) or subdirectory (such as `/ns1/subdir/`) that will be mapped 1-1 with `data_repository_path`. The leading forward slash in the name is required. Two data repository associations cannot have overlapping file system paths. For example, if a data repository is associated with file system path `/ns1/`, then you cannot link another data repository with file system path `/ns1/ns2`. This path specifies where in your file system files will be exported from or imported to. This file system directory can be linked to only one Amazon S3 bucket, and no other S3 bucket can be linked to the directory.
+* `imported_file_chunk_size` - (Optional) For files imported from a data repository, this value determines the stripe count and maximum amount of data per file (in MiB) stored on a single physical disk. The maximum number of disks that a single file can be striped across is limited by the total number of disks that make up the file system.
+* `s3` - (Optional) See the [`s3` configuration](#s3-arguments) block. Max of 1.
+The configuration for an Amazon S3 data repository linked to an Amazon FSx Lustre file system with a data repository association. The configuration defines which file events (new, changed, or deleted files or directories) are automatically imported from the linked data repository to the file system or automatically exported from the file system to the data repository.
+* `delete_data_in_filesystem` - (Optional) Set to true to delete files from the file system upon deleting this data repository association. Defaults to `false`.
+* `tags` - (Optional) A map of tags to assign to the data repository association. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+#### S3 arguments
+
+* `auto_export_policy` - (Optional) Specifies the type of updated objects that will be automatically exported from your file system to the linked S3 bucket. See the [`events` configuration](#events-arguments) block.
+* `auto_import_policy` - (Optional) Specifies the type of updated objects that will be automatically imported from the linked S3 bucket to your file system. See the [`events` configuration](#events-arguments) block.
+
+#### Events arguments
+
+* `events` - (Optional) A list of file event types to automatically export to your linked S3 bucket or import from the linked S3 bucket. Valid values are `NEW`, `CHANGED`, `DELETED`. Max of 3.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - Amazon Resource Name of the file system.
+* `id` - Identifier of the data repository association, e.g., `dra-12345678`
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `10m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FSx Data Repository Associations using the `id`. For example:
+
+```terraform
+import {
+  to = aws_fsx_data_repository_association.example
+  id = "dra-0b1cfaeca11088b10"
+}
+```
+
+Using `terraform import`, import FSx Data Repository Associations using the `id`. For example:
+
+```console
+% terraform import aws_fsx_data_repository_association.example dra-0b1cfaeca11088b10
+```

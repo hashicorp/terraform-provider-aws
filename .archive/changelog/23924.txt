@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_imagebuilder_distribution_configuration: Add `account_id` argument to the `launch_template_configuration` attribute of the `distribution` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_imagebuilder_distribution_configuration: Add `account_id` attribute to the `launch_template_configuration` attribute of the `distribution` configuration block
+```

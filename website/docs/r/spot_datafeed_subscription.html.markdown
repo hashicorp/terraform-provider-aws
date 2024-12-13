@@ -1,5 +1,5 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_spot_datafeed_subscription"
 description: |-
@@ -15,13 +15,13 @@ This data feed is sent to an Amazon S3 bucket that you specify when you subscrib
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_s3_bucket" "default" {
   bucket = "tf-spot-datafeed"
 }
 
 resource "aws_spot_datafeed_subscription" "default" {
-  bucket = aws_s3_bucket.default.bucket
+  bucket = aws_s3_bucket.default.id
   prefix = "my_subdirectory"
 }
 ```
@@ -31,10 +31,23 @@ resource "aws_spot_datafeed_subscription" "default" {
 * `bucket` - (Required) The Amazon S3 bucket in which to store the Spot instance data feed.
 * `prefix` - (Optional) Path of folder inside bucket to place spot pricing data.
 
+## Attribute Reference
+
+This resource exports no additional attributes.
+
 ## Import
 
-A Spot Datafeed Subscription can be imported using the word `spot-datafeed-subscription`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Spot Datafeed Subscription using the word `spot-datafeed-subscription`. For example:
 
+```terraform
+import {
+  to = aws_spot_datafeed_subscription.mysubscription
+  id = "spot-datafeed-subscription"
+}
 ```
-$ terraform import aws_spot_datafeed_subscription.mysubscription spot-datafeed-subscription
+
+Using `terraform import`, import a Spot Datafeed Subscription using the word `spot-datafeed-subscription`. For example:
+
+```console
+% terraform import aws_spot_datafeed_subscription.mysubscription spot-datafeed-subscription
 ```

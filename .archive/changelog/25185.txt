@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_instance: Add `disable_api_stop` argument
+```
+
+```release-note:enhancement
+data-source/aws_instance: Add `disable_api_stop` attribute
+```
+
+```release-note:enhancement
+resource/aws_launch_template: Add `disable_api_stop` argument
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Add `disable_api_stop` attribute
+```

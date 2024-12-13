@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_route53_health_check: Add plan time validation for `failure_threshold`, `ip_address`, `fqdn`, `port`, `resource_path`, `search_string`, `child_healthchecks`.
+```
+
+```release-note:enhancement
+resource/aws_route53_health_check: Add `arn` attribute.
+```

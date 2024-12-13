@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudfront_function: Add `live_etag_version` attribute
+```
+
+```release-note:bug
+resource/aws_cloudfront_function: The `etag` attribute always the `DEVELOPMENT` version's value
+```

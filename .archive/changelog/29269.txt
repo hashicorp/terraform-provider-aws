@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_dynamodb_table: Avoid recreating table replicas when enabling PITR on them
+```
+
+```release-note:enhancement
+resource/aws_dynamodb_table: Add `arn`, `stream_arn`, and `stream_label` attributes to `replica` to obtain this information for replicas
+```
+
+```release-note:note
+provider: Resolves provider crashes reporting `Error: Plugin did not respond` and `fatal error: concurrent map writes` with updated upstream package (`terraform-plugin-log`)
+```

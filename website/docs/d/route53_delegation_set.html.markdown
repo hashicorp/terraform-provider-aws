@@ -1,5 +1,5 @@
 ---
-subcategory: "Route53"
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_delegation_set"
 description: |-
@@ -16,7 +16,7 @@ This data source allows to find a list of name servers associated with a specifi
 
 The following example shows how to get a delegation set from its id.
 
-```hcl
+```terraform
 data "aws_route53_delegation_set" "dset" {
   id = "MQWGHCBFAKEID"
 }
@@ -24,9 +24,10 @@ data "aws_route53_delegation_set" "dset" {
 
 ## Argument Reference
 
-* `id` - (Required) The Hosted Zone id of the desired delegation set.
+* `id` - (Required) Delegation set ID.
 
 The following attribute is additionally exported:
 
+* `arn` - ARN of the Delegation Set.
 * `caller_reference` - Caller Reference of the delegation set.
-* `name_servers` - The list of DNS name servers for the delegation set.
+* `name_servers` - List of DNS name servers for the delegation set.

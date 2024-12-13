@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_networkfirewall_firewall_rule_group: Add `stateful_rule_options` configuration block
+```
+
+```release-note:enhancement
+resource/aws_networkfirewall_firewall_policy: Add `stateful_default_actions` and `stateful_engine_options` configuration blocks. Add `priority` attribute to `stateful_rule_group_reference` block
+```

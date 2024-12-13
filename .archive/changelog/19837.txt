@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_macie2_classification_job: Add `bucket_criteria` attribute to the `s3_job_definition` configuration block
+```
+
+```release-note:bug
+resource/aws_macie2_classification_job: Fix incorrect plan diff for `TagScopeTerm()` when updating resources
+```
