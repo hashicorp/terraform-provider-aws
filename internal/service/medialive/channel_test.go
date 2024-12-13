@@ -124,7 +124,7 @@ func TestAccMediaLiveChannel_captionDescriptions(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.caption_descriptions.*", map[string]string{
 						"caption_selector_name": "test-caption-selector-teletext",
-						"name":                  "test-caption-name-teletext",
+						names.AttrName:          "test-caption-name-teletext",
 						"destination_settings.0.teletext_destination_settings.0": "",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "encoder_settings.0.video_descriptions.*", map[string]string{
