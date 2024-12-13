@@ -238,6 +238,28 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_tags(t *testing.T) {
 	})
 }
 
+func TestAccNetworkManagerDirectConnectGatewayAttachment_accepted(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dxgatewayattachment awstypes.DirectConnectGatewayAttachment
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkmanager_dx_gateway_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDirectConnectGatewayAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDirectConnectGatewayAttachmentConfig_Accepted_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDirectConnectGatewayAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)
@@ -435,8 +457,8 @@ resource "aws_networkmanager_dx_gateway_attachment" "test" {
 `)
 }
 
-func testAccDirectConnectGatewayAttachmentConfig_Accepted_basic(rName string, requireAcceptance bool) string {
-	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_base(rName, requireAcceptance), `
+func testAccDirectConnectGatewayAttachmentConfig_Accepted_basic(rName string) string {
+	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_base(rName, true), `
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
   core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
   direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
