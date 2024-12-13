@@ -53,9 +53,9 @@ resource "aws_kms_custom_key_store" "example" {
     access_key_id         = var.ephemeral_access_key_id
     raw_secret_access_key = var.ephemeral_secret_access_key
   }
-  xks_proxy_connectivity              = "PUBLIC_ENDPOINT"
-  xks_proxy_uri_endpoint              = "https://myproxy.xks.example.com"
-  xks_proxy_uri_path                  = "/kms/xks/v1"
+  xks_proxy_connectivity = "PUBLIC_ENDPOINT"
+  xks_proxy_uri_endpoint = "https://myproxy.xks.example.com"
+  xks_proxy_uri_path     = "/kms/xks/v1"
 }
 ```
 
