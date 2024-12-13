@@ -120,7 +120,6 @@ The `agent_descriptor` configuration block supports the following arguments:
 
 * `alias_arn` - (Required) ARN of the Alias of an Agent to use as the collaborator.
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
