@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -21,9 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	resourceIDPartCount = 2
 )
 
 // @SDKResource("aws_resourcegroups_resource", name="Resource")
@@ -63,7 +67,11 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	groupARN := d.Get("group_arn").(string)
 	resourceARN := d.Get(names.AttrResourceARN).(string)
-	id := strings.Join([]string{strings.Split(strings.ToLower(groupARN), "/")[1], strings.Split(resourceARN, "/")[1]}, "_")
+	id, err := flex.FlattenResourceId([]string{groupARN, resourceARN}, resourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &resourcegroups.GroupResourcesInput{
 		Group:        aws.String(groupARN),
 		ResourceArns: []string{resourceARN},

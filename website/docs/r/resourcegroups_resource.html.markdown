@@ -30,23 +30,20 @@ resource "aws_resourcegroups_resource" "example" {
   group_arn    = aws_resourcegroups_group.example.arn
   resource_arn = aws_ec2_host.example.arn
 }
-
 ```
 
 ## Argument Reference
 
 The following arguments are required:
 
-* `group_arn` - (Required) The name or the ARN of the resource group to add resources to.
-
-The following arguments are optional:
-
-* `resource_arn` - (Required) The ARN of the resource to be added to the group.
+* `group_arn` - (Required) Name or ARN of the resource group to add resources to.
+* `resource_arn` - (Required) ARN of the resource to be added to the group.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - A comma-delimited string combining `group_arn` and `resource_arn`.
 * `resource_type` - The resource type of a resource, such as `AWS::EC2::Instance`.
 
 ## Timeouts
