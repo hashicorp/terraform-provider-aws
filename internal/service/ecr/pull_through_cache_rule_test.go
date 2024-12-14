@@ -105,7 +105,6 @@ func TestAccECRPullThroughCacheRule_disappears(t *testing.T) {
 func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
-	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
 	if acctest.Partition() == "aws-us-gov" {
 		t.Skip("ECR Pull Through Cache Rule is not supported in GovCloud partition")
@@ -118,10 +117,7 @@ func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPullThroughCacheRuleConfig_failWhenAlreadyExist(repositoryPrefix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
-				),
+				Config:      testAccPullThroughCacheRuleConfig_failWhenAlreadyExists(repositoryPrefix),
 				ExpectError: regexache.MustCompile(`PullThroughCacheRuleAlreadyExistsException`),
 			},
 		},
@@ -222,7 +218,7 @@ resource "aws_ecr_pull_through_cache_rule" "test" {
 `, repositoryPrefix)
 }
 
-func testAccPullThroughCacheRuleConfig_failWhenAlreadyExist(repositoryPrefix string) string {
+func testAccPullThroughCacheRuleConfig_failWhenAlreadyExists(repositoryPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_pull_through_cache_rule" "test" {
   ecr_repository_prefix = %[1]q

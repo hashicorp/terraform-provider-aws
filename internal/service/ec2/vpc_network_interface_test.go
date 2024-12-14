@@ -117,6 +117,94 @@ func TestAccVPCNetworkInterface_ipv6(t *testing.T) {
 	})
 }
 
+func TestAccVPCNetworkInterface_ipv6Primary(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf types.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckENIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInterfaceConfig_ipv6Primary(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCNetworkInterface_ipv6PrimaryEnable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf types.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckENIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInterfaceConfig_ipv6(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+				),
+			},
+			{
+				Config: testAccVPCNetworkInterfaceConfig_ipv6Primary(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccVPCNetworkInterface_ipv6PrimaryDisable(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf types.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckENIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInterfaceConfig_ipv6Primary(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+				),
+			},
+			{
+				Config: testAccVPCNetworkInterfaceConfig_ipv6Primary(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVPCNetworkInterface_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface.test"
@@ -1236,6 +1324,22 @@ resource "aws_network_interface" "test" {
   }
 }
 `, rName))
+}
+
+func testAccVPCNetworkInterfaceConfig_ipv6Primary(rName string, enable bool) string {
+	return acctest.ConfigCompose(testAccVPCNetworkInterfaceConfig_baseIPV6(rName), fmt.Sprintf(`
+resource "aws_network_interface" "test" {
+  subnet_id           = aws_subnet.test.id
+  private_ips         = ["172.16.10.100"]
+  enable_primary_ipv6 = %[1]t
+  ipv6_addresses      = [cidrhost(aws_subnet.test.ipv6_cidr_block, 4)]
+  security_groups     = [aws_security_group.test.id]
+
+  tags = {
+    Name = %[2]q
+  }
+}
+`, enable, rName))
 }
 
 func testAccVPCNetworkInterfaceConfig_ipv6Multiple(rName string) string {

@@ -9,6 +9,7 @@ var (
 	ResourceStream         = resourceStream
 	ResourceStreamConsumer = resourceStreamConsumer
 
+	FindLimits              = findLimits
 	FindResourcePolicyByARN = findResourcePolicyByARN
 	FindStreamByName        = findStreamByName
 	FindStreamConsumerByARN = findStreamConsumerByARN

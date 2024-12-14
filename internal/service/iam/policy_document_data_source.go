@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -143,8 +144,9 @@ func dataSourcePolicyDocument() *schema.Resource {
 							"principals":        principalsSchema(),
 							names.AttrResources: setOfStringSchema(),
 							"sid": {
-								Type:     schema.TypeString,
-								Optional: true,
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]*$`), "must only include alphanumeric characters"),
 							},
 						},
 					},
