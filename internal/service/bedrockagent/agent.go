@@ -134,6 +134,20 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringvalidator.LengthBetween(40, 8000),
 				},
 			},
+			"memory_configuration": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[memoryConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[memoryConfigurationModel](ctx),
+				},
+			},
 			"prompt_override_configuration": schema.ListAttribute{ // proto5 Optional+Computed nested block.
 				CustomType: fwtypes.NewListNestedObjectTypeOf[promptOverrideConfigurationModel](ctx),
 				Optional:   true,
@@ -287,7 +301,6 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 	if response.Diagnostics.HasError() {
 		return
 	}
-
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	if !new.AgentName.Equal(old.AgentName) ||
@@ -297,6 +310,7 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		!new.Instruction.Equal(old.Instruction) ||
 		!new.IdleSessionTTLInSeconds.Equal(old.IdleSessionTTLInSeconds) ||
 		!new.FoundationModel.Equal(old.FoundationModel) ||
+		!new.MemoryConfiguration.Equal(old.MemoryConfiguration) ||
 		!new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) ||
 		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
 		input := &bedrockagent.UpdateAgentInput{
@@ -322,6 +336,18 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 			}
 
 			input.GuardrailConfiguration = guardrailConfiguration
+		}
+
+		if !new.MemoryConfiguration.Equal(old.MemoryConfiguration) {
+			memoryConfiguration := &awstypes.MemoryConfiguration{}
+			response.Diagnostics.Append(fwflex.Expand(ctx, new.MemoryConfiguration, memoryConfiguration)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
+
+			if len(memoryConfiguration.EnabledMemoryTypes) > 0 {
+				input.MemoryConfiguration = memoryConfiguration
+			}
 		}
 
 		if !new.PromptOverrideConfiguration.IsNull() {
@@ -604,6 +630,7 @@ type agentResourceModel struct {
 	IdleSessionTTLInSeconds     types.Int64                                                       `tfsdk:"idle_session_ttl_in_seconds"`
 	Instruction                 types.String                                                      `tfsdk:"instruction"`
 	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
+	MemoryConfiguration         fwtypes.ListNestedObjectValueOf[memoryConfigurationModel]         `tfsdk:"memory_configuration"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
 	SkipResourceInUseCheck      types.Bool                                                        `tfsdk:"skip_resource_in_use_check"`
 	Tags                        tftags.Map                                                        `tfsdk:"tags"`
@@ -624,6 +651,11 @@ func (m *agentResourceModel) setID() {
 type guardrailConfigurationModel struct {
 	GuardrailIdentifier types.String `tfsdk:"guardrail_identifier"`
 	GuardrailVersion    types.String `tfsdk:"guardrail_version"`
+}
+
+type memoryConfigurationModel struct {
+	EnabledMemoryTypes fwtypes.ListValueOf[fwtypes.StringEnum[awstypes.MemoryType]] `tfsdk:"enabled_memory_types"`
+	StorageDays        types.Int32                                                  `tfsdk:"storage_days"`
 }
 
 type promptOverrideConfigurationModel struct {
