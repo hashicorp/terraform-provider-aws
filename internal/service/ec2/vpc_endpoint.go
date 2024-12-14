@@ -159,6 +159,10 @@ func resourceVPCEndpoint() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"service_region": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			names.AttrState: {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -270,6 +274,13 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk(names.AttrSubnetIDs); ok && v.(*schema.Set).Len() > 0 {
 		input.SubnetIds = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("service_region"); ok {
+		if err := validateServiceRegion(conn, serviceName, v.(string)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint (%s): %s", serviceName, err)
+		}
+		input.ServiceRegion = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateVpcEndpoint(ctx, input)
@@ -768,4 +779,24 @@ func flattenSubnetConfigurations(apiObjects []subnetConfiguration) []interface{}
 	}
 
 	return tfList
+}
+
+func validateServiceRegion(conn *ec2.Client, serviceName, serviceRegion string) error {
+	// Describe the VPC endpoint service with the specified name and region
+	input := &ec2.DescribeVpcEndpointServicesInput{
+		ServiceNames:   []string{serviceName},
+		ServiceRegions: []string{serviceRegion},
+	}
+
+	result, err := conn.DescribeVpcEndpointServices(context.TODO(), input)
+	if err != nil {
+		return fmt.Errorf("error describing VPC endpoint service %q in region %q: %w", serviceName, serviceRegion, err)
+	}
+
+	// If no service details are returned, the service is not available in the specified region
+	if len(result.ServiceDetails) == 0 {
+		return fmt.Errorf("service %q not found in region %q", serviceName, serviceRegion)
+	}
+
+	return nil // Service exists in the specified region
 }
