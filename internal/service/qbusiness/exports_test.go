@@ -10,4 +10,5 @@ var (
 	ResourceDatasource    = newResourceDatasource
 	ResourcePlugin        = newResourcePlugin
 	ResourceWebexperience = newResourceWebexperience
+	ResourceDataAccessor  = newResourceDataAccessor
 )

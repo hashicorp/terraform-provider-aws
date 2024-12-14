@@ -65,9 +65,9 @@ type resourceDatasource struct {
 	framework.WithTimeouts
 }
 
-func valueSchema(ctx context.Context) schema.SingleNestedBlock {
+func documentAttributeValueSchema(ctx context.Context) schema.SingleNestedBlock {
 	return schema.SingleNestedBlock{
-		CustomType: fwtypes.NewObjectTypeOf[resourceValueData](ctx),
+		CustomType: fwtypes.NewObjectTypeOf[resourceDocumentAttributeValueData](ctx),
 		Attributes: map[string]schema.Attribute{
 			"date_value": schema.StringAttribute{
 				CustomType:  timetypes.RFC3339Type{},
@@ -134,7 +134,7 @@ func conditionSchema(ctx context.Context) schema.ListNestedBlock {
 				},
 			},
 			Blocks: map[string]schema.Block{
-				names.AttrValue: valueSchema(ctx),
+				names.AttrValue: documentAttributeValueSchema(ctx),
 			},
 		},
 	}
@@ -204,7 +204,7 @@ func documentAttributeTargetSchema(ctx context.Context) schema.ListNestedBlock {
 				},
 			},
 			Blocks: map[string]schema.Block{
-				names.AttrValue: valueSchema(ctx),
+				names.AttrValue: documentAttributeValueSchema(ctx),
 			},
 		},
 	}
@@ -505,7 +505,7 @@ type resourceDatasourceData struct {
 	VpcConfiguration                fwtypes.ListNestedObjectValueOf[resourceVPCConfigurationData]                `tfsdk:"vpc_config"`
 }
 
-type resourceValueData struct {
+type resourceDocumentAttributeValueData struct {
 	DateValue       timetypes.RFC3339                 `tfsdk:"date_value"`
 	LongValue       types.Int64                       `tfsdk:"long_value"`
 	StringListValue fwtypes.ListValueOf[types.String] `tfsdk:"string_list_value"`
@@ -515,7 +515,7 @@ type resourceValueData struct {
 type resourceConditionData struct {
 	Key      types.String                                                     `tfsdk:"key"`
 	Operator fwtypes.StringEnum[awstypes.DocumentEnrichmentConditionOperator] `tfsdk:"operator"`
-	Value    fwtypes.ObjectValueOf[resourceValueData]                         `tfsdk:"value"`
+	Value    fwtypes.ObjectValueOf[resourceDocumentAttributeValueData]        `tfsdk:"value"`
 }
 
 type resourceHookConfigurationData struct {
@@ -526,9 +526,9 @@ type resourceHookConfigurationData struct {
 }
 
 type resourceDocumentAttributeTargetData struct {
-	Key      types.String                                        `tfsdk:"key"`
-	Operator fwtypes.StringEnum[awstypes.AttributeValueOperator] `tfsdk:"attribute_value_operator"`
-	Value    fwtypes.ObjectValueOf[resourceValueData]            `tfsdk:"value"`
+	Key      types.String                                              `tfsdk:"key"`
+	Operator fwtypes.StringEnum[awstypes.AttributeValueOperator]       `tfsdk:"attribute_value_operator"`
+	Value    fwtypes.ObjectValueOf[resourceDocumentAttributeValueData] `tfsdk:"value"`
 }
 
 type resourceInlineDocumentEnrichmentConfigurationData struct {
@@ -618,7 +618,7 @@ func (data *resourceDocumentAttributeTargetData) flattenResourceDocumentAttribut
 
 	data.Key = fwflex.StringToFramework(ctx, conf.Key)
 	data.Operator = fwtypes.StringEnumValue(conf.AttributeValueOperator)
-	data.Value, diags = fwtypes.NewObjectValueOf[resourceValueData](ctx, flatValue(ctx, conf.Value))
+	data.Value, diags = fwtypes.NewObjectValueOf[resourceDocumentAttributeValueData](ctx, flatValue(ctx, conf.Value))
 	return diags
 }
 
@@ -627,7 +627,7 @@ func (data *resourceConditionData) flattenDocumentAttributeCondition(ctx context
 
 	data.Key = fwflex.StringToFramework(ctx, conf.Key)
 	data.Operator = fwtypes.StringEnumValue(conf.Operator)
-	data.Value, diags = fwtypes.NewObjectValueOf[resourceValueData](ctx, flatValue(ctx, conf.Value))
+	data.Value, diags = fwtypes.NewObjectValueOf[resourceDocumentAttributeValueData](ctx, flatValue(ctx, conf.Value))
 	return diags
 }
 
@@ -730,8 +730,30 @@ func (r *resourceDatasourceData) flattenConfiguration(conf document.Interface) d
 	return diags
 }
 
-func flatValue(ctx context.Context, av awstypes.DocumentAttributeValue) *resourceValueData {
-	rvd := resourceValueData{
+func (r *resourceDocumentAttributeValueData) Flatten(ctx context.Context, v any) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	r.DateValue = timetypes.NewRFC3339Null()
+	r.LongValue = types.Int64Null()
+	r.StringValue = types.StringNull()
+	r.StringListValue = fwtypes.NewListValueOfNull[types.String](ctx)
+
+	switch t := v.(type) {
+	case awstypes.DocumentAttributeValueMemberDateValue:
+		r.DateValue = timetypes.NewRFC3339TimeValue(t.Value)
+	case awstypes.DocumentAttributeValueMemberLongValue:
+		r.LongValue = types.Int64Value(t.Value)
+	case awstypes.DocumentAttributeValueMemberStringListValue:
+		r.StringListValue = fwflex.FlattenFrameworkStringValueListOfString(ctx, t.Value)
+	case awstypes.DocumentAttributeValueMemberStringValue:
+		r.StringValue = types.StringValue(t.Value)
+	}
+
+	return diags
+}
+
+func flatValue(ctx context.Context, av awstypes.DocumentAttributeValue) *resourceDocumentAttributeValueData {
+	rvd := resourceDocumentAttributeValueData{
 		DateValue:       timetypes.NewRFC3339Null(),
 		LongValue:       types.Int64Null(),
 		StringValue:     types.StringNull(),
@@ -952,7 +974,11 @@ func expDocumentAttributeCondition(ctx context.Context, conf *resourceConditionD
 	return &cond, nil
 }
 
-func expValue(ctx context.Context, rvd *resourceValueData) (awstypes.DocumentAttributeValue, diag.Diagnostics) {
+func (r resourceDocumentAttributeValueData) Expand(ctx context.Context) (any, diag.Diagnostics) {
+	return expValue(ctx, &r)
+}
+
+func expValue(ctx context.Context, rvd *resourceDocumentAttributeValueData) (awstypes.DocumentAttributeValue, diag.Diagnostics) {
 	if rvd == nil {
 		return nil, nil
 	}
