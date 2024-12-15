@@ -65,6 +65,7 @@ func TestAccFSxLustreFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestMatchResourceAttr(resourceName, names.AttrVPCID, regexache.MustCompile(`^vpc-.+`)),
 					resource.TestMatchResourceAttr(resourceName, "weekly_maintenance_start_time", regexache.MustCompile(`^\d:\d\d:\d\d$`)),
+					resource.TestCheckResourceAttr(resourceName, "efa_enabled", acctest.CtFalse),
 				),
 			},
 			{
@@ -830,6 +831,50 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent2_perUnitStorageThroughp
 					testAccCheckLustreFileSystemExists(ctx, resourceName, &filesystem2),
 					testAccCheckLustreFileSystemNotRecreated(&filesystem1, &filesystem2),
 					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "250"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFSxLustreFileSystem_EfaEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	var efa_enabled_filesystem awstypes.FileSystem
+	resourceName := "aws_fsx_lustre_file_system.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.FSxEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLustreFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLustreFileSystemConfig_EfaEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &efa_enabled_filesystem),
+					resource.TestCheckResourceAttr(resourceName, "per_unit_storage_throughput", "125"),
+					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "38400"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.LustreDeploymentTypePersistent2)),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_configuration.0.mode", "AUTOMATIC"),
+					resource.TestCheckResourceAttr(resourceName, "efa_enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_backup_tags",
+					names.AttrSecurityGroupIDs,
+					"skip_final_backup",
+				},
+			}, {
+				Config: testAccLustreFileSystemConfig_persistent2DeploymentType(rName, 250),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &efa_enabled_filesystem),
+					resource.TestCheckResourceAttr(resourceName, "efa_enabled", acctest.CtTrue),
 				),
 			},
 		},
@@ -1948,4 +1993,47 @@ resource "aws_fsx_lustre_file_system" "test" {
   }
 }
 `, rName, uid))
+}
+
+func testAccLustreFileSystemConfig_EfaEnabled(rName string, efa_enabled bool) string {
+	return acctest.ConfigCompose(testAccLustreFileSystemConfig_base(rName), fmt.Sprintf(`
+resource "aws_security_group" "efa_enabled_secutiry_group" {
+  name   = "EFA-enabled-security-group"
+  vpc_id = aws_vpc.test.id
+  ingress {
+	from_port  = 0
+      to_port  = 0
+      protocol = "-1"
+      self     = true
+  }
+  egress {
+    from_port   = 0
+      to_port     = 0
+	  protocol    = "-1"
+	  self        = true
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+	  
+
+resource "aws_fsx_lustre_file_system" "efa_enabled_lustre" {
+  security_group_ids          = [aws_security_group.efa_enabled_secutiry_group.id]
+  storage_capacity            = 38400
+  subnet_ids                  = aws_subnet.test[*].id
+  deployment_type             = "PERSISTENT_2"
+  per_unit_storage_throughput = 125
+  efa_enabled                 = %[2]t
+
+  metadata_configuration {
+    mode = "AUTOMATIC"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, efa_enabled))
 }
