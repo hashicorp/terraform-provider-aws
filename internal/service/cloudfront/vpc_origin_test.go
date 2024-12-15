@@ -6,6 +6,7 @@ package cloudfront_test
 import (
 	"context"
 	"fmt"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,6 +21,7 @@ import (
 
 func TestAccCloudFrontVPCOrigin_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	var vpcOrigin awstypes.VpcOrigin
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_vpc_origin.test"
 
@@ -27,14 +29,20 @@ func TestAccCloudFrontVPCOrigin_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckVPCOriginDestroy(ctx, resourceName),
+		CheckDestroy:             testAccCheckVPCOriginDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCOriginConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVPCOriginExists(ctx, resourceName),
+					testAccCheckVPCOriginExists(ctx, resourceName, &vpcOrigin),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_origin_endpoint_config.origin_arn"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.http_port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.https_port", "8443"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.origin_protocol_policy", "https-only"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.origin_ssl_protocols.items#", "TLSv1.2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.origin_ssl_protocols.quantity", "1"),
 				),
 			},
 			{
@@ -46,26 +54,33 @@ func TestAccCloudFrontVPCOrigin_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCOriginExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckVPCOriginExists(ctx context.Context, n string, v *awstypes.VpcOrigin) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
-		rs := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("not found: %s", n)
+		}
 
 		if rs.Type != "aws_cloudfront_vpc_origin" {
 			return fmt.Errorf("resource %s is not a Cloudfront VPC Origin", n)
 		}
 
-		_, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
+		output, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
+		}
+
+		if output.VpcOrigin != nil {
+			*v = *output.VpcOrigin
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckVPCOriginDestroy(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckVPCOriginDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
@@ -76,15 +91,13 @@ func testAccCheckVPCOriginDestroy(ctx context.Context, n string) resource.TestCh
 
 			_, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
 
-			if tfresource.NotFound(err) {
-				continue
+			if err == nil {
+				return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
 			}
 
-			if err != nil {
+			if !tfresource.NotFound(err) {
 				return err
 			}
-
-			return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -116,19 +129,19 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "a" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "10.1.1.0/24"
-  availability_zone = "data.aws_availability_zones.available.names[0]"
+  availability_zone = data.aws_availability_zones.available.names[0]
 }
 
 resource "aws_subnet" "b" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "10.1.2.0/24"
-  availability_zone = "data.aws_availability_zones.available.names[1]"
+  availability_zone = data.aws_availability_zones.available.names[1]
 }
 
 resource "aws_subnet" "c" {
   vpc_id            = aws_vpc.test.id
   cidr_block        = "10.1.3.0/24"
-  availability_zone = "data.aws_availability_zones.available.names[2]"
+  availability_zone = data.aws_availability_zones.available.names[2]
 }
 
 resource "aws_internet_gateway" "gw" {

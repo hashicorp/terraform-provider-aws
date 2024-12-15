@@ -112,7 +112,6 @@ func (r *cloudfrontVPCOriginResource) Schema(ctx context.Context, request resour
 							listvalidator.SizeAtLeast(1),
 							listvalidator.SizeAtMost(1),
 						},
-						// TODO: User should be able to just specify an array, not object internals.
 						NestedObject: schema.NestedBlockObject{
 							Attributes: map[string]schema.Attribute{
 								"items": schema.SetAttribute{
@@ -359,11 +358,18 @@ func findVPCOriginByID(ctx context.Context, conn *cloudfront.Client, id string) 
 
 	output, err := conn.GetVpcOrigin(ctx, input)
 
+	if errs.IsA[*awstypes.EntityNotFound](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || output.VpcOrigin == nil {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
