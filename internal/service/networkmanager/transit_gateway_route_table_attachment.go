@@ -218,7 +218,7 @@ func findTransitGatewayRouteTableAttachmentByID(ctx context.Context, conn *netwo
 	return output.TransitGatewayRouteTableAttachment, nil
 }
 
-func statusTransitGatewayRouteTableAttachmentState(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+func statusTransitGatewayRouteTableAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findTransitGatewayRouteTableAttachmentByID(ctx, conn, id)
 
@@ -239,7 +239,7 @@ func waitTransitGatewayRouteTableAttachmentCreated(ctx context.Context, conn *ne
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
 		Timeout: timeout,
-		Refresh: statusTransitGatewayRouteTableAttachmentState(ctx, conn, id),
+		Refresh: statusTransitGatewayRouteTableAttachment(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -256,7 +256,7 @@ func waitTransitGatewayRouteTableAttachmentDeleted(ctx context.Context, conn *ne
 		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
 		Target:         []string{},
 		Timeout:        timeout,
-		Refresh:        statusTransitGatewayRouteTableAttachmentState(ctx, conn, id),
+		Refresh:        statusTransitGatewayRouteTableAttachment(ctx, conn, id),
 		NotFoundChecks: 1,
 	}
 
@@ -274,7 +274,7 @@ func waitTransitGatewayRouteTableAttachmentAvailable(ctx context.Context, conn *
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
 		Timeout: timeout,
-		Refresh: statusTransitGatewayRouteTableAttachmentState(ctx, conn, id),
+		Refresh: statusTransitGatewayRouteTableAttachment(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

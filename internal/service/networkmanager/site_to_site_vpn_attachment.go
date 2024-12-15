@@ -232,7 +232,7 @@ func findSiteToSiteVPNAttachmentByID(ctx context.Context, conn *networkmanager.C
 	return output.SiteToSiteVpnAttachment, nil
 }
 
-func statusSiteToSiteVPNAttachmentState(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+func statusSiteToSiteVPNAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findSiteToSiteVPNAttachmentByID(ctx, conn, id)
 
@@ -253,7 +253,7 @@ func waitSiteToSiteVPNAttachmentCreated(ctx context.Context, conn *networkmanage
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
 		Timeout: timeout,
-		Refresh: statusSiteToSiteVPNAttachmentState(ctx, conn, id),
+		Refresh: statusSiteToSiteVPNAttachment(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -270,7 +270,7 @@ func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanage
 		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
 		Target:         []string{},
 		Timeout:        timeout,
-		Refresh:        statusSiteToSiteVPNAttachmentState(ctx, conn, id),
+		Refresh:        statusSiteToSiteVPNAttachment(ctx, conn, id),
 		NotFoundChecks: 1,
 	}
 
@@ -288,7 +288,7 @@ func waitSiteToSiteVPNAttachmentAvailable(ctx context.Context, conn *networkmana
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingAttachmentAcceptance, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
 		Timeout: timeout,
-		Refresh: statusSiteToSiteVPNAttachmentState(ctx, conn, id),
+		Refresh: statusSiteToSiteVPNAttachment(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

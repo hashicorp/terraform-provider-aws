@@ -304,7 +304,7 @@ func findConnectAttachmentByID(ctx context.Context, conn *networkmanager.Client,
 	return output.ConnectAttachment, nil
 }
 
-func statusConnectAttachmentState(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
+func statusConnectAttachment(ctx context.Context, conn *networkmanager.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findConnectAttachmentByID(ctx, conn, id)
 
@@ -325,7 +325,7 @@ func waitConnectAttachmentCreated(ctx context.Context, conn *networkmanager.Clie
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
 		Timeout: timeout,
-		Refresh: statusConnectAttachmentState(ctx, conn, id),
+		Refresh: statusConnectAttachment(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -342,7 +342,7 @@ func waitConnectAttachmentDeleted(ctx context.Context, conn *networkmanager.Clie
 		Pending:        enum.Slice(awstypes.AttachmentStateDeleting),
 		Target:         []string{},
 		Timeout:        timeout,
-		Refresh:        statusConnectAttachmentState(ctx, conn, id),
+		Refresh:        statusConnectAttachment(ctx, conn, id),
 		NotFoundChecks: 1,
 	}
 
@@ -360,7 +360,7 @@ func waitConnectAttachmentAvailable(ctx context.Context, conn *networkmanager.Cl
 		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate, awstypes.AttachmentStatePendingAttachmentAcceptance),
 		Target:  enum.Slice(awstypes.AttachmentStateAvailable),
 		Timeout: timeout,
-		Refresh: statusConnectAttachmentState(ctx, conn, id),
+		Refresh: statusConnectAttachment(ctx, conn, id),
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
