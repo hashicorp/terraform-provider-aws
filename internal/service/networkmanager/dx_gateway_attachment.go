@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -175,7 +174,7 @@ func (r *directConnectGatewayAttachmentResource) Create(ctx context.Context, req
 		return
 	}
 
-	data.ARN = flex.StringValueToFramework(ctx, attachmentARN(ctx, r.Meta(), data.ID.ValueString()))
+	data.ARN = fwflex.StringValueToFramework(ctx, attachmentARN(ctx, r.Meta(), data.ID.ValueString()))
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -210,7 +209,7 @@ func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, reque
 		return
 	}
 
-	data.DirectConnectGatewayARN = flex.StringToFrameworkARN(ctx, dxgwAttachment.DirectConnectGatewayArn)
+	data.DirectConnectGatewayARN = fwflex.StringToFrameworkARN(ctx, dxgwAttachment.DirectConnectGatewayArn)
 
 	setTagsOut(ctx, dxgwAttachment.Attachment.Tags)
 
