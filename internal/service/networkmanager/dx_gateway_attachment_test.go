@@ -310,7 +310,6 @@ func testAccCheckDirectConnectGatewayAttachmentExists(ctx context.Context, n str
 func testAccDirectConnectGatewayAttachmentConfig_base(rName string, requireAcceptance bool) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
 
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
@@ -378,7 +377,6 @@ data "aws_networkmanager_core_network_policy_document" "test" {
 func testAccDirectConnectGatewayAttachmentConfig_multiRegionBase(rName string, edgeLocation1, edgeLocation2 string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_region" "current" {}
-data "aws_caller_identity" "current" {}
 
 resource "aws_dx_gateway" "test" {
   name            = %[1]q
@@ -451,7 +449,7 @@ func testAccDirectConnectGatewayAttachmentConfig_basic(rName string, requireAcce
 	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_base(rName, requireAcceptance), `
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
   core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
+  direct_connect_gateway_arn = aws_dx_gateway.test.arn
   edge_locations             = [data.aws_region.current.name]
 }
 `)
@@ -461,7 +459,7 @@ func testAccDirectConnectGatewayAttachmentConfig_Accepted_basic(rName string) st
 	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_base(rName, true), `
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
   core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
+  direct_connect_gateway_arn = aws_dx_gateway.test.arn
   edge_locations             = [data.aws_region.current.name]
 }
 
@@ -476,7 +474,7 @@ func testAccDirectConnectGatewayAttachmentConfig_multipleEdgeLocations(rName str
 	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_multiRegionBase(rName, edgeLocation1, edgeLocation2), fmt.Sprintf(`
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
   core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
+  direct_connect_gateway_arn = aws_dx_gateway.test.arn
   edge_locations             = [%[1]q]
 }
 `, edgeLocation1))
@@ -486,7 +484,7 @@ func testAccDirectConnectGatewayAttachmentConfig_multipleEdgeLocationsUpdated(rN
 	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_multiRegionBase(rName, edgeLocation1, edgeLocation2), fmt.Sprintf(`
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
   core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
+  direct_connect_gateway_arn = aws_dx_gateway.test.arn
   edge_locations             = [%[1]q, %[2]q]
 }
 `, edgeLocation1, edgeLocation2))
@@ -496,7 +494,7 @@ func testAccDirectConnectGatewayAttachmentConfig_tags1(rName, tagKey1, tagValue1
 	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_base(rName, false), fmt.Sprintf(`
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
   core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
+  direct_connect_gateway_arn = aws_dx_gateway.test.arn
   edge_locations             = [data.aws_region.current.name]
 
   tags = {
@@ -510,7 +508,7 @@ func testAccDirectConnectGatewayAttachmentConfig_tags2(rName, tagKey1, tagValue1
 	return acctest.ConfigCompose(testAccDirectConnectGatewayAttachmentConfig_base(rName, false), fmt.Sprintf(`
 resource "aws_networkmanager_dx_gateway_attachment" "test" {
   core_network_id            = aws_networkmanager_core_network_policy_attachment.test.core_network_id
-  direct_connect_gateway_arn = "arn:aws:directconnect::${data.aws_caller_identity.current.account_id}:dx-gateway/${aws_dx_gateway.test.id}"
+  direct_connect_gateway_arn = aws_dx_gateway.test.arn
   edge_locations             = [data.aws_region.current.name]
 
   tags = {
