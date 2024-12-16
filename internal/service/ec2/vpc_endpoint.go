@@ -162,6 +162,7 @@ func resourceVPCEndpoint() *schema.Resource {
 			"service_region": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			names.AttrState: {
