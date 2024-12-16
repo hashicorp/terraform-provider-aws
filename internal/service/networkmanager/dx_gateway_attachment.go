@@ -95,12 +95,6 @@ func (r *directConnectGatewayAttachmentResource) Schema(ctx context.Context, req
 				ElementType: types.StringType,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"network_function_group_name": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
 			names.AttrOwnerAccountID: schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -473,7 +467,6 @@ type directConnectGatewayAttachmentResourceModel struct {
 	DirectConnectGatewayARN    fwtypes.ARN          `tfsdk:"direct_connect_gateway_arn"`
 	EdgeLocations              fwtypes.ListOfString `tfsdk:"edge_locations"`
 	ID                         types.String         `tfsdk:"id"`
-	NetworkFunctionGroupName   types.String         `tfsdk:"network_function_group_name"`
 	OwnerAccountId             types.String         `tfsdk:"owner_account_id"`
 	SegmentName                types.String         `tfsdk:"segment_name"`
 	State                      types.String         `tfsdk:"state"`
