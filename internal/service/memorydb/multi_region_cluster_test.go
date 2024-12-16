@@ -51,10 +51,9 @@ func TestAccMemoryDBMultiRegionCluster_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrTags, names.AttrTagsAll},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -92,10 +91,9 @@ func TestAccMemoryDBMultiRegionCluster_defaults(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrTags, names.AttrTagsAll},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -113,26 +111,16 @@ func TestAccMemoryDBMultiRegionCluster_description(t *testing.T) {
 		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiRegionClusterConfig_description(rName, "Also managed by Terraform", 1),
+				Config: testAccMultiRegionClusterConfig_description(rName, "Also managed by Terraform"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Also managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrTags, names.AttrTagsAll},
-			},
-			{
-				Config: testAccMultiRegionClusterConfig_description(rName, "Also managed by Terraform, but now with an updated description", 2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiRegionClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Also managed by Terraform, but now with an updated description"),
-					resource.TestCheckResourceAttr(resourceName, "num_shards", "2"),
-				),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -157,10 +145,9 @@ func TestAccMemoryDBMultiRegionCluster_tlsEnabled(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrTags, names.AttrTagsAll},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -186,10 +173,9 @@ func TestAccMemoryDBMultiRegionCluster_engine(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrTags, names.AttrTagsAll},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -215,10 +201,9 @@ func TestAccMemoryDBMultiRegionCluster_engineVersion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrTags, names.AttrTagsAll},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -287,10 +272,9 @@ func TestAccMemoryDBMultiRegionCluster_numShards(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrTags, names.AttrTagsAll},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccMultiRegionClusterConfig_numShards(rName, 3),
@@ -298,6 +282,67 @@ func TestAccMemoryDBMultiRegionCluster_numShards(t *testing.T) {
 					testAccCheckMultiRegionClusterExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "num_shards", "3"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBMultiRegionCluster_nodeType(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_multi_region_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionClusterConfig_nodeType(rName, "db.r7g.xlarge"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "db.r7g.xlarge"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMultiRegionClusterConfig_nodeType(rName, "db.r7g.2xlarge"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "node_type", "db.r7g.2xlarge"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccMemoryDBMultiRegionCluster_parameterGroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_multi_region_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionClusterConfig_parameterGroup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "multi_region_parameter_group_name", "default.memorydb-valkey7.multiregion"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -416,20 +461,18 @@ resource "aws_memorydb_multi_region_cluster" "test" {
 }
 
 // Sets `num_shards` to also test an update of the resource
-func testAccMultiRegionClusterConfig_description(rName, description string, numShards int) string {
+func testAccMultiRegionClusterConfig_description(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
   node_type   = "db.r7g.xlarge"
   description = %[2]q
 
-  num_shards = %[3]d
-
   tags = {
     Test = "test"
   }
 }
-`, rName, description, numShards)
+`, rName, description)
 }
 
 func testAccMultiRegionClusterConfig_numShards(rName string, numShards int) string {
@@ -446,6 +489,36 @@ resource "aws_memorydb_multi_region_cluster" "test" {
   }
 }
 `, rName, numShards)
+}
+
+func testAccMultiRegionClusterConfig_nodeType(rName string, nodeType string) string {
+	return fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  multi_region_cluster_name_suffix = %[1]q
+  node_type   = %[2]q
+  description = "Also managed by Terraform"
+
+  tags = {
+    Test = "test"
+  }
+}
+`, rName, nodeType)
+}
+
+func testAccMultiRegionClusterConfig_parameterGroup(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_memorydb_multi_region_cluster" "test" {
+  multi_region_cluster_name_suffix = %[1]q
+  node_type   = "db.r7g.xlarge"
+  description = "Also managed by Terraform"
+
+  multi_region_parameter_group_name = "default.memorydb-valkey7.multiregion"
+
+  tags = {
+    Test = "test"
+  }
+}
+`, rName)
 }
 
 func testAccMultiRegionClusterConfig_tlsEnabled(rName string) string {

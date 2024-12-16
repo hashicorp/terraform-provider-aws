@@ -270,18 +270,6 @@ func (r *multiRegionClusterResource) Update(ctx context.Context, req resource.Up
 			MultiRegionClusterName: state.MultiRegionClusterName.ValueStringPointer(),
 		}
 
-		if !plan.MultiRegionClusterName.Equal(state.MultiRegionClusterName) {
-			input.MultiRegionClusterName = plan.MultiRegionClusterName.ValueStringPointer()
-		}
-
-		if !plan.Description.Equal(state.Description) {
-			input.Description = plan.Description.ValueStringPointer()
-		}
-
-		if !plan.Engine.Equal(state.Engine) {
-			input.EngineVersion = plan.EngineVersion.ValueStringPointer()
-		}
-
 		if !plan.MultiRegionParameterGroupName.Equal(state.MultiRegionParameterGroupName) {
 			input.MultiRegionParameterGroupName = plan.MultiRegionParameterGroupName.ValueStringPointer()
 		}
@@ -313,21 +301,21 @@ func (r *multiRegionClusterResource) Update(ctx context.Context, req resource.Up
 			)
 			return
 		}
-	}
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	statusOut, err := waitMultiRegionClusterAvailable(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionWaitingForUpdate, ResNameMultiRegionCluster, plan.MultiRegionClusterName.String(), err),
-			err.Error(),
-		)
-		return
-	}
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		statusOut, err := waitMultiRegionClusterAvailable(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.MemoryDB, create.ErrActionWaitingForUpdate, ResNameMultiRegionCluster, plan.MultiRegionClusterName.String(), err),
+				err.Error(),
+			)
+			return
+		}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, statusOut, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
+		resp.Diagnostics.Append(flex.Flatten(ctx, statusOut, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
