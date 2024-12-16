@@ -83,6 +83,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  resourceIndexPolicy,
+			TypeName: "aws_cloudwatch_log_index_policy",
+		},
+		{
 			Factory:  resourceMetricFilter,
 			TypeName: "aws_cloudwatch_log_metric_filter",
 		},

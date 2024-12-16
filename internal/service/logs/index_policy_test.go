@@ -83,7 +83,7 @@ import (
 // Cut and dry functions using well-used patterns, like typical flatteners and
 // expanders, don't need unit testing. However, if they are complex or
 // intricate, they should be unit tested.
-func TestFieldIndexExampleUnitTest(t *testing.T) {
+func TestIndexPolicyExampleUnitTest(t *testing.T) {
 	t.Parallel()
 
 	testCases := []struct {
@@ -139,7 +139,7 @@ func TestFieldIndexExampleUnitTest(t *testing.T) {
 // resource name.
 //
 // Acceptance test access AWS and cost money to run.
-func TestAccLogsFieldIndex_basic(t *testing.T) {
+func TestAccLogsIndexPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	// TIP: This is a long-running test guard for tests that run longer than
 	// 300s (5 min) generally.
@@ -147,7 +147,7 @@ func TestAccLogsFieldIndex_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var fieldindex cloudwatchlogs.DescribeFieldIndexResponse
+	var fieldindex cloudwatchlogs.DescribeIndexPolicyResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_logs_field_index.test"
 
@@ -159,12 +159,12 @@ func TestAccLogsFieldIndex_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFieldIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFieldIndexConfig_basic(rName),
+				Config: testAccIndexPolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFieldIndexExists(ctx, resourceName, &fieldindex),
+					testAccCheckIndexPolicyExists(ctx, resourceName, &fieldindex),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
@@ -186,13 +186,13 @@ func TestAccLogsFieldIndex_basic(t *testing.T) {
 	})
 }
 
-func TestAccLogsFieldIndex_disappears(t *testing.T) {
+func TestAccLogsIndexPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var fieldindex cloudwatchlogs.DescribeFieldIndexResponse
+	var fieldindex cloudwatchlogs.DescribeIndexPolicyResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_logs_field_index.test"
 
@@ -204,19 +204,19 @@ func TestAccLogsFieldIndex_disappears(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFieldIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckIndexPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFieldIndexConfig_basic(rName, testAccFieldIndexVersionNewer),
+				Config: testAccIndexPolicyConfig_basic(rName, testAccIndexPolicyVersionNewer),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFieldIndexExists(ctx, resourceName, &fieldindex),
+					testAccCheckIndexPolicyExists(ctx, resourceName, &fieldindex),
 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
 					// but expects a new resource factory function as the third argument. To expose this
 					// private function to the testing package, you may need to add a line like the following
 					// to exports_test.go:
 					//
-					//   var ResourceFieldIndex = newResourceFieldIndex
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceFieldIndex, resourceName),
+					//   var ResourceIndexPolicy = newResourceIndexPolicy
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceIndexPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -224,7 +224,7 @@ func TestAccLogsFieldIndex_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckFieldIndexDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckIndexPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
@@ -233,41 +233,41 @@ func testAccCheckFieldIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			
+
 			// TIP: ==== FINDERS ====
 			// The find function should be exported. Since it won't be used outside of the package, it can be exported
 			// in the `exports_test.go` file.
-			_, err := tflogs.FindFieldIndexByID(ctx, conn, rs.Primary.ID)
+			_, err := tflogs.FindIndexPolicyByID(ctx, conn, rs.Primary.ID)
 			if tfresource.NotFound(err) {
 				return nil
 			}
 			if err != nil {
-			        return create.Error(names.Logs, create.ErrActionCheckingDestroyed, tflogs.ResNameFieldIndex, rs.Primary.ID, err)
+			        return create.Error(names.Logs, create.ErrActionCheckingDestroyed, tflogs.ResNameIndexPolicy, rs.Primary.ID, err)
 			}
 
-			return create.Error(names.Logs, create.ErrActionCheckingDestroyed, tflogs.ResNameFieldIndex, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.Logs, create.ErrActionCheckingDestroyed, tflogs.ResNameIndexPolicy, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckFieldIndexExists(ctx context.Context, name string, fieldindex *cloudwatchlogs.DescribeFieldIndexResponse) resource.TestCheckFunc {
+func testAccCheckIndexPolicyExists(ctx context.Context, name string, fieldindex *cloudwatchlogs.DescribeIndexPolicyResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameFieldIndex, name, errors.New("not found"))
+			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameFieldIndex, name, errors.New("not set"))
+			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		resp, err := tflogs.FindFieldIndexByID(ctx, conn, rs.Primary.ID)
+		resp, err := tflogs.FindIndexPolicyByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameFieldIndex, rs.Primary.ID, err)
+			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, rs.Primary.ID, err)
 		}
 
 		*fieldindex = *resp
@@ -279,9 +279,9 @@ func testAccCheckFieldIndexExists(ctx context.Context, name string, fieldindex *
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-	input := &cloudwatchlogs.ListFieldIndexsInput{}
+	input := &cloudwatchlogs.ListIndexPolicysInput{}
 
-	_, err := conn.ListFieldIndexs(ctx, input)
+	_, err := conn.ListIndexPolicys(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -291,17 +291,17 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckFieldIndexNotRecreated(before, after *cloudwatchlogs.DescribeFieldIndexResponse) resource.TestCheckFunc {
+func testAccCheckIndexPolicyNotRecreated(before, after *cloudwatchlogs.DescribeIndexPolicyResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.FieldIndexId), aws.ToString(after.FieldIndexId); before != after {
-			return create.Error(names.Logs, create.ErrActionCheckingNotRecreated, tflogs.ResNameFieldIndex, aws.ToString(before.FieldIndexId), errors.New("recreated"))
+		if before, after := aws.ToString(before.IndexPolicyId), aws.ToString(after.IndexPolicyId); before != after {
+			return create.Error(names.Logs, create.ErrActionCheckingNotRecreated, tflogs.ResNameIndexPolicy, aws.ToString(before.IndexPolicyId), errors.New("recreated"))
 		}
 
 		return nil
 	}
 }
 
-func testAccFieldIndexConfig_basic(rName, version string) string {
+func testAccIndexPolicyConfig_basic(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name = %[1]q
