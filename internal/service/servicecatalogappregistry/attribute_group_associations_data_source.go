@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -91,30 +90,31 @@ func (d *dataSourceAttributeGroupAssociations) Read(ctx context.Context, req dat
 		return
 	}
 
-	data.AttributeGroups = flex.FlattenFrameworkStringValueSet(ctx, out.AttributeGroups)
-
+	data.AttributeGroups = flex.FlattenFrameworkStringValueSet(ctx, out)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func findAttributeGroupAssociationsByID(ctx context.Context, conn *servicecatalogappregistry.Client, id string) (*servicecatalogappregistry.ListAssociatedAttributeGroupsOutput, error) {
+func findAttributeGroupAssociationsByID(ctx context.Context, conn *servicecatalogappregistry.Client, id string) ([]string, error) {
 	in := &servicecatalogappregistry.ListAssociatedAttributeGroupsInput{
 		Application: aws.String(id),
 	}
 
-	out, err := conn.ListAssociatedAttributeGroups(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
+	var out []string
+	paginator := servicecatalogappregistry.NewListAssociatedAttributeGroupsPaginator(conn, in)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: in,
+				}
 			}
+
+			return nil, err
 		}
 
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+		out = append(out, page.AttributeGroups...)
 	}
 
 	return out, nil
