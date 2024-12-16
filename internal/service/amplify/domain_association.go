@@ -207,8 +207,8 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if d.HasChanges("enable_auto_sub_domain", "sub_domain") {
-		input := &amplify.UpdateDomainAssociationInput{
+	if d.HasChanges("certificate_settings", "enable_auto_sub_domain", "sub_domain") {
+		input := amplify.UpdateDomainAssociationInput{
 			AppId:      aws.String(appID),
 			DomainName: aws.String(domainName),
 		}
@@ -225,16 +225,16 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 			input.SubDomainSettings = expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List())
 		}
 
-		_, err := conn.UpdateDomainAssociation(ctx, input)
+		_, err := conn.UpdateDomainAssociation(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Amplify Domain Association (%s): %s", d.Id(), err)
 		}
-	}
 
-	if d.Get("wait_for_verification").(bool) {
-		if _, err := waitDomainAssociationVerified(ctx, conn, appID, domainName); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) verification: %s", d.Id(), err)
+		if d.Get("wait_for_verification").(bool) {
+			if _, err := waitDomainAssociationVerified(ctx, conn, appID, domainName); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Amplify Domain Association (%s) verification: %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -314,8 +314,17 @@ func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, app
 		timeout = 5 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.DomainStatusCreating, types.DomainStatusInProgress, types.DomainStatusRequestingCertificate, types.DomainStatusImportingCustomCertificate),
-		Target:  enum.Slice(types.DomainStatusPendingVerification, types.DomainStatusPendingDeployment, types.DomainStatusAvailable),
+		Pending: enum.Slice(
+			types.DomainStatusCreating,
+			types.DomainStatusInProgress,
+			types.DomainStatusRequestingCertificate,
+			types.DomainStatusImportingCustomCertificate,
+		),
+		Target: enum.Slice(
+			types.DomainStatusPendingVerification,
+			types.DomainStatusPendingDeployment,
+			types.DomainStatusAvailable,
+		),
 		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
 		Timeout: timeout,
 	}
@@ -338,8 +347,46 @@ func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, ap
 		timeout = 15 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.DomainStatusUpdating, types.DomainStatusInProgress, types.DomainStatusPendingVerification),
-		Target:  enum.Slice(types.DomainStatusPendingDeployment, types.DomainStatusAvailable),
+		Pending: enum.Slice(
+			types.DomainStatusUpdating,
+			types.DomainStatusInProgress,
+			types.DomainStatusPendingVerification,
+		),
+		Target: enum.Slice(
+			types.DomainStatusPendingDeployment,
+			types.DomainStatusAvailable,
+		),
+		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if v, ok := outputRaw.(*types.DomainAssociation); ok {
+		if v.DomainStatus == types.DomainStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
+		}
+
+		return v, err
+	}
+
+	return nil, err
+}
+
+func waitDomainAssociationAvailable(ctx context.Context, conn *amplify.Client, appID, domainName string) (*types.DomainAssociation, error) { //nolint:unparam
+	const (
+		timeout = 15 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(
+			types.DomainStatusUpdating,
+			types.DomainStatusInProgress,
+			types.DomainStatusPendingVerification,
+			types.DomainStatusPendingDeployment,
+		),
+		Target: enum.Slice(
+			types.DomainStatusAvailable,
+		),
 		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
 		Timeout: timeout,
 	}

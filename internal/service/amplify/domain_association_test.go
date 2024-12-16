@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -21,6 +22,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// To test this resource, use a domain that is hosted in Route 53 in the same account and set the environment
+// variable "AMPLIFY_DOMAIN_NAME" to the domain name.
 
 func testAccDomainAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -107,7 +111,10 @@ func testAccDomainAssociation_update(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var domain types.DomainAssociation
+	var (
+		app    types.App
+		domain types.DomainAssociation
+	)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_domain_association.test"
 
@@ -120,6 +127,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 			{
 				Config: testAccDomainAssociationConfig_basic(rName, domainName, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppExists(ctx, "aws_amplify_app.test", &app),
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
@@ -128,6 +136,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
 						"branch_name":    rName,
 						names.AttrPrefix: "",
+						"verified":       acctest.CtTrue,
 					}),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", acctest.CtTrue),
 				),
@@ -139,7 +148,8 @@ func testAccDomainAssociation_update(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"wait_for_verification"},
 			},
 			{
-				Config: testAccDomainAssociationConfig_updated(rName, domainName, true, true),
+				PreConfig: domainAssociationStatusAvailablePreConfig(ctx, t, &app, &domain),
+				Config:    testAccDomainAssociationConfig_updated(rName, domainName, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
@@ -149,13 +159,21 @@ func testAccDomainAssociation_update(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
 						"branch_name":    rName,
 						names.AttrPrefix: "",
+						// "verified":       acctest.CtTrue, // Even though we're waiting for verification, this isn't getting verified
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "sub_domain.*", map[string]string{
 						"branch_name":    fmt.Sprintf("%s-2", rName),
 						names.AttrPrefix: "www",
+						// "verified":       acctest.CtTrue, // Even though we're waiting for verification, this isn't getting verified
 					}),
 					resource.TestCheckResourceAttr(resourceName, "wait_for_verification", acctest.CtTrue),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_verification"},
 			},
 		},
 	})
@@ -169,19 +187,23 @@ func testAccDomainAssociation_certificateSettings_Managed(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var domain types.DomainAssociation
+	var (
+		app    types.App
+		domain types.DomainAssociation
+	)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_domain_association.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAssociationConfig_certificateSettings_Managed(rName, domainName, false, false),
+				Config: testAccDomainAssociationConfig_certificateSettings_Managed(rName, domainName, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppExists(ctx, "aws_amplify_app.test", &app),
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
@@ -197,11 +219,30 @@ func testAccDomainAssociation_certificateSettings_Managed(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"wait_for_verification"},
 			},
+			{
+				PreConfig: domainAssociationStatusAvailablePreConfig(ctx, t, &app, &domain),
+				Config:    testAccDomainAssociationConfig_certificateSettings_Custom(rName, domainName, false, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.certificate_verification_dns_record", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "certificate_settings.0.custom_certificate_arn", "aws_acm_certificate.test", names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.type", "CUSTOM"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_verification"},
+			},
 		},
 	})
 }
 
-func TestAccDomainAssociation_certificateSettings_Custom(t *testing.T) {
+func testAccDomainAssociation_certificateSettings_Custom(t *testing.T) {
 	ctx := acctest.Context(t)
 	key := "AMPLIFY_DOMAIN_NAME"
 	domainName := os.Getenv(key)
@@ -209,7 +250,10 @@ func TestAccDomainAssociation_certificateSettings_Custom(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var domain types.DomainAssociation
+	var (
+		app    types.App
+		domain types.DomainAssociation
+	)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_domain_association.test"
 
@@ -224,8 +268,9 @@ func TestAccDomainAssociation_certificateSettings_Custom(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainAssociationConfig_certificateSettings_Custom(rName, domainName, false, false),
+				Config: testAccDomainAssociationConfig_certificateSettings_Custom(rName, domainName, false, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppExists(ctx, "aws_amplify_app.test", &app),
 					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
@@ -233,6 +278,25 @@ func TestAccDomainAssociation_certificateSettings_Custom(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.certificate_verification_dns_record", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_settings.0.custom_certificate_arn", "aws_acm_certificate.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.type", "CUSTOM"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_verification"},
+			},
+			{
+				PreConfig: domainAssociationStatusAvailablePreConfig(ctx, t, &app, &domain),
+				Config:    testAccDomainAssociationConfig_certificateSettings_Managed(rName, domainName, false, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDomainAssociationExists(ctx, resourceName, &domain),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "amplify", regexache.MustCompile(fmt.Sprintf(`apps/.+/domains/%s$`, domainName))),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDomainName, domainName),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.type", "AMPLIFY_MANAGED"),
+					resource.TestCheckResourceAttrSet(resourceName, "certificate_settings.0.certificate_verification_dns_record"),
+					resource.TestCheckResourceAttr(resourceName, "certificate_settings.0.custom_certificate_arn", ""),
 				),
 			},
 			{
@@ -447,4 +511,17 @@ resource "aws_acm_certificate_validation" "test" {
   certificate_arn = aws_acm_certificate.test.arn
 }
   `, rName, domainName, enableAutoSubDomain, waitForVerification))
+}
+
+// In practice, we don't seem to need to wait for the Domain Association to be `AVAILABLE` for the purposes of deploying infrastructure.
+// Since subsequent modifications to a Domain Association cannot occur until it is `AVAILABLE`, wait during tests.
+func domainAssociationStatusAvailablePreConfig(ctx context.Context, t *testing.T, app *types.App, domain *types.DomainAssociation) func() {
+	return func() {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
+
+		_, err := tfamplify.WaitDomainAssociationAvailable(ctx, conn, aws.ToString(app.AppId), aws.ToString(domain.DomainName))
+		if err != nil {
+			t.Fatalf("waiting for Amplify Domain Association (%s/%s) to be available: %s", aws.ToString(app.AppId), aws.ToString(domain.DomainName), err)
+		}
+	}
 }

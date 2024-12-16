@@ -9,3 +9,7 @@ resource/aws_amplify_domain_association: Prevent `ValidationException` when sett
 ```release-note:bug
 resource/aws_amplify_domain_association: Prevent "unexpected state" error when setting `certificate_settings.type` to `CUSTOM`.
 ```
+
+```release-note:bug
+resource/aws_amplify_domain_association: No longer ignores changes to `certificate_settings` when updating.
+```

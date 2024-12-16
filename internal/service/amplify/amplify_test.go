@@ -46,10 +46,11 @@ func TestAccAmplify_serial(t *testing.T) {
 			"OptionalArguments":    testAccBranch_OptionalArguments,
 		},
 		"DomainAssociation": {
-			acctest.CtBasic:       testAccDomainAssociation_basic,
-			"certificateSettings": testAccDomainAssociation_certificateSettings,
-			acctest.CtDisappears:  testAccDomainAssociation_disappears,
-			"update":              testAccDomainAssociation_update,
+			acctest.CtBasic:               testAccDomainAssociation_basic,
+			"certificateSettings_Managed": testAccDomainAssociation_certificateSettings_Managed,
+			"certificateSettings_Custom":  testAccDomainAssociation_certificateSettings_Custom,
+			acctest.CtDisappears:          testAccDomainAssociation_disappears,
+			"update":                      testAccDomainAssociation_update,
 		},
 		"Webhook": {
 			acctest.CtBasic:      testAccWebhook_basic,
