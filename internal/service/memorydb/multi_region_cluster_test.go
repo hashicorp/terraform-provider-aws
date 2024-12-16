@@ -247,7 +247,7 @@ func TestAccMemoryDBMultiRegionCluster_updateStrategy(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrTags, names.AttrTagsAll, "update_strategy"},
+				ImportStateVerifyIgnore: []string{"update_strategy"},
 			},
 		},
 	})

@@ -262,47 +262,87 @@ func (r *multiRegionClusterResource) Update(ctx context.Context, req resource.Up
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 
-	if !plan.MultiRegionParameterGroupName.Equal(state.MultiRegionParameterGroupName) ||
-		!plan.NodeType.Equal(state.NodeType) ||
-		!plan.NumShards.Equal(state.NumShards) {
-		input := memorydb.UpdateMultiRegionClusterInput{
-			MultiRegionClusterName: state.MultiRegionClusterName.ValueStringPointer(),
+	// Only one of node type, shard configurations, or parameter group
+	// can be updated in a single request. Construct a list of update
+	// requests to execute serially to support cases where multiple attributes
+	// are changed at once.
+	updateRequests := []*memorydb.UpdateMultiRegionClusterInput{}
+
+	// Standard updates
+	if !plan.Description.Equal(state.Description) ||
+		!plan.EngineVersion.Equal(state.EngineVersion) {
+		input := &memorydb.UpdateMultiRegionClusterInput{
+			MultiRegionClusterName: plan.MultiRegionClusterName.ValueStringPointer(),
 		}
-
-		if !plan.MultiRegionParameterGroupName.Equal(state.MultiRegionParameterGroupName) {
-			input.MultiRegionParameterGroupName = plan.MultiRegionParameterGroupName.ValueStringPointer()
+		if !plan.Description.IsNull() {
+			input.Description = plan.Description.ValueStringPointer()
 		}
-
-		if !plan.NodeType.Equal(state.NodeType) {
-			input.NodeType = plan.NodeType.ValueStringPointer()
+		if !plan.EngineVersion.IsNull() {
+			input.EngineVersion = plan.EngineVersion.ValueStringPointer()
 		}
-
-		if !plan.NumShards.Equal(state.NumShards) {
-			input.ShardConfiguration = &awstypes.ShardConfigurationRequest{
-				ShardCount: int32(*plan.NumShards.ValueInt64Pointer()),
-			}
-		}
-
-		if !plan.UpdateStrategy.Equal(state.UpdateStrategy) {
+		if !plan.UpdateStrategy.IsNull() {
 			input.UpdateStrategy = awstypes.UpdateStrategy(plan.UpdateStrategy.ValueString())
 		}
 
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input)...)
-		if resp.Diagnostics.HasError() {
-			return
+		updateRequests = append(updateRequests, input)
+	}
+
+	// Node type
+	if !plan.NodeType.Equal(state.NodeType) {
+		input := &memorydb.UpdateMultiRegionClusterInput{
+			MultiRegionClusterName: plan.MultiRegionClusterName.ValueStringPointer(),
+			NodeType:               plan.NodeType.ValueStringPointer(),
+		}
+		if !plan.UpdateStrategy.IsNull() {
+			input.UpdateStrategy = awstypes.UpdateStrategy(plan.UpdateStrategy.ValueString())
 		}
 
-		_, err := conn.UpdateMultiRegionCluster(ctx, &input)
-		if err != nil {
+		updateRequests = append(updateRequests, input)
+	}
+
+	// Shard configurations
+	if !plan.NumShards.Equal(state.NumShards) {
+		input := &memorydb.UpdateMultiRegionClusterInput{
+			MultiRegionClusterName: plan.MultiRegionClusterName.ValueStringPointer(),
+			ShardConfiguration: &awstypes.ShardConfigurationRequest{
+				ShardCount: int32(plan.NumShards.ValueInt64()),
+			},
+		}
+		if !plan.UpdateStrategy.IsNull() {
+			input.UpdateStrategy = awstypes.UpdateStrategy(plan.UpdateStrategy.ValueString())
+		}
+
+		updateRequests = append(updateRequests, input)
+	}
+
+	// Parameter group name
+	if !plan.MultiRegionParameterGroupName.Equal(state.MultiRegionParameterGroupName) {
+		input := &memorydb.UpdateMultiRegionClusterInput{
+			MultiRegionClusterName:        plan.MultiRegionClusterName.ValueStringPointer(),
+			MultiRegionParameterGroupName: plan.MultiRegionParameterGroupName.ValueStringPointer(),
+		}
+		if !plan.UpdateStrategy.IsNull() {
+			input.UpdateStrategy = awstypes.UpdateStrategy(plan.UpdateStrategy.ValueString())
+		}
+
+		updateRequests = append(updateRequests, input)
+	}
+
+	for _, input := range updateRequests {
+		if err := updateMultiRegionClusterAndWaitAvailable(ctx, conn, input, updateTimeout); err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.MemoryDB, create.ErrActionUpdating, ResNameMultiRegionCluster, plan.MultiRegionClusterName.String(), err),
 				err.Error(),
 			)
 			return
 		}
+	}
 
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	// If update requests were made, make one last call to the update waiter to
+	// retreive and write the latest status to state
+	if len(updateRequests) > 0 {
 		statusOut, err := waitMultiRegionClusterAvailable(ctx, conn, plan.ID.ValueString(), updateTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -437,6 +477,15 @@ func findMultiRegionClusters(ctx context.Context, conn *memorydb.Client, input *
 	}
 
 	return output, nil
+}
+
+func updateMultiRegionClusterAndWaitAvailable(ctx context.Context, conn *memorydb.Client, input *memorydb.UpdateMultiRegionClusterInput, timeout time.Duration) error {
+	if _, err := conn.UpdateMultiRegionCluster(ctx, input); err != nil {
+		return err
+	}
+
+	_, err := waitMultiRegionClusterAvailable(ctx, conn, aws.ToString(input.MultiRegionClusterName), timeout)
+	return err
 }
 
 func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name string) retry.StateRefreshFunc {
