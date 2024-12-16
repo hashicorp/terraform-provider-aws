@@ -37,6 +37,10 @@ func resourceResource() *schema.Resource {
 		ReadWithoutTimeout:   resourceResourceRead,
 		DeleteWithoutTimeout: resourceResourceDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
@@ -100,8 +104,14 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
-	output, err := findResourceByTwoPartKey(ctx, conn, d.Get("group_arn").(string), d.Get(names.AttrResourceARN).(string))
+	parts, err := flex.ExpandResourceId(d.Id(), resourceIDPartCount, false)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	groupARN := parts[0]
+	resourceARN := parts[1]
 
+	output, err := findResourceByTwoPartKey(ctx, conn, groupARN, resourceARN)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ResourceGroups Resource (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -112,6 +122,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Resource Groups Resource (%s): %s", d.Id(), err)
 	}
 
+	d.Set("group_arn", groupARN)
 	d.Set(names.AttrResourceARN, output.Identifier.ResourceArn)
 	d.Set(names.AttrResourceType, output.Identifier.ResourceType)
 

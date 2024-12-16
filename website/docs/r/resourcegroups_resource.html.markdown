@@ -52,3 +52,20 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `create` - (Default `5m`)
 * `delete` - (Default `5m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an AWS Resource Groups Resource using `group_arn` and `resource_arn`, separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_resourcegroups_resource.example
+  id = "arn:aws:resource-groups:us-west-2:012345678901:group/example,arn:aws:lambda:us-west-2:012345678901:function:example"
+}
+```
+
+Using `terraform import`, import an AWS Resource Groups Resource using `group_arn` and `resource_arn`, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_resourcegroups_resource.example arn:aws:resource-groups:us-west-2:012345678901:group/example,arn:aws:lambda:us-west-2:012345678901:function:example
+```

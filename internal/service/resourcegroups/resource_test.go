@@ -40,6 +40,11 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
