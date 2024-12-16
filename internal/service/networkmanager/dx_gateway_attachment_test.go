@@ -60,7 +60,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_basic(t *testing.T) {
 						Config: testAccDirectConnectGatewayAttachmentConfig_basic(rName, tc.acceptanceRequired),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
-							acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dx-gateway/.+`)),
+							acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 							resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 							resource.TestCheckResourceAttr(resourceName, "attachment_type", "DIRECT_CONNECT_GATEWAY"),
 							resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
@@ -150,7 +150,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_update(t *testing.T) {
 				Config: testAccDirectConnectGatewayAttachmentConfig_multipleEdgeLocations(rName, edgeLocation1, edgeLocation2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dx-gateway/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "DIRECT_CONNECT_GATEWAY"),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
@@ -171,7 +171,7 @@ func TestAccNetworkManagerDirectConnectGatewayAttachment_update(t *testing.T) {
 				Config: testAccDirectConnectGatewayAttachmentConfig_multipleEdgeLocationsUpdated(rName, edgeLocation1, edgeLocation2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDirectConnectGatewayAttachmentExists(ctx, resourceName, &dxgatewayattachment),
-					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "directconnect", regexache.MustCompile(`dx-gateway/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "DIRECT_CONNECT_GATEWAY"),
 					resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
