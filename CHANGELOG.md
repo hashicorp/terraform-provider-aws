@@ -12,6 +12,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_acmpca_certificate_authority: Ignore `AccessDeniedException: ... is not authorized to perform: acm-pca:GetCertificateAuthorityCsr on resource: ...` errors for RAM-shared CAs ([#39952](https://github.com/hashicorp/terraform-provider-aws/issues/39952))
+* resource/aws_codeconnections_host: Mark `vpc_configuration.tls_certificate` as Optional ([#40574](https://github.com/hashicorp/terraform-provider-aws/issues/40574))
 * resource/aws_elasticache_replication_group: Prevent perpetual diff which triggers resource replacement on `at_rest_encryption_enabled` when `engine` is `valkey`. ([#40514](https://github.com/hashicorp/terraform-provider-aws/issues/40514))
 * resource/aws_lakeformation_permissions: Fix refreshing state so order is not considered in `permissions` and `permissions_with_grant_option` attributes ([#38047](https://github.com/hashicorp/terraform-provider-aws/issues/38047))
 * resource/aws_lambda_invocation: Set new computed value for `result` attribute when changing `input` attribute, for lifecycle scope "CRUD" ([#34263](https://github.com/hashicorp/terraform-provider-aws/issues/34263))
