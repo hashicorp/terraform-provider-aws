@@ -180,6 +180,10 @@ func sweepGatewayAssociations(region string) error {
 				}
 
 				for _, v := range page.DirectConnectGatewayAssociations {
+					if v.AssociatedGateway == nil {
+						continue
+					}
+
 					gatewayID := aws.ToString(v.AssociatedGateway.Id)
 
 					if gatewayRegion := aws.ToString(v.AssociatedGateway.Region); gatewayRegion != region {
