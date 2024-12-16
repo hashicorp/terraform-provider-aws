@@ -183,7 +183,7 @@ func (r *multiRegionClusterResource) Create(ctx context.Context, req resource.Cr
 		)
 		return
 	}
-	if out == nil || out.MultiRegionCluster.ARN == nil {
+	if out == nil || out.MultiRegionCluster == nil || out.MultiRegionCluster.ARN == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionCreating, ResNameMultiRegionCluster, plan.MultiRegionClusterName.String(), nil),
 			errors.New("empty output").Error(),
