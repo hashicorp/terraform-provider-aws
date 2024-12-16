@@ -373,7 +373,7 @@ func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, ap
 	return nil, err
 }
 
-func waitDomainAssociationAvailable(ctx context.Context, conn *amplify.Client, appID, domainName string) (*types.DomainAssociation, error) { //nolint:unparam
+func waitDomainAssociationAvailable(ctx context.Context, conn *amplify.Client, appID, domainName string) (*types.DomainAssociation, error) {
 	const (
 		timeout = 15 * time.Minute
 	)
