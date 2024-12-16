@@ -419,7 +419,7 @@ data "aws_networkmanager_core_network_policy_document" "test" {
   segments {
     name                          = "shared"
     description                   = "SegmentForSharedServices"
-    require_attachment_acceptance = "false"
+    require_attachment_acceptance = false
   }
 
   segment_actions {
