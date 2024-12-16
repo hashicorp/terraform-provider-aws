@@ -33,7 +33,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociationsDataSource_basic(
 		CheckDestroy:             testAccCheckAttributeGroupAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationAttributeGroupAssociationsDataSourceConfig_basic(rName),
+				Config: testAccAttributeGroupAssociationsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAttributeGroupAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "attribute_group_ids.#", "1"),
@@ -43,7 +43,7 @@ func TestAccServiceCatalogAppRegistryAttributeGroupAssociationsDataSource_basic(
 	})
 }
 
-func testAccApplicationAttributeGroupAssociationsDataSourceConfig_basic(rName string) string {
+func testAccAttributeGroupAssociationsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
 		testAccAttributeGroupAssociationConfig_basic(rName),
 		`

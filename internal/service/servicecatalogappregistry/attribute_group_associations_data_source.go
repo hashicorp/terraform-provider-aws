@@ -21,25 +21,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource("aws_servicecatalogappregistry_attribute_group_associations", name="Application Attribute Group Associations")
-func newDataSourceApplicationAttributeGroupAssociations(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceApplicationAttributeGroupAssociations{}, nil
+// @FrameworkDataSource("aws_servicecatalogappregistry_attribute_group_associations", name="Attribute Group Associations")
+func newDataSourceAttributeGroupAssociations(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceAttributeGroupAssociations{}, nil
 }
 
 const (
-	DSNameApplicationAttributeGroupAssociations = "Application Attribute Group Associations Data Source"
+	DSNameAttributeGroupAssociations = "Attribute Group Associations Data Source"
 )
 
-type dataSourceApplicationAttributeGroupAssociations struct {
+type dataSourceAttributeGroupAssociations struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceApplicationAttributeGroupAssociations) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+func (d *dataSourceAttributeGroupAssociations) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	resp.TypeName = "aws_servicecatalogappregistry_attribute_group_associations"
 }
 
-func (d *dataSourceApplicationAttributeGroupAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
+func (d *dataSourceAttributeGroupAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: schema.StringAttribute{
@@ -55,10 +54,11 @@ func (d *dataSourceApplicationAttributeGroupAssociations) Schema(ctx context.Con
 		},
 	}
 }
-func (d *dataSourceApplicationAttributeGroupAssociations) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+
+func (d *dataSourceAttributeGroupAssociations) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	conn := d.Meta().ServiceCatalogAppRegistryClient(ctx)
 
-	var data dataSourceApplicationAttributeGroupAssociationsData
+	var data dataSourceAttributeGroupAssociationsData
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -72,10 +72,10 @@ func (d *dataSourceApplicationAttributeGroupAssociations) Read(ctx context.Conte
 		id = data.Name.ValueString()
 	}
 
-	out, err := findApplicationAttributeGroupAssociationsByID(ctx, conn, id)
+	out, err := findAttributeGroupAssociationsByID(ctx, conn, id)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionReading, DSNameApplicationAttributeGroupAssociations, data.ID.String(), err),
+			create.ProblemStandardMessage(names.ServiceCatalogAppRegistry, create.ErrActionReading, DSNameAttributeGroupAssociations, data.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -86,7 +86,7 @@ func (d *dataSourceApplicationAttributeGroupAssociations) Read(ctx context.Conte
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func findApplicationAttributeGroupAssociationsByID(ctx context.Context, conn *servicecatalogappregistry.Client, id string) (*servicecatalogappregistry.ListAssociatedAttributeGroupsOutput, error) {
+func findAttributeGroupAssociationsByID(ctx context.Context, conn *servicecatalogappregistry.Client, id string) (*servicecatalogappregistry.ListAssociatedAttributeGroupsOutput, error) {
 	in := &servicecatalogappregistry.ListAssociatedAttributeGroupsInput{
 		Application: aws.String(id),
 	}
@@ -110,7 +110,7 @@ func findApplicationAttributeGroupAssociationsByID(ctx context.Context, conn *se
 	return out, nil
 }
 
-type dataSourceApplicationAttributeGroupAssociationsData struct {
+type dataSourceAttributeGroupAssociationsData struct {
 	ID              types.String `tfsdk:"id"`
 	AttributeGroups types.Set    `tfsdk:"attribute_group_ids"`
 	Name            types.String `tfsdk:"name"`
