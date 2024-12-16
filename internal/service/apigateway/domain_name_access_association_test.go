@@ -38,7 +38,6 @@ func TestAccAPIGatewayDomainNameAccessAssociation_basic(t *testing.T) {
 				Config: testAccDomainNameAccessAssociationConfig_basic(rName, domain, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameAccessAssociationExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_name_arn", "aws_api_gateway_domain_name.test", "domain_name_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_association_source", "aws_vpc_endpoint.test", names.AttrID),
 					resource.TestCheckResourceAttr(resourceName, "access_association_source_type", "VPCE"),
 				),
@@ -186,7 +185,7 @@ resource "aws_api_gateway_domain_name" "test" {
 resource "aws_api_gateway_domain_name_access_association" "test" {
   access_association_source      = aws_vpc_endpoint.test.id
   access_association_source_type = "VPCE"
-  domain_name_arn                = aws_api_gateway_domain_name.test.domain_name_arn
+  domain_name_arn                = aws_api_gateway_domain_name.test.arn
 }
 `, rName, domainName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }

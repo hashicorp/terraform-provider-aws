@@ -57,7 +57,7 @@ resource "aws_api_gateway_domain_name" "test" {
 resource "aws_api_gateway_domain_name_access_association" "test" {
   access_association_source      = aws_vpc_endpoint.test.id
   access_association_source_type = "VPCE"
-  domain_name_arn                = aws_api_gateway_domain_name.test.domain_name_arn
+  domain_name_arn                = aws_api_gateway_domain_name.test.arn
 
   tags = var.resource_tags
 }
