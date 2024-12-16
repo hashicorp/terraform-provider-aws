@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_iam_policy_document: Add plan-time validation that the `statement` `sid` is valid, including on alphanumeric characters ([#40562](https://github.com/hashicorp/terraform-provider-aws/issues/40562))
+* resource/aws_bedrockagent_agent: Add `agent_collaboration` attribute to configure agent collaboration role ([#40543](https://github.com/hashicorp/terraform-provider-aws/issues/40543))
 
 BUG FIXES:
 
