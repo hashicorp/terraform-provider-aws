@@ -62,14 +62,7 @@ func (*multiRegionClusterResource) Metadata(_ context.Context, request resource.
 func (r *multiRegionClusterResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
 			names.AttrARN: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"multi_region_cluster_name": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -100,16 +93,17 @@ func (r *multiRegionClusterResource) Schema(ctx context.Context, request resourc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrID: framework.IDAttribute(),
+			"multi_region_cluster_name": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"multi_region_cluster_name_suffix": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			names.AttrStatus: schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"multi_region_parameter_group_name": schema.StringAttribute{
@@ -132,6 +126,19 @@ func (r *multiRegionClusterResource) Schema(ctx context.Context, request resourc
 					int64planmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrStatus: schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			"tls_enabled": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+			},
 			"update_strategy": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
@@ -141,13 +148,6 @@ func (r *multiRegionClusterResource) Schema(ctx context.Context, request resourc
 					enum.FrameworkValidate[awstypes.UpdateStrategy](),
 				},
 			},
-			"tls_enabled": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(true),
-			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
@@ -378,22 +378,22 @@ func (r *multiRegionClusterResource) ModifyPlan(ctx context.Context, req resourc
 }
 
 type multiRegionClusterResourceModel struct {
-	ID                            types.String   `tfsdk:"id"`
 	ARN                           types.String   `tfsdk:"arn"`
-	MultiRegionClusterName        types.String   `tfsdk:"multi_region_cluster_name"`
-	MultiRegionClusterNameSuffix  types.String   `tfsdk:"multi_region_cluster_name_suffix"`
 	Description                   types.String   `tfsdk:"description"`
 	Engine                        types.String   `tfsdk:"engine"`
 	EngineVersion                 types.String   `tfsdk:"engine_version"`
+	ID                            types.String   `tfsdk:"id"`
+	MultiRegionClusterName        types.String   `tfsdk:"multi_region_cluster_name"`
+	MultiRegionClusterNameSuffix  types.String   `tfsdk:"multi_region_cluster_name_suffix"`
 	MultiRegionParameterGroupName types.String   `tfsdk:"multi_region_parameter_group_name"`
 	NodeType                      types.String   `tfsdk:"node_type"`
 	NumShards                     types.Int64    `tfsdk:"num_shards"`
-	UpdateStrategy                types.String   `tfsdk:"update_strategy"`
 	Status                        types.String   `tfsdk:"status"`
-	TLSEnabled                    types.Bool     `tfsdk:"tls_enabled"`
 	Tags                          tftags.Map     `tfsdk:"tags"`
 	TagsAll                       tftags.Map     `tfsdk:"tags_all"`
 	Timeouts                      timeouts.Value `tfsdk:"timeouts"`
+	TLSEnabled                    types.Bool     `tfsdk:"tls_enabled"`
+	UpdateStrategy                types.String   `tfsdk:"update_strategy"`
 }
 
 func findMultiRegionClusterByName(ctx context.Context, conn *memorydb.Client, name string) (*awstypes.MultiRegionCluster, error) {
