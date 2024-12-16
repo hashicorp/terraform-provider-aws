@@ -442,7 +442,7 @@ func testAccMultiRegionClusterConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
-  node_type   = "db.r7g.xlarge"
+  node_type                        = "db.r7g.xlarge"
 
   tags = {
     Test = "test"
@@ -455,7 +455,7 @@ func testAccMultiRegionClusterConfig_defaults(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
-  node_type   = "db.r7g.xlarge"
+  node_type                        = "db.r7g.xlarge"
 }
 `, rName)
 }
@@ -465,8 +465,8 @@ func testAccMultiRegionClusterConfig_description(rName, description string) stri
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
-  node_type   = "db.r7g.xlarge"
-  description = %[2]q
+  node_type                        = "db.r7g.xlarge"
+  description                      = %[2]q
 
   tags = {
     Test = "test"
@@ -479,8 +479,8 @@ func testAccMultiRegionClusterConfig_numShards(rName string, numShards int) stri
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
-  node_type   = "db.r7g.xlarge"
-  description = "Also managed by Terraform"
+  node_type                        = "db.r7g.xlarge"
+  description                      = "Also managed by Terraform"
 
   num_shards = %[2]d
 
@@ -495,8 +495,8 @@ func testAccMultiRegionClusterConfig_nodeType(rName string, nodeType string) str
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
-  node_type   = %[2]q
-  description = "Also managed by Terraform"
+  node_type                        = %[2]q
+  description                      = "Also managed by Terraform"
 
   tags = {
     Test = "test"
@@ -509,8 +509,8 @@ func testAccMultiRegionClusterConfig_parameterGroup(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
-  node_type   = "db.r7g.xlarge"
-  description = "Also managed by Terraform"
+  node_type                        = "db.r7g.xlarge"
+  description                      = "Also managed by Terraform"
 
   multi_region_parameter_group_name = "default.memorydb-valkey7.multiregion"
 
@@ -525,8 +525,8 @@ func testAccMultiRegionClusterConfig_tlsEnabled(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
-  node_type   = "db.r7g.xlarge"
-  tls_enabled = false
+  node_type                        = "db.r7g.xlarge"
+  tls_enabled                      = false
 
   tags = {
     Test = "test"
@@ -539,8 +539,8 @@ func testAccMultiRegionClusterConfig_engine(rName, engine string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
-  node_type   = "db.r7g.xlarge"
-  engine      = %[2]q
+  node_type                        = "db.r7g.xlarge"
+  engine                           = %[2]q
 
   tags = {
     Test = "test"
@@ -552,10 +552,10 @@ resource "aws_memorydb_multi_region_cluster" "test" {
 func testAccMultiRegionClusterConfig_engineVersion(rName, engine, engineVersion string) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
-  multi_region_cluster_name_suffix    = %[1]q
-  node_type      = "db.r7g.xlarge"
-  engine         = %[2]q
-  engine_version = %[3]q
+  multi_region_cluster_name_suffix = %[1]q
+  node_type                        = "db.r7g.xlarge"
+  engine                           = %[2]q
+  engine_version                   = %[3]q
 
   tags = {
     Test = "test"
@@ -569,10 +569,10 @@ func testAccMultiRegionClusterConfig_updateStrategy(rName, updateStrategy string
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
-  node_type   = "db.r7g.xlarge"
-  
+  node_type                        = "db.r7g.xlarge"
+
   update_strategy = %[2]q
-  num_shards = %[3]d
+  num_shards      = %[3]d
 
   tags = {
     Test = "test"
@@ -585,7 +585,7 @@ func testAccMultiRegionClusterConfig_tags1(rName, tag1Key, tag1Value string) str
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
-  node_type   = "db.r7g.xlarge"
+  node_type                        = "db.r7g.xlarge"
 
   tags = {
     %[2]q = %[3]q
@@ -598,7 +598,7 @@ func testAccMultiRegionClusterConfig_tags2(rName, tag1Key, tag1Value, tag2Key, t
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
-  node_type   = "db.r7g.xlarge"
+  node_type                        = "db.r7g.xlarge"
 
   tags = {
     %[2]q = %[3]q
