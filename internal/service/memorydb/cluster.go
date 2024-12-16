@@ -377,14 +377,17 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.SetId(name)
 
-	if _, err := waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) create: %s", d.Id(), err)
-	}
-
+	// If a multi-region cluster name is set, ensure the `aws_memorydb_multi_region_cluster`
+	// is created and available before proceeding with cluster creation.
+	// Otherwise, the cluster creation will fail.
 	if v, ok := d.GetOk("multi_region_cluster_name"); ok {
 		if _, err := waitMultiRegionClusterAvailable(ctx, conn, v.(string), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Multi-Region Cluster (%s) create: %s", v.(string), err)
 		}
+	}
+
+	if _, err := waitClusterAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB Cluster (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
