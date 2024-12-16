@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_codeconnections_host: Set `tls_certificate` as an optional attribute
+```
