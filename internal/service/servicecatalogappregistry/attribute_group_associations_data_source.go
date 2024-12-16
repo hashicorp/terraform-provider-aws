@@ -9,8 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/datasourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -41,17 +43,26 @@ func (d *dataSourceAttributeGroupAssociations) Metadata(_ context.Context, req d
 func (d *dataSourceAttributeGroupAssociations) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: schema.StringAttribute{
-				Optional: true,
-			},
 			"attribute_group_ids": schema.SetAttribute{
 				Computed:    true,
 				ElementType: types.StringType,
+			},
+			names.AttrID: schema.StringAttribute{
+				Optional: true,
 			},
 			names.AttrName: schema.StringAttribute{
 				Optional: true,
 			},
 		},
+	}
+}
+
+func (d *dataSourceAttributeGroupAssociations) ConfigValidators(_ context.Context) []datasource.ConfigValidator {
+	return []datasource.ConfigValidator{
+		datasourcevalidator.ExactlyOneOf(
+			path.MatchRoot(names.AttrID),
+			path.MatchRoot(names.AttrName),
+		),
 	}
 }
 
@@ -65,7 +76,6 @@ func (d *dataSourceAttributeGroupAssociations) Read(ctx context.Context, req dat
 	}
 
 	var id string
-
 	if !data.ID.IsNull() {
 		id = data.ID.ValueString()
 	} else if !data.Name.IsNull() {
@@ -111,7 +121,7 @@ func findAttributeGroupAssociationsByID(ctx context.Context, conn *servicecatalo
 }
 
 type dataSourceAttributeGroupAssociationsData struct {
-	ID              types.String `tfsdk:"id"`
 	AttributeGroups types.Set    `tfsdk:"attribute_group_ids"`
+	ID              types.String `tfsdk:"id"`
 	Name            types.String `tfsdk:"name"`
 }
