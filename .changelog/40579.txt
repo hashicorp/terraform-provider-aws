@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_resourcegroups_resource: Fix crash when parsing certain ARN formats
+```
+```release-note:enhancement
+resource/aws_resourcegroups_resource: Add import support
+```
