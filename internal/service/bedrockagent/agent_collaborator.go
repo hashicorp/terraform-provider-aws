@@ -81,6 +81,9 @@ func (r *resourceAgentCollaborator) Schema(ctx context.Context, request resource
 			},
 			"collaborator_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"collaboration_instruction": schema.StringAttribute{
 				Required: true,
@@ -164,7 +167,7 @@ func (r *resourceAgentCollaborator) Create(ctx context.Context, request resource
 		return
 	}
 
-	data.CollaboratorID = flex.StringToFramework(ctx, out.AgentCollaborator.CollaboratorId)
+	data.CollaboratorId = flex.StringToFramework(ctx, out.AgentCollaborator.CollaboratorId)
 	id, err := data.setID()
 	if err != nil {
 		response.Diagnostics.AddError("flattening resource ID Bedrock Agent Action Group", err.Error())
@@ -201,7 +204,7 @@ func (r *resourceAgentCollaborator) Read(ctx context.Context, request resource.R
 		return
 	}
 
-	out, err := findAgentCollaboratorByThreePartKey(ctx, conn, data.AgentId.ValueString(), data.AgentVersion.ValueString(), data.CollaboratorID.ValueString())
+	out, err := findAgentCollaboratorByThreePartKey(ctx, conn, data.AgentId.ValueString(), data.AgentVersion.ValueString(), data.CollaboratorId.ValueString())
 	if tfresource.NotFound(err) {
 		response.State.RemoveResource(ctx)
 		return
@@ -285,7 +288,7 @@ func (r *resourceAgentCollaborator) Delete(ctx context.Context, request resource
 	input := bedrockagent.DisassociateAgentCollaboratorInput{
 		AgentId:        state.AgentId.ValueStringPointer(),
 		AgentVersion:   state.AgentVersion.ValueStringPointer(),
-		CollaboratorId: state.CollaboratorID.ValueStringPointer(),
+		CollaboratorId: state.CollaboratorId.ValueStringPointer(),
 	}
 
 	_, err := conn.DisassociateAgentCollaborator(ctx, &input)
@@ -338,7 +341,7 @@ type agentCollaboratorResourceModel struct {
 	AgentId                  types.String                                          `tfsdk:"agent_id"`
 	AgentVersion             types.String                                          `tfsdk:"agent_version"`
 	AgentDescriptor          fwtypes.ListNestedObjectValueOf[agentDescriptorModel] `tfsdk:"agent_descriptor"`
-	CollaboratorID           types.String                                          `tfsdk:"collaborator_id"`
+	CollaboratorId           types.String                                          `tfsdk:"collaborator_id"`
 	CollaborationInstruction types.String                                          `tfsdk:"collaboration_instruction"`
 	CollaboratorName         types.String                                          `tfsdk:"collaborator_name"`
 	ID                       types.String                                          `tfsdk:"id"`
@@ -361,7 +364,7 @@ func (m *agentCollaboratorResourceModel) InitFromID() error {
 
 	m.AgentId = types.StringValue(parts[0])
 	m.AgentVersion = types.StringValue(parts[1])
-	m.CollaboratorID = types.StringValue(parts[2])
+	m.CollaboratorId = types.StringValue(parts[2])
 
 	return nil
 }
@@ -370,7 +373,7 @@ func (m *agentCollaboratorResourceModel) setID() (string, error) {
 	parts := []string{
 		m.AgentId.ValueString(),
 		m.AgentVersion.ValueString(),
-		m.CollaboratorID.ValueString(),
+		m.CollaboratorId.ValueString(),
 	}
 
 	return fwflex.FlattenResourceId(parts, agentCollaboratorResourceIDPartCount, false)
