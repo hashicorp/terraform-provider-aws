@@ -1876,6 +1876,13 @@ func endpointsBlock() schema.SetNestedBlock {
 					Description: "Use this to override the default service endpoint URL",
 				},
 
+				// timestreamquery
+
+				"timestreamquery": schema.StringAttribute{
+					Optional:    true,
+					Description: "Use this to override the default service endpoint URL",
+				},
+
 				// timestreamwrite
 
 				"timestreamwrite": schema.StringAttribute{

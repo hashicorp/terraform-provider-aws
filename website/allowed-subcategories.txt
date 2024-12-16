@@ -232,6 +232,7 @@ Signer
 Storage Gateway
 Systems Manager for SAP
 Tax Settings
+Timestream Query
 Timestream Write
 Timestream for InfluxDB
 Transcribe

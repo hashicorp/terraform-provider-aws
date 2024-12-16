@@ -241,6 +241,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/synthetics"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/taxsettings"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreaminfluxdb"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamquery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/timestreamwrite"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transcribe"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
@@ -492,6 +493,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		synthetics.ServicePackage(ctx),
 		taxsettings.ServicePackage(ctx),
 		timestreaminfluxdb.ServicePackage(ctx),
+		timestreamquery.ServicePackage(ctx),
 		timestreamwrite.ServicePackage(ctx),
 		transcribe.ServicePackage(ctx),
 		transfer.ServicePackage(ctx),

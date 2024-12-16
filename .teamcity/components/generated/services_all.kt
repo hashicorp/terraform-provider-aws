@@ -234,6 +234,7 @@ val services = mapOf(
     "synthetics" to ServiceSpec("CloudWatch Synthetics", parallelismOverride = 10),
     "taxsettings" to ServiceSpec("Tax Settings"),
     "timestreaminfluxdb" to ServiceSpec("Timestream for InfluxDB", vpcLock = true, parallelismOverride = 3),
+    "timestreamquery" to ServiceSpec("Timestream Query"),
     "timestreamwrite" to ServiceSpec("Timestream Write"),
     "transcribe" to ServiceSpec("Transcribe"),
     "transfer" to ServiceSpec("Transfer Family", vpcLock = true),
