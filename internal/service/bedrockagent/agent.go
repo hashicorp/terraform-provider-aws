@@ -68,6 +68,11 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 		Attributes: map[string]schema.Attribute{
 			"agent_arn": framework.ARNAttributeComputedOnly(),
 			"agent_id":  framework.IDAttribute(),
+			"agent_collaboration": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.AgentCollaboration](),
+				Optional:   true,
+				Computed:   true,
+			},
 			"agent_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -298,9 +303,11 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		!new.IdleSessionTTLInSeconds.Equal(old.IdleSessionTTLInSeconds) ||
 		!new.FoundationModel.Equal(old.FoundationModel) ||
 		!new.GuardrailConfiguration.Equal(old.GuardrailConfiguration) ||
-		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
+		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) ||
+		!new.AgentCollaboration.Equal(old.AgentCollaboration) {
 		input := &bedrockagent.UpdateAgentInput{
 			AgentId:                  fwflex.StringFromFramework(ctx, new.AgentID),
+			AgentCollaboration:       new.AgentCollaboration.ValueEnum(),
 			AgentName:                fwflex.StringFromFramework(ctx, new.AgentName),
 			AgentResourceRoleArn:     fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN),
 			CustomerEncryptionKeyArn: fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN),
@@ -593,6 +600,7 @@ func removeDefaultPrompts(agent *awstypes.Agent) {
 type agentResourceModel struct {
 	AgentARN                    types.String                                                      `tfsdk:"agent_arn"`
 	AgentID                     types.String                                                      `tfsdk:"agent_id"`
+	AgentCollaboration          fwtypes.StringEnum[awstypes.AgentCollaboration]                   `tfsdk:"agent_collaboration"`
 	AgentName                   types.String                                                      `tfsdk:"agent_name"`
 	AgentResourceRoleARN        fwtypes.ARN                                                       `tfsdk:"agent_resource_role_arn"`
 	AgentVersion                types.String                                                      `tfsdk:"agent_version"`

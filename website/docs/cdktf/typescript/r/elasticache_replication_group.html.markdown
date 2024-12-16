@@ -280,6 +280,8 @@ The following arguments are optional:
 
 * `applyImmediately` - (Optional) Specifies whether any modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `atRestEncryptionEnabled` - (Optional) Whether to enable encryption at rest.
+  When `engine` is `redis`, default is `false`.
+  When `engine` is `valkey`, default is `true`.
 * `authToken` - (Optional) Password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
 * `authTokenUpdateStrategy` - (Optional) Strategy to use when updating the `authToken`. Valid values are `SET`, `ROTATE`, and `DELETE`. Defaults to `ROTATE`.
 * `autoMinorVersionUpgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
@@ -288,7 +290,9 @@ The following arguments are optional:
 * `automaticFailoverEnabled` - (Optional) Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, `numCacheClusters` must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups. Defaults to `false`.
 * `clusterMode` - (Optional) Specifies whether cluster mode is enabled or disabled. Valid values are `enabled` or `disabled` or `compatible`
 * `dataTieringEnabled` - (Optional) Enables data tiering. Data tiering is only supported for replication groups using the r6gd node type. This parameter must be set to `true` when using r6gd nodes.
-* `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group. Valid values are `redis` or `valkey`.
+* `engine` - (Optional) Name of the cache engine to be used for the clusters in this replication group.
+  Valid values are `redis` or `valkey`.
+  Default is `redis`.
 * `engineVersion` - (Optional) Version number of the cache engine to be used for the cache clusters in this replication group.
   If the version is 7 or higher, the major and minor version should be set, e.g., `7.2`.
   If the version is 6, the major and minor version can be set, e.g., `6.2`,
@@ -406,4 +410,4 @@ Using `terraform import`, import ElastiCache Replication Groups using the `repli
 % terraform import aws_elasticache_replication_group.my_replication_group replication-group-1
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-e0c8d9c9d277d04be4cd241f12248f2f98b5dc53d801120f9c9f67969bb8ba8e -->
+<!-- cache-key: cdktf-0.20.8 input-be878f20a1e1bb4fc8c8133075a64143c2efc8c9efc50187bb390813f0c704af -->
