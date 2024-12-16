@@ -29,7 +29,7 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -65,7 +65,7 @@ func TestAccCEAnomalySubscription_disappears(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -91,7 +91,7 @@ func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -129,7 +129,7 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -168,7 +168,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 	address2 := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
@@ -226,7 +226,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 	})
 }
 
-func TestAccCEAnomalySubscription_Tags(t *testing.T) {
+func TestAccCEAnomalySubscription_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
@@ -235,7 +235,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 	address := acctest.RandomEmailAddress(domain)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckPayerAccount(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAnomalySubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),

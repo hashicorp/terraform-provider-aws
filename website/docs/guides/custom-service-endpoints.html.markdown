@@ -316,6 +316,7 @@ provider "aws" {
 |CloudWatch Synthetics|`synthetics`|`AWS_ENDPOINT_URL_SYNTHETICS`|`synthetics`|
 |Tax Settings|`taxsettings`|`AWS_ENDPOINT_URL_TAXSETTINGS`|`taxsettings`|
 |Timestream for InfluxDB|`timestreaminfluxdb`|`AWS_ENDPOINT_URL_TIMESTREAM_INFLUXDB`|`timestream_influxdb`|
+|Timestream Query|`timestreamquery`|`AWS_ENDPOINT_URL_TIMESTREAM_QUERY`|`timestream_query`|
 |Timestream Write|`timestreamwrite`|`AWS_ENDPOINT_URL_TIMESTREAM_WRITE`|`timestream_write`|
 |Transcribe|`transcribe`(or `transcribeservice`)|`AWS_ENDPOINT_URL_TRANSCRIBE`|`transcribe`|
 |Transfer Family|`transfer`|`AWS_ENDPOINT_URL_TRANSFER`|`transfer`|
