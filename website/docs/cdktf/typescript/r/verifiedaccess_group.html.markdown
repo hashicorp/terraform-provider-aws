@@ -80,7 +80,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of the verified access group.
 * `policyDocument` - (Optional) The policy document that is associated with this resource.
 * `sseConfiguration` - (Optional) Configuration block to use KMS keys for server-side encryption.
-    * `customer_managed_key_enabled` - (Optional) Boolean flag to indicate that the CMK should be used.
+    * `cmk_enabled` - (Optional) Boolean flag to indicate that the CMK should be used.
     * `kmsKeyArn` - (Optional) ARN of the KMS key to use.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
