@@ -63,7 +63,7 @@ class MyConvertedCode extends TerraformStack {
     });
     const main = new CognitoUserPoolDomain(this, "main", {
       certificateArn: cert.arn,
-      domain: "example-domain",
+      domain: "auth.example.com",
       userPoolId: example.id,
     });
     const dataAwsRoute53ZoneExample = new DataAwsRoute53Zone(
@@ -141,4 +141,4 @@ Using `terraform import`, import Cognito User Pool Domains using the `domain`. F
 % terraform import aws_cognito_user_pool_domain.main auth.example.org
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-733a59c8cc009e81485e84116993b875f945dcad026524678e85b20d84780cc3 -->
+<!-- cache-key: cdktf-0.20.8 input-daa2779d8867f347bab96c76ae17fcad9c9350846b68b324043fe7920b7f9666 -->
