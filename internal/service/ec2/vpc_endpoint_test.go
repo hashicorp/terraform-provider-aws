@@ -888,12 +888,45 @@ func TestAccVPCEndpoint_crossRegionService(t *testing.T) {
 		),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCEndpointConfig_crossRegionService(rName), // Cross-region
+				Config: testAccVPCEndpointConfig_crossRegionService(rName, acctest.Region()), // Cross-region
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExistsWithProvider(ctx, endpointResourceName, &endpoint, acctest.RegionProviderFunc(ctx, acctest.AlternateRegion(), &providers)),
 					testAccCheckVPCEndpointServiceExists(ctx, serviceResourceName, &svcCfg),
 					resource.TestCheckResourceAttr(endpointResourceName, "service_region", acctest.Region()),
 				),
+			},
+			{
+				ResourceName:      endpointResourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPCEndpoint_invalidCrossRegionService(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("tfacctest") // 32 character limit
+
+	// record the initialized providers so that we can use them to
+	// check for the vpc endpoints in each region
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 3)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckVPCEndpointDestroy(ctx),
+			testAccCheckVPCEndpointServiceDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVPCEndpointConfig_crossRegionService(rName, acctest.ThirdRegion()), // Cross-region
+				ExpectError: regexache.MustCompile(`The Vpc Endpoint Service 'com\.amazonaws\.vpce\.([A-Za-z0-9]+(-[A-Za-z0-9]+)+)\.vpce-svc-[A-Za-z0-9]+' does not exist`),
 			},
 		},
 	})
@@ -1744,7 +1777,7 @@ resource "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccVPCEndpointConfig_crossRegionService(rName string) string {
+func testAccVPCEndpointConfig_crossRegionService(rName, serviceRegion string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		testAccVPCEndpointServiceConfig_crossRegion(rName, acctest.Region(), acctest.AlternateRegion()),
@@ -1770,6 +1803,6 @@ resource "aws_vpc_endpoint" "test" {
     Name = "%[1]s"
   }
 }
-`, rName, acctest.Region()),
+`, rName, serviceRegion),
 	)
 }
