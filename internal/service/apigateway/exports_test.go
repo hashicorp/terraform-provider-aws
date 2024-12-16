@@ -39,7 +39,7 @@ var (
 	FindDeploymentByTwoPartKey           = findDeploymentByTwoPartKey
 	FindDocumentationPartByTwoPartKey    = findDocumentationPartByTwoPartKey
 	FindDocumentationVersionByTwoPartKey = findDocumentationVersionByTwoPartKey
-	FindDomainNameAccessAssociationByID  = findDomainNameAccessAssociationByID
+	FindDomainNameAccessAssociationByARN = findDomainNameAccessAssociationByARN
 	FindDomainNameByTwoPartKey           = findDomainNameByTwoPartKey
 	FindGatewayResponseByTwoPartKey      = findGatewayResponseByTwoPartKey
 	FindIntegrationByThreePartKey        = findIntegrationByThreePartKey

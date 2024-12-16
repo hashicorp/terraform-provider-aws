@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -52,7 +53,7 @@ func resourceDomainNameAccessAssociation() *schema.Resource {
 			"access_association_source_type": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateDiagFunc: enum.Validate[types.AccessAssociationSourceType](),
+				ValidateDiagFunc: enum.Validate[awstypes.AccessAssociationSourceType](),
 				ForceNew:         true,
 			},
 			"domain_name_arn": {
@@ -75,7 +76,7 @@ func resourceDomainNameAccessAssociationCreate(ctx context.Context, d *schema.Re
 
 	input := &apigateway.CreateDomainNameAccessAssociationInput{
 		AccessAssociationSource:     aws.String(d.Get("access_association_source").(string)),
-		AccessAssociationSourceType: types.AccessAssociationSourceType(d.Get("access_association_source_type").(string)),
+		AccessAssociationSourceType: awstypes.AccessAssociationSourceType(d.Get("access_association_source_type").(string)),
 		DomainNameArn:               aws.String(d.Get("domain_name_arn").(string)),
 		Tags:                        getTagsIn(ctx),
 	}
@@ -97,7 +98,7 @@ func resourceDomainNameAccessAssociationRead(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	out, err := findDomainNameAccessAssociationByID(ctx, conn, d.Id())
+	out, err := findDomainNameAccessAssociationByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Domain Name Access Association (%s) not found, removing from state", d.Id())
@@ -134,7 +135,7 @@ func resourceDomainNameAccessAssociationDelete(ctx context.Context, d *schema.Re
 		DomainNameAccessAssociationArn: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.NotFoundException](err) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -145,14 +146,44 @@ func resourceDomainNameAccessAssociationDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func findDomainNameAccessAssociationByID(ctx context.Context, conn *apigateway.Client, id string) (*types.DomainNameAccessAssociation, error) {
+func findDomainNameAccessAssociationByARN(ctx context.Context, conn *apigateway.Client, arn string) (*awstypes.DomainNameAccessAssociation, error) {
 	input := &apigateway.GetDomainNameAccessAssociationsInput{
-		ResourceOwner: types.ResourceOwnerSelf,
+		ResourceOwner: awstypes.ResourceOwnerSelf,
 	}
 
-	output, err := conn.GetDomainNameAccessAssociations(ctx, input)
+	return findDomainNameAccessAssociation(ctx, conn, input, func(v *awstypes.DomainNameAccessAssociation) bool {
+		return aws.ToString(v.DomainNameAccessAssociationArn) == arn
+	})
+}
 
-	if errs.IsA[*types.NotFoundException](err) {
+func findDomainNameAccessAssociation(ctx context.Context, conn *apigateway.Client, input *apigateway.GetDomainNameAccessAssociationsInput, filter tfslices.Predicate[*awstypes.DomainNameAccessAssociation]) (*awstypes.DomainNameAccessAssociation, error) {
+	output, err := findDomainNameAccessAssociations(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findDomainNameAccessAssociations(ctx context.Context, conn *apigateway.Client, input *apigateway.GetDomainNameAccessAssociationsInput, filter tfslices.Predicate[*awstypes.DomainNameAccessAssociation]) ([]awstypes.DomainNameAccessAssociation, error) {
+	var output []awstypes.DomainNameAccessAssociation
+
+	err := getDomainNameAccessAssociationsPages(ctx, conn, input, func(page *apigateway.GetDomainNameAccessAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Items {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -163,26 +194,5 @@ func findDomainNameAccessAssociationByID(ctx context.Context, conn *apigateway.C
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if len(output.Items) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	var domainNameAccessAssociation *types.DomainNameAccessAssociation
-
-	for _, item := range output.Items {
-		if aws.ToString(item.DomainNameAccessAssociationArn) == id {
-			domainNameAccessAssociation = &item
-			break
-		}
-	}
-
-	if domainNameAccessAssociation == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return domainNameAccessAssociation, nil
+	return output, nil
 }

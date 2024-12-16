@@ -88,7 +88,7 @@ func testAccCheckDomainNameAccessAssociationExists(ctx context.Context, n string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindDomainNameAccessAssociationByID(ctx, conn, rs.Primary.ID)
+		output, err := tfapigateway.FindDomainNameAccessAssociationByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -109,7 +109,7 @@ func testAccCheckDomainNameAccessAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			_, err := tfapigateway.FindDomainNameAccessAssociationByID(ctx, conn, rs.Primary.ID)
+			_, err := tfapigateway.FindDomainNameAccessAssociationByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -119,7 +119,7 @@ func testAccCheckDomainNameAccessAssociationDestroy(ctx context.Context) resourc
 				return err
 			}
 
-			return fmt.Errorf("API Gateway Documentation Version %s still exists", rs.Primary.ID)
+			return fmt.Errorf("API Gateway Domain Name Access Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
