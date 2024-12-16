@@ -214,7 +214,9 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		if d.HasChange("certificate_settings") {
-			input.CertificateSettings = expandCertificateSettings(d.Get("certificate_settings").([]interface{})[0].(map[string]interface{}))
+			if v, ok := d.GetOk("certificate_settings"); ok && len(v.([]any)) > 0 && v.([]any)[0] != nil {
+				input.CertificateSettings = expandCertificateSettings(d.Get("certificate_settings").([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		if d.HasChange("enable_auto_sub_domain") {

@@ -13,3 +13,7 @@ resource/aws_amplify_domain_association: Prevent "unexpected state" error when s
 ```release-note:bug
 resource/aws_amplify_domain_association: No longer ignores changes to `certificate_settings` when updating.
 ```
+
+```release-note:bug
+resource/aws_amplify_domain_association: Prevents panic in some circumstances when `certificate_settings` is not set during update.
+```
