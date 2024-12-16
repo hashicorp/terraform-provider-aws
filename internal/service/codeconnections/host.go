@@ -108,7 +108,7 @@ func (r *hostResource) Schema(ctx context.Context, req resource.SchemaRequest, r
 							ElementType: types.StringType,
 						},
 						"tls_certificate": schema.StringAttribute{
-							Required: true,
+							Optional: true,
 							Validators: []validator.String{
 								stringvalidator.LengthBetween(1, 16384),
 							},
