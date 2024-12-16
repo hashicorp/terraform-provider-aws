@@ -228,16 +228,16 @@ func (r *multiRegionClusterResource) Read(ctx context.Context, req resource.Read
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionSetting, ResNameMultiRegionCluster, state.MultiRegionClusterName.String(), err),
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionReading, ResNameMultiRegionCluster, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	suffix, err := suffixAfterHyphen(*out.MultiRegionClusterName)
+	suffix, err := suffixAfterHyphen(aws.ToString(out.MultiRegionClusterName))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionSetting, ResNameMultiRegionCluster, state.MultiRegionClusterName.String(), err),
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionSetting, ResNameMultiRegionCluster, state.ID.String(), err),
 			err.Error(),
 		)
 		return
