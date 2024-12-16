@@ -604,8 +604,8 @@ service "mgn" {
     human_friendly      = "Application Migration (Mgn)"
   }
 
-  client {
-    go_v1_client_typename = "Mgn"
+  endpoint_info {
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -7499,8 +7499,8 @@ service "s3tables" {
     correct = "aws_s3tables_"
   }
 
-  doc_prefix               = ["s3tables_"]
-  brand                    = "Amazon"
+  doc_prefix = ["s3tables_"]
+  brand      = "Amazon"
 }
 
 service "glacier" {
