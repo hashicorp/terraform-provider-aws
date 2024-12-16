@@ -322,15 +322,18 @@ func statusConnectAttachment(ctx context.Context, conn *networkmanager.Client, i
 
 func waitConnectAttachmentCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.ConnectAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
-		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
-		Timeout: timeout,
-		Refresh: statusConnectAttachment(ctx, conn, id),
+		Pending:                   enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
+		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
+		Timeout:                   timeout,
+		Refresh:                   statusConnectAttachment(ctx, conn, id),
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectAttachment); ok {
+		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+
 		return output, err
 	}
 
@@ -349,6 +352,8 @@ func waitConnectAttachmentDeleted(ctx context.Context, conn *networkmanager.Clie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectAttachment); ok {
+		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+
 		return output, err
 	}
 
@@ -366,6 +371,8 @@ func waitConnectAttachmentAvailable(ctx context.Context, conn *networkmanager.Cl
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.ConnectAttachment); ok {
+		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+
 		return output, err
 	}
 

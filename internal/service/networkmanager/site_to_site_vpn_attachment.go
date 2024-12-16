@@ -250,15 +250,18 @@ func statusSiteToSiteVPNAttachment(ctx context.Context, conn *networkmanager.Cli
 
 func waitSiteToSiteVPNAttachmentCreated(ctx context.Context, conn *networkmanager.Client, id string, timeout time.Duration) (*awstypes.SiteToSiteVpnAttachment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
-		Target:  enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
-		Timeout: timeout,
-		Refresh: statusSiteToSiteVPNAttachment(ctx, conn, id),
+		Pending:                   enum.Slice(awstypes.AttachmentStateCreating, awstypes.AttachmentStatePendingNetworkUpdate),
+		Target:                    enum.Slice(awstypes.AttachmentStateAvailable, awstypes.AttachmentStatePendingAttachmentAcceptance),
+		Timeout:                   timeout,
+		Refresh:                   statusSiteToSiteVPNAttachment(ctx, conn, id),
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SiteToSiteVpnAttachment); ok {
+		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+
 		return output, err
 	}
 
@@ -277,6 +280,8 @@ func waitSiteToSiteVPNAttachmentDeleted(ctx context.Context, conn *networkmanage
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SiteToSiteVpnAttachment); ok {
+		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+
 		return output, err
 	}
 
@@ -294,6 +299,8 @@ func waitSiteToSiteVPNAttachmentAvailable(ctx context.Context, conn *networkmana
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.SiteToSiteVpnAttachment); ok {
+		tfresource.SetLastError(err, attachmentsError(output.Attachment.LastModificationErrors))
+
 		return output, err
 	}
 
