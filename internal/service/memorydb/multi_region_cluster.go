@@ -455,7 +455,7 @@ func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name s
 	}
 }
 
-func waitMultiRegionClusterAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.MultiRegionCluster, error) { //nolint:unparam
+func waitMultiRegionClusterAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.MultiRegionCluster, error) {
 	stateConf := &retry.StateChangeConf{
 		Delay:                     20 * time.Second,
 		Pending:                   []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
