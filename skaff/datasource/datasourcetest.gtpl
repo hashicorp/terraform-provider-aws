@@ -187,6 +187,12 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
+					{{- if .IncludeComments }}
+					// TIP: If the ARN can be partially or completely determined by the parameters passed, e.g. it contains the
+					// value of `rName`, either include the values in the regex or check for an exact match using `acctest.CheckResourceAttrRegionalARN`
+					// Alternatively, if the data source returns the values for a corresponding resource, use `resource.TestCheckResourceAttrPair` to
+					// check that the values are the same.
+					{{- end }}
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, names.AttrARN, "{{ .ServicePackage }}", regexache.MustCompile(`{{ .DataSourceLower }}:.+$`)),
 				),
 			},
