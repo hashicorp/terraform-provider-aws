@@ -457,11 +457,12 @@ func statusMultiRegionCluster(ctx context.Context, conn *memorydb.Client, name s
 
 func waitMultiRegionClusterAvailable(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.MultiRegionCluster, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Delay:   20 * time.Second,
-		Pending: []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
-		Target:  []string{clusterStatusAvailable},
-		Refresh: statusMultiRegionCluster(ctx, conn, name),
-		Timeout: timeout,
+		Delay:                     20 * time.Second,
+		Pending:                   []string{clusterStatusCreating, clusterStatusUpdating, clusterStatusSnapshotting},
+		Target:                    []string{clusterStatusAvailable},
+		Refresh:                   statusMultiRegionCluster(ctx, conn, name),
+		ContinuousTargetOccurence: 3,
+		Timeout:                   timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -475,11 +476,12 @@ func waitMultiRegionClusterAvailable(ctx context.Context, conn *memorydb.Client,
 
 func waitMultiRegionClusterDeleted(ctx context.Context, conn *memorydb.Client, name string, timeout time.Duration) (*awstypes.MultiRegionCluster, error) {
 	stateConf := &retry.StateChangeConf{
-		Delay:   20 * time.Second,
-		Pending: []string{clusterStatusDeleting},
-		Target:  []string{},
-		Refresh: statusMultiRegionCluster(ctx, conn, name),
-		Timeout: timeout,
+		Delay:                     20 * time.Second,
+		Pending:                   []string{clusterStatusDeleting},
+		Target:                    []string{},
+		Refresh:                   statusMultiRegionCluster(ctx, conn, name),
+		ContinuousTargetOccurence: 3,
+		Timeout:                   timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
