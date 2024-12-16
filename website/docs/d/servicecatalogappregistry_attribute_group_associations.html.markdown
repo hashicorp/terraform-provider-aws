@@ -3,12 +3,12 @@ subcategory: "Service Catalog AppRegistry"
 layout: "aws"
 page_title: "AWS: aws_servicecatalogappregistry_attribute_group_associations"
 description: |-
-  Terraform data source for managing an AWS Service Catalog AppRegistry Application Attribute Group Associations.
+  Terraform data source for managing an AWS Service Catalog AppRegistry Attribute Group Associations.
 ---
 
 # Data Source: aws_servicecatalogappregistry_attribute_group_associations
 
-Terraform data source for managing an AWS Service Catalog AppRegistry Application Attribute Group Associations.
+Terraform data source for managing an AWS Service Catalog AppRegistry Attribute Group Associations.
 
 ## Example Usage
 
@@ -22,14 +22,12 @@ data "aws_servicecatalogappregistry_attribute_group_associations" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
-
 The following arguments are optional:
 
 ~> Exactly one of `id`or `name` must be set.
 
-* `id`   - (Optional) ID of the Attribute Group to find.
-* `name` - (Optional) Name of the Attribute Group to find.
+* `id`   - (Optional) ID of the application to which attribute groups are associatied.
+* `name` - (Optional) Name of the application to which attribute groups are associatied.
 
 The following arguments are optional:
 
@@ -37,4 +35,4 @@ The following arguments are optional:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `attribute_group_ids` - Set of Ids ot the Attribute Groups this Application is associated with.
+* `attribute_group_ids` - Set of attribute group IDs this application is associated with.
