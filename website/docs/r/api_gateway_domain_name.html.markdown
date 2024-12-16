@@ -193,7 +193,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `cloudfront_domain_name` - Hostname created by Cloudfront to represent the distribution that implements this domain name mapping.
 * `cloudfront_zone_id` - For convenience, the hosted zone ID (`Z2FDTNDATAQYW2`) that can be used to create a Route53 alias record for the distribution.
 * `domain_name_id` - The identifier for the domain name resource. Supported only for private custom domain names.
-* `domain_name_arn` - ARN of domain name That is returned from API.
 * `id` - Internal identifier assigned to this domain name by API Gateway.
 * `regional_domain_name` - Hostname for the custom domain's regional endpoint.
 * `regional_zone_id` - Hosted zone ID that can be used to create a Route53 alias record for the regional endpoint.

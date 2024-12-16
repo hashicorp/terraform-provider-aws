@@ -99,10 +99,6 @@ func resourceDomainName() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"domain_name_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"domain_name_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -282,7 +278,11 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, domainNameARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	if output.DomainNameArn != nil {
+		d.Set(names.AttrARN, output.DomainNameArn)
+	} else {
+		d.Set(names.AttrARN, domainNameARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	}
 	d.Set(names.AttrCertificateARN, output.CertificateArn)
 	d.Set("certificate_name", output.CertificateName)
 	if output.CertificateUploadDate != nil {
@@ -294,7 +294,6 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set(names.AttrDomainName, output.DomainName)
 	d.Set("domain_name_id", output.DomainNameId)
-	d.Set("domain_name_arn", output.DomainNameArn)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}

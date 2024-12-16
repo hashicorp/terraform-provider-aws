@@ -2,6 +2,6 @@
 aws_api_gateway_domain_name_access_association
 ```
 
-```release-note:enhancement
-resource/aws_api_gateway_domain_name: Add `domain_name_arn` attribute
+```release-note:bug
+resource/aws_api_gateway_domain_name: Correct `arn` for private custom domain names
 ```
