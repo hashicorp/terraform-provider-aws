@@ -162,6 +162,7 @@ func resourceVPCEndpoint() *schema.Resource {
 			"service_region": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			names.AttrState: {
 				Type:     schema.TypeString,
@@ -277,7 +278,12 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("service_region"); ok {
-		if err := validateServiceRegion(conn, serviceName, v.(string)); err != nil {
+		_, err := conn.DescribeVpcEndpointServices(context.TODO(), &ec2.DescribeVpcEndpointServicesInput{
+			ServiceNames:   []string{serviceName},
+			ServiceRegions: []string{v.(string)},
+		})
+
+		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint (%s): %s", serviceName, err)
 		}
 		input.ServiceRegion = aws.String(v.(string))
@@ -349,6 +355,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
 	}.String()
 	serviceName := aws.ToString(vpce.ServiceName)
+	serviceRegion := aws.ToString(vpce.ServiceRegion)
 	d.Set(names.AttrARN, arn)
 	if err := d.Set("dns_entry", flattenDNSEntries(vpce.DnsEntries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dns_entry: %s", err)
@@ -368,6 +375,7 @@ func resourceVPCEndpointRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("route_table_ids", vpce.RouteTableIds)
 	d.Set(names.AttrSecurityGroupIDs, flattenSecurityGroupIdentifiers(vpce.Groups))
 	d.Set(names.AttrServiceName, serviceName)
+	d.Set("service_region", serviceRegion)
 	d.Set(names.AttrState, vpce.State)
 	d.Set(names.AttrSubnetIDs, vpce.SubnetIds)
 	// VPC endpoints don't have types in GovCloud, so set type to default if empty
@@ -779,24 +787,4 @@ func flattenSubnetConfigurations(apiObjects []subnetConfiguration) []interface{}
 	}
 
 	return tfList
-}
-
-func validateServiceRegion(conn *ec2.Client, serviceName, serviceRegion string) error {
-	// Describe the VPC endpoint service with the specified name and region
-	input := &ec2.DescribeVpcEndpointServicesInput{
-		ServiceNames:   []string{serviceName},
-		ServiceRegions: []string{serviceRegion},
-	}
-
-	result, err := conn.DescribeVpcEndpointServices(context.TODO(), input)
-	if err != nil {
-		return fmt.Errorf("error describing VPC endpoint service %q in region %q: %w", serviceName, serviceRegion, err)
-	}
-
-	// If no service details are returned, the service is not available in the specified region
-	if len(result.ServiceDetails) == 0 {
-		return fmt.Errorf("service %q not found in region %q", serviceName, serviceRegion)
-	}
-
-	return nil // Service exists in the specified region
 }
