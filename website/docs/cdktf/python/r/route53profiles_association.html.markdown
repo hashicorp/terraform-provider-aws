@@ -41,7 +41,10 @@ class MyConvertedCode(TerraformStack):
         aws_route53_profiles_association_example = Route53ProfilesAssociation(self, "example_2",
             name="example",
             profile_id=example.id,
-            resource_id=Token.as_string(aws_vpc_example.id)
+            resource_id=Token.as_string(aws_vpc_example.id),
+            tags={
+                "Environment": "dev"
+            }
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_route53_profiles_association_example.override_logical_id("example")
@@ -49,19 +52,21 @@ class MyConvertedCode(TerraformStack):
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the Profile Association. Must match a regex of `(?!^[0-9]+$)([a-zA-Z0-9\\-_' ']+)`.
 * `profile_id` - (Required) ID of the profile associated with the VPC.
 * `resource_id` - (Required) Resource ID of the VPC the profile to be associated with.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the Profile Association.
-* `status` - Status of the Profile Association. See the [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53profiles_Profile.html) for valid values.
+* `status` - Status of the Profile Association.
 * `status_message` - Status message of the Profile Association.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -96,4 +101,4 @@ Using `terraform import`, import Route 53 Profiles Association using the `exampl
 % terraform import aws_route53profiles_association.example rpa-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-89a170c936fc2b05caed63eb9a258f6154bd81161307e28100d9b71c01d1750b -->
+<!-- cache-key: cdktf-0.20.8 input-2e61e89058e5b38abf5ae500d2ee628dfd2eeceaadf991fc83f053efae47b677 -->

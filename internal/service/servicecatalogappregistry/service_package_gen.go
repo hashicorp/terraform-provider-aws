@@ -30,6 +30,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory: newDataSourceAttributeGroupAssociations,
+			Name:    "Attribute Group Associations",
+		},
 	}
 }
 
@@ -48,6 +52,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
+		},
+		{
+			Factory: newResourceAttributeGroupAssociation,
+			Name:    "Attribute Group Association",
 		},
 	}
 }

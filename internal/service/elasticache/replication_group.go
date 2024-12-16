@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 
@@ -67,10 +68,11 @@ func resourceReplicationGroup() *schema.Resource {
 				Computed: true,
 			},
 			"at_rest_encryption_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:         nullable.TypeNullableBool,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: nullable.ValidateTypeStringNullableBool,
 			},
 			"auth_token": {
 				Type:          schema.TypeString,
@@ -434,8 +436,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		Tags:               getTagsIn(ctx),
 	}
 
-	if _, ok := d.GetOk("at_rest_encryption_enabled"); ok {
-		input.AtRestEncryptionEnabled = aws.Bool(d.Get("at_rest_encryption_enabled").(bool))
+	if v, ok := d.GetOk("at_rest_encryption_enabled"); ok {
+		if v, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
+			input.AtRestEncryptionEnabled = aws.Bool(v)
+		}
 	}
 
 	if v, ok := d.GetOk("auth_token"); ok {
@@ -764,7 +768,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 			return sdkdiag.AppendErrorf(diags, "reading ElastiCache Replication Group (%s): reading Cache Cluster (%s): %s", d.Id(), aws.ToString(cacheCluster.CacheClusterId), err)
 		}
 
-		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
+		d.Set("at_rest_encryption_enabled", strconv.FormatBool(aws.ToBool(c.AtRestEncryptionEnabled)))
 		// `aws_elasticache_cluster` resource doesn't define `security_group_names`, but `aws_elasticache_replication_group` does.
 		// The value for that comes from []CacheSecurityGroupMembership which is part of CacheCluster object in AWS API.
 		// We need to set it here, as it is not set in setFromCacheCluster, and we cannot add it to that function

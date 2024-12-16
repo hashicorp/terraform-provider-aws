@@ -33,6 +33,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newResourceClusterSnapshotCopy,
+			Name:    "Cluster Snapshot Copy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "db_cluster_snapshot_arn",
+			},
+		},
+		{
 			Factory: newResourceExportTask,
 		},
 		{

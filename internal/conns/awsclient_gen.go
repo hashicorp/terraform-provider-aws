@@ -157,6 +157,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	"github.com/aws/aws-sdk-go-v2/service/mediastore"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
+	"github.com/aws/aws-sdk-go-v2/service/mgn"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mwaa"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
@@ -236,6 +237,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/synthetics"
 	"github.com/aws/aws-sdk-go-v2/service/taxsettings"
 	"github.com/aws/aws-sdk-go-v2/service/timestreaminfluxdb"
+	"github.com/aws/aws-sdk-go-v2/service/timestreamquery"
 	"github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
 	"github.com/aws/aws-sdk-go-v2/service/transfer"
@@ -873,6 +875,10 @@ func (c *AWSClient) MemoryDBClient(ctx context.Context) *memorydb.Client {
 	return errs.Must(client[*memorydb.Client](ctx, c, names.MemoryDB, make(map[string]any)))
 }
 
+func (c *AWSClient) MgnClient(ctx context.Context) *mgn.Client {
+	return errs.Must(client[*mgn.Client](ctx, c, names.Mgn, make(map[string]any)))
+}
+
 func (c *AWSClient) NeptuneClient(ctx context.Context) *neptune.Client {
 	return errs.Must(client[*neptune.Client](ctx, c, names.Neptune, make(map[string]any)))
 }
@@ -1179,6 +1185,10 @@ func (c *AWSClient) TaxSettingsClient(ctx context.Context) *taxsettings.Client {
 
 func (c *AWSClient) TimestreamInfluxDBClient(ctx context.Context) *timestreaminfluxdb.Client {
 	return errs.Must(client[*timestreaminfluxdb.Client](ctx, c, names.TimestreamInfluxDB, make(map[string]any)))
+}
+
+func (c *AWSClient) TimestreamQueryClient(ctx context.Context) *timestreamquery.Client {
+	return errs.Must(client[*timestreamquery.Client](ctx, c, names.TimestreamQuery, make(map[string]any)))
 }
 
 func (c *AWSClient) TimestreamWriteClient(ctx context.Context) *timestreamwrite.Client {
