@@ -261,6 +261,7 @@ func TestAccMemoryDBCluster_multiRegionClusterName(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_memorydb_cluster.test"
+	multiRegionClusterResourceName := "aws_memorydb_multi_region_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
@@ -272,7 +273,7 @@ func TestAccMemoryDBCluster_multiRegionClusterName(t *testing.T) {
 				Config: testAccClusterConfig_multiRegionClusterName(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "multi_region_cluster_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "multi_region_cluster_name", multiRegionClusterResourceName, "multi_region_cluster_name"),
 				),
 			},
 			{
@@ -1416,10 +1417,6 @@ resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
   node_type                        = "db.r7g.xlarge"
   num_shards                       = 2
-
-  tags = {
-    Test = "test"
-  }
 }
 
 resource "aws_memorydb_cluster" "test" {
@@ -1433,10 +1430,6 @@ resource "aws_memorydb_cluster" "test" {
   subnet_group_name          = aws_memorydb_subnet_group.test.id
 
   multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName),
 	)
