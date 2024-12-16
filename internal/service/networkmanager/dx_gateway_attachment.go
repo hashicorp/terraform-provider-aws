@@ -209,6 +209,7 @@ func (r *directConnectGatewayAttachmentResource) Read(ctx context.Context, reque
 		return
 	}
 
+	data.ARN = fwflex.StringValueToFramework(ctx, attachmentARN(ctx, r.Meta(), data.ID.ValueString()))
 	data.DirectConnectGatewayARN = fwflex.StringToFrameworkARN(ctx, dxgwAttachment.DirectConnectGatewayArn)
 
 	setTagsOut(ctx, dxgwAttachment.Attachment.Tags)
