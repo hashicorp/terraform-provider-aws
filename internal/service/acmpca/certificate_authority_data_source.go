@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -175,13 +176,19 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		d.Set(names.AttrCertificateChain, outputGCACert.CertificateChain)
 	}
 
+	// Attempt to get the CSR (if permitted).
 	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	})
 
-	// Returned when in PENDING_CERTIFICATE status
-	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
-	if err != nil && !errs.IsA[*types.InvalidStateException](err) {
+	switch {
+	case tfawserr.ErrCodeEquals(err, "AccessDeniedException"):
+		// Handle permission issues gracefully for Resource Access Manager shared CAs.
+		// arn:aws:ram::aws:permission/AWSRAMDefaultPermissionCertificateAuthority does not include acm-pca:GetCertificateAuthorityCsr.
+	case errs.IsA[*types.InvalidStateException](err):
+		// Returned when in PENDING_CERTIFICATE status
+		// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
+	case err != nil:
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate Signing Request: %s", d.Id(), err)
 	}
 

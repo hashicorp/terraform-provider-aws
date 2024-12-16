@@ -57,9 +57,7 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 // Disallow Empty filter block
 func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.MetricsConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_metric.test"
 	metricName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -69,10 +67,7 @@ func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketMetricConfig_emptyFilter(rName, metricName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-				),
+				Config:      testAccBucketMetricConfig_emptyFilter(rName, metricName),
 				ExpectError: regexache.MustCompile(`(?is)one of.*must be specified`),
 			},
 		},
@@ -635,9 +630,9 @@ func TestAccS3BucketMetric_directoryBucket(t *testing.T) {
 
 func testAccCheckBucketMetricDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
-
 		for _, rs := range s.RootModule().Resources {
+			conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
 			if rs.Type != "aws_s3_bucket_metric" {
 				continue
 			}
@@ -645,6 +640,10 @@ func testAccCheckBucketMetricDestroy(ctx context.Context) resource.TestCheckFunc
 			bucket, name, err := tfs3.BucketMetricParseID(rs.Primary.ID)
 			if err != nil {
 				return err
+			}
+
+			if tfs3.IsDirectoryBucket(bucket) {
+				conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 			}
 
 			_, err = tfs3.FindMetricsConfiguration(ctx, conn, bucket, name)
@@ -677,6 +676,9 @@ func testAccCheckBucketMetricsExistsConfig(ctx context.Context, n string, v *typ
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		output, err := tfs3.FindMetricsConfiguration(ctx, conn, bucket, name)
 

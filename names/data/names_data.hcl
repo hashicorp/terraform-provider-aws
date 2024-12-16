@@ -7482,6 +7482,28 @@ service "s3control" {
   brand                    = "AWS"
 }
 
+service "s3tables" {
+  sdk {
+    id = "S3Tables"
+  }
+
+  names {
+    provider_name_upper = "S3Tables"
+    human_friendly      = "S3 Tables"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListTableBuckets"
+  }
+
+  resource_prefix {
+    correct = "aws_s3tables_"
+  }
+
+  doc_prefix               = ["s3tables_"]
+  brand                    = "Amazon"
+}
+
 service "glacier" {
   sdk {
     id = "Glacier"
@@ -8649,7 +8671,7 @@ service "timestreaminfluxdb" {
 
   provider_package_correct = "timestreaminfluxdb"
   doc_prefix               = ["timestreaminfluxdb_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "timestreamquery" {
@@ -8667,8 +8689,8 @@ service "timestreamquery" {
     human_friendly      = "Timestream Query"
   }
 
-  client {
-    go_v1_client_typename = "TimestreamQuery"
+  endpoint_info {
+    endpoint_api_call = "DescribeEndpoints"
   }
 
   resource_prefix {
@@ -8678,7 +8700,6 @@ service "timestreamquery" {
   provider_package_correct = "timestreamquery"
   doc_prefix               = ["timestreamquery_"]
   brand                    = "Amazon"
-  not_implemented          = true
 }
 
 service "timestreamwrite" {
@@ -8706,7 +8727,7 @@ service "timestreamwrite" {
 
   provider_package_correct = "timestreamwrite"
   doc_prefix               = ["timestreamwrite_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "transcribe" {

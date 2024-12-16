@@ -1890,6 +1890,12 @@ service/s3outposts:
           - any-glob-to-any-file:
               - 'internal/service/s3outposts/**/*'
               - 'website/**/s3outposts_*'
+service/s3tables:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/s3tables/**/*'
+              - 'website/**/s3tables_*'
 service/sagemaker:
   - any:
       - changed-files:

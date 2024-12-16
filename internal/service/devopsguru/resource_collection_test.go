@@ -82,7 +82,7 @@ func testAccResourceCollection_disappears(t *testing.T) {
 				Config: testAccResourceCollectionConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceCollectionExists(ctx, resourceName, &resourcecollection),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tfdevopsguru.ResourceResourceCollection, resourceName, resourceCollectionDisappearsStateFunc()),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tfdevopsguru.ResourceResourceCollection, resourceName, resourceCollectionDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -200,37 +200,35 @@ func testAccResourceCollection_tagsAllResources(t *testing.T) {
 	})
 }
 
-func resourceCollectionDisappearsStateFunc() func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
-	return func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
-		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrID), is.Attributes[names.AttrID])); err != nil {
-			return err
-		}
-
-		// The delete operation requires passing in the configured array of stack names
-		// with a "REMOVE" action. Manually construct the root cloudformation attribute
-		// to match what is created by the _basic test configuration.
-		var diags diag.Diagnostics
-		attrType := map[string]attr.Type{"stack_names": fwtypes.ListType{ElemType: fwtypes.StringType}}
-		obj := map[string]attr.Value{
-			"stack_names": flex.FlattenFrameworkStringValueList(ctx, []string{"*"}),
-		}
-		objVal, d := fwtypes.ObjectValue(attrType, obj)
-		diags.Append(d...)
-
-		elemType := fwtypes.ObjectType{AttrTypes: attrType}
-		listVal, d := fwtypes.ListValue(elemType, []attr.Value{objVal})
-		diags.Append(d...)
-
-		if diags.HasError() {
-			return fwdiag.DiagnosticsError(diags)
-		}
-
-		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("cloudformation"), listVal)); err != nil {
-			return err
-		}
-
-		return nil
+func resourceCollectionDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root(names.AttrID), is.Attributes[names.AttrID])); err != nil {
+		return err
 	}
+
+	// The delete operation requires passing in the configured array of stack names
+	// with a "REMOVE" action. Manually construct the root cloudformation attribute
+	// to match what is created by the _basic test configuration.
+	var diags diag.Diagnostics
+	attrType := map[string]attr.Type{"stack_names": fwtypes.ListType{ElemType: fwtypes.StringType}}
+	obj := map[string]attr.Value{
+		"stack_names": flex.FlattenFrameworkStringValueList(ctx, []string{"*"}),
+	}
+	objVal, d := fwtypes.ObjectValue(attrType, obj)
+	diags.Append(d...)
+
+	elemType := fwtypes.ObjectType{AttrTypes: attrType}
+	listVal, d := fwtypes.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	if diags.HasError() {
+		return fwdiag.DiagnosticsError(diags)
+	}
+
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("cloudformation"), listVal)); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func testAccCheckResourceCollectionDestroy(ctx context.Context) resource.TestCheckFunc {

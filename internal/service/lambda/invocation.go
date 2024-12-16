@@ -76,6 +76,7 @@ func resourceInvocation() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			customizeDiffValidateInput,
 			customizeDiffInputChangeWithCreateOnlyScope,
+			customizeDiffInputChangeWithCRUDScope,
 		),
 	}
 }
@@ -226,6 +227,15 @@ func customizeDiffValidateInput(_ context.Context, diff *schema.ResourceDiff, v 
 func customizeDiffInputChangeWithCreateOnlyScope(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.HasChange("input") && lifecycleScope(diff.Get("lifecycle_scope").(string)) == lifecycleScopeCreateOnly {
 		return diff.ForceNew("input")
+	}
+	return nil
+}
+
+// customizeDiffInputChangedWithCRUDScope invalidates the result of the previous invocation for any changes
+// to the input, causing any dependent resources to refresh their own state, when `lifecycle_scope` is set to "CRUD"
+func customizeDiffInputChangeWithCRUDScope(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if diff.HasChange("input") && lifecycleScope(diff.Get("lifecycle_scope").(string)) == lifecycleScopeCRUD {
+		return diff.SetNewComputed("result")
 	}
 	return nil
 }
