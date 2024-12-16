@@ -5,6 +5,7 @@ package qbusiness
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -61,28 +63,27 @@ func (r *resourceDataAccessor) Metadata(_ context.Context, request resource.Meta
 	response.TypeName = "aws_qbusiness_dataaccessor"
 }
 
-func documentAttributeSchema(ctx context.Context) schema.SingleNestedBlock {
-	return schema.SingleNestedBlock{
-		CustomType: fwtypes.NewObjectTypeOf[documentAttributeData](ctx),
-		Attributes: map[string]schema.Attribute{
-			names.AttrName: schema.StringAttribute{
-				Description: "Identifier for the attribute",
-				Optional:    true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 200),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]*$`), "must be a valid document attribute"),
+func documentAttributeSchema(ctx context.Context) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[documentAttributeData](ctx),
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				names.AttrName: schema.StringAttribute{
+					Description: "Identifier for the attribute",
+					Optional:    true,
+					Validators: []validator.String{
+						stringvalidator.LengthBetween(1, 200),
+						stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]*$`), "must be a valid document attribute"),
+					},
 				},
 			},
+			Blocks: map[string]schema.Block{
+				"value": documentAttributeValueSchema(ctx),
+			},
 		},
-		Blocks: map[string]schema.Block{
-			"value": documentAttributeValueSchema(ctx),
-		},
-	}
-}
-
-func attributeFilterArraySchema(ctx context.Context, level int) schema.ListNestedBlock {
-	return schema.ListNestedBlock{
-		NestedObject: attributeFilterBlockObject(ctx, level-1),
 	}
 }
 
@@ -106,12 +107,29 @@ func attributeFilterBlockObject(ctx context.Context, level int) schema.NestedBlo
 	return b
 }
 
+func typeFor(ctx context.Context, level int) basetypes.ListTypable {
+	if level == actionConfigurationSchemaLevel-1 {
+		return fwtypes.NewListNestedObjectTypeOf[attributeFilterData2](ctx)
+	}
+	if level == actionConfigurationSchemaLevel-2 {
+		return fwtypes.NewListNestedObjectTypeOf[attributeFilterData3](ctx)
+	}
+	return fwtypes.NewListNestedObjectTypeOf[attributeFilterData](ctx)
+}
+
 func attributeFilterSchema(ctx context.Context, level int) schema.ListNestedBlock {
 	return schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[attributeFilterData](ctx),
+		CustomType: typeFor(ctx, level),
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
+		NestedObject: attributeFilterBlockObject(ctx, level),
+	}
+}
+
+func attributeFilterArraySchema(ctx context.Context, level int) schema.ListNestedBlock {
+	return schema.ListNestedBlock{
+		CustomType:   typeFor(ctx, level),
 		NestedObject: attributeFilterBlockObject(ctx, level),
 	}
 }
@@ -164,10 +182,15 @@ func (r *resourceDataAccessor) Schema(ctx context.Context, req resource.SchemaRe
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"filter_configuration": schema.SingleNestedBlock{
-							CustomType: fwtypes.NewObjectTypeOf[actionFilterConfigurationData](ctx),
-							Blocks: map[string]schema.Block{
-								"document_attribute_filter": attributeFilterSchema(ctx, actionConfigurationSchemaLevel),
+						"filter_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[actionFilterConfigurationData](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Blocks: map[string]schema.Block{
+									"document_attribute_filter": attributeFilterSchema(ctx, actionConfigurationSchemaLevel),
+								},
 							},
 						},
 					},
@@ -237,6 +260,10 @@ func (r *resourceDataAccessor) Delete(ctx context.Context, req resource.DeleteRe
 
 	_, err := conn.DeleteDataAccessor(ctx, input)
 	if err != nil {
+		var nfe *awstypes.ResourceNotFoundException
+		if errors.As(err, &nfe) {
+			return
+		}
 		resp.Diagnostics.AddError("failed to delete Q Business dataaccessor", err.Error())
 		return
 	}
@@ -272,6 +299,35 @@ func (r *resourceDataAccessor) Read(ctx context.Context, req resource.ReadReques
 }
 
 func (r *resourceDataAccessor) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var old, new resourceDataAccessorData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !old.DisplayName.Equal(new.DisplayName) ||
+		!old.ActionConfigurations.Equal(new.ActionConfigurations) {
+		conn := r.Meta().QBusinessClient(ctx)
+
+		input := &qbusiness.UpdateDataAccessorInput{}
+
+		resp.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		_, err := conn.UpdateDataAccessor(ctx, input)
+		if err != nil {
+			resp.Diagnostics.AddError("failed to update Q Business dataaccessor", err.Error())
+			return
+		}
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
 type documentAttributeData struct {
@@ -280,39 +336,39 @@ type documentAttributeData struct {
 }
 
 type attributeFilterData3 struct {
-	ContainsAll         fwtypes.ObjectValueOf[documentAttributeData] `tfsdk:"contains_all"`
-	ContainsAny         fwtypes.ObjectValueOf[documentAttributeData] `tfsdk:"contains_any"`
-	EqualsTo            fwtypes.ObjectValueOf[documentAttributeData] `tfsdk:"equals_to"`
-	GreaterThan         fwtypes.ObjectValueOf[documentAttributeData] `tfsdk:"greater_than"`
-	GreaterThanOrEquals fwtypes.ObjectValueOf[documentAttributeData] `tfsdk:"greater_than_or_equals"`
-	LessThan            fwtypes.ObjectValueOf[documentAttributeData] `tfsdk:"less_than"`
-	LessThanOrEquals    fwtypes.ObjectValueOf[documentAttributeData] `tfsdk:"less_than_or_equals"`
+	ContainsAll         fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"contains_all"`
+	ContainsAny         fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"contains_any"`
+	EqualsTo            fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"equals_to"`
+	GreaterThan         fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"greater_than"`
+	GreaterThanOrEquals fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"greater_than_or_equals"`
+	LessThan            fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"less_than"`
+	LessThanOrEquals    fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"less_than_or_equals"`
 }
 
 type attributeFilterData2 struct {
-	AndAllFilters       fwtypes.ListNestedObjectValueOf[attributeFilterData3] `tfsdk:"and_all_filters"`
-	ContainsAll         fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"contains_all"`
-	ContainsAny         fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"contains_any"`
-	EqualsTo            fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"equals_to"`
-	GreaterThan         fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"greater_than"`
-	GreaterThanOrEquals fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"greater_than_or_equals"`
-	LessThan            fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"less_than"`
-	LessThanOrEquals    fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"less_than_or_equals"`
-	NotFilter           fwtypes.ObjectValueOf[attributeFilterData3]           `tfsdk:"not_filter"`
-	OrAllFilters        fwtypes.ListNestedObjectValueOf[attributeFilterData3] `tfsdk:"or_all_filters"`
+	AndAllFilters       fwtypes.ListNestedObjectValueOf[attributeFilterData3]  `tfsdk:"and_all_filters"`
+	ContainsAll         fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"contains_all"`
+	ContainsAny         fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"contains_any"`
+	EqualsTo            fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"equals_to"`
+	GreaterThan         fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"greater_than"`
+	GreaterThanOrEquals fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"greater_than_or_equals"`
+	LessThan            fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"less_than"`
+	LessThanOrEquals    fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"less_than_or_equals"`
+	NotFilter           fwtypes.ListNestedObjectValueOf[attributeFilterData3]  `tfsdk:"not_filter"`
+	OrAllFilters        fwtypes.ListNestedObjectValueOf[attributeFilterData3]  `tfsdk:"or_all_filters"`
 }
 
 type attributeFilterData struct {
-	AndAllFilters       fwtypes.ListNestedObjectValueOf[attributeFilterData2] `tfsdk:"and_all_filters"`
-	ContainsAll         fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"contains_all"`
-	ContainsAny         fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"contains_any"`
-	EqualsTo            fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"equals_to"`
-	GreaterThan         fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"greater_than"`
-	GreaterThanOrEquals fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"greater_than_or_equals"`
-	LessThan            fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"less_than"`
-	LessThanOrEquals    fwtypes.ObjectValueOf[documentAttributeData]          `tfsdk:"less_than_or_equals"`
-	NotFilter           fwtypes.ObjectValueOf[attributeFilterData2]           `tfsdk:"not_filter"`
-	OrAllFilters        fwtypes.ListNestedObjectValueOf[attributeFilterData2] `tfsdk:"or_all_filters"`
+	AndAllFilters       fwtypes.ListNestedObjectValueOf[attributeFilterData2]  `tfsdk:"and_all_filters"`
+	ContainsAll         fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"contains_all"`
+	ContainsAny         fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"contains_any"`
+	EqualsTo            fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"equals_to"`
+	GreaterThan         fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"greater_than"`
+	GreaterThanOrEquals fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"greater_than_or_equals"`
+	LessThan            fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"less_than"`
+	LessThanOrEquals    fwtypes.ListNestedObjectValueOf[documentAttributeData] `tfsdk:"less_than_or_equals"`
+	NotFilter           fwtypes.ListNestedObjectValueOf[attributeFilterData2]  `tfsdk:"not_filter"`
+	OrAllFilters        fwtypes.ListNestedObjectValueOf[attributeFilterData2]  `tfsdk:"or_all_filters"`
 }
 
 type actionFilterConfigurationData struct {
@@ -320,8 +376,8 @@ type actionFilterConfigurationData struct {
 }
 
 type actionConfigurationData struct {
-	Action              types.String                                         `tfsdk:"action"`
-	FilterConfiguration fwtypes.ObjectValueOf[actionFilterConfigurationData] `tfsdk:"filter_configuration"`
+	Action              types.String                                                   `tfsdk:"action"`
+	FilterConfiguration fwtypes.ListNestedObjectValueOf[actionFilterConfigurationData] `tfsdk:"filter_configuration"`
 }
 
 type resourceDataAccessorData struct {
