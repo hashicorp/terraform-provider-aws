@@ -1413,9 +1413,9 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_memorydb_multi_region_cluster" "test" {
-  name_suffix = %[1]q
-  node_type   = "db.r7g.xlarge"
-  num_shards  = 2
+  multi_region_cluster_name_suffix = %[1]q
+  node_type                        = "db.r7g.xlarge"
+  num_shards                       = 2
 
   tags = {
     Test = "test"
@@ -1432,7 +1432,7 @@ resource "aws_memorydb_cluster" "test" {
   snapshot_retention_limit   = 7
   subnet_group_name          = aws_memorydb_subnet_group.test.id
 
-  multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.name
+  multi_region_cluster_name = aws_memorydb_multi_region_cluster.test.multi_region_cluster_name
 
   tags = {
     Test = "test"
