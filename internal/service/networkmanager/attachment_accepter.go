@@ -223,6 +223,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 
 		attachment = vpcAttachment.Attachment
 		d.Set("edge_location", attachment.EdgeLocation)
+		d.Set("edge_locations", nil)
 
 	case awstypes.AttachmentTypeSiteToSiteVpn:
 		vpnAttachment, err := findSiteToSiteVPNAttachmentByID(ctx, conn, d.Id())
@@ -239,6 +240,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 
 		attachment = vpnAttachment.Attachment
 		d.Set("edge_location", attachment.EdgeLocation)
+		d.Set("edge_locations", nil)
 
 	case awstypes.AttachmentTypeConnect:
 		connectAttachment, err := findConnectAttachmentByID(ctx, conn, d.Id())
@@ -255,6 +257,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 
 		attachment = connectAttachment.Attachment
 		d.Set("edge_location", attachment.EdgeLocation)
+		d.Set("edge_locations", nil)
 
 	case awstypes.AttachmentTypeTransitGatewayRouteTable:
 		tgwAttachment, err := findTransitGatewayRouteTableAttachmentByID(ctx, conn, d.Id())
@@ -271,6 +274,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 
 		attachment = tgwAttachment.Attachment
 		d.Set("edge_location", attachment.EdgeLocation)
+		d.Set("edge_locations", nil)
 
 	case awstypes.AttachmentTypeDirectConnectGateway:
 		dxgwAttachment, err := findDirectConnectGatewayAttachmentByID(ctx, conn, d.Id())
@@ -286,6 +290,7 @@ func resourceAttachmentAccepterRead(ctx context.Context, d *schema.ResourceData,
 		}
 
 		attachment = dxgwAttachment.Attachment
+		d.Set("edge_location", nil)
 		d.Set("edge_locations", attachment.EdgeLocations)
 	}
 
