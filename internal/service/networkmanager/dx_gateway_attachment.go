@@ -256,6 +256,8 @@ func (r *directConnectGatewayAttachmentResource) Update(ctx context.Context, req
 
 		// Set values for unknowns.
 		new.State = fwflex.StringValueToFramework(ctx, dxgwAttachment.Attachment.State)
+	} else {
+		new.State = old.State
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
