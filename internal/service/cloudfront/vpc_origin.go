@@ -12,9 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -73,25 +71,16 @@ func (r *vpcOriginResource) Schema(ctx context.Context, request resource.SchemaR
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Validators: []validator.Object{
-						objectvalidator.AtLeastOneOf(path.MatchRelative().AtName("http_port"), path.MatchRelative().AtName("https_port")),
-					},
 					Attributes: map[string]schema.Attribute{
 						names.AttrARN: schema.StringAttribute{
 							Required:   true,
 							CustomType: fwtypes.ARNType,
 						},
-						"http_port": schema.Int32Attribute{
-							Optional: true,
-							Validators: []validator.Int32{
-								int32validator.Between(1, 65535),
-							},
+						"http_port": schema.Int64Attribute{
+							Required: true,
 						},
-						"https_port": schema.Int32Attribute{
-							Optional: true,
-							Validators: []validator.Int32{
-								int32validator.Between(1, 65535),
-							},
+						"https_port": schema.Int64Attribute{
+							Required: true,
 						},
 						names.AttrName: schema.StringAttribute{
 							Required: true,
@@ -104,11 +93,16 @@ func (r *vpcOriginResource) Schema(ctx context.Context, request resource.SchemaR
 					Blocks: map[string]schema.Block{
 						"origin_ssl_protocols": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[originSSLProtocolsModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"items": schema.ListAttribute{
-										CustomType:  fwtypes.ListOfStringEnumType[awstypes.SslProtocol](),
-										Optional:    true,
+									"items": schema.SetAttribute{
+										CustomType:  fwtypes.SetOfStringEnumType[awstypes.SslProtocol](),
+										Required:    true,
 										ElementType: types.StringType,
 									},
 									"quantity": schema.Int64Attribute{
@@ -260,31 +254,17 @@ func (r *vpcOriginResource) Delete(ctx context.Context, request resource.DeleteR
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	const (
-		timeout = 1 * time.Minute
-	)
-	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, timeout, func() (interface{}, error) {
-		return nil, deleteVPCOrigin(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))
-	})
+	id := data.ID.ValueString()
+	etag, err := vpcOriginETag(ctx, conn, id)
 
 	if tfresource.NotFound(err) {
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError("deleting CloudFront VPC Origin", err.Error())
-	}
-}
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront VPC Origin (%s)", data.ID.ValueString()), err.Error())
 
-func (r *vpcOriginResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
-}
-
-func deleteVPCOrigin(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) error {
-	etag, err := vpcOriginETag(ctx, conn, id)
-
-	if err != nil {
-		return err
+		return
 	}
 
 	input := &cloudfront.DeleteVpcOriginInput{
@@ -294,22 +274,54 @@ func deleteVPCOrigin(ctx context.Context, conn *cloudfront.Client, id string, ti
 
 	_, err = conn.DeleteVpcOrigin(ctx, input)
 
+	if errs.IsA[*awstypes.EntityNotFound](err) {
+		return
+	}
+
+	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
+		etag, err = vpcOriginETag(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return
+		}
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront VPC Origin (%s)", data.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		input.IfMatch = aws.String(etag)
+
+		_, err = conn.DeleteVpcOrigin(ctx, input)
+
+		if errs.IsA[*awstypes.EntityNotFound](err) {
+			return
+		}
+	}
+
 	if err != nil {
-		return fmt.Errorf("deleting CloudFront VPC Origin (%s): %w", id, err)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudFront VPC Origin (%s)", data.ID.ValueString()), err.Error())
+
+		return
 	}
 
-	if _, err := waitVPCOriginDeleted(ctx, conn, id, timeout); err != nil {
-		return fmt.Errorf("waiting for CloudFront VPC Origin (%s) delete: %w", id, err)
-	}
+	if _, err := waitVPCOriginDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront VPC Origin (%s) delete", data.ID.ValueString()), err.Error())
 
-	return nil
+		return
+	}
+}
+
+func (r *vpcOriginResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 func vpcOriginETag(ctx context.Context, conn *cloudfront.Client, id string) (string, error) {
 	output, err := findVPCOriginByID(ctx, conn, id)
 
 	if err != nil {
-		return "", fmt.Errorf("reading CloudFront VPC Origin (%s): %w", id, err)
+		return "", err
 	}
 
 	return aws.ToString(output.ETag), nil
@@ -406,14 +418,14 @@ type vpcOriginResourceModel struct {
 
 type vpcOriginEndpointConfigModel struct {
 	ARN                  types.String                                             `tfsdk:"arn"`
-	HTTPPort             types.Int32                                              `tfsdk:"http_port"`
-	HTTPSPort            types.Int32                                              `tfsdk:"https_port"`
+	HTTPPort             types.Int64                                              `tfsdk:"http_port"`
+	HTTPSPort            types.Int64                                              `tfsdk:"https_port"`
 	Name                 types.String                                             `tfsdk:"name"`
 	OriginProtocolPolicy fwtypes.StringEnum[awstypes.OriginProtocolPolicy]        `tfsdk:"origin_protocol_policy"`
 	OriginSSLProtocols   fwtypes.ListNestedObjectValueOf[originSSLProtocolsModel] `tfsdk:"origin_ssl_protocols"`
 }
 
 type originSSLProtocolsModel struct {
-	Items    fwtypes.ListValueOf[fwtypes.StringEnum[awstypes.SslProtocol]] `tfsdk:"items"`
-	Quantity types.Int64                                                   `tfsdk:"quantity"`
+	Items    fwtypes.SetValueOf[fwtypes.StringEnum[awstypes.SslProtocol]] `tfsdk:"items"`
+	Quantity types.Int64                                                  `tfsdk:"quantity"`
 }

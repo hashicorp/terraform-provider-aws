@@ -51,8 +51,8 @@ The following arguments are optional:
 ### VPC Origin Endpoint Config Arguments
 
 * `arn` (Required) - The ARN of the CloudFront VPC origin endpoint configuration.
-* `http_port` (Optional) - The HTTP port for the CloudFront VPC origin endpoint configuration.
-* `https_port` (Optional) - The HTTPS port for the CloudFront VPC origin endpoint configuration.
+* `http_port` (Required) - The HTTP port for the CloudFront VPC origin endpoint configuration.
+* `https_port` (Required) - The HTTPS port for the CloudFront VPC origin endpoint configuration.
 * `name` (Required) - The name of the CloudFront VPC origin endpoint configuration.
 * `origin_protocol_policy` (Required) - The origin protocol policy for the CloudFront VPC origin endpoint configuration.
 * `origin_ssl_protocols` (Required) - A complex type that contains information about the SSL/TLS protocols that CloudFront can use when establishing an HTTPS connection with your origin.
