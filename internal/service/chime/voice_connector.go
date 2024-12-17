@@ -76,7 +76,7 @@ func ResourceVoiceConnector() *schema.Resource {
 
 func resourceVoiceConnectorDefaultRegion(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if v, ok := diff.Get("aws_region").(string); !ok || v == "" {
-		if err := diff.SetNew("aws_region", meta.(*conns.AWSClient).Region); err != nil {
+		if err := diff.SetNew("aws_region", meta.(*conns.AWSClient).Region(ctx)); err != nil {
 			return err
 		}
 	}

@@ -490,6 +490,9 @@ func testAccCheckBucketServerSideEncryptionConfigurationExists(ctx context.Conte
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		if tfs3.IsDirectoryBucket(bucket) {
+			conn = acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
+		}
 
 		_, err = tfs3.FindServerSideEncryptionConfiguration(ctx, conn, bucket, expectedBucketOwner)
 

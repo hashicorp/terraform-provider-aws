@@ -36,7 +36,7 @@ func testAccOrganizationAdminAccount_basic(t *testing.T) {
 				Config: testAccOrganizationAdminAccountConfig_self(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationAdminAccountExists(ctx, resourceName),
-					acctest.CheckResourceAttrAccountID(resourceName, "admin_account_id"),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, "admin_account_id"),
 				),
 			},
 			{

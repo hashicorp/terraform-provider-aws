@@ -33,7 +33,18 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newResourceClusterSnapshotCopy,
+			Name:    "Cluster Snapshot Copy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "db_cluster_snapshot_arn",
+			},
+		},
+		{
 			Factory: newResourceExportTask,
+		},
+		{
+			Factory: newResourceInstanceState,
+			Name:    "Instance State",
 		},
 	}
 }
@@ -278,6 +289,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceGlobalCluster,
 			TypeName: "aws_rds_global_cluster",
 			Name:     "Global Cluster",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: names.AttrARN,
+			},
 		},
 		{
 			Factory:  resourceReservedInstance,

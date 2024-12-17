@@ -42,7 +42,7 @@ func TestAccCloudFormationStackSet_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
 					resource.TestCheckResourceAttrPair(resourceName, "administration_role_arn", iamRoleResourceName, names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(`stackset/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(`stackset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "call_as", "SELF"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
@@ -596,7 +596,7 @@ func TestAccCloudFormationStackSet_PermissionModel_serviceManaged(t *testing.T) 
 				Config: testAccStackSetConfig_permissionModel(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStackSetExists(ctx, resourceName, &stackSet1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(`stackset/.+`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "cloudformation", regexache.MustCompile(`stackset/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "permission_model", "SERVICE_MANAGED"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", acctest.CtTrue),

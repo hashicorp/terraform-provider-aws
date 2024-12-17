@@ -65,7 +65,7 @@ func dataSourceComponentsRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Components: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrARNs, tfslices.ApplyToAll(components, func(v awstypes.ComponentVersion) string {
 		return aws.ToString(v.Arn)
 	}))

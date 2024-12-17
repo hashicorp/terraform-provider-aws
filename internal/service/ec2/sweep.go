@@ -4,6 +4,7 @@
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
@@ -224,59 +226,55 @@ func RegisterSweepers() {
 		F:    sweepSpotInstanceRequests,
 	})
 
-	resource.AddTestSweepers("aws_subnet", &resource.Sweeper{
-		Name: "aws_subnet",
-		F:    sweepSubnets,
-		Dependencies: []string{
-			"aws_appstream_fleet",
-			"aws_appstream_image_builder",
-			"aws_autoscaling_group",
-			"aws_batch_compute_environment",
-			"aws_elastic_beanstalk_environment",
-			"aws_cloud9_environment_ec2",
-			"aws_cloudhsm_v2_cluster",
-			"aws_codestarconnections_host",
-			"aws_db_subnet_group",
-			"aws_directory_service_directory",
-			"aws_dms_replication_subnet_group",
-			"aws_docdb_subnet_group",
-			"aws_ec2_client_vpn_endpoint",
-			"aws_ec2_instance_connect_endpoint",
-			"aws_ec2_transit_gateway_vpc_attachment",
-			"aws_efs_file_system",
-			"aws_eks_cluster",
-			"aws_elasticache_cluster",
-			"aws_elasticache_replication_group",
-			"aws_elasticache_serverless_cache",
-			"aws_elasticache_subnet_group",
-			"aws_elasticsearch_domain",
-			"aws_elb",
-			"aws_emr_cluster",
-			"aws_emr_studio",
-			"aws_fsx_lustre_file_system",
-			"aws_fsx_ontap_file_system",
-			"aws_fsx_openzfs_file_system",
-			"aws_fsx_windows_file_system",
-			"aws_grafana_workspace",
-			"aws_iot_topic_rule_destination",
-			"aws_lambda_function",
-			"aws_lb",
-			"aws_memorydb_subnet_group",
-			"aws_mq_broker",
-			"aws_msk_cluster",
-			"aws_network_interface",
-			"aws_networkfirewall_firewall",
-			"aws_opensearch_domain",
-			"aws_quicksight_vpc_connection",
-			"aws_redshift_cluster",
-			"aws_redshift_subnet_group",
-			"aws_route53_resolver_endpoint",
-			"aws_sagemaker_notebook_instance",
-			"aws_spot_fleet_request",
-			"aws_spot_instance_request",
-			"aws_vpc_endpoint",
-		},
-	})
+	awsv2.Register("aws_subnet", sweepSubnets,
+		"aws_appstream_fleet",
+		"aws_appstream_image_builder",
+		"aws_autoscaling_group",
+		"aws_batch_compute_environment",
+		"aws_elastic_beanstalk_environment",
+		"aws_cloud9_environment_ec2",
+		"aws_cloudhsm_v2_cluster",
+		"aws_codestarconnections_host",
+		"aws_db_subnet_group",
+		"aws_directory_service_directory",
+		"aws_dms_replication_subnet_group",
+		"aws_docdb_subnet_group",
+		"aws_ec2_client_vpn_endpoint",
+		"aws_ec2_instance_connect_endpoint",
+		"aws_ec2_transit_gateway_vpc_attachment",
+		"aws_efs_file_system",
+		"aws_eks_cluster",
+		"aws_elasticache_cluster",
+		"aws_elasticache_replication_group",
+		"aws_elasticache_serverless_cache",
+		"aws_elasticache_subnet_group",
+		"aws_elasticsearch_domain",
+		"aws_elb",
+		"aws_emr_cluster",
+		"aws_emr_studio",
+		"aws_fsx_lustre_file_system",
+		"aws_fsx_ontap_file_system",
+		"aws_fsx_openzfs_file_system",
+		"aws_fsx_windows_file_system",
+		"aws_grafana_workspace",
+		"aws_iot_topic_rule_destination",
+		"aws_lambda_function",
+		"aws_lb",
+		"aws_memorydb_subnet_group",
+		"aws_mq_broker",
+		"aws_msk_cluster",
+		"aws_network_interface",
+		"aws_networkfirewall_firewall",
+		"aws_opensearch_domain",
+		"aws_quicksight_vpc_connection",
+		"aws_redshift_cluster",
+		"aws_redshift_subnet_group",
+		"aws_route53_resolver_endpoint",
+		"aws_sagemaker_notebook_instance",
+		"aws_spot_fleet_request",
+		"aws_spot_instance_request",
+		"aws_vpc_endpoint",
+	)
 
 	resource.AddTestSweepers("aws_ec2_traffic_mirror_filter", &resource.Sweeper{
 		Name: "aws_ec2_traffic_mirror_filter",
@@ -316,6 +314,7 @@ func RegisterSweepers() {
 			"aws_dx_gateway_association",
 			"aws_ec2_transit_gateway_vpc_attachment",
 			"aws_ec2_transit_gateway_peering_attachment",
+			"aws_networkmanager_transit_gateway_route_table_attachment",
 			"aws_vpn_connection",
 		},
 	})
@@ -330,6 +329,7 @@ func RegisterSweepers() {
 		F:    sweepTransitGatewayConnects,
 		Dependencies: []string{
 			"aws_ec2_transit_gateway_connect_peer",
+			"aws_networkmanager_connect_attachment",
 		},
 	})
 
@@ -383,6 +383,7 @@ func RegisterSweepers() {
 			"aws_internet_gateway",
 			"aws_nat_gateway",
 			"aws_network_acl",
+			"aws_networkmanager_vpc_attachment",
 			"aws_route_table",
 			"aws_security_group",
 			"aws_subnet",
@@ -404,6 +405,7 @@ func RegisterSweepers() {
 		F:    sweepVPNGateways,
 		Dependencies: []string{
 			"aws_dx_gateway_association",
+			"aws_networkmanager_site_to_site_vpn_attachment",
 			"aws_vpn_connection",
 		},
 	})
@@ -1791,27 +1793,18 @@ func sweepSpotInstanceRequests(region string) error {
 	return errs.ErrorOrNil()
 }
 
-func sweepSubnets(region string) error {
-	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
+func sweepSubnets(ctx context.Context, client *conns.AWSClient) ([]sweep.Sweepable, error) {
 	conn := client.EC2Client(ctx)
-	input := &ec2.DescribeSubnetsInput{}
-	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := ec2.NewDescribeSubnetsPaginator(conn, input)
+	var sweepResources []sweep.Sweepable
+
+	r := resourceSubnet()
+	input := ec2.DescribeSubnetsInput{}
+	pages := ec2.NewDescribeSubnetsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-
-		if awsv2.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, err)
-			return nil
-		}
-
 		if err != nil {
-			return fmt.Errorf("error listing EC2 Subnets (%s): %w", region, err)
+			return nil, err
 		}
 
 		for _, v := range page.Subnets {
@@ -1820,7 +1813,6 @@ func sweepSubnets(region string) error {
 				continue
 			}
 
-			r := resourceSubnet()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.SubnetId))
 
@@ -1828,13 +1820,7 @@ func sweepSubnets(region string) error {
 		}
 	}
 
-	err = sweep.SweepOrchestrator(ctx, sweepResources)
-
-	if err != nil {
-		return fmt.Errorf("error sweeping EC2 Subnets (%s): %w", region, err)
-	}
-
-	return nil
+	return sweepResources, nil
 }
 
 func sweepTrafficMirrorFilters(region string) error {

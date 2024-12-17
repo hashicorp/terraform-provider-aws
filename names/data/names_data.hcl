@@ -604,8 +604,8 @@ service "mgn" {
     human_friendly      = "Application Migration (Mgn)"
   }
 
-  client {
-    go_v1_client_typename = "Mgn"
+  endpoint_info {
+    endpoint_api_call = "ListApplications"
   }
 
   resource_prefix {
@@ -615,7 +615,6 @@ service "mgn" {
   provider_package_correct = "mgn"
   doc_prefix               = ["mgn_"]
   brand                    = "AWS"
-  not_implemented          = true
 }
 
 service "appstream" {
@@ -5693,7 +5692,7 @@ service "memorydb" {
 
   names {
     provider_name_upper = "MemoryDB"
-    human_friendly      = "MemoryDB for Redis"
+    human_friendly      = "MemoryDB"
   }
 
   client {
@@ -5710,7 +5709,7 @@ service "memorydb" {
 
   provider_package_correct = "memorydb"
   doc_prefix               = ["memorydb_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "meta" {
@@ -7482,6 +7481,28 @@ service "s3control" {
   brand                    = "AWS"
 }
 
+service "s3tables" {
+  sdk {
+    id = "S3Tables"
+  }
+
+  names {
+    provider_name_upper = "S3Tables"
+    human_friendly      = "S3 Tables"
+  }
+
+  endpoint_info {
+    endpoint_api_call = "ListTableBuckets"
+  }
+
+  resource_prefix {
+    correct = "aws_s3tables_"
+  }
+
+  doc_prefix = ["s3tables_"]
+  brand      = "Amazon"
+}
+
 service "glacier" {
   sdk {
     id = "Glacier"
@@ -8649,7 +8670,7 @@ service "timestreaminfluxdb" {
 
   provider_package_correct = "timestreaminfluxdb"
   doc_prefix               = ["timestreaminfluxdb_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "timestreamquery" {
@@ -8667,8 +8688,8 @@ service "timestreamquery" {
     human_friendly      = "Timestream Query"
   }
 
-  client {
-    go_v1_client_typename = "TimestreamQuery"
+  endpoint_info {
+    endpoint_api_call = "DescribeEndpoints"
   }
 
   resource_prefix {
@@ -8678,7 +8699,6 @@ service "timestreamquery" {
   provider_package_correct = "timestreamquery"
   doc_prefix               = ["timestreamquery_"]
   brand                    = "Amazon"
-  not_implemented          = true
 }
 
 service "timestreamwrite" {
@@ -8706,7 +8726,7 @@ service "timestreamwrite" {
 
   provider_package_correct = "timestreamwrite"
   doc_prefix               = ["timestreamwrite_"]
-  brand                    = "AWS"
+  brand                    = "Amazon"
 }
 
 service "transcribe" {
@@ -9454,7 +9474,7 @@ service "ec2" {
 
     split_package       = "ec2"
     file_prefix         = "vpc_"
-    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\."]
+    doc_prefix          = ["default_network_", "default_route_", "default_security_", "default_subnet", "default_vpc", "ec2_managed_", "ec2_network_", "ec2_subnet_", "ec2_traffic_", "egress_only_", "flow_log", "internet_gateway", "main_route_", "nat_", "network_", "prefix_list", "route_", "route\\.", "security_group", "subnet", "vpc_dhcp_", "vpc_endpoint", "vpc_ipv", "vpc_network_performance", "vpc_peering_", "vpc_security_group_", "vpc\\.", "vpcs\\.", "vpc_block_public_access_"]
     brand               = "Amazon"
     exclude             = true
     allowed_subcategory = true

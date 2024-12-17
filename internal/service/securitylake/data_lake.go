@@ -270,7 +270,7 @@ func (r *dataLakeResource) Read(ctx context.Context, request resource.ReadReques
 
 	// Transparent tagging fails with "ResourceNotFoundException: The request failed because the specified resource doesn't exist."
 	// if the data lake's AWS Region isn't the configured one.
-	if region := configuration.Region.ValueString(); region != r.Meta().Region {
+	if region := configuration.Region.ValueString(); region != r.Meta().Region(ctx) {
 		if tags, err := listTags(ctx, conn, data.ID.ValueString(), func(o *securitylake.Options) { o.Region = region }); err == nil {
 			setTagsOut(ctx, Tags(tags))
 		}

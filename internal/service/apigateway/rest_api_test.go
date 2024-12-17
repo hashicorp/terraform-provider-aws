@@ -50,7 +50,7 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.types.0", "EDGE"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint_configuration.0.vpc_endpoint_ids.#", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexache.MustCompile(`[0-9a-z]+$`)),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, "execution_arn", "execute-api", regexache.MustCompile(`[0-9a-z]+$`)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "root_resource_id", regexache.MustCompile(`^[0-9a-z]+$`)),

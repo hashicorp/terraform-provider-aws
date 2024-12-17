@@ -50,7 +50,7 @@ func testAccFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "ARCHIVE"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, ""),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/[0-9a-z]{32}/filter/test-filter$")),
+					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "guardduty", regexache.MustCompile("detector/[0-9a-z]{32}/filter/test-filter$")),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "finding_criteria.0.criterion.#", "3"),

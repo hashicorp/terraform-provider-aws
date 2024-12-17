@@ -44,6 +44,12 @@ func resourceEBSSnapshotCopy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"completion_duration_minutes": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.All(validation.IntDivisibleBy(15), validation.IntAtMost(2880)),
+			},
 			"data_encryption_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -123,6 +129,10 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 		TagSpecifications: getTagSpecificationsIn(ctx, awstypes.ResourceTypeSnapshot),
 	}
 
+	if v, ok := d.GetOk("completion_duration_minutes"); ok {
+		input.CompletionDurationMinutes = aws.Int32(int32(v.(int)))
+	}
+
 	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
@@ -145,8 +155,7 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
-			waiter := ec2.NewSnapshotCompletedWaiter(conn)
-			return waiter.WaitForOutput(ctx, &ec2.DescribeSnapshotsInput{
+			return ec2.NewSnapshotCompletedWaiter(conn).WaitForOutput(ctx, &ec2.DescribeSnapshotsInput{
 				SnapshotIds: []string{d.Id()},
 			}, d.Timeout(schema.TimeoutCreate))
 		},
@@ -156,19 +165,19 @@ func resourceEBSSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot Copy (%s) create: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("storage_tier"); ok && v.(string) == string(awstypes.TargetStorageTierArchive) {
-		_, err = conn.ModifySnapshotTier(ctx, &ec2.ModifySnapshotTierInput{
+	if v, ok := d.GetOk("storage_tier"); ok && awstypes.TargetStorageTier(v.(string)) == awstypes.TargetStorageTierArchive {
+		input := &ec2.ModifySnapshotTierInput{
 			SnapshotId:  aws.String(d.Id()),
 			StorageTier: awstypes.TargetStorageTier(v.(string)),
-		})
+		}
+
+		_, err := conn.ModifySnapshotTier(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting EBS Snapshot Copy (%s) Storage Tier: %s", d.Id(), err)
 		}
 
-		_, err = waitEBSSnapshotTierArchive(ctx, conn, d.Id(), ebsSnapshotArchivedTimeout)
-
-		if err != nil {
+		if _, err := waitEBSSnapshotTierArchive(ctx, conn, d.Id(), ebsSnapshotArchivedTimeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EBS Snapshot Copy (%s) Storage Tier archive: %s", d.Id(), err)
 		}
 	}

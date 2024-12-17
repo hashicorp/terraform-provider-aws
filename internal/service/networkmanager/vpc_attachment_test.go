@@ -62,7 +62,7 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 						Config: testAccVPCAttachmentConfig_basic(rName, testcase.acceptanceRequired),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-							acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
+							acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 							resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 							resource.TestCheckResourceAttr(resourceName, "attachment_type", "VPC"),
 							resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
@@ -71,7 +71,7 @@ func TestAccNetworkManagerVPCAttachment_basic(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
 							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
-							acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+							acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 							resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, vpcResourceName, names.AttrARN),
 							resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 							resource.TestCheckResourceAttr(resourceName, names.AttrState, string(testcase.expectedState)),
@@ -128,7 +128,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_basic(t *testing.T) {
 						Config: testAccVPCAttachmentConfig_Attached_basic(rName, testcase.acceptanceRequired),
 						Check: resource.ComposeAggregateTestCheckFunc(
 							testAccCheckVPCAttachmentExists(ctx, resourceName, &v),
-							acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
+							acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 							resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "1"),
 							resource.TestCheckResourceAttr(resourceName, "attachment_type", "VPC"),
 							resource.TestCheckResourceAttrPair(resourceName, "core_network_arn", coreNetworkResourceName, names.AttrARN),
@@ -137,7 +137,7 @@ func TestAccNetworkManagerVPCAttachment_Attached_basic(t *testing.T) {
 							resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 							resource.TestCheckResourceAttr(resourceName, "options.0.appliance_mode_support", acctest.CtFalse),
 							resource.TestCheckResourceAttr(resourceName, "options.0.ipv6_support", acctest.CtFalse),
-							acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+							acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 							resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, vpcResourceName, names.AttrARN),
 							resource.TestCheckResourceAttr(resourceName, "segment_name", "shared"),
 							resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
@@ -519,10 +519,6 @@ func testAccCheckVPCAttachmentExists(ctx context.Context, n string, v *awstypes.
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network Manager VPC Attachment ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)

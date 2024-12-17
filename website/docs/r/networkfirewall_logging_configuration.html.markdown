@@ -21,7 +21,7 @@ resource "aws_networkfirewall_logging_configuration" "example" {
     log_destination_config {
       log_destination = {
         bucketName = aws_s3_bucket.example.bucket
-        prefix     = "/example"
+        prefix     = "example"
       }
       log_destination_type = "S3"
       log_type             = "FLOW"
@@ -83,7 +83,7 @@ The `logging_configuration` block supports the following arguments:
 The `log_destination_config` block supports the following arguments:
 
 * `log_destination` - (Required) A map describing the logging destination for the chosen `log_destination_type`.
-    * For an Amazon S3 bucket, specify the key `bucketName` with the name of the bucket and optionally specify the key `prefix` with a path.
+    * For an Amazon S3 bucket, specify the key `bucketName` with the name of the bucket and optionally specify the key `prefix` with a path (Do not add a leading / in the `prefix` as the configuration will have two // when applied).
     * For a CloudWatch log group, specify the key `logGroup` with the name of the CloudWatch log group.
     * For a Kinesis Data Firehose delivery stream, specify the key `deliveryStream` with the name of the delivery stream.
 

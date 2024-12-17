@@ -55,7 +55,7 @@ func dataSourceQueuesRead(ctx context.Context, d *schema.ResourceData, meta inte
 		queueURLs = append(queueURLs, page.QueueUrls...)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set("queue_urls", queueURLs)
 
 	return diags

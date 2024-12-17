@@ -100,7 +100,7 @@ func (d *regionDataSource) Read(ctx context.Context, request datasource.ReadRequ
 
 	// Default to provider current Region if no other filters matched.
 	if region == nil {
-		name := d.Meta().Region
+		name := d.Meta().Region(ctx)
 		matchingRegion, err := findRegionByName(ctx, name)
 
 		if err != nil {

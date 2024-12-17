@@ -34,7 +34,7 @@ func TestAccMemoryDBACL_basic(t *testing.T) {
 				Config: testAccACLConfig_basic(rName, []string{user1}, []string{user1}),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckACLExists(ctx, resourceName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "memorydb", "acl/"+rName),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "memorydb", "acl/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, "minimum_engine_version"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
@@ -326,10 +326,6 @@ func testAccCheckACLExists(ctx context.Context, n string) resource.TestCheckFunc
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MemoryDB ACL ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)

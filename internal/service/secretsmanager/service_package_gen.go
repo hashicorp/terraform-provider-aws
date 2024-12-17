@@ -14,6 +14,15 @@ import (
 
 type servicePackage struct{}
 
+func (p *servicePackage) EphemeralResources(ctx context.Context) []*types.ServicePackageEphemeralResource {
+	return []*types.ServicePackageEphemeralResource{
+		{
+			Factory: newEphemeralSecretVersion,
+			Name:    "Secret Version",
+		},
+	}
+}
+
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{

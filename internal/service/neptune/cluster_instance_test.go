@@ -40,7 +40,7 @@ func TestAccNeptuneClusterInstance_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrAddress),
-					acctest.CheckResourceAttrRegionalARN(resourceName, names.AttrARN, "rds", fmt.Sprintf("db:%s", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "rds", fmt.Sprintf("db:%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAutoMinorVersionUpgrade, acctest.CtTrue),
 					resource.TestMatchResourceAttr(resourceName, names.AttrAvailabilityZone, regexache.MustCompile(fmt.Sprintf("^%s[a-z]{1}$", acctest.Region()))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterIdentifier, clusterResourceName, names.AttrID),

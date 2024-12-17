@@ -36,11 +36,11 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_basic(t *testing.T)
 				Config: testAccTransitGatewayRouteTableAttachmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
+					acctest.MatchResourceAttrGlobalARN(ctx, resourceName, names.AttrARN, "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "0"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "TRANSIT_GATEWAY_ROUTE_TABLE"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
-					acctest.CheckResourceAttrAccountID(resourceName, names.AttrOwnerAccountID),
+					acctest.CheckResourceAttrAccountID(ctx, resourceName, names.AttrOwnerAccountID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrResourceARN),
 					resource.TestCheckResourceAttr(resourceName, "segment_name", ""),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrState),
@@ -131,10 +131,6 @@ func testAccCheckTransitGatewayRouteTableAttachmentExists(ctx context.Context, n
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Network Manager Transit Gateway Route Table Attachment ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerClient(ctx)

@@ -74,7 +74,7 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		ids = append(ids, api.ApiId)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 
 	if err := d.Set(names.AttrIDs, flex.FlattenStringSet(ids)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ids: %s", err)

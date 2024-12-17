@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tffunction "github.com/hashicorp/terraform-provider-aws/internal/function"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -492,6 +493,7 @@ func (p *fwprovider) EphemeralResources(ctx context.Context) []func() ephemeral.
 					if meta != nil {
 						ctx = meta.RegisterLogger(ctx)
 						ctx = flex.RegisterLogger(ctx)
+						ctx = logging.MaskSensitiveValuesByKey(ctx, logging.HTTPKeyRequestBody, logging.HTTPKeyResponseBody)
 					}
 					return ctx
 				}

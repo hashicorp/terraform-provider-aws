@@ -131,7 +131,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "CreateAccessKey response did not contain a Secret Access Key as expected")
 	}
 
-	sesSMTPPasswordV4, err := sesSMTPPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region)
+	sesSMTPPasswordV4, err := sesSMTPPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region(ctx))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting SES SigV4 SMTP Password from Secret Access Key: %s", err)
 	}

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_eks_cluster: Add `compute_config`, `storage_config`, and `kubernetes_network_config.elastic_load_balancing` arguments for EKS Auto Mode
+```
