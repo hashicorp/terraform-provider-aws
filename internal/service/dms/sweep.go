@@ -1,22 +1,20 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package dms
 
 import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	dms "github.com/aws/aws-sdk-go-v2/service/databasemigrationservice"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_dms_endpoint", &resource.Sweeper{
 		Name: "aws_dms_endpoint",
 		F:    sweepEndpoints,
@@ -34,7 +32,6 @@ func init() {
 		Name: "aws_dms_replication_instance",
 		F:    sweepReplicationInstances,
 		Dependencies: []string{
-			"aws_dms_replication_subnet_group",
 			"aws_dms_replication_task",
 		},
 	})
@@ -42,6 +39,9 @@ func init() {
 	resource.AddTestSweepers("aws_dms_replication_subnet_group", &resource.Sweeper{
 		Name: "aws_dms_replication_subnet_group",
 		F:    sweepReplicationSubnetGroups,
+		Dependencies: []string{
+			"aws_dms_replication_instance",
+		},
 	})
 
 	resource.AddTestSweepers("aws_dms_replication_task", &resource.Sweeper{
@@ -56,34 +56,31 @@ func sweepEndpoints(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.DMSConn(ctx)
+	conn := client.DMSClient(ctx)
 	input := &dms.DescribeEndpointsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeEndpointsPagesWithContext(ctx, input, func(page *dms.DescribeEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := dms.NewDescribeEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DMS Endpoint sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing DMS Endpoints (%s): %w", region, err)
 		}
 
 		for _, v := range page.Endpoints {
-			r := ResourceEndpoint()
+			r := resourceEndpoint()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.EndpointIdentifier))
+			d.SetId(aws.ToString(v.EndpointIdentifier))
 			d.Set("endpoint_arn", v.EndpointArn)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DMS Endpoint sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing DMS Endpoints (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -101,33 +98,30 @@ func sweepReplicationConfigs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.DMSConn(ctx)
+	conn := client.DMSClient(ctx)
 	input := &dms.DescribeReplicationConfigsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeReplicationConfigsPagesWithContext(ctx, input, func(page *dms.DescribeReplicationConfigsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := dms.NewDescribeReplicationConfigsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DMS Replication Config sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing DMS Replication Configs (%s): %w", region, err)
 		}
 
 		for _, v := range page.ReplicationConfigs {
-			r := ResourceReplicationConfig()
+			r := resourceReplicationConfig()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ReplicationConfigArn))
+			d.SetId(aws.ToString(v.ReplicationConfigArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DMS Replication Config sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing DMS Replication Configs (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -145,34 +139,31 @@ func sweepReplicationInstances(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.DMSConn(ctx)
+	conn := client.DMSClient(ctx)
 	input := &dms.DescribeReplicationInstancesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeReplicationInstancesPagesWithContext(ctx, input, func(page *dms.DescribeReplicationInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := dms.NewDescribeReplicationInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DMS Replication Instance sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing DMS Replication Instances (%s): %w", region, err)
 		}
 
 		for _, v := range page.ReplicationInstances {
-			r := ResourceReplicationInstance()
+			r := resourceReplicationInstance()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ReplicationInstanceIdentifier))
+			d.SetId(aws.ToString(v.ReplicationInstanceIdentifier))
 			d.Set("replication_instance_arn", v.ReplicationInstanceArn)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DMS Replication Instance sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing DMS Replication Instances (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -190,33 +181,30 @@ func sweepReplicationSubnetGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.DMSConn(ctx)
+	conn := client.DMSClient(ctx)
 	input := &dms.DescribeReplicationSubnetGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeReplicationSubnetGroupsPagesWithContext(ctx, input, func(page *dms.DescribeReplicationSubnetGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := dms.NewDescribeReplicationSubnetGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DMS Replication Subnet Group sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing DMS Replication Subnet Groups (%s): %w", region, err)
 		}
 
 		for _, v := range page.ReplicationSubnetGroups {
-			r := ResourceReplicationSubnetGroup()
+			r := resourceReplicationSubnetGroup()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ReplicationSubnetGroupIdentifier))
+			d.SetId(aws.ToString(v.ReplicationSubnetGroupIdentifier))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DMS Replication Subnet Group sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing DMS Replication Subnet Groups (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
@@ -234,36 +222,33 @@ func sweepReplicationTasks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.DMSConn(ctx)
+	conn := client.DMSClient(ctx)
 	input := &dms.DescribeReplicationTasksInput{
 		WithoutSettings: aws.Bool(true),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeReplicationTasksPagesWithContext(ctx, input, func(page *dms.DescribeReplicationTasksOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := dms.NewDescribeReplicationTasksPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping DMS Replication Task sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing DMS Replication Tasks (%s): %w", region, err)
 		}
 
 		for _, v := range page.ReplicationTasks {
-			r := ResourceReplicationTask()
+			r := resourceReplicationTask()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ReplicationTaskIdentifier))
+			d.SetId(aws.ToString(v.ReplicationTaskIdentifier))
 			d.Set("replication_task_arn", v.ReplicationTaskArn)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping DMS Replication Task sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing DMS Replication Tasks (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

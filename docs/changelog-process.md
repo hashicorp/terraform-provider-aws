@@ -1,14 +1,16 @@
 # Changelog Process
 
-HashiCorp’s open-source projects have always maintained user-friendly, readable CHANGELOG.md that allow users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
+HashiCorp’s open-source projects have always maintained user-friendly, readable `CHANGELOG.md` that allows users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
 
-We use the [go-changelog](https://github.com/hashicorp/go-changelog) to generate and update the changelog from files created in the `.changelog/` directory. It is important that when you raise your Pull Request, there is a changelog entry which describes the changes your contribution makes. Not all changes require an entry in the changelog, guidance follows on what changes do.
+We use [go-changelog](https://github.com/hashicorp/go-changelog) to generate the changelog from files created in the `.changelog/` directory.
+It is important that when you raise your pull request, there is a changelog entry which describes the changes your contribution makes.
+Not all changes require an entry in the changelog, guidance follows on what changes do.
 
 ## Changelog format
 
 The changelog format requires an entry in the following format, where HEADER corresponds to the changelog category, and the entry is the changelog entry itself. The entry should be included in a file in the `.changelog` directory with the naming convention `{PR-NUMBER}.txt`. For example, to create a changelog entry for pull request 1234, there should be a file named `.changelog/1234.txt`.
 
-``````markdown
+``````
 ```release-note:{HEADER}
 {ENTRY}
 ```
@@ -16,7 +18,7 @@ The changelog format requires an entry in the following format, where HEADER cor
 
 If a pull request should contain multiple changelog entries, then multiple blocks can be added to the same changelog file. For example:
 
-``````markdown
+``````
 ```release-note:note
 resource/aws_example_thing: The `broken` attribute has been deprecated. All configurations using `broken` should be updated to use the new `not_broken` attribute instead.
 ```
@@ -36,7 +38,7 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 
 A new resource entry should only contain the name of the resource, and use the `release-note:new-resource` header.
 
-``````markdown
+``````
 ```release-note:new-resource
 aws_secretsmanager_secret_policy
 ```
@@ -46,7 +48,7 @@ aws_secretsmanager_secret_policy
 
 A new data source entry should only contain the name of the data source, and use the `release-note:new-data-source` header.
 
-``````markdown
+``````
 ```release-note:new-data-source
 aws_workspaces_workspace
 ```
@@ -54,9 +56,9 @@ aws_workspaces_workspace
 
 #### New full-length documentation guides (e.g., EKS Getting Started Guide, IAM Policy Documents with Terraform)
 
-A new full length documentation entry gives the title of the documentation added, using the `release-note:new-guide` header.
+A new full-length documentation entry gives the title of the documentation added, using the `release-note:new-guide` header.
 
-``````markdown
+``````
 ```release-note:new-guide
 Custom Service Endpoint Configuration
 ```
@@ -64,9 +66,9 @@ Custom Service Endpoint Configuration
 
 #### Resource and provider bug fixes
 
-A new bug entry should use the `release-note:bug` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level fixes.
+A new bug entry should use the `release-note:bug` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level fixes.
 
-``````markdown
+``````
 ```release-note:bug
 resource/aws_glue_classifier: Fix quote_symbol being optional
 ```
@@ -74,9 +76,9 @@ resource/aws_glue_classifier: Fix quote_symbol being optional
 
 #### Resource and provider enhancements
 
-A new enhancement entry should use the `release-note:enhancement` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level enhancements.
+A new enhancement entry should use the `release-note:enhancement` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level enhancements.
 
-``````markdown
+``````
 ```release-note:enhancement
 resource/aws_eip: Add network_border_group argument
 ```
@@ -84,9 +86,9 @@ resource/aws_eip: Add network_border_group argument
 
 #### Deprecations
 
-A deprecation entry should use the `release-note:note` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
+A deprecation entry should use the `release-note:note` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level changes.
 
-``````markdown
+``````
 ```release-note:note
 resource/aws_dx_gateway_association: The vpn_gateway_id attribute is being deprecated in favor of the new associated_gateway_id attribute to support transit gateway associations
 ```
@@ -94,9 +96,9 @@ resource/aws_dx_gateway_association: The vpn_gateway_id attribute is being depre
 
 #### Breaking changes and removals
 
-A breaking-change entry should use the `release-note:breaking-change` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
+A breaking-change entry should use the `release-note:breaking-change` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level changes.
 
-``````markdown
+``````
 ```release-note:breaking-change
 resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
 ```
@@ -104,13 +106,13 @@ resource/aws_lambda_alias: Resource import no longer converts Lambda Function na
 
 #### Region validation support
 
-``````markdown
+``````
 ```release-note:note
 provider: Region validation now automatically supports the new `XX-XXXXX-#` (Location) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g., `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g., `data.aws_availability_zones.available: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-####]
 ```
 
 ```release-note:enhancement
-* provider: Support automatic region validation for `XX-XXXXX-#` [GH-####]
+provider: Support automatic region validation for `XX-XXXXX-#` [GH-####]
 ```
 ``````
 
@@ -120,7 +122,7 @@ Dependency updates: If the update contains relevant bug fixes or enhancements th
 Any changes which do not fit into the above categories but warrant highlighting.
 Use resource/data source/provider prefixes where appropriate.
 
-``````markdown
+``````
 ```release-note:note
 resource/aws_lambda_alias: Resource import no longer converts Lambda Function name to ARN
 ```

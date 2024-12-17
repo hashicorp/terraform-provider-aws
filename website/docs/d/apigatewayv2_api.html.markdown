@@ -23,7 +23,7 @@ data "aws_apigatewayv2_api" "example" {
 The arguments of this data source act as filters for querying the available APIs in the current region.
 The given filters must match exactly one API whose data will be exported as attributes.
 
-This argument supports the following arguments:
+This data source supports the following arguments:
 
 * `api_id` - (Required) API identifier.
 

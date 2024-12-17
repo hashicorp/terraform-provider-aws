@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package opensearchserverless
 
 import (
@@ -13,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/endpoints"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -21,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_opensearchserverless_access_policy", &resource.Sweeper{
 		Name: "aws_opensearchserverless_access_policy",
 		F:    sweepAccessPolicies,
@@ -46,7 +44,7 @@ func init() {
 
 func sweepAccessPolicies(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Access Policy sweep for region: %s", region)
 		return nil
 	}
@@ -77,9 +75,9 @@ func sweepAccessPolicies(region string) error {
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Access Policy: %s", name)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceAccessPolicy, client,
-				framework.NewAttribute("id", name),
-				framework.NewAttribute("name", name),
-				framework.NewAttribute("type", ap.Type),
+				framework.NewAttribute(names.AttrID, name),
+				framework.NewAttribute(names.AttrName, name),
+				framework.NewAttribute(names.AttrType, ap.Type),
 			))
 		}
 	}
@@ -93,7 +91,7 @@ func sweepAccessPolicies(region string) error {
 
 func sweepCollections(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Collection sweep for region: %s", region)
 		return nil
 	}
@@ -122,7 +120,7 @@ func sweepCollections(region string) error {
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Collection: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
@@ -136,7 +134,7 @@ func sweepCollections(region string) error {
 
 func sweepSecurityConfigs(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Security Config sweep for region: %s", region)
 		return nil
 	}
@@ -167,7 +165,7 @@ func sweepSecurityConfigs(region string) error {
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Config: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}
@@ -181,7 +179,7 @@ func sweepSecurityConfigs(region string) error {
 
 func sweepSecurityPolicies(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Security Policy sweep for region: %s", region)
 		return nil
 	}
@@ -212,9 +210,9 @@ func sweepSecurityPolicies(region string) error {
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Policy: %s", name)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
-				framework.NewAttribute("id", name),
-				framework.NewAttribute("name", name),
-				framework.NewAttribute("type", sp.Type),
+				framework.NewAttribute(names.AttrID, name),
+				framework.NewAttribute(names.AttrName, name),
+				framework.NewAttribute(names.AttrType, sp.Type),
 			))
 		}
 	}
@@ -239,9 +237,9 @@ func sweepSecurityPolicies(region string) error {
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless Security Policy: %s", name)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
-				framework.NewAttribute("id", name),
-				framework.NewAttribute("name", name),
-				framework.NewAttribute("type", sp.Type),
+				framework.NewAttribute(names.AttrID, name),
+				framework.NewAttribute(names.AttrName, name),
+				framework.NewAttribute(names.AttrType, sp.Type),
 			))
 		}
 	}
@@ -255,7 +253,7 @@ func sweepSecurityPolicies(region string) error {
 
 func sweepVPCEndpoints(region string) error {
 	ctx := sweep.Context(region)
-	if region == names.USWest1RegionID {
+	if region == endpoints.UsWest1RegionID || region == endpoints.UsGovEast1RegionID {
 		log.Printf("[WARN] Skipping OpenSearch Serverless Security Policy sweep for region: %s", region)
 		return nil
 	}
@@ -284,7 +282,7 @@ func sweepVPCEndpoints(region string) error {
 
 			log.Printf("[INFO] Deleting OpenSearch Serverless VPC Endpoint: %s", id)
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceCollection, client,
-				framework.NewAttribute("id", id),
+				framework.NewAttribute(names.AttrID, id),
 			))
 		}
 	}

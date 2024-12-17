@@ -9,15 +9,17 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcognitoidentity "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIdentityPoolProviderPrincipalTags_basic(t *testing.T) {
@@ -27,7 +29,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolProviderPrincipalTagsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -36,7 +38,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolProviderPrincipalTagsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", "value"),
+					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", names.AttrValue),
 				),
 			},
 		},
@@ -50,7 +52,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_updated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolProviderPrincipalTagsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -59,7 +61,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_updated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolProviderPrincipalTagsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", "value"),
+					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", names.AttrValue),
 				),
 			},
 			{
@@ -72,7 +74,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_updated(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolProviderPrincipalTagsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", "value"),
+					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", names.AttrValue),
 					resource.TestCheckResourceAttr(resourceName, "principal_tags.new", "map"),
 				),
 			},
@@ -87,7 +89,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolProviderPrincipalTagsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,7 +112,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_oidc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolProviderPrincipalTagsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -119,7 +121,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_oidc(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPoolProviderPrincipalTagsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "identity_pool_id"),
-					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", "value"),
+					resource.TestCheckResourceAttr(resourceName, "principal_tags.test", names.AttrValue),
 				),
 			},
 		},
@@ -137,9 +139,9 @@ func testAccCheckPoolProviderPrincipalTagsExists(ctx context.Context, n string) 
 			return errors.New("No Cognito Identity Princpal Tags is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-		_, err := conn.GetPrincipalTagAttributeMapWithContext(ctx, &cognitoidentity.GetPrincipalTagAttributeMapInput{
+		_, err := conn.GetPrincipalTagAttributeMap(ctx, &cognitoidentity.GetPrincipalTagAttributeMapInput{
 			IdentityPoolId:       aws.String(rs.Primary.Attributes["identity_pool_id"]),
 			IdentityProviderName: aws.String(rs.Primary.Attributes["identity_provider_name"]),
 		})
@@ -150,20 +152,20 @@ func testAccCheckPoolProviderPrincipalTagsExists(ctx context.Context, n string) 
 
 func testAccCheckPoolProviderPrincipalTagsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_identity_pool_provider_principal_tag" {
 				continue
 			}
 
-			_, err := conn.GetPrincipalTagAttributeMapWithContext(ctx, &cognitoidentity.GetPrincipalTagAttributeMapInput{
+			_, err := conn.GetPrincipalTagAttributeMap(ctx, &cognitoidentity.GetPrincipalTagAttributeMapInput{
 				IdentityPoolId:       aws.String(rs.Primary.Attributes["identity_pool_id"]),
 				IdentityProviderName: aws.String(rs.Primary.Attributes["identity_provider_name"]),
 			})
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					return nil
 				}
 				return err

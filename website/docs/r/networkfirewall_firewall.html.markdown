@@ -25,6 +25,12 @@ resource "aws_networkfirewall_firewall" "example" {
     Tag1 = "Value1"
     Tag2 = "Value2"
   }
+
+  timeouts {
+    create = "40m"
+    update = "50m"
+    delete = "1h"
+  }
 }
 ```
 
@@ -32,7 +38,7 @@ resource "aws_networkfirewall_firewall" "example" {
 
 This resource supports the following arguments:
 
-* `delete_protection` - (Optional) A boolean flag indicating whether it is possible to delete the firewall. Defaults to `false`.
+* `delete_protection` - (Optional) A flag indicating whether the firewall is protected against deletion. Use this setting to protect against accidentally deleting a firewall that is in use. Defaults to `false`.
 
 * `description` - (Optional) A friendly description of the firewall.
 
@@ -40,11 +46,11 @@ This resource supports the following arguments:
 
 * `firewall_policy_arn` - (Required) The Amazon Resource Name (ARN) of the VPC Firewall policy.
 
-* `firewall_policy_change_protection` - (Option) A boolean flag indicating whether it is possible to change the associated firewall policy. Defaults to `false`.
+* `firewall_policy_change_protection` - (Optional) A flag indicating whether the firewall is protected against a change to the firewall policy association. Use this setting to protect against accidentally modifying the firewall policy for a firewall that is in use. Defaults to `false`.
 
 * `name` - (Required, Forces new resource) A friendly name of the firewall.
 
-* `subnet_change_protection` - (Optional) A boolean flag indicating whether it is possible to change the associated subnet(s). Defaults to `false`.
+* `subnet_change_protection` - (Optional) A flag indicating whether the firewall is protected against changes to the subnet associations. Use this setting to protect against accidentally modifying the subnet associations for a firewall that is in use. Defaults to `false`.
 
 * `subnet_mapping` - (Required) Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet. See [Subnet Mapping](#subnet-mapping) below for details.
 
@@ -84,6 +90,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 * `update_token` - A string token used when updating a firewall.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
 
 ## Import
 

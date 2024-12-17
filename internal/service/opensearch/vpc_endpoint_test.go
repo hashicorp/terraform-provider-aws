@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearch/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopensearch "github.com/hashicorp/terraform-provider-aws/internal/service/opensearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestVPCEndpointErrorsNotFound(t *testing.T) {
@@ -24,7 +25,7 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 
 	testCases := []struct {
 		name       string
-		apiObjects []*opensearchservice.VpcEndpointError
+		apiObjects []awstypes.VpcEndpointError
 		notFound   bool
 	}{
 		{
@@ -32,20 +33,20 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		},
 		{
 			name:       "slice of nil input",
-			apiObjects: []*opensearchservice.VpcEndpointError{nil, nil},
+			apiObjects: []awstypes.VpcEndpointError{},
 		},
 		{
 			name: "single SERVER_ERROR",
-			apiObjects: []*opensearchservice.VpcEndpointError{{
-				ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeServerError),
+			apiObjects: []awstypes.VpcEndpointError{{
+				ErrorCode:     awstypes.VpcEndpointErrorCodeServerError,
 				ErrorMessage:  aws.String("fail"),
 				VpcEndpointId: aws.String("aos-12345678"),
 			}},
 		},
 		{
 			name: "single ENDPOINT_NOT_FOUND",
-			apiObjects: []*opensearchservice.VpcEndpointError{{
-				ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeEndpointNotFound),
+			apiObjects: []awstypes.VpcEndpointError{{
+				ErrorCode:     awstypes.VpcEndpointErrorCodeEndpointNotFound,
 				ErrorMessage:  aws.String("Endpoint does not exist"),
 				VpcEndpointId: aws.String("aos-12345678"),
 			}},
@@ -53,14 +54,14 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		},
 		{
 			name: "no ENDPOINT_NOT_FOUND in many",
-			apiObjects: []*opensearchservice.VpcEndpointError{
+			apiObjects: []awstypes.VpcEndpointError{
 				{
-					ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeServerError),
+					ErrorCode:     awstypes.VpcEndpointErrorCodeServerError,
 					ErrorMessage:  aws.String("fail"),
 					VpcEndpointId: aws.String("aos-abcd0123"),
 				},
 				{
-					ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeServerError),
+					ErrorCode:     awstypes.VpcEndpointErrorCodeServerError,
 					ErrorMessage:  aws.String("crash"),
 					VpcEndpointId: aws.String("aos-12345678"),
 				},
@@ -68,14 +69,14 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 		},
 		{
 			name: "single ENDPOINT_NOT_FOUND in many",
-			apiObjects: []*opensearchservice.VpcEndpointError{
+			apiObjects: []awstypes.VpcEndpointError{
 				{
-					ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeServerError),
+					ErrorCode:     awstypes.VpcEndpointErrorCodeServerError,
 					ErrorMessage:  aws.String("fail"),
 					VpcEndpointId: aws.String("aos-abcd0123"),
 				},
 				{
-					ErrorCode:     aws.String(opensearchservice.VpcEndpointErrorCodeEndpointNotFound),
+					ErrorCode:     awstypes.VpcEndpointErrorCodeEndpointNotFound,
 					ErrorMessage:  aws.String("Endpoint does not exist"),
 					VpcEndpointId: aws.String("aos-12345678"),
 				},
@@ -85,7 +86,6 @@ func TestVPCEndpointErrorsNotFound(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -102,14 +102,14 @@ func TestAccOpenSearchVPCEndpoint_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v opensearchservice.VpcEndpoint
+	var v awstypes.VpcEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +117,7 @@ func TestAccOpenSearchVPCEndpoint_basic(t *testing.T) {
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
@@ -140,14 +140,14 @@ func TestAccOpenSearchVPCEndpoint_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v opensearchservice.VpcEndpoint
+	var v awstypes.VpcEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -169,14 +169,14 @@ func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var v opensearchservice.VpcEndpoint
+	var v awstypes.VpcEndpoint
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domainName := testAccRandomDomainName()
 	resourceName := "aws_opensearch_vpc_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -184,7 +184,7 @@ func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 				Config: testAccVPCEndpointConfig_basic(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
@@ -196,7 +196,7 @@ func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 				Config: testAccVPCEndpointConfig_updated(rName, domainName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCEndpointExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrSet(resourceName, "endpoint"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrEndpoint),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.availability_zones.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "2"),
@@ -208,14 +208,14 @@ func TestAccOpenSearchVPCEndpoint_update(t *testing.T) {
 	})
 }
 
-func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *opensearchservice.VpcEndpoint) resource.TestCheckFunc {
+func testAccCheckVPCEndpointExists(ctx context.Context, n string, v *awstypes.VpcEndpoint) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
 		output, err := tfopensearch.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 
@@ -236,7 +236,7 @@ func testAccCheckVPCEndpointDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchClient(ctx)
 
 			_, err := tfopensearch.FindVPCEndpointByID(ctx, conn, rs.Primary.ID)
 

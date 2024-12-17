@@ -29,9 +29,9 @@ func validPrincipal(v interface{}, k string) (ws []string, errors []error) {
 	ws = append(ws, wsARN...)
 	errors = append(errors, errorsARN...)
 
-	pattern := `:(role|user|group|ou|organization)/`
+	pattern := `:(role|user|federated-user|group|ou|organization)/`
 	if !regexache.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q does not look like a user, role, group, OU, or organization: %q", k, value))
+		errors = append(errors, fmt.Errorf("%q does not look like a user, federated-user, role, group, OU, or organization: %q", k, value))
 	}
 
 	if len(errors) > 0 {

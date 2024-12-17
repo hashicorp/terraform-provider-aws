@@ -46,7 +46,7 @@ This resource supports the following arguments:
 * `cluster_identifier` - (Optional, Forces new resources) The cluster identifier. If omitted, Terraform will assign a random, unique identifier.
 * `cluster_identifier_prefix` - (Optional, Forces new resource) Creates a unique cluster identifier beginning with the specified prefix. Conflicts with `cluster_identifier`.
 * `copy_tags_to_snapshot` - (Optional) If set to true, tags are copied to any snapshot of the DB cluster that is created.
-* `enable_cloudwatch_logs_exports` - (Optional) A list of the log types this DB cluster is configured to export to Cloudwatch Logs. Currently only supports `audit`.
+* `enable_cloudwatch_logs_exports` - (Optional) A list of the log types this DB cluster is configured to export to Cloudwatch Logs. Currently only supports `audit` and `slowquery`.
 * `engine` - (Optional) The name of the database engine to be used for this Neptune cluster. Defaults to `neptune`.
 * `engine_version` - (Optional) The database engine version.
 * `final_snapshot_identifier` - (Optional) The name of your final Neptune snapshot when this Neptune cluster is deleted. If omitted, no final snapshot will be made.
@@ -57,6 +57,7 @@ This resource supports the following arguments:
 * `neptune_subnet_group_name` - (Optional) A Neptune subnet group to associate with this Neptune instance.
 * `neptune_cluster_parameter_group_name` - (Optional) A cluster parameter group to associate with the cluster.
 * `neptune_instance_parameter_group_name` - (Optional) The name of the DB parameter group to apply to all instances of the DB cluster.
+* `storage_type` - (Optional) Storage type associated with the cluster `standard/iopt1`. Default: `standard`
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled using the BackupRetentionPeriod parameter. Time in UTC. Default: A 30-minute window selected at random from an 8-hour block of time per regionE.g., 04:00-09:00
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in (UTC) e.g., wed:04:00-wed:04:30
 * `port` - (Optional) The port on which the Neptune accepts connections. Default is `8182`.

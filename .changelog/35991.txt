@@ -1,0 +1,11 @@
+```release-note:new-resource
+aws_globalaccelerator_cross_account_attachment
+```
+
+```release-note:enhancement
+resource/aws_eip: Add `arn` attribute
+```
+
+```release-note:enhancement
+data-source/aws_eip: Add `arn` attribute
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appflow_flow: Fix perpetual diff on `destination_flow_config`
+```

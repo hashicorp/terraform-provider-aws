@@ -19,9 +19,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_accessanalyzer_archive_rule")
@@ -42,7 +44,7 @@ func resourceArchiveRule() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			"filter": {
+			names.AttrFilter: {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem: &schema.Resource{
@@ -88,6 +90,8 @@ func resourceArchiveRule() *schema.Resource {
 }
 
 func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName := d.Get("analyzer_name").(string)
@@ -99,28 +103,30 @@ func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta
 		RuleName:     aws.String(ruleName),
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
+	if v, ok := d.GetOk(names.AttrFilter); ok {
 		input.Filter = expandFilter(v.(*schema.Set))
 	}
 
 	_, err := conn.CreateArchiveRule(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating IAM Access Analyzer Archive Rule (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM Access Analyzer Archive Rule (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	return resourceArchiveRuleRead(ctx, d, meta)
+	return append(diags, resourceArchiveRuleRead(ctx, d, meta)...)
 }
 
 func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName, ruleName, err := archiveRuleParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	archiveRule, err := findArchiveRuleByTwoPartKey(ctx, conn, analyzerName, ruleName)
@@ -128,27 +134,29 @@ func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Access Analyzer Archive Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading IAM Access Analyzer Archive Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Access Analyzer Archive Rule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("analyzer_name", analyzerName)
-	d.Set("filter", flattenFilter(archiveRule.Filter))
+	d.Set(names.AttrFilter, flattenFilter(archiveRule.Filter))
 	d.Set("rule_name", archiveRule.RuleName)
 
-	return nil
+	return diags
 }
 
 func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName, ruleName, err := archiveRuleParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &accessanalyzer.UpdateArchiveRuleInput{
@@ -157,26 +165,28 @@ func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta
 		RuleName:     aws.String(ruleName),
 	}
 
-	if d.HasChanges("filter") {
-		input.Filter = expandFilter(d.Get("filter").(*schema.Set))
+	if d.HasChanges(names.AttrFilter) {
+		input.Filter = expandFilter(d.Get(names.AttrFilter).(*schema.Set))
 	}
 
 	_, err = conn.UpdateArchiveRule(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating AWS IAM Access Analyzer Archive Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating AWS IAM Access Analyzer Archive Rule (%s): %s", d.Id(), err)
 	}
 
-	return resourceArchiveRuleRead(ctx, d, meta)
+	return append(diags, resourceArchiveRuleRead(ctx, d, meta)...)
 }
 
 func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName, ruleName, err := archiveRuleParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[INFO] Deleting IAM Access Analyzer Archive Rule: %s", d.Id())
@@ -187,14 +197,14 @@ func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting IAM Access Analyzer Archive Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Access Analyzer Archive Rule (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findArchiveRuleByTwoPartKey(ctx context.Context, conn *accessanalyzer.Client, analyzerName, ruleName string) (*types.ArchiveRuleSummary, error) {
@@ -273,7 +283,7 @@ func expandFilter(l *schema.Set) map[string]types.Criterion {
 			}
 		}
 		if v, ok := value.(map[string]interface{})["exists"]; ok {
-			if val, null, _ := nullable.Bool(v.(string)).Value(); !null {
+			if val, null, _ := nullable.Bool(v.(string)).ValueBool(); !null {
 				c.Exists = aws.Bool(val)
 			}
 		}

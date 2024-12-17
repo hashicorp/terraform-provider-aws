@@ -1,0 +1,9 @@
+```release-note:bug
+resource/aws_dynamodb_tag: Handle eventual consistency of tag creation and removal
+```
+```release-note:bug
+resource/aws_dynamodb_table: Handle eventual consistency of tag creation and removal
+```
+```release-note:bug
+resource/aws_dynamodb_table_replica: Handle eventual consistency of tag creation and removal
+```

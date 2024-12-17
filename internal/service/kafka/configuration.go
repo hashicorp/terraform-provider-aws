@@ -6,20 +6,26 @@ package kafka
 import (
 	"context"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kafka"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kafka"
+	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_msk_configuration")
-func ResourceConfiguration() *schema.Resource {
+// @SDKResource("aws_msk_configuration", name="Configuration")
+func resourceConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationCreate,
 		ReadWithoutTimeout:   resourceConfigurationRead,
@@ -37,11 +43,11 @@ func ResourceConfiguration() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
+			names.AttrARN: {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
+			names.AttrDescription: {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
@@ -57,7 +63,7 @@ func ResourceConfiguration() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"name": {
+			names.AttrName: {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -72,85 +78,60 @@ func ResourceConfiguration() *schema.Resource {
 
 func resourceConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	input := &kafka.CreateConfigurationInput{
-		Name:             aws.String(d.Get("name").(string)),
+		Name:             aws.String(d.Get(names.AttrName).(string)),
 		ServerProperties: []byte(d.Get("server_properties").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("kafka_versions"); ok && v.(*schema.Set).Len() > 0 {
-		input.KafkaVersions = flex.ExpandStringSet(v.(*schema.Set))
+		input.KafkaVersions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	output, err := conn.CreateConfigurationWithContext(ctx, input)
+	output, err := conn.CreateConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating MSK Configuration: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.Arn))
+	d.SetId(aws.ToString(output.Arn))
 
 	return append(diags, resourceConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	configurationInput := &kafka.DescribeConfigurationInput{
-		Arn: aws.String(d.Id()),
-	}
+	configurationOutput, err := findConfigurationByARN(ctx, conn, d.Id())
 
-	configurationOutput, err := conn.DescribeConfigurationWithContext(ctx, configurationInput)
-
-	if tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "Configuration ARN does not exist") {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MSK Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Configuration (%s): %s", d.Id(), err)
 	}
 
-	if configurationOutput == nil {
-		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s): missing result", d.Id())
-	}
-
-	if configurationOutput.LatestRevision == nil {
-		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s): missing latest revision", d.Id())
-	}
-
-	revision := configurationOutput.LatestRevision.Revision
-	revisionInput := &kafka.DescribeConfigurationRevisionInput{
-		Arn:      aws.String(d.Id()),
-		Revision: revision,
-	}
-
-	revisionOutput, err := conn.DescribeConfigurationRevisionWithContext(ctx, revisionInput)
+	revision := aws.ToInt64(configurationOutput.LatestRevision.Revision)
+	revisionOutput, err := findConfigurationRevisionByTwoPartKey(ctx, conn, d.Id(), revision)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s) Revision (%d): %s", d.Id(), aws.Int64Value(revision), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Configuration (%s) revision (%d): %s", d.Id(), revision, err)
 	}
 
-	if revisionOutput == nil {
-		return sdkdiag.AppendErrorf(diags, "describing MSK Configuration (%s) Revision (%d): missing result", d.Id(), aws.Int64Value(revision))
-	}
-
-	d.Set("arn", configurationOutput.Arn)
-	d.Set("description", revisionOutput.Description)
-
-	if err := d.Set("kafka_versions", aws.StringValueSlice(configurationOutput.KafkaVersions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting kafka_versions: %s", err)
-	}
-
+	d.Set(names.AttrARN, configurationOutput.Arn)
+	d.Set(names.AttrDescription, revisionOutput.Description)
+	d.Set("kafka_versions", configurationOutput.KafkaVersions)
 	d.Set("latest_revision", revision)
-	d.Set("name", configurationOutput.Name)
+	d.Set(names.AttrName, configurationOutput.Name)
 	d.Set("server_properties", string(revisionOutput.ServerProperties))
 
 	return diags
@@ -158,18 +139,18 @@ func resourceConfigurationRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	input := &kafka.UpdateConfigurationInput{
 		Arn:              aws.String(d.Id()),
 		ServerProperties: []byte(d.Get("server_properties").(string)),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
+	if v, ok := d.GetOk(names.AttrDescription); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := conn.UpdateConfigurationWithContext(ctx, input)
+	_, err := conn.UpdateConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating MSK Configuration (%s): %s", d.Id(), err)
@@ -180,14 +161,16 @@ func resourceConfigurationUpdate(ctx context.Context, d *schema.ResourceData, me
 
 func resourceConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).KafkaConn(ctx)
-
-	input := &kafka.DeleteConfigurationInput{
-		Arn: aws.String(d.Id()),
-	}
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	log.Printf("[DEBUG] Deleting MSK Configuration: %s", d.Id())
-	_, err := conn.DeleteConfigurationWithContext(ctx, input)
+	_, err := conn.DeleteConfiguration(ctx, &kafka.DeleteConfigurationInput{
+		Arn: aws.String(d.Id()),
+	})
+
+	if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Configuration ARN does not exist") {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting MSK Configuration (%s): %s", d.Id(), err)
@@ -198,4 +181,84 @@ func resourceConfigurationDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return diags
+}
+
+func findConfigurationByARN(ctx context.Context, conn *kafka.Client, arn string) (*kafka.DescribeConfigurationOutput, error) {
+	input := &kafka.DescribeConfigurationInput{
+		Arn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeConfiguration(ctx, input)
+
+	if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Configuration ARN does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.LatestRevision == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findConfigurationRevisionByTwoPartKey(ctx context.Context, conn *kafka.Client, arn string, revision int64) (*kafka.DescribeConfigurationRevisionOutput, error) {
+	input := &kafka.DescribeConfigurationRevisionInput{
+		Arn:      aws.String(arn),
+		Revision: aws.Int64(revision),
+	}
+
+	output, err := conn.DescribeConfigurationRevision(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusConfigurationState(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findConfigurationByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func waitConfigurationDeleted(ctx context.Context, conn *kafka.Client, arn string) (*kafka.DescribeConfigurationOutput, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ConfigurationStateDeleting),
+		Target:  []string{},
+		Refresh: statusConfigurationState(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*kafka.DescribeConfigurationOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }

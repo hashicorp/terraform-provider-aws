@@ -5,32 +5,23 @@ package shield_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/shield"
+	"github.com/aws/aws-sdk-go-v2/service/shield/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccShieldApplicationLayerAutomaticResponse_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var applicationlayerautomaticresponse shield.DescribeProtectionOutput
+	var applicationlayerautomaticresponse types.ApplicationLayerAutomaticResponseConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_shield_application_layer_automatic_response.test"
 
@@ -44,9 +35,22 @@ func TestAccShieldApplicationLayerAutomaticResponse_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationLayerAutomaticResponseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationLayerAutomaticResponseConfig_basic(rName),
+				Config: testAccApplicationLayerAutomaticResponseConfig_basic(rName, "COUNT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationLayerAutomaticResponseExists(ctx, resourceName, &applicationlayerautomaticresponse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "COUNT"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationLayerAutomaticResponseConfig_basic(rName, "BLOCK"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationLayerAutomaticResponseExists(ctx, resourceName, &applicationlayerautomaticresponse),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAction, "BLOCK"),
 				),
 			},
 		},
@@ -55,11 +59,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_basic(t *testing.T) {
 
 func TestAccShieldApplicationLayerAutomaticResponse_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var applicationlayerautomaticresponse shield.DescribeProtectionOutput
+	var applicationlayerautomaticresponse types.ApplicationLayerAutomaticResponseConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_shield_application_layer_automatic_response.test"
 
@@ -73,7 +73,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationLayerAutomaticResponseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationLayerAutomaticResponseConfig_basic(rName),
+				Config: testAccApplicationLayerAutomaticResponseConfig_basic(rName, "COUNT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationLayerAutomaticResponseExists(ctx, resourceName, &applicationlayerautomaticresponse),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfshield.ResourceApplicationLayerAutomaticResponse, resourceName),
@@ -85,62 +85,52 @@ func TestAccShieldApplicationLayerAutomaticResponse_disappears(t *testing.T) {
 
 func testAccCheckApplicationLayerAutomaticResponseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_application_layer_automatic_response" {
 				continue
 			}
 
-			input := &shield.DescribeProtectionInput{
-				ResourceArn: aws.String(rs.Primary.ID),
-			}
-			resp, err := conn.DescribeProtectionWithContext(ctx, input)
-			if errs.IsA[*shield.ResourceNotFoundException](err) {
-				return nil
+			_, err := tfshield.FindApplicationLayerAutomaticResponseByResourceARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
 			if err != nil {
 				return err
 			}
 
-			if resp != nil && *resp.Protection.ApplicationLayerAutomaticResponseConfiguration.Status == "DISABLED" {
-				return nil
-			}
-			return create.Error(names.Shield, create.ErrActionCheckingDestroyed, tfshield.ResNameApplicationLayerAutomaticResponse, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Shield Application Layer Automatic Response %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckApplicationLayerAutomaticResponseExists(ctx context.Context, name string, applicationlayerautomaticresponse *shield.DescribeProtectionOutput) resource.TestCheckFunc {
+func testAccCheckApplicationLayerAutomaticResponseExists(ctx context.Context, n string, v *types.ApplicationLayerAutomaticResponseConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameApplicationLayerAutomaticResponse, name, errors.New("not found"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameApplicationLayerAutomaticResponse, name, errors.New("not set"))
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
-		resp, err := conn.DescribeProtectionWithContext(ctx, &shield.DescribeProtectionInput{
-			ResourceArn: aws.String(rs.Primary.ID),
-		})
+		output, err := tfshield.FindApplicationLayerAutomaticResponseByResourceARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameApplicationLayerAutomaticResponse, rs.Primary.ID, err)
+			return err
 		}
 
-		*applicationlayerautomaticresponse = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccApplicationLayerAutomaticResponseConfig_basic(rName string) string {
+func testAccApplicationLayerAutomaticResponseConfig_basic(rName, action string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = %[1]q
@@ -212,9 +202,10 @@ resource "aws_shield_protection" "test" {
   name         = %[1]q
   resource_arn = aws_cloudfront_distribution.test.arn
 }
+
 resource "aws_shield_application_layer_automatic_response" "test" {
   resource_arn = aws_cloudfront_distribution.test.arn
-  action       = "COUNT"
+  action       = %[2]q
 
   depends_on = [
     aws_shield_protection.test,
@@ -222,5 +213,5 @@ resource "aws_shield_application_layer_automatic_response" "test" {
     aws_wafv2_web_acl.test
   ]
 }
-`, rName)
+`, rName, action)
 }

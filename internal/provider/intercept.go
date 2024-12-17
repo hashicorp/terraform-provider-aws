@@ -6,8 +6,9 @@ package provider
 import (
 	"context"
 
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,6 +18,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -241,13 +243,13 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 			// Remove system tags.
 			tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
-			tagsInContext.TagsIn = types.Some(tags)
+			tagsInContext.TagsIn = option.Some(tags)
 
 			if why == Create {
 				break
 			}
 
-			if d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
+			if d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
 				if d.HasChange(names.AttrTagsAll) {
 					if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
 						var identifier string
@@ -265,18 +267,19 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 							// If the service package has a generic resource update tags methods, call it.
 							var err error
 
-							if v, ok := sp.(interface {
-								UpdateTags(context.Context, any, string, any, any) error
-							}); ok {
+							if v, ok := sp.(tftags.ServiceTagUpdater); ok {
 								err = v.UpdateTags(ctx, meta, identifier, o, n)
-							} else if v, ok := sp.(interface {
-								UpdateTags(context.Context, any, string, string, any, any) error
-							}); ok && r.tags.ResourceType != "" {
+							} else if v, ok := sp.(tftags.ResourceTypeTagUpdater); ok && r.tags.ResourceType != "" {
 								err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
+							} else {
+								tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
+									"ServicePackage": sp.ServicePackageName(),
+									"ResourceType":   r.tags.ResourceType,
+								})
 							}
 
 							// ISO partitions may not support tagging, giving error.
-							if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+							if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 								return ctx, diags
 							}
 
@@ -317,18 +320,25 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 						// If the service package has a generic resource list tags methods, call it.
 						var err error
 
-						if v, ok := sp.(interface {
-							ListTags(context.Context, any, string) error
-						}); ok {
+						if v, ok := sp.(tftags.ServiceTagLister); ok {
 							err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
-						} else if v, ok := sp.(interface {
-							ListTags(context.Context, any, string, string) error
-						}); ok && r.tags.ResourceType != "" {
-							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+						} else if v, ok := sp.(tftags.ResourceTypeTagLister); ok {
+							if r.tags.ResourceType == "" {
+								tflog.Error(ctx, "ListTags method requires ResourceType but none set", map[string]interface{}{
+									"ServicePackage": sp.ServicePackageName(),
+								})
+							} else {
+								err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+							}
+						} else {
+							tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+								"ServicePackage": sp.ServicePackageName(),
+								"ResourceType":   r.tags.ResourceType,
+							})
 						}
 
 						// ISO partitions may not support tagging, giving error.
-						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
 							return ctx, diags
 						}
 
@@ -350,7 +360,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)
 
 			// The resource's configured tags can now include duplicate tags that have been configured on the provider.
-			if err := d.Set(names.AttrTags, tags.ResolveDuplicates(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, d).Map()); err != nil {
+			if err := d.Set(names.AttrTags, tags.ResolveDuplicates(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, d, names.AttrTags, nil).Map()); err != nil {
 				return ctx, sdkdiag.AppendErrorf(diags, "setting %s: %s", names.AttrTags, err)
 			}
 
@@ -387,20 +397,20 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, d schemaResourceData
 		return ctx, diags
 	}
 
-	// sp, ok := meta.(*conns.AWSClient).ServicePackages[inContext.ServicePackageName]
-	// if !ok {
-	// 	return ctx, diags
-	// }
+	sp, ok := meta.(*conns.AWSClient).ServicePackages[inContext.ServicePackageName]
+	if !ok {
+		return ctx, diags
+	}
 
-	// serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
-	// if err != nil {
-	// 	serviceName = "<service>"
-	// }
+	serviceName, err := names.HumanFriendly(inContext.ServicePackageName)
+	if err != nil {
+		serviceName = "<service>"
+	}
 
-	// resourceName := inContext.ResourceName
-	// if resourceName == "" {
-	// 	resourceName = "<thing>"
-	// }
+	resourceName := inContext.ResourceName
+	if resourceName == "" {
+		resourceName = "<thing>"
+	}
 
 	tagsInContext, ok := tftags.FromContext(ctx)
 	if !ok {
@@ -413,24 +423,67 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, d schemaResourceData
 		case Read:
 			// Get the data source's configured tags.
 			tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))
-			tagsInContext.TagsIn = types.Some(tags)
+			tagsInContext.TagsIn = option.Some(tags)
 		}
 	case After:
-		// Set tags and tags_all in state after CRU.
-		// C & U handlers are assumed to tail call the R handler.
+		// Set tags in state after R.
 		switch why {
 		case Read:
-			// Will occur on a refresh when the resource does not exist in AWS and needs to be recreated, e.g. "_disappears" tests.
+			// TODO: can this occur for a data source?
 			if d.Id() == "" {
 				return ctx, diags
 			}
 
-			fallthrough
-		case Create, Update:
 			// If the R handler didn't set tags, try and read them from the service API.
-			// TODO.
-			// if tagsInContext.TagsOut.IsNone() {
-			// }
+			if tagsInContext.TagsOut.IsNone() {
+				if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
+					var identifier string
+					if identifierAttribute == "id" {
+						identifier = d.Id()
+					} else {
+						identifier = d.Get(identifierAttribute).(string)
+					}
+
+					// TODO: can this occur for a data source?
+					// Some old resources may not have the required attribute set after Read:
+					// https://github.com/hashicorp/terraform-provider-aws/issues/31180
+					if identifier != "" {
+						// If the service package has a generic resource list tags methods, call it.
+						var err error
+
+						if v, ok := sp.(interface {
+							ListTags(context.Context, any, string) error
+						}); ok {
+							err = v.ListTags(ctx, meta, identifier) // Sets tags in Context
+						} else if v, ok := sp.(interface {
+							ListTags(context.Context, any, string, string) error
+						}); ok && r.tags.ResourceType != "" {
+							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+						} else {
+							tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+								"ServicePackage": sp.ServicePackageName(),
+								"ResourceType":   r.tags.ResourceType,
+							})
+						}
+
+						// ISO partitions may not support tagging, giving error.
+						if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
+							return ctx, diags
+						}
+
+						if inContext.ServicePackageName == names.DynamoDB && err != nil {
+							// When a DynamoDB Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`.
+							if tfresource.NotFound(err) || tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+								err = nil
+							}
+						}
+
+						if err != nil {
+							return ctx, sdkdiag.AppendErrorf(diags, "listing tags for %s %s (%s): %s", serviceName, resourceName, identifier, err)
+						}
+					}
+				}
+			}
 
 			// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 			tags := tagsInContext.TagsOut.UnwrapOrDefault().IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig)

@@ -3,8 +3,19 @@
 
 package sweep
 
-import "context"
+import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-log/tfsdklog"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/internal/log"
+)
 
 func Context(region string) context.Context {
-	return context.Background()
+	ctx := context.Background()
+
+	ctx = tfsdklog.RegisterStdlogSink(ctx)
+
+	ctx = log.Logger(ctx, "sweeper", region)
+
+	return ctx
 }

@@ -80,7 +80,7 @@ resource "aws_elastictranscoder_preset" "bar" {
 
 See ["Create Preset"](http://docs.aws.amazon.com/elastictranscoder/latest/developerguide/create-preset.html) in the AWS docs for reference.
 
-This argument supports the following arguments:
+This resource supports the following arguments:
 
 * `audio` - (Optional, Forces new resource) Audio parameters object (documented below).
 * `audio_codec_options` - (Optional, Forces new resource) Codec options for the audio parameters (documented below)
