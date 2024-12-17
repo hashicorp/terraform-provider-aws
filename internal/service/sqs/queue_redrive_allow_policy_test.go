@@ -131,6 +131,15 @@ func TestAccSQSQueueRedriveAllowPolicy_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_allow_policy"),
 				),
 			},
+			{
+				Config:             testAccQueueRedriveAllowPolicyConfig_by_queue(rName),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config:             testAccQueueRedriveAllowPolicyConfig_by_queue(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: false,
+			},
 		},
 	})
 }
@@ -180,4 +189,24 @@ resource "aws_sqs_queue_redrive_allow_policy" "test" {
   })
 }
 `, rName)
+}
+
+func testAccQueueRedriveAllowPolicyConfig_by_queue(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sqs_queue" "test" {
+  name = %[1]q
+}
+
+resource "aws_sqs_queue" "test_src" {
+  name = "%[1]s_src"
+  redrive_policy = jsonencode({
+    deadLetterTargetArn = aws_sqs_queue.test.arn
+    maxReceiveCount     = 4
+  })
+}
+
+resource "aws_sqs_queue_redrive_allow_policy" "test" {
+  queue_url = aws_sqs_queue.test.id
+  redrive_allow_policy = "{\"redrivePermission\": \"byQueue\", \"sourceQueueArns\": [\"${aws_sqs_queue.test_src.arn}\"]}"
+}`, rName)
 }
