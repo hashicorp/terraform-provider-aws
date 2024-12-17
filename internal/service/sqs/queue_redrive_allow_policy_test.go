@@ -131,14 +131,22 @@ func TestAccSQSQueueRedriveAllowPolicy_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "redrive_allow_policy"),
 				),
 			},
+		},
+	})
+}
+
+func TestAccSQSQueueRedriveAllowPolicy_by_queue(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SQSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckQueueDestroy(ctx),
+		Steps: []resource.TestStep{
 			{
-				Config:             testAccQueueRedriveAllowPolicyConfig_by_queue(rName),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config:             testAccQueueRedriveAllowPolicyConfig_by_queue(rName),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
+				Config: testAccQueueRedriveAllowPolicyConfig_by_queue(rName),
 			},
 		},
 	})
