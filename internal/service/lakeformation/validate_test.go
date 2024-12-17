@@ -23,7 +23,7 @@ func TestValidPrincipal(t *testing.T) {
 	validNames := []string{
 		"IAM_ALLOWED_PRINCIPALS",     // Special principal
 		"123456789012:IAMPrincipals", // Special principal, Example Account ID (Valid looking but not real)
-    acctest.Ct12Digit,            // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
+		acctest.Ct12Digit,            // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
 		"123456789012",               // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
 		"111122223333",               // lintignore:AWSAT005          // Example Account ID (Valid looking but not real)
 		"arn:aws-us-gov:iam::357342307427:role/tf-acc-test-3217321001347236965",          // lintignore:AWSAT005          // IAM Role
