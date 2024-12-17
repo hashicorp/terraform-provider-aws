@@ -1794,10 +1794,10 @@ resource "aws_vpc" "endpoint" {
 
 resource "aws_vpc_endpoint" "test" {
   provider          = "awsalternate"
-  vpc_id         	= aws_vpc.endpoint.id
+  vpc_id            = aws_vpc.endpoint.id
   vpc_endpoint_type = "Interface"
-  service_name   	= aws_vpc_endpoint_service.test.service_name
-  service_region 	= "%[2]s"
+  service_name      = aws_vpc_endpoint_service.test.service_name
+  service_region    = "%[2]s"
 
   tags = {
     Name = "%[1]s"
