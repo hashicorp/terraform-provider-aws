@@ -212,7 +212,7 @@ func expandRotationRules(l []interface{}) *types.RotationRulesType {
 
 	tfMap := l[0].(map[string]interface{})
 
-	if v, ok := tfMap["schedule_expression"].(string); ok && v != "" {
+	if v, ok := tfMap[names.AttrScheduleExpression].(string); ok && v != "" {
 		rules.ScheduleExpression = aws.String(v)
 	} else if v, ok := tfMap["automatically_after_days"].(int); ok && v != 0 {
 		rules.AutomaticallyAfterDays = aws.Int64(int64(v))
@@ -234,7 +234,7 @@ func flattenRotationRules(rules *types.RotationRulesType) []interface{} {
 
 	// If ScheduleExpression is set, AutomaticallyAfterDays will be the result of AWS calculating the number of days between rotations
 	if s := rules.ScheduleExpression; s != nil && aws.ToString(s) != "" {
-		m["schedule_expression"] = aws.ToString(s)
+		m[names.AttrScheduleExpression] = aws.ToString(s)
 	} else if v := rules.AutomaticallyAfterDays; v != nil && aws.ToInt64(v) != 0 {
 		m["automatically_after_days"] = int(aws.ToInt64(v))
 	}

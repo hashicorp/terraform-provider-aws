@@ -356,8 +356,8 @@ func TestAccSecretsManagerSecretRotation_switchBetweenDaysAndExpression(t *testi
 				Config: testAccSecretRotationConfig_basic(rName, automaticallyAfterDays),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(automaticallyAfterDays)),
@@ -367,8 +367,8 @@ func TestAccSecretsManagerSecretRotation_switchBetweenDaysAndExpression(t *testi
 				Config: testAccSecretRotationConfig_scheduleExpression(rName, scheduleExpression),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					//resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", "5"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression),
@@ -378,8 +378,8 @@ func TestAccSecretsManagerSecretRotation_switchBetweenDaysAndExpression(t *testi
 				Config: testAccSecretRotationConfig_basic(rName, automaticallyAfterDays2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", ""),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(automaticallyAfterDays2)),
