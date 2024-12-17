@@ -46,6 +46,15 @@ func resourceResource() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceResourceConfigV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"group_arn": {
 				Type:     schema.TypeString,
