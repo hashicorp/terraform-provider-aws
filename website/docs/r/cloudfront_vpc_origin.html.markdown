@@ -28,7 +28,7 @@ resource "aws_cloudfront_vpc_origin" "alb" {
     https_port             = 8443
     origin_protocol_policy = "https-only"
     origin_ssl_protocols {
-      items = ["TLSv1.2"]
+      items    = ["TLSv1.2"]
       quantity = 1
     }
   }

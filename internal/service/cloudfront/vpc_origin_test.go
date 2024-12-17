@@ -6,16 +6,16 @@ package cloudfront_test
 import (
 	"context"
 	"fmt"
+	"testing"
+
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"testing"
-
-	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -91,13 +91,16 @@ func testAccCheckVPCOriginDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			_, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
 
-			if err == nil {
-				return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			if !tfresource.NotFound(err) {
-				return err
+			if err != nil {
+				return fmt.Errorf("CloudFront VPC Origin %s still exists with error %s", rs.Primary.ID, err.Error())
 			}
+
+			return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
+
 		}
 
 		return nil

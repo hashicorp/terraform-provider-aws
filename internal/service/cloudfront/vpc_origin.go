@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
@@ -21,18 +23,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	fwdiag "github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"time"
 )
 
 // @FrameworkResource("aws_cloudfront_vpc_origin", name="VPC Origin")
-func newCloudFrontVPCOriginResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newVPCOriginResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &cloudfrontVPCOriginResource{}
 
 	r.SetDefaultCreateTimeout(15 * time.Minute)
@@ -183,14 +183,9 @@ func (r *cloudfrontVPCOriginResource) Read(ctx context.Context, request resource
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	input := &cloudfront.GetVpcOriginInput{
-		Id: aws.String(data.Id.ValueString()),
-	}
-
-	output, err := conn.GetVpcOrigin(ctx, input)
+	output, err := findVPCOriginByID(ctx, conn, data.Id.ValueString())
 
 	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
