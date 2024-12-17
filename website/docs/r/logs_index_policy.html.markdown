@@ -3,7 +3,7 @@ subcategory: "CloudWatch Logs"
 layout: "aws"
 page_title: "AWS: aws_logs_index_policy"
 description: |-
-  Terraform resource for managing an AWS CloudWatch Logs Field Index.
+  Terraform resource for managing an AWS CloudWatch Logs Index Policy.
 ---
 <!---
 TIP: A few guiding principles for writing documentation:
@@ -15,7 +15,7 @@ TIP: A few guiding principles for writing documentation:
 --->`
 # Resource: aws_logs_index_policy
 
-Terraform resource for managing an AWS CloudWatch Logs Field Index.
+Terraform resource for managing an AWS CloudWatch Logs Index Policy.
 
 ## Example Usage
 
@@ -40,7 +40,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Field Index. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the Index Policy. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 * `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 ## Timeouts
@@ -53,7 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Field Index using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Index Policy using the `example_id_arg`. For example:
 
 ```terraform
 import {
@@ -62,7 +62,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CloudWatch Logs Field Index using the `example_id_arg`. For example:
+Using `terraform import`, import CloudWatch Logs Index Policy using the `example_id_arg`. For example:
 
 ```console
 % terraform import aws_logs_index_policy.example index_policy-id-12345678
