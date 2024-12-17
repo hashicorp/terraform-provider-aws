@@ -39,10 +39,9 @@ func resourceIndexPolicy() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validLogGroupName,
 			},
-			"fields": {
-				Type:     schema.TypeList,
+			"policyDocument": {
+				Type:     schema.TypeString,
 				Optional: false,
-				Elem:     schema.TypeString,
 			},
 		},
 	}
@@ -53,11 +52,11 @@ func resourceIndexPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	name := d.Get(names.AttrName).(string)
 	logGroupName := d.Get(names.AttrLogGroupName).(string)
+	policyDocument := d.Get("policyDocument").(string)
 	input := &cloudwatchlogs.PutIndexPolicyInput{
 		LogGroupIdentifier: aws.String(logGroupName),
-		PolicyDocument:     aws.String(fmt.Sprintf(`{"fields": %s}`, d.Get("fields").([]interface{}))),
+		PolicyDocument:     aws.String(policyDocument),
 	}
 
 	_, err := conn.PutIndexPolicy(ctx, input)
@@ -67,7 +66,7 @@ func resourceIndexPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.IsNewResource() {
-		d.SetId(name)
+		d.SetId(fmt.Sprintf("%s:index-policy", logGroupName))
 	}
 
 	return append(diags, resourceIndexPolicyRead(ctx, d, meta)...)
@@ -95,7 +94,7 @@ func resourceIndexPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set(names.AttrLogGroupName, ip.IndexPolicies[0].LogGroupIdentifier)
-	d.Set("indexPolicy", ip.IndexPolicies)
+	d.Set("policyDocument", ip.IndexPolicies[0].PolicyDocument)
 
 	return diags
 }
@@ -125,4 +124,17 @@ func resourceIndexPolicyImport(d *schema.ResourceData, meta interface{}) ([]*sch
 	logGroupName := d.Get(names.AttrLogGroupName).(string)
 	d.Set(names.AttrLogGroupName, logGroupName)
 	return []*schema.ResourceData{d}, nil
+}
+
+func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName string) ([]types.IndexPolicy, error) {
+	input := cloudwatchlogs.DescribeIndexPoliciesInput{
+		LogGroupIdentifiers: []string{logGroupName},
+	}
+
+	ip, err := conn.DescribeIndexPolicies(ctx, &input)
+	if err != nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return ip.IndexPolicies, nil
 }

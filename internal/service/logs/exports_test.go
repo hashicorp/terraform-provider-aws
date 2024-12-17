@@ -11,6 +11,7 @@ var (
 	ResourceDestinationPolicy    = resourceDestinationPolicy
 	ResourceGroup                = resourceGroup
 	ResourceMetricFilter         = resourceMetricFilter
+	ResourceIndexPolicy          = resourceIndexPolicy
 	ResourceQueryDefinition      = resourceQueryDefinition
 	ResourceResourcePolicy       = resourceResourcePolicy
 	ResourceStream               = resourceStream
@@ -22,6 +23,7 @@ var (
 	FindLogGroupByName                 = findLogGroupByName
 	FindLogStreamByTwoPartKey          = findLogStreamByTwoPartKey // nosemgrep:ci.logs-in-var-name
 	FindMetricFilterByTwoPartKey       = findMetricFilterByTwoPartKey
+	FindIndexPolicyByLogGroupName      = findIndexPolicyByLogGroupName
 	FindQueryDefinitionByTwoPartKey    = findQueryDefinitionByTwoPartKey
 	FindResourcePolicyByName           = findResourcePolicyByName
 	FindSubscriptionFilterByTwoPartKey = findSubscriptionFilterByTwoPartKey
