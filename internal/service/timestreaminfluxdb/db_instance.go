@@ -519,6 +519,10 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 		plan.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
 	}
 
+	if plan.SecondaryAvailabilityZone.IsUnknown() {
+		plan.SecondaryAvailabilityZone = state.SecondaryAvailabilityZone
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -600,7 +604,7 @@ func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client,
 
 func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.StatusDeleting),
+		Pending: enum.Slice(awstypes.StatusDeleting, awstypes.StatusDeleted),
 		Target:  []string{},
 		Refresh: statusDBInstance(ctx, conn, id),
 		Timeout: timeout,
