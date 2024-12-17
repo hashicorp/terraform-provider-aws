@@ -166,7 +166,7 @@ func (r *cloudfrontVPCOriginResource) Create(ctx context.Context, request resour
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	if _, err = waitVPCOriginDeployed(ctx, conn, data.Id.ValueString(), createTimeout); err != nil {
+	if err = waitVPCOriginDeployed(ctx, conn, data.Id.ValueString(), createTimeout); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("Creating CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
 		return
 	}
@@ -237,9 +237,14 @@ func (r *cloudfrontVPCOriginResource) Update(ctx context.Context, request resour
 
 	output, err := conn.UpdateVpcOrigin(ctx, input)
 
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating CloudFront VPC Origin (%s)", new.Id.ValueString()), err.Error())
+		return
+	}
+
 	updateTimeout := r.UpdateTimeout(ctx, old.Timeouts)
-	if _, err = waitVPCOriginDeployed(ctx, conn, old.Id.ValueString(), updateTimeout); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("Updating CloudFront VPC Origin (%s)", new.Id.ValueString()), err.Error())
+	if err = waitVPCOriginDeployed(ctx, conn, old.Id.ValueString(), updateTimeout); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating CloudFront VPC Origin (%s)", new.Id.ValueString()), err.Error())
 		return
 	}
 
@@ -254,7 +259,6 @@ func (r *cloudfrontVPCOriginResource) Update(ctx context.Context, request resour
 	new.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
-
 }
 
 func (r *cloudfrontVPCOriginResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -280,9 +284,14 @@ func (r *cloudfrontVPCOriginResource) Delete(ctx context.Context, request resour
 
 	_, err = conn.DeleteVpcOrigin(ctx, input)
 
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
+		return
+	}
+
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 	if _, err = waitVPCOriginDeleted(ctx, conn, data.Id.ValueString(), deleteTimeout); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("Deleting CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
 		return
 	}
 }
@@ -311,7 +320,7 @@ func VPCOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) re
 	}
 }
 
-func waitVPCOriginDeployed(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.VpcOrigin, error) {
+func waitVPCOriginDeployed(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"Deploying"},
 		Target:  []string{"Deployed"},
@@ -321,11 +330,11 @@ func waitVPCOriginDeployed(ctx context.Context, conn *cloudfront.Client, id stri
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*awstypes.VpcOrigin); ok {
-		return output, err
+	if _, ok := outputRaw.(*awstypes.VpcOrigin); ok {
+		return nil
 	}
 
-	return nil, err
+	return err
 }
 
 func waitVPCOriginDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.VpcOrigin, error) {

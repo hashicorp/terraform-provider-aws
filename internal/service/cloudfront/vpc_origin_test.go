@@ -100,9 +100,7 @@ func testAccCheckVPCOriginDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
-
 		}
-
 		return nil
 	}
 }
