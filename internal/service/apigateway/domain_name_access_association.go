@@ -5,145 +5,172 @@ package apigateway
 
 import (
 	"context"
-	"log"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_api_gateway_domain_name_access_association", name="Domain Name Access Association")
+// @FrameworkResource("aws_api_gateway_domain_name_access_association", name="Domain Name Access Association")
 // @Tags(identifierAttribute="arn")
 // @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/apigateway;types.DomainNameAccessAssociation")
 // @Testing(generator="github.com/hashicorp/terraform-provider-aws/internal/acctest;acctest.RandomSubdomain()")
 // @Testing(tlsKey=true, tlsKeyDomain="rName")
-func resourceDomainNameAccessAssociation() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceDomainNameAccessAssociationCreate,
-		ReadWithoutTimeout:   resourceDomainNameAccessAssociationRead,
-		UpdateWithoutTimeout: resourceDomainNameAccessAssociationUpdate,
-		DeleteWithoutTimeout: resourceDomainNameAccessAssociationDelete,
+func newDomainNameAccessAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &domainNameAccessAssociationResource{}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	return r, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrARN: {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"access_association_source": {
-				Type:     schema.TypeString,
+type domainNameAccessAssociationResource struct {
+	framework.ResourceWithConfigure
+	framework.WithNoOpUpdate[domainNameAccessAssociationResourceModel]
+	framework.WithImportByID
+}
+
+func (*domainNameAccessAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_api_gateway_domain_name_access_association"
+}
+
+func (r *domainNameAccessAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"access_association_source": schema.StringAttribute{
 				Required: true,
-				ForceNew: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			"access_association_source_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.AccessAssociationSourceType](),
-				ForceNew:         true,
+			"access_association_source_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.AccessAssociationSourceType](),
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			"domain_name_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: verify.ValidARN,
-				ForceNew:     true,
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
+			"domain_name_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			names.AttrID:      framework.IDAttribute(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
-
-		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDomainNameAccessAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
-
-	input := &apigateway.CreateDomainNameAccessAssociationInput{
-		AccessAssociationSource:     aws.String(d.Get("access_association_source").(string)),
-		AccessAssociationSourceType: awstypes.AccessAssociationSourceType(d.Get("access_association_source_type").(string)),
-		DomainNameArn:               aws.String(d.Get("domain_name_arn").(string)),
-		Tags:                        getTagsIn(ctx),
+func (r *domainNameAccessAssociationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data domainNameAccessAssociationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	out, err := conn.CreateDomainNameAccessAssociation(ctx, input)
+	conn := r.Meta().APIGatewayClient(ctx)
 
-	id := aws.ToString(out.DomainNameAccessAssociationArn)
+	input := &apigateway.CreateDomainNameAccessAssociationInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
+
+	output, err := conn.CreateDomainNameAccessAssociation(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating API Gateway Domain Name Access Association (%s): %s", id, err)
+		response.Diagnostics.AddError("creating API Gateway Domain Name Access Association", err.Error())
+
+		return
 	}
 
-	d.SetId(id)
+	// Set values for unknowns.
+	data.DomainNameAccessAssociationARN = fwflex.StringToFramework(ctx, output.DomainNameAccessAssociationArn)
+	data.ID = data.DomainNameAccessAssociationARN
 
-	return append(diags, resourceDomainNameAccessAssociationRead(ctx, d, meta)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func resourceDomainNameAccessAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+func (r *domainNameAccessAssociationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data domainNameAccessAssociationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	out, err := findDomainNameAccessAssociationByARN(ctx, conn, d.Id())
+	conn := r.Meta().APIGatewayClient(ctx)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] API Gateway Domain Name Access Association (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	output, err := findDomainNameAccessAssociationByARN(ctx, conn, data.ID.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name Access Association (%s): %s", d.Id(), err)
+		response.Diagnostics.AddError(fmt.Sprintf("reading API Gateway Domain Name Access Association (%s)", data.ID.ValueString()), err.Error())
+
+		return
 	}
 
-	setTagsOut(ctx, out.Tags)
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	d.Set(names.AttrARN, out.DomainNameAccessAssociationArn)
-	d.Set("access_association_source", out.AccessAssociationSource)
-	d.Set("access_association_source_type", out.AccessAssociationSourceType)
-	d.Set("domain_name_arn", out.DomainNameArn)
-
-	return diags
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func resourceDomainNameAccessAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	// Tags only.
-	return append(diags, resourceDomainNameAccessAssociationRead(ctx, d, meta)...)
-}
+func (r *domainNameAccessAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data domainNameAccessAssociationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-func resourceDomainNameAccessAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
+	conn := r.Meta().APIGatewayClient(ctx)
 
-	log.Printf("[DEBUG] Deleting API Gateway Domain Name Access Association: %s", d.Id())
 	_, err := conn.DeleteDomainNameAccessAssociation(ctx, &apigateway.DeleteDomainNameAccessAssociationInput{
-		DomainNameAccessAssociationArn: aws.String(d.Id()),
+		DomainNameAccessAssociationArn: fwflex.StringFromFramework(ctx, data.ID),
 	})
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return diags
+		return
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Domain Name Access Association (%s): %s", d.Id(), err)
-	}
+		response.Diagnostics.AddError(fmt.Sprintf("deleting API Gateway Domain Name Access Association (%s)", data.ID.ValueString()), err.Error())
 
-	return diags
+		return
+	}
+}
+
+func (r *domainNameAccessAssociationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 func findDomainNameAccessAssociationByARN(ctx context.Context, conn *apigateway.Client, arn string) (*awstypes.DomainNameAccessAssociation, error) {
@@ -195,4 +222,20 @@ func findDomainNameAccessAssociations(ctx context.Context, conn *apigateway.Clie
 	}
 
 	return output, nil
+}
+
+type domainNameAccessAssociationResourceModel struct {
+	AccessAssociationSource        types.String                                             `tfsdk:"access_association_source"`
+	AccessAssociationSourceType    fwtypes.StringEnum[awstypes.AccessAssociationSourceType] `tfsdk:"access_association_source_type"`
+	DomainNameAccessAssociationARN types.String                                             `tfsdk:"arn"`
+	DomainNameARN                  fwtypes.ARN                                              `tfsdk:"domain_name_arn"`
+	ID                             types.String                                             `tfsdk:"id"`
+	Tags                           tftags.Map                                               `tfsdk:"tags"`
+	TagsAll                        tftags.Map                                               `tfsdk:"tags_all"`
+}
+
+func (model *domainNameAccessAssociationResourceModel) InitFromID() error {
+	model.DomainNameAccessAssociationARN = model.ID
+
+	return nil
 }
