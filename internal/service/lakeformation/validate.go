@@ -22,7 +22,7 @@ func validPrincipal(v interface{}, k string) (ws []string, errors []error) {
 	if val := strings.Split(value, ":"); len(val) == 2 && val[1] == "IAMPrincipals" {
 		wsAccount, errorsAccount := verify.ValidAccountID(val[0], k)
 		if len(errorsAccount) == 0 {
-			return
+			return wsAccount, errorsAccount
 		}
 
 		ws = append(ws, wsAccount...)
