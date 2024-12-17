@@ -43,7 +43,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `description` - (Optional) description for the multi-region cluster. Defaults to `"Managed by Terraform"`.
+* `description` - (Optional) description for the multi-region cluster.
 * `engine` - (Optional) The name of the engine to be used for the multi-region cluster. Supported values are `redis` and `valkey`.
 * `engine_version` - (Optional) The version of the engine to be used for the multi-region cluster. Downgrades are not supported.
 * `multi_region_parameter_group_name` - (Optional) The name of the multi-region parameter group to be associated with the cluster.

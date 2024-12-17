@@ -37,17 +37,15 @@ func TestAccMemoryDBMultiRegionCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "multi_region_cluster_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "multi_region_cluster_name_suffix"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
+					resource.TestCheckNoResourceAttr(resourceName, names.AttrDescription),
 					resource.TestCheckResourceAttr(resourceName, "node_type", "db.r7g.xlarge"),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
 					resource.TestCheckResourceAttrSet(resourceName, "multi_region_parameter_group_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "num_shards"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
+					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
 					resource.TestCheckResourceAttr(resourceName, "clusters.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Test", "test"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
 				),
 			},
 			{
@@ -77,46 +75,6 @@ func TestAccMemoryDBMultiRegionCluster_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceMultiRegionCluster, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccMemoryDBMultiRegionCluster_defaults(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_memorydb_multi_region_cluster.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMultiRegionClusterConfig_defaults(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMultiRegionClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(resourceName, "multi_region_cluster_name"),
-					resource.TestCheckResourceAttrSet(resourceName, "multi_region_cluster_name_suffix"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Managed by Terraform"),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "db.r7g.xlarge"),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngine),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrEngineVersion),
-					resource.TestCheckResourceAttrSet(resourceName, "multi_region_parameter_group_name"),
-					resource.TestCheckResourceAttr(resourceName, "num_shards", "1"),
-					resource.TestCheckResourceAttr(resourceName, "clusters.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrStatus),
-					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -466,19 +424,6 @@ func testAccMultiRegionClusterConfig_basic(rName string) string {
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
   node_type                        = "db.r7g.xlarge"
-
-  tags = {
-    Test = "test"
-  }
-}
-`, rName)
-}
-
-func testAccMultiRegionClusterConfig_defaults(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_memorydb_multi_region_cluster" "test" {
-  multi_region_cluster_name_suffix = %[1]q
-  node_type                        = "db.r7g.xlarge"
 }
 `, rName)
 }
@@ -490,10 +435,6 @@ resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
   node_type                        = "db.r7g.xlarge"
   description                      = %[2]q
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName, description)
 }
@@ -506,10 +447,6 @@ resource "aws_memorydb_multi_region_cluster" "test" {
   description                      = "Also managed by Terraform"
 
   num_shards = %[2]d
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName, numShards)
 }
@@ -520,10 +457,6 @@ resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
   node_type                        = %[2]q
   description                      = "Also managed by Terraform"
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName, nodeType)
 }
@@ -536,10 +469,6 @@ resource "aws_memorydb_multi_region_cluster" "test" {
   description                      = "Also managed by Terraform"
 
   multi_region_parameter_group_name = "default.memorydb-valkey7.multiregion"
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName)
 }
@@ -550,10 +479,6 @@ resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
   node_type                        = "db.r7g.xlarge"
   tls_enabled                      = false
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName)
 }
@@ -564,10 +489,6 @@ resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
   node_type                        = "db.r7g.xlarge"
   engine                           = %[2]q
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName, engine)
 }
@@ -579,10 +500,6 @@ resource "aws_memorydb_multi_region_cluster" "test" {
   node_type                        = "db.r7g.xlarge"
   engine                           = %[2]q
   engine_version                   = %[3]q
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName, engine, engineVersion)
 }
@@ -596,10 +513,6 @@ resource "aws_memorydb_multi_region_cluster" "test" {
 
   update_strategy = %[2]q
   num_shards      = %[3]d
-
-  tags = {
-    Test = "test"
-  }
 }
 `, rName, updateStrategy, numShards)
 }
