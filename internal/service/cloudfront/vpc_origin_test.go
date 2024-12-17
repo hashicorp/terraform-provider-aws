@@ -59,6 +59,30 @@ func TestAccCloudFrontVPCOrigin_basic(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontVPCOrigin_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpcOrigin awstypes.VpcOrigin
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_vpc_origin.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudFrontEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCOriginDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCOriginConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckVPCOriginExists(ctx, resourceName, &vpcOrigin),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceVPCOrigin, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckVPCOriginExists(ctx context.Context, n string, v *awstypes.VpcOrigin) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
