@@ -119,16 +119,23 @@ func TestAccMemoryDBMultiRegionCluster_tlsEnabled(t *testing.T) {
 		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMultiRegionClusterConfig_tlsEnabled(rName),
+				Config: testAccMultiRegionClusterConfig_tlsEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtTrue),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMultiRegionClusterConfig_tlsEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tls_enabled", acctest.CtFalse),
+				),
 			},
 		},
 	})
@@ -473,14 +480,14 @@ resource "aws_memorydb_multi_region_cluster" "test" {
 `, rName)
 }
 
-func testAccMultiRegionClusterConfig_tlsEnabled(rName string) string {
+func testAccMultiRegionClusterConfig_tlsEnabled(rName string, tlsEnabled bool) string {
 	return fmt.Sprintf(`
 resource "aws_memorydb_multi_region_cluster" "test" {
   multi_region_cluster_name_suffix = %[1]q
   node_type                        = "db.r7g.xlarge"
-  tls_enabled                      = false
+  tls_enabled                      = %[2]t
 }
-`, rName)
+`, rName, tlsEnabled)
 }
 
 func testAccMultiRegionClusterConfig_engine(rName, engine string) string {

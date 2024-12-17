@@ -44,12 +44,12 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) description for the multi-region cluster.
-* `engine` - (Optional) The name of the engine to be used for the multi-region cluster. Supported values are `redis` and `valkey`.
+* `engine` - (Optional) The name of the engine to be used for the multi-region cluster. Valid values are `redis` and `valkey`.
 * `engine_version` - (Optional) The version of the engine to be used for the multi-region cluster. Downgrades are not supported.
 * `multi_region_parameter_group_name` - (Optional) The name of the multi-region parameter group to be associated with the cluster.
 * `num_shards` - (Optional) The number of shards for the multi-region cluster.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `tls_enabled` - (Optional, Forces new resource) A flag to enable in-transit encryption on the cluster. Defaults to `true`.
+* `tls_enabled` - (Optional, Forces new resource) A flag to enable in-transit encryption on the cluster.
 
 ## Attribute Reference
 
