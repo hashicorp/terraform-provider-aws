@@ -341,7 +341,7 @@ func (r *multiRegionClusterResource) Update(ctx context.Context, req resource.Up
 	}
 
 	// If update requests were made, make one last call to the update waiter to
-	// retreive and write the latest status to state
+	// retrieve and write the latest status to state
 	if len(updateRequests) > 0 {
 		statusOut, err := waitMultiRegionClusterAvailable(ctx, conn, plan.ID.ValueString(), updateTimeout)
 		if err != nil {
