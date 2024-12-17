@@ -59,6 +59,29 @@ func TestAccMemoryDBMultiRegionCluster_basic(t *testing.T) {
 	})
 }
 
+func TestAccMemoryDBMultiRegionCluster_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_memorydb_multi_region_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckMultiRegionClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMultiRegionClusterConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckMultiRegionClusterExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfmemorydb.ResourceMultiRegionCluster, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccMemoryDBMultiRegionCluster_defaults(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
