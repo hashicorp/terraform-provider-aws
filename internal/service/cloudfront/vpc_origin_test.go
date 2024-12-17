@@ -37,6 +37,7 @@ func TestAccCloudFrontVPCOrigin_basic(t *testing.T) {
 					testAccCheckVPCOriginExists(ctx, resourceName, &vpcOrigin),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_origin_endpoint_config.0.arn"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.0.http_port", "8080"),
