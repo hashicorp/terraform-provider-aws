@@ -142,7 +142,9 @@ func (r *vpcOriginResource) Create(ctx context.Context, request resource.CreateR
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 
 	if tags := getTagsIn(ctx); len(tags) > 0 {
-		input.Tags.Items = tags
+		input.Tags = &awstypes.Tags{
+			Items: tags,
+		}
 	}
 
 	output, err := conn.CreateVpcOrigin(ctx, input)
