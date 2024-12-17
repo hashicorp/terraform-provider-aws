@@ -100,8 +100,7 @@ func testAccCheckIndexPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tflogs.FindMetricFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName], rs.Primary.ID)
-			_, err := tflogs.
+			_, err := tflogs.FindIndexPolicyByLogGroupName(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -118,15 +117,15 @@ func testAccCheckIndexPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckIndexPolicyExists(ctx context.Context, logGroupName string, indexpolicy *cloudwatchlogs.DescribeIndexPolicyResponse) resource.TestCheckFunc {
+func testAccCheckIndexPolicyExists(ctx context.Context, logGroupName string, indexpolicy []types.IndexPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[logGroupName]
 		if !ok {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, name, errors.New("not found"))
+			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, logGroupName, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, name, errors.New("not set"))
+			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, logGroupName, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
@@ -136,24 +135,9 @@ func testAccCheckIndexPolicyExists(ctx context.Context, logGroupName string, ind
 			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, rs.Primary.ID, err)
 		}
 
-		*indexpolicy = *resp
+		indexpolicy = resp
 
 		return nil
-	}
-}
-
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
-
-	input := &cloudwatchlogs.ListIndexPolicysInput{}
-
-	_, err := conn.ListIndexPolicys(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -169,8 +153,12 @@ func testAccCheckIndexPolicyNotRecreated(before, after *cloudwatchlogs.DescribeI
 
 func testAccIndexPolicyConfig_basic(rName, policyDocument string) string {
 	return fmt.Sprintf(`
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
 resource "aws_cloudwatch_log_index_policy" "test" {
-  log_group_name = %[1]q
+  log_group_name = aws_cloudwatch_log_group.test.name
   policyDocument = %[2]q
 }
 `, rName, policyDocument)

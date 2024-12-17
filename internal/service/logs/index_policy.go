@@ -13,11 +13,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	ResNameIndexPolicy = "Index Policy"
 )
 
 // @SDKResource("aws_cloudwatch_log_index_policy")
@@ -39,9 +44,9 @@ func resourceIndexPolicy() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validLogGroupName,
 			},
-			"policyDocument": {
+			"policy_document": {
 				Type:     schema.TypeString,
-				Optional: false,
+				Required: true,
 			},
 		},
 	}
@@ -53,20 +58,25 @@ func resourceIndexPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	logGroupName := d.Get(names.AttrLogGroupName).(string)
-	policyDocument := d.Get("policyDocument").(string)
+
+	policyDocument, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyDocument, err)
+	}
+
 	input := &cloudwatchlogs.PutIndexPolicyInput{
 		LogGroupIdentifier: aws.String(logGroupName),
 		PolicyDocument:     aws.String(policyDocument),
 	}
 
-	_, err := conn.PutIndexPolicy(ctx, input)
+	output, err := conn.PutIndexPolicy(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Index Policy (%s): %s", d.Id(), err)
 	}
 
 	if d.IsNewResource() {
-		d.SetId(fmt.Sprintf("%s:index-policy", logGroupName))
+		d.SetId(fmt.Sprintf("%s:index-policy", *output.IndexPolicy.LogGroupIdentifier))
 	}
 
 	return append(diags, resourceIndexPolicyRead(ctx, d, meta)...)
@@ -94,7 +104,7 @@ func resourceIndexPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set(names.AttrLogGroupName, ip.IndexPolicies[0].LogGroupIdentifier)
-	d.Set("policyDocument", ip.IndexPolicies[0].PolicyDocument)
+	d.Set("policy_document", ip.IndexPolicies[0].PolicyDocument)
 
 	return diags
 }
