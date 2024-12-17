@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
@@ -26,6 +27,11 @@ var (
 	// ListOfARNType is a custom type used for defining a List of ARNs.
 	ListOfARNType = listTypeOf[ARN]{basetypes.ListType{ElemType: ARNType}}
 )
+
+// TODO Replace with Go 1.24 generic type alias when available.
+func ListOfStringEnumType[T enum.Valueser[T]]() listTypeOf[StringEnum[T]] {
+	return listTypeOf[StringEnum[T]]{basetypes.ListType{ElemType: StringEnumType[T]()}}
+}
 
 type listTypeOf[T attr.Value] struct {
 	basetypes.ListType
