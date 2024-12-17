@@ -81,7 +81,7 @@ func documentAttributeSchema(ctx context.Context) schema.ListNestedBlock {
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"value": documentAttributeValueSchema(ctx),
+				names.AttrValue: documentAttributeValueSchema(ctx),
 			},
 		},
 	}
@@ -173,7 +173,7 @@ func (r *resourceDataAccessor) Schema(ctx context.Context, req resource.SchemaRe
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"action": schema.StringAttribute{
+						names.AttrAction: schema.StringAttribute{
 							Description: "Q Business action that is allowed.",
 							Required:    true,
 							Validators: []validator.String{

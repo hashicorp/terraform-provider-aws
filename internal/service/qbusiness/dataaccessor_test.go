@@ -18,6 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+var (
+	//lintignore:AWSAT005
+	principal = "arn:aws:iam::359246571101:role/zoom-ai-companion"
+)
+
 func TestAccQBusinessDataAccessor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dataaccessor qbusiness.GetDataAccessorOutput
@@ -31,7 +36,7 @@ func TestAccQBusinessDataAccessor_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDataAccessorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataAccessorConfig_basic(rName),
+				Config: testAccDataAccessorConfig_basic(rName, principal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataAccessorExists(ctx, resourceName, &dataaccessor),
 				),
@@ -58,7 +63,7 @@ func TestAccQBusinessDataAccessor_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDataAccessorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataAccessorConfig_tags(rName, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
+				Config: testAccDataAccessorConfig_tags(rName, principal, acctest.CtKey1, acctest.CtValue1, acctest.CtKey2, acctest.CtValue2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataAccessorExists(ctx, resourceName, &dataaccessor),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -72,7 +77,7 @@ func TestAccQBusinessDataAccessor_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDataAccessorConfig_tags(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, "value2updated"),
+				Config: testAccDataAccessorConfig_tags(rName, principal, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, "value2updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataAccessorExists(ctx, resourceName, &dataaccessor),
 					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, "2"),
@@ -97,7 +102,7 @@ func TestAccQBusinessDataAccessor_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDataAccessorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataAccessorConfig_basic(rName),
+				Config: testAccDataAccessorConfig_basic(rName, principal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataAccessorExists(ctx, resourceName, &dataaccessor),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceDataAccessor, resourceName),
@@ -171,35 +176,35 @@ func testAccCheckDataAccessorExists(ctx context.Context, n string, v *qbusiness.
 	}
 }
 
-func testAccDataAccessorConfig_basic(rName string) string {
+func testAccDataAccessorConfig_basic(rName, principal string) string {
 	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_dataaccessor" "test" {
   application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
-  principal      = "arn:aws:iam::359246571101:role/zoom-ai-companion"
+  principal      = %[2]q
 
   action_configuration {
     action = "qbusiness:SearchRelevantContent"
   }
 
 }
-`, rName))
+`, rName, principal))
 }
 
-func testAccDataAccessorConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDataAccessorConfig_tags(rName, principal, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccAppConfig_basic(rName), fmt.Sprintf(`
 resource "aws_qbusiness_dataaccessor" "test" {
   application_id = aws_qbusiness_app.test.id
   display_name   = %[1]q
-  principal      = "arn:aws:iam::359246571101:role/zoom-ai-companion"
+  principal      = %[2]q
 
   action_configuration {
     action = "qbusiness:SearchRelevantContent"
   }
   tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+    %[3]q = %[4]q
+    %[5]q = %[6]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+`, rName, principal, tagKey1, tagValue1, tagKey2, tagValue2))
 }
