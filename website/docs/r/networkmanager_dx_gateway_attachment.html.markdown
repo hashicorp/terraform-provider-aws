@@ -40,7 +40,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `attachment_policy_rule_number` - Policy rule number associated with the attachment.
 * `attachment_type` - Type of attachment.
 * `core_network_arn` - ARN of the core network for the attachment.
-- `id` - The ID of the attachment.
+* `id` - The ID of the attachment.
 * `owner_account_id` - ID of the attachment account owner.
 * `segment_name` - Name of the segment attachment.
 * `state` - State of the attachment.
