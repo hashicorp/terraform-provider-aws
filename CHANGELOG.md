@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_servicecatalogappregistry_attribute_group_associations` ([#38306](https://github.com/hashicorp/terraform-provider-aws/issues/38306))
 * **New Resource:** `aws_rds_cluster_snapshot_copy` ([#40398](https://github.com/hashicorp/terraform-provider-aws/issues/40398))
 
 ENHANCEMENTS:
@@ -15,6 +16,7 @@ BUG FIXES:
 * resource/aws_codeconnections_host: Mark `vpc_configuration.tls_certificate` as Optional ([#40574](https://github.com/hashicorp/terraform-provider-aws/issues/40574))
 * resource/aws_elasticache_replication_group: Prevent perpetual diff which triggers resource replacement on `at_rest_encryption_enabled` when `engine` is `valkey`. ([#40514](https://github.com/hashicorp/terraform-provider-aws/issues/40514))
 * resource/aws_lakeformation_permissions: Fix refreshing state so order is not considered in `permissions` and `permissions_with_grant_option` attributes ([#38047](https://github.com/hashicorp/terraform-provider-aws/issues/38047))
+* resource/aws_lakeformation_resource_lf_tag: Fix panic when resource tries to destroy a LFTag reference that does not exist ([#40584](https://github.com/hashicorp/terraform-provider-aws/issues/40584))
 * resource/aws_lambda_invocation: Set new computed value for `result` attribute when changing `input` attribute, for lifecycle scope "CRUD" ([#34263](https://github.com/hashicorp/terraform-provider-aws/issues/34263))
 * resource/medialive: Added missing `teletext_destination_settings`. ([#33797](https://github.com/hashicorp/terraform-provider-aws/issues/33797))
 
