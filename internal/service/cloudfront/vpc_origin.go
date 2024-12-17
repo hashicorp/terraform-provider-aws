@@ -63,7 +63,7 @@ func (r *cloudfrontVPCOriginResource) Schema(ctx context.Context, request resour
 			"etag": schema.StringAttribute{
 				Computed: true,
 			},
-			names.AttrLastModifiedTime: schema.StringAttribute{
+			"last_modified_time": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
@@ -74,7 +74,7 @@ func (r *cloudfrontVPCOriginResource) Schema(ctx context.Context, request resour
 			names.AttrTags: tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			names.AttrVPCOriginEndpointConfig: schema.SingleNestedBlock{
+			"vpc_origin_endpoint_config": schema.SingleNestedBlock{
 				CustomType: fwtypes.NewObjectTypeOf[vpcOriginEndpointConfigModel](ctx),
 				Validators: []validator.Object{
 					objectvalidator.IsRequired(),
@@ -99,13 +99,13 @@ func (r *cloudfrontVPCOriginResource) Schema(ctx context.Context, request resour
 					names.AttrName: schema.StringAttribute{
 						Required: true,
 					},
-					names.AttrOriginProtocolPolicy: schema.StringAttribute{
+					"origin_protocol_policy": schema.StringAttribute{
 						Required:   true,
 						CustomType: fwtypes.StringEnumType[awstypes.OriginProtocolPolicy](),
 					},
 				},
 				Blocks: map[string]schema.Block{
-					names.AttrOriginSSLProtocols: schema.ListNestedBlock{
+					"origin_ssl_protocols": schema.ListNestedBlock{
 						CustomType: fwtypes.NewListNestedObjectTypeOf[originSSLProtocolsModel](ctx),
 						Validators: []validator.List{
 							listvalidator.IsRequired(),

@@ -1927,24 +1927,6 @@ rules:
     options:
       constant_propagation: false
 
-  - id: literal-last_modified_time-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrLastModifiedTime` for the string literal "last_modified_time"
-    paths:
-      include:
-        - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"last_modified_time"'
-      - pattern-not-regex: '"last_modified_time":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrLastModifiedTime"
-    options:
-      constant_propagation: false
-
   - id: literal-last_updated_date-string-constant
     languages: [go]
     message: Use the constant `names.AttrLastUpdatedDate` for the string literal "last_updated_date"
@@ -2284,42 +2266,6 @@ rules:
       - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrNetworkInterfaceID"
-    options:
-      constant_propagation: false
-
-  - id: literal-origin_protocol_policy-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrOriginProtocolPolicy` for the string literal "origin_protocol_policy"
-    paths:
-      include:
-        - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"origin_protocol_policy"'
-      - pattern-not-regex: '"origin_protocol_policy":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrOriginProtocolPolicy"
-    options:
-      constant_propagation: false
-
-  - id: literal-origin_ssl_protocols-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrOriginSSLProtocols` for the string literal "origin_ssl_protocols"
-    paths:
-      include:
-        - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"origin_ssl_protocols"'
-      - pattern-not-regex: '"origin_ssl_protocols":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrOriginSSLProtocols"
     options:
       constant_propagation: false
 
@@ -4030,42 +3976,6 @@ rules:
       - pattern-not-inside: 'const $X = ...'
     severity: ERROR
     fix: "names.AttrVPCID"
-    options:
-      constant_propagation: false
-
-  - id: literal-vpc_origin_endpoint_config-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrVPCOriginEndpointConfig` for the string literal "vpc_origin_endpoint_config"
-    paths:
-      include:
-        - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"vpc_origin_endpoint_config"'
-      - pattern-not-regex: '"vpc_origin_endpoint_config":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrVPCOriginEndpointConfig"
-    options:
-      constant_propagation: false
-
-  - id: literal-vpc_origin_id-string-constant
-    languages: [go]
-    message: Use the constant `names.AttrVPCOriginID` for the string literal "vpc_origin_id"
-    paths:
-      include:
-        - "internal/service/**/*.go"
-    patterns:
-      - pattern: '"vpc_origin_id"'
-      - pattern-not-regex: '"vpc_origin_id":\s+test\w+,'
-      - pattern-not-inside: 'config.Variables{ ... }'
-      - pattern-not-inside: 'packageName = ...'
-      - pattern-not-inside: 'provider.ConflictingEndpointsWarningDiag(...)'
-      - pattern-not-inside: 'const $X = ...'
-    severity: ERROR
-    fix: "names.AttrVPCOriginID"
     options:
       constant_propagation: false
 
