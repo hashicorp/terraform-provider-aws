@@ -445,6 +445,17 @@ func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, tim
 	return agent, nil
 }
 
+func prepareAgentIgnoreCollaborationError(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
+	agent, err := prepareAgent(ctx, conn, id, timeout)
+
+	// Ignore the ValidationException for AgentCollaboration being set
+	// This occurs when the last Collaborator from an Agent has been removed
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "The AgentCollaboration attribute is set to") {
+		return agent, nil
+	}
+	return agent, err
+}
+
 func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.Agent, error) {
 	input := &bedrockagent.GetAgentInput{
 		AgentId: aws.String(id),
