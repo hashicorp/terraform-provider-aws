@@ -80,7 +80,7 @@ func resourceInstance() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(40 * time.Minute),
+			Create: schema.DefaultTimeout(50 * time.Minute),
 			Update: schema.DefaultTimeout(80 * time.Minute),
 			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
@@ -541,8 +541,10 @@ func resourceInstance() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"replicate_source_db": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				DiffSuppressFunc:      instanceReplicateSourceDBSuppressDiff,
+				DiffSuppressOnRefresh: true,
 			},
 			names.AttrResourceID: {
 				Type:     schema.TypeString,
@@ -686,7 +688,7 @@ func resourceInstance() *schema.Resource {
 
 		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil
 				}
@@ -697,7 +699,7 @@ func resourceInstance() *schema.Resource {
 				}
 				return nil
 			},
-			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
 				if !d.Get("blue_green_update.0.enabled").(bool) {
 					return nil
 				}
@@ -705,6 +707,20 @@ func resourceInstance() *schema.Resource {
 				source := d.Get("replicate_source_db").(string)
 				if source != "" {
 					return errors.New(`"blue_green_update.enabled" cannot be set when "replicate_source_db" is set.`)
+				}
+				return nil
+			},
+			func(_ context.Context, d *schema.ResourceDiff, meta any) error {
+				source := d.Get("replicate_source_db").(string)
+				if source == "" {
+					return nil
+				}
+
+				rawConfig := d.GetRawConfig()
+				if v := rawConfig.GetAttr("db_subnet_group_name"); v.IsKnown() && !v.IsNull() && v.AsString() != "" {
+					if !arn.IsARN(source) {
+						return errors.New(`"replicate_source_db" must be an ARN when "db_subnet_group_name" is set.`)
+					}
 				}
 				return nil
 			},
@@ -1993,7 +2009,25 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set(names.AttrPubliclyAccessible, v.PubliclyAccessible)
 	d.Set("replica_mode", v.ReplicaMode)
 	d.Set("replicas", v.ReadReplicaDBInstanceIdentifiers)
-	d.Set("replicate_source_db", v.ReadReplicaSourceDBInstanceIdentifier)
+
+	// The AWS API accepts either the identifier or ARN when setting up a replica in the same region. The AWS Console uses the ARN.
+	// However, if the replica is in the same region, it always returns the identifier.
+	// Store the ARN if the ARN was originally set.
+	var sourceDBIdentifier string
+	if v.ReadReplicaSourceDBInstanceIdentifier != nil {
+		sourceDBIdentifier = aws.ToString(v.ReadReplicaSourceDBInstanceIdentifier)
+		if original, ok := d.GetOk("replicate_source_db"); ok {
+			original := original.(string)
+			if arn.IsARN(original) {
+				if !arn.IsARN(sourceDBIdentifier) {
+					awsClient := meta.(*conns.AWSClient)
+					sourceDBIdentifier = newDBInstanceARNString(ctx, awsClient, sourceDBIdentifier)
+				}
+			}
+		}
+	}
+	d.Set("replicate_source_db", sourceDBIdentifier)
+
 	d.Set(names.AttrResourceID, v.DbiResourceId)
 	d.Set(names.AttrStatus, v.DBInstanceStatus)
 	d.Set(names.AttrStorageEncrypted, v.StorageEncrypted)
@@ -2671,6 +2705,10 @@ func dbSetResourceDataEngineVersionFromInstance(d *schema.ResourceData, c *types
 	compareActualEngineVersion(d, oldVersion, newVersion, pendingVersion)
 }
 
+func newDBInstanceARNString(ctx context.Context, client *conns.AWSClient, identifier string) string {
+	return client.RegionalARN(ctx, "rds", "db:"+identifier)
+}
+
 type dbInstanceARN struct {
 	arn.ARN
 	Identifier string
@@ -3131,4 +3169,26 @@ func stopInstance(ctx context.Context, conn *rds.Client, id string, timeout time
 	}
 
 	return nil
+}
+
+func instanceReplicateSourceDBSuppressDiff(_, old, new string, _ *schema.ResourceData) bool {
+	// Ideally, we'd be able to check the partition, region, and accountID, but that's not available in SDK
+	if arn.IsARN(old) {
+		if new != "" && !arn.IsARN(new) {
+			if oldARN, err := parseDBInstanceARN(old); err != nil {
+				return false
+			} else {
+				return oldARN.Identifier == new
+			}
+		}
+	} else if arn.IsARN(new) {
+		if old != "" && !arn.IsARN(old) {
+			if newARN, err := parseDBInstanceARN(new); err != nil {
+				return false
+			} else {
+				return newARN.Identifier == old
+			}
+		}
+	}
+	return false
 }

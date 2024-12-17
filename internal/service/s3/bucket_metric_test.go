@@ -57,9 +57,7 @@ func TestAccS3BucketMetric_basic(t *testing.T) {
 // Disallow Empty filter block
 func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf types.MetricsConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_s3_bucket_metric.test"
 	metricName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -69,10 +67,7 @@ func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 		CheckDestroy:             testAccCheckBucketMetricDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketMetricConfig_emptyFilter(rName, metricName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
-				),
+				Config:      testAccBucketMetricConfig_emptyFilter(rName, metricName),
 				ExpectError: regexache.MustCompile(`(?is)one of.*must be specified`),
 			},
 		},

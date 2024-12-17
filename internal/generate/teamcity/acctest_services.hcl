@@ -11,7 +11,8 @@ service "apigateway" {
 }
 
 service "apigatewayv2" {
-  vpc_lock = true
+  vpc_lock    = true
+  parallelism = 10
 }
 
 service "appautoscaling" {

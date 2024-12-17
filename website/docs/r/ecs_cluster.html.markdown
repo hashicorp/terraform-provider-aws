@@ -198,7 +198,7 @@ The `service_connect_defaults` configuration block supports the following argume
 The `setting` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the setting to manage. Valid values: `containerInsights`.
-* `value` -  (Required) Value to assign to the setting. Valid values: `enabled`, `disabled`.
+* `value` -  (Required) Value to assign to the setting. Valid values: `enhanced`, `enabled`, `disabled`.
 
 ## Attribute Reference
 
