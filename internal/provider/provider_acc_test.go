@@ -727,7 +727,8 @@ func testAccCheckSTSRegion(ctx context.Context, t *testing.T, p **schema.Provide
 		var stsRegion string
 
 		stsClient := (*p).Meta().(*conns.AWSClient).STSClient(ctx)
-		_, err := stsClient.GetCallerIdentity(ctx, &sts.GetCallerIdentityInput{},
+		input := sts.GetCallerIdentityInput{}
+		_, err := stsClient.GetCallerIdentity(ctx, &input,
 			func(opts *sts.Options) {
 				opts.APIOptions = append(opts.APIOptions,
 					addRegionRetrieverMiddleware(&stsRegion),
