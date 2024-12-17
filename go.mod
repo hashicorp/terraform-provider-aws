@@ -50,7 +50,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.21.0
-	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.28.7
+	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.28.8
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.56.1
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.43.1
@@ -95,12 +95,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.34.7
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.30.8
-	github.com/aws/aws-sdk-go-v2/service/dlm v1.28.10
+	github.com/aws/aws-sdk-go-v2/service/dlm v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/docdb v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.14.4
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.7
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.38.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.197.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.198.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.7
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.7
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.52.2
@@ -164,7 +164,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/macie2 v1.43.7
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.63.1
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.63.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.34.7
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.24.7
@@ -197,7 +197,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/quicksight v1.81.0
 	github.com/aws/aws-sdk-go-v2/service/ram v1.29.7
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.21.1
-	github.com/aws/aws-sdk-go-v2/service/rds v1.92.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.93.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.25.0
