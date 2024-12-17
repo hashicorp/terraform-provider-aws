@@ -279,7 +279,7 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("service_region"); ok {
-		_, err := conn.DescribeVpcEndpointServices(context.TODO(), &ec2.DescribeVpcEndpointServicesInput{
+		_, err := conn.DescribeVpcEndpointServices(ctx, &ec2.DescribeVpcEndpointServicesInput{
 			ServiceNames:   []string{serviceName},
 			ServiceRegions: []string{v.(string)},
 		})
