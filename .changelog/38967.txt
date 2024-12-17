@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_eks_cluster: Allow unsetting the `bootstrap_cluster_creator_admin_permissions` (from `true` to `null`) without cluster re-creation.
+```
