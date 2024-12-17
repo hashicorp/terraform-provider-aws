@@ -878,7 +878,7 @@ func testAccCheckIAMPrincipalsGrantPrincipal(ctx context.Context, resourceName s
 		}
 
 		if v, ok := rs.Primary.Attributes["principal"]; ok && v != "" {
-			expectedPrincipalValue := acctest.AccountID() + ":IAMPrincipals"
+			expectedPrincipalValue := acctest.AccountID(ctx) + ":IAMPrincipals"
 			if v == expectedPrincipalValue {
 				return nil
 			} else {

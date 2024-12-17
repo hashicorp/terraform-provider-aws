@@ -50,6 +50,7 @@ func TestValidPrincipal(t *testing.T) {
 		"1234567890125",               //not an account id
 		"IAMPrincipals",               // incorrect representation
 		"1234567890125:IAMPrincipals", // incorrect representation, account id invalid length
+		"1234567890125:IAMPrincipal",
 		"arn:aws",
 		"arn:aws:logs",            //lintignore:AWSAT005
 		"arn:aws:logs:region:*:*", //lintignore:AWSAT005
