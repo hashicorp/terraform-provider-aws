@@ -214,7 +214,7 @@ resource "aws_sqs_queue" "test_src" {
 }
 
 resource "aws_sqs_queue_redrive_allow_policy" "test" {
-  queue_url = aws_sqs_queue.test.id
+  queue_url            = aws_sqs_queue.test.id
   redrive_allow_policy = "{\"redrivePermission\": \"byQueue\", \"sourceQueueArns\": [\"${aws_sqs_queue.test_src.arn}\"]}"
 }`, rName)
 }
