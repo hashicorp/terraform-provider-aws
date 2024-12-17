@@ -372,14 +372,21 @@ func (r *multiRegionClusterResource) Delete(ctx context.Context, req resource.De
 
 	// Before deleting the multi-region cluster, ensure it is ready for deletion.
 	// Removing an `aws_memorydb_cluster` from a multi-region cluster may temporarily block deletion.
-	createTimeout := r.CreateTimeout(ctx, state.Timeouts)
-	_, err := waitMultiRegionClusterAvailable(ctx, conn, state.ID.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionWaitingForCreation, ResNameMultiRegionCluster, state.MultiRegionClusterName.String(), err),
-			err.Error(),
-		)
+	output, err := findMultiRegionClusterByName(ctx, conn, state.ID.ValueString())
+	if tfresource.NotFound(err) {
 		return
+	}
+
+	if aws.ToString(output.Status) != clusterStatusAvailable {
+		deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
+		_, err := waitMultiRegionClusterAvailable(ctx, conn, state.ID.ValueString(), deleteTimeout)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.MemoryDB, create.ErrActionDeleting, ResNameMultiRegionCluster, state.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
 	}
 
 	input := memorydb.DeleteMultiRegionClusterInput{
