@@ -343,7 +343,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		domainName := d.Get(names.AttrDomainName).(string)
-		input := &acm.RequestCertificateInput{
+		input := acm.RequestCertificateInput{
 			DomainName:       aws.String(domainName),
 			IdempotencyToken: aws.String(id.PrefixedUniqueId("tf")), // 32 character limit
 			Tags:             getTagsIn(ctx),
@@ -373,7 +373,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.DomainValidationOptions = expandDomainValidationOptions(v.(*schema.Set).List())
 		}
 
-		output, err := conn.RequestCertificate(ctx, input)
+		output, err := conn.RequestCertificate(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "requesting ACM Certificate (%s): %s", domainName, err)
@@ -381,7 +381,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 		d.SetId(aws.ToString(output.CertificateArn))
 	} else {
-		input := &acm.ImportCertificateInput{
+		input := acm.ImportCertificateInput{
 			Certificate: []byte(d.Get("certificate_body").(string)),
 			PrivateKey:  []byte(d.Get(names.AttrPrivateKey).(string)),
 			Tags:        getTagsIn(ctx),
@@ -391,7 +391,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.CertificateChain = []byte(v.(string))
 		}
 
-		output, err := conn.ImportCertificate(ctx, input)
+		output, err := conn.ImportCertificate(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "importing ACM Certificate: %s", err)
@@ -489,7 +489,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		oPKRaw, nPKRaw := d.GetChange(names.AttrPrivateKey)
 
 		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) {
-			input := &acm.ImportCertificateInput{
+			input := acm.ImportCertificateInput{
 				Certificate:    []byte(d.Get("certificate_body").(string)),
 				CertificateArn: aws.String(d.Get(names.AttrARN).(string)),
 				PrivateKey:     []byte(d.Get(names.AttrPrivateKey).(string)),
@@ -499,16 +499,17 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 				input.CertificateChain = []byte(chain.(string))
 			}
 
-			_, err := conn.ImportCertificate(ctx, input)
+			_, err := conn.ImportCertificate(ctx, &input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "importing ACM Certificate (%s): %s", d.Id(), err)
 			}
 		}
 	} else if d.Get("pending_renewal").(bool) {
-		_, err := conn.RenewCertificate(ctx, &acm.RenewCertificateInput{
+		input := acm.RenewCertificateInput{
 			CertificateArn: aws.String(d.Get(names.AttrARN).(string)),
-		})
+		}
+		_, err := conn.RenewCertificate(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "renewing ACM Certificate (%s): %s", d.Id(), err)
@@ -521,12 +522,12 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	if d.HasChange("options") {
 		_, n := d.GetChange("options")
-		input := &acm.UpdateCertificateOptionsInput{
+		input := acm.UpdateCertificateOptionsInput{
 			CertificateArn: aws.String(d.Get(names.AttrARN).(string)),
 			Options:        expandCertificateOptions(n.([]interface{})[0].(map[string]interface{})),
 		}
 
-		_, err := conn.UpdateCertificateOptions(ctx, input)
+		_, err := conn.UpdateCertificateOptions(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ACM Certificate options (%s): %s", d.Id(), err)
@@ -542,11 +543,12 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
+	input := acm.DeleteCertificateInput{
+		CertificateArn: aws.String(d.Id()),
+	}
 	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, certificateCrossServicePropagationTimeout,
 		func() (interface{}, error) {
-			return conn.DeleteCertificate(ctx, &acm.DeleteCertificateInput{
-				CertificateArn: aws.String(d.Id()),
-			})
+			return conn.DeleteCertificate(ctx, &input)
 		})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -798,11 +800,11 @@ func findCertificate(ctx context.Context, conn *acm.Client, input *acm.DescribeC
 }
 
 func findCertificateByARN(ctx context.Context, conn *acm.Client, arn string) (*types.CertificateDetail, error) {
-	input := &acm.DescribeCertificateInput{
+	input := acm.DescribeCertificateInput{
 		CertificateArn: aws.String(arn),
 	}
 
-	output, err := findCertificate(ctx, conn, input)
+	output, err := findCertificate(ctx, conn, &input)
 
 	if err != nil {
 		return nil, err
