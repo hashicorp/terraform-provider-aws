@@ -3,16 +3,27 @@
 FEATURES:
 
 * **New Data Source:** `aws_servicecatalogappregistry_attribute_group_associations` ([#38306](https://github.com/hashicorp/terraform-provider-aws/issues/38306))
+* **New Resource:** `aws_api_gateway_domain_name_access_association` ([#40566](https://github.com/hashicorp/terraform-provider-aws/issues/40566))
+* **New Resource:** `aws_networkmanager_dx_gateway_attachment` ([#40546](https://github.com/hashicorp/terraform-provider-aws/issues/40546))
 * **New Resource:** `aws_rds_cluster_snapshot_copy` ([#40398](https://github.com/hashicorp/terraform-provider-aws/issues/40398))
 
 ENHANCEMENTS:
 
+* data-source/aws_dx_gateway: Add `arn` attribute ([#40546](https://github.com/hashicorp/terraform-provider-aws/issues/40546))
 * data-source/aws_iam_policy_document: Add plan-time validation that the `statement` `sid` is valid, including on alphanumeric characters ([#40562](https://github.com/hashicorp/terraform-provider-aws/issues/40562))
 * resource/aws_bedrockagent_agent: Add `agent_collaboration` attribute to configure agent collaboration role ([#40543](https://github.com/hashicorp/terraform-provider-aws/issues/40543))
+* resource/aws_dx_gateway: Add `arn` attribute ([#40546](https://github.com/hashicorp/terraform-provider-aws/issues/40546))
+* resource/aws_networkmanager_attachment_accepter: Add `edge_locations` attribute ([#40546](https://github.com/hashicorp/terraform-provider-aws/issues/40546))
 
 BUG FIXES:
 
 * data-source/aws_acmpca_certificate_authority: Ignore `AccessDeniedException: ... is not authorized to perform: acm-pca:GetCertificateAuthorityCsr on resource: ...` errors for RAM-shared CAs ([#39952](https://github.com/hashicorp/terraform-provider-aws/issues/39952))
+* resource/aws_amplify_domain_association: No longer ignores changes to `certificate_settings` when updating. ([#40589](https://github.com/hashicorp/terraform-provider-aws/issues/40589))
+* resource/aws_amplify_domain_association: Prevent "unexpected state" error when setting `certificate_settings.type` to `CUSTOM`. ([#40589](https://github.com/hashicorp/terraform-provider-aws/issues/40589))
+* resource/aws_amplify_domain_association: Prevent `ValidationException` when setting `certificate_settings.type` to `AMPLIFY_MANAGED`. ([#40589](https://github.com/hashicorp/terraform-provider-aws/issues/40589))
+* resource/aws_amplify_domain_association: Prevent permanent diff when `certificate_settings` not set. ([#40589](https://github.com/hashicorp/terraform-provider-aws/issues/40589))
+* resource/aws_amplify_domain_association: Prevents panic in some circumstances when `certificate_settings` is not set during update. ([#40589](https://github.com/hashicorp/terraform-provider-aws/issues/40589))
+* resource/aws_api_gateway_domain_name: Correct `arn` for private custom domain names ([#40566](https://github.com/hashicorp/terraform-provider-aws/issues/40566))
 * resource/aws_codeconnections_host: Mark `vpc_configuration.tls_certificate` as Optional ([#40574](https://github.com/hashicorp/terraform-provider-aws/issues/40574))
 * resource/aws_elasticache_replication_group: Prevent perpetual diff which triggers resource replacement on `at_rest_encryption_enabled` when `engine` is `valkey`. ([#40514](https://github.com/hashicorp/terraform-provider-aws/issues/40514))
 * resource/aws_lakeformation_permissions: Fix refreshing state so order is not considered in `permissions` and `permissions_with_grant_option` attributes ([#38047](https://github.com/hashicorp/terraform-provider-aws/issues/38047))
