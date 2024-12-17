@@ -18,14 +18,6 @@ func validPrincipal(v interface{}, k string) (ws []string, errors []error) {
 		return ws, errors
 	}
 
-	//if len(value) == 26 && value[13:26] == "IAMPrincipals" && value[12] == ':' {
-	//	return ws, errors
-	//	wsAccount, errorsAccount := verify.ValidAccountID(value[0:12], k)
-	//	if len(errorsAccount) == 0 {
-	//		return wsAccount, errorsAccount
-	//	}
-	//}
-
 	// IAMPrincipals special grant has format {account_id}:IAMPrincipals
 	if val := strings.Split(value, ":"); len(val) == 2 && val[1] == "IAMPrincipals" {
 		wsAccount, errorsAccount := verify.ValidAccountID(val[0], k)
