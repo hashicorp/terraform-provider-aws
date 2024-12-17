@@ -42,6 +42,7 @@ func RegisterSweepers() {
 		F:    sweepGateways,
 		Dependencies: []string{
 			"aws_dx_gateway_association",
+			"aws_networkmanager_dx_gateway_attachment",
 		},
 	})
 
