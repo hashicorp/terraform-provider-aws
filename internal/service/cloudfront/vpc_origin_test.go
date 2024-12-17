@@ -33,15 +33,15 @@ func TestAccCloudFrontVPCOrigin_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCOriginConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckVPCOriginExists(ctx, resourceName, &vpcOrigin),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_origin_endpoint_config.origin_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_origin_endpoint_config.arn"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.http_port", "8080"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.https_port", "8443"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.origin_protocol_policy", "https-only"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.origin_ssl_protocols.items#", "TLSv1.2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.origin_ssl_protocols.items.0", "TLSv1.2"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_origin_endpoint_config.origin_ssl_protocols.quantity", "1"),
 				),
 			},
@@ -56,15 +56,12 @@ func TestAccCloudFrontVPCOrigin_basic(t *testing.T) {
 
 func testAccCheckVPCOriginExists(ctx context.Context, n string, v *awstypes.VpcOrigin) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", n)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Type != "aws_cloudfront_vpc_origin" {
-			return fmt.Errorf("resource %s is not a Cloudfront VPC Origin", n)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
 		output, err := tfcloudfront.FindVPCOriginByID(ctx, conn, rs.Primary.ID)
 
@@ -72,9 +69,7 @@ func testAccCheckVPCOriginExists(ctx context.Context, n string, v *awstypes.VpcO
 			return err
 		}
 
-		if output.VpcOrigin != nil {
-			*v = *output.VpcOrigin
-		}
+		*v = *output.VpcOrigin
 
 		return nil
 	}
@@ -96,7 +91,7 @@ func testAccCheckVPCOriginDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if err != nil {
-				return fmt.Errorf("CloudFront VPC Origin %s still exists with error %s", rs.Primary.ID, err.Error())
+				return err
 			}
 
 			return fmt.Errorf("CloudFront VPC Origin %s still exists", rs.Primary.ID)
@@ -107,8 +102,6 @@ func testAccCheckVPCOriginDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccVPCOriginConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-
-
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -192,10 +185,11 @@ resource "aws_lb" "this" {
 resource "aws_cloudfront_vpc_origin" "this" {
   vpc_origin_endpoint_config {
     name                   = %[1]q
-    origin_arn             = aws_lb.this.arn
+    arn                    = aws_lb.this.arn
     http_port              = 8080
     https_port             = 8443
     origin_protocol_policy = "https-only"
+
     origin_ssl_protocols {
       items    = ["TLSv1.2"]
       quantity = 1

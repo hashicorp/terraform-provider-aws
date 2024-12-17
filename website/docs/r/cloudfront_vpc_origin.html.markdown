@@ -23,10 +23,11 @@ The following example below creates a CloudFront VPC origin for a Application Lo
 resource "aws_cloudfront_vpc_origin" "alb" {
   vpc_origin_endpoint_config {
     name                   = "Example VPC Origin"
-    origin_arn             = aws_lb.this.arn
+    arn                    = aws_lb.this.arn
     http_port              = 8080
     https_port             = 8443
     origin_protocol_policy = "https-only"
+
     origin_ssl_protocols {
       items    = ["TLSv1.2"]
       quantity = 1
@@ -39,13 +40,19 @@ resource "aws_cloudfront_vpc_origin" "alb" {
 
 ### Top Level Arguments
 
+The following arguments are required:
+
 * `vpc_origin_endpoint_config` (Required) - The VPC origin endpoint configuration.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+The following arguments are optional:
+
+* `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### VPC Origin Endpoint Config Arguments
 
-* `http_port` (Required) - The HTTP port for the CloudFront VPC origin endpoint configuration.
-* `https_port` (Required) - The HTTPS port for the CloudFront VPC origin endpoint configuration.
+* `arn` (Required) - The ARN of the CloudFront VPC origin endpoint configuration.
+* `http_port` (Optional) - The HTTP port for the CloudFront VPC origin endpoint configuration.
+* `https_port` (Optional) - The HTTPS port for the CloudFront VPC origin endpoint configuration.
 * `name` (Required) - The name of the CloudFront VPC origin endpoint configuration.
 * `origin_protocol_policy` (Required) - The origin protocol policy for the CloudFront VPC origin endpoint configuration.
 * `origin_ssl_protocols` (Required) - A complex type that contains information about the SSL/TLS protocols that CloudFront can use when establishing an HTTPS connection with your origin.
@@ -55,11 +62,9 @@ resource "aws_cloudfront_vpc_origin" "alb" {
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The VPC origin ARN.
-* `created_time` - The VPC origin created time.
-* `etag` - The current version of the origin. For example: `<todo>`.
-* `id` - The VPC origin ID. For example: `<todo>`.
-* `last_modified_time` - The VPC origin last modified time.
-* `status` - The VPC origin status.
+* `etag` - The current version of the origin.
+* `id` - The VPC origin ID.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 [1]: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-vpc-origins.html
 
@@ -75,5 +80,5 @@ import {
 Using `terraform import`, import Cloudfront VPC origins using the `id`. For example:
 
 ```console
-% terraform import aws_cloudfront_vpc_origin
+% terraform import aws_cloudfront_vpc_origin vo_JQEa410sssUFoY6wMkx69j
 ```

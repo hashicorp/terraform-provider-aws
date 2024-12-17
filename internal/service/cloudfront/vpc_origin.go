@@ -5,7 +5,6 @@ package cloudfront
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -13,16 +12,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int32validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -32,8 +32,9 @@ import (
 )
 
 // @FrameworkResource("aws_cloudfront_vpc_origin", name="VPC Origin")
-func newVPCOriginResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &cloudfrontVPCOriginResource{}
+// @Tags(identifierAttribute="arn")
+func newVPCOriginResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &vpcOriginResource{}
 
 	r.SetDefaultCreateTimeout(15 * time.Minute)
 	r.SetDefaultUpdateTimeout(15 * time.Minute)
@@ -42,85 +43,77 @@ func newVPCOriginResource(_ context.Context) (resource.ResourceWithConfigure, er
 	return r, nil
 }
 
-type cloudfrontVPCOriginResource struct {
+type vpcOriginResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *cloudfrontVPCOriginResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (*vpcOriginResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_cloudfront_vpc_origin"
 }
 
-func (r *cloudfrontVPCOriginResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *vpcOriginResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			names.AttrCreatedTime: schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			names.AttrID: framework.IDAttribute(),
+			names.AttrID:  framework.IDAttribute(),
 			"etag": schema.StringAttribute{
 				Computed: true,
 			},
-			"last_modified_time": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			names.AttrStatus: schema.StringAttribute{
-				Computed: true,
-			},
-
-			names.AttrTags: tftags.TagsAttribute(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"vpc_origin_endpoint_config": schema.SingleNestedBlock{
-				CustomType: fwtypes.NewObjectTypeOf[vpcOriginEndpointConfigModel](ctx),
-				Validators: []validator.Object{
-					objectvalidator.IsRequired(),
+			"vpc_origin_endpoint_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[vpcOriginEndpointConfigModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
 				},
-				Attributes: map[string]schema.Attribute{
-					"origin_arn": schema.StringAttribute{
-						Required:   true,
-						CustomType: fwtypes.ARNType,
+				NestedObject: schema.NestedBlockObject{
+					Validators: []validator.Object{
+						objectvalidator.AtLeastOneOf(path.MatchRelative().AtName("http_port"), path.MatchRelative().AtName("https_port")),
 					},
-					"http_port": schema.Int32Attribute{
-						Required: true,
-						Validators: []validator.Int32{
-							int32validator.Between(1, 65535),
+					Attributes: map[string]schema.Attribute{
+						names.AttrARN: schema.StringAttribute{
+							Required:   true,
+							CustomType: fwtypes.ARNType,
+						},
+						"http_port": schema.Int32Attribute{
+							Optional: true,
+							Validators: []validator.Int32{
+								int32validator.Between(1, 65535),
+							},
+						},
+						"https_port": schema.Int32Attribute{
+							Optional: true,
+							Validators: []validator.Int32{
+								int32validator.Between(1, 65535),
+							},
+						},
+						names.AttrName: schema.StringAttribute{
+							Required: true,
+						},
+						"origin_protocol_policy": schema.StringAttribute{
+							Required:   true,
+							CustomType: fwtypes.StringEnumType[awstypes.OriginProtocolPolicy](),
 						},
 					},
-					"https_port": schema.Int32Attribute{
-						Required: true,
-						Validators: []validator.Int32{
-							int32validator.Between(1, 65535),
-						},
-					},
-					names.AttrName: schema.StringAttribute{
-						Required: true,
-					},
-					"origin_protocol_policy": schema.StringAttribute{
-						Required:   true,
-						CustomType: fwtypes.StringEnumType[awstypes.OriginProtocolPolicy](),
-					},
-				},
-				Blocks: map[string]schema.Block{
-					"origin_ssl_protocols": schema.ListNestedBlock{
-						CustomType: fwtypes.NewListNestedObjectTypeOf[originSSLProtocolsModel](ctx),
-						Validators: []validator.List{
-							listvalidator.IsRequired(),
-							listvalidator.SizeAtLeast(1),
-							listvalidator.SizeAtMost(1),
-						},
-						NestedObject: schema.NestedBlockObject{
-							Attributes: map[string]schema.Attribute{
-								"items": schema.SetAttribute{
-									CustomType:  fwtypes.SetOfStringType,
-									Required:    true,
-									ElementType: types.StringType,
-								},
-								"quantity": schema.Int64Attribute{
-									Required: true,
+					Blocks: map[string]schema.Block{
+						"origin_ssl_protocols": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[originSSLProtocolsModel](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"items": schema.ListAttribute{
+										CustomType:  fwtypes.ListOfStringEnumType[awstypes.SslProtocol](),
+										Optional:    true,
+										ElementType: types.StringType,
+									},
+									"quantity": schema.Int64Attribute{
+										Required: true,
+									},
 								},
 							},
 						},
@@ -136,46 +129,47 @@ func (r *cloudfrontVPCOriginResource) Schema(ctx context.Context, request resour
 	}
 }
 
-func (r *cloudfrontVPCOriginResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data vpcOriginModel
+func (r *vpcOriginResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data vpcOriginResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().CloudFrontClient(ctx)
-	var input cloudfront.CreateVpcOriginInput
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
+
+	input := &cloudfront.CreateVpcOriginInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		input.Tags.Items = tags
 	}
 
-	output, err := conn.CreateVpcOrigin(ctx, &input)
+	output, err := conn.CreateVpcOrigin(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError("Creating CloudFront VPC Origin", err.Error())
+		response.Diagnostics.AddError("creating CloudFront VPC Origin", err.Error())
+
 		return
 	}
 
-	data.Id = fwflex.StringToFramework(ctx, output.VpcOrigin.Id)
+	// Set values for unknowns.
+	data.ID = fwflex.StringToFramework(ctx, output.VpcOrigin.Id)
 	data.ARN = fwflex.StringToFramework(ctx, output.VpcOrigin.Arn)
-	data.CreatedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.CreatedTime)
-	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.LastModifiedTime)
-	data.Status = fwflex.StringToFramework(ctx, output.VpcOrigin.Status)
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
-	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	if err = waitVPCOriginDeployed(ctx, conn, data.Id.ValueString(), createTimeout); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("Creating CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
+	if _, err := waitVPCOriginDeployed(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront VPC Origin (%s) create", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *cloudfrontVPCOriginResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data vpcOriginModel
+func (r *vpcOriginResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data vpcOriginResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -183,15 +177,17 @@ func (r *cloudfrontVPCOriginResource) Read(ctx context.Context, request resource
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	output, err := findVPCOriginByID(ctx, conn, data.Id.ValueString())
+	output, err := findVPCOriginByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 		return
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront VPC Origin (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
@@ -200,24 +196,17 @@ func (r *cloudfrontVPCOriginResource) Read(ctx context.Context, request resource
 		return
 	}
 
-	data.ARN = fwflex.StringToFramework(ctx, output.VpcOrigin.Arn)
-	data.CreatedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.CreatedTime)
-	data.Id = fwflex.StringToFramework(ctx, output.VpcOrigin.Id)
-	data.LastModifiedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.LastModifiedTime)
-	data.Status = fwflex.StringToFramework(ctx, output.VpcOrigin.Status)
 	data.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *cloudfrontVPCOriginResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old vpcOriginModel
+func (r *vpcOriginResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new vpcOriginResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	var new vpcOriginModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -225,44 +214,43 @@ func (r *cloudfrontVPCOriginResource) Update(ctx context.Context, request resour
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	input := &cloudfront.UpdateVpcOriginInput{
-		Id:      aws.String(new.Id.ValueString()),
-		IfMatch: aws.String(old.ETag.ValueString()),
+	if !new.VPCOriginEndpointConfig.Equal(old.VPCOriginEndpointConfig) {
+		input := &cloudfront.UpdateVpcOriginInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		input.Id = new.ID.ValueStringPointer()
+		// Use state ETag value. The planned value will be unknown.
+		input.IfMatch = old.ETag.ValueStringPointer()
+
+		_, err := conn.UpdateVpcOrigin(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudFront VPC Origin (%s)", new.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		output, err := waitVPCOriginDeployed(ctx, conn, old.ID.ValueString(), r.UpdateTimeout(ctx, old.Timeouts))
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for CloudFront VPC Origin (%s) update", new.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		new.ETag = fwflex.StringToFramework(ctx, output.ETag)
+	} else {
+		new.ETag = old.ETag
 	}
-
-	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	output, err := conn.UpdateVpcOrigin(ctx, input)
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating CloudFront VPC Origin (%s)", new.Id.ValueString()), err.Error())
-		return
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, old.Timeouts)
-	if err = waitVPCOriginDeployed(ctx, conn, old.Id.ValueString(), updateTimeout); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating CloudFront VPC Origin (%s)", new.Id.ValueString()), err.Error())
-		return
-	}
-
-	if output == nil {
-		response.Diagnostics.AddError(fmt.Sprintf("Updating Cloudfront VPC Origin (%s): empty response", old.Id.ValueString()), err.Error())
-		return
-	}
-
-	new.CreatedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.CreatedTime)
-	new.LastModifiedTime = fwflex.TimeToFramework(ctx, output.VpcOrigin.LastModifiedTime)
-	new.Status = fwflex.StringToFramework(ctx, output.VpcOrigin.Status)
-	new.ETag = fwflex.StringToFramework(ctx, output.ETag)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *cloudfrontVPCOriginResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data vpcOriginModel
+func (r *vpcOriginResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data vpcOriginResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -270,89 +258,59 @@ func (r *cloudfrontVPCOriginResource) Delete(ctx context.Context, request resour
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	output, err := findVPCOriginByID(ctx, conn, data.Id.ValueString())
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsOneOf2[*awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, timeout, func() (interface{}, error) {
+		return nil, deleteVPCOrigin(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts))
+	})
 
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
+	if tfresource.NotFound(err) {
 		return
 	}
 
+	if err != nil {
+		response.Diagnostics.AddError("deleting CloudFront VPC Origin", err.Error())
+	}
+}
+
+func (r *vpcOriginResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
+func deleteVPCOrigin(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) error {
+	etag, err := vpcOriginETag(ctx, conn, id)
+
+	if err != nil {
+		return err
+	}
+
 	input := &cloudfront.DeleteVpcOriginInput{
-		Id:      aws.String(data.Id.ValueString()),
-		IfMatch: aws.String(*output.ETag),
+		Id:      aws.String(id),
+		IfMatch: aws.String(etag),
 	}
 
 	_, err = conn.DeleteVpcOrigin(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
-		return
+		return fmt.Errorf("deleting CloudFront VPC Origin (%s): %w", id, err)
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
-	if _, err = waitVPCOriginDeleted(ctx, conn, data.Id.ValueString(), deleteTimeout); err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudFront VPC Origin (%s)", data.Id.ValueString()), err.Error())
-		return
+	if _, err := waitVPCOriginDeleted(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for CloudFront VPC Origin (%s) delete: %w", id, err)
 	}
+
+	return nil
 }
 
-func VPCOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &cloudfront.GetVpcOriginInput{
-			Id: &id,
-		}
+func vpcOriginETag(ctx context.Context, conn *cloudfront.Client, id string) (string, error) {
+	output, err := findVPCOriginByID(ctx, conn, id)
 
-		output, err := conn.GetVpcOrigin(ctx, input)
-
-		if errs.IsA[*awstypes.EntityNotFound](err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output == nil {
-			return nil, "", nil
-		}
-
-		return output, aws.ToString(output.VpcOrigin.Status), nil
-	}
-}
-
-func waitVPCOriginDeployed(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) error {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{"Deploying"},
-		Target:  []string{"Deployed"},
-		Refresh: VPCOriginStatus(ctx, conn, id),
-		Timeout: timeout,
+	if err != nil {
+		return "", fmt.Errorf("reading CloudFront VPC Origin (%s): %w", id, err)
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if _, ok := outputRaw.(*awstypes.VpcOrigin); ok {
-		return nil
-	}
-
-	return err
-}
-
-func waitVPCOriginDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*awstypes.VpcOrigin, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{"Deploying", "Deployed"},
-		Target:  []string{},
-		Refresh: VPCOriginStatus(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*awstypes.VpcOrigin); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Status)))
-		return output, err
-	}
-
-	return nil, err
+	return aws.ToString(output.ETag), nil
 }
 
 func findVPCOriginByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetVpcOriginOutput, error) {
@@ -360,6 +318,10 @@ func findVPCOriginByID(ctx context.Context, conn *cloudfront.Client, id string) 
 		Id: aws.String(id),
 	}
 
+	return findVPCOrigin(ctx, conn, input)
+}
+
+func findVPCOrigin(ctx context.Context, conn *cloudfront.Client, input *cloudfront.GetVpcOriginInput) (*cloudfront.GetVpcOriginOutput, error) {
 	output, err := conn.GetVpcOrigin(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
@@ -373,35 +335,83 @@ func findVPCOriginByID(ctx context.Context, conn *cloudfront.Client, id string) 
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.VpcOrigin == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
 }
 
-type vpcOriginModel struct {
-	ARN                     types.String                                        `tfsdk:"arn"`
-	CreatedTime             timetypes.RFC3339                                   `tfsdk:"created_time"`
-	Id                      types.String                                        `tfsdk:"id"`
-	ETag                    types.String                                        `tfsdk:"etag"`
-	LastModifiedTime        timetypes.RFC3339                                   `tfsdk:"last_modified_time"`
-	Status                  types.String                                        `tfsdk:"status"`
-	VpcOriginEndpointConfig fwtypes.ObjectValueOf[vpcOriginEndpointConfigModel] `tfsdk:"vpc_origin_endpoint_config"`
-	Tags                    tftags.Map                                          `tfsdk:"tags"`
-	Timeouts                timeouts.Value                                      `tfsdk:"timeouts"`
+func vpcOriginStatus(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findVPCOriginByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.VpcOrigin.Status), nil
+	}
+}
+
+func waitVPCOriginDeployed(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetVpcOriginOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{vpcOriginStatusDeploying},
+		Target:  []string{vpcOriginStatusDeployed},
+		Refresh: vpcOriginStatus(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudfront.GetVpcOriginOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitVPCOriginDeleted(ctx context.Context, conn *cloudfront.Client, id string, timeout time.Duration) (*cloudfront.GetVpcOriginOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{vpcOriginStatusDeployed, vpcOriginStatusDeploying},
+		Target:  []string{},
+		Refresh: vpcOriginStatus(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudfront.GetVpcOriginOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+type vpcOriginResourceModel struct {
+	ARN                     types.String                                                  `tfsdk:"arn"`
+	ETag                    types.String                                                  `tfsdk:"etag"`
+	ID                      types.String                                                  `tfsdk:"id"`
+	Tags                    tftags.Map                                                    `tfsdk:"tags"`
+	TagsAll                 tftags.Map                                                    `tfsdk:"tags_all"`
+	Timeouts                timeouts.Value                                                `tfsdk:"timeouts"`
+	VPCOriginEndpointConfig fwtypes.ListNestedObjectValueOf[vpcOriginEndpointConfigModel] `tfsdk:"vpc_origin_endpoint_config"`
 }
 
 type vpcOriginEndpointConfigModel struct {
-	Arn                  types.String                                             `tfsdk:"origin_arn"`
+	ARN                  types.String                                             `tfsdk:"arn"`
 	HTTPPort             types.Int32                                              `tfsdk:"http_port"`
 	HTTPSPort            types.Int32                                              `tfsdk:"https_port"`
 	Name                 types.String                                             `tfsdk:"name"`
 	OriginProtocolPolicy fwtypes.StringEnum[awstypes.OriginProtocolPolicy]        `tfsdk:"origin_protocol_policy"`
-	OriginSslProtocols   fwtypes.ListNestedObjectValueOf[originSSLProtocolsModel] `tfsdk:"origin_ssl_protocols"`
+	OriginSSLProtocols   fwtypes.ListNestedObjectValueOf[originSSLProtocolsModel] `tfsdk:"origin_ssl_protocols"`
 }
 
 type originSSLProtocolsModel struct {
-	Items    fwtypes.SetValueOf[types.String] `tfsdk:"items"`
-	Quantity types.Int64                      `tfsdk:"quantity"`
+	Items    fwtypes.ListValueOf[fwtypes.StringEnum[awstypes.SslProtocol]] `tfsdk:"items"`
+	Quantity types.Int64                                                   `tfsdk:"quantity"`
 }
