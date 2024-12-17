@@ -34,7 +34,7 @@ func resourceIndexPolicy() *schema.Resource {
 		DeleteWithoutTimeout: resourceIndexPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceIndexPolicyImport,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -75,9 +75,7 @@ func resourceIndexPolicyPut(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Index Policy (%s): %s", d.Id(), err)
 	}
 
-	if d.IsNewResource() {
-		d.SetId(fmt.Sprintf("%s:index-policy", *output.IndexPolicy.LogGroupIdentifier))
-	}
+	d.SetId(fmt.Sprintf("%s:index-policy", *output.IndexPolicy.LogGroupIdentifier))
 
 	return append(diags, resourceIndexPolicyRead(ctx, d, meta)...)
 }
@@ -87,8 +85,9 @@ func resourceIndexPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
+	logGroupName := d.Id()
 	input := cloudwatchlogs.DescribeIndexPoliciesInput{
-		LogGroupIdentifiers: []string{d.Get(names.AttrLogGroupName).(string)},
+		LogGroupIdentifiers: []string{logGroupName},
 	}
 
 	ip, err := conn.DescribeIndexPolicies(ctx, &input)
@@ -130,12 +129,6 @@ func resourceIndexPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceIndexPolicyImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	logGroupName := d.Get(names.AttrLogGroupName).(string)
-	d.Set(names.AttrLogGroupName, logGroupName)
-	return []*schema.ResourceData{d}, nil
-}
-
 func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName string) ([]types.IndexPolicy, error) {
 	input := cloudwatchlogs.DescribeIndexPoliciesInput{
 		LogGroupIdentifiers: []string{logGroupName},
@@ -143,7 +136,7 @@ func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Cli
 
 	ip, err := conn.DescribeIndexPolicies(ctx, &input)
 	if err != nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, err
 	}
 
 	return ip.IndexPolicies, nil
