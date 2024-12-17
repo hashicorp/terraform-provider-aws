@@ -89,7 +89,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 		linkIDs = append(linkIDs, aws.ToString(v.LinkId))
 	}
 
-	d.SetId(meta.(*conns.AWSClient).Region)
+	d.SetId(meta.(*conns.AWSClient).Region(ctx))
 	d.Set(names.AttrIDs, linkIDs)
 
 	return diags

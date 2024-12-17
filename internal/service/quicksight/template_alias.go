@@ -86,7 +86,7 @@ func (r *templateAliasResource) Create(ctx context.Context, req resource.CreateR
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = types.StringValue(r.Meta().AccountID(ctx))
 	}
 	awsAccountID, templateID, aliasName := flex.StringValueFromFramework(ctx, plan.AWSAccountID), flex.StringValueFromFramework(ctx, plan.TemplateID), flex.StringValueFromFramework(ctx, plan.AliasName)
 	in := &quicksight.CreateTemplateAliasInput{

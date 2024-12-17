@@ -385,7 +385,7 @@ func TestAccFISExperimentTemplate_loggingConfiguration(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccExperimentTemplateExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.log_schema_version", "2"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "log_configuration.0.cloudwatch_logs_configuration.0.log_group_arn", "logs", fmt.Sprintf("log-group:%s:*", rName)),
+					acctest.CheckResourceAttrRegionalARN(ctx, resourceName, "log_configuration.0.cloudwatch_logs_configuration.0.log_group_arn", "logs", fmt.Sprintf("log-group:%s:*", rName)),
 				),
 			},
 			// Delete Logging

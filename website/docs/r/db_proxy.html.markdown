@@ -10,7 +10,11 @@ description: |-
 
 Provides an RDS DB proxy resource. For additional information, see the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy.html).
 
+~> **Note:** Not all Availability Zones (AZs) support DB proxies. Specifying `vpc_subnet_ids` for AZs that do not support proxies will not trigger an error as long as at least one `vpc_subnet_id` is valid. However, this will cause Terraform to continuously detect differences between the configuration and the actual infrastructure. Refer to the [Unsupported Availability Zones](#unsupported-availability-zones) section below for potential workarounds.
+
 ## Example Usage
+
+### Basic Usage
 
 ```terraform
 resource "aws_db_proxy" "example" {
@@ -34,6 +38,57 @@ resource "aws_db_proxy" "example" {
     Name = "example"
     Key  = "value"
   }
+}
+```
+
+### Unsupported Availability Zones
+
+Terraform may report constant differences if you use `vpc_subnet_ids` that correspond to Availability Zones (AZs) that do not support a DB proxy. While this typically does not result in an error, AWS only returns `vpc_subnet_ids` for AZs that support DB proxies. As a result, Terraform detects a mismatch between your configuration and the actual infrastructure, leading it to report that changes are required. Below are some ways to avoid this issue.
+
+One solution is to exclude AZs that do not support DB proxies by using the [`aws_availability_zones` data source](/docs/providers/aws/d/availability_zones.html). The example below demonstrates how to configure this for the `us-east-1` region, excluding the `use1-az3` AZ. (Keep in mind that AZ names can vary between accounts, while AZ IDs remain consistent.) If the `us-east-1` region has six AZs in total and you aim to configure the maximum number of subnets, you would exclude one AZ and configure five subnets:
+
+```terraform
+data "aws_availability_zones" "available" {
+  exclude_zone_ids = ["use1-az3"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "example" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "example" {
+  count             = 5
+  cidr_block        = cidrsubnet(aws_vpc.example.cidr_block, 8, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  vpc_id            = aws_vpc.example.id
+}
+
+resource "aws_db_proxy" "example" {
+  name           = "example"
+  vpc_subnet_ids = [aws_subnet.example.id]
+
+  # additional configuration...
+}
+```
+
+Another approach is to use the [`lifecycle` `ignore_changes`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#ignore_changes) meta-argument. With this method, Terraform will stop detecting differences for the `vpc_subnet_ids` argument. However, note that this approach disables Terraform's ability to track and manage updates to `vpc_subnet_ids`, so use it carefully to avoid unintended drift between your configuration and the actual infrastructure.
+
+```terraform
+resource "aws_db_proxy" "example" {
+  name           = "example"
+  vpc_subnet_ids = [aws_subnet.example.id]
+
+  lifecycle {
+    ignore_changes = [vpc_subnet_ids]
+  }
+
+  # additional configuration...
 }
 ```
 

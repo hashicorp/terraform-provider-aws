@@ -27,7 +27,7 @@ func TestAccECRRepositoryCreationTemplateDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRepositoryCreationTemplateDataSourceConfig_basic(repositoryPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					acctest.CheckResourceAttrAccountID(dataSource, "registry_id"),
+					acctest.CheckResourceAttrAccountID(ctx, dataSource, "registry_id"),
 					resource.TestCheckResourceAttr(dataSource, "applied_for.#", "1"),
 					resource.TestCheckTypeSetElemAttr(dataSource, "applied_for.*", string(types.RCTAppliedForPullThroughCache)),
 					resource.TestCheckResourceAttr(dataSource, "custom_role_arn", ""),

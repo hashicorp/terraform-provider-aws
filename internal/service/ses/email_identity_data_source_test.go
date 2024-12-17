@@ -28,7 +28,7 @@ func testAccEmailIdentityDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEmailIdentityDataDourceConfig_source(email),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN("data.aws_ses_email_identity.test", names.AttrARN, "ses", regexache.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(email)))),
+					acctest.MatchResourceAttrRegionalARN(ctx, "data.aws_ses_email_identity.test", names.AttrARN, "ses", regexache.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(email)))),
 				),
 			},
 		},
@@ -48,7 +48,7 @@ func testAccEmailIdentityDataSource_trailingPeriod(t *testing.T) {
 			{
 				Config: testAccEmailIdentityDataDourceConfig_source(email),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN("data.aws_ses_email_identity.test", names.AttrARN, "ses", regexache.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(strings.TrimSuffix(email, "."))))),
+					acctest.MatchResourceAttrRegionalARN(ctx, "data.aws_ses_email_identity.test", names.AttrARN, "ses", regexache.MustCompile(fmt.Sprintf("identity/%s$", regexp.QuoteMeta(strings.TrimSuffix(email, "."))))),
 				),
 			},
 		},

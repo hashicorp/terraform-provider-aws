@@ -54,16 +54,16 @@ func TestAccLogsQueryDefinition_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccQueryDefinitionImportStateID(&v),
+				ImportStateIdFunc: testAccQueryDefinitionImportStateID(ctx, &v),
 			},
 		},
 	})
 }
 
-func testAccQueryDefinitionImportStateID(v *types.QueryDefinition) resource.ImportStateIdFunc {
+func testAccQueryDefinitionImportStateID(ctx context.Context, v *types.QueryDefinition) resource.ImportStateIdFunc {
 	return func(*terraform.State) (string, error) {
 		id := arn.ARN{
-			AccountID: acctest.AccountID(),
+			AccountID: acctest.AccountID(ctx),
 			Partition: acctest.Partition(),
 			Region:    acctest.Region(),
 			Service:   "logs",
@@ -129,7 +129,7 @@ func TestAccLogsQueryDefinition_rename(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccQueryDefinitionImportStateID(&v2),
+				ImportStateIdFunc: testAccQueryDefinitionImportStateID(ctx, &v2),
 			},
 		},
 	})
@@ -170,7 +170,7 @@ func TestAccLogsQueryDefinition_logGroups(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateIdFunc: testAccQueryDefinitionImportStateID(&v2),
+				ImportStateIdFunc: testAccQueryDefinitionImportStateID(ctx, &v2),
 			},
 		},
 	})
