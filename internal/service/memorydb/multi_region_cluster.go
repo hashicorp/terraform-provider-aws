@@ -370,10 +370,10 @@ func (r *multiRegionClusterResource) Delete(ctx context.Context, req resource.De
 	// Before deleting the multi-region cluster, ensure it is ready for deletion.
 	// Removing an `aws_memorydb_cluster` from a multi-region cluster may temporarily block deletion.
 	output, err := findMultiRegionClusterByName(ctx, conn, state.ID.ValueString())
+	if tfresource.NotFound(err) {
+		return
+	}
 	if err != nil {
-		if tfresource.NotFound(err) {
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionDeleting, ResNameMultiRegionCluster, state.ID.String(), err),
 			err.Error(),
