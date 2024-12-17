@@ -158,9 +158,9 @@ func testAccPermissions_databaseIAMPrincipals(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					testAccCheckIAMPrincipalsGrantPrincipal(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "database.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "database.0.name", dbName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "database.0.name", dbName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAll)),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
@@ -468,10 +468,10 @@ func testAccPermissions_tableIAMPrincipals(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPermissionsExists(ctx, resourceName),
 					testAccCheckIAMPrincipalsGrantPrincipal(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
+					resource.TestCheckResourceAttr(resourceName, "catalog_resource", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", dbName, "database_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", dbName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", dbName, names.AttrDatabaseName),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", dbName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAll)),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
@@ -877,7 +877,7 @@ func testAccCheckIAMPrincipalsGrantPrincipal(ctx context.Context, resourceName s
 			return fmt.Errorf("acceptance test: resource not found: %s", resourceName)
 		}
 
-		if v, ok := rs.Primary.Attributes["principal"]; ok && v != "" {
+		if v, ok := rs.Primary.Attributes[names.AttrPrincipal]; ok && v != "" {
 			expectedPrincipalValue := acctest.AccountID(ctx) + ":IAMPrincipals"
 			if v == expectedPrincipalValue {
 				return nil
