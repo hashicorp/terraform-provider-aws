@@ -337,9 +337,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListDatabases(ctx, &redshiftdata.ListDatabasesInput{
+	input := redshiftdata.ListDatabasesInput{
 		Database: aws.String("test"),
-	},
+	}
+	_, err := client.ListDatabases(ctx, &input,
 		func(opts *redshiftdata.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

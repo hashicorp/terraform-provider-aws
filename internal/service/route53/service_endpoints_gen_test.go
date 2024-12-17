@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListHostedZones(ctx, &route53.ListHostedZonesInput{},
+	input := route53.ListHostedZonesInput{}
+	_, err := client.ListHostedZones(ctx, &input,
 		func(opts *route53.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

@@ -337,7 +337,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListLanguageModels(ctx, &transcribe.ListLanguageModelsInput{},
+	input := transcribe.ListLanguageModelsInput{}
+	_, err := client.ListLanguageModels(ctx, &input,
 		func(opts *transcribe.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

@@ -338,9 +338,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListRules(ctx, &rbin.ListRulesInput{
+	input := rbin.ListRulesInput{
 		ResourceType: awstypes.ResourceTypeEc2Image,
-	},
+	}
+	_, err := client.ListRules(ctx, &input,
 		func(opts *rbin.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

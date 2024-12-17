@@ -337,7 +337,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListAccountPermissions(ctx, &inspector2.ListAccountPermissionsInput{},
+	input := inspector2.ListAccountPermissionsInput{}
+	_, err := client.ListAccountPermissions(ctx, &input,
 		func(opts *inspector2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

@@ -337,7 +337,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListBots(ctx, &lexmodelsv2.ListBotsInput{},
+	input := lexmodelsv2.ListBotsInput{}
+	_, err := client.ListBots(ctx, &input,
 		func(opts *lexmodelsv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
