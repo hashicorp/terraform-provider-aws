@@ -175,6 +175,22 @@ func resourceReplicator() *schema.Resource {
 											},
 										},
 									},
+									"topic_name_configuration": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												names.AttrType: {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[types.ReplicationTopicNameConfigurationType](),
+												},
+											},
+										},
+									},
 									"topics_to_exclude": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -579,6 +595,10 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 		tfMap["starting_position"] = []interface{}{flattenReplicationStartingPosition(v)}
 	}
 
+	if v := apiObject.TopicNameConfiguration; v != nil {
+		tfMap["topic_name_configuration"] = []interface{}{flattenReplicationTopicNameConfiguration(v)}
+	}
+
 	if v := apiObject.TopicsToReplicate; v != nil {
 		tfMap["topics_to_replicate"] = v
 	}
@@ -591,6 +611,20 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 }
 
 func flattenReplicationStartingPosition(apiObject *types.ReplicationStartingPosition) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Type; v != "" {
+		tfMap[names.AttrType] = v
+	}
+
+	return tfMap
+}
+
+func flattenReplicationTopicNameConfiguration(apiObject *types.ReplicationTopicNameConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -687,14 +721,6 @@ func expandConsumerGroupReplicationUpdate(tfMap map[string]interface{}) *types.C
 func expandTopicReplicationUpdate(tfMap map[string]interface{}) *types.TopicReplicationUpdate {
 	apiObject := &types.TopicReplicationUpdate{}
 
-	if v, ok := tfMap["topics_to_replicate"].(*schema.Set); ok {
-		apiObject.TopicsToReplicate = flex.ExpandStringValueSet(v)
-	}
-
-	if v, ok := tfMap["topics_to_exclude"].(*schema.Set); ok {
-		apiObject.TopicsToExclude = flex.ExpandStringValueSet(v)
-	}
-
 	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
 		apiObject.CopyTopicConfigurations = aws.Bool(v)
 	}
@@ -705,6 +731,14 @@ func expandTopicReplicationUpdate(tfMap map[string]interface{}) *types.TopicRepl
 
 	if v, ok := tfMap["detect_and_copy_new_topics"].(bool); ok {
 		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
+	}
+
+	if v, ok := tfMap["topics_to_exclude"].(*schema.Set); ok {
+		apiObject.TopicsToExclude = flex.ExpandStringValueSet(v)
+	}
+
+	if v, ok := tfMap["topics_to_replicate"].(*schema.Set); ok {
+		apiObject.TopicsToReplicate = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
@@ -799,6 +833,10 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 		apiObject.StartingPosition = expandReplicationStartingPosition(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["topic_name_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.TopicNameConfiguration = expandReplicationTopicNameConfiguration(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["topics_to_replicate"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.TopicsToReplicate = flex.ExpandStringValueSet(v)
 	}
@@ -815,6 +853,16 @@ func expandReplicationStartingPosition(tfMap map[string]interface{}) *types.Repl
 
 	if v, ok := tfMap[names.AttrType].(string); ok {
 		apiObject.Type = types.ReplicationStartingPositionType(v)
+	}
+
+	return apiObject
+}
+
+func expandReplicationTopicNameConfiguration(tfMap map[string]interface{}) *types.ReplicationTopicNameConfiguration {
+	apiObject := &types.ReplicationTopicNameConfiguration{}
+
+	if v, ok := tfMap[names.AttrType].(string); ok {
+		apiObject.Type = types.ReplicationTopicNameConfigurationType(v)
 	}
 
 	return apiObject
