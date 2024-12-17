@@ -39,6 +39,8 @@ func resourceQueueRedriveAllowPolicy() *schema.Resource {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
 				},
+
+				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
 			},
 		},
 
