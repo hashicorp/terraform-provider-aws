@@ -277,6 +277,18 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionToDays(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(days)),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", ""),
+					testSecretValueIsCurrent(ctx, rName),
+				),
+			},
+			{
+				Config: testAccSecretRotationConfig_scheduleExpression(rName, scheduleExpression),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtTrue),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", "0"),
 				),
 			},
 			{
@@ -332,64 +344,6 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionHours(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"rotate_immediately"},
-			},
-		},
-	})
-}
-
-func TestAccSecretsManagerSecretRotation_switchBetweenDaysAndExpression(t *testing.T) {
-	ctx := acctest.Context(t)
-	var secret secretsmanager.DescribeSecretOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_secretsmanager_secret_rotation.test"
-	lambdaFunctionResourceName := "aws_lambda_function.test1"
-	scheduleExpression := "cron(0 0 10,20,30 * ? *)"
-	automaticallyAfterDays := 5
-	automaticallyAfterDays2 := 10
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{ // Test creating secret rotation resource using automatically_after_days first
-				Config: testAccSecretRotationConfig_basic(rName, automaticallyAfterDays),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(automaticallyAfterDays)),
-				),
-			},
-			{ // then set test setting rotation to a schedule_expression
-				Config: testAccSecretRotationConfig_scheduleExpression(rName, scheduleExpression),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
-					//resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", "5"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", scheduleExpression),
-				),
-			},
-			{ // and verify setting automatically_after_days once again
-				Config: testAccSecretRotationConfig_basic(rName, automaticallyAfterDays2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
-					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", acctest.CtTrue),
-					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", ""),
-					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(automaticallyAfterDays2)),
-				),
-			},
-			// Test importing secret rotation
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
