@@ -65,11 +65,10 @@ func DataSourceSchemaFromResourceSchema(rs map[string]*schema.Schema) map[string
 	return ds
 }
 
-// PolicyDocumentSchema returns the standard schema for a Required JSON policy document.
-func PolicyDocumentSchemaRequired() *schema.Schema {
+// PolicyDocumentSchema returns the standard schema for a JSON policy document.
+func PolicyDocumentSchema(required bool) *schema.Schema {
 	schema := &schema.Schema{
 		Type:                  schema.TypeString,
-		Required:              true,
 		ValidateFunc:          validation.StringIsJSON,
 		DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 		DiffSuppressOnRefresh: true,
@@ -77,6 +76,9 @@ func PolicyDocumentSchemaRequired() *schema.Schema {
 			json, _ := structure.NormalizeJsonString(v)
 			return json
 		},
+	}
+	if required {
+		schema.Required = true
 	}
 
 	return schema
