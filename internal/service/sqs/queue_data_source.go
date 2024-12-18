@@ -5,7 +5,6 @@ package sqs
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -67,16 +65,6 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(queueURL)
 	d.Set(names.AttrARN, attributesOutput)
 	d.Set(names.AttrURL, queueURL)
-
-	if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition(ctx), err) {
-		// Some partitions may not support tagging, giving error
-		log.Printf("[WARN] failed listing tags for SQS Queue (%s): %s", d.Id(), err)
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for SQS Queue (%s): %s", d.Id(), err)
-	}
 
 	return diags
 }
