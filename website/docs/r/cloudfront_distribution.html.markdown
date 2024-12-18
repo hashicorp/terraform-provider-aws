@@ -388,6 +388,7 @@ argument should not be specified.
 * `origin_path` (Optional) - Optional element that causes CloudFront to request your content from a directory in your Amazon S3 bucket or your custom origin.
 * `origin_shield` - (Optional) [CloudFront Origin Shield](#origin-shield-arguments) configuration information. Using Origin Shield can help reduce the load on your origin. For more information, see [Using Origin Shield](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/origin-shield.html) in the Amazon CloudFront Developer Guide.
 * `s3_origin_config` - (Optional) [CloudFront S3 origin](#s3-origin-config-arguments) configuration information. If a custom origin is required, use `custom_origin_config` instead.
+* `vpc_origin_config` - (Optional) The VPC origin configuration.
 
 ##### Custom Origin Config Arguments
 
@@ -406,6 +407,12 @@ argument should not be specified.
 ##### S3 Origin Config Arguments
 
 * `origin_access_identity` (Required) - The [CloudFront origin access identity][5] to associate with the origin.
+
+##### VPC Origin Config Arguments
+
+* `origin_keepalive_timeout` - (Optional) Specifies how long, in seconds, CloudFront persists its connection to the origin. The minimum timeout is 1 second, the maximum is 60 seconds. Defaults to `5`.
+* `origin_read_timeout` - (Optional) Specifies how long, in seconds, CloudFront waits for a response from the origin. This is also known as the _origin response timeout_. The minimum timeout is 1 second, the maximum is 60 seconds. Defaults to `30`.
+* `vpc_origin_id` (Required) - The VPC origin ID.
 
 #### Origin Group Arguments
 
