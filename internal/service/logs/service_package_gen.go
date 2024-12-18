@@ -27,6 +27,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory: newResourceIndexPolicy,
+			Name:    "Index Policy",
+		},
 	}
 }
 
@@ -81,10 +85,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: names.AttrARN,
 			},
-		},
-		{
-			Factory:  resourceIndexPolicy,
-			TypeName: "aws_cloudwatch_log_index_policy",
 		},
 		{
 			Factory:  resourceMetricFilter,

@@ -5,139 +5,266 @@ package logs
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// @FrameworkResource("aws_cloudwatch_logs_index_policy", name="Index Policy")
+func newResourceIndexPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceIndexPolicy{}
+
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultUpdateTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(30 * time.Minute)
+
+	return r, nil
+}
 
 const (
 	ResNameIndexPolicy = "Index Policy"
 )
 
-// @SDKResource("aws_cloudwatch_log_index_policy")
-func resourceIndexPolicy() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceIndexPolicyPut,
-		ReadWithoutTimeout:   resourceIndexPolicyRead,
-		UpdateWithoutTimeout: resourceIndexPolicyPut,
-		DeleteWithoutTimeout: resourceIndexPolicyDelete,
+type resourceIndexPolicy struct {
+	framework.ResourceWithConfigure
+	framework.WithTimeouts
+}
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+func (r *resourceIndexPolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_logs_index_policy"
+}
 
-		Schema: map[string]*schema.Schema{
-			names.AttrLogGroupName: {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validLogGroupName,
-			},
-			"policy_document": {
-				Type:     schema.TypeString,
+func (r *resourceIndexPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id": framework.IDAttribute(),
+			names.AttrLogGroupName: schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
+			"policy_document": schema.StringAttribute{
+				Required:    true,
+				Description: "Field index filter policy, in JSON",
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
 
-func resourceIndexPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *resourceIndexPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().LogsClient(ctx)
 
-	conn := meta.(*conns.AWSClient).LogsClient(ctx)
+	var plan resourceIndexPolicyModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	logGroupName := d.Get(names.AttrLogGroupName).(string)
+	input := cloudwatchlogs.PutIndexPolicyInput{
+		LogGroupIdentifier: plan.LogGroupName.ValueStringPointer(),
+		PolicyDocument:     plan.PolicyDocument.ValueStringPointer(),
+	}
 
-	policyDocument, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("IndexPolicy"))...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := conn.PutIndexPolicy(ctx, &input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyDocument, err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameIndexPolicy, plan.LogGroupName.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	if out == nil || out.IndexPolicy == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameIndexPolicy, plan.LogGroupName.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
 	}
 
-	input := &cloudwatchlogs.PutIndexPolicyInput{
-		LogGroupIdentifier: aws.String(logGroupName),
-		PolicyDocument:     aws.String(policyDocument),
+	// Set resource ID
+	id := fmt.Sprintf("%s:%s", out.IndexPolicy.LogGroupIdentifier, "index-policy")
+	plan.ID = flex.StringToFramework(ctx, &id)
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	output, err := conn.PutIndexPolicy(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Index Policy (%s): %s", d.Id(), err)
-	}
-
-	d.SetId(fmt.Sprintf("%s:index-policy", *output.IndexPolicy.LogGroupIdentifier))
-
-	return append(diags, resourceIndexPolicyRead(ctx, d, meta)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func resourceIndexPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *resourceIndexPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().LogsClient(ctx)
 
-	conn := meta.(*conns.AWSClient).LogsClient(ctx)
+	var state resourceIndexPolicyModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	logGroupName := d.Id()
-	input := cloudwatchlogs.DescribeIndexPoliciesInput{
+	out, err := findIndexPolicyByLogGroupName(ctx, conn, state.LogGroupName.ValueString())
+
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Logs, create.ErrActionSetting, ResNameIndexPolicy, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	state.ID = flex.StringToFramework(ctx, state.ID.ValueStringPointer())
+	state.LogGroupName = flex.StringToFramework(ctx, out.LogGroupIdentifier)
+	state.PolicyDocument = flex.StringToFramework(ctx, out.PolicyDocument)
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceIndexPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().LogsClient(ctx)
+
+	var plan, state resourceIndexPolicyModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.PolicyDocument.Equal(state.PolicyDocument) {
+		input := cloudwatchlogs.PutIndexPolicyInput{
+			LogGroupIdentifier: plan.LogGroupName.ValueStringPointer(),
+		}
+
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		// TIP: -- 4. Call the AWS modify/update function
+		out, err := conn.PutIndexPolicy(ctx, &input)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameIndexPolicy, plan.LogGroupName.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		if out == nil || out.IndexPolicy == nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameIndexPolicy, plan.ID.String(), nil),
+				errors.New("empty output").Error(),
+			)
+			return
+		}
+
+		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *resourceIndexPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	conn := r.Meta().LogsClient(ctx)
+
+	// TIP: -- 2. Fetch the state
+	var state resourceIndexPolicyModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// TIP: -- 3. Populate a delete input structure
+	input := cloudwatchlogs.DeleteIndexPolicyInput{
+		LogGroupIdentifier: state.LogGroupName.ValueStringPointer(),
+	}
+
+	_, err := conn.DeleteIndexPolicy(ctx, &input)
+
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Logs, create.ErrActionDeleting, ResNameIndexPolicy, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
+func (r *resourceIndexPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrLogGroupName), req, resp)
+}
+
+func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName string) (*awstypes.IndexPolicy, error) {
+	in := &cloudwatchlogs.DescribeIndexPoliciesInput{
 		LogGroupIdentifiers: []string{logGroupName},
 	}
 
-	ip, err := conn.DescribeIndexPolicies(ctx, &input)
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CloudWatch Logs Index Policy (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
+	out, err := conn.DescribeIndexPolicies(ctx, in)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Index Policy (%s): %s", d.Id(), err)
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+
+		return nil, err
 	}
 
-	d.Set(names.AttrLogGroupName, ip.IndexPolicies[0].LogGroupIdentifier)
-	d.Set("policy_document", ip.IndexPolicies[0].PolicyDocument)
+	if out == nil || out.IndexPolicies == nil || len(out.IndexPolicies) == 0 {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
 
-	return diags
+	return &out.IndexPolicies[0], nil
 }
 
-func resourceIndexPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	conn := meta.(*conns.AWSClient).LogsClient(ctx)
-
-	log.Printf("[INFO] Deleting CloudWatch Logs Index Policy: %s", d.Id())
-	_, err := conn.DeleteIndexPolicy(ctx, &cloudwatchlogs.DeleteIndexPolicyInput{
-		LogGroupIdentifier: aws.String(d.Get(names.AttrLogGroupName).(string)),
-	})
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Index Policy (%s): %s", d.Id(), err)
-	}
-
-	return diags
-}
-
-func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName string) (*types.IndexPolicy, error) {
-	input := cloudwatchlogs.DescribeIndexPoliciesInput{
-		LogGroupIdentifiers: []string{logGroupName},
-	}
-
-	ip, err := conn.DescribeIndexPolicies(ctx, &input)
-	if err != nil {
-		return &types.IndexPolicy{}, err
-	}
-
-	return &ip.IndexPolicies[0], nil
+type resourceIndexPolicyModel struct {
+	ID             types.String   `tfsdk:"id"`
+	LogGroupName   types.String   `tfsdk:"log_group_name"`
+	PolicyDocument types.String   `tfsdk:"policy_document"`
+	Timeouts       timeouts.Value `tfsdk:"timeouts"`
 }

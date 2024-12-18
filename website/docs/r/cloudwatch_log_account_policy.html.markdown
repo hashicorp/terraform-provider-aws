@@ -109,3 +109,4 @@ Using `terraform import`, import this resource using the `policy_name` and `poli
 ```console
 % terraform import aws_cloudwatch_log_account_policy.example "my-account-policy:SUBSCRIPTION_FILTER_POLICY"
 ```
+

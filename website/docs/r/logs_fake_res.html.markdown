@@ -1,9 +1,9 @@
 ---
 subcategory: "CloudWatch Logs"
 layout: "aws"
-page_title: "AWS: aws_logs_index_policy"
+page_title: "AWS: aws_logs_fake_res"
 description: |-
-  Terraform resource for managing an AWS CloudWatch Logs Index Policy.
+  Terraform resource for managing an AWS CloudWatch Logs Fake Res.
 ---
 <!---
 TIP: A few guiding principles for writing documentation:
@@ -13,16 +13,16 @@ TIP: A few guiding principles for writing documentation:
 4. Document your feature as it exists now; do not mention the future or past if you can help it.
 5. Use accessible and inclusive language.
 --->`
-# Resource: aws_logs_index_policy
+# Resource: aws_logs_fake_res
 
-Terraform resource for managing an AWS CloudWatch Logs Index Policy.
+Terraform resource for managing an AWS CloudWatch Logs Fake Res.
 
 ## Example Usage
 
 ### Basic Usage
 
 ```terraform
-resource "aws_logs_index_policy" "example" {
+resource "aws_logs_fake_res" "example" {
 }
 ```
 
@@ -40,7 +40,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Index Policy. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the Fake Res. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 * `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 ## Timeouts
@@ -53,17 +53,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Index Policy using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Logs Fake Res using the `example_id_arg`. For example:
 
 ```terraform
 import {
-  to = aws_logs_index_policy.example
-  id = "index_policy-id-12345678"
+  to = aws_logs_fake_res.example
+  id = "fake_res-id-12345678"
 }
 ```
 
-Using `terraform import`, import CloudWatch Logs Index Policy using the `example_id_arg`. For example:
+Using `terraform import`, import CloudWatch Logs Fake Res using the `example_id_arg`. For example:
 
 ```console
-% terraform import aws_logs_index_policy.example index_policy-id-12345678
+% terraform import aws_logs_fake_res.example fake_res-id-12345678
 ```
