@@ -284,6 +284,15 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 			emittedFieldName = true
 		}
 
+		if name == "id" && isTopLevelAttribute {
+			fprintf(e.SchemaWriter, `// If the AWS API structs have an "...Id" field, use framework.IDAttribute()`+"\n")
+			if e.IsDataSource {
+				fprintf(e.SchemaWriter, `// Otherwise, use framework.IDAttributeDeprecatedNoReplacement()`+"\n")
+			} else {
+				fprintf(e.SchemaWriter, `// Otherwise, if the "id" attribute is set to a single attribute of the resource, use framework.IDAttributeDeprecatedWithAlternate()`+"\n")
+				fprintf(e.SchemaWriter, `// If the "id" attribute is composed from multiple attributes of the resource, use framework.IDAttributeDeprecatedNoReplacement()`+"\n")
+			}
+		}
 		fprintf(e.SchemaWriter, "%q:", name)
 
 		if isTopLevelAttribute {
