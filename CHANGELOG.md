@@ -9,6 +9,7 @@ FEATURES:
 * **New Data Source:** `aws_servicecatalogappregistry_attribute_group_associations` ([#38306](https://github.com/hashicorp/terraform-provider-aws/issues/38306))
 * **New Resource:** `aws_api_gateway_domain_name_access_association` ([#40566](https://github.com/hashicorp/terraform-provider-aws/issues/40566))
 * **New Resource:** `aws_cloudfront_vpc_origin` ([#40239](https://github.com/hashicorp/terraform-provider-aws/issues/40239))
+* **New Resource:** `aws_memorydb_multi_region_cluster` ([#40376](https://github.com/hashicorp/terraform-provider-aws/issues/40376))
 * **New Resource:** `aws_networkmanager_dx_gateway_attachment` ([#40546](https://github.com/hashicorp/terraform-provider-aws/issues/40546))
 * **New Resource:** `aws_rds_cluster_snapshot_copy` ([#40398](https://github.com/hashicorp/terraform-provider-aws/issues/40398))
 
@@ -20,6 +21,7 @@ ENHANCEMENTS:
 * resource/aws_bedrockagent_agent: Add `agent_collaboration` attribute to configure agent collaboration role ([#40543](https://github.com/hashicorp/terraform-provider-aws/issues/40543))
 * resource/aws_cloudfront_distribution: Add `origin.vpc_origin_config` argument ([#40239](https://github.com/hashicorp/terraform-provider-aws/issues/40239))
 * resource/aws_dx_gateway: Add `arn` attribute ([#40546](https://github.com/hashicorp/terraform-provider-aws/issues/40546))
+* resource/aws_memorydb_cluster: Add `multi_region_cluster_name` argument ([#40376](https://github.com/hashicorp/terraform-provider-aws/issues/40376))
 * resource/aws_networkmanager_attachment_accepter: Add `edge_locations` attribute ([#40546](https://github.com/hashicorp/terraform-provider-aws/issues/40546))
 * resource/aws_resourcegroups_resource: Add import support ([#40579](https://github.com/hashicorp/terraform-provider-aws/issues/40579))
 * resource/aws_vpc_endpoint: Add `service_region` argument ([#40583](https://github.com/hashicorp/terraform-provider-aws/issues/40583))
@@ -35,12 +37,13 @@ BUG FIXES:
 * resource/aws_api_gateway_domain_name: Correct `arn` for private custom domain names ([#40566](https://github.com/hashicorp/terraform-provider-aws/issues/40566))
 * resource/aws_codeconnections_host: Mark `vpc_configuration.tls_certificate` as Optional ([#40574](https://github.com/hashicorp/terraform-provider-aws/issues/40574))
 * resource/aws_elasticache_replication_group: Prevent perpetual diff which triggers resource replacement on `at_rest_encryption_enabled` when `engine` is `valkey`. ([#40514](https://github.com/hashicorp/terraform-provider-aws/issues/40514))
+* resource/aws_lakeformation_permissions: Add support for `IAMPrincipals` principal group ([#38600](https://github.com/hashicorp/terraform-provider-aws/issues/38600))
 * resource/aws_lakeformation_permissions: Fix refreshing state so order is not considered in `permissions` and `permissions_with_grant_option` attributes ([#38047](https://github.com/hashicorp/terraform-provider-aws/issues/38047))
 * resource/aws_lakeformation_resource_lf_tag: Fix panic when resource tries to destroy a LFTag reference that does not exist ([#40584](https://github.com/hashicorp/terraform-provider-aws/issues/40584))
 * resource/aws_lambda_invocation: Set new computed value for `result` attribute when changing `input` attribute, for lifecycle scope "CRUD" ([#34263](https://github.com/hashicorp/terraform-provider-aws/issues/34263))
+* resource/aws_medialive_channel: Added missing `teletext_destination_settings`. ([#33797](https://github.com/hashicorp/terraform-provider-aws/issues/33797))
 * resource/aws_rds_cluster: Fix issue with waiter when modifying `allocated_storage` ([#40601](https://github.com/hashicorp/terraform-provider-aws/issues/40601))
 * resource/aws_resourcegroups_resource: Fix crash when parsing certain ARN formats ([#40579](https://github.com/hashicorp/terraform-provider-aws/issues/40579))
-* resource/medialive: Added missing `teletext_destination_settings`. ([#33797](https://github.com/hashicorp/terraform-provider-aws/issues/33797))
 
 ## 5.81.0 (December 12, 2024)
 
