@@ -31,6 +31,16 @@ func IDAttributeDeprecatedWithAlternate(altPath path.Path) schema.StringAttribut
 	}
 }
 
+func IDAttributeDeprecatedNoReplacement() schema.StringAttribute {
+	return schema.StringAttribute{
+		Computed: true,
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.UseStateForUnknown(),
+		},
+		DeprecationMessage: fmt.Sprintf("This attribute will be removed in a future verion of the provider."),
+	}
+}
+
 func ARNAttributeComputedOnly() schema.StringAttribute {
 	return schema.StringAttribute{
 		Computed: true,
