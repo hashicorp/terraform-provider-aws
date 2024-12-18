@@ -49,6 +49,7 @@ The following arguments are optional:
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `num_replicas_per_shard` - (Optional) The number of replicas to apply to each shard, up to a maximum of 5. Defaults to `1` (i.e. 2 nodes per shard).
 * `num_shards` - (Optional) The number of shards in the cluster. Defaults to `1`.
+* `multi_region_cluster_name` - (Optional) The multi region cluster identifier specified on `aws_memorydb_multi_region_cluster`.
 * `parameter_group_name` - (Optional) The name of the parameter group associated with the cluster.
 * `port` - (Optional, Forces new resource) The port number on which each of the nodes accepts connections. Defaults to `6379`.
 * `security_group_ids` - (Optional) Set of VPC Security Group ID-s to associate with this cluster.
