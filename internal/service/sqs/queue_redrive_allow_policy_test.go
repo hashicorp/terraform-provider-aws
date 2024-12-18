@@ -135,7 +135,7 @@ func TestAccSQSQueueRedriveAllowPolicy_update(t *testing.T) {
 	})
 }
 
-func TestAccSQSQueueRedriveAllowPolicy_by_queue(t *testing.T) {
+func TestAccSQSQueueRedriveAllowPolicy_byQueue(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -146,7 +146,7 @@ func TestAccSQSQueueRedriveAllowPolicy_by_queue(t *testing.T) {
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueRedriveAllowPolicyConfig_by_queue(rName),
+				Config: testAccQueueRedriveAllowPolicyConfig_byQueue(rName),
 			},
 		},
 	})
@@ -199,7 +199,7 @@ resource "aws_sqs_queue_redrive_allow_policy" "test" {
 `, rName)
 }
 
-func testAccQueueRedriveAllowPolicyConfig_by_queue(rName string) string {
+func testAccQueueRedriveAllowPolicyConfig_byQueue(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "test" {
   name = %[1]q
