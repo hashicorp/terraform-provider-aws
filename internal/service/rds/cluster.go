@@ -2050,6 +2050,7 @@ func waitDBClusterUpdated(ctx context.Context, conn *rds.Client, id string, wait
 		clusterStatusRenaming,
 		clusterStatusResettingMasterCredentials,
 		clusterStatusScalingCompute,
+		clusterStatusScalingStorage,
 		clusterStatusUpgrading,
 	}
 	if waitNoPendingModifiedValues {
