@@ -38,8 +38,8 @@ func TestAccResourceGroupsResource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName, &r),
 					resource.TestCheckResourceAttr(resourceName, names.AttrResourceType, "AWS::EC2::Host"),
-					resource.TestCheckResourceAttrPair(resourceName, "group_arn", groupResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, hostResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "group_arn", groupResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, names.AttrResourceARN, hostResourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 				),
 			},
