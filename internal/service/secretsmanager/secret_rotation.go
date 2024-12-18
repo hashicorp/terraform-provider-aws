@@ -233,9 +233,10 @@ func flattenRotationRules(rules *types.RotationRulesType) []interface{} {
 	m := map[string]interface{}{}
 
 	// If ScheduleExpression is set, AutomaticallyAfterDays will be the result of AWS calculating the number of days between rotations
-	if s := rules.ScheduleExpression; s != nil && aws.ToString(s) != "" {
-		m[names.AttrScheduleExpression] = aws.ToString(s)
+	if v := rules.ScheduleExpression; v != nil && aws.ToString(v) != "" {
+		m[names.AttrScheduleExpression] = aws.ToString(v)
 	} else if v := rules.AutomaticallyAfterDays; v != nil && aws.ToInt64(v) != 0 {
+		// Only populate automatically_after_days if schedule_expression is not set, otherwise we won't be able to update the resource
 		m["automatically_after_days"] = int(aws.ToInt64(v))
 	}
 
