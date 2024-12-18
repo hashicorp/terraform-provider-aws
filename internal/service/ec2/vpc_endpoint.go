@@ -279,14 +279,6 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("service_region"); ok {
-		_, err := conn.DescribeVpcEndpointServices(ctx, &ec2.DescribeVpcEndpointServicesInput{
-			ServiceNames:   []string{serviceName},
-			ServiceRegions: []string{v.(string)},
-		})
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 VPC Endpoint (%s): %s", serviceName, err)
-		}
 		input.ServiceRegion = aws.String(v.(string))
 	}
 
