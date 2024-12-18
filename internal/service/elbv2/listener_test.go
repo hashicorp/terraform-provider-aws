@@ -3414,9 +3414,9 @@ resource "aws_lb_listener" "test" {
   }
 
   mutual_authentication {
-    mode            			= "verify"
-    trust_store_arn 			= aws_lb_trust_store.test.arn
-    advertise_ca_subject_names 	= true
+    mode                       = "verify"
+    trust_store_arn            = aws_lb_trust_store.test.arn
+    advertise_ca_subject_names = true
   }
 }
 
