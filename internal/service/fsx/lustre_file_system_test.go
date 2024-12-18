@@ -839,7 +839,7 @@ func TestAccFSxLustreFileSystem_deploymentTypePersistent2_perUnitStorageThroughp
 
 func TestAccFSxLustreFileSystem_efaEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var efa_enabled_filesystem awstypes.FileSystem
+	var v awstypes.FileSystem
 	resourceName := "aws_fsx_lustre_file_system.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -852,7 +852,7 @@ func TestAccFSxLustreFileSystem_efaEnabled(t *testing.T) {
 			{
 				Config: testAccLustreFileSystemConfig_efaEnabled(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLustreFileSystemExists(ctx, resourceName, &efa_enabled_filesystem),
+					testAccCheckLustreFileSystemExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "efa_enabled", acctest.CtTrue),
 				),
 			},
@@ -1991,17 +1991,17 @@ resource "aws_security_group" "test" {
   vpc_id = aws_vpc.test.id
 
   ingress {
-    from_port  = 0
-    to_port  = 0
-    protocol = "-1"
-    self     = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   tags = {
