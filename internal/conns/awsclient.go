@@ -98,6 +98,16 @@ func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string
 	return fmt.Sprintf("%s.%s", prefix, c.DNSSuffix(ctx))
 }
 
+// GlobalARN returns a global (no Region) ARN for the specified service namespace and resource.
+func (c *AWSClient) GlobalARN(ctx context.Context, service, resource string) string {
+	return arn.ARN{
+		Partition: c.Partition(ctx),
+		Service:   service,
+		AccountID: c.AccountID(ctx),
+		Resource:  resource,
+	}.String()
+}
+
 // RegionalARN returns a regional ARN for the specified service namespace and resource.
 func (c *AWSClient) RegionalARN(ctx context.Context, service, resource string) string {
 	return arn.ARN{
