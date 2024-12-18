@@ -67,11 +67,27 @@ func DataSourceSchemaFromResourceSchema(rs map[string]*schema.Schema) map[string
 	return ds
 }
 
-// PolicyDocumentSchemaRequired returns the standard schema for a required JSON policy document.
+// PolicyDocumentSchemaRequired returns the standard schema for a Required JSON policy document.
 var PolicyDocumentSchemaRequired = sync.OnceValue(func() *schema.Schema {
 	return &schema.Schema{
 		Type:                  schema.TypeString,
 		Required:              true,
+		ValidateFunc:          validation.StringIsJSON,
+		DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+		DiffSuppressOnRefresh: true,
+		StateFunc: func(v interface{}) string {
+			json, _ := structure.NormalizeJsonString(v)
+			return json
+		},
+	}
+})
+
+// PolicyDocumentSchemaOptionalComputed returns the standard schema for an Optional+Computed JSON policy document.
+var PolicyDocumentSchemaOptionalComputed = sync.OnceValue(func() *schema.Schema {
+	return &schema.Schema{
+		Type:                  schema.TypeString,
+		Optional:              true,
+		Computed:              true,
 		ValidateFunc:          validation.StringIsJSON,
 		DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 		DiffSuppressOnRefresh: true,
