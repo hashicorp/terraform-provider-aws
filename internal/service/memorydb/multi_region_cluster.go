@@ -87,7 +87,6 @@ func (r *multiRegionClusterResource) Schema(ctx context.Context, request resourc
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"multi_region_cluster_name": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -187,12 +186,10 @@ func (r *multiRegionClusterResource) Create(ctx context.Context, req resource.Cr
 		)
 		return
 	}
-
-	plan.ID = flex.StringToFramework(ctx, out.MultiRegionCluster.MultiRegionClusterName)
-	plan.NumShards = flex.Int32ToFramework(ctx, out.MultiRegionCluster.NumberOfShards)
+	name := aws.ToString(out.MultiRegionCluster.MultiRegionClusterName)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	statusOut, err := waitMultiRegionClusterAvailable(ctx, conn, plan.ID.ValueString(), createTimeout)
+	statusOut, err := waitMultiRegionClusterAvailable(ctx, conn, name, createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionWaitingForCreation, ResNameMultiRegionCluster, plan.MultiRegionClusterName.String(), err),
@@ -205,6 +202,9 @@ func (r *multiRegionClusterResource) Create(ctx context.Context, req resource.Cr
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// Account for field name mismatches between the Create
+	// and Describe data structures
+	plan.NumShards = flex.Int32ToFramework(ctx, statusOut.NumberOfShards)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -218,14 +218,14 @@ func (r *multiRegionClusterResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	out, err := findMultiRegionClusterByName(ctx, conn, state.ID.ValueString())
+	out, err := findMultiRegionClusterByName(ctx, conn, state.MultiRegionClusterName.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionReading, ResNameMultiRegionCluster, state.ID.String(), err),
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionReading, ResNameMultiRegionCluster, state.MultiRegionClusterName.String(), err),
 			err.Error(),
 		)
 		return
@@ -234,7 +234,7 @@ func (r *multiRegionClusterResource) Read(ctx context.Context, req resource.Read
 	suffix, err := suffixAfterHyphen(aws.ToString(out.MultiRegionClusterName))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionSetting, ResNameMultiRegionCluster, state.ID.String(), err),
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionSetting, ResNameMultiRegionCluster, state.MultiRegionClusterName.String(), err),
 			err.Error(),
 		)
 		return
@@ -340,7 +340,7 @@ func (r *multiRegionClusterResource) Update(ctx context.Context, req resource.Up
 	// If update requests were made, make one last call to the update waiter to
 	// retrieve and write the latest status to state
 	if len(updateRequests) > 0 {
-		statusOut, err := waitMultiRegionClusterAvailable(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		statusOut, err := waitMultiRegionClusterAvailable(ctx, conn, plan.MultiRegionClusterName.ValueString(), updateTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.MemoryDB, create.ErrActionWaitingForUpdate, ResNameMultiRegionCluster, plan.MultiRegionClusterName.String(), err),
@@ -369,23 +369,23 @@ func (r *multiRegionClusterResource) Delete(ctx context.Context, req resource.De
 
 	// Before deleting the multi-region cluster, ensure it is ready for deletion.
 	// Removing an `aws_memorydb_cluster` from a multi-region cluster may temporarily block deletion.
-	output, err := findMultiRegionClusterByName(ctx, conn, state.ID.ValueString())
+	output, err := findMultiRegionClusterByName(ctx, conn, state.MultiRegionClusterName.ValueString())
 	if tfresource.NotFound(err) {
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionDeleting, ResNameMultiRegionCluster, state.ID.String(), err),
+			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionDeleting, ResNameMultiRegionCluster, state.MultiRegionClusterName.String(), err),
 			err.Error(),
 		)
 	}
 
 	if aws.ToString(output.Status) != clusterStatusAvailable {
 		deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-		_, err := waitMultiRegionClusterAvailable(ctx, conn, state.ID.ValueString(), deleteTimeout)
+		_, err := waitMultiRegionClusterAvailable(ctx, conn, state.MultiRegionClusterName.ValueString(), deleteTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.MemoryDB, create.ErrActionDeleting, ResNameMultiRegionCluster, state.ID.String(), err),
+				create.ProblemStandardMessage(names.MemoryDB, create.ErrActionDeleting, ResNameMultiRegionCluster, state.MultiRegionClusterName.String(), err),
 				err.Error(),
 			)
 			return
@@ -409,7 +409,7 @@ func (r *multiRegionClusterResource) Delete(ctx context.Context, req resource.De
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitMultiRegionClusterDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	_, err = waitMultiRegionClusterDeleted(ctx, conn, state.MultiRegionClusterName.ValueString(), deleteTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.MemoryDB, create.ErrActionWaitingForDeletion, ResNameMultiRegionCluster, state.MultiRegionClusterName.String(), err),
@@ -420,7 +420,7 @@ func (r *multiRegionClusterResource) Delete(ctx context.Context, req resource.De
 }
 
 func (r *multiRegionClusterResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
+	resource.ImportStatePassthroughID(ctx, path.Root("multi_region_cluster_name"), request, response)
 }
 
 func (r *multiRegionClusterResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
@@ -432,7 +432,6 @@ type multiRegionClusterResourceModel struct {
 	Description                   types.String   `tfsdk:"description"`
 	Engine                        types.String   `tfsdk:"engine"`
 	EngineVersion                 types.String   `tfsdk:"engine_version"`
-	ID                            types.String   `tfsdk:"id"`
 	MultiRegionClusterName        types.String   `tfsdk:"multi_region_cluster_name"`
 	MultiRegionClusterNameSuffix  types.String   `tfsdk:"multi_region_cluster_name_suffix"`
 	MultiRegionParameterGroupName types.String   `tfsdk:"multi_region_parameter_group_name"`

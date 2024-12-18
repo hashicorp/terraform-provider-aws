@@ -56,7 +56,6 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the multi-region cluster.
-* `id` - The name of the multi-region cluster.
 * `multi_region_cluster_name` - The name of the multi-region cluster.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -75,12 +74,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_memorydb_multi_region_cluster.example
-  id = "my-multi-region-cluster"
+  id = "virxk-example"
 }
 ```
 
 Using `terraform import`, import a cluster using the `multi_region_cluster_name`. For example:
 
 ```console
-% terraform import aws_memorydb_multi_region_cluster.example my-multi-region-cluster
+% terraform import aws_memorydb_multi_region_cluster.example virxk-example
 ```

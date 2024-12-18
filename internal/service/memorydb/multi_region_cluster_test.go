@@ -33,7 +33,6 @@ func TestAccMemoryDBMultiRegionCluster_basic(t *testing.T) {
 				Config: testAccMultiRegionClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckMultiRegionClusterExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, names.AttrID),
 					resource.TestCheckResourceAttrSet(resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(resourceName, "multi_region_cluster_name"),
 					resource.TestCheckResourceAttrSet(resourceName, "multi_region_cluster_name_suffix"),
@@ -49,9 +48,11 @@ func TestAccMemoryDBMultiRegionCluster_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMultiRegionClusterImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "multi_region_cluster_name",
 			},
 		},
 	})
@@ -99,9 +100,11 @@ func TestAccMemoryDBMultiRegionCluster_description(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMultiRegionClusterImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "multi_region_cluster_name",
 			},
 		},
 	})
@@ -126,9 +129,11 @@ func TestAccMemoryDBMultiRegionCluster_tlsEnabled(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMultiRegionClusterImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "multi_region_cluster_name",
 			},
 			{
 				Config: testAccMultiRegionClusterConfig_tlsEnabled(rName, false),
@@ -161,9 +166,11 @@ func TestAccMemoryDBMultiRegionCluster_engine(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMultiRegionClusterImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "multi_region_cluster_name",
 			},
 		},
 	})
@@ -189,9 +196,11 @@ func TestAccMemoryDBMultiRegionCluster_engineVersion(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMultiRegionClusterImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "multi_region_cluster_name",
 			},
 		},
 	})
@@ -232,10 +241,12 @@ func TestAccMemoryDBMultiRegionCluster_updateStrategy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"update_strategy"},
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMultiRegionClusterImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "multi_region_cluster_name",
+				ImportStateVerifyIgnore:              []string{"update_strategy"},
 			},
 		},
 	})
@@ -260,9 +271,11 @@ func TestAccMemoryDBMultiRegionCluster_numShards(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMultiRegionClusterImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "multi_region_cluster_name",
 			},
 			{
 				Config: testAccMultiRegionClusterConfig_numShards(rName, 3),
@@ -294,9 +307,11 @@ func TestAccMemoryDBMultiRegionCluster_nodeType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMultiRegionClusterImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "multi_region_cluster_name",
 			},
 			{
 				Config: testAccMultiRegionClusterConfig_nodeType(rName, "db.r7g.2xlarge"),
@@ -328,9 +343,11 @@ func TestAccMemoryDBMultiRegionCluster_parameterGroup(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMultiRegionClusterImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "multi_region_cluster_name",
 			},
 		},
 	})
@@ -356,9 +373,11 @@ func TestAccMemoryDBMultiRegionCluster_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccMultiRegionClusterImportStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: "multi_region_cluster_name",
 			},
 			{
 				Config: testAccMultiRegionClusterConfig_tags2(rName, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
@@ -388,13 +407,13 @@ func testAccCheckMultiRegionClusterExists(ctx context.Context, n string) resourc
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MemoryDB Multi Region Cluster ID is set")
+		name := rs.Primary.Attributes["multi_region_cluster_name"]
+		if name == "" {
+			return fmt.Errorf("No MemoryDB Multi Region Cluster Name is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MemoryDBClient(ctx)
-
-		_, err := tfmemorydb.FindMultiRegionClusterByName(ctx, conn, rs.Primary.Attributes["multi_region_cluster_name"])
+		_, err := tfmemorydb.FindMultiRegionClusterByName(ctx, conn, name)
 
 		return err
 	}
@@ -409,8 +428,9 @@ func testAccCheckMultiRegionClusterDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			_, err := tfmemorydb.FindMultiRegionClusterByName(ctx, conn, rs.Primary.Attributes["multi_region_cluster_name"])
+			name := rs.Primary.Attributes["multi_region_cluster_name"]
 
+			_, err := tfmemorydb.FindMultiRegionClusterByName(ctx, conn, name)
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -419,10 +439,21 @@ func testAccCheckMultiRegionClusterDestroy(ctx context.Context) resource.TestChe
 				return err
 			}
 
-			return fmt.Errorf("MemoryDB Multi Region Cluster %s still exists", rs.Primary.ID)
+			return fmt.Errorf("MemoryDB Multi Region Cluster %s still exists", name)
 		}
 
 		return nil
+	}
+}
+
+func testAccMultiRegionClusterImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["multi_region_cluster_name"], nil
 	}
 }
 
