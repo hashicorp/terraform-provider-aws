@@ -187,7 +187,7 @@ func (r *multiRegionClusterResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 	name := aws.ToString(out.MultiRegionCluster.MultiRegionClusterName)
-
+        resp.State.SetAttribute(ctx, path.Root("multi_region_cluster_name"), name)
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	statusOut, err := waitMultiRegionClusterAvailable(ctx, conn, name, createTimeout)
 	if err != nil {
