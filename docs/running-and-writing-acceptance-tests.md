@@ -1154,7 +1154,7 @@ func sweepThings(region string) error {
 
   input := example.ListThingsInput{}
 
-  err = conn.ListThingsPages(ctx, input, func(page *example.ListThingsOutput, lastPage bool) bool {
+  err = conn.ListThingsPages(ctx, &input, func(page *example.ListThingsOutput, lastPage bool) bool {
     if page == nil {
       return !lastPage
     }
