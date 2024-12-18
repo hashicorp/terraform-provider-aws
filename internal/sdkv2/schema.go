@@ -5,9 +5,6 @@ package sdkv2
 
 import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // Adapted from https://github.com/hashicorp/terraform-provider-google/google/datasource_helpers.go. Thanks!
@@ -63,23 +60,4 @@ func DataSourceSchemaFromResourceSchema(rs map[string]*schema.Schema) map[string
 	}
 
 	return ds
-}
-
-// PolicyDocumentSchema returns the standard schema for a JSON policy document.
-func PolicyDocumentSchema(required bool) *schema.Schema {
-	schema := &schema.Schema{
-		Type:                  schema.TypeString,
-		ValidateFunc:          validation.StringIsJSON,
-		DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-		DiffSuppressOnRefresh: true,
-		StateFunc: func(v interface{}) string {
-			json, _ := structure.NormalizeJsonString(v)
-			return json
-		},
-	}
-	if required {
-		schema.Required = true
-	}
-
-	return schema
 }
