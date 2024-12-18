@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/attrmap"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -110,14 +111,43 @@ var (
 			ForceNew:      true,
 			ConflictsWith: []string{names.AttrName},
 		},
-		names.AttrPolicy: sdkv2.PolicyDocumentSchemaOptionalComputed(),
+		names.AttrPolicy: {
+			Type:                  schema.TypeString,
+			Optional:              true,
+			Computed:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+			DiffSuppressOnRefresh: true,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
 		"receive_wait_time_seconds": {
 			Type:     schema.TypeInt,
 			Optional: true,
 			Default:  defaultQueueReceiveMessageWaitTimeSeconds,
 		},
-		"redrive_allow_policy": sdkv2.PolicyDocumentSchemaOptionalComputed(),
-		"redrive_policy":       sdkv2.PolicyDocumentSchemaOptionalComputed(),
+		"redrive_allow_policy": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringIsJSON,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
+		"redrive_policy": {
+			Type:         schema.TypeString,
+			Optional:     true,
+			Computed:     true,
+			ValidateFunc: validation.StringIsJSON,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
 		"sqs_managed_sse_enabled": {
 			Type:          schema.TypeBool,
 			Optional:      true,
