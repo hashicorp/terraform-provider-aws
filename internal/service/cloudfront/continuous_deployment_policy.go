@@ -271,7 +271,9 @@ func (r *continuousDeploymentPolicyResource) Delete(ctx context.Context, request
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError("deleting CloudFront Continuous Deployment Policy", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Continuous Deployment Policy (%s)", data.ID.ValueString()), err.Error())
+
+		return
 	}
 
 	input := &cloudfront.DeleteContinuousDeploymentPolicyInput{
@@ -293,7 +295,9 @@ func (r *continuousDeploymentPolicyResource) Delete(ctx context.Context, request
 		}
 
 		if err != nil {
-			response.Diagnostics.AddError("deleting CloudFront Continuous Deployment Policy", err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Continuous Deployment Policy (%s)", data.ID.ValueString()), err.Error())
+
+			return
 		}
 
 		input.IfMatch = aws.String(etag)
@@ -316,7 +320,7 @@ func cdpETag(ctx context.Context, conn *cloudfront.Client, id string) (string, e
 	output, err := findContinuousDeploymentPolicyByID(ctx, conn, id)
 
 	if err != nil {
-		return "", fmt.Errorf("reading CloudFront Continuous Deployment Policy (%s): %w", id, err)
+		return "", err
 	}
 
 	return aws.ToString(output.ETag), nil

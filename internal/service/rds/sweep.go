@@ -379,10 +379,10 @@ func sweepInstances(region string) error {
 			case "docdb", "neptune":
 				// These engines are handled by their respective services' sweepers.
 				continue
-			default:
+			case InstanceEngineMySQL:
 				// "InvalidParameterValue: Deleting cluster instances isn't supported for DB engine mysql".
-				if v.DBClusterIdentifier != nil {
-					log.Printf("[INFO] Skipping RDS DB Instance %s", id)
+				if clusterID := aws.ToString(v.DBClusterIdentifier); clusterID != "" {
+					log.Printf("[INFO] Skipping RDS DB Instance %s: DBClusterIdentifier=%s", id, clusterID)
 					continue
 				}
 			}

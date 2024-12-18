@@ -42,6 +42,7 @@ func TestAccVPCEndpointDataSource_gatewayBasic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "route_table_ids.#", resourceName, "route_table_ids.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "security_group_ids.#", resourceName, "security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrServiceName, resourceName, names.AttrServiceName),
+					resource.TestCheckResourceAttrPair(datasourceName, "service_region", resourceName, "service_region"),
 					resource.TestCheckResourceAttrPair(datasourceName, names.AttrState, resourceName, names.AttrState),
 					resource.TestCheckResourceAttrPair(datasourceName, "subnet_ids.#", resourceName, "subnet_ids.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, acctest.CtTagsPercent, resourceName, acctest.CtTagsPercent),

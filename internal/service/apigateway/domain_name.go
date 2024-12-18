@@ -278,7 +278,11 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, domainNameARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	if output.DomainNameArn != nil { // nosemgrep: ci.helper-schema-ResourceData-Set-extraneous-nil-check
+		d.Set(names.AttrARN, output.DomainNameArn)
+	} else {
+		d.Set(names.AttrARN, domainNameARN(ctx, meta.(*conns.AWSClient), d.Id()))
+	}
 	d.Set(names.AttrCertificateARN, output.CertificateArn)
 	d.Set("certificate_name", output.CertificateName)
 	if output.CertificateUploadDate != nil {

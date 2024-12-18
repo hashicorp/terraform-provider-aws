@@ -157,6 +157,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	"github.com/aws/aws-sdk-go-v2/service/mediastore"
 	"github.com/aws/aws-sdk-go-v2/service/memorydb"
+	"github.com/aws/aws-sdk-go-v2/service/mgn"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
 	"github.com/aws/aws-sdk-go-v2/service/mwaa"
 	"github.com/aws/aws-sdk-go-v2/service/neptune"
@@ -872,6 +873,10 @@ func (c *AWSClient) MediaStoreClient(ctx context.Context) *mediastore.Client {
 
 func (c *AWSClient) MemoryDBClient(ctx context.Context) *memorydb.Client {
 	return errs.Must(client[*memorydb.Client](ctx, c, names.MemoryDB, make(map[string]any)))
+}
+
+func (c *AWSClient) MgnClient(ctx context.Context) *mgn.Client {
+	return errs.Must(client[*mgn.Client](ctx, c, names.Mgn, make(map[string]any)))
 }
 
 func (c *AWSClient) NeptuneClient(ctx context.Context) *neptune.Client {
