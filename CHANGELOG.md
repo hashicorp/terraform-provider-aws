@@ -21,6 +21,7 @@ ENHANCEMENTS:
 * resource/aws_bedrockagent_agent: Add `agent_collaboration` attribute to configure agent collaboration role ([#40543](https://github.com/hashicorp/terraform-provider-aws/issues/40543))
 * resource/aws_cloudfront_distribution: Add `origin.vpc_origin_config` argument ([#40239](https://github.com/hashicorp/terraform-provider-aws/issues/40239))
 * resource/aws_dx_gateway: Add `arn` attribute ([#40546](https://github.com/hashicorp/terraform-provider-aws/issues/40546))
+* resource/aws_fsx_lustre_file_system: Add `efa_enabled` argument ([#40381](https://github.com/hashicorp/terraform-provider-aws/issues/40381))
 * resource/aws_memorydb_cluster: Add `multi_region_cluster_name` argument ([#40376](https://github.com/hashicorp/terraform-provider-aws/issues/40376))
 * resource/aws_networkmanager_attachment_accepter: Add `edge_locations` attribute ([#40546](https://github.com/hashicorp/terraform-provider-aws/issues/40546))
 * resource/aws_resourcegroups_resource: Add import support ([#40579](https://github.com/hashicorp/terraform-provider-aws/issues/40579))
@@ -29,6 +30,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_acmpca_certificate_authority: Ignore `AccessDeniedException: ... is not authorized to perform: acm-pca:GetCertificateAuthorityCsr on resource: ...` errors for RAM-shared CAs ([#39952](https://github.com/hashicorp/terraform-provider-aws/issues/39952))
+* data-source/aws_licensemanager_received_license: Fix `setting entitlements: Invalid address to set: []string{"entitlements", "0", "overage"}` errors ([#40621](https://github.com/hashicorp/terraform-provider-aws/issues/40621))
 * resource/aws_amplify_domain_association: No longer ignores changes to `certificate_settings` when updating. ([#40589](https://github.com/hashicorp/terraform-provider-aws/issues/40589))
 * resource/aws_amplify_domain_association: Prevent "unexpected state" error when setting `certificate_settings.type` to `CUSTOM`. ([#40589](https://github.com/hashicorp/terraform-provider-aws/issues/40589))
 * resource/aws_amplify_domain_association: Prevent `ValidationException` when setting `certificate_settings.type` to `AMPLIFY_MANAGED`. ([#40589](https://github.com/hashicorp/terraform-provider-aws/issues/40589))
@@ -46,6 +48,7 @@ BUG FIXES:
 * resource/aws_resourcegroups_resource: Fix crash when parsing certain ARN formats ([#40579](https://github.com/hashicorp/terraform-provider-aws/issues/40579))
 * resource/aws_secretsmanager_secret_rotation: Fix bug where `automatically_after_days` was not being set properly when `schedule_expression` had been set previously ([#34295](https://github.com/hashicorp/terraform-provider-aws/issues/34295))
 * resource/aws_secretsmanager_secret_rotation: Retry rotation in case it has not yet propagated when previously an error would occur: `InvalidRequestException: A previous rotation isn't complete. That rotation will be reattempted.` ([#34295](https://github.com/hashicorp/terraform-provider-aws/issues/34295))
+* resource/aws_sqs_queue_redrive_allow_policy: Fix perpetual `redrive_allow_policy` diffs ([#40604](https://github.com/hashicorp/terraform-provider-aws/issues/40604))
 
 ## 5.81.0 (December 12, 2024)
 
