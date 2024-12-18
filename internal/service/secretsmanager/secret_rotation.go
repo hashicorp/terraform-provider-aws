@@ -178,7 +178,7 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 		// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
 			return conn.RotateSecret(ctx, input)
-		}, "AccessDeniedException")
+		}, "AccessDeniedException", "InvalidRequestException")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret Rotation (%s): %s", d.Id(), err)
