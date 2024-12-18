@@ -6,8 +6,8 @@ package sqs
 import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_sqs_queue_redrive_allow_policy")
@@ -16,7 +16,7 @@ func resourceQueueRedriveAllowPolicy() *schema.Resource {
 		AttributeName: types.QueueAttributeNameRedriveAllowPolicy,
 		SchemaKey:     "redrive_allow_policy",
 		ToSet: func(old, new string) (string, error) {
-			if json.EqualStrings(old, new) {
+			if verify.JSONBytesEqual([]byte(old), []byte(new)) {
 				return old, nil
 			}
 			return new, nil
