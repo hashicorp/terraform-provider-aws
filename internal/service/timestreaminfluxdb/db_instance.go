@@ -519,6 +519,8 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 		plan.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
 	}
 
+	// Updating tags can leave SecondaryAvailabilityZone unknown, as tags cannot be included in UpdateDbInstanceInput above.
+	// To get around this, if SecondaryAvailabilityZone is unknown after an update, set it to its previous value.
 	if plan.SecondaryAvailabilityZone.IsUnknown() {
 		plan.SecondaryAvailabilityZone = state.SecondaryAvailabilityZone
 	}
