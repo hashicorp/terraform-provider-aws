@@ -30,7 +30,7 @@ func resourceQueueRedrivePolicy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"redrive_policy": sdkv2.PolicyDocumentSchema(true),
+			"redrive_policy": sdkv2.PolicyDocumentSchemaRequired(),
 		},
 
 		Importer: &schema.ResourceImporter{
