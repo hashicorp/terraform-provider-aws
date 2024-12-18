@@ -129,15 +129,15 @@ func resourceIndexPolicyDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName string) ([]types.IndexPolicy, error) {
+func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName string) (*types.IndexPolicy, error) {
 	input := cloudwatchlogs.DescribeIndexPoliciesInput{
 		LogGroupIdentifiers: []string{logGroupName},
 	}
 
 	ip, err := conn.DescribeIndexPolicies(ctx, &input)
 	if err != nil {
-		return nil, err
+		return &types.IndexPolicy{}, err
 	}
 
-	return ip.IndexPolicies, nil
+	return &ip.IndexPolicies[0], nil
 }

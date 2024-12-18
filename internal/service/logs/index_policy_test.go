@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,9 +36,10 @@ func TestAccLogsIndexPolicy_basic(t *testing.T) {
 	}
 
 	var indexPolicy types.IndexPolicy
+	var logGroup types.LogGroup
 	resourceName := "aws_cloudwatch_log_index_policy.test"
-	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyDocument := "{\"Fields\":[\"eventName\"]}"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -49,12 +48,11 @@ func TestAccLogsIndexPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckIndexPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexPolicy_basic(rName),
+				Config: testAccIndexPolicyConfig_basic(rName, policyDocument),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckIndexPolicyExists(ctx, resourceName, &indexPolicy),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrLogGroupName, logGroupResourceName, names.AttrName),
-					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
-					resource.TestCheckResourceAttr(resourceName, "fields", ""),
+					testAccCheckLogGroupExists(ctx, t, "aws_cloudwatch_log_group.test", &logGroup),
+					testAccCheckIndexPolicyExists(ctx, t, resourceName, &indexPolicy),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocument),
 				),
 			},
 			{
@@ -69,9 +67,10 @@ func TestAccLogsIndexPolicy_basic(t *testing.T) {
 
 func TestAccLogsIndexPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mf types.IndexPolicy
+	var ip types.IndexPolicy
 	resourceName := "aws_cloudwatch_log_index_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyDocument := "{\"Fields\":[\"eventName\"]}"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -80,9 +79,9 @@ func TestAccLogsIndexPolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckIndexPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIndexPolicyConfig_basic(rName),
+				Config: testAccIndexPolicyConfig_basic(rName, policyDocument),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexPolicyExists(ctx, resourceName, &mf),
+					testAccCheckIndexPolicyExists(ctx, t, resourceName, &ip),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflogs.ResourceIndexPolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -110,44 +109,44 @@ func testAccCheckIndexPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			return fmt.Errorf("CloudWatch Logs Metric Filter still exists: %s", rs.Primary.ID)
+			return fmt.Errorf("CloudWatch Logs Index Policy still exists: %s", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckIndexPolicyExists(ctx context.Context, logGroupName string, indexpolicy []types.IndexPolicy) resource.TestCheckFunc {
+func testAccCheckIndexPolicyExists(ctx context.Context, t *testing.T, resourceName string, indexPolicy *types.IndexPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[logGroupName]
+		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, logGroupName, errors.New("not found"))
+			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, resourceName, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, logGroupName, errors.New("not set"))
+			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, resourceName, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).LogsClient(ctx)
 
-		resp, err := tflogs.FindIndexPolicyByLogGroupName(ctx, conn, logGroupName)
+		resp, err := tflogs.FindIndexPolicyByLogGroupName(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName])
 		if err != nil {
 			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, rs.Primary.ID, err)
 		}
 
-		indexpolicy = resp
-
+		*indexPolicy = *resp
 		return nil
 	}
 }
 
-func testAccCheckIndexPolicyNotRecreated(before, after *cloudwatchlogs.DescribeIndexPolicyResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.IndexPolicyId), aws.ToString(after.IndexPolicyId); before != after {
-			return create.Error(names.Logs, create.ErrActionCheckingNotRecreated, tflogs.ResNameIndexPolicy, aws.ToString(before.IndexPolicyId), errors.New("recreated"))
+func testAccIndexPolicyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return nil
+		return rs.Primary.Attributes[names.AttrLogGroupName] + ":" + rs.Primary.Attributes[names.AttrName], nil
 	}
 }
 
@@ -159,7 +158,7 @@ resource "aws_cloudwatch_log_group" "test" {
 
 resource "aws_cloudwatch_log_index_policy" "test" {
   log_group_name = aws_cloudwatch_log_group.test.name
-  policyDocument = %[2]q
+  policy_document = %[2]q
 }
 `, rName, policyDocument)
 }
