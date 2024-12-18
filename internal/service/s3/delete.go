@@ -13,8 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/aws/smithy-go"
+	smithy "github.com/aws/smithy-go"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
@@ -45,13 +46,12 @@ func emptyDirectoryBucket(ctx context.Context, conn *s3.Client, bucket string) (
 
 // forEachObjectVersionsPage calls the specified function for each page returned from the S3 ListObjectVersionsPages API.
 func forEachObjectVersionsPage(ctx context.Context, conn *s3.Client, bucket string, fn func(ctx context.Context, conn *s3.Client, bucket string, page *s3.ListObjectVersionsOutput) (int64, error)) (int64, error) {
-	var nObjects int64
-
 	input := &s3.ListObjectVersionsInput{
 		Bucket:       aws.String(bucket),
 		EncodingType: types.EncodingTypeUrl,
 	}
 	var lastErr error
+	var nObjects int64
 
 	pages := s3.NewListObjectVersionsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -63,19 +63,18 @@ func forEachObjectVersionsPage(ctx context.Context, conn *s3.Client, bucket stri
 
 		// Reverse URL-encoding from requested EncodingType: "url"
 		for i, v := range page.Versions {
-			unescaped, err := url.QueryUnescape(aws.ToString(v.Key))
+			key, err := url.QueryUnescape(aws.ToString(v.Key))
 			if err != nil {
-				return 0, fmt.Errorf("listing S3 bucket (%s) object versions: unescaping object keys: %w", bucket, err)
+				return 0, fmt.Errorf("listing S3 bucket (%s) object versions: unescaping object version key: %w", bucket, err)
 			}
-			page.Versions[i].Key = aws.String(unescaped)
+			page.Versions[i].Key = aws.String(key)
 		}
-
-		for i, dm := range page.DeleteMarkers {
-			unescaped, err := url.QueryUnescape(aws.ToString(dm.Key))
+		for i, v := range page.DeleteMarkers {
+			key, err := url.QueryUnescape(aws.ToString(v.Key))
 			if err != nil {
-				return 0, fmt.Errorf("listing S3 bucket (%s) object versions: unescaping object keys: %w", bucket, err)
+				return 0, fmt.Errorf("listing S3 bucket (%s) object versions: unescaping delete marker key: %w", bucket, err)
 			}
-			page.DeleteMarkers[i].Key = aws.String(unescaped)
+			page.DeleteMarkers[i].Key = aws.String(key)
 		}
 
 		n, err := fn(ctx, conn, bucket, page)
@@ -96,13 +95,12 @@ func forEachObjectVersionsPage(ctx context.Context, conn *s3.Client, bucket stri
 
 // forEachObjectsPage calls the specified function for each page returned from the S3 ListObjectsV2 API.
 func forEachObjectsPage(ctx context.Context, conn *s3.Client, bucket string, fn func(ctx context.Context, conn *s3.Client, bucket string, page *s3.ListObjectsV2Output) (int64, error)) (int64, error) {
-	var nObjects int64
-
 	input := &s3.ListObjectsV2Input{
 		Bucket:       aws.String(bucket),
 		EncodingType: types.EncodingTypeUrl,
 	}
 	var lastErr error
+	var nObjects int64
 
 	pages := s3.NewListObjectsV2Paginator(conn, input)
 	for pages.HasMorePages() {
@@ -113,12 +111,12 @@ func forEachObjectsPage(ctx context.Context, conn *s3.Client, bucket string, fn 
 		}
 
 		// Reverse URL-encoding from requested EncodingType: "url"
-		for i, c := range page.Contents {
-			unescaped, err := url.QueryUnescape(aws.ToString(c.Key))
+		for i, v := range page.Contents {
+			key, err := url.QueryUnescape(aws.ToString(v.Key))
 			if err != nil {
-				return 0, fmt.Errorf("listing S3 bucket (%s) object: unescaping object keys: %w", bucket, err)
+				return 0, fmt.Errorf("listing S3 bucket (%s) object: unescaping object key: %w", bucket, err)
 			}
-			page.Contents[i].Key = aws.String(unescaped)
+			page.Contents[i].Key = aws.String(key)
 		}
 
 		n, err := fn(ctx, conn, bucket, page)
@@ -189,7 +187,7 @@ func deletePage(ctx context.Context, conn *s3.Client, bucket string, force bool,
 	// Keys with characters outside the valid XML character set cannot be deleted by bulk DeleteObjects, and must be deleted individually
 	// using DeleteObject.
 	for _, v := range toDelete {
-		if keyInXmlCharacterRange(aws.ToString(v.Key)) {
+		if keyInXMLCharacterRange(aws.ToString(v.Key)) {
 			toDeleteBulk = append(toDeleteBulk, v)
 		} else {
 			toDeleteSingly = append(toDeleteSingly, v)
@@ -201,28 +199,27 @@ func deletePage(ctx context.Context, conn *s3.Client, bucket string, force bool,
 
 	for _, v := range toDeleteSingly {
 		key := aws.ToString(v.Key)
-		versionId := aws.ToString(v.VersionId)
+		versionID := aws.ToString(v.VersionId)
 
-		err := deleteObjectVersion(ctx, conn, bucket, key, versionId, force)
+		err := deleteObjectVersion(ctx, conn, bucket, key, versionID, force)
 		if err == nil {
 			nObjects++
 			continue
 		}
 
-		if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-			return int64(len(toDelete)), nil
-		}
-
-		var apiErr smithy.APIError
-		if errors.As(err, &apiErr) {
-			outputErrs = append(outputErrs, types.Error{
-				Code:      aws.String(apiErr.ErrorCode()),
-				Key:       v.Key,
-				VersionId: v.VersionId,
-			})
+		if err, ok := errs.As[smithy.APIError](err); ok {
+			if errorCode := err.ErrorCode(); errorCode == errCodeNoSuchBucket {
+				return int64(len(toDelete)), nil
+			} else {
+				outputErrs = append(outputErrs, types.Error{
+					Code:      aws.String(errorCode),
+					Key:       aws.String(key),
+					VersionId: aws.String(versionID),
+				})
+			}
 		} else {
 			typeErr := fmt.Errorf("unexpected error type: %w", err)
-			return nObjects, newObjectVersionError(key, versionId, typeErr)
+			return nObjects, newObjectVersionError(key, versionID, typeErr)
 		}
 	}
 
@@ -263,15 +260,16 @@ func deletePage(ctx context.Context, conn *s3.Client, bucket string, force bool,
 		if force && code == errCodeAccessDenied {
 			key := aws.ToString(v.Key)
 			versionID := aws.ToString(v.VersionId)
-
-			_, err := conn.PutObjectLegalHold(ctx, &s3.PutObjectLegalHoldInput{
-				Bucket:    aws.String(bucket),
-				Key:       aws.String(key),
-				VersionId: aws.String(versionID),
+			input := &s3.PutObjectLegalHoldInput{
+				Bucket: aws.String(bucket),
+				Key:    aws.String(key),
 				LegalHold: &types.ObjectLockLegalHold{
 					Status: types.ObjectLockLegalHoldStatusOff,
 				},
-			})
+				VersionId: aws.String(versionID),
+			}
+
+			_, err := conn.PutObjectLegalHold(ctx, input)
 
 			if err != nil {
 				// Add the original error and the new error.
@@ -279,11 +277,13 @@ func deletePage(ctx context.Context, conn *s3.Client, bucket string, force bool,
 				errs = append(errs, fmt.Errorf("removing legal hold: %w", newObjectVersionError(key, versionID, err)))
 			} else {
 				// Attempt to delete the object once the legal hold has been removed.
-				_, err := conn.DeleteObject(ctx, &s3.DeleteObjectInput{
+				input := &s3.DeleteObjectInput{
 					Bucket:    aws.String(bucket),
 					Key:       aws.String(key),
 					VersionId: aws.String(versionID),
-				})
+				}
+
+				_, err := conn.DeleteObject(ctx, input)
 
 				if err != nil {
 					errs = append(errs, fmt.Errorf("deleting: %w", newObjectVersionError(key, versionID, err)))
@@ -335,8 +335,8 @@ func deleteAllObjectVersions(ctx context.Context, conn *s3.Client, bucket, key s
 		Bucket: aws.String(bucket),
 		Prefix: aws.String(key),
 	}
-	var nObjects int64
 	var lastErr error
+	var nObjects int64
 
 	pages := s3.NewListObjectVersionsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -476,7 +476,6 @@ func deleteObjectVersion(ctx context.Context, conn *s3.Client, b, k, v string, f
 		Bucket: aws.String(b),
 		Key:    aws.String(k),
 	}
-
 	if v != "" {
 		input.VersionId = aws.String(v)
 	}
@@ -498,7 +497,7 @@ func deleteObjectVersion(ctx context.Context, conn *s3.Client, b, k, v string, f
 	return err
 }
 
-func keyInXmlCharacterRange(key string) bool {
+func keyInXMLCharacterRange(key string) bool {
 	for _, r := range key {
 		if !(r == 0x09 ||
 			r == 0x0A ||
