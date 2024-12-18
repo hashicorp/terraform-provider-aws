@@ -62,12 +62,29 @@ resource "aws_cloudwatch_log_account_policy" "subscription_filter" {
 }
 ```
 
+### Field Index Policy
+
+```terraform
+resource "aws_cloudwatch_log_account_policy" "field_index" {
+  policy_name = "field-index"
+  policy_type = "FIELD_INDEX_POLICY"
+  policy_document = jsonencode(
+    {
+      Fields = [
+        "field1",
+        "field2"
+      ]
+    }
+  )
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
 
 * `policy_document` - (Required) Text of the account policy. Refer to the [AWS docs](https://docs.aws.amazon.com/cli/latest/reference/logs/put-account-policy.html) for more information.
-* `policy_type` - (Required) Type of account policy. Either `DATA_PROTECTION_POLICY` or `SUBSCRIPTION_FILTER_POLICY`. You can have one account policy per type in an account.
+* `policy_type` - (Required) Type of account policy. One of `DATA_PROTECTION_POLICY`, `SUBSCRIPTION_FILTER_POLICY`, `FIELD_INDEX_POLICY` or `TRANSFORMER_POLICY`. You can have one account policy per type in an account.
 * `policy_name` - (Required) Name of the account policy.
 * `scope` - (Optional) Currently defaults to and only accepts the value: `ALL`.
 * `selection_criteria` - (Optional) - Criteria for applying a subscription filter policy to a selection of log groups. The only allowable criteria selector is `LogGroupName NOT IN []`.
