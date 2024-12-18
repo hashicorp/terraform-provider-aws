@@ -2008,7 +2008,7 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
-	  
+
 resource "aws_fsx_lustre_file_system" "test" {
   security_group_ids          = [aws_security_group.test.id]
   storage_capacity            = 38400
