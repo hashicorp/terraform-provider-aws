@@ -168,7 +168,6 @@ func (r *resourceIndexPolicy) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		// TIP: -- 4. Call the AWS modify/update function
 		out, err := conn.PutIndexPolicy(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -197,14 +196,12 @@ func (r *resourceIndexPolicy) Update(ctx context.Context, req resource.UpdateReq
 func (r *resourceIndexPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().LogsClient(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceIndexPolicyModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a delete input structure
 	input := cloudwatchlogs.DeleteIndexPolicyInput{
 		LogGroupIdentifier: state.LogGroupName.ValueStringPointer(),
 	}
