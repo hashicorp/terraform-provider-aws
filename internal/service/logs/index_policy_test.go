@@ -41,14 +41,13 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
 	// TIP: You will often need to import the package that this test file lives
@@ -150,7 +149,7 @@ func TestAccLogsIndexPolicy_basic(t *testing.T) {
 
 	var indexpolicy cloudwatchlogs.DescribeIndexPolicyResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_logs_index_policy.test"
+	resourceName := "aws_cloudwatch_log_index_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -195,7 +194,7 @@ func TestAccLogsIndexPolicy_disappears(t *testing.T) {
 
 	var indexpolicy cloudwatchlogs.DescribeIndexPolicyResponse
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_logs_index_policy.test"
+	resourceName := "aws_cloudwatch_log_index_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -230,7 +229,7 @@ func testAccCheckIndexPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_logs_index_policy" {
+			if rs.Type != "aws_cloudwatch_log_index_policy" {
 				continue
 			}
 
@@ -303,27 +302,17 @@ func testAccCheckIndexPolicyNotRecreated(before, after *cloudwatchlogs.DescribeI
 
 func testAccIndexPolicyConfig_basic(rName, version string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
+resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
 
-resource "aws_logs_index_policy" "test" {
-  index_policy_name             = %[1]q
-  engine_type             = "ActiveLogs"
-  engine_version          = %[2]q
-  host_instance_type      = "logs.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
+resource "aws_cloudwatch_log_index_policy" "test" {
+  log_group_name = aws_cloudwatch_log_group.test.name
+  policy_document = jsonencode({
+    Fields = [
+		"eventName"
+	]
+  })
 }
 `, rName, version)
 }

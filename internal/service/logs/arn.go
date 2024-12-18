@@ -4,6 +4,7 @@
 package logs
 
 import (
+	"errors"
 	"strings"
 )
 
@@ -14,4 +15,12 @@ const (
 // TrimLogGroupARNWildcardSuffix trims any wilcard suffix from a Log Group ARN.
 func TrimLogGroupARNWildcardSuffix(arn string) string {
 	return strings.TrimSuffix(arn, logGroupARNWildcardSuffix)
+}
+
+func LogGroupArnToName(arn string) (string, error) {
+	parts := strings.SplitN(arn, "log-group:", 2)
+	if len(parts) > 1 {
+		return parts[1], nil
+	}
+	return "", errors.New("invalid log group ARN")
 }

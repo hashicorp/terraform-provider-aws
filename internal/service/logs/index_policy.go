@@ -7,11 +7,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -27,14 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource("aws_cloudwatch_logs_index_policy", name="Index Policy")
+// @FrameworkResource("aws_cloudwatch_log_index_policy", name="Index Policy")
 func newResourceIndexPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIndexPolicy{}
-
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
 	return r, nil
 }
 
@@ -44,11 +37,10 @@ const (
 
 type resourceIndexPolicy struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
 }
 
 func (r *resourceIndexPolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_logs_index_policy"
+	resp.TypeName = "aws_cloudwatch_log_index_policy"
 }
 
 func (r *resourceIndexPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -65,13 +57,6 @@ func (r *resourceIndexPolicy) Schema(ctx context.Context, req resource.SchemaReq
 				Required:    true,
 				Description: "Field index filter policy, in JSON",
 			},
-		},
-		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
@@ -112,7 +97,7 @@ func (r *resourceIndexPolicy) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	// Set resource ID
-	id := fmt.Sprintf("%s:%s", out.IndexPolicy.LogGroupIdentifier, "index-policy")
+	id := fmt.Sprintf("%s:%s", *out.IndexPolicy.LogGroupIdentifier, "index-policy")
 	plan.ID = flex.StringToFramework(ctx, &id)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
@@ -147,7 +132,12 @@ func (r *resourceIndexPolicy) Read(ctx context.Context, req resource.ReadRequest
 	}
 
 	state.ID = flex.StringToFramework(ctx, state.ID.ValueStringPointer())
-	state.LogGroupName = flex.StringToFramework(ctx, out.LogGroupIdentifier)
+
+	logGroupName, err := LogGroupArnToName(*out.LogGroupIdentifier)
+	if err != nil {
+		resp.Diagnostics.AddError("failed to parse log group name", err.Error())
+	}
+	state.LogGroupName = flex.StringToFramework(ctx, &logGroupName)
 	state.PolicyDocument = flex.StringToFramework(ctx, out.PolicyDocument)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
@@ -263,8 +253,7 @@ func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Cli
 }
 
 type resourceIndexPolicyModel struct {
-	ID             types.String   `tfsdk:"id"`
-	LogGroupName   types.String   `tfsdk:"log_group_name"`
-	PolicyDocument types.String   `tfsdk:"policy_document"`
-	Timeouts       timeouts.Value `tfsdk:"timeouts"`
+	ID             types.String `tfsdk:"id"`
+	LogGroupName   types.String `tfsdk:"log_group_name"`
+	PolicyDocument types.String `tfsdk:"policy_document"`
 }
