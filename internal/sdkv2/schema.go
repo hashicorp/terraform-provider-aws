@@ -4,8 +4,6 @@
 package sdkv2
 
 import (
-	"sync"
-
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -67,11 +65,10 @@ func DataSourceSchemaFromResourceSchema(rs map[string]*schema.Schema) map[string
 	return ds
 }
 
-// PolicyDocumentSchemaRequired returns the standard schema for a required JSON policy document.
-var PolicyDocumentSchemaRequired = sync.OnceValue(func() *schema.Schema {
-	return &schema.Schema{
+// PolicyDocumentSchema returns the standard schema for a JSON policy document.
+func PolicyDocumentSchema(required bool) *schema.Schema {
+	schema := &schema.Schema{
 		Type:                  schema.TypeString,
-		Required:              true,
 		ValidateFunc:          validation.StringIsJSON,
 		DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 		DiffSuppressOnRefresh: true,
@@ -80,4 +77,9 @@ var PolicyDocumentSchemaRequired = sync.OnceValue(func() *schema.Schema {
 			return json
 		},
 	}
-})
+	if required {
+		schema.Required = true
+	}
+
+	return schema
+}

@@ -34,7 +34,7 @@ func resourceQueuePolicy() *schema.Resource {
 		SchemaVersion: 1,
 
 		Schema: map[string]*schema.Schema{
-			names.AttrPolicy: sdkv2.PolicyDocumentSchemaRequired(),
+			names.AttrPolicy: sdkv2.PolicyDocumentSchema(true),
 			"queue_url": {
 				Type:     schema.TypeString,
 				Required: true,
