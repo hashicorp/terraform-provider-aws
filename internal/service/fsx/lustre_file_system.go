@@ -120,8 +120,8 @@ func resourceLustreFileSystem() *schema.Resource {
 			"efa_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
-				Default:  false,
 			},
 			"export_path": {
 				Type:     schema.TypeString,
