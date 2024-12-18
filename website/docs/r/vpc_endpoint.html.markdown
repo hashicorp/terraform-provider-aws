@@ -144,6 +144,7 @@ Defaults to `false`.
 * `dns_options` - (Optional) The DNS options for the endpoint. See dns_options below.
 * `ip_address_type` - (Optional) The IP address type for the endpoint. Valid values are `ipv4`, `dualstack`, and `ipv6`.
 * `route_table_ids` - (Optional) One or more route table IDs. Applicable for endpoints of type `Gateway`.
+* `service_region` - (Optional) - The AWS region of the VPC Endpoint Service. If specified, the VPC endpoint will connect to the service in the provided region. Applicable for endpoints of type `Interface`.
 * `subnet_configuration` - (Optional) Subnet configuration for the endpoint, used to select specific IPv4 and/or IPv6 addresses to the endpoint. See subnet_configuration below.
 * `subnet_ids` - (Optional) The ID of one or more subnets in which to create a network interface for the endpoint. Applicable for endpoints of type `GatewayLoadBalancer` and `Interface`. Interface type endpoints cannot function without being assigned to a subnet.
 * `security_group_ids` - (Optional) The ID of one or more security groups to associate with the network interface. Applicable for endpoints of type `Interface`.
