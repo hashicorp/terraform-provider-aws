@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_dataexchange_job
+resource/aws_dataexchange_event_action
+```
