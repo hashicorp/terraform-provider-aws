@@ -103,6 +103,9 @@ jobs:
           EOF
 
       - name: Initialize the AWS Provider
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_wrapper: false
         run: terraform init -upgrade
 
       - name: Send Slack Notification Upon Failure
