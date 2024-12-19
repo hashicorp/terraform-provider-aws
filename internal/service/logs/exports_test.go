@@ -18,16 +18,17 @@ var (
 	ResourceStream               = resourceStream
 	ResourceSubscriptionFilter   = resourceSubscriptionFilter
 
-	FindAccountPolicyByTwoPartKey      = findAccountPolicyByTwoPartKey
-	FindDestinationByName              = findDestinationByName
-	FindLogAnomalyDetectorByARN        = findLogAnomalyDetectorByARN
-	FindLogGroupByName                 = findLogGroupByName
-	FindLogStreamByTwoPartKey          = findLogStreamByTwoPartKey // nosemgrep:ci.logs-in-var-name
-	FindMetricFilterByTwoPartKey       = findMetricFilterByTwoPartKey
-	FindIndexPolicyByLogGroupName      = findIndexPolicyByLogGroupName
-	FindQueryDefinitionByTwoPartKey    = findQueryDefinitionByTwoPartKey
-	FindResourcePolicyByName           = findResourcePolicyByName
-	FindSubscriptionFilterByTwoPartKey = findSubscriptionFilterByTwoPartKey
+	FindAccountPolicyByTwoPartKey          = findAccountPolicyByTwoPartKey
+	FindDataProtectionPolicyByLogGroupName = findDataProtectionPolicyByLogGroupName
+	FindDestinationByName                  = findDestinationByName
+	FindLogAnomalyDetectorByARN            = findLogAnomalyDetectorByARN
+	FindLogGroupByName                     = findLogGroupByName
+	FindLogStreamByTwoPartKey              = findLogStreamByTwoPartKey // nosemgrep:ci.logs-in-var-name
+	FindMetricFilterByTwoPartKey           = findMetricFilterByTwoPartKey
+	FindIndexPolicyByLogGroupName          = findIndexPolicyByLogGroupName
+	FindQueryDefinitionByTwoPartKey        = findQueryDefinitionByTwoPartKey
+	FindResourcePolicyByName               = findResourcePolicyByName
+	FindSubscriptionFilterByTwoPartKey     = findSubscriptionFilterByTwoPartKey
 
 	ValidLogGroupName                      = validLogGroupName
 	ValidLogGroupNamePrefix                = validLogGroupNamePrefix
