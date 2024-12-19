@@ -21,7 +21,7 @@ import (
 func TestAccLogsIndexPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	logGroupName := "/aws/testacc/index-policy-" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyDocument := `{Fields:[\"eventName\"]}`
+	policyDocument := `{"Fields":["eventName"]}`
 	resourceName := "aws_cloudwatch_log_index_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -40,9 +40,11 @@ func TestAccLogsIndexPolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:                         resourceName,
+				ImportState:                          true,
+				ImportStateIdFunc:                    testAccIndexPolicyStateIdFunc(resourceName),
+				ImportStateVerify:                    true,
+				ImportStateVerifyIdentifierAttribute: names.AttrLogGroupName,
 			},
 		},
 	})
@@ -51,7 +53,7 @@ func TestAccLogsIndexPolicy_basic(t *testing.T) {
 func TestAccLogsIndexPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	logGroupName := "/aws/testacc/index-policy-" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyDocument := `{Fields:[\"eventName\"]}`
+	policyDocument := `{"Fields":["eventName"]}`
 	resourceName := "aws_cloudwatch_log_index_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -78,8 +80,8 @@ func TestAccLogsIndexPolicy_disappears(t *testing.T) {
 func TestAccLogsIndexPolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	logGroupName := "/aws/testacc/index-policy-" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyDocument1 := `{Fields:[\"eventName\"]}`
-	policyDocument2 := `{Fields:[\"requestId\"]}`
+	policyDocument1 := `{"Fields":["eventName"]}`
+	policyDocument2 := `{"Fields": ["eventName", "requestId"]}`
 	resourceName := "aws_cloudwatch_log_index_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -97,11 +99,6 @@ func TestAccLogsIndexPolicy_update(t *testing.T) {
 					testAccCheckIndexPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocument1),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccIndexPolicyConfig_basic(logGroupName, policyDocument2),
@@ -149,9 +146,20 @@ func testAccCheckIndexPolicyExists(ctx context.Context, n string) resource.TestC
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		_, err := tflogs.FindIndexPolicyByLogGroupName(ctx, conn, rs.Primary.ID)
+		_, err := tflogs.FindIndexPolicyByLogGroupName(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName])
 
 		return err
+	}
+}
+
+func testAccIndexPolicyStateIdFunc(n string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", n)
+		}
+
+		return rs.Primary.Attributes[names.AttrLogGroupName], nil
 	}
 }
 
@@ -163,7 +171,7 @@ resource "aws_cloudwatch_log_group" "test" {
 
 resource "aws_cloudwatch_log_index_policy" "test" {
   log_group_name  = aws_cloudwatch_log_group.test.name
-  policy_document = jsonencode(%[2]q)
+  policy_document = %[2]q
 }
 `, logGroupName, policyDocument)
 }

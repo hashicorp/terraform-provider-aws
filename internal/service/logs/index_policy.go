@@ -222,9 +222,10 @@ type indexPolicyResourceModel struct {
 }
 
 func logGroupIdentifierToName(identifier string) string {
-	if !arn.IsARN(identifier) {
+	arn, err := arn.Parse(identifier)
+	if err != nil {
 		return identifier
 	}
 
-	return strings.TrimPrefix(identifier, "log-group:")
+	return strings.TrimPrefix(arn.Resource, "log-group:")
 }
