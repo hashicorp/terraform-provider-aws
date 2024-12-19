@@ -16,6 +16,7 @@ var (
 	ResourceStream               = resourceStream
 	ResourceSubscriptionFilter   = resourceSubscriptionFilter
 	ResourceAnomalyDetector      = newResourceAnomalyDetector
+	ResourceIndexPolicy          = newResourceIndexPolicy
 
 	FindAccountPolicyByTwoPartKey      = findAccountPolicyByTwoPartKey
 	FindDestinationByName              = findDestinationByName
