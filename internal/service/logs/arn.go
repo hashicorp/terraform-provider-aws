@@ -17,7 +17,7 @@ func TrimLogGroupARNWildcardSuffix(arn string) string {
 	return strings.TrimSuffix(arn, logGroupARNWildcardSuffix)
 }
 
-func logGroupArnToName(arn string) (string, error) {
+func logGroupARNToName(arn string) (string, error) {
 	parts := strings.SplitN(arn, "log-group:", 2)
 	if len(parts) > 1 {
 		return parts[1], nil

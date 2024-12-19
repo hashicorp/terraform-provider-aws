@@ -136,7 +136,7 @@ func (r *resourceIndexPolicy) Read(ctx context.Context, req resource.ReadRequest
 
 	//state.ID = flex.StringToFramework(ctx, state.ID.ValueStringPointer())
 
-	logGroupName, err := logGroupArnToName(*out.LogGroupIdentifier)
+	logGroupName, err := logGroupARNToName(*out.LogGroupIdentifier)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to parse log group name", err.Error())
 	}
