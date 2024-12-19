@@ -1,4 +1,9 @@
 ## 5.83.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_autoscaling_group: Add `availability_zone_distribution` argument ([#40634](https://github.com/hashicorp/terraform-provider-aws/issues/40634))
+
 ## 5.82.0 (December 19, 2024)
 
 NOTES:
