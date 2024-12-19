@@ -321,7 +321,7 @@ func resourceDeliveryStream() *schema.Resource {
 					Elem:     s3ConfigurationElem(),
 				}
 			}
-			secretsManagerConfigurationSchema := func() *schema.Schema {
+			secretsManagerConfigurationSchema := func(forceNew bool) *schema.Schema {
 				return &schema.Schema{
 					Type:     schema.TypeList,
 					MaxItems: 1,
@@ -333,7 +333,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Type:     schema.TypeBool,
 								Optional: true,
 								Computed: true,
-								ForceNew: true,
+								ForceNew: forceNew,
 							},
 							"secret_arn": {
 								Type:         schema.TypeString,
@@ -840,7 +840,7 @@ func resourceDeliveryStream() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[types.HttpEndpointS3BackupMode](),
 							},
 							"s3_configuration":              s3ConfigurationSchema(),
-							"secrets_manager_configuration": secretsManagerConfigurationSchema(),
+							"secrets_manager_configuration": secretsManagerConfigurationSchema(true),
 							names.AttrURL: {
 								Type:     schema.TypeString,
 								Required: true,
@@ -1215,7 +1215,7 @@ func resourceDeliveryStream() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[types.RedshiftS3BackupMode](),
 							},
 							"s3_configuration":              s3ConfigurationSchema(),
-							"secrets_manager_configuration": secretsManagerConfigurationSchema(),
+							"secrets_manager_configuration": secretsManagerConfigurationSchema(true),
 							names.AttrUsername: {
 								Type:     schema.TypeString,
 								Optional: true,
@@ -1331,7 +1331,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Required:     true,
 								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
-							"secrets_manager_configuration": secretsManagerConfigurationSchema(),
+							"secrets_manager_configuration": secretsManagerConfigurationSchema(true),
 							"snowflake_role_configuration": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -1431,7 +1431,7 @@ func resourceDeliveryStream() *schema.Resource {
 								ValidateDiagFunc: enum.Validate[types.SplunkS3BackupMode](),
 							},
 							"s3_configuration":              s3ConfigurationSchema(),
-							"secrets_manager_configuration": secretsManagerConfigurationSchema(),
+							"secrets_manager_configuration": secretsManagerConfigurationSchema(false),
 						},
 					},
 				},
