@@ -6,6 +6,7 @@ package timestreaminfluxdb
 import (
 	"context"
 	"errors"
+	"math"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -182,6 +183,18 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					Amazon Timestream for InfluxDB API and CLI commands. This name will also be a 
 					prefix included in the endpoint. DB instance names must be unique per customer 
 					and per region.`,
+			},
+			"network_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.NetworkType](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: `Specifies whether the networkType of the Timestream for InfluxDB instance is 
+					IPV4, which can communicate over IPv4 protocol only, or DUAL, which can communicate 
+					over both IPv4 and IPv6 protocols.`,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -487,6 +500,21 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 		}
 
 		if !plan.Port.Equal(state.Port) {
+			if plan.Port.ValueInt64() > math.MaxInt32 {
+				err := errors.New("port was greater than the maximum allowed value for int32")
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
+					err.Error(),
+				)
+				return
+			} else if plan.Port.ValueInt64() < math.MinInt32 {
+				err := errors.New("port was less than the minimum allowed value for int32")
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
+					err.Error(),
+				)
+				return
+			}
 			in.Port = aws.Int32(int32(plan.Port.ValueInt64()))
 		}
 
@@ -674,6 +702,7 @@ type resourceDBInstanceData struct {
 	InfluxAuthParametersSecretARN types.String                                                  `tfsdk:"influx_auth_parameters_secret_arn"`
 	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[logDeliveryConfigurationData] `tfsdk:"log_delivery_configuration"`
 	Name                          types.String                                                  `tfsdk:"name"`
+	NetworkType                   fwtypes.StringEnum[awstypes.NetworkType]                      `tfsdk:"network_type"`
 	Organization                  types.String                                                  `tfsdk:"organization"`
 	Password                      types.String                                                  `tfsdk:"password"`
 	Port                          types.Int64                                                   `tfsdk:"port"`

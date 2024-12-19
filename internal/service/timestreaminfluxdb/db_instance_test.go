@@ -52,6 +52,8 @@ func TestAccTimestreamInfluxDBDBInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "db_storage_type", string(awstypes.DbStorageTypeInfluxIoIncludedT1)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_type", string(awstypes.DeploymentTypeSingleAz)),
 					resource.TestCheckResourceAttrSet(resourceName, "influx_auth_parameters_secret_arn"),
+					resource.TestCheckResourceAttr(resourceName, "network_type", string(awstypes.NetworkTypeIpv4)),
+					resource.TestCheckResourceAttr(resourceName, "port", "8086"),
 					resource.TestCheckResourceAttr(resourceName, names.AttrPubliclyAccessible, acctest.CtFalse),
 				),
 			},
