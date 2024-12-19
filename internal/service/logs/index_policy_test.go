@@ -300,7 +300,7 @@ func testAccCheckIndexPolicyNotRecreated(before, after *cloudwatchlogs.DescribeI
 	}
 }
 
-func testAccIndexPolicyConfig_basic(rName, version string) string {
+func testAccIndexPolicyConfig_basic(logGroupName string, policyDocument string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -308,11 +308,7 @@ resource "aws_cloudwatch_log_group" "test" {
 
 resource "aws_cloudwatch_log_index_policy" "test" {
   log_group_name = aws_cloudwatch_log_group.test.name
-  policy_document = jsonencode({
-    Fields = [
-		"eventName"
-	]
-  })
+  policy_document = jsonencode(%[2]q)
 }
-`, rName, version)
+`, logGroupName, policyDocument)
 }
