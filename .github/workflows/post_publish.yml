@@ -85,12 +85,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [registry-check]
     steps:
-      - if: matrix.os == 'windows-latest'
-        name: Set Shell
-        shell: bash
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
         with:
           terraform_wrapper: false
+        if: matrix.os == windows-latest
+        shell: bash
       - name: Specify Provider Version in TF Configuration
         run: |
           cat <<EOF > main.tf
