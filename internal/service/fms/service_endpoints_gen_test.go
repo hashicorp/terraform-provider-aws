@@ -283,9 +283,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListAppsLists(ctx, &fms.ListAppsListsInput{
+	input := fms.ListAppsListsInput{
 		MaxResults: aws.Int32(1),
-	},
+	}
+	_, err := client.ListAppsLists(ctx, &input,
 		func(opts *fms.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

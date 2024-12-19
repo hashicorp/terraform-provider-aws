@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListSchedules(ctx, &scheduler.ListSchedulesInput{},
+	input := scheduler.ListSchedulesInput{}
+	_, err := client.ListSchedules(ctx, &input,
 		func(opts *scheduler.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

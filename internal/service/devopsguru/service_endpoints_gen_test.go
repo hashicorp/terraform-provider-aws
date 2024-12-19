@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribeAccountHealth(ctx, &devopsguru.DescribeAccountHealthInput{},
+	input := devopsguru.DescribeAccountHealthInput{}
+	_, err := client.DescribeAccountHealth(ctx, &input,
 		func(opts *devopsguru.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListProfiles(ctx, &wellarchitected.ListProfilesInput{},
+	input := wellarchitected.ListProfilesInput{}
+	_, err := client.ListProfiles(ctx, &input,
 		func(opts *wellarchitected.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

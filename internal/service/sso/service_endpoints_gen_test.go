@@ -283,9 +283,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListAccounts(ctx, &sso.ListAccountsInput{
+	input := sso.ListAccountsInput{
 		AccessToken: aws.String("mock-access-token"),
-	},
+	}
+	_, err := client.ListAccounts(ctx, &input,
 		func(opts *sso.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

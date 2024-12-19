@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListChannels(ctx, &iotanalytics.ListChannelsInput{},
+	input := iotanalytics.ListChannelsInput{}
+	_, err := client.ListChannels(ctx, &input,
 		func(opts *iotanalytics.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

@@ -24,19 +24,19 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *kms.Client, identifier string, optFns ...func(*kms.Options)) (tftags.KeyValueTags, error) {
-	input := &kms.ListResourceTagsInput{
+	input := kms.ListResourceTagsInput{
 		KeyId: aws.String(identifier),
 	}
 	var output []awstypes.Tag
 
-	pages := kms.NewListResourceTagsPaginator(conn, input)
+	pages := kms.NewListResourceTagsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
 
 		if tfawserr.ErrCodeEquals(err, "NotFoundException") {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
-				LastRequest: input,
+				LastRequest: &input,
 			}
 		}
 
@@ -128,12 +128,12 @@ func updateTags(ctx context.Context, conn *kms.Client, identifier string, oldTag
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.KMS)
 	if len(removedTags) > 0 {
-		input := &kms.UntagResourceInput{
+		input := kms.UntagResourceInput{
 			KeyId:   aws.String(identifier),
 			TagKeys: removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -143,12 +143,12 @@ func updateTags(ctx context.Context, conn *kms.Client, identifier string, oldTag
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.KMS)
 	if len(updatedTags) > 0 {
-		input := &kms.TagResourceInput{
+		input := kms.TagResourceInput{
 			KeyId: aws.String(identifier),
 			Tags:  Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)
