@@ -175,8 +175,17 @@ func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Cli
 	input := cloudwatchlogs.DescribeIndexPoliciesInput{
 		LogGroupIdentifiers: []string{name},
 	}
+	output, err := findIndexPolicy(ctx, conn, &input)
 
-	return findIndexPolicy(ctx, conn, &input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output.PolicyDocument == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, err
 }
 
 func findIndexPolicy(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeIndexPoliciesInput) (*awstypes.IndexPolicy, error) {
