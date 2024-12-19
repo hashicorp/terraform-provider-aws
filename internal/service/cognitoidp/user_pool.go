@@ -643,6 +643,12 @@ func resourceUserPool() *schema.Resource {
 					},
 				},
 			},
+			"user_pool_tier": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.UserPoolTierTypeEssentials,
+				ValidateDiagFunc: enum.Validate[awstypes.UserPoolTierType](),
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -765,6 +771,10 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		if v, ok := v.([]interface{})[0].(map[string]interface{}); ok && v != nil {
 			input.VerificationMessageTemplate = expandVerificationMessageTemplateType(v)
 		}
+	}
+
+	if v := awstypes.UserPoolMfaType(d.Get("user_pool_tier").(string)); v != awstypes.UserPoolTierTypeEssentials {
+		input.UserPoolTier = v
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
@@ -894,6 +904,8 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting software_token_mfa_configuration: %s", err)
 	}
 
+	d.Set("user_pool_tier", output.UserPoolTier)
+
 	return diags
 }
 
@@ -959,6 +971,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		"user_attribute_update_settings",
 		"user_pool_add_ons",
 		"verification_message_template",
+		"user_pool_tier",
 	) {
 		// TODO: `UpdateUserPoolInput` has a field `UserPoolTags` that can be used to set tags directly.
 		// However, setting tags directly on the update requires correctly managing Ignored and Default tags.
@@ -1089,6 +1102,10 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 				input.VerificationMessageTemplate = expandVerificationMessageTemplateType(v)
 			}
+		}
+
+		if v, ok := d.GetOk("user_pool_tier"); ok {
+			input.UserPoolTier = awstypes.UserPoolTierType(v.(string))
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
