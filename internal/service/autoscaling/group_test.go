@@ -921,6 +921,31 @@ func TestAccAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingGroup_availabilityZoneDistribution(t *testing.T) {
+	ctx := acctest.Context(t)
+	var group awstypes.AutoScalingGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_availabilityZoneDistribution(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-best-effort"),
+				),
+			},
+			testAccGroupImportStep(resourceName),
+		},
+	})
+}
+
 func TestAccAutoScalingGroup_withScalingActivityErrorPlacementGroupNotSupportedOnInstanceType(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -4929,6 +4954,32 @@ resource "aws_autoscaling_group" "test" {
   termination_policies      = ["OldestInstance", "ClosestToNextInstanceHour"]
   placement_group           = aws_placement_group.test.name
   launch_configuration      = aws_launch_configuration.test.name
+
+  tag {
+    key                 = "Name"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+}
+`, rName))
+}
+
+func testAccGroupConfig_availabilityZoneDistribution(rName string) string {
+	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
+  name                 = %[1]q
+  max_size             = 5
+  min_size             = 2
+  health_check_type    = "ELB"
+  desired_capacity     = 4
+  force_delete         = true
+  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
+  launch_configuration = aws_launch_configuration.test.name
+
+  availability_zone_distribution {
+    capacity_distribution_strategy = "balanced-best-effort" 
+  }
 
   tag {
     key                 = "Name"
