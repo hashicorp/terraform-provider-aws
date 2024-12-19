@@ -351,6 +351,12 @@ func resourceListener() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"advertise_trust_store_ca_names": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AdvertiseTrustStoreCaNamesEnum](),
+						},
 						"ignore_client_certificate_expiry": {
 							Type:     schema.TypeBool,
 							Optional: true,
@@ -1076,12 +1082,12 @@ func expandListenerActionForwardConfig(l []interface{}) *awstypes.ForwardActionC
 	return config
 }
 
-func expandMutualAuthenticationAttributes(l []interface{}) *awstypes.MutualAuthenticationAttributes {
-	if len(l) == 0 || l[0] == nil {
+func expandMutualAuthenticationAttributes(tfList []interface{}) *awstypes.MutualAuthenticationAttributes {
+	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
-	tfMap, ok := l[0].(map[string]interface{})
+	tfMap, ok := tfList[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
@@ -1097,11 +1103,16 @@ func expandMutualAuthenticationAttributes(l []interface{}) *awstypes.MutualAuthe
 			TrustStoreArn: aws.String(tfMap["trust_store_arn"].(string)),
 		}
 	default:
-		return &awstypes.MutualAuthenticationAttributes{
+		apiObject := &awstypes.MutualAuthenticationAttributes{
+			IgnoreClientCertificateExpiry: aws.Bool(tfMap["ignore_client_certificate_expiry"].(bool)),
 			Mode:                          aws.String(mode),
 			TrustStoreArn:                 aws.String(tfMap["trust_store_arn"].(string)),
-			IgnoreClientCertificateExpiry: aws.Bool(tfMap["ignore_client_certificate_expiry"].(bool)),
 		}
+		if v, ok := tfMap["advertise_trust_store_ca_names"].(string); ok && v != "" {
+			apiObject.AdvertiseTrustStoreCaNames = awstypes.AdvertiseTrustStoreCaNamesEnum(v)
+		}
+
+		return apiObject
 	}
 }
 
@@ -1257,13 +1268,12 @@ func flattenForwardActionBoth(awsAction awstypes.Action, actionMap map[string]an
 	actionMap["forward"] = flattenListenerActionForwardConfig(awsAction.ForwardConfig)
 }
 
-func flattenMutualAuthenticationAttributes(description *awstypes.MutualAuthenticationAttributes) []interface{} {
-	if description == nil {
+func flattenMutualAuthenticationAttributes(apiObject *awstypes.MutualAuthenticationAttributes) []interface{} {
+	if apiObject == nil {
 		return []interface{}{}
 	}
 
-	mode := aws.ToString(description.Mode)
-	if mode == mutualAuthenticationOff {
+	if mode := aws.ToString(apiObject.Mode); mode == mutualAuthenticationOff {
 		return []interface{}{
 			map[string]interface{}{
 				names.AttrMode: mode,
@@ -1271,18 +1281,20 @@ func flattenMutualAuthenticationAttributes(description *awstypes.MutualAuthentic
 		}
 	}
 
-	m := map[string]interface{}{}
-	if description.Mode != nil {
-		m[names.AttrMode] = aws.ToString(description.Mode)
+	tfMap := map[string]interface{}{
+		"advertise_trust_store_ca_names": apiObject.AdvertiseTrustStoreCaNames,
 	}
-	if description.TrustStoreArn != nil {
-		m["trust_store_arn"] = aws.ToString(description.TrustStoreArn)
+	if apiObject.IgnoreClientCertificateExpiry != nil {
+		tfMap["ignore_client_certificate_expiry"] = aws.ToBool(apiObject.IgnoreClientCertificateExpiry)
 	}
-	if description.IgnoreClientCertificateExpiry != nil {
-		m["ignore_client_certificate_expiry"] = aws.ToBool(description.IgnoreClientCertificateExpiry)
+	if apiObject.Mode != nil {
+		tfMap[names.AttrMode] = aws.ToString(apiObject.Mode)
+	}
+	if apiObject.TrustStoreArn != nil {
+		tfMap["trust_store_arn"] = aws.ToString(apiObject.TrustStoreArn)
 	}
 
-	return []interface{}{m}
+	return []interface{}{tfMap}
 }
 
 func flattenAuthenticateOIDCActionConfig(apiObject *awstypes.AuthenticateOidcActionConfig, clientSecret string) []interface{} {

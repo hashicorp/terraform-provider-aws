@@ -384,9 +384,10 @@ The following arguments are optional:
 
 ### mutual_authentication
 
+* `advertise_trust_store_ca_names` - (Optional) Valid values are `off` and `on`.
+* `ignore_client_certificate_expiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
 * `mode` - (Required) Valid values are `off`, `verify` and `passthrough`.
 * `trust_store_arn` - (Required) ARN of the elbv2 Trust Store.
-* `ignore_client_certificate_expiry` - (Optional) Whether client certificate expiry is ignored. Default is `false`.
 
 ## Attribute Reference
 
