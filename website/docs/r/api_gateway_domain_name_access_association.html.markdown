@@ -34,7 +34,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the domain name access association.
-* `id` - Internal identifier assigned to this domain name access association.
+* `id` - (**Deprecated**, use `arn` instead) Internal identifier assigned to this domain name access association.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

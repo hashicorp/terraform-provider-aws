@@ -270,7 +270,7 @@ resource "aws_s3_directory_bucket" "test" {
 }
 
 resource "aws_s3_bucket_accelerate_configuration" "test" {
-  bucket = aws_s3_directory_bucket.test.id
+  bucket = aws_s3_directory_bucket.test.bucket
   status = %[1]q
 }
 `, status))
