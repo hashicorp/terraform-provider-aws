@@ -365,6 +365,7 @@ func resourceGroup() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							Computed:         true,
+							Default:          awstypes.CapacityDistributionStrategyBalancedBestEffort,
 							ValidateDiagFunc: enum.Validate[awstypes.CapacityDistributionStrategy](),
 						},
 					},
