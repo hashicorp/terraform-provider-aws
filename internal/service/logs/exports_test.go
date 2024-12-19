@@ -16,12 +16,14 @@ var (
 	ResourceStream               = resourceStream
 	ResourceSubscriptionFilter   = resourceSubscriptionFilter
 	ResourceAnomalyDetector      = newResourceAnomalyDetector
+	ResourceIndexPolicy          = newResourceIndexPolicy
 
 	FindAccountPolicyByTwoPartKey      = findAccountPolicyByTwoPartKey
 	FindDestinationByName              = findDestinationByName
 	FindLogGroupByName                 = findLogGroupByName
 	FindLogStreamByTwoPartKey          = findLogStreamByTwoPartKey // nosemgrep:ci.logs-in-var-name
 	FindMetricFilterByTwoPartKey       = findMetricFilterByTwoPartKey
+	FindIndexPolicyByLogGroupName      = findIndexPolicyByLogGroupName
 	FindQueryDefinitionByTwoPartKey    = findQueryDefinitionByTwoPartKey
 	FindResourcePolicyByName           = findResourcePolicyByName
 	FindSubscriptionFilterByTwoPartKey = findSubscriptionFilterByTwoPartKey
