@@ -71,6 +71,13 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrAvailabilityZones: {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				Computed:      true,
+				Elem:          &schema.Schema{Type: schema.TypeString},
+				ConflictsWith: []string{"vpc_zone_identifier"},
+			},
 			"availability_zone_distribution": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -86,13 +93,6 @@ func resourceGroup() *schema.Resource {
 						},
 					},
 				},
-			},
-			names.AttrAvailabilityZones: {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
-				ConflictsWith: []string{"vpc_zone_identifier"},
 			},
 			"capacity_rebalance": {
 				Type:     schema.TypeBool,
@@ -1086,12 +1086,12 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if v, ok := d.GetOk("availability_zone_distribution"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		inputCASG.AvailabilityZoneDistribution = expandAvailabilityZoneDistribution(v.([]interface{})[0].(map[string]interface{}))
-	}
-
 	if v, ok := d.GetOk(names.AttrAvailabilityZones); ok && v.(*schema.Set).Len() > 0 {
 		inputCASG.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("availability_zone_distribution"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		inputCASG.AvailabilityZoneDistribution = expandAvailabilityZoneDistribution(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
@@ -1293,8 +1293,8 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set(names.AttrARN, g.AutoScalingGroupARN)
-	d.Set("availability_zone_distribution", []interface{}{flattenAvailabilityZoneDistribution(g.AvailabilityZoneDistribution)})
 	d.Set(names.AttrAvailabilityZones, g.AvailabilityZones)
+	d.Set("availability_zone_distribution", []interface{}{flattenAvailabilityZoneDistribution(g.AvailabilityZoneDistribution)})
 	d.Set("capacity_rebalance", g.CapacityRebalance)
 	d.Set("context", g.Context)
 	d.Set("default_cooldown", g.DefaultCooldown)
