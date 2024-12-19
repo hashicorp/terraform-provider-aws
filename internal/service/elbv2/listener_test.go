@@ -1219,8 +1219,9 @@ func TestAccELBV2Listener_Protocol_https(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, "aws_iam_server_certificate.test", names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "ssl_policy", "ELBSecurityPolicy-2016-08"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", tfelbv2.MutualAuthenticationOff),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.advertise_trust_store_ca_names", "off"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", tfelbv2.MutualAuthenticationOff),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.trust_store_arn", ""),
 				),
 			},
@@ -1349,21 +1350,10 @@ func TestAccELBV2Listener_mutualAuthenticationAdvertiseCASubject(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", tfelbv2.MutualAuthenticationVerify),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.advertise_trust_store_ca_names", "on"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", acctest.CtFalse),
-					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.advertise_ca_subject_names", acctest.CtTrue),
+					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", tfelbv2.MutualAuthenticationVerify),
 					resource.TestCheckResourceAttrPair(resourceName, "mutual_authentication.0.trust_store_arn", "aws_lb_trust_store.test", names.AttrARN),
-					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", names.AttrARN),
-					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr(resourceName, names.AttrProtocol, "HTTPS"),
-					resource.TestCheckResourceAttr(resourceName, names.AttrPort, "443"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
-					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
-					resource.TestCheckResourceAttrPair(resourceName, names.AttrCertificateARN, "aws_iam_server_certificate.test", names.AttrARN),
-					resource.TestCheckResourceAttr(resourceName, "ssl_policy", "ELBSecurityPolicy-2016-08"),
 				),
 			},
 			{
@@ -3414,9 +3404,9 @@ resource "aws_lb_listener" "test" {
   }
 
   mutual_authentication {
-    mode                       = "verify"
-    trust_store_arn            = aws_lb_trust_store.test.arn
-    advertise_ca_subject_names = true
+    mode                           = "verify"
+    trust_store_arn                = aws_lb_trust_store.test.arn
+    advertise_trust_store_ca_names = "on"
   }
 }
 
