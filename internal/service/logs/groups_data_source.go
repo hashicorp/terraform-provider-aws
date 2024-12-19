@@ -69,7 +69,7 @@ func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var arns, logGroupNames []string
 
 	for _, r := range output {
-		arns = append(arns, TrimLogGroupARNWildcardSuffix(aws.ToString(r.Arn)))
+		arns = append(arns, trimLogGroupARNWildcardSuffix(aws.ToString(r.Arn)))
 		logGroupNames = append(logGroupNames, aws.ToString(r.LogGroupName))
 	}
 

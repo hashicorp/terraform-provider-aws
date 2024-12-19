@@ -151,7 +151,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set(names.AttrARN, TrimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
+	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
 	d.Set(names.AttrKMSKeyID, lg.KmsKeyId)
 	d.Set("log_group_class", lg.LogGroupClass)
 	d.Set(names.AttrName, lg.LogGroupName)

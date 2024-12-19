@@ -30,6 +30,7 @@ var (
 	FindResourcePolicyByName               = findResourcePolicyByName
 	FindSubscriptionFilterByTwoPartKey     = findSubscriptionFilterByTwoPartKey
 
+	TrimLogGroupARNWildcardSuffix          = trimLogGroupARNWildcardSuffix
 	ValidLogGroupName                      = validLogGroupName
 	ValidLogGroupNamePrefix                = validLogGroupNamePrefix
 	ValidLogMetricFilterName               = validLogMetricFilterName
