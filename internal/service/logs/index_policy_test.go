@@ -307,7 +307,7 @@ resource "aws_cloudwatch_log_group" "test" {
 }
 
 resource "aws_cloudwatch_log_index_policy" "test" {
-  log_group_name = aws_cloudwatch_log_group.test.name
+  log_group_name  = aws_cloudwatch_log_group.test.name
   policy_document = jsonencode(%[2]q)
 }
 `, logGroupName, policyDocument)
