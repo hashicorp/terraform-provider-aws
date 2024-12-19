@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListPortfolios(ctx, &servicecatalog.ListPortfoliosInput{},
+	input := servicecatalog.ListPortfoliosInput{}
+	_, err := client.ListPortfolios(ctx, &input,
 		func(opts *servicecatalog.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

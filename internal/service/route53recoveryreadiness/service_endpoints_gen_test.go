@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListCells(ctx, &route53recoveryreadiness.ListCellsInput{},
+	input := route53recoveryreadiness.ListCellsInput{}
+	_, err := client.ListCells(ctx, &input,
 		func(opts *route53recoveryreadiness.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

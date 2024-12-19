@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribeEndpoints(ctx, &timestreamquery.DescribeEndpointsInput{},
+	input := timestreamquery.DescribeEndpointsInput{}
+	_, err := client.DescribeEndpoints(ctx, &input,
 		func(opts *timestreamquery.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

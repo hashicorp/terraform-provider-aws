@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *elasticsearchservice.Client, identifier string, optFns ...func(*elasticsearchservice.Options)) (tftags.KeyValueTags, error) {
-	input := &elasticsearchservice.ListTagsInput{
+	input := elasticsearchservice.ListTagsInput{
 		ARN: aws.String(identifier),
 	}
 
-	output, err := conn.ListTags(ctx, input, optFns...)
+	output, err := conn.ListTags(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -109,12 +109,12 @@ func updateTags(ctx context.Context, conn *elasticsearchservice.Client, identifi
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Elasticsearch)
 	if len(removedTags) > 0 {
-		input := &elasticsearchservice.RemoveTagsInput{
+		input := elasticsearchservice.RemoveTagsInput{
 			ARN:     aws.String(identifier),
 			TagKeys: removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTags(ctx, input, optFns...)
+		_, err := conn.RemoveTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -124,12 +124,12 @@ func updateTags(ctx context.Context, conn *elasticsearchservice.Client, identifi
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Elasticsearch)
 	if len(updatedTags) > 0 {
-		input := &elasticsearchservice.AddTagsInput{
+		input := elasticsearchservice.AddTagsInput{
 			ARN:     aws.String(identifier),
 			TagList: Tags(updatedTags),
 		}
 
-		_, err := conn.AddTags(ctx, input, optFns...)
+		_, err := conn.AddTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

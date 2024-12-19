@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListConnectors(ctx, &pcaconnectorad.ListConnectorsInput{},
+	input := pcaconnectorad.ListConnectorsInput{}
+	_, err := client.ListConnectors(ctx, &input,
 		func(opts *pcaconnectorad.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

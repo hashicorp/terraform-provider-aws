@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListDomainNames(ctx, &cloudsearch.ListDomainNamesInput{},
+	input := cloudsearch.ListDomainNamesInput{}
+	_, err := client.ListDomainNames(ctx, &input,
 		func(opts *cloudsearch.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

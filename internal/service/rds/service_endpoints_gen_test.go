@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribeDBInstances(ctx, &rds.DescribeDBInstancesInput{},
+	input := rds.DescribeDBInstancesInput{}
+	_, err := client.DescribeDBInstances(ctx, &input,
 		func(opts *rds.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

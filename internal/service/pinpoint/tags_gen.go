@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *pinpoint.Client, identifier string, optFns ...func(*pinpoint.Options)) (tftags.KeyValueTags, error) {
-	input := &pinpoint.ListTagsForResourceInput{
+	input := pinpoint.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -92,12 +92,12 @@ func updateTags(ctx context.Context, conn *pinpoint.Client, identifier string, o
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Pinpoint)
 	if len(removedTags) > 0 {
-		input := &pinpoint.UntagResourceInput{
+		input := pinpoint.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -107,12 +107,12 @@ func updateTags(ctx context.Context, conn *pinpoint.Client, identifier string, o
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Pinpoint)
 	if len(updatedTags) > 0 {
-		input := &pinpoint.TagResourceInput{
+		input := pinpoint.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagsModel:   &awstypes.TagsModel{Tags: Tags(updatedTags.IgnoreAWS())},
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

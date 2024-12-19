@@ -19,11 +19,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *ssmincidents.Client, identifier string, optFns ...func(*ssmincidents.Options)) (tftags.KeyValueTags, error) {
-	input := &ssmincidents.ListTagsForResourceInput{
+	input := ssmincidents.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -91,12 +91,12 @@ func updateTags(ctx context.Context, conn *ssmincidents.Client, identifier strin
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.SSMIncidents)
 	if len(removedTags) > 0 {
-		input := &ssmincidents.UntagResourceInput{
+		input := ssmincidents.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -106,12 +106,12 @@ func updateTags(ctx context.Context, conn *ssmincidents.Client, identifier strin
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.SSMIncidents)
 	if len(updatedTags) > 0 {
-		input := &ssmincidents.TagResourceInput{
+		input := ssmincidents.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

@@ -284,9 +284,10 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListRuleGroups(ctx, &wafv2.ListRuleGroupsInput{
+	input := wafv2.ListRuleGroupsInput{
 		Scope: awstypes.ScopeRegional,
-	},
+	}
+	_, err := client.ListRuleGroups(ctx, &input,
 		func(opts *wafv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

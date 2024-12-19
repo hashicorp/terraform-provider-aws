@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListGameServerGroups(ctx, &gamelift.ListGameServerGroupsInput{},
+	input := gamelift.ListGameServerGroupsInput{}
+	_, err := client.ListGameServerGroups(ctx, &input,
 		func(opts *gamelift.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListGroups(ctx, &greengrass.ListGroupsInput{},
+	input := greengrass.ListGroupsInput{}
+	_, err := client.ListGroups(ctx, &input,
 		func(opts *greengrass.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

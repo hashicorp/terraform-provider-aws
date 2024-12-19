@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListDomains(ctx, &datazone.ListDomainsInput{},
+	input := datazone.ListDomainsInput{}
+	_, err := client.ListDomains(ctx, &input,
 		func(opts *datazone.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

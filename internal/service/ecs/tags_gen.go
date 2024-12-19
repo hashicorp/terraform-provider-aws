@@ -42,16 +42,16 @@ func findTag(ctx context.Context, conn *ecs.Client, identifier, key string, optF
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *ecs.Client, identifier string, optFns ...func(*ecs.Options)) (tftags.KeyValueTags, error) {
-	input := &ecs.ListTagsForResourceInput{
+	input := ecs.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if tfawserr.ErrMessageContains(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: input,
+			LastRequest: &input,
 		}
 	}
 
@@ -147,12 +147,12 @@ func updateTags(ctx context.Context, conn *ecs.Client, identifier string, oldTag
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.ECS)
 	if len(removedTags) > 0 {
-		input := &ecs.UntagResourceInput{
+		input := ecs.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -162,12 +162,12 @@ func updateTags(ctx context.Context, conn *ecs.Client, identifier string, oldTag
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.ECS)
 	if len(updatedTags) > 0 {
-		input := &ecs.TagResourceInput{
+		input := ecs.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

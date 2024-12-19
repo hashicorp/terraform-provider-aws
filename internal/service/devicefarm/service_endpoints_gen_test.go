@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListDeviceInstances(ctx, &devicefarm.ListDeviceInstancesInput{},
+	input := devicefarm.ListDeviceInstancesInput{}
+	_, err := client.ListDeviceInstances(ctx, &input,
 		func(opts *devicefarm.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

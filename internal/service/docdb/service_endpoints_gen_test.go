@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribeDBClusters(ctx, &docdb.DescribeDBClustersInput{},
+	input := docdb.DescribeDBClustersInput{}
+	_, err := client.DescribeDBClusters(ctx, &input,
 		func(opts *docdb.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

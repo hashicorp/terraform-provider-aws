@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListFirewalls(ctx, &networkfirewall.ListFirewallsInput{},
+	input := networkfirewall.ListFirewallsInput{}
+	_, err := client.ListFirewalls(ctx, &input,
 		func(opts *networkfirewall.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

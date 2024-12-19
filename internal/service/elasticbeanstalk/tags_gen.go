@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *elasticbeanstalk.Client, identifier string, optFns ...func(*elasticbeanstalk.Options)) (tftags.KeyValueTags, error) {
-	input := &elasticbeanstalk.ListTagsForResourceInput{
+	input := elasticbeanstalk.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -116,7 +116,7 @@ func updateTags(ctx context.Context, conn *elasticbeanstalk.Client, identifier s
 		return nil
 	}
 
-	input := &elasticbeanstalk.UpdateTagsForResourceInput{
+	input := elasticbeanstalk.UpdateTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
@@ -128,7 +128,7 @@ func updateTags(ctx context.Context, conn *elasticbeanstalk.Client, identifier s
 		input.TagsToRemove = removedTags.Keys()
 	}
 
-	_, err := conn.UpdateTagsForResource(ctx, input, optFns...)
+	_, err := conn.UpdateTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("tagging resource (%s): %w", identifier, err)

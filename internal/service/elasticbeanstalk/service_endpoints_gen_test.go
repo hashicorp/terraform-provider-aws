@@ -337,7 +337,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListAvailableSolutionStacks(ctx, &elasticbeanstalk.ListAvailableSolutionStacksInput{},
+	input := elasticbeanstalk.ListAvailableSolutionStacksInput{}
+	_, err := client.ListAvailableSolutionStacks(ctx, &input,
 		func(opts *elasticbeanstalk.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

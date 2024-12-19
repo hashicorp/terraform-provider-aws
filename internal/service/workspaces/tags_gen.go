@@ -20,11 +20,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *workspaces.Client, identifier string, optFns ...func(*workspaces.Options)) (tftags.KeyValueTags, error) {
-	input := &workspaces.DescribeTagsInput{
+	input := workspaces.DescribeTagsInput{
 		ResourceId: aws.String(identifier),
 	}
 
-	output, err := conn.DescribeTags(ctx, input, optFns...)
+	output, err := conn.DescribeTags(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -109,12 +109,12 @@ func updateTags(ctx context.Context, conn *workspaces.Client, identifier string,
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.WorkSpaces)
 	if len(removedTags) > 0 {
-		input := &workspaces.DeleteTagsInput{
+		input := workspaces.DeleteTagsInput{
 			ResourceId: aws.String(identifier),
 			TagKeys:    removedTags.Keys(),
 		}
 
-		_, err := conn.DeleteTags(ctx, input, optFns...)
+		_, err := conn.DeleteTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -124,12 +124,12 @@ func updateTags(ctx context.Context, conn *workspaces.Client, identifier string,
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.WorkSpaces)
 	if len(updatedTags) > 0 {
-		input := &workspaces.CreateTagsInput{
+		input := workspaces.CreateTagsInput{
 			ResourceId: aws.String(identifier),
 			Tags:       Tags(updatedTags),
 		}
 
-		_, err := conn.CreateTags(ctx, input, optFns...)
+		_, err := conn.CreateTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

@@ -16,11 +16,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *ssmquicksetup.Client, identifier string, optFns ...func(*ssmquicksetup.Options)) (tftags.KeyValueTags, error) {
-	input := &ssmquicksetup.ListTagsForResourceInput{
+	input := ssmquicksetup.ListTagsForResourceInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResource(ctx, input, optFns...)
+	output, err := conn.ListTagsForResource(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err

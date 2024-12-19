@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListMonitors(ctx, &networkmonitor.ListMonitorsInput{},
+	input := networkmonitor.ListMonitorsInput{}
+	_, err := client.ListMonitors(ctx, &input,
 		func(opts *networkmonitor.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
