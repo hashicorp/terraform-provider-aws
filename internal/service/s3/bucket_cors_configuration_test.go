@@ -516,7 +516,7 @@ resource "aws_s3_directory_bucket" "test" {
 }
 
 resource "aws_s3_bucket_cors_configuration" "test" {
-  bucket = aws_s3_directory_bucket.test.id
+  bucket = aws_s3_directory_bucket.test.bucket
 
   cors_rule {
     allowed_methods = ["PUT"]
