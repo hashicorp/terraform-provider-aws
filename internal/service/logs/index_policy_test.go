@@ -42,7 +42,7 @@ func TestAccLogsIndexPolicy_basic(t *testing.T) {
 			{
 				ResourceName:                         resourceName,
 				ImportState:                          true,
-				ImportStateIdFunc:                    testAccIndexPolicyStateIdFunc(resourceName),
+				ImportStateIdFunc:                    testAccIndexPolicyImportStateIDFunc(resourceName),
 				ImportStateVerify:                    true,
 				ImportStateVerifyIdentifierAttribute: names.AttrLogGroupName,
 			},
@@ -152,7 +152,7 @@ func testAccCheckIndexPolicyExists(ctx context.Context, n string) resource.TestC
 	}
 }
 
-func testAccIndexPolicyStateIdFunc(n string) resource.ImportStateIdFunc {
+func testAccIndexPolicyImportStateIDFunc(n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
