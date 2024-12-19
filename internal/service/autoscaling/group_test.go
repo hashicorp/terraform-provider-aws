@@ -76,6 +76,8 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-best-effort"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "context", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_cooldown", "300"),
@@ -304,6 +306,8 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "autoscaling", regexache.MustCompile(fmt.Sprintf(`autoScalingGroup:.+:autoScalingGroupName/%s`, rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "availability_zones.*", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-best-effort"),
 					resource.TestCheckResourceAttr(resourceName, "capacity_rebalance", acctest.CtFalse),
 					resource.TestCheckResourceAttr(resourceName, "default_cooldown", "300"),
 					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "4"),
@@ -934,7 +938,7 @@ func TestAccAutoScalingGroup_availabilityZoneDistribution(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_availabilityZoneDistribution(rName),
+				Config: testAccGroupConfig_availabilityZoneDistribution(rName, "balanced-best-effort"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
@@ -942,6 +946,14 @@ func TestAccAutoScalingGroup_availabilityZoneDistribution(t *testing.T) {
 				),
 			},
 			testAccGroupImportStep(resourceName),
+			{
+				Config: testAccGroupConfig_availabilityZoneDistribution(rName, "balanced-only"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_distribution.0.capacity_distribution_strategy", "balanced-only"),
+				),
+			},
 		},
 	})
 }
@@ -4964,30 +4976,20 @@ resource "aws_autoscaling_group" "test" {
 `, rName))
 }
 
-func testAccGroupConfig_availabilityZoneDistribution(rName string) string {
+func testAccGroupConfig_availabilityZoneDistribution(rName, capacityDistributionStrategy string) string {
 	return acctest.ConfigCompose(testAccGroupConfig_launchConfigurationBase(rName, "t2.micro"), fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones   = [data.aws_availability_zones.available.names[0]]
+  max_size             = 0
+  min_size             = 0
   name                 = %[1]q
-  max_size             = 5
-  min_size             = 2
-  health_check_type    = "ELB"
-  desired_capacity     = 4
-  force_delete         = true
-  termination_policies = ["OldestInstance", "ClosestToNextInstanceHour"]
   launch_configuration = aws_launch_configuration.test.name
 
   availability_zone_distribution {
-    capacity_distribution_strategy = "balanced-best-effort"
-  }
-
-  tag {
-    key                 = "Name"
-    value               = %[1]q
-    propagate_at_launch = true
+    capacity_distribution_strategy = %[2]q
   }
 }
-`, rName))
+`, rName, capacityDistributionStrategy))
 }
 
 func testAccGroupConfig_enabledMetrics(rName string) string {
