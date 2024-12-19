@@ -21,6 +21,7 @@ var (
 	FindAccountPolicyByTwoPartKey          = findAccountPolicyByTwoPartKey
 	FindDataProtectionPolicyByLogGroupName = findDataProtectionPolicyByLogGroupName
 	FindDestinationByName                  = findDestinationByName
+	FindDestinationPolicyByName            = findDestinationPolicyByName
 	FindLogAnomalyDetectorByARN            = findLogAnomalyDetectorByARN
 	FindLogGroupByName                     = findLogGroupByName
 	FindLogStreamByTwoPartKey              = findLogStreamByTwoPartKey // nosemgrep:ci.logs-in-var-name

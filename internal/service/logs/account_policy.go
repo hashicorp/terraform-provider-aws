@@ -99,7 +99,7 @@ func resourceAccountPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 	output, err := conn.PutAccountPolicy(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Logs Account Policy (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Account Policy (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.AccountPolicy.PolicyName))
