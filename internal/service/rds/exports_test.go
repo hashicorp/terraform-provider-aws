@@ -48,6 +48,7 @@ var (
 	FindDBProxyByName                          = findDBProxyByName
 	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
 	FindDBProxyTargetByFourPartKey             = findDBProxyTargetByFourPartKey
+	FindDBProxyAuthItemByArn                   = findDBProxyAuthItemByArn
 	FindDBSnapshotByID                         = findDBSnapshotByID
 	FindDBSubnetGroupByName                    = findDBSubnetGroupByName
 	FindDefaultCertificate                     = findDefaultCertificate
