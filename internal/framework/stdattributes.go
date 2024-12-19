@@ -37,7 +37,7 @@ func IDAttributeDeprecatedNoReplacement() schema.StringAttribute {
 		PlanModifiers: []planmodifier.String{
 			stringplanmodifier.UseStateForUnknown(),
 		},
-		DeprecationMessage: fmt.Sprintf("This attribute will be removed in a future verion of the provider."),
+		DeprecationMessage: "This attribute will be removed in a future verion of the provider.",
 	}
 }
 
