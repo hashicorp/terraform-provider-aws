@@ -83,7 +83,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macOS-latest]
     runs-on: ${{ matrix.os }}
-    default:
+    defaults:
       run:
         shell: bash
     needs: [registry-check]
