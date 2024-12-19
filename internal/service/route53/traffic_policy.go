@@ -30,7 +30,7 @@ func resourceTrafficPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficPolicyCreate,
 		ReadWithoutTimeout:   resourceTrafficPolicyRead,
-		UpdateWithoutTimeout: resourceTrafficPolicyUpdate,
+		UpdateWithoutTimeout: resourceTrafficPolicyVersionCreate,
 		DeleteWithoutTimeout: resourceTrafficPolicyDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -63,7 +63,7 @@ func resourceTrafficPolicy() *schema.Resource {
 			"document": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
+				ForceNew:     false,
 				ValidateFunc: validation.StringLenBetween(0, 102400),
 			},
 			names.AttrName: {
@@ -136,23 +136,20 @@ func resourceTrafficPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func resourceTrafficPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceTrafficPolicyVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53Client(ctx)
 
-	input := &route53.UpdateTrafficPolicyCommentInput{
-		Id:      aws.String(d.Id()),
-		Version: aws.Int32(int32(d.Get(names.AttrVersion).(int))),
+	input := &route53.CreateTrafficPolicyVersionInput{
+		Document: aws.String(d.Get("document").(string)),
+		Id:       aws.String(d.Id()),
+		Comment:  aws.String(d.Get(names.AttrComment).(string)),
 	}
 
-	if d.HasChange(names.AttrComment) {
-		input.Comment = aws.String(d.Get(names.AttrComment).(string))
-	}
-
-	_, err := conn.UpdateTrafficPolicyComment(ctx, input)
+	_, err := conn.CreateTrafficPolicyVersion(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Route53 Traffic Policy (%s) comment: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "Creating new Route53 Traffic Policy version (%s) comment: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceTrafficPolicyRead(ctx, d, meta)...)
