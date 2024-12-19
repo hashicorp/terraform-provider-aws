@@ -85,6 +85,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [registry-check]
     steps:
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+        with:
+          terraform_wrapper: false
       - name: Specify Provider Version in TF Configuration
         run: |
           cat <<EOF > main.tf
