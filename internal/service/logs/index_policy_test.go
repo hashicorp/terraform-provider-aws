@@ -5,17 +5,14 @@ package logs_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,11 +20,6 @@ import (
 
 func TestAccLogsIndexPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var indexPolicy cloudwatchlogs.DescribeIndexPoliciesOutput
 	logGroupName := "/aws/testacc/index-policy-" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyDocument := `{Fields:[\"eventName\"]}`
 	resourceName := "aws_cloudwatch_log_index_policy.test"
@@ -44,14 +36,13 @@ func TestAccLogsIndexPolicy_basic(t *testing.T) {
 			{
 				Config: testAccIndexPolicyConfig_basic(logGroupName, policyDocument),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexPolicyExists(ctx, resourceName, &indexPolicy),
+					testAccCheckIndexPolicyExists(ctx, resourceName),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{names.AttrApplyImmediately, "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -59,11 +50,6 @@ func TestAccLogsIndexPolicy_basic(t *testing.T) {
 
 func TestAccLogsIndexPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var indexPolicy cloudwatchlogs.DescribeIndexPoliciesOutput
 	logGroupName := "/aws/testacc/index-policy-" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyDocument := `{Fields:[\"eventName\"]}`
 	resourceName := "aws_cloudwatch_log_index_policy.test"
@@ -80,7 +66,7 @@ func TestAccLogsIndexPolicy_disappears(t *testing.T) {
 			{
 				Config: testAccIndexPolicyConfig_basic(logGroupName, policyDocument),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIndexPolicyExists(ctx, resourceName, &indexPolicy),
+					testAccCheckIndexPolicyExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflogs.ResourceIndexPolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -99,41 +85,34 @@ func testAccCheckIndexPolicyDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			_, err := tflogs.FindIndexPolicyByLogGroupName(ctx, conn, rs.Primary.Attributes[names.AttrLogGroupName])
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.Logs, create.ErrActionCheckingDestroyed, tflogs.ResNameIndexPolicy, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.Logs, create.ErrActionCheckingDestroyed, tflogs.ResNameIndexPolicy, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CloudWatch Logs Index Policy still exists: %s", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckIndexPolicyExists(ctx context.Context, name string, indexPolicy *cloudwatchlogs.DescribeIndexPoliciesOutput) resource.TestCheckFunc {
+func testAccCheckIndexPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		resp, err := tflogs.FindIndexPolicyByLogGroupName(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return create.Error(names.Logs, create.ErrActionCheckingExistence, tflogs.ResNameIndexPolicy, rs.Primary.ID, err)
-		}
+		_, err := tflogs.FindIndexPolicyByLogGroupName(ctx, conn, rs.Primary.ID)
 
-		indexPolicy.IndexPolicies = append(indexPolicy.IndexPolicies, *resp)
-
-		return nil
+		return err
 	}
 }
 

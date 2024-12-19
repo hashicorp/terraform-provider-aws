@@ -5,47 +5,45 @@ package logs
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource("aws_cloudwatch_log_index_policy", name="Index Policy")
-func newResourceIndexPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceIndexPolicy{}
+func newIndexPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &indexPolicyResource{}
 	return r, nil
 }
 
-const (
-	ResNameIndexPolicy = "Index Policy"
-)
-
-type resourceIndexPolicy struct {
+type indexPolicyResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceIndexPolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_cloudwatch_log_index_policy"
+func (*indexPolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_cloudwatch_log_index_policy"
 }
 
-func (r *resourceIndexPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *indexPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrLogGroupName: schema.StringAttribute{
 				Required: true,
@@ -54,205 +52,179 @@ func (r *resourceIndexPolicy) Schema(ctx context.Context, req resource.SchemaReq
 				},
 			},
 			"policy_document": schema.StringAttribute{
+				CustomType:  jsontypes.NormalizedType{},
 				Required:    true,
 				Description: "Field index filter policy, in JSON",
-				Validators: []validator.String{
-					validators.JSON(),
-				},
 			},
 		},
 	}
 }
 
-func (r *resourceIndexPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().LogsClient(ctx)
-
-	var plan resourceIndexPolicyModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *indexPolicyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data indexPolicyResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().LogsClient(ctx)
 
 	input := cloudwatchlogs.PutIndexPolicyInput{
-		LogGroupIdentifier: plan.LogGroupName.ValueStringPointer(),
-		PolicyDocument:     plan.PolicyDocument.ValueStringPointer(),
+		LogGroupIdentifier: fwflex.StringFromFramework(ctx, data.LogGroupName),
+		PolicyDocument:     fwflex.StringFromFramework(ctx, data.PolicyDocument),
 	}
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("IndexPolicy"))...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	_, err := conn.PutIndexPolicy(ctx, &input)
 
-	out, err := conn.PutIndexPolicy(ctx, &input)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameIndexPolicy, plan.LogGroupName.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.IndexPolicy == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionCreating, ResNameIndexPolicy, plan.LogGroupName.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating CloudWatch Logs Index Policy (%s)", data.LogGroupName.ValueString()), err.Error())
+
 		return
 	}
 
-	// Set resource ID
-	//id := fmt.Sprintf("%s:%s", *out.IndexPolicy.LogGroupIdentifier, "index-policy")
-	//plan.ID = flex.StringToFramework(ctx, &id)
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceIndexPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().LogsClient(ctx)
-
-	var state resourceIndexPolicyModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *indexPolicyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data indexPolicyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findIndexPolicyByLogGroupName(ctx, conn, state.LogGroupName.ValueString())
+	conn := r.Meta().LogsClient(ctx)
+
+	output, err := findIndexPolicyByLogGroupName(ctx, conn, data.LogGroupName.ValueString())
 
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionSetting, ResNameIndexPolicy, "", err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudWatch Logs Index Policy (%s)", data.LogGroupName.ValueString()), err.Error())
+
 		return
 	}
 
-	//state.ID = flex.StringToFramework(ctx, state.ID.ValueStringPointer())
+	// Set attributes for import.
+	data.LogGroupName = fwflex.StringValueToFramework(ctx, logGroupIdentifierToName(aws.ToString(output.LogGroupIdentifier)))
+	data.PolicyDocument = jsontypes.NewNormalizedValue(aws.ToString(output.PolicyDocument))
 
-	logGroupName, err := logGroupARNToName(*out.LogGroupIdentifier)
-	if err != nil {
-		resp.Diagnostics.AddError("failed to parse log group name", err.Error())
-	}
-	state.LogGroupName = flex.StringToFramework(ctx, &logGroupName)
-	state.PolicyDocument = flex.StringToFramework(ctx, out.PolicyDocument)
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceIndexPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().LogsClient(ctx)
-
-	var plan, state resourceIndexPolicyModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *indexPolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new indexPolicyResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.PolicyDocument.Equal(state.PolicyDocument) {
-		input := cloudwatchlogs.PutIndexPolicyInput{
-			LogGroupIdentifier: plan.LogGroupName.ValueStringPointer(),
-		}
+	conn := r.Meta().LogsClient(ctx)
 
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &input, flex.WithFieldNamePrefix("Test"))...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		out, err := conn.PutIndexPolicy(ctx, &input)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameIndexPolicy, plan.LogGroupName.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.IndexPolicy == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameIndexPolicy, "", nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	input := cloudwatchlogs.PutIndexPolicyInput{
+		LogGroupIdentifier: fwflex.StringFromFramework(ctx, new.LogGroupName),
+		PolicyDocument:     fwflex.StringFromFramework(ctx, new.PolicyDocument),
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	_, err := conn.PutIndexPolicy(ctx, &input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating CloudWatch Logs Index Policy (%s)", new.LogGroupName.ValueString()), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceIndexPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().LogsClient(ctx)
-
-	var state resourceIndexPolicyModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *indexPolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data indexPolicyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().LogsClient(ctx)
 
 	input := cloudwatchlogs.DeleteIndexPolicyInput{
-		LogGroupIdentifier: state.LogGroupName.ValueStringPointer(),
+		LogGroupIdentifier: fwflex.StringFromFramework(ctx, data.LogGroupName),
 	}
 
 	_, err := conn.DeleteIndexPolicy(ctx, &input)
 
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionDeleting, ResNameIndexPolicy, "", err),
-			err.Error(),
-		)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting CloudWatch Logs Index Policy (%s)", data.LogGroupName.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceIndexPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrLogGroupName), req, resp)
+func (r *indexPolicyResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrLogGroupName), request, response)
 }
 
-func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName string) (*awstypes.IndexPolicy, error) {
-	in := &cloudwatchlogs.DescribeIndexPoliciesInput{
-		LogGroupIdentifiers: []string{logGroupName},
+func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*awstypes.IndexPolicy, error) {
+	input := cloudwatchlogs.DescribeIndexPoliciesInput{
+		LogGroupIdentifiers: []string{name},
 	}
 
-	out, err := conn.DescribeIndexPolicies(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	return findIndexPolicy(ctx, conn, &input)
+}
 
+func findIndexPolicy(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeIndexPoliciesInput) (*awstypes.IndexPolicy, error) {
+	output, err := findIndexPolicies(ctx, conn, input)
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.IndexPolicies == nil || len(out.IndexPolicies) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return &out.IndexPolicies[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
-type resourceIndexPolicyModel struct {
-	LogGroupName   types.String `tfsdk:"log_group_name"`
-	PolicyDocument types.String `tfsdk:"policy_document"`
+func findIndexPolicies(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeIndexPoliciesInput) ([]awstypes.IndexPolicy, error) {
+	var output []awstypes.IndexPolicy
+
+	err := describeIndexPoliciesPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeIndexPoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		output = append(output, page.IndexPolicies...)
+
+		return !lastPage
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+type indexPolicyResourceModel struct {
+	LogGroupName   types.String         `tfsdk:"log_group_name"`
+	PolicyDocument jsontypes.Normalized `tfsdk:"policy_document"`
+}
+
+func logGroupIdentifierToName(identifier string) string {
+	if !arn.IsARN(identifier) {
+		return identifier
+	}
+
+	return strings.TrimPrefix(identifier, "log-group:")
 }

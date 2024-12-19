@@ -6,20 +6,21 @@ package logs
 // Exports for use in tests only.
 var (
 	ResourceAccountPolicy        = resourceAccountPolicy
+	ResourceAnomalyDetector      = newResourceAnomalyDetector
 	ResourceDataProtectionPolicy = resourceDataProtectionPolicy
 	ResourceDestination          = resourceDestination
 	ResourceDestinationPolicy    = resourceDestinationPolicy
 	ResourceGroup                = resourceGroup
+	ResourceIndexPolicy          = newIndexPolicyResource
 	ResourceMetricFilter         = resourceMetricFilter
 	ResourceQueryDefinition      = resourceQueryDefinition
 	ResourceResourcePolicy       = resourceResourcePolicy
 	ResourceStream               = resourceStream
 	ResourceSubscriptionFilter   = resourceSubscriptionFilter
-	ResourceAnomalyDetector      = newResourceAnomalyDetector
-	ResourceIndexPolicy          = newResourceIndexPolicy
 
 	FindAccountPolicyByTwoPartKey      = findAccountPolicyByTwoPartKey
 	FindDestinationByName              = findDestinationByName
+	FindLogAnomalyDetectorByARN        = findLogAnomalyDetectorByARN
 	FindLogGroupByName                 = findLogGroupByName
 	FindLogStreamByTwoPartKey          = findLogStreamByTwoPartKey // nosemgrep:ci.logs-in-var-name
 	FindMetricFilterByTwoPartKey       = findMetricFilterByTwoPartKey
@@ -27,7 +28,6 @@ var (
 	FindQueryDefinitionByTwoPartKey    = findQueryDefinitionByTwoPartKey
 	FindResourcePolicyByName           = findResourcePolicyByName
 	FindSubscriptionFilterByTwoPartKey = findSubscriptionFilterByTwoPartKey
-	FindLogAnomalyDetectorByARN        = findLogAnomalyDetectorByARN
 
 	ValidLogGroupName                      = validLogGroupName
 	ValidLogGroupNamePrefix                = validLogGroupNamePrefix
