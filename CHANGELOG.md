@@ -4,6 +4,10 @@ ENHANCEMENTS:
 
 * resource/aws_autoscaling_group: Add `availability_zone_distribution` argument ([#40634](https://github.com/hashicorp/terraform-provider-aws/issues/40634))
 
+BUG FIXES:
+
+* data-source/aws_iam_policy_document: Reverts plan-time validation for `statement` `sid` ([#40639](https://github.com/hashicorp/terraform-provider-aws/issues/40639))
+
 ## 5.82.0 (December 19, 2024)
 
 NOTES:
