@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_s3_bucket: Destroying a bucket with `force_destroy = true` can now delete objects with non-XML-safe keys
+```
+
+```release-note:bug
+resource/aws_s3_directory_bucket: Destroying a directory bucket with `force_destroy = true` can now delete objects with non-XML-safe keys
+```
