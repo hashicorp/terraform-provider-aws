@@ -71,6 +71,22 @@ func resourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"availability_zone_distribution": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"capacity_distribution_strategy": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.CapacityDistributionStrategyBalancedBestEffort,
+							ValidateDiagFunc: enum.Validate[awstypes.CapacityDistributionStrategy](),
+						},
+					},
+				},
+			},
 			names.AttrAvailabilityZones: {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -353,23 +369,6 @@ func resourceGroup() *schema.Resource {
 					},
 				},
 				ExactlyOneOf: []string{"launch_configuration", names.AttrLaunchTemplate, "mixed_instances_policy"},
-			},
-			"availability_zone_distribution": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"capacity_distribution_strategy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Computed:         true,
-							Default:          awstypes.CapacityDistributionStrategyBalancedBestEffort,
-							ValidateDiagFunc: enum.Validate[awstypes.CapacityDistributionStrategy](),
-						},
-					},
-				},
 			},
 			"load_balancers": {
 				Type:          schema.TypeSet,
@@ -1087,7 +1086,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if v, ok := d.GetOk("availability_zone_distribution"); ok {
+	if v, ok := d.GetOk("availability_zone_distribution"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		inputCASG.AvailabilityZoneDistribution = expandAvailabilityZoneDistribution(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -1294,7 +1293,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set(names.AttrARN, g.AutoScalingGroupARN)
-	d.Set("availability_zone_distribution", flattenAvailabilityZoneDistribution(g.AvailabilityZoneDistribution))
+	d.Set("availability_zone_distribution", []interface{}{flattenAvailabilityZoneDistribution(g.AvailabilityZoneDistribution)})
 	d.Set(names.AttrAvailabilityZones, g.AvailabilityZones)
 	d.Set("capacity_rebalance", g.CapacityRebalance)
 	d.Set("context", g.Context)
