@@ -6,7 +6,6 @@ package logs
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
@@ -48,7 +47,6 @@ func (r *resourceIndexPolicy) Metadata(_ context.Context, req resource.MetadataR
 func (r *resourceIndexPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
 			names.AttrLogGroupName: schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -102,8 +100,8 @@ func (r *resourceIndexPolicy) Create(ctx context.Context, req resource.CreateReq
 	}
 
 	// Set resource ID
-	id := fmt.Sprintf("%s:%s", *out.IndexPolicy.LogGroupIdentifier, "index-policy")
-	plan.ID = flex.StringToFramework(ctx, &id)
+	//id := fmt.Sprintf("%s:%s", *out.IndexPolicy.LogGroupIdentifier, "index-policy")
+	//plan.ID = flex.StringToFramework(ctx, &id)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 	if resp.Diagnostics.HasError() {
@@ -130,13 +128,13 @@ func (r *resourceIndexPolicy) Read(ctx context.Context, req resource.ReadRequest
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionSetting, ResNameIndexPolicy, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Logs, create.ErrActionSetting, ResNameIndexPolicy, "", err),
 			err.Error(),
 		)
 		return
 	}
 
-	state.ID = flex.StringToFramework(ctx, state.ID.ValueStringPointer())
+	//state.ID = flex.StringToFramework(ctx, state.ID.ValueStringPointer())
 
 	logGroupName, err := logGroupArnToName(*out.LogGroupIdentifier)
 	if err != nil {
@@ -183,7 +181,7 @@ func (r *resourceIndexPolicy) Update(ctx context.Context, req resource.UpdateReq
 		}
 		if out == nil || out.IndexPolicy == nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameIndexPolicy, plan.ID.String(), nil),
+				create.ProblemStandardMessage(names.Logs, create.ErrActionUpdating, ResNameIndexPolicy, "", nil),
 				errors.New("empty output").Error(),
 			)
 			return
@@ -219,7 +217,7 @@ func (r *resourceIndexPolicy) Delete(ctx context.Context, req resource.DeleteReq
 		}
 
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Logs, create.ErrActionDeleting, ResNameIndexPolicy, state.ID.String(), err),
+			create.ProblemStandardMessage(names.Logs, create.ErrActionDeleting, ResNameIndexPolicy, "", err),
 			err.Error(),
 		)
 		return
@@ -255,7 +253,6 @@ func findIndexPolicyByLogGroupName(ctx context.Context, conn *cloudwatchlogs.Cli
 }
 
 type resourceIndexPolicyModel struct {
-	ID             types.String `tfsdk:"id"`
 	LogGroupName   types.String `tfsdk:"log_group_name"`
 	PolicyDocument types.String `tfsdk:"policy_document"`
 }
