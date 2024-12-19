@@ -75,6 +75,45 @@ func TestAccLogsIndexPolicy_disappears(t *testing.T) {
 	})
 }
 
+func TestAccLogsIndexPolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	logGroupName := "/aws/testacc/index-policy-" + sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyDocument1 := `{Fields:[\"eventName\"]}`
+	policyDocument2 := `{Fields:[\"requestId\"]}`
+	resourceName := "aws_cloudwatch_log_index_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudWatchEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIndexPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIndexPolicyConfig_basic(logGroupName, policyDocument1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocument1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIndexPolicyConfig_basic(logGroupName, policyDocument2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIndexPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_document", policyDocument2),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckIndexPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
