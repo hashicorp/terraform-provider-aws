@@ -14,7 +14,11 @@ Provides a resource to manage a domain that has been [registered](https://docs.a
 
 The `aws_route53domains_registered_domain` resource behaves differently from normal resources in that if a domain has been registered, Terraform does not _register_ this domain, but instead "adopts" it into management. `terraform destroy` does not delete the domain but does remove the resource from Terraform state.
 
+This module can also register a new `aws_route53domains_registered_domain`, but you have to be explicit about it and set `register`. Be aware that registering a new domain will also create a [`aws_route53_zone`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_zone) by default that is not managed by this resource.
+
 ## Example Usage
+
+### Adopt existing domain
 
 ```terraform
 resource "aws_route53domains_registered_domain" "example" {
@@ -34,6 +38,19 @@ resource "aws_route53domains_registered_domain" "example" {
 }
 ```
 
+### Register new domain or adopt if exists
+
+```terraform
+resource "aws_route53domains_registered_domain" "example" {
+  domain_name = "example.com"
+  register    = true
+
+  tags = {
+    Environment = "test"
+  }
+}
+```
+
 ## Argument Reference
 
 ~> **NOTE:** You must specify the same privacy setting for `admin_privacy`, `registrant_privacy` and `tech_privacy`.
@@ -46,7 +63,9 @@ This resource supports the following arguments:
 * `billing_contact` - (Optional) Details about the domain billing contact. See [Contact Blocks](#contact-blocks) for more details.
 * `billing_privacy` - (Optional) Whether domain billing contact information is concealed from WHOIS queries. Default: `true`.
 * `domain_name` - (Required) The name of the registered domain.
+* `duration_in_years` - (Optional) Number of years that you want to register the domain for. Minimum registration is one year, maximum period depends on the top-level domain. Used only when registering new domains, has no effect on updates. Default: `1`.
 * `name_server` - (Optional) The list of nameservers for the domain. See [`name_server` Blocks](#name_server-blocks) for more details.
+* `register` - (Optional) Enable automatic registration of `domain_name` if not found. Default: `false`.
 * `registrant_contact` - (Optional) Details about the domain registrant. See [Contact Blocks](#contact-blocks) for more details.
 * `registrant_privacy` - (Optional) Whether domain registrant contact information is concealed from WHOIS queries. Default: `true`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
