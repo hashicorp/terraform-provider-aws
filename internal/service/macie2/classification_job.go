@@ -705,14 +705,20 @@ func resourceClassificationJobUpdate(ctx context.Context, d *schema.ResourceData
 		JobId: aws.String(d.Id()),
 	}
 
-	if d.HasChange("job_status") {
-		status := d.Get("job_status").(string)
-
-		if status == string(awstypes.JobStatusCancelled) {
+	// Always include job_status in update input, even if unchanged
+	if status, ok := d.GetOk("job_status"); ok {
+		jobStatus := status.(string)
+		if jobStatus == string(awstypes.JobStatusCancelled) {
 			return sdkdiag.AppendErrorf(diags, "updating Macie ClassificationJob (%s): %s", d.Id(), fmt.Sprintf("%s cannot be set", awstypes.JobStatusCancelled))
 		}
-
-		input.JobStatus = awstypes.JobStatus(status)
+		input.JobStatus = awstypes.JobStatus(jobStatus)
+	} else {
+		// If job_status not explicitly set, get current status from state
+		currentStatus := d.Get("job_status").(string)
+		if currentStatus == string(awstypes.JobStatusCancelled) {
+			return sdkdiag.AppendErrorf(diags, "updating Macie ClassificationJob (%s): %s", d.Id(), fmt.Sprintf("%s cannot be set", awstypes.JobStatusCancelled))
+		}
+		input.JobStatus = awstypes.JobStatus(currentStatus)
 	}
 
 	_, err := conn.UpdateClassificationJob(ctx, input)
