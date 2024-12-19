@@ -2956,3 +2956,47 @@ resource "aws_cognito_user_pool" "test" {
 }
 `, name, attr)
 }
+
+
+func TestAccCognitoIDPUserPool_userPoolTier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool awstypes.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_userPoolTier(rName, "PLUS"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_tier", "PLUS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_userPoolTier(rName, "LITE"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_tier", "LITE"),
+				),
+			},
+		},
+	})
+}
+
+func testAccUserPoolConfig_userPoolTier(rName string, user_pool_tier string) string {
+	return fmt.Sprintf(`
+	resource "aws_cognito_user_pool" "test" {
+		name = %[1]q
+		user_pool_tier = %[2]s
+	}`, rName, user_pool_tier)
+}
