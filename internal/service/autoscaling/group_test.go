@@ -4978,7 +4978,7 @@ resource "aws_autoscaling_group" "test" {
   launch_configuration = aws_launch_configuration.test.name
 
   availability_zone_distribution {
-    capacity_distribution_strategy = "balanced-best-effort" 
+    capacity_distribution_strategy = "balanced-best-effort"
   }
 
   tag {
