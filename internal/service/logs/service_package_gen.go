@@ -51,6 +51,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceGroups,
 			TypeName: "aws_cloudwatch_log_groups",
+			Name:     "Log Groups",
 		},
 	}
 }
