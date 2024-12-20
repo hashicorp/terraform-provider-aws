@@ -39,7 +39,7 @@ func (e *ephemeralClusterAuth) Schema(ctx context.Context, _ ephemeral.SchemaReq
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
-			"token": schema.BoolAttribute{
+			"token": schema.StringAttribute{
 				Computed:  true,
 				Sensitive: true,
 			},
