@@ -107,6 +107,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceQueryDefinition,
 			TypeName: "aws_cloudwatch_query_definition",
+			Name:     "Query Definition",
 		},
 	}
 }
