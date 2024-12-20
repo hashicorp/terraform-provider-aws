@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/macie2"
@@ -50,6 +51,94 @@ func testAccClassificationJob_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccMacie2ClassificationJob_updateWithoutStatusChange(t *testing.T) {
+	ctx := acctest.Context(t)
+	var job macie2.DescribeClassificationJobOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_macie2_classification_job.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckMacie2(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClassificationJobDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClassificationJobConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClassificationJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "job_status", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				Config: testAccClassificationJobConfig_basic(rName + "-updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClassificationJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "job_status", "RUNNING"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName+"-updated"),
+				),
+			},
+		},
+	})
+}
+
+func testAccClassificationJobConfig_basic(name string) string {
+	return fmt.Sprintf(`
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_macie2_classification_job" "test" {
+  job_type    = "SCHEDULED"
+  name        = %[1]q
+  job_status  = "RUNNING"
+  
+  s3_job_definition {
+    bucket_definitions {
+      account_id = data.aws_caller_identity.current.account_id
+      buckets    = [aws_s3_bucket.test.bucket]
+    }
+  }
+
+  schedule_frequency {
+    daily_schedule = true
+  }
+
+}
+
+data "aws_caller_identity" "current" {}
+`, name)
+}
+
+func testAccPreCheckMacie2(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).Macie2Client(ctx)
+	input := &macie2.GetMacieSessionInput{}
+
+	err := resource.RetryContext(ctx, 2*time.Minute, func() *resource.RetryError {
+		_, err := conn.GetMacieSession(ctx, input)
+		if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Macie is not enabled") {
+			return resource.RetryableError(err)
+		}
+		if err != nil {
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "service-linked role") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+
+	if err != nil {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
 }
 
 func testAccClassificationJob_Name_Generated(t *testing.T) {
