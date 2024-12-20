@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudwatch_log_data_protection_policy")
+// @SDKResource("aws_cloudwatch_log_data_protection_policy", name="Data Protection Policy")
 func resourceDataProtectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDataProtectionPolicyPut,

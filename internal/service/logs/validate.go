@@ -7,20 +7,7 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 )
-
-func validResourcePolicyDocument(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	// http://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutResourcePolicy.html
-	if len(value) > 5120 || (len(value) == 0) {
-		errors = append(errors, fmt.Errorf("CloudWatch log resource policy document must be between 1 and 5120 characters."))
-	}
-	if _, err := structure.NormalizeJsonString(v); err != nil {
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
-	}
-	return
-}
 
 func validLogGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)

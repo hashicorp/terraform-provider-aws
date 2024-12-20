@@ -66,6 +66,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceDataProtectionPolicy,
 			TypeName: "aws_cloudwatch_log_data_protection_policy",
+			Name:     "Data Protection Policy",
 		},
 		{
 			Factory:  resourceDestination,
@@ -78,6 +79,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceDestinationPolicy,
 			TypeName: "aws_cloudwatch_log_destination_policy",
+			Name:     "Destination Policy",
 		},
 		{
 			Factory:  resourceGroup,
@@ -95,6 +97,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceResourcePolicy,
 			TypeName: "aws_cloudwatch_log_resource_policy",
+			Name:     "Resource Policy",
 		},
 		{
 			Factory:  resourceStream,
