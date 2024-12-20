@@ -35,7 +35,6 @@ func (e *ephemeralClusterAuth) Metadata(_ context.Context, _ ephemeral.MetadataR
 func (e *ephemeralClusterAuth) Schema(ctx context.Context, _ ephemeral.SchemaRequest, response *ephemeral.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-
 			names.AttrName: schema.StringAttribute{
 				Required: true,
 			},
