@@ -41,7 +41,7 @@ func (d *dataSourceEventBuses) Schema(ctx context.Context, req datasource.Schema
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			names.AttrID: framework.IDAttribute(),
-			"name_prefix": schema.StringAttribute{
+			names.AttrNamePrefix: schema.StringAttribute{
 				Optional: true,
 			},
 		},
@@ -50,24 +50,24 @@ func (d *dataSourceEventBuses) Schema(ctx context.Context, req datasource.Schema
 				CustomType: fwtypes.NewListNestedObjectTypeOf[eventBustModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"arn": schema.StringAttribute{
+						names.AttrARN: schema.StringAttribute{
 							Computed: true,
 						},
-						"creation_time": schema.StringAttribute{
+						names.AttrCreationTime: schema.StringAttribute{
 							CustomType: timetypes.RFC3339Type{},
 							Computed:   true,
 						},
-						"description": schema.StringAttribute{
+						names.AttrDescription: schema.StringAttribute{
 							Computed: true,
 						},
 						"last_modified_time": schema.StringAttribute{
 							CustomType: timetypes.RFC3339Type{},
 							Computed:   true,
 						},
-						"name": schema.StringAttribute{
+						names.AttrName: schema.StringAttribute{
 							Computed: true,
 						},
-						"policy": schema.StringAttribute{
+						names.AttrPolicy: schema.StringAttribute{
 							Computed: true,
 						},
 					},

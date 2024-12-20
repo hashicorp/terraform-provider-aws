@@ -28,7 +28,7 @@ func TestAccEventsEventBusesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEventBusesDataSourceConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "event_buses.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "event_buses.#", acctest.Ct1),
 					resource.TestCheckResourceAttrPair(dataSourceName, "event_buses.0.arn", resourceName, names.AttrARN),
 					resource.TestCheckResourceAttrSet(dataSourceName, "event_buses.0.creation_time"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "event_buses.0.last_modified_time"),
