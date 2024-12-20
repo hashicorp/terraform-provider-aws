@@ -22,11 +22,11 @@ var (
 	FindDataProtectionPolicyByLogGroupName = findDataProtectionPolicyByLogGroupName
 	FindDestinationByName                  = findDestinationByName
 	FindDestinationPolicyByName            = findDestinationPolicyByName
+	FindIndexPolicyByLogGroupName          = findIndexPolicyByLogGroupName
 	FindLogAnomalyDetectorByARN            = findLogAnomalyDetectorByARN
 	FindLogGroupByName                     = findLogGroupByName
 	FindLogStreamByTwoPartKey              = findLogStreamByTwoPartKey // nosemgrep:ci.logs-in-var-name
 	FindMetricFilterByTwoPartKey           = findMetricFilterByTwoPartKey
-	FindIndexPolicyByLogGroupName          = findIndexPolicyByLogGroupName
 	FindQueryDefinitionByTwoPartKey        = findQueryDefinitionByTwoPartKey
 	FindResourcePolicyByName               = findResourcePolicyByName
 	FindSubscriptionFilterByTwoPartKey     = findSubscriptionFilterByTwoPartKey
@@ -36,5 +36,5 @@ var (
 	ValidLogGroupNamePrefix                = validLogGroupNamePrefix
 	ValidLogMetricFilterName               = validLogMetricFilterName
 	ValidLogMetricFilterTransformationName = validLogMetricFilterTransformationName
-	ValidStreamName                        = validStreamName
+	ValidLogStreamName                     = validLogStreamName
 )

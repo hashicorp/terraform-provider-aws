@@ -87,3 +87,17 @@ func validLogMetricFilterTransformationName(v interface{}, k string) (ws []strin
 
 	return
 }
+
+func validLogStreamName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if regexache.MustCompile(`:`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"colons not allowed in %q:", k))
+	}
+	if len(value) < 1 || len(value) > 512 {
+		errors = append(errors, fmt.Errorf(
+			"%q must be between 1 and 512 characters: %q", k, value))
+	}
+
+	return
+}

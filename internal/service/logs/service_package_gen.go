@@ -102,6 +102,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceStream,
 			TypeName: "aws_cloudwatch_log_stream",
+			Name:     "Log Stream",
 		},
 		{
 			Factory:  resourceSubscriptionFilter,
