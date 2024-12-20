@@ -74,4 +74,4 @@ EOF
 	fi
 fi
 
-TF_ACC=1 go test ./... -run="%TEST_PREFIX%" -v -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0
+TF_ACC=1 go test ./... -run="%TEST_PREFIX%" -json -count=1 -parallel "%ACCTEST_PARALLELISM%" -timeout=0

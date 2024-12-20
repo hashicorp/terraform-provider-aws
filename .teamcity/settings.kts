@@ -176,6 +176,10 @@ object PullRequest : BuildType({
                 buildProbablyHanging = false
             }
         }
+
+        golang {
+            testFormat = "json"
+        }
     }
 })
 
