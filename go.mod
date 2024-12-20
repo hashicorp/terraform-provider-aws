@@ -53,7 +53,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.28.9
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/cloudformation v1.56.2
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.0
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.8.8
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.26.7
@@ -152,7 +152,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesisvideo v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/kms v1.37.8
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.39.2
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.1
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.69.2
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.8.8
 	github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.28.8
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.49.8
@@ -227,7 +227,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/serverlessapplicationrepository v1.24.8
 	github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.32.8
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.30.8
-	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.34.0
+	github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.25.8
 	github.com/aws/aws-sdk-go-v2/service/ses v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.40.1

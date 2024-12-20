@@ -117,8 +117,8 @@ github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.23.3 h1:CqhKpcm7vRbGqIKq4Eg
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.23.3/go.mod h1:+m2sovuoyrrRtwrMDH/RrBq66dpBfEW1BK/4t9VCHqE=
 github.com/aws/aws-sdk-go-v2/service/cloudformation v1.56.2 h1:6USen+lDo8xYQutfnzhSeNLKEykNmBPfrcBmYKhLP38=
 github.com/aws/aws-sdk-go-v2/service/cloudformation v1.56.2/go.mod h1:10A7sHyxlTZSB7419K2wq/1tn0x/K9/drbD2j8VRZVc=
-github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.0 h1:zYk75ljFsvA6PgmbkMVy5b3M/arUF7EY3kHJz7LDaDk=
-github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.0/go.mod h1:fXHLupAMPNGhRAW7e2kS0aoDY/KsQ9GHu80GSK70cRs=
+github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.1 h1:jtaYeSe1A/vag0YwjCZmFty9BEV6MhryK5n8strwcks=
+github.com/aws/aws-sdk-go-v2/service/cloudfront v1.44.1/go.mod h1:m70SuBWmdnAnd6e3Z2PxtLL8PfgzFXx4hcGlySK/yik=
 github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.8.8 h1:9st+40hamlQ/98Q7ppwFJQMoWa0HbnmVX7+JlWNVQeU=
 github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.8.8/go.mod h1:qb90fXDbbwuDneZ1VlhEXRFULd7+pkwoqzqzJ/ygm34=
 github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.28.1 h1:4ESEUP6oHjykdCx1ab21nKpYQlkadizCqZ3OD/9SU/4=
@@ -325,8 +325,8 @@ github.com/aws/aws-sdk-go-v2/service/kms v1.37.8 h1:KbLZjYqhQ9hyB4HwXiheiflTlYQa
 github.com/aws/aws-sdk-go-v2/service/kms v1.37.8/go.mod h1:ANs9kBhK4Ghj9z1W+bsr3WsNaPF71qkgd6eE6Ekol/Y=
 github.com/aws/aws-sdk-go-v2/service/lakeformation v1.39.2 h1:IUlID9r2gZKHN+oxQ7ph9pE0nqLgL45czJGnPapvcLE=
 github.com/aws/aws-sdk-go-v2/service/lakeformation v1.39.2/go.mod h1:/8URO3jdXHx2trFkw8886/BvIymTacL7D8ycHuYly6M=
-github.com/aws/aws-sdk-go-v2/service/lambda v1.69.1 h1:q1NrvoJiz0rm9ayKOJ9wsMGmStK6rZSY36BDICMrcuY=
-github.com/aws/aws-sdk-go-v2/service/lambda v1.69.1/go.mod h1:hDj7He9kbR9T5zugnS+T21l4z6do4SEGuno/BpJLpA0=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.69.2 h1:z+Bc5arm0ZJQgiphpwpWF97/wCwBERRQ1CEA+Nckmkw=
+github.com/aws/aws-sdk-go-v2/service/lambda v1.69.2/go.mod h1:jWFEZMgQ48dPvuAWy2zcRIq8Mx/L0eO0iR1xkGR4Ov8=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.8.8 h1:Kxrp+zOb2WYS4BDRS7osCBOPIK1T7OedcOytIe2I8CY=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.8.8/go.mod h1:f+ruiwPQPaXW7OnTCUn5ttZm21UvB3WKMd7PxFxaSaM=
 github.com/aws/aws-sdk-go-v2/service/lexmodelbuildingservice v1.28.8 h1:wlqWZFl1a5658FCynvBGxlZVRzwgltRkAbggFSc48Jc=
@@ -475,8 +475,8 @@ github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.32.8 h1:uDR8FMmsEd/g+eihj
 github.com/aws/aws-sdk-go-v2/service/servicecatalog v1.32.8/go.mod h1:8ugnqCHkdv41d2Mo5F/mdPtaXauABVDYL3kV9U7LNbM=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.30.8 h1:G9LHlcpsxE3028FETYM+y3DkMTR7Go9lPTP7L8emf1g=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.30.8/go.mod h1:PqH0Z4nbCtd1+zDrMTxLK+v4JaYdHSDzZb+FurGamcs=
-github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.34.0 h1:e1QcVk0DcUPLPUjnBC3A+Z5kvDc0Sqp3jWQvhjGEwSE=
-github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.34.0/go.mod h1:YMM+e0OfZQVBpTJs+WNZWP/hdodeWnepXgancR5NFFw=
+github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.34.1 h1:d8dH4PATJiEI2yXrEVNBi38osCIm3I3KMYe/tkgykrY=
+github.com/aws/aws-sdk-go-v2/service/servicediscovery v1.34.1/go.mod h1:KmNFSoNNh6qNFUCfNAVf3yW+gZXgEPc//PGttodQ1KU=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.25.8 h1:05g+xF2b6eqAwCeHpl8v6nRY0+u8CpgIOd+vwtnyB10=
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.25.8/go.mod h1:l6nMNVvoAEbRczyvXiYGChtzbm3UuZdrbMW7/FWelI0=
 github.com/aws/aws-sdk-go-v2/service/ses v1.29.2 h1:ezumdYONyhe5B4OvSZxQfqfSyKW9kjekr56u1UjQmys=
