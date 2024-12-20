@@ -150,11 +150,9 @@ func (r *indexPolicyResource) Delete(ctx context.Context, request resource.Delet
 
 	conn := r.Meta().LogsClient(ctx)
 
-	input := cloudwatchlogs.DeleteIndexPolicyInput{
+	_, err := conn.DeleteIndexPolicy(ctx, &cloudwatchlogs.DeleteIndexPolicyInput{
 		LogGroupIdentifier: fwflex.StringFromFramework(ctx, data.LogGroupName),
-	}
-
-	_, err := conn.DeleteIndexPolicy(ctx, &input)
+	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
