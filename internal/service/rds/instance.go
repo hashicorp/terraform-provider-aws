@@ -724,6 +724,31 @@ func resourceInstance() *schema.Resource {
 				}
 				return nil
 			},
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				conn := meta.(*conns.AWSClient).RDSClient(ctx)
+
+				if d.Id() == "" && d.Get(names.AttrIdentifier).(string) == "" {
+					return nil
+				}
+
+				v, err := findDBInstanceByID(ctx, conn, d.Id())
+				log.Printf("[DEBUG] did we get here %s", aws.ToString(v.DBInstanceStatus))
+
+				if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+					// Retry with `identifier`
+					v, err = findDBInstanceByID(ctx, conn, d.Get(names.AttrIdentifier).(string))
+					if tfresource.NotFound(err) { // nosemgrep:ci.semgrep.errors.notfound-without-err-checks
+						log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get(names.AttrIdentifier).(string))
+						return err
+					}
+				}
+
+				if aws.ToString(v.DBInstanceStatus) == instanceStatusStopped {
+					return errors.New("cannot modify stopped instance")
+				}
+
+				return nil
+			},
 		),
 	}
 }
