@@ -284,16 +284,27 @@ func (e *emitter) emitAttributesAndBlocks(path []string, schema map[string]*sche
 			emittedFieldName = true
 		}
 
+		if name == "id" && isTopLevelAttribute {
+			fprintf(e.SchemaWriter, `// If the AWS API structs have an "...Id" field, use framework.IDAttribute()`+"\n")
+			if e.IsDataSource {
+				fprintf(e.SchemaWriter, `// Otherwise, use framework.IDAttributeDeprecatedNoReplacement()`+"\n")
+			} else {
+				fprintf(e.SchemaWriter, `// Otherwise, if the "id" attribute is set to a single attribute of the resource, use framework.IDAttributeDeprecatedWithAlternate()`+"\n")
+				fprintf(e.SchemaWriter, `// If the "id" attribute is composed from multiple attributes of the resource, use framework.IDAttributeDeprecatedNoReplacement()`+"\n")
+			}
+		}
 		fprintf(e.SchemaWriter, "%q:", name)
 
 		if isTopLevelAttribute {
 			fprintf(e.StructWriter, "%s ", naming.ToCamelCase(name))
 		}
 
-		err := e.emitAttributeProperty(append(path, name), property)
-
-		if err != nil {
-			return err
+		if name == "id" && isTopLevelAttribute {
+			fprintf(e.SchemaWriter, "framework.IDAttribute()")
+		} else {
+			if err := e.emitAttributeProperty(append(path, name), property); err != nil {
+				return err
+			}
 		}
 
 		if isTopLevelAttribute {
@@ -393,10 +404,6 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 				fprintf(e.StructWriter, "fwtypes.ARN")
 			}
 		} else {
-			if isTopLevelAttribute && attributeName == "id" {
-				fprintf(e.SchemaWriter, "// TODO framework.IDAttribute()\n")
-			}
-
 			fprintf(e.SchemaWriter, "schema.StringAttribute{\n")
 
 			if isTopLevelAttribute {
@@ -550,11 +557,6 @@ func (e *emitter) emitAttributeProperty(path []string, property *schema.Schema) 
 			fprintf(e.SchemaWriter, "%s.SizeAtMost(%d),\n", fwValidatorsPackage, maxItems)
 		}
 		fprintf(e.SchemaWriter, "},\n")
-	}
-
-	if attributeName == "id" && isTopLevelAttribute && !e.IsDataSource {
-		planModifiers = append(planModifiers, fmt.Sprintf("%s.UseStateForUnknown()", fwPlanModifierPackage))
-		e.FrameworkPlanModifierPackages = append(e.FrameworkPlanModifierPackages, fwPlanModifierPackage)
 	}
 
 	if property.ForceNew {
