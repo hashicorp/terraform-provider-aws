@@ -36,5 +36,5 @@ var (
 	ValidLogGroupNamePrefix                = validLogGroupNamePrefix
 	ValidLogMetricFilterName               = validLogMetricFilterName
 	ValidLogMetricFilterTransformationName = validLogMetricFilterTransformationName
-	ValidLogStreamName                     = validLogStreamName
+	ValidLogStreamName                     = validLogStreamName // nosemgrep:ci.logs-in-var-name
 )

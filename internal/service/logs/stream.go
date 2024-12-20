@@ -152,7 +152,7 @@ func findLogStreamByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client,
 	})
 }
 
-func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, filter tfslices.Predicate[*awstypes.LogStream]) (*awstypes.LogStream, error) {
+func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, filter tfslices.Predicate[*awstypes.LogStream]) (*awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
 	output, err := findLogStreams(ctx, conn, input, filter)
 
 	if err != nil {
@@ -162,7 +162,7 @@ func findLogStream(ctx context.Context, conn *cloudwatchlogs.Client, input *clou
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, filter tfslices.Predicate[*awstypes.LogStream]) ([]awstypes.LogStream, error) {
+func findLogStreams(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeLogStreamsInput, filter tfslices.Predicate[*awstypes.LogStream]) ([]awstypes.LogStream, error) { // nosemgrep:ci.logs-in-func-name
 	var output []awstypes.LogStream
 
 	pages := cloudwatchlogs.NewDescribeLogStreamsPaginator(conn, input)

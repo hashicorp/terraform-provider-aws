@@ -88,7 +88,7 @@ func validLogMetricFilterTransformationName(v interface{}, k string) (ws []strin
 	return
 }
 
-func validLogStreamName(v interface{}, k string) (ws []string, errors []error) {
+func validLogStreamName(v interface{}, k string) (ws []string, errors []error) { // nosemgrep:ci.logs-in-func-name
 	value := v.(string)
 	if regexache.MustCompile(`:`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
