@@ -557,7 +557,6 @@ func resourceService() *schema.Resource {
 			"availability_zone_rebalancing": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          awstypes.AvailabilityZoneRebalancingDisabled,
 				ValidateDiagFunc: enum.Validate[awstypes.AvailabilityZoneRebalancing](),
 			},
 			names.AttrCapacityProviderStrategy: {
