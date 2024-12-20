@@ -42,7 +42,7 @@ func TestAccEventsEventBusesDataSource_basic(t *testing.T) {
 func testAccEventBusesDataSourceConfig_basic(busName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_event_bus" "test" {
-  name        = %[1]q
+  name = %[1]q
 }
 
 data "aws_cloudwatch_event_buses" "test" {
