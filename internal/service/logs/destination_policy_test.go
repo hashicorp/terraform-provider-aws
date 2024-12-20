@@ -63,7 +63,7 @@ func testAccCheckDestinationPolicyExists(ctx context.Context, n string, v *strin
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
-		output, err := tflogs.FindDestinationByName(ctx, conn, rs.Primary.ID)
+		output, err := tflogs.FindDestinationPolicyByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
