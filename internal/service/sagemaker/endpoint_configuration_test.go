@@ -207,7 +207,8 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_emptyModel(t *test
 				ImportState:               true,
 				ImportStateVerify:         true,
 				PreventPostDestroyRefresh: true,
-				ImportStateVerifyIgnore:   []string{"execution_role_arn"},
+				// AWS does not return executionRoleArn in the DescribeEndpointConfig API response
+				ImportStateVerifyIgnore: []string{"execution_role_arn"},
 			},
 		},
 	})
@@ -1417,7 +1418,6 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
     variant_name           = "variant-1"
     initial_instance_count = 1
     instance_type          = "ml.g5.12xlarge"
-	initial_variant_weight = 0
 	
 	routing_config {
       routing_strategy = "LEAST_OUTSTANDING_REQUESTS"

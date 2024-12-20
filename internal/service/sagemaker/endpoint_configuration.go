@@ -782,7 +782,7 @@ func expandProductionVariants(configured []interface{}) []awstypes.ProductionVar
 		}
 
 		// Do not set initial variant weight or SSM access if we're using inference components
-		// Inference component usage is determined by a lack of model name
+		// Inference component usage is determined by a nonexistent model_name
 		if modelName, ok := data["model_name"].(string); ok && modelName != "" {
 			if v, ok := data["initial_variant_weight"].(float64); ok {
 				l.InitialVariantWeight = aws.Float32(float32(v))
@@ -792,7 +792,6 @@ func expandProductionVariants(configured []interface{}) []awstypes.ProductionVar
 				l.EnableSSMAccess = aws.Bool(v)
 			}
 		}
-
 		if v, ok := data["accelerator_type"].(string); ok && v != "" {
 			l.AcceleratorType = awstypes.ProductionVariantAcceleratorType(v)
 		}
