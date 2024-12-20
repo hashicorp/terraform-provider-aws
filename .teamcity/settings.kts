@@ -56,7 +56,7 @@ project {
         if (acctestParallelism != "") {
             text("ACCTEST_PARALLELISM", acctestParallelism, allowEmpty = false)
         }
-        text("TEST_PATTERN", "TestAcc", display = ParameterDisplay.HIDDEN)
+        text("TEST_PREFIX", "TestAcc", display = ParameterDisplay.HIDDEN)
         text("TEST_EXCLUDE_PATTERN", "", display = ParameterDisplay.HIDDEN)
         text("SWEEPER_REGIONS", sweeperRegions, display = ParameterDisplay.HIDDEN, allowEmpty = false)
         text("env.AWS_ACCOUNT_ID", awsAccountID, display = ParameterDisplay.HIDDEN, allowEmpty = false)

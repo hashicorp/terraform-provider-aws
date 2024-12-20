@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-TEST_LIST=$(./test-binary -test.list="%TEST_PATTERN%" 2>/dev/null)
+TEST_LIST=$(./test-binary -test.list="%TEST_PREFIX%" 2>/dev/null)
 
 # shellcheck disable=2157 # This isn't a constant string, it's a TeamCity variable substitution
 if [[ -n "%TEST_EXCLUDE_PATTERN%" ]]; then
@@ -13,8 +13,8 @@ read -r -a split <<<"${TEST_LIST}"
 TEST_COUNT=${#split[@]}
 
 # shellcheck disable=2050 # This isn't a constant string, it's a TeamCity variable substitution
-if [[ "%TEST_PATTERN%" != "TestAcc" ]]; then
-	echo "Filtering acceptance tests: %TEST_PATTERN%"
+if [[ "%TEST_PREFIX%" != "TestAcc" ]]; then
+	echo "Filtering acceptance tests: %TEST_PREFIX%"
 fi
 if [[ "${TEST_COUNT}" == 0 ]]; then
 	echo "Zero acceptance tests"

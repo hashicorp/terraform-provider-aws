@@ -42,7 +42,7 @@ class Service(name: String, spec: ServiceSpec) {
 
             if (spec.patternOverride != null) {
                 params {
-                    text("TEST_PATTERN", spec.patternOverride, display = ParameterDisplay.HIDDEN)
+                    text("TEST_PREFIX", spec.patternOverride, display = ParameterDisplay.HIDDEN)
                 }
             }
             if (spec.parallelismOverride != null) {
