@@ -1,4 +1,12 @@
-## 5.82.2 (Unreleased)
+## 5.83.0 (Unreleased)
+
+NOTES:
+
+* resource/aws_api_gateway_domain_name_access_association: Deprecates `id` in favor of `arn`. ([#40626](https://github.com/hashicorp/terraform-provider-aws/issues/40626))
+* resource/aws_route53_cidr_location: Deprecates `id`. ([#40626](https://github.com/hashicorp/terraform-provider-aws/issues/40626))
+* resource/aws_s3_directory_bucket: Deprecates `id` in favor of `bucket`. ([#40626](https://github.com/hashicorp/terraform-provider-aws/issues/40626))
+
+## 5.82.2 (December 20, 2024)
 
 BUG FIXES:
 

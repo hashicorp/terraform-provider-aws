@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribeFileSystems(ctx, &efs.DescribeFileSystemsInput{},
+	input := efs.DescribeFileSystemsInput{}
+	_, err := client.DescribeFileSystems(ctx, &input,
 		func(opts *efs.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

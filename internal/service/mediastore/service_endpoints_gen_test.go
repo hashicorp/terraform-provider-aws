@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListContainers(ctx, &mediastore.ListContainersInput{},
+	input := mediastore.ListContainersInput{}
+	_, err := client.ListContainers(ctx, &input,
 		func(opts *mediastore.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

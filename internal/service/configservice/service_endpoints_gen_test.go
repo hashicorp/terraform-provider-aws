@@ -337,7 +337,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListStoredQueries(ctx, &configservice.ListStoredQueriesInput{},
+	input := configservice.ListStoredQueriesInput{}
+	_, err := client.ListStoredQueries(ctx, &input,
 		func(opts *configservice.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

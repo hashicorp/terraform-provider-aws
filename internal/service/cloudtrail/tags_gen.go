@@ -20,12 +20,12 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *cloudtrail.Client, identifier string, optFns ...func(*cloudtrail.Options)) (tftags.KeyValueTags, error) {
-	input := &cloudtrail.ListTagsInput{
+	input := cloudtrail.ListTagsInput{
 		ResourceIdList: []string{identifier},
 	}
 	var output []awstypes.Tag
 
-	pages := cloudtrail.NewListTagsPaginator(conn, input)
+	pages := cloudtrail.NewListTagsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
 
@@ -117,12 +117,12 @@ func updateTags(ctx context.Context, conn *cloudtrail.Client, identifier string,
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.CloudTrail)
 	if len(removedTags) > 0 {
-		input := &cloudtrail.RemoveTagsInput{
+		input := cloudtrail.RemoveTagsInput{
 			ResourceId: aws.String(identifier),
 			TagsList:   Tags(removedTags),
 		}
 
-		_, err := conn.RemoveTags(ctx, input, optFns...)
+		_, err := conn.RemoveTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -132,12 +132,12 @@ func updateTags(ctx context.Context, conn *cloudtrail.Client, identifier string,
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.CloudTrail)
 	if len(updatedTags) > 0 {
-		input := &cloudtrail.AddTagsInput{
+		input := cloudtrail.AddTagsInput{
 			ResourceId: aws.String(identifier),
 			TagsList:   Tags(updatedTags),
 		}
 
-		_, err := conn.AddTags(ctx, input, optFns...)
+		_, err := conn.AddTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

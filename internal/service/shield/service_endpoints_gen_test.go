@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListProtectionGroups(ctx, &shield.ListProtectionGroupsInput{},
+	input := shield.ListProtectionGroupsInput{}
+	_, err := client.ListProtectionGroups(ctx, &input,
 		func(opts *shield.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.GetLifecyclePolicies(ctx, &dlm.GetLifecyclePoliciesInput{},
+	input := dlm.GetLifecyclePoliciesInput{}
+	_, err := client.GetLifecyclePolicies(ctx, &input,
 		func(opts *dlm.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

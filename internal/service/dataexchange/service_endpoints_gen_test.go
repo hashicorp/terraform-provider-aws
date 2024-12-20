@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListDataSets(ctx, &dataexchange.ListDataSetsInput{},
+	input := dataexchange.ListDataSetsInput{}
+	_, err := client.ListDataSets(ctx, &input,
 		func(opts *dataexchange.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

@@ -1,0 +1,11 @@
+```release-note:note
+resource/aws_api_gateway_domain_name_access_association: Deprecates `id` in favor of `arn`.
+```
+
+```release-note:note
+resource/aws_route53_cidr_location: Deprecates `id`.
+```
+
+```release-note:note
+resource/aws_s3_directory_bucket: Deprecates `id` in favor of `bucket`.
+```
