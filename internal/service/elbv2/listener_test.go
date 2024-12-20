@@ -3308,7 +3308,7 @@ resource "aws_internet_gateway" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_mutualAuthentication(rName string, key, certificate string) string {
+func testAccListenerConfig_mutualAuthentication(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
 		testAccTrustStoreConfig_baseS3BucketCA(rName),
@@ -3381,7 +3381,7 @@ resource "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_mutualAuthenticationAdvertiseCASubject(rName string, key, certificate string) string {
+func testAccListenerConfig_mutualAuthenticationAdvertiseCASubject(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
 		testAccTrustStoreConfig_baseS3BucketCA(rName),
@@ -3455,7 +3455,7 @@ resource "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_mutualAuthenticationPassthrough(rName string, key, certificate string) string {
+func testAccListenerConfig_mutualAuthenticationPassthrough(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
