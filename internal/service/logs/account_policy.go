@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -38,17 +39,7 @@ func resourceAccountPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy_document": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          validAccountPolicyDocument,
-				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
+			"policy_document": sdkv2.JSONDocumentSchemaRequired(),
 			"policy_name": {
 				Type:     schema.TypeString,
 				Required: true,
