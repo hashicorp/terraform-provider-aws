@@ -90,6 +90,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceMetricFilter,
 			TypeName: "aws_cloudwatch_log_metric_filter",
+			Name:     "Metric Filter",
 		},
 		{
 			Factory:  resourceResourcePolicy,
