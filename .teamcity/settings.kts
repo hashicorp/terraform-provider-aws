@@ -181,6 +181,17 @@ object PullRequest : BuildType({
             testFormat = "json"
         }
     }
+
+    // PR-build-specific parameters
+    params {
+        // Override TEST_PREFIX from parent
+        text("TEST_PREFIX", "")
+
+        // Used for service packages
+        text("PKG", "")
+        // Used for other packages
+        text("PKG_NAME", "")
+    }
 })
 
 object FullBuild : BuildType({
