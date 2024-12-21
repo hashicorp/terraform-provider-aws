@@ -1772,7 +1772,7 @@ func testAccCheckRecordDoesNotExist(ctx context.Context, zoneResourceName string
 
 		found := false
 		for _, rec := range resp.ResourceRecordSets {
-			recName := tfroute53.NormalizeNameIntoRoute53APIRepresentation(*rec.Name)
+			recName := tfroute53.NormalizeNameIntoAPIRepresentation(*rec.Name)
 			if tfroute53.FQDN(strings.ToLower(recName)) == tfroute53.FQDN(strings.ToLower(en)) && rec.Type == awstypes.RRType(recordType) {
 				found = true
 				break

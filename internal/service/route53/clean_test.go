@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func TestNormalizeNameIntoRoute53Representation(t *testing.T) {
+func TestNormalizeNameIntoAPIRepresentation(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
@@ -38,7 +38,7 @@ func TestNormalizeNameIntoRoute53Representation(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := normalizeNameIntoRoute53APIRepresentation(tc.UserInput)
+		actual := normalizeNameIntoAPIRepresentation(tc.UserInput)
 
 		if actual != tc.ExpectedR53Output {
 			t.Errorf(

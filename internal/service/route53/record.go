@@ -791,7 +791,7 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 	}
 
 	name := expandRecordName(recordName, aws.ToString(zone.HostedZone.Name))
-	recordName = normalizeNameIntoRoute53APIRepresentation(fqdn(strings.ToLower(name)))
+	recordName = fqdn(name)
 	rrType := awstypes.RRType(strings.ToUpper(recordType))
 	input := &route53.ListResourceRecordSetsInput{
 		HostedZoneId:    aws.String(zoneID),
