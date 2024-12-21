@@ -85,8 +85,6 @@ func (d *dataSourceEventBuses) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().AccountID)
-
 	input := &eventbridge.ListEventBusesInput{
 		NamePrefix: data.NamePrefix.ValueStringPointer(),
 	}
@@ -101,6 +99,7 @@ func (d *dataSourceEventBuses) Read(ctx context.Context, req datasource.ReadRequ
 		return
 	}
 
+	data.ID = types.StringValue(d.Meta().Region(ctx))
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data.EventBuses)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
