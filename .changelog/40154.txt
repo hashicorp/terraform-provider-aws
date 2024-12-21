@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_route53_zone: Handle a hosted zone with escape code correctly
+```
+
+```release-note:bug
+resource/aws_route53_record: Handle a record name with escaped escape code correctly
+```

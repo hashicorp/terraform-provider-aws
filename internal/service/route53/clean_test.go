@@ -9,23 +9,42 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 )
 
-func TestCleanRecordName(t *testing.T) {
+func TestNormalizeNameIntoRoute53Representation(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		Input, Output string
+		UserInput, ExpectedR53Output string
 	}{
+		// Preserve escape code
+		{"a\\000c.example.com", "a\\000c.example.com"},
+		{"a\\056c.example.com", "a\\056c.example.com"}, // with escaped "."
+
+		// Preserve "-" / "_" as-is
+		{"a-b.example.com", "a-b.example.com"},
+		{"_abc.example.com", "_abc.example.com"},
+
+		// no conversion
 		{"www.example.com", "www.example.com"},
-		{"\\052.example.com", "*.example.com"},
-		{"\\100.example.com", "@.example.com"},
-		{"\\043.example.com", "#.example.com"},
-		{"example.com", "example.com"},
+
+		// converted into lower-case
+		{"AbC.example.com", "abc.example.com"},
+
+		// convert into escape code
+		{"*.example.com", "\\052.example.com"},
+		{"!.example.com", "\\041.example.com"},
+		{"a/b.example.com", "a\\057b.example.com"},
+		{"/.example.com", "\\057.example.com"},
+		{"~.example.com", "\\176.example.com"},
 	}
 
 	for _, tc := range cases {
-		actual := cleanRecordName(tc.Input)
-		if actual != tc.Output {
-			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
+		actual := normalizeNameIntoRoute53APIRepresentation(tc.UserInput)
+
+		if actual != tc.ExpectedR53Output {
+			t.Errorf(
+				"user input: %+q\nexpected: %+q\nr53 output: %+q",
+				tc.UserInput, tc.ExpectedR53Output, actual,
+			)
 		}
 	}
 }

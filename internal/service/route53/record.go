@@ -791,7 +791,7 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 	}
 
 	name := expandRecordName(recordName, aws.ToString(zone.HostedZone.Name))
-	recordName = fqdn(strings.ToLower(name))
+	recordName = normalizeNameIntoRoute53APIRepresentation(fqdn(strings.ToLower(name)))
 	rrType := awstypes.RRType(strings.ToUpper(recordType))
 	input := &route53.ListResourceRecordSetsInput{
 		HostedZoneId:    aws.String(zoneID),
@@ -804,7 +804,7 @@ func findResourceRecordSetByFourPartKey(ctx context.Context, conn *route53.Clien
 		input.MaxItems = aws.Int32(100)
 	}
 	output, err := findResourceRecordSet(ctx, conn, input, resourceRecordsFor(recordName, rrType), func(v *awstypes.ResourceRecordSet) bool {
-		if recordName != strings.ToLower(cleanRecordName(aws.ToString(v.Name))) {
+		if recordName != strings.ToLower(aws.ToString(v.Name)) {
 			return false
 		}
 		if recordType != strings.ToUpper(string(v.Type)) {
@@ -869,7 +869,7 @@ func findResourceRecordSets(ctx context.Context, conn *route53.Client, input *ro
 func resourceRecordsFor(recordName string, recordType awstypes.RRType) tfslices.Predicate[*route53.ListResourceRecordSetsOutput] {
 	return func(page *route53.ListResourceRecordSetsOutput) bool {
 		if page.IsTruncated {
-			if strings.ToLower(cleanRecordName(aws.ToString(page.NextRecordName))) != recordName {
+			if strings.ToLower(aws.ToString(page.NextRecordName)) != recordName {
 				return false
 			}
 

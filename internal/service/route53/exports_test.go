@@ -20,7 +20,6 @@ var (
 	ResourceZoneAssociation             = resourceZoneAssociation
 
 	CleanDelegationSetID                        = cleanDelegationSetID
-	CleanRecordName                             = cleanRecordName
 	CleanZoneID                                 = cleanZoneID
 	ExpandRecordName                            = expandRecordName
 	FindCIDRCollectionByID                      = findCIDRCollectionByID
@@ -43,6 +42,7 @@ var (
 	ServeSignatureNotSigning                    = serveSignatureNotSigning
 	ServeSignatureSigning                       = serveSignatureSigning
 	WaitChangeInsync                            = waitChangeInsync
+	NormalizeNameIntoRoute53APIRepresentation   = normalizeNameIntoRoute53APIRepresentation
 )
 
 type Route53TrafficPolicyDoc = route53TrafficPolicyDoc
