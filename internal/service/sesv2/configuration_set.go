@@ -624,7 +624,7 @@ func expandDeliveryOptions(tfMap map[string]interface{}) *types.DeliveryOptions 
 
 	apiObject := &types.DeliveryOptions{}
 
-	if v, ok := tfMap["max_delivery_seconds"].(int); ok {
+	if v, ok := tfMap["max_delivery_seconds"].(int); ok && v != 0 {
 		apiObject.MaxDeliverySeconds = aws.Int64(int64(v))
 	}
 
