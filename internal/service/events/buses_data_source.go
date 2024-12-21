@@ -6,6 +6,8 @@ package events
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -15,9 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 )
 
 // @FrameworkDataSource(name="Event Buses")
