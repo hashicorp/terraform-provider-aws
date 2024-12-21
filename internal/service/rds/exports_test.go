@@ -5,6 +5,7 @@ package rds
 
 // Exports for use in tests only.
 var (
+	ResourceActivityStream                      = resourceActivityStream
 	ResourceCertificate                         = resourceCertificate
 	ResourceCluster                             = resourceCluster
 	ResourceClusterActivityStream               = resourceClusterActivityStream
@@ -44,6 +45,7 @@ var (
 	FindDBInstanceAutomatedBackupByARN         = findDBInstanceAutomatedBackupByARN
 	FindDBInstanceByID                         = findDBInstanceByID
 	FindDBInstanceRoleByTwoPartKey             = findDBInstanceRoleByTwoPartKey
+	FindDBInstanceWithActivityStream           = findDBInstanceWithActivityStream
 	FindDBParameterGroupByName                 = findDBParameterGroupByName
 	FindDBProxyByName                          = findDBProxyByName
 	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
