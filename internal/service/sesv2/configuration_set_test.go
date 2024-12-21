@@ -397,7 +397,7 @@ resource "aws_sesv2_configuration_set" "test" {
   configuration_set_name = %[1]q
 
   delivery_options {
-    tls_policy           = %[2]q
+    tls_policy = %[2]q
   }
 }
 `, rName, tlsPolicy)
