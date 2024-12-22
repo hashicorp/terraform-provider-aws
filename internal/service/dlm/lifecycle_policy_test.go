@@ -198,6 +198,46 @@ func TestAccDLMLifecyclePolicy_deprecate(t *testing.T) {
 	})
 }
 
+func TestAccDLMLifecyclePolicy_defaultPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dlm_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_defaultPolicy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkLifecyclePolicyExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, names.AttrARN, "dlm", regexache.MustCompile(`policy/.+`)),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "tf-acc-basic"),
+					resource.TestCheckResourceAttrSet(resourceName, names.AttrExecutionRoleARN),
+					resource.TestCheckResourceAttr(resourceName, names.AttrState, "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "default_policy", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.copy_tags", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.create_interval", "5"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.extend_deletion", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_type", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.retain_interval", "7"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.policy_language", "SIMPLIFIED"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", acctest.Ct0),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.event_source.#", acctest.Ct0),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"default_policy"},
+			},
+		},
+	})
+}
+
 func TestAccDLMLifecyclePolicy_fastRestore(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dlm_lifecycle_policy.test"
@@ -636,6 +676,22 @@ resource "aws_dlm_lifecycle_policy" "test" {
     target_tags = {
       tf-acc-test = "basic"
     }
+  }
+}
+`)
+}
+
+func testAccLifecyclePolicyConfig_defaultPolicy(rName string) string {
+	return acctest.ConfigCompose(lifecyclePolicyBaseConfig(rName), `
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = "tf-acc-basic"
+  execution_role_arn = aws_iam_role.test.arn
+  default_policy     = "VOLUME"
+
+  policy_details {
+    create_interval = 5
+    resource_type   = "VOLUME"
+    policy_language = "SIMPLIFIED"
   }
 }
 `)
