@@ -1,0 +1,4 @@
+
+```release-note:bug
+resource/aws_elasticache_replication_group: Fix invalid drifting to redis engine in global replication groups
+```
