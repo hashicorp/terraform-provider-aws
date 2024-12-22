@@ -73,7 +73,7 @@ This resource exports the following attributes in addition to the arguments abov
 ```terraform
 import {
   to = aws_cloudfront_vpc_origin.origin
-  id = vo_JQEa410sssUFoY6wMkx69j
+  id = "vo_JQEa410sssUFoY6wMkx69j"
 }
 ```
 
