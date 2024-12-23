@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListAppBundles(ctx, &appfabric.ListAppBundlesInput{},
+	input := appfabric.ListAppBundlesInput{}
+	_, err := client.ListAppBundles(ctx, &input,
 		func(opts *appfabric.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

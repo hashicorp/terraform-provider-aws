@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.GetApis(ctx, &apigatewayv2.GetApisInput{},
+	input := apigatewayv2.GetApisInput{}
+	_, err := client.GetApis(ctx, &input,
 		func(opts *apigatewayv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

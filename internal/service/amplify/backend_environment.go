@@ -77,7 +77,7 @@ func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 	environmentName := d.Get("environment_name").(string)
 	id := backendEnvironmentCreateResourceID(appID, environmentName)
 
-	input := &amplify.CreateBackendEnvironmentInput{
+	input := amplify.CreateBackendEnvironmentInput{
 		AppId:           aws.String(appID),
 		EnvironmentName: aws.String(environmentName),
 	}
@@ -90,7 +90,7 @@ func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 		input.StackName = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateBackendEnvironment(ctx, input)
+	_, err := conn.CreateBackendEnvironment(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify Backend Environment (%s): %s", id, err)
@@ -141,10 +141,11 @@ func resourceBackendEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Backend Environment: %s", d.Id())
-	_, err = conn.DeleteBackendEnvironment(ctx, &amplify.DeleteBackendEnvironmentInput{
+	input := amplify.DeleteBackendEnvironmentInput{
 		AppId:           aws.String(appID),
 		EnvironmentName: aws.String(environmentName),
-	})
+	}
+	_, err = conn.DeleteBackendEnvironment(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -158,17 +159,17 @@ func resourceBackendEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 }
 
 func findBackendEnvironmentByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, environmentName string) (*types.BackendEnvironment, error) {
-	input := &amplify.GetBackendEnvironmentInput{
+	input := amplify.GetBackendEnvironmentInput{
 		AppId:           aws.String(appID),
 		EnvironmentName: aws.String(environmentName),
 	}
 
-	output, err := conn.GetBackendEnvironment(ctx, input)
+	output, err := conn.GetBackendEnvironment(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: input,
+			LastRequest: &input,
 		}
 	}
 
@@ -177,7 +178,7 @@ func findBackendEnvironmentByTwoPartKey(ctx context.Context, conn *amplify.Clien
 	}
 
 	if output == nil || output.BackendEnvironment == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
 	return output.BackendEnvironment, nil

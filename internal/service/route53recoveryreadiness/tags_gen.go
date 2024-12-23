@@ -19,11 +19,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *route53recoveryreadiness.Client, identifier string, optFns ...func(*route53recoveryreadiness.Options)) (tftags.KeyValueTags, error) {
-	input := &route53recoveryreadiness.ListTagsForResourcesInput{
+	input := route53recoveryreadiness.ListTagsForResourcesInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.ListTagsForResources(ctx, input, optFns...)
+	output, err := conn.ListTagsForResources(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -100,12 +100,12 @@ func updateTags(ctx context.Context, conn *route53recoveryreadiness.Client, iden
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Route53RecoveryReadiness)
 	if len(removedTags) > 0 {
-		input := &route53recoveryreadiness.UntagResourceInput{
+		input := route53recoveryreadiness.UntagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -115,12 +115,12 @@ func updateTags(ctx context.Context, conn *route53recoveryreadiness.Client, iden
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Route53RecoveryReadiness)
 	if len(updatedTags) > 0 {
-		input := &route53recoveryreadiness.TagResourceInput{
+		input := route53recoveryreadiness.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

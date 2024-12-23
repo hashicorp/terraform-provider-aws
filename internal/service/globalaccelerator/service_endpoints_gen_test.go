@@ -285,7 +285,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListAccelerators(ctx, &globalaccelerator.ListAcceleratorsInput{},
+	input := globalaccelerator.ListAcceleratorsInput{}
+	_, err := client.ListAccelerators(ctx, &input,
 		func(opts *globalaccelerator.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

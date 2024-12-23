@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListEnvironments(ctx, &cloud9.ListEnvironmentsInput{},
+	input := cloud9.ListEnvironmentsInput{}
+	_, err := client.ListEnvironments(ctx, &input,
 		func(opts *cloud9.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

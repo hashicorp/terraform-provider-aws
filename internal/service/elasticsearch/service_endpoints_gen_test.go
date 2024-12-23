@@ -396,7 +396,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListDomainNames(ctx, &elasticsearchservice.ListDomainNamesInput{},
+	input := elasticsearchservice.ListDomainNamesInput{}
+	_, err := client.ListDomainNames(ctx, &input,
 		func(opts *elasticsearchservice.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),
