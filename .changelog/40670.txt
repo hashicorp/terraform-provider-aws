@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_sesv2_configuration_set: Fix passing max_delivery_options when unset
+resource/aws_sesv2_configuration_set: Fix handling of `delivery_options.max_delivery_seconds` when not configured
 ```
