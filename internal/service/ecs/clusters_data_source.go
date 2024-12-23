@@ -10,32 +10,29 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
 // @FrameworkDataSource("aws_ecs_clusters", name="Clusters")
-func newDataSourceClusters(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceClusters{}, nil
+func newClustersDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &clustersDataSource{}, nil
 }
 
-const (
-	DSNameClusters = "Clusters Data Source"
-)
-
-type dataSourceClusters struct {
+type clustersDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceClusters) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_ecs_clusters"
+func (*clustersDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_ecs_clusters"
 }
 
-func (d *dataSourceClusters) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *clustersDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"cluster_arns": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
 				Computed:    true,
 				ElementType: types.StringType,
 			},
@@ -43,34 +40,30 @@ func (d *dataSourceClusters) Schema(ctx context.Context, req datasource.SchemaRe
 	}
 }
 
-func (d *dataSourceClusters) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *clustersDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data dataSourceClustersModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := d.Meta().ECSClient(ctx)
 
-	var data dataSourceClustersModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	input := ecs.ListClustersInput{}
+	arns, err := listClusters(ctx, conn, &input)
 
-	clusterArns, err := listClusters(ctx, conn, &ecs.ListClustersInput{})
 	if err != nil {
-		resp.Diagnostics.AddError("Listing ECS clusters", err.Error())
+		response.Diagnostics.AddError("listing ECS Clusters", err.Error())
 		return
 	}
 
-	out := &ecs.ListClustersOutput{
-		ClusterArns: clusterArns,
-	}
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data, flex.WithFieldNamePrefix("Clusters"))...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	data.ClusterARNs = fwflex.FlattenFrameworkStringValueListOfString(ctx, arns)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func listClusters(ctx context.Context, conn *ecs.Client, input *ecs.ListClustersInput) ([]string, error) {
-	var clusterArns []string
+	var output []string
 
 	pages := ecs.NewListClustersPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -80,12 +73,12 @@ func listClusters(ctx context.Context, conn *ecs.Client, input *ecs.ListClusters
 			return nil, err
 		}
 
-		clusterArns = append(clusterArns, page.ClusterArns...)
+		output = append(output, page.ClusterArns...)
 	}
 
-	return clusterArns, nil
+	return output, nil
 }
 
 type dataSourceClustersModel struct {
-	ClusterArns basetypes.ListValue `tfsdk:"cluster_arns"`
+	ClusterARNs fwtypes.ListOfString `tfsdk:"cluster_arns"`
 }

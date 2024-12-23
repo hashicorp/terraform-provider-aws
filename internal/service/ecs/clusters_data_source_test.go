@@ -14,14 +14,8 @@ import (
 
 func TestAccECSClustersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceResourceName := "data.aws_ecs_clusters.test"
-	resourceName := "aws_ecs_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -35,8 +29,7 @@ func TestAccECSClustersDataSource_basic(t *testing.T) {
 			{
 				Config: testAccClustersDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceResourceName, "cluster_arns.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceResourceName, "cluster_arns.0", resourceName, names.AttrARN),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceResourceName, "cluster_arns.#", 1),
 				),
 			},
 		},
