@@ -68,11 +68,9 @@ class MyConvertedCode extends TerraformStack {
             startingPosition: {
               type: "LATEST",
             },
-            topic_configuration_name: [
-              {
-                type: "PREFIXED_WITH_SOURCE_CLUSTER_ALIAS",
-              },
-            ],
+            topicNameConfiguration: {
+              type: "PREFIXED_WITH_SOURCE_CLUSTER_ALIAS",
+            },
             topicsToReplicate: [".*"],
           },
         ],
@@ -119,7 +117,7 @@ The following arguments are required:
 
 ### topic_replication Argument Reference
 
-* `topic_configuration_name` - (Optional) Configuration for specifying replicated topic names should be the same as their corresponding upstream topics or prefixed with source cluster alias.
+* `topicNameConfiguration` - (Optional) Configuration for specifying replicated topic names should be the same as their corresponding upstream topics or prefixed with source cluster alias.
 * `topicsToReplicate` - (Required) List of regular expression patterns indicating the topics to copy.
 * `topicsToExclude` - (Optional) List of regular expression patterns indicating the topics that should not be replica.
 * `detectAndCopyNewTopics` - (Optional) Whether to periodically check for new topics and partitions.
@@ -134,7 +132,7 @@ The following arguments are required:
 * `detectAndCopyNewConsumerGroups` - (Optional) Whether to periodically check for new consumer groups.
 * `synchroniseConsumerGroupOffsets` - (Optional) Whether to periodically write the translated offsets to __consumer_offsets topic in target cluster.
 
-### topic_configuration_name
+### topic_name_configuration
 
 * `type` - (optional) The type of topic configuration name. Supports `PREFIXED_WITH_SOURCE_CLUSTER_ALIAS` and `IDENTICAL`.
 
@@ -188,4 +186,4 @@ Using `terraform import`, import MSK replicators using the replicator ARN. For e
 % terraform import aws_msk_replicator.example arn:aws:kafka:us-west-2:123456789012:configuration/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-81c8dd9d71beff859ef166fa86d70ee0ad35e29763ffd0eee2ee391b323af343 -->
+<!-- cache-key: cdktf-0.20.8 input-436cbb7d27f263382a3b611462357323f9ced9d92547956bae4cbeb8c5fa9c73 -->
