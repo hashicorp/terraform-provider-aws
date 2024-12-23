@@ -341,6 +341,20 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
+	// Set values for unknowns.
+	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s)", domainName), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, domainDetail, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -429,6 +443,23 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 
 		return
 	}
+
+	// TODO Delete associated hosted zone:
+	// % aws route53 list-hosted-zones
+	// {
+	// 	"HostedZones": [
+	// 		{
+	// 			"Id": "/hostedzone/Z04259161CEX7GET1UCX1",
+	// 			"Name": "tf-acc-test-002.click.",
+	// 			"CallerReference": "RISWorkflow-RD:0c5f36fb-7c78-4c40-8fb3-310d5961bdbe",
+	// 			"Config": {
+	// 				"Comment": "HostedZone created by Route53 Registrar",
+	// 				"PrivateZone": false
+	// 			},
+	// 			"ResourceRecordSetCount": 2
+	// 		}
+	// 	]
+	// }
 }
 
 func (r *domainResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
@@ -478,7 +509,7 @@ type contactDetailModel struct {
 	ContactType      fwtypes.StringEnum[awstypes.ContactType] `tfsdk:"contact_type"`
 	CountryCode      fwtypes.StringEnum[awstypes.CountryCode] `tfsdk:"country_code"`
 	Email            types.String                             `tfsdk:"email"`
-	ExtraParams      fwtypes.MapOfString                      `tfsdk:"extra_params"`
+	ExtraParams      fwtypes.MapOfString                      `tfsdk:"extra_params" autoflex:"-"`
 	Fax              types.String                             `tfsdk:"fax"`
 	FirstName        types.String                             `tfsdk:"first_name"`
 	LastName         types.String                             `tfsdk:"last_name"`
