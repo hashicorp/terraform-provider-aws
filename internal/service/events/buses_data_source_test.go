@@ -48,7 +48,7 @@ resource "aws_cloudwatch_event_bus" "test" {
 }
 
 data "aws_cloudwatch_event_buses" "by_name_prefix" {
-  name_prefix = aws_cloudwatch_event_bus.name
+  name_prefix = aws_cloudwatch_event_bus.test.name
 }
 
 data "aws_cloudwatch_event_buses" "all" {
