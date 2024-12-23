@@ -79,14 +79,14 @@ func resourceIdentityNotificationTopicSet(ctx context.Context, d *schema.Resourc
 		inputSINT.SnsTopic = aws.String(v.(string))
 	}
 
-	if d.IsNewResource() {
-		d.SetId(id)
-	}
-
 	_, err := conn.SetIdentityNotificationTopic(ctx, inputSINT)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting SES Identity Notification Topic (%s): %s", id, err)
+	}
+
+	if d.IsNewResource() {
+		d.SetId(id)
 	}
 
 	inputSIHINE := &ses.SetIdentityHeadersInNotificationsEnabledInput{
