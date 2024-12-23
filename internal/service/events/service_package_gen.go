@@ -17,7 +17,7 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceEventBuses,
+			Factory: newEventBusesDataSource,
 			Name:    "Event Buses",
 		},
 	}

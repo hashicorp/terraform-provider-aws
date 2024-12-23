@@ -12,105 +12,71 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource(name="Event Buses")
-func newDataSourceEventBuses(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceEventBuses{}, nil
+// @FrameworkDataSource("aws_cloudwatch_event_buses", name="Event Buses")
+func newEventBusesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &eventBusesDataSource{}, nil
 }
 
-const (
-	DSNameEventBuses = "Event Buses Data Source"
-)
-
-type dataSourceEventBuses struct {
+type eventBusesDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceEventBuses) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_cloudwatch_event_buses"
+func (*eventBusesDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_cloudwatch_event_buses"
 }
 
-func (d *dataSourceEventBuses) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *eventBusesDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrID: framework.IDAttribute(),
+			"event_buses": framework.DataSourceComputedListOfObjectAttribute[eventBusModel](ctx),
 			names.AttrNamePrefix: schema.StringAttribute{
 				Optional: true,
 			},
 		},
-		Blocks: map[string]schema.Block{
-			"event_buses": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[eventBustModel](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						names.AttrARN: schema.StringAttribute{
-							Computed: true,
-						},
-						names.AttrCreationTime: schema.StringAttribute{
-							CustomType: timetypes.RFC3339Type{},
-							Computed:   true,
-						},
-						names.AttrDescription: schema.StringAttribute{
-							Computed: true,
-						},
-						"last_modified_time": schema.StringAttribute{
-							CustomType: timetypes.RFC3339Type{},
-							Computed:   true,
-						},
-						names.AttrName: schema.StringAttribute{
-							Computed: true,
-						},
-						names.AttrPolicy: schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
-		},
 	}
 }
-func (d *dataSourceEventBuses) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *eventBusesDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data eventBusesDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := d.Meta().EventsClient(ctx)
 
-	var data dataSourceEventBusesModel
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
+	input := eventbridge.ListEventBusesInput{
+		NamePrefix: fwflex.StringFromFramework(ctx, data.NamePrefix),
 	}
 
-	input := &eventbridge.ListEventBusesInput{
-		NamePrefix: data.NamePrefix.ValueStringPointer(),
-	}
-
-	out, err := findEventBuses(ctx, conn, input)
+	output, err := findEventBuses(ctx, conn, &input)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Events, create.ErrActionReading, DSNameEventBuses, data.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("reading EventBridge Event Buses", err.Error())
+
 		return
 	}
 
-	data.ID = types.StringValue(d.Meta().Region(ctx))
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &data.EventBuses)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data.EventBuses)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceEventBusesModel struct {
-	ID         types.String                                    `tfsdk:"id"`
-	NamePrefix types.String                                    `tfsdk:"name_prefix"`
-	EventBuses fwtypes.ListNestedObjectValueOf[eventBustModel] `tfsdk:"event_buses"`
+type eventBusesDataSourceModel struct {
+	EventBuses fwtypes.ListNestedObjectValueOf[eventBusModel] `tfsdk:"event_buses"`
+	NamePrefix types.String                                   `tfsdk:"name_prefix"`
 }
 
-type eventBustModel struct {
-	Arn              types.String      `tfsdk:"arn"`
+type eventBusModel struct {
+	ARN              types.String      `tfsdk:"arn"`
 	CreationTime     timetypes.RFC3339 `tfsdk:"creation_time"`
 	Description      types.String      `tfsdk:"description"`
 	LastModifiedTime timetypes.RFC3339 `tfsdk:"last_modified_time"`

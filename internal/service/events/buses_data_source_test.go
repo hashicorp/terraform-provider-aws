@@ -17,7 +17,8 @@ func TestAccEventsEventBusesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	busName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_bus.test"
-	dataSourceName := "data.aws_cloudwatch_event_buses.test"
+	dataSource1Name := "data.aws_cloudwatch_event_buses.by_name_prefix"
+	dataSource2Name := "data.aws_cloudwatch_event_buses.all"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -28,11 +29,12 @@ func TestAccEventsEventBusesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccEventBusesDataSourceConfig_basic(busName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "event_buses.#", "1"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "event_buses.0.arn", resourceName, names.AttrARN),
-					resource.TestCheckResourceAttrSet(dataSourceName, "event_buses.0.creation_time"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "event_buses.0.last_modified_time"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "event_buses.0.name", resourceName, names.AttrName),
+					resource.TestCheckResourceAttr(dataSource1Name, "event_buses.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "event_buses.0.arn", resourceName, names.AttrARN),
+					resource.TestCheckResourceAttrSet(dataSource1Name, "event_buses.0.creation_time"),
+					resource.TestCheckResourceAttrSet(dataSource1Name, "event_buses.0.last_modified_time"),
+					resource.TestCheckResourceAttrPair(dataSource1Name, "event_buses.0.name", resourceName, names.AttrName),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSource2Name, "event_buses.#", 1),
 				),
 			},
 		},
@@ -45,10 +47,12 @@ resource "aws_cloudwatch_event_bus" "test" {
   name = %[1]q
 }
 
-data "aws_cloudwatch_event_buses" "test" {
-  depends_on = [aws_cloudwatch_event_bus.test]
+data "aws_cloudwatch_event_buses" "by_name_prefix" {
+  name_prefix = aws_cloudwatch_event_bus.name
+}
 
-  name_prefix = %[1]q
+data "aws_cloudwatch_event_buses" "all" {
+  depends_on = [aws_cloudwatch_event_bus.test]
 }
 `, busName)
 }
