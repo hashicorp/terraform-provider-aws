@@ -6,6 +6,7 @@ package timestreaminfluxdb
 import (
 	"context"
 	"errors"
+	"math"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -105,11 +106,8 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					that each data point persists). A bucket belongs to an organization.`,
 			},
 			"db_instance_type": schema.StringAttribute{
-				CustomType: fwtypes.StringEnumType[awstypes.DbInstanceType](),
-				Required:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				CustomType:  fwtypes.StringEnumType[awstypes.DbInstanceType](),
+				Required:    true,
 				Description: `The Timestream for InfluxDB DB instance type to run InfluxDB on.`,
 			},
 			"db_parameter_group_identifier": schema.StringAttribute{
@@ -146,7 +144,6 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 				Optional:   true,
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
 				Description: `Specifies whether the DB instance will be deployed as a standalone instance or 
@@ -187,6 +184,18 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					prefix included in the endpoint. DB instance names must be unique per customer 
 					and per region.`,
 			},
+			"network_type": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.NetworkType](),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Description: `Specifies whether the networkType of the Timestream for InfluxDB instance is 
+					IPV4, which can communicate over IPv4 protocol only, or DUAL, which can communicate 
+					over both IPv4 and IPv6 protocols.`,
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"organization": schema.StringAttribute{
@@ -215,6 +224,18 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 					also use the InfluxDB CLI to create an operator token. These attributes will be 
 					stored in a Secret created in AWS SecretManager in your account.`,
 			},
+			names.AttrPort: schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.Int64{
+					int64validator.Between(1024, 65535),
+					int64validator.NoneOf(2375, 2376, 7788, 7789, 7790, 7791, 7792, 7793, 7794, 7795, 7796, 7797, 7798, 7799, 8090, 51678, 51679, 51680),
+				},
+				Description: `The port number on which InfluxDB accepts connections.`,
+			},
 			names.AttrPubliclyAccessible: schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -226,9 +247,7 @@ func (r *resourceDBInstance) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"secondary_availability_zone": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Default:  nil,
 				Description: `The Availability Zone in which the standby instance is located when deploying 
 					with a MultiAZ standby instance.`,
 			},
@@ -454,15 +473,49 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) ||
-		!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
+		!plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) ||
+		!plan.DBInstanceType.Equal(state.DBInstanceType) ||
+		!plan.DeploymentType.Equal(state.DeploymentType) ||
+		!plan.Port.Equal(state.Port) {
 		in := timestreaminfluxdb.UpdateDbInstanceInput{
 			Identifier: plan.ID.ValueStringPointer(),
 		}
 
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
+		// If any argument is updated with the same value, a ValidationException will occur. Arguments should only
+		// be updated if they have changed. For this reason, flex.Expand cannot be used for all arguments.
+		if !plan.DBParameterGroupIdentifier.Equal(state.DBParameterGroupIdentifier) {
+			in.DbParameterGroupIdentifier = plan.DBParameterGroupIdentifier.ValueStringPointer()
+		}
 
-		if resp.Diagnostics.HasError() {
-			return
+		if !plan.LogDeliveryConfiguration.Equal(state.LogDeliveryConfiguration) {
+			flex.Expand(ctx, plan.LogDeliveryConfiguration, &in.LogDeliveryConfiguration)
+		}
+
+		if !plan.DBInstanceType.Equal(state.DBInstanceType) {
+			in.DbInstanceType = awstypes.DbInstanceType(plan.DBInstanceType.ValueString())
+		}
+
+		if !plan.DeploymentType.Equal(state.DeploymentType) {
+			in.DeploymentType = awstypes.DeploymentType(plan.DeploymentType.ValueString())
+		}
+
+		if !plan.Port.Equal(state.Port) {
+			if plan.Port.ValueInt64() > math.MaxInt32 {
+				err := errors.New("port was greater than the maximum allowed value for int32")
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
+					err.Error(),
+				)
+				return
+			} else if plan.Port.ValueInt64() < math.MinInt32 {
+				err := errors.New("port was less than the minimum allowed value for int32")
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.TimestreamInfluxDB, create.ErrActionUpdating, ResNameDBInstance, plan.ID.String(), err),
+					err.Error(),
+				)
+				return
+			}
+			in.Port = aws.Int32(int32(plan.Port.ValueInt64()))
 		}
 
 		_, err := conn.UpdateDbInstance(ctx, &in)
@@ -492,6 +545,12 @@ func (r *resourceDBInstance) Update(ctx context.Context, req resource.UpdateRequ
 
 		// flatten using legacy since this computed output may be null
 		plan.SecondaryAvailabilityZone = flex.StringToFrameworkLegacy(ctx, output.SecondaryAvailabilityZone)
+	}
+
+	// Updating tags can leave SecondaryAvailabilityZone unknown, as tags cannot be included in UpdateDbInstanceInput above.
+	// To get around this, if SecondaryAvailabilityZone is unknown after an update, set it to its previous value.
+	if plan.SecondaryAvailabilityZone.IsUnknown() {
+		plan.SecondaryAvailabilityZone = state.SecondaryAvailabilityZone
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -557,7 +616,7 @@ func waitDBInstanceCreated(ctx context.Context, conn *timestreaminfluxdb.Client,
 
 func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.StatusModifying, awstypes.StatusUpdating),
+		Pending:                   enum.Slice(awstypes.StatusModifying, awstypes.StatusUpdating, awstypes.StatusUpdatingInstanceType, awstypes.StatusUpdatingDeploymentType),
 		Target:                    enum.Slice(awstypes.StatusAvailable),
 		Refresh:                   statusDBInstance(ctx, conn, id),
 		Timeout:                   timeout,
@@ -575,7 +634,7 @@ func waitDBInstanceUpdated(ctx context.Context, conn *timestreaminfluxdb.Client,
 
 func waitDBInstanceDeleted(ctx context.Context, conn *timestreaminfluxdb.Client, id string, timeout time.Duration) (*timestreaminfluxdb.GetDbInstanceOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.StatusDeleting),
+		Pending: enum.Slice(awstypes.StatusDeleting, awstypes.StatusDeleted),
 		Target:  []string{},
 		Refresh: statusDBInstance(ctx, conn, id),
 		Timeout: timeout,
@@ -643,8 +702,10 @@ type resourceDBInstanceData struct {
 	InfluxAuthParametersSecretARN types.String                                                  `tfsdk:"influx_auth_parameters_secret_arn"`
 	LogDeliveryConfiguration      fwtypes.ListNestedObjectValueOf[logDeliveryConfigurationData] `tfsdk:"log_delivery_configuration"`
 	Name                          types.String                                                  `tfsdk:"name"`
+	NetworkType                   fwtypes.StringEnum[awstypes.NetworkType]                      `tfsdk:"network_type"`
 	Organization                  types.String                                                  `tfsdk:"organization"`
 	Password                      types.String                                                  `tfsdk:"password"`
+	Port                          types.Int64                                                   `tfsdk:"port"`
 	PubliclyAccessible            types.Bool                                                    `tfsdk:"publicly_accessible"`
 	SecondaryAvailabilityZone     types.String                                                  `tfsdk:"secondary_availability_zone"`
 	Tags                          tftags.Map                                                    `tfsdk:"tags"`
