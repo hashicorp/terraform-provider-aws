@@ -3626,10 +3626,14 @@ data "aws_rds_orderable_db_instance" "test" {
   supports_iops              = true
 }
 
+data "aws_rds_certificate" "test" {
+  default_for_new_launches = true
+}
+
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
   db_subnet_group_name      = aws_db_subnet_group.test.name
-  ca_certificate_identifier = "rds-ca-rsa2048-g1"
+  ca_certificate_identifier = data.aws_rds_certificate.test.id
   cluster_identifier        = %[1]q
   engine                    = data.aws_rds_orderable_db_instance.test.engine
   engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
