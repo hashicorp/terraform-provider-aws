@@ -47,8 +47,8 @@ func (e *ephemeralClusterAuth) Schema(ctx context.Context, _ ephemeral.SchemaReq
 }
 
 func (e *ephemeralClusterAuth) Open(ctx context.Context, request ephemeral.OpenRequest, response *ephemeral.OpenResponse) {
-	var data epClusterAuthData
 	conn := e.Meta().STSClient(ctx)
+	data := epClusterAuthData{}
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -61,16 +61,19 @@ func (e *ephemeralClusterAuth) Open(ctx context.Context, request ephemeral.OpenR
 			create.ProblemStandardMessage(names.EKS, create.ErrActionReading, ERNameClusterAuth, data.Name.String(), err),
 			err.Error(),
 		)
+		return
 	}
-	output, err := generator.GetWithSTS(ctx, data.Name.String(), conn)
+
+	token, err := generator.GetWithSTS(ctx, data.Name.ValueString(), conn)
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EKS, create.ErrActionReading, ERNameClusterAuth, data.Name.String(), err),
 			err.Error(),
 		)
+		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, token, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
