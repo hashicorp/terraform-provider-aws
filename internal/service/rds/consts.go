@@ -30,6 +30,7 @@ const (
 	clusterStatusRenaming                      = "renaming"
 	clusterStatusResettingMasterCredentials    = "resetting-master-credentials"
 	clusterStatusScalingCompute                = "scaling-compute"
+	clusterStatusScalingStorage                = "scaling-storage"
 	clusterStatusUpgrading                     = "upgrading"
 
 	// Non-standard status values.
@@ -39,6 +40,7 @@ const (
 const (
 	clusterSnapshotStatusAvailable = "available"
 	clusterSnapshotStatusCreating  = "creating"
+	clusterSnapshotStatusCopying   = "copying"
 )
 
 const (

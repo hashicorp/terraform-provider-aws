@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
-	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -20,12 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cloudwatch_query_definition")
+// @SDKResource("aws_cloudwatch_query_definition", name="Query Definition")
 func resourceQueryDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueryDefinitionPut,
@@ -68,7 +69,6 @@ func resourceQueryDefinition() *schema.Resource {
 
 func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -100,7 +100,6 @@ func resourceQueryDefinitionPut(ctx context.Context, d *schema.ResourceData, met
 
 func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	result, err := findQueryDefinitionByTwoPartKey(ctx, conn, d.Get(names.AttrName).(string), d.Id())
@@ -125,7 +124,6 @@ func resourceQueryDefinitionRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Query Definition: %s", d.Id())
@@ -133,7 +131,7 @@ func resourceQueryDefinitionDelete(ctx context.Context, d *schema.ResourceData, 
 		QueryDefinitionId: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -165,12 +163,29 @@ func resourceQueryDefinitionImport(ctx context.Context, d *schema.ResourceData, 
 	return []*schema.ResourceData{d}, nil
 }
 
-func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, name, queryDefinitionID string) (*types.QueryDefinition, error) {
-	input := &cloudwatchlogs.DescribeQueryDefinitionsInput{}
+func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, name, queryDefinitionID string) (*awstypes.QueryDefinition, error) {
+	input := cloudwatchlogs.DescribeQueryDefinitionsInput{}
 	if name != "" {
 		input.QueryDefinitionNamePrefix = aws.String(name)
 	}
-	var output *types.QueryDefinition
+
+	return findQueryDefinition(ctx, conn, &input, func(v *awstypes.QueryDefinition) bool {
+		return aws.ToString(v.QueryDefinitionId) == queryDefinitionID
+	})
+}
+
+func findQueryDefinition(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, filter tfslices.Predicate[*awstypes.QueryDefinition]) (*awstypes.QueryDefinition, error) {
+	output, err := findQueryDefinitions(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findQueryDefinitions(ctx context.Context, conn *cloudwatchlogs.Client, input *cloudwatchlogs.DescribeQueryDefinitionsInput, filter tfslices.Predicate[*awstypes.QueryDefinition]) ([]awstypes.QueryDefinition, error) {
+	var output []awstypes.QueryDefinition
 
 	err := describeQueryDefinitionsPages(ctx, conn, input, func(page *cloudwatchlogs.DescribeQueryDefinitionsOutput, lastPage bool) bool {
 		if page == nil {
@@ -178,10 +193,8 @@ func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.C
 		}
 
 		for _, v := range page.QueryDefinitions {
-			if aws.ToString(v.QueryDefinitionId) == queryDefinitionID {
-				output = &v
-
-				return false
+			if filter(&v) {
+				output = append(output, v)
 			}
 		}
 
@@ -192,9 +205,5 @@ func findQueryDefinitionByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.C
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, err
+	return output, nil
 }

@@ -337,7 +337,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribeDirectories(ctx, &directoryservice.DescribeDirectoriesInput{},
+	input := directoryservice.DescribeDirectoriesInput{}
+	_, err := client.DescribeDirectories(ctx, &input,
 		func(opts *directoryservice.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

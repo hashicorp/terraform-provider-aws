@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -65,13 +64,7 @@ func (r *resourceAccount) Schema(ctx context.Context, request resource.SchemaReq
 				ElementType: types.StringType,
 				Computed:    true,
 			},
-			names.AttrID: schema.StringAttribute{
-				Computed:           true,
-				DeprecationMessage: `The "id" attribute is unused and will be removed in a future version of the provider`,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			names.AttrID: framework.IDAttributeDeprecatedNoReplacement(),
 			"reset_on_delete": schema.BoolAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.Bool{

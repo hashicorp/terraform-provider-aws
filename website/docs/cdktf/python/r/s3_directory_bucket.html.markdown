@@ -56,7 +56,7 @@ The `location` block supports the following:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Name of the bucket.
+* `id` - (**Deprecated**, use `bucket` instead) Name of the bucket.
 * `arn` - ARN of the bucket.
 
 ## Import
@@ -84,4 +84,4 @@ Using `terraform import`, import S3 bucket using `bucket`. For example:
 % terraform import aws_s3_directory_bucket.example example--usw2-az1--x-s3
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-0e4bc20e8cd7179bbaa30fdacb2507255d4fcf3c4306b70467bba052d9a3cd9e -->
+<!-- cache-key: cdktf-0.20.8 input-4d74630b712855b41f51ea4767b000039cd48967ec61754825ee171cd1a6209e -->

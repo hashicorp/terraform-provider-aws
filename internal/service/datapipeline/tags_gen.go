@@ -76,12 +76,12 @@ func updateTags(ctx context.Context, conn *datapipeline.Client, identifier strin
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.DataPipeline)
 	if len(removedTags) > 0 {
-		input := &datapipeline.RemoveTagsInput{
+		input := datapipeline.RemoveTagsInput{
 			PipelineId: aws.String(identifier),
 			TagKeys:    removedTags.Keys(),
 		}
 
-		_, err := conn.RemoveTags(ctx, input, optFns...)
+		_, err := conn.RemoveTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -91,12 +91,12 @@ func updateTags(ctx context.Context, conn *datapipeline.Client, identifier strin
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.DataPipeline)
 	if len(updatedTags) > 0 {
-		input := &datapipeline.AddTagsInput{
+		input := datapipeline.AddTagsInput{
 			PipelineId: aws.String(identifier),
 			Tags:       Tags(updatedTags),
 		}
 
-		_, err := conn.AddTags(ctx, input, optFns...)
+		_, err := conn.AddTags(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

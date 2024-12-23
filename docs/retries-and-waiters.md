@@ -306,13 +306,13 @@ const (
 
     	// ...Creation steps...
 
-    	input := &example.OperationInput{/* ... */}
+    	input := example.OperationInput{/* ... */}
 
     	var output *example.OperationOutput
         createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
     	err := retry.RetryContext(ctx, createTimeout, func() *retry.RetryError {
     		var err error
-    		output, err = conn.Operation(input)
+    		output, err = conn.Operation(ctx, &input)
 
     		if errs.IsA[*types.ResourceNotFoundException(err) {
     			return retry.RetryableError(err)
@@ -327,7 +327,7 @@ const (
 
     	// Retry AWS Go SDK operation if no response from automatic retries.
     	if tfresource.TimedOut(err) {
-    		output, err = exampleconn.Operation(input)
+    		output, err = conn.Operation(ctx, &input)
     	}
 
     	if err != nil {
@@ -366,12 +366,12 @@ const (
 
     	conn := meta.(*AWSClient).ExampleConn()
 
-    	input := &example.OperationInput{/* ... */}
+    	input := example.OperationInput{/* ... */}
 
     	var output *example.OperationOutput
     	err := retry.RetryContext(ctx, ThingCreationTimeout, func() *retry.RetryError {
     		var err error
-    		output, err = conn.Operation(input)
+    		output, err = conn.Operation(ctx, &input)
 
     		// Retry on any API "not found" errors, but only on new resources.
     		if d.IsNewResource() && tfawserr.ErrorCodeEquals(err, example.ErrCodeResourceNotFoundException) {
@@ -387,7 +387,7 @@ const (
 
     	// Retry AWS Go SDK operation if no response from automatic retries.
     	if tfresource.TimedOut(err) {
-    		output, err = exampleconn.Operation(input)
+    		output, err = conn.Operation(ctx, &input)
     	}
 
     	// Prevent confusing Terraform error messaging to operators by

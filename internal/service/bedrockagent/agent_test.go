@@ -431,6 +431,52 @@ func TestAccBedrockAgentAgent_kms(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentAgent_agentCollaboration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent.test"
+	var v awstypes.Agent
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-v2", "basic claude", string(awstypes.AgentCollaborationSupervisor)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "agent_collaboration", string(awstypes.AgentCollaborationSupervisor)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check", "prepare_agent"},
+			},
+			{
+				Config: testAccAgentConfig_agentCollaboration(rName, "anthropic.claude-v2", "basic claude", string(awstypes.AgentCollaborationSupervisorRouter)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "guardrail_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "basic claude"),
+					resource.TestCheckResourceAttr(resourceName, "prepare_agent", acctest.CtFalse),
+					resource.TestCheckResourceAttr(resourceName, "agent_collaboration", string(awstypes.AgentCollaborationSupervisorRouter)),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAgentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
@@ -822,4 +868,19 @@ resource "aws_kms_key" "test_agent" {
   deletion_window_in_days = 7
 }
 `, rName, model, description, timeout))
+}
+
+func testAccAgentConfig_agentCollaboration(rName, model, description, collaboration string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_collaboration         = %[4]q
+  agent_name                  = %[1]q
+  agent_resource_role_arn     = aws_iam_role.test_agent.arn
+  description                 = %[3]q
+  idle_session_ttl_in_seconds = 500
+  instruction                 = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model            = %[2]q
+  prepare_agent               = false
+}
+`, rName, model, description, collaboration))
 }

@@ -92,14 +92,14 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v := d.Get(names.AttrEnabled).(bool); v {
-		input := &account.EnableRegionInput{
+		input := account.EnableRegionInput{
 			RegionName: aws.String(region),
 		}
 		if accountID != "" {
 			input.AccountId = aws.String(accountID)
 		}
 
-		_, err := conn.EnableRegion(ctx, input)
+		_, err := conn.EnableRegion(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
@@ -109,14 +109,14 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "waiting for Account Region (%s) enable: %s", d.Id(), err)
 		}
 	} else {
-		input := &account.DisableRegionInput{
+		input := account.DisableRegionInput{
 			RegionName: aws.String(region),
 		}
 		if accountID != "" {
 			input.AccountId = aws.String(accountID)
 		}
 
-		_, err := conn.DisableRegion(ctx, input)
+		_, err := conn.DisableRegion(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
@@ -166,14 +166,14 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func findRegionOptStatus(ctx context.Context, conn *account.Client, accountID, region string) (*account.GetRegionOptStatusOutput, error) {
-	input := &account.GetRegionOptStatusInput{
+	input := account.GetRegionOptStatusInput{
 		RegionName: aws.String(region),
 	}
 	if accountID != "" {
 		input.AccountId = aws.String(accountID)
 	}
 
-	output, err := conn.GetRegionOptStatus(ctx, input)
+	output, err := conn.GetRegionOptStatus(ctx, &input)
 
 	if err != nil {
 		return nil, err
