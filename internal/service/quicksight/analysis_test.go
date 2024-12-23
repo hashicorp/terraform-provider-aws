@@ -216,6 +216,67 @@ func TestAccQuickSightAnalysis_forceDelete(t *testing.T) {
 	})
 }
 
+func TestAccQuickSightAnalysis_textContent(t *testing.T) {
+	ctx := acctest.Context(t)
+	var analysis awstypes.Analysis
+	resourceName := "aws_quicksight_analysis.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalysisDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalysisConfig_textContent(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
+					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
+					resource.TestCheckResourceAttr(resourceName, names.AttrName, rName),
+					resource.TestCheckResourceAttr(resourceName, names.AttrStatus, string(awstypes.ResourceStatusCreationSuccessful)),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.text_boxes.0.content", "<text-box>\n  <inline font-size=\"20px\">\n    <b>Title</b>\n  </inline>\n  <br/>\n  Some text.\n  <br/>\n  Some text, and here is a link:\n  <a href=\"https://github.com/hashicorp/terraform-provider-aws\" target=\"_blank\">link</a>\n</text-box>"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAnalysisConfig_textContent(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccAnalysisConfig_base(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_analysis" "test" {
+  analysis_id = %[1]q
+  name        = %[2]q
+  theme_arn   = "arn:aws:quicksight::aws:theme/CLASSIC"
+
+  definition {
+    data_set_identifiers_declarations {
+      data_set_arn = aws_quicksight_data_set.test.arn
+      identifier   = "1"
+    }
+    sheets {
+      title    = "Test"
+      sheet_id = "Test1"
+      text_boxes {
+        sheet_text_box_id = "text1"
+        content = "<text-box>\n  <inline font-size=\"20px\">\n    <b>Title</b>\n  </inline>\n  <br/>\n  Some text.\n  <br/>\n  Some text, and here is a link:\n  <a href=\"https://github.com/hashicorp/terraform-provider-aws\" target=\"_blank\">link</a>\n</text-box>"
+      }
+    }
+  }
+}
+`, rId, rName))
+}
+
 func TestAccQuickSightAnalysis_Definition_calculatedFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	var analysis awstypes.Analysis
