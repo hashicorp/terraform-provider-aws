@@ -31,17 +31,34 @@ resource "aws_route53_record" "www" {
 }
 ```
 
+The following example shows how to get a Hosted Zone from a unique combination of its tags:
+
+```terraform
+data "aws_route53_zone" "selected" {
+  tags {
+    scope    = "local"
+    category = "api"
+  }
+}
+
+output "local_api_zone" {
+  value = data.aws_route53_zone.selected.zone_id
+}
+```
+
 ## Argument Reference
 
 The arguments of this data source act as filters for querying the available
-Hosted Zone. You have to use `zone_id` or `name`, not both of them. The given filter must match exactly one
-Hosted Zone. If you use `name` field for private Hosted Zone, you need to add `private_zone` field to `true`.
+Hosted Zone.
+The `zone_id` and `name` arguments are mutually exclusive: only one can be specified.
+The `private_zone`, `vpc_id` and `tags` filters are ignored when `zone_id` is
+specified, and together they must filter to match exactly one Hosted Zone.
 
-* `zone_id` - (Optional) Hosted Zone id of the desired Hosted Zone.
-* `name` - (Optional) Hosted Zone name of the desired Hosted Zone.
-* `private_zone` - (Optional) Used with `name` field to get a private Hosted Zone.
-* `vpc_id` - (Optional) Used with `name` field to get a private Hosted Zone associated with the vpc_id (in this case, private_zone is not mandatory).
-* `tags` - (Optional) Used with `name` field. A map of tags, each pair of which must exactly match a pair on the desired Hosted Zone.
+* `zone_id` - (Optional) Directly return the Hosted Zone with the specified Zone ID. No further filtering is performed.
+* `name` - (Optional) Hosted Zone name of the desired Hosted Zone. If blank, then accept any name, filtering on only `private_zone`, `vpc_id` and `tags`.
+* `private_zone` - (Optional) Filter to only private Hosted Zones.
+* `vpc_id` - (Optional, string) Filter to private Hosted Zones associated with the specified `vpc_id`.
+* `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired Hosted Zone.
 
 ## Attribute Reference
 
@@ -50,7 +67,7 @@ result attributes. This data source will complete the data by populating
 any fields that are not included in the configuration with the data for
 the selected Hosted Zone.
 
-The following attribute is additionally exported:
+The following attributes are additionally exported:
 
 * `arn` - ARN of the Hosted Zone.
 * `caller_reference` - Caller Reference of the Hosted Zone.
