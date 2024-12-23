@@ -6,7 +6,6 @@ package route53domains
 import (
 	"context"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -37,8 +36,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Domain")
-// @Tags(identifierAttribute="id")
+// @FrameworkResource("aws_route53domains_domain", name="Domain")
+// @Tags(identifierAttribute="domain_name")
 func newDomainResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &domainResource{}
 
@@ -52,7 +51,6 @@ func newDomainResource(context.Context) (resource.ResourceWithConfigure, error) 
 type domainResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
-	framework.WithImportByID
 }
 
 func (*domainResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -118,7 +116,6 @@ func (r *domainResource) Schema(ctx context.Context, request resource.SchemaRequ
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			names.AttrID: framework.IDAttribute(),
 			"name_server": schema.ListAttribute{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[nameserverModel](ctx),
 				Optional:   true,
@@ -324,18 +321,15 @@ func (r *domainResource) Create(ctx context.Context, request resource.CreateRequ
 		return
 	}
 
-	// Set values for unknowns.
-	data.ID = fwflex.StringValueToFramework(ctx, strings.ToLower(domainName))
-
 	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.DomainName) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Route 53 Domains Domain (%s) create", domainName), err.Error())
 
 		return
 	}
 
 	if err := createTags(ctx, conn, domainName, getTagsIn(ctx)); err != nil {
-		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.DomainName) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("setting Route 53 Domains Domain (%s) tags", domainName), err.Error())
 
 		return
@@ -362,12 +356,6 @@ func (r *domainResource) Read(ctx context.Context, request resource.ReadRequest,
 	var data domainResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
-		return
-	}
-
-	if err := data.InitFromID(); err != nil {
-		response.Diagnostics.AddError("parsing resource ID", err.Error())
-
 		return
 	}
 
@@ -462,6 +450,10 @@ func (r *domainResource) Delete(ctx context.Context, request resource.DeleteRequ
 	// }
 }
 
+func (r *domainResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrDomainName), request, response)
+}
+
 func (r *domainResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
@@ -478,7 +470,6 @@ type domainResourceModel struct {
 	DomainName        fwtypes.CaseInsensitiveString                       `tfsdk:"domain_name"`
 	DurationInYears   types.Int64                                         `tfsdk:"duration_in_years"`
 	ExpirationDate    timetypes.RFC3339                                   `tfsdk:"expiration_date"`
-	ID                types.String                                        `tfsdk:"id"`
 	NameServers       fwtypes.ListNestedObjectValueOf[nameserverModel]    `tfsdk:"name_server"`
 	RegistrantContact fwtypes.ListNestedObjectValueOf[contactDetailModel] `tfsdk:"registrant_contact"`
 	RegistrantPrivacy types.Bool                                          `tfsdk:"registrant_privacy"`
@@ -494,12 +485,6 @@ type domainResourceModel struct {
 	TransferLock      types.Bool                                          `tfsdk:"transfer_lock"`
 	UpdatedDate       timetypes.RFC3339                                   `tfsdk:"updated_date"`
 	WhoIsServer       types.String                                        `tfsdk:"whois_server"`
-}
-
-func (data *domainResourceModel) InitFromID() error {
-	data.DomainName = fwtypes.CaseInsensitiveStringValue(data.ID.ValueString())
-
-	return nil
 }
 
 type contactDetailModel struct {
