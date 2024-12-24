@@ -461,6 +461,30 @@ func TestAccRoute53Zone_escapedCharacter(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Zone_classlessDelegation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var zone route53.GetHostedZoneOutput
+	resourceName := "aws_route53_zone.test"
+	// https://datatracker.ietf.org/doc/html/rfc2317.
+	zoneName := "1.0/25.2.0.192.in-addr.arpa"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckZoneDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccZoneConfig_basic(zoneName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckZoneExists(ctx, resourceName, &zone),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckZoneDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Route53Client(ctx)
