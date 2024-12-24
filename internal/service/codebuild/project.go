@@ -522,6 +522,25 @@ func resourceProject() *schema.Resource {
 				MaxItems: 12,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"auth": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrType: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.AuthType](),
+									},
+									"resource": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
 						"build_status_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -613,6 +632,25 @@ func resourceProject() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"auth": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									names.AttrType: {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.AuthType](),
+									},
+									"resource": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
 						"build_status_config": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -1634,6 +1672,20 @@ func expandProjectSource(tfMap map[string]interface{}) *types.ProjectSource {
 
 			apiObject.BuildStatusConfig = buildStatusConfig
 		}
+	}
+
+	if v, ok := tfMap["auth"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
+
+		sourceAuthConfig := &types.SourceAuth{}
+		if v, ok := tfMap[names.AttrType].(string); ok && v != "" {
+			sourceAuthConfig.Type = types.SourceAuthType(v)
+		}
+		if v, ok := tfMap["resource"].(string); ok && v != "" {
+			sourceAuthConfig.Resource = aws.String(v)
+		}
+
+		apiObject.Auth = sourceAuthConfig
 	}
 
 	return apiObject
