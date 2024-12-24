@@ -157,7 +157,7 @@ This resource supports the following arguments:
 `auth` blocks support the following:
 
 * `auth_scheme` - (Optional) The type of authentication that the proxy uses for connections from the proxy to the underlying database. One of `SECRETS`.
-* `client_password_auth_type` - (Optional) The type of authentication the proxy uses for connections from clients. Valid values are `MYSQL_NATIVE_PASSWORD`, `POSTGRES_SCRAM_SHA_256`, `POSTGRES_MD5`, and `SQL_SERVER_AUTHENTICATION`.
+* `client_password_auth_type` - (Optional) The type of authentication the proxy uses for connections from clients. Valid values are `MYSQL_CACHING_SHA2_PASSWORD`, `MYSQL_NATIVE_PASSWORD`, `POSTGRES_SCRAM_SHA_256`, `POSTGRES_MD5`, and `SQL_SERVER_AUTHENTICATION`.
 * `description` - (Optional) A user-specified description about the authentication used by a proxy to log in as a specific database user.
 * `iam_auth` - (Optional) Whether to require or disallow AWS Identity and Access Management (IAM) authentication for connections to the proxy. One of `DISABLED`, `REQUIRED`.
 * `secret_arn` - (Optional) The Amazon Resource Name (ARN) representing the secret that the proxy uses to authenticate to the RDS DB instance or Aurora DB cluster. These secrets are stored within Amazon Secrets Manager.
@@ -205,4 +205,4 @@ Using `terraform import`, import DB proxies using the `name`. For example:
 % terraform import aws_db_proxy.example example
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-3d39552f1967946e21c2fee64f93bccc68d21463cd7495e1c00fa31fda1795a2 -->
+<!-- cache-key: cdktf-0.20.8 input-d145839adbe8d3079eab1a6c70438b965ea76c73ccfbdf78c9220b1efcb5b2bf -->

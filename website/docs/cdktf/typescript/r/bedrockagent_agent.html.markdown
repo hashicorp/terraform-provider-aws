@@ -132,6 +132,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `agentCollaboration` - (Optional) Agents collaboration role. Valid values: `SUPERVISOR`, `SUPERVISOR_ROUTER`, `DISABLED`.
 * `customerEncryptionKeyArn` - (Optional) ARN of the AWS KMS key that encrypts the agent.
 * `description` - (Optional) Description of the agent.
 * `guardrailConfiguration` - (Optional) Details about the guardrail associated with the agent. See [`guardrailConfiguration` Block](#guardrail_configuration-block) for details.
@@ -223,4 +224,4 @@ Using `terraform import`, import Agents for Amazon Bedrock Agent using the agent
 % terraform import aws_bedrockagent_agent.example GGRRAED6JP
 ```
 
-<!-- cache-key: cdktf-0.20.8 input-4a7d151369dd60c740a3c70ec972992b20b273aef8f00cd4966f9d574d918988 -->
+<!-- cache-key: cdktf-0.20.8 input-11b1ee00a32af1f9b4b57de61f7da77db4347915374c563e0c5d4a4684321793 -->

@@ -53,7 +53,6 @@ func dataSourceGroup() *schema.Resource {
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	name := d.Get(names.AttrName).(string)
@@ -64,7 +63,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(name)
-	d.Set(names.AttrARN, TrimLogGroupARNWildcardSuffix(aws.ToString(logGroup.Arn)))
+	d.Set(names.AttrARN, trimLogGroupARNWildcardSuffix(aws.ToString(logGroup.Arn)))
 	d.Set(names.AttrCreationTime, logGroup.CreationTime)
 	d.Set(names.AttrKMSKeyID, logGroup.KmsKeyId)
 	d.Set("log_group_class", logGroup.LogGroupClass)
