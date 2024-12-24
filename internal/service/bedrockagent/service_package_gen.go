@@ -58,6 +58,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: names.AttrARN,
 			},
 		},
+		{
+			Factory: newResourceAgentCollaborator,
+			Name:    "Agent Collaborator",
+		},
 	}
 }
 
