@@ -1575,6 +1575,35 @@ func TestAccRoute53Record_ttl0(t *testing.T) {
 	})
 }
 
+func TestAccRoute53Record_aliasWildcardName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v awstypes.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	zoneName := acctest.RandomDomain()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRecordDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRecordConfig_aliasWildcardName(rName, zoneName.String()),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRecordExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", names.AttrWeight},
+			},
+		},
+	})
+}
+
 // testAccErrorCheckSkip skips Route53 tests that have error messages indicating unsupported features
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 	return acctest.ErrorCheckSkipMessagesContaining(t,
@@ -3255,4 +3284,60 @@ resource "aws_route53_record" "test" {
   records = ["127.0.0.1", "127.0.0.27"]
 }
 `, zoneName, recordName, ttl)
+}
+
+func testAccRecordConfig_aliasWildcardName(rName, zoneName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 3
+
+  vpc_id            = aws_vpc.test.id
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, count.index)
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id              = aws_vpc.test.id
+  service_name        = "com.amazonaws.${data.aws_region.current.name}.s3"
+  vpc_endpoint_type   = "Interface"
+  private_dns_enabled = false
+  subnet_ids          = aws_subnet.test[*].id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route53_zone" "test1" {
+  name = %[2]q
+}
+
+resource "aws_route53_record" "test" {
+  zone_id = aws_route53_zone.test1.zone_id
+  name    = "*.%[2]s"
+  type    = "A"
+
+  alias {
+    name                   = aws_vpc_endpoint.test.dns_entry[0].dns_name
+    zone_id                = aws_vpc_endpoint.test.dns_entry[0].hosted_zone_id
+    evaluate_target_health = false
+  }
+}
+`, rName, zoneName))
 }
