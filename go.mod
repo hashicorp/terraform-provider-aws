@@ -101,11 +101,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/drs v1.30.8
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.198.1
-	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.8
-	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.27.8
+	github.com/aws/aws-sdk-go-v2/service/ecr v1.36.9
+	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/efs v1.34.2
-	github.com/aws/aws-sdk-go-v2/service/eks v1.55.0
+	github.com/aws/aws-sdk-go-v2/service/eks v1.56.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.28.8
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.28.7
@@ -125,7 +125,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/gamelift v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.26.8
 	github.com/aws/aws-sdk-go-v2/service/globalaccelerator v1.29.8
-	github.com/aws/aws-sdk-go-v2/service/glue v1.104.1
+	github.com/aws/aws-sdk-go-v2/service/glue v1.105.0
 	github.com/aws/aws-sdk-go-v2/service/grafana v1.26.8
 	github.com/aws/aws-sdk-go-v2/service/greengrass v1.27.8
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.31.8
@@ -161,9 +161,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/location v1.42.8
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.31.8
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.19.1
-	github.com/aws/aws-sdk-go-v2/service/macie2 v1.44.0
+	github.com/aws/aws-sdk-go-v2/service/macie2 v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.36.1
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.64.0
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.64.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.65.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.34.8
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.20.2
