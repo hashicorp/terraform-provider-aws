@@ -251,7 +251,7 @@ The CloudFront distribution argument layout is a complex structure composed of s
 * `enabled` (Required) - Whether the distribution is enabled to accept end user requests for content.
 * `is_ipv6_enabled` (Optional) - Whether the IPv6 is enabled for the distribution.
 * `http_version` (Optional) - Maximum HTTP version to support on the distribution. Allowed values are `http1.1`, `http2`, `http2and3` and `http3`. The default is `http2`.
-* `logging_config` (Optional) - The [logging configuration](#logging-config-arguments) that controls how logs are written to your distribution (maximum one).
+* `logging_config` (Optional) - The [logging configuration](#logging-config-arguments) that controls how logs are written to your distribution (maximum one). AWS provides two versions of access logs for CloudFront: Legacy and v2. This is argument configures legacy standard logs.
 * `ordered_cache_behavior` (Optional) - Ordered list of [cache behaviors](#cache-behavior-arguments) resource for this distribution. List from top to bottom in order of precedence. The topmost cache behavior will have precedence 0.
 * `origin` (Required) - One or more [origins](#origin-arguments) for this distribution (multiples allowed).
 * `origin_group` (Optional) - One or more [origin_group](#origin-group-arguments) for this distribution (multiples allowed).
