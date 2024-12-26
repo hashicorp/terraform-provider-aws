@@ -78,7 +78,7 @@ func resourceRecord() *schema.Resource {
 						names.AttrName: {
 							Type:             schema.TypeString,
 							Required:         true,
-							StateFunc:        normalizeAliasName,
+							StateFunc:        normalizeAliasDomainName,
 							DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 							ValidateFunc:     validation.StringLenBetween(1, 1024),
 						},
@@ -415,7 +415,7 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if alias := record.AliasTarget; alias != nil {
 		tfList := []interface{}{map[string]interface{}{
 			"evaluate_target_health": alias.EvaluateTargetHealth,
-			names.AttrName:           normalizeAliasName(aws.ToString(alias.DNSName)),
+			names.AttrName:           normalizeAliasDomainName(aws.ToString(alias.DNSName)),
 			"zone_id":                aws.ToString(alias.HostedZoneId),
 		}}
 
@@ -988,7 +988,7 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *awstypes.
 // If it does not, add the zone name to form a fully qualified name
 // and keep AWS happy.
 func expandRecordName(name, zone string) string {
-	rn := normalizeZoneName(name)
+	rn := normalizeDomainName(name)
 	zone = strings.TrimSuffix(zone, ".")
 	if !strings.HasSuffix(rn, zone) {
 		if len(name) == 0 {

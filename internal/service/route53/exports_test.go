@@ -42,7 +42,7 @@ var (
 	ServeSignatureNotSigning                    = serveSignatureNotSigning
 	ServeSignatureSigning                       = serveSignatureSigning
 	WaitChangeInsync                            = waitChangeInsync
-	NormalizeNameIntoAPIRepresentation          = normalizeNameIntoAPIRepresentation
+	NormalizeNameIntoAPIRepresentation          = normalizeDomainNameToAPI
 )
 
 type Route53TrafficPolicyDoc = route53TrafficPolicyDoc

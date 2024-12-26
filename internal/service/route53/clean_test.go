@@ -13,7 +13,7 @@ func TestNormalizeNameIntoAPIRepresentation(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		UserInput, ExpectedR53Output string
+		input, output string
 	}{
 		// Preserve escape code
 		{"a\\000c.example.com", "a\\000c.example.com"},
@@ -38,22 +38,19 @@ func TestNormalizeNameIntoAPIRepresentation(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := normalizeNameIntoAPIRepresentation(tc.UserInput)
+		output := normalizeDomainNameToAPI(tc.input)
 
-		if actual != tc.ExpectedR53Output {
-			t.Errorf(
-				"user input: %+q\nexpected: %+q\nr53 output: %+q",
-				tc.UserInput, tc.ExpectedR53Output, actual,
-			)
+		if got, want := output, tc.output; got != want {
+			t.Errorf("normalizeDomainNameToAPI(%q) = %v, want %v", tc.input, got, want)
 		}
 	}
 }
 
-func TestNormalizeAliasName(t *testing.T) {
+func TestNormalizeAliasDomainName(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		Input, Output string
+		input, output string
 	}{
 		{"www.example.com", "www.example.com"},
 		{"www.example.com.", "www.example.com"},
@@ -66,9 +63,10 @@ func TestNormalizeAliasName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := normalizeAliasName(tc.Input)
-		if actual != tc.Output {
-			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
+		output := normalizeAliasDomainName(tc.input)
+
+		if got, want := output, tc.output; got != want {
+			t.Errorf("normalizeAliasDomainName(%q) = %v, want %v", tc.input, got, want)
 		}
 	}
 }
@@ -77,7 +75,7 @@ func TestCleanZoneID(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		Input, Output string
+		input, output string
 	}{
 		{"/hostedzone/foo", "foo"},
 		{"/change/foo", "/change/foo"},
@@ -85,19 +83,20 @@ func TestCleanZoneID(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := cleanZoneID(tc.Input)
-		if actual != tc.Output {
-			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
+		output := cleanZoneID(tc.input)
+
+		if got, want := output, tc.output; got != want {
+			t.Errorf("cleanZoneID(%q) = %v, want %v", tc.input, got, want)
 		}
 	}
 }
 
-func TestNormalizeZoneName(t *testing.T) {
+func TestNormalizeDomainName(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
-		Input  interface{}
-		Output string
+		input  interface{}
+		output string
 	}{
 		{"example.com", "example.com"},
 		{"example.com.", "example.com"},
@@ -117,9 +116,10 @@ func TestNormalizeZoneName(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual := normalizeZoneName(tc.Input)
-		if actual != tc.Output {
-			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
+		output := normalizeDomainName(tc.input)
+
+		if got, want := output, tc.output; got != want {
+			t.Errorf("normalizeDomainName(%q) = %v, want %v", tc.input, got, want)
 		}
 	}
 }
