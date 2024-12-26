@@ -153,7 +153,7 @@ func resourceNodeGroup() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled": {
+						names.AttrEnabled: {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
@@ -953,7 +953,7 @@ func expandNodeRepairConfig(tfMap map[string]interface{}) *types.NodeRepairConfi
 
 	apiObject := &types.NodeRepairConfig{}
 
-	if v, ok := tfMap["enabled"].(bool); ok {
+	if v, ok := tfMap[names.AttrEnabled].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
@@ -1068,7 +1068,7 @@ func flattenNodeRepairConfig(apiObject *types.NodeRepairConfig) map[string]inter
 	tfMap := make(map[string]interface{})
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.ToBool(v)
+		tfMap[names.AttrEnabled] = aws.ToBool(v)
 	}
 
 	return tfMap
