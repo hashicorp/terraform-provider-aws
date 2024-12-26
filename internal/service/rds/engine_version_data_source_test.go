@@ -50,6 +50,7 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_certificate_rotation_without_restart"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_global_databases"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_limitless_database"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "supports_local_write_forwarding"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_log_exports_to_cloudwatch"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_parallel_query"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "supports_read_replica"),
