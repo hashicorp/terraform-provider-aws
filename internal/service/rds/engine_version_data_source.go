@@ -117,6 +117,10 @@ func dataSourceEngineVersion() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
+			"supports_integrations": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"supports_limitless_database": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -402,6 +406,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	}))
 	d.Set("supports_certificate_rotation_without_restart", found.SupportsCertificateRotationWithoutRestart)
 	d.Set("supports_global_databases", found.SupportsGlobalDatabases)
+	d.Set("supports_integrations", found.SupportsIntegrations)
 	d.Set("supports_limitless_database", found.SupportsLimitlessDatabase)
 	d.Set("supports_local_write_forwarding", found.SupportsLocalWriteForwarding)
 	d.Set("supports_log_exports_to_cloudwatch", found.SupportsLogExportsToCloudwatchLogs)
