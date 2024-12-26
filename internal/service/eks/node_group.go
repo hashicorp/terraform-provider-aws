@@ -434,9 +434,11 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("node_group_name", nodeGroup.NodegroupName)
 	d.Set("node_group_name_prefix", create.NamePrefixFromName(aws.ToString(nodeGroup.NodegroupName)))
 	if nodeGroup.NodeRepairConfig != nil {
-		if err := d.Set("node_repair_config", flattenNodeGroupRepairConfig(nodeGroup.NodeRepairConfig)); err != nil {
+		if err := d.Set("node_repair_config", []interface{}{flattenNodeGroupRepairConfig(nodeGroup.NodeRepairConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting node_repair_config: %s", err)
 		}
+	} else {
+		d.Set("node_repair_config", nil)
 	}
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)

@@ -533,6 +533,11 @@ func TestAccEKSNodeGroup_RepairConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.enabled", acctest.CtTrue),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -2082,7 +2087,7 @@ resource "aws_eks_node_group" "test" {
     min_size     = 1
   }
 
-  node_repair_config = {
+  node_repair_config {
 	enabled = true
   }
 
