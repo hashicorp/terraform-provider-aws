@@ -117,6 +117,40 @@ func TestAccDMSEndpoint_Aurora_secretID(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_Aurora_updateSecretID(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_auroraSecretID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_auroraUpdateSecretID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_Aurora_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
@@ -1019,6 +1053,40 @@ func TestAccDMSEndpoint_MariaDB_secretID(t *testing.T) {
 	})
 }
 
+func TestAccDMSEndpoint_MariaDB_updateSecretID(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mariaDBSecretID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_mariaDBUpdateSecretID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDMSEndpoint_MariaDB_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_dms_endpoint.test"
@@ -1104,6 +1172,40 @@ func TestAccDMSEndpoint_MySQL_secretID(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccDMSEndpoint_MySQL_updateSecretID(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_mySQLSecretID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_mySQLUpdateSecretID(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tftest-new-database_name"),
 				),
 			},
 			{
@@ -2422,11 +2524,31 @@ resource "aws_dms_endpoint" "test" {
   engine_name                     = "aurora"
   secrets_manager_access_role_arn = aws_iam_role.test.arn
   secrets_manager_arn             = aws_secretsmanager_secret.test.id
+  database_name                   = "tftest"
 
   tags = {
     Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_auroraUpdateSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "aurora"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+  database_name                   = "tftest-new-database_name"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
   }
 }
 `, rName))
@@ -3677,11 +3799,31 @@ resource "aws_dms_endpoint" "test" {
   engine_name                     = "mariadb"
   secrets_manager_access_role_arn = aws_iam_role.test.arn
   secrets_manager_arn             = aws_secretsmanager_secret.test.id
+  database_name                   = "tftest"
 
   tags = {
     Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_mariaDBUpdateSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "mariadb"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+  database_name                   = "tftest-new-database_name"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
   }
 }
 `, rName))
@@ -3741,11 +3883,31 @@ resource "aws_dms_endpoint" "test" {
   engine_name                     = "mysql"
   secrets_manager_access_role_arn = aws_iam_role.test.arn
   secrets_manager_arn             = aws_secretsmanager_secret.test.id
+  database_name                   = "tftest"
 
   tags = {
     Name   = %[1]q
     Update = "to-update"
     Remove = "to-remove"
+  }
+}
+`, rName))
+}
+
+func testAccEndpointConfig_mySQLUpdateSecretID(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_secretBase(rName), fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id                     = %[1]q
+  endpoint_type                   = "source"
+  engine_name                     = "mysql"
+  secrets_manager_access_role_arn = aws_iam_role.test.arn
+  secrets_manager_arn             = aws_secretsmanager_secret.test.id
+  database_name                   = "tftest-new-database_name"
+
+  tags = {
+    Name   = %[1]q
+    Update = "updated"
+    Add    = "added"
   }
 }
 `, rName))
