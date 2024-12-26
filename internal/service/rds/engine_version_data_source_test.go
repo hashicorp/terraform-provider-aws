@@ -171,7 +171,7 @@ func TestAccRDSEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfrds.InstanceEngineMySQL),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^5\.7\.`)),
+					resource.TestMatchResourceAttr(dataSourceName, names.AttrVersion, regexache.MustCompile(`^8\.0\.`)),
 				),
 			},
 			{
