@@ -1,7 +1,7 @@
 ```release-note:bug
-resource/aws_route53_zone: Handle a hosted zone with escape code correctly
+resource/aws_route53_zone: Fix perpetual diff if `name` contains characters that the [Route 53 API escapes](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DomainNameFormat.html#domain-name-format-hosted-zones)
 ```
 
 ```release-note:bug
-resource/aws_route53_record: Handle a record name with escaped escape code correctly
+resource/aws_route53_record: Fix perpetual diff if `alias.name` contains characters that the [Route 53 API escapes](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DomainNameFormat.html#domain-name-format-hosted-zones)
 ```
