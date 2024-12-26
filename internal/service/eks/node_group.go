@@ -146,6 +146,21 @@ func resourceNodeGroup() *schema.Resource {
 				ConflictsWith: []string{"node_group_name"},
 				ValidateFunc:  validation.StringLenBetween(0, 63-id.UniqueIDSuffixLength),
 			},
+			"node_repair_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+					},
+				},
+			},
 			"node_role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -341,6 +356,10 @@ func resourceNodeGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.LaunchTemplate = expandLaunchTemplateSpecification(v)
 	}
 
+	if v, ok := d.GetOk("node_repair_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.NodeRepairConfig = expandNodegroupRepairConfig(v.([]interface{})[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("release_version"); ok {
 		input.ReleaseVersion = aws.String(v.(string))
 	}
@@ -414,6 +433,11 @@ func resourceNodeGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("node_group_name", nodeGroup.NodegroupName)
 	d.Set("node_group_name_prefix", create.NamePrefixFromName(aws.ToString(nodeGroup.NodegroupName)))
+	if nodeGroup.NodeRepairConfig != nil {
+		if err := d.Set("node_repair_config", flattenNodeGroupRepairConfig(nodeGroup.NodeRepairConfig)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting node_repair_config: %s", err)
+		}
+	}
 	d.Set("node_role_arn", nodeGroup.NodeRole)
 	d.Set("release_version", nodeGroup.ReleaseVersion)
 	if err := d.Set("remote_access", flattenRemoteAccessConfig(nodeGroup.RemoteAccess)); err != nil {
@@ -508,7 +532,7 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChanges("labels", "scaling_config", "taint", "update_config") {
+	if d.HasChanges("labels", "scaling_config", "taint", "update_config", "node_repair_config") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 		oldTaintsRaw, newTaintsRaw := d.GetChange("taint")
 
@@ -518,6 +542,12 @@ func resourceNodeGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			Labels:             expandUpdateLabelsPayload(ctx, oldLabelsRaw, newLabelsRaw),
 			NodegroupName:      aws.String(nodeGroupName),
 			Taints:             expandUpdateTaintsPayload(oldTaintsRaw.(*schema.Set).List(), newTaintsRaw.(*schema.Set).List()),
+		}
+
+		if d.HasChange("node_repair_config") {
+			if v, ok := d.GetOk("node_repair_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.NodeRepairConfig = expandNodegroupRepairConfig(v.([]interface{})[0].(map[string]interface{}))
+			}
 		}
 
 		if d.HasChange("scaling_config") {
@@ -915,6 +945,20 @@ func expandNodegroupUpdateConfig(tfMap map[string]interface{}) *types.NodegroupU
 	return apiObject
 }
 
+func expandNodegroupRepairConfig(tfMap map[string]interface{}) *types.NodeRepairConfig {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.NodeRepairConfig{}
+
+	if v, ok := tfMap["enabled"].(bool); ok {
+		apiObject.Enabled = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
 func expandUpdateLabelsPayload(ctx context.Context, oldLabelsMap, newLabelsMap interface{}) *types.UpdateLabelsPayload {
 	// EKS Labels operate similarly to keyvaluetags
 	oldLabels := tftags.New(ctx, oldLabelsMap)
@@ -1010,6 +1054,20 @@ func flattenNodeGroupScalingConfig(apiObject *types.NodegroupScalingConfig) map[
 
 	if v := apiObject.MinSize; v != nil {
 		tfMap["min_size"] = aws.ToInt32(v)
+	}
+
+	return tfMap
+}
+
+func flattenNodeGroupRepairConfig(apiObject *types.NodeRepairConfig) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.Enabled; v != nil {
+		tfMap["enabled"] = aws.ToBool(v)
 	}
 
 	return tfMap
