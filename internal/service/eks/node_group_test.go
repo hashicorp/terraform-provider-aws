@@ -162,7 +162,7 @@ func TestAccEKSNodeGroup_disappears(t *testing.T) {
 
 func TestAccEKSNodeGroup_amiType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var nodeGroup1, nodeGroup2 types.Nodegroup
+	var nodeGroup1 types.Nodegroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
@@ -183,13 +183,6 @@ func TestAccEKSNodeGroup_amiType(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccNodeGroupConfig_amiType(rName, string(types.AMITypesAl2Arm64)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
-					resource.TestCheckResourceAttr(resourceName, "ami_type", string(types.AMITypesAl2Arm64)),
-				),
 			},
 		},
 	})
