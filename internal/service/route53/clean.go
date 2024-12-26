@@ -11,8 +11,8 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 func cleanDelegationSetID(id string) string {
@@ -23,63 +23,43 @@ func cleanDelegationSetID(id string) string {
 // See https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DomainNameFormat.html#domain-name-format-hosted-zones.
 // See https://datatracker.ietf.org/doc/html/rfc4343#section-2.1.
 func normalizeDomainNameToAPI(input string) string {
-	var ret string
-
+	var output strings.Builder
 	br := bufio.NewReader(strings.NewReader(input))
-
-	const lenEscapeCode = 3
 
 	for {
 		ch, _, err := br.ReadRune()
+		if errors.Is(err, io.EOF) {
+			break
+		}
 		if err != nil {
-			if errors.Is(err, io.EOF) {
-				break
-			}
 			return ""
 		}
 
-		ch = unicode.ToLower(ch)
-
-		// when backslack is found, check if a beginning of escape code
 		switch {
+		case ch >= 'A' && ch <= 'Z':
+			output.WriteRune(unicode.ToLower(ch))
+		case ch >= '0' && ch <= '9' || ch >= 'a' && ch <= 'z' || ch == '-' || ch == '.' || ch == '_':
+			output.WriteRune(ch)
 		case ch == '\\':
-			esc, err := br.Peek(lenEscapeCode)
-			if err == nil {
-				if isAllNumeric(string(esc)) {
-					ret += "\\" + string(esc)
-
-					// advanced 3 bytes
-					_, _ = br.Discard(lenEscapeCode)
-					continue
-				}
+			const (
+				lenOctalCode = 3
+			)
+			if bytes, err := br.Peek(lenOctalCode); err == nil && tfslices.All(bytes, func(b byte) bool {
+				return b >= '0' && b <= '7' // Octal.
+			}) {
+				output.WriteRune(ch)
+				output.WriteString(string(bytes))
+				br.Discard(lenOctalCode)
+				continue
 			}
-			// treat it as "\"  and carry on
-			ret += "\\"
-		case needEscapeCode(ch):
-			// convert into escape code
-			ret += fmt.Sprintf("\\%03o", ch)
+			fallthrough
 		default:
-			ret += string(ch)
+			// Three-digit octal code.
+			output.WriteString(fmt.Sprintf("\\%03o", ch))
 		}
 	}
 
-	return ret
-}
-
-func isAllNumeric(s string) bool {
-	for _, r := range s {
-		if r < '0' || r > '9' {
-			return false
-		}
-	}
-	return true
-}
-
-// needEscapeCode returns true if a given rune needs an escape code for Route53 representation.
-// https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DomainNameFormat.html#domain-name-format-hosted-zones
-// > If the domain name includes any characters other than a to z, 0 to 9, - (hyphen), or _ (underscore), Route 53 API actions return the characters as escape codes
-func needEscapeCode(r rune) bool {
-	return !regexache.MustCompile(`[0-9A-Za-z_\-.]`).MatchString(string(r))
+	return output.String()
 }
 
 // cleanZoneID is used to remove the leading "/hostedzone/" from a hosted zone ID.
@@ -87,9 +67,18 @@ func cleanZoneID(ID string) string {
 	return strings.TrimPrefix(ID, "/hostedzone/")
 }
 
-func normalizeAliasDomainName(alias interface{}) string {
-	output := strings.ToLower(alias.(string))
-	return normalizeDomainNameToAPI(strings.TrimSuffix(output, "."))
+func normalizeAliasDomainName(v interface{}) string {
+	var s string
+	switch v := v.(type) {
+	case *string:
+		s = aws.ToString(v)
+	case string:
+		s = v
+	default:
+		return ""
+	}
+
+	return normalizeDomainNameToAPI(strings.TrimSuffix(s, "."))
 }
 
 // normalizeDomainName is used to remove the trailing period and apply consistent casing to the domain names
@@ -111,9 +100,7 @@ func normalizeDomainName(v interface{}) string {
 		return s
 	}
 
-	return normalizeDomainNameToAPI(
-		strings.ToLower(strings.TrimSuffix(s, ".")),
-	)
+	return normalizeDomainNameToAPI(strings.TrimSuffix(s, "."))
 }
 
 // fqdn appends a single dot (".") to the input string if necessary.

@@ -35,6 +35,7 @@ func TestNormalizeNameIntoAPIRepresentation(t *testing.T) {
 		{"a/b.example.com", "a\\057b.example.com"},
 		{"/.example.com", "\\057.example.com"},
 		{"~.example.com", "\\176.example.com"},
+		{"a\\B.example.com", "a\\134b.example.com"},
 	}
 
 	for _, tc := range cases {
