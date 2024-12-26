@@ -109,6 +109,10 @@ func dataSourceEngineVersion() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
+			"supports_certificate_rotation_without_restart": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"supports_global_databases": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -392,6 +396,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("supported_timezones", tfslices.ApplyToAll(found.SupportedTimezones, func(v awstypes.Timezone) string {
 		return aws.ToString(v.TimezoneName)
 	}))
+	d.Set("supports_certificate_rotation_without_restart", found.SupportsCertificateRotationWithoutRestart)
 	d.Set("supports_global_databases", found.SupportsGlobalDatabases)
 	d.Set("supports_limitless_database", found.SupportsLimitlessDatabase)
 	d.Set("supports_log_exports_to_cloudwatch", found.SupportsLogExportsToCloudwatchLogs)

@@ -68,6 +68,7 @@ This data source exports the following attributes in addition to the arguments a
 * `supported_feature_names` - Set of features supported by the engine version.
 * `supported_modes` - Set of supported engine version modes.
 * `supported_timezones` - Set of the time zones supported by the engine version.
+* `supports_certificate_rotation_without_restart` - Whether the certificates can be rotated without restarting the Aurora instance.
 * `supports_global_databases` - Whether you can use Aurora global databases with the engine version.
 * `supports_log_exports_to_cloudwatch` - Whether the engine version supports exporting the log types specified by `exportable_log_types` to CloudWatch Logs.
 * `supports_limitless_database` - Whether the engine version supports Aurora Limitless Database.
