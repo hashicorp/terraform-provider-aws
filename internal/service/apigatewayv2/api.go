@@ -238,7 +238,6 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	output, err := findAPIByID(ctx, conn, d.Id())
-
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 API (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -271,7 +270,6 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 func resourceAPIUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
-
 	corsConfigurationDeleted := false
 	if d.HasChange("cors_configuration") {
 		if v := d.Get("cors_configuration"); len(v.([]interface{})) == 0 {
@@ -377,18 +375,18 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 		if err != nil {
 			return fmt.Errorf("reimporting API Gateway v2 API (%s) OpenAPI definition: %w", d.Id(), err)
 		}
-
 		corsConfiguration := d.Get("cors_configuration")
-
+		apiName := d.Get(names.AttrName).(string)
+		versionInput := d.Get(names.AttrVersion).(string)
 		if diags := resourceAPIRead(ctx, d, meta); diags.HasError() {
 			return sdkdiag.DiagnosticsError(diags)
 		}
 
 		inputU := &apigatewayv2.UpdateApiInput{
 			ApiId:       aws.String(d.Id()),
-			Name:        aws.String(d.Get(names.AttrName).(string)),
+			Name:        aws.String(apiName),
 			Description: aws.String(d.Get(names.AttrDescription).(string)),
-			Version:     aws.String(d.Get(names.AttrVersion).(string)),
+			Version:     aws.String(versionInput),
 		}
 
 		if !reflect.DeepEqual(corsConfiguration, d.Get("cors_configuration")) {
@@ -429,7 +427,6 @@ func findAPIByID(ctx context.Context, conn *apigatewayv2.Client, id string) (*ap
 
 func findAPI(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetApiInput) (*apigatewayv2.GetApiOutput, error) {
 	output, err := conn.GetApi(ctx, input)
-
 	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
