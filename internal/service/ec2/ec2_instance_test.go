@@ -2446,16 +2446,46 @@ func TestAccEC2Instance_changeInstanceTypeReplace(t *testing.T) {
 				Config: testAccInstanceConfig_typeReplace(rName, "m5.2xlarge"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "m5.2xlarge"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrInstanceType), knownvalue.StringExact("m5.2xlarge")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
+				},
 			},
 			{
 				Config: testAccInstanceConfig_typeReplace(rName, "m6g.2xlarge"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceRecreated(&before, &after),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "m6g.2xlarge"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionDestroyBeforeCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrInstanceType), knownvalue.StringExact("m6g.2xlarge")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
+				},
 			},
 		},
 	})
@@ -2482,17 +2512,49 @@ func TestAccEC2Instance_changeInstanceTypeAndUserData(t *testing.T) {
 				Config: testAccInstanceConfig_typeAndUserData(rName, "t2.medium", "hello world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.medium"),
-					resource.TestCheckResourceAttr(resourceName, "user_data", expectedUserData),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrInstanceType), knownvalue.StringExact("t2.medium")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact(expectedUserData)),
+				},
 			},
 			{
 				Config: testAccInstanceConfig_typeAndUserData(rName, "t2.large", "new world"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, names.AttrInstanceType, "t2.large"),
-					resource.TestCheckResourceAttr(resourceName, "user_data", expectedUserDataUpdated),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
+						plancheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
+					},
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrInstanceType), knownvalue.StringExact("t2.large")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_dns"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("public_ip"), knownvalue.StringExact("")),
+					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New("user_data"), knownvalue.StringExact(expectedUserDataUpdated)),
+				},
 			},
 			{
 				ResourceName:            resourceName,
