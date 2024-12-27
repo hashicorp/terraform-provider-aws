@@ -725,6 +725,35 @@ func TestAccAPIGatewayV2API_quickCreate(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayV2API_name(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v apigatewayv2.GetApiOutput
+	resourceName := "aws_apigatewayv2_api.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAPIConfig_open(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAPIExists(ctx, resourceName, &v),
+					testAccCheckAPIName(ctx, resourceName, rName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"body"},
+			},
+		},
+	})
+}
+
 func testAccCheckAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
@@ -875,6 +904,31 @@ func testAccCheckAPIQuickCreateStage(ctx context.Context, n, expectedName string
 	}
 }
 
+func testAccCheckAPIName(ctx context.Context, n, expectedName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No API Gateway v2 API ID is set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
+
+		output, err := tfapigatewayv2.FindAPIByID(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		if aws.ToString(output.Name) != expectedName {
+			return fmt.Errorf("Incorrect API name. Expected: %s, got: %s", expectedName, aws.ToString(output.Name))
+		}
+
+		return nil
+	}
+}
 func testAccAPIConfig_basicWebSocket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
