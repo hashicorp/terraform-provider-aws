@@ -40,10 +40,10 @@ func TestAccEKSNodeGroup_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_dataSourceName(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccNodeGroupConfig_name(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup),
-					resource.TestCheckResourceAttr(resourceName, "ami_type", string(types.AMITypesAl2X8664)),
+					resource.TestCheckResourceAttr(resourceName, "ami_type", string(types.AMITypesAl2023X8664Standard)),
 					acctest.MatchResourceAttrRegionalARN(ctx, resourceName, names.AttrARN, "eks", regexache.MustCompile(fmt.Sprintf("nodegroup/%[1]s/%[1]s/.+", rName))),
 					resource.TestCheckResourceAttrPair(resourceName, names.AttrClusterName, eksClusterResourceName, names.AttrName),
 					resource.TestCheckResourceAttr(resourceName, "capacity_type", string(types.CapacityTypesOnDemand)),
@@ -149,7 +149,7 @@ func TestAccEKSNodeGroup_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccNodeGroupConfig_dataSourceName(rName),
+				Config: testAccNodeGroupConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceNodeGroup(), resourceName),
@@ -162,7 +162,7 @@ func TestAccEKSNodeGroup_disappears(t *testing.T) {
 
 func TestAccEKSNodeGroup_amiType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var nodeGroup1, nodeGroup2 types.Nodegroup
+	var nodeGroup1 types.Nodegroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_eks_node_group.test"
 
@@ -183,13 +183,6 @@ func TestAccEKSNodeGroup_amiType(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccNodeGroupConfig_amiType(rName, string(types.AMITypesAl2Arm64)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup2),
-					resource.TestCheckResourceAttr(resourceName, "ami_type", string(types.AMITypesAl2Arm64)),
-				),
 			},
 		},
 	})
@@ -508,6 +501,35 @@ func TestAccEKSNodeGroup_LaunchTemplate_version(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.version", launchTemplateResourceName, "default_version"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEKSNodeGroup_nodeRepairConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var nodeGroup1 types.Nodegroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNodeGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNodeGroupConfig_nodeRepairConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNodeGroupExists(ctx, resourceName, &nodeGroup1),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_repair_config.0.enabled", acctest.CtTrue),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -1066,17 +1088,8 @@ func testAccCheckNodeGroupRecreated(i, j *types.Nodegroup) resource.TestCheckFun
 	}
 }
 
-func testAccNodeGroupBaseIAMAndVPCConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccNodeGroupConfig_iamAndVPCBase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "cluster" {
@@ -1205,12 +1218,12 @@ resource "aws_subnet" "test" {
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
-`, rName)
+`, rName))
 }
 
-func testAccNodeGroupBaseConfig(rName string) string {
+func testAccNodeGroupConfig_base(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNodeGroupBaseIAMAndVPCConfig(rName),
+		testAccNodeGroupConfig_iamAndVPCBase(rName),
 		fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
@@ -1228,9 +1241,9 @@ resource "aws_eks_cluster" "test" {
 `, rName))
 }
 
-func testAccNodeGroupBaseVersionConfig(rName string, version string) string {
+func testAccNodeGroupConfig_versionBase(rName string, version string) string {
 	return acctest.ConfigCompose(
-		testAccNodeGroupBaseIAMAndVPCConfig(rName),
+		testAccNodeGroupConfig_iamAndVPCBase(rName),
 		fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
@@ -1249,8 +1262,8 @@ resource "aws_eks_cluster" "test" {
 `, rName, version))
 }
 
-func testAccNodeGroupConfig_dataSourceName(rName string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+func testAccNodeGroupConfig_name(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1273,7 +1286,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_nameGenerated(rName string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), `
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), `
 resource "aws_eks_node_group" "test" {
   cluster_name  = aws_eks_cluster.test.name
   node_role_arn = aws_iam_role.node.arn
@@ -1295,7 +1308,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_namePrefix(rName, namePrefix string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name           = aws_eks_cluster.test.name
   node_group_name_prefix = %[1]q
@@ -1318,7 +1331,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_amiType(rName, amiType string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   ami_type        = %[2]q
   cluster_name    = aws_eks_cluster.test.name
@@ -1342,7 +1355,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_capacityType(rName, capacityType string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   capacity_type   = %[2]q
   cluster_name    = aws_eks_cluster.test.name
@@ -1366,7 +1379,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_diskSize(rName string, diskSize int) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   disk_size       = %[2]d
@@ -1390,7 +1403,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_forceUpdateVersion(rName, version string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseVersionConfig(rName, version), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_versionBase(rName, version), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name         = aws_eks_cluster.test.name
   force_update_version = true
@@ -1416,7 +1429,7 @@ resource "aws_eks_node_group" "test" {
 
 func testAccNodeGroupConfig_instanceTypesMultiple(rName, instanceTypes string) string {
 	return acctest.ConfigCompose(
-		testAccNodeGroupBaseConfig(rName),
+		testAccNodeGroupConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name = aws_eks_cluster.test.name
@@ -1444,7 +1457,7 @@ resource "aws_eks_node_group" "test" {
 
 func testAccNodeGroupConfig_instanceTypesSingle(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNodeGroupBaseConfig(rName),
+		testAccNodeGroupConfig_base(rName),
 		fmt.Sprintf(`
 data "aws_ec2_instance_type_offering" "available" {
   filter {
@@ -1478,7 +1491,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_labels1(rName, labelKey1, labelValue1 string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1505,7 +1518,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_labels2(rName, labelKey1, labelValue1, labelKey2, labelValue2 string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1534,7 +1547,7 @@ resource "aws_eks_node_group" "test" {
 
 func testAccNodeGroupConfig_launchTemplateId1(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNodeGroupBaseConfig(rName),
+		testAccNodeGroupConfig_base(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/image_id"
@@ -1582,7 +1595,7 @@ resource "aws_eks_node_group" "test" {
 
 func testAccNodeGroupConfig_launchTemplateId2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNodeGroupBaseConfig(rName),
+		testAccNodeGroupConfig_base(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/image_id"
@@ -1630,7 +1643,7 @@ resource "aws_eks_node_group" "test" {
 
 func testAccNodeGroupConfig_launchTemplateName1(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNodeGroupBaseConfig(rName),
+		testAccNodeGroupConfig_base(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/image_id"
@@ -1678,7 +1691,7 @@ resource "aws_eks_node_group" "test" {
 
 func testAccNodeGroupConfig_launchTemplateName2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNodeGroupBaseConfig(rName),
+		testAccNodeGroupConfig_base(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/image_id"
@@ -1726,7 +1739,7 @@ resource "aws_eks_node_group" "test" {
 
 func testAccNodeGroupConfig_launchTemplateVersion1(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNodeGroupBaseConfig(rName),
+		testAccNodeGroupConfig_base(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/image_id"
@@ -1768,7 +1781,7 @@ resource "aws_eks_node_group" "test" {
 
 func testAccNodeGroupConfig_launchTemplateVersion2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccNodeGroupBaseConfig(rName),
+		testAccNodeGroupConfig_base(rName),
 		fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/image_id"
@@ -1809,7 +1822,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_releaseVersion(rName string, version string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseVersionConfig(rName, version), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_versionBase(rName, version), fmt.Sprintf(`
 data "aws_ssm_parameter" "test" {
   name = "/aws/service/eks/optimized-ami/${aws_eks_cluster.test.version}/amazon-linux-2/recommended/release_version"
 }
@@ -1838,7 +1851,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_remoteAccessEC2SSHKey(rName, publicKey string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
@@ -1870,7 +1883,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_remoteAccessSourceSecurityIds1(rName, publicKey string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = %[2]q
@@ -1903,7 +1916,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_scalingSizes(rName string, desiredSize, maxSize, minSize int) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1926,7 +1939,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1953,7 +1966,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -1981,7 +1994,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_taints1(rName, taintKey1, taintValue1, taintEffect1 string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2010,7 +2023,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_taints2(rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2 string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2044,8 +2057,35 @@ resource "aws_eks_node_group" "test" {
 `, rName, taintKey1, taintValue1, taintEffect1, taintKey2, taintValue2, taintEffect2))
 }
 
+func testAccNodeGroupConfig_nodeRepairConfig(rName string) string {
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    = aws_eks_cluster.test.name
+  node_group_name = %[1]q
+  node_role_arn   = aws_iam_role.node.arn
+  subnet_ids      = aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 3
+    min_size     = 1
+  }
+
+  node_repair_config {
+    enabled = true
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy,
+    aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy,
+    aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly,
+  ]
+}
+`, rName))
+}
+
 func testAccNodeGroupConfig_update1(rName string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2072,7 +2112,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_update2(rName string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseConfig(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_base(rName), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
@@ -2099,7 +2139,7 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccNodeGroupConfig_version(rName, version string) string {
-	return acctest.ConfigCompose(testAccNodeGroupBaseVersionConfig(rName, version), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccNodeGroupConfig_versionBase(rName, version), fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
