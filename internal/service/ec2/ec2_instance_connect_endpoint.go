@@ -173,6 +173,11 @@ func (r *instanceConnectEndpointResource) Create(ctx context.Context, request re
 		return
 	}
 
+	// Fix missing FipsDnsName in regions without FIPS endpoint support.
+	if instanceConnectEndpoint.FipsDnsName == nil {
+		instanceConnectEndpoint.FipsDnsName = aws.String("")
+	}
+
 	// Set values for unknowns.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, instanceConnectEndpoint, &data)...)
 	if response.Diagnostics.HasError() {
@@ -205,6 +210,11 @@ func (r *instanceConnectEndpointResource) Read(ctx context.Context, request reso
 		response.Diagnostics.AddError(fmt.Sprintf("reading EC2 Instance Connect Endpoint (%s)", id), err.Error())
 
 		return
+	}
+
+	// Fix missing FipsDnsName in regions without FIPS endpoint support.
+	if instanceConnectEndpoint.FipsDnsName == nil {
+		instanceConnectEndpoint.FipsDnsName = aws.String("")
 	}
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, instanceConnectEndpoint, &data)...)
