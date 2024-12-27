@@ -102,15 +102,16 @@ func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
 	id := "default"
-	input := &account.PutContactInformationInput{
-		ContactInformation: &types.ContactInformation{
-			AddressLine1: aws.String(d.Get("address_line_1").(string)),
-			City:         aws.String(d.Get("city").(string)),
-			CountryCode:  aws.String(d.Get("country_code").(string)),
-			FullName:     aws.String(d.Get("full_name").(string)),
-			PhoneNumber:  aws.String(d.Get("phone_number").(string)),
-			PostalCode:   aws.String(d.Get("postal_code").(string)),
-		},
+	contactInfo := types.ContactInformation{
+		AddressLine1: aws.String(d.Get("address_line_1").(string)),
+		City:         aws.String(d.Get("city").(string)),
+		CountryCode:  aws.String(d.Get("country_code").(string)),
+		FullName:     aws.String(d.Get("full_name").(string)),
+		PhoneNumber:  aws.String(d.Get("phone_number").(string)),
+		PostalCode:   aws.String(d.Get("postal_code").(string)),
+	}
+	input := account.PutContactInformationInput{
+		ContactInformation: &contactInfo,
 	}
 
 	if v, ok := d.GetOk(names.AttrAccountID); ok {
@@ -142,7 +143,7 @@ func resourcePrimaryContactPut(ctx context.Context, d *schema.ResourceData, meta
 		input.ContactInformation.WebsiteUrl = aws.String(v.(string))
 	}
 
-	_, err := conn.PutContactInformation(ctx, input)
+	_, err := conn.PutContactInformation(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Account Primary Contact (%s): %s", id, err)
@@ -190,12 +191,12 @@ func resourcePrimaryContactRead(ctx context.Context, d *schema.ResourceData, met
 }
 
 func findContactInformation(ctx context.Context, conn *account.Client, accountID string) (*types.ContactInformation, error) {
-	input := &account.GetContactInformationInput{}
+	input := account.GetContactInformationInput{}
 	if accountID != "" {
 		input.AccountId = aws.String(accountID)
 	}
 
-	output, err := conn.GetContactInformation(ctx, input)
+	output, err := conn.GetContactInformation(ctx, &input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{

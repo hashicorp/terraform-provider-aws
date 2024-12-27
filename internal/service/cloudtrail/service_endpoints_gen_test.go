@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListChannels(ctx, &cloudtrail.ListChannelsInput{},
+	input := cloudtrail.ListChannelsInput{}
+	_, err := client.ListChannels(ctx, &input,
 		func(opts *cloudtrail.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

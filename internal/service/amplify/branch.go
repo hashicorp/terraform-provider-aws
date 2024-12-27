@@ -182,7 +182,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	appID := d.Get("app_id").(string)
 	branchName := d.Get("branch_name").(string)
 	id := branchCreateResourceID(appID, branchName)
-	input := &amplify.CreateBranchInput{
+	input := amplify.CreateBranchInput{
 		AppId:           aws.String(appID),
 		BranchName:      aws.String(branchName),
 		EnableAutoBuild: aws.Bool(d.Get("enable_auto_build").(bool)),
@@ -241,7 +241,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Ttl = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateBranch(ctx, input)
+	_, err := conn.CreateBranch(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify Branch (%s): %s", id, err)
@@ -310,7 +310,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		input := &amplify.UpdateBranchInput{
+		input := amplify.UpdateBranchInput{
 			AppId:      aws.String(appID),
 			BranchName: aws.String(branchName),
 		}
@@ -375,7 +375,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.Ttl = aws.String(d.Get("ttl").(string))
 		}
 
-		_, err = conn.UpdateBranch(ctx, input)
+		_, err = conn.UpdateBranch(ctx, &input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Amplify Branch (%s): %s", d.Id(), err)
@@ -395,10 +395,11 @@ func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Branch: %s", d.Id())
-	_, err = conn.DeleteBranch(ctx, &amplify.DeleteBranchInput{
+	input := amplify.DeleteBranchInput{
 		AppId:      aws.String(appID),
 		BranchName: aws.String(branchName),
-	})
+	}
+	_, err = conn.DeleteBranch(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return diags
@@ -412,17 +413,17 @@ func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func findBranchByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, branchName string) (*types.Branch, error) {
-	input := &amplify.GetBranchInput{
+	input := amplify.GetBranchInput{
 		AppId:      aws.String(appID),
 		BranchName: aws.String(branchName),
 	}
 
-	output, err := conn.GetBranch(ctx, input)
+	output, err := conn.GetBranch(ctx, &input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: input,
+			LastRequest: &input,
 		}
 	}
 
@@ -431,7 +432,7 @@ func findBranchByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, br
 	}
 
 	if output == nil || output.Branch == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+		return nil, tfresource.NewEmptyResultError(&input)
 	}
 
 	return output.Branch, nil

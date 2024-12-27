@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListBuildBatches(ctx, &codebuild.ListBuildBatchesInput{},
+	input := codebuild.ListBuildBatchesInput{}
+	_, err := client.ListBuildBatches(ctx, &input,
 		func(opts *codebuild.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

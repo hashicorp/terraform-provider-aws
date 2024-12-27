@@ -352,9 +352,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var domain awstypes.ElasticsearchDomainStatus
 	rName := testAccRandomDomainName()
-	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
@@ -388,12 +386,7 @@ func TestAccElasticsearchDomain_duplicate(t *testing.T) {
 						t.Fatal(err)
 					}
 				},
-				Config: testAccDomainConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDomainExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(
-						resourceName, "elasticsearch_version", "1.5"),
-				),
+				Config:      testAccDomainConfig_basic(rName),
 				ExpectError: regexache.MustCompile(`Elasticsearch Domain .+ already exists`),
 			},
 		},

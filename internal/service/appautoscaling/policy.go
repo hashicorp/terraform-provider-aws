@@ -308,7 +308,7 @@ func resourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interfa
 	input := expandPutScalingPolicyInput(d)
 
 	_, err := tfresource.RetryWhenIsA[*awstypes.FailedResourceAccessException](ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.PutScalingPolicy(ctx, input)
+		return conn.PutScalingPolicy(ctx, &input)
 	})
 
 	if err != nil {
@@ -364,7 +364,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
-	input := &applicationautoscaling.DeleteScalingPolicyInput{
+	input := applicationautoscaling.DeleteScalingPolicyInput{
 		PolicyName:        aws.String(d.Get(names.AttrName).(string)),
 		ResourceId:        aws.String(d.Get(names.AttrResourceID).(string)),
 		ScalableDimension: awstypes.ScalableDimension(d.Get("scalable_dimension").(string)),
@@ -372,7 +372,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	_, err := tfresource.RetryWhenIsA[*awstypes.FailedResourceAccessException](ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.DeleteScalingPolicy(ctx, input)
+		return conn.DeleteScalingPolicy(ctx, &input)
 	})
 
 	if errs.IsA[*awstypes.ObjectNotFoundException](err) {
@@ -407,14 +407,14 @@ func resourcePolicyImport(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func findScalingPolicyByFourPartKey(ctx context.Context, conn *applicationautoscaling.Client, name, serviceNamespace, resourceID, scalableDimension string) (*awstypes.ScalingPolicy, error) {
-	input := &applicationautoscaling.DescribeScalingPoliciesInput{
+	input := applicationautoscaling.DescribeScalingPoliciesInput{
 		PolicyNames:       []string{name},
 		ResourceId:        aws.String(resourceID),
 		ScalableDimension: awstypes.ScalableDimension(scalableDimension),
 		ServiceNamespace:  awstypes.ServiceNamespace(serviceNamespace),
 	}
 
-	return findScalingPolicy(ctx, conn, input, func(v awstypes.ScalingPolicy) bool {
+	return findScalingPolicy(ctx, conn, &input, func(v awstypes.ScalingPolicy) bool {
 		return aws.ToString(v.PolicyName) == name && string(v.ScalableDimension) == scalableDimension
 	})
 }
@@ -652,8 +652,8 @@ func expandPredefinedMetricSpecification(configured []interface{}) *awstypes.Pre
 	return spec
 }
 
-func expandPutScalingPolicyInput(d *schema.ResourceData) *applicationautoscaling.PutScalingPolicyInput {
-	apiObject := &applicationautoscaling.PutScalingPolicyInput{
+func expandPutScalingPolicyInput(d *schema.ResourceData) applicationautoscaling.PutScalingPolicyInput {
+	apiObject := applicationautoscaling.PutScalingPolicyInput{
 		PolicyName: aws.String(d.Get(names.AttrName).(string)),
 		ResourceId: aws.String(d.Get(names.AttrResourceID).(string)),
 	}
@@ -678,7 +678,7 @@ func expandPutScalingPolicyInput(d *schema.ResourceData) *applicationautoscaling
 		v := l.([]interface{})
 		if len(v) == 1 {
 			ttspCfg := v[0].(map[string]interface{})
-			cfg := &awstypes.TargetTrackingScalingPolicyConfiguration{
+			cfg := awstypes.TargetTrackingScalingPolicyConfiguration{
 				TargetValue: aws.Float64(ttspCfg["target_value"].(float64)),
 			}
 
@@ -702,7 +702,7 @@ func expandPutScalingPolicyInput(d *schema.ResourceData) *applicationautoscaling
 				cfg.PredefinedMetricSpecification = expandPredefinedMetricSpecification(v)
 			}
 
-			apiObject.TargetTrackingScalingPolicyConfiguration = cfg
+			apiObject.TargetTrackingScalingPolicyConfiguration = &cfg
 		}
 	}
 

@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListNamespaces(ctx, &redshiftserverless.ListNamespacesInput{},
+	input := redshiftserverless.ListNamespacesInput{}
+	_, err := client.ListNamespaces(ctx, &input,
 		func(opts *redshiftserverless.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

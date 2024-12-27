@@ -729,7 +729,7 @@ func TestAccRDSCluster_storageTypeAuroraUpdateAuroraIopt1(t *testing.T) {
 	})
 }
 
-func TestAccRDSCluster_allocatedStorage(t *testing.T) {
+func TestAccRDSCluster_allocatedStorage_io1(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -746,10 +746,44 @@ func TestAccRDSCluster_allocatedStorage(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_allocatedStorage(rName),
+				Config: testAccClusterConfig_allocatedStorage(rName, "io1", 100, 1000),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "100"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_allocatedStorage_gp3(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster types.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_allocatedStorage(rName, "gp3", 400, 12000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "400"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_allocatedStorage(rName, "gp3", 500, 12000),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, names.AttrAllocatedStorage, "500"),
 				),
 			},
 		},
@@ -2117,6 +2151,43 @@ func TestAccRDSCluster_serverlessV2ScalingConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "0"),
 					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause", "21600"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_serverlessV2ScalingRemoved(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster types.DBCluster
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_serverlessV2ScalingConfiguration(rName, 64.0, 2.5),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.max_capacity", "64"),
+					resource.TestCheckResourceAttr(resourceName, "serverlessv2_scaling_configuration.0.min_capacity", "2.5"),
+					resource.TestCheckResourceAttrSet(resourceName, "serverlessv2_scaling_configuration.0.seconds_until_auto_pause"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_serverlessV2ScalingRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 				),
 			},
 		},
@@ -3555,10 +3626,14 @@ data "aws_rds_orderable_db_instance" "test" {
   supports_iops              = true
 }
 
+data "aws_rds_certificate" "test" {
+  default_for_new_launches = true
+}
+
 resource "aws_rds_cluster" "test" {
   apply_immediately         = true
   db_subnet_group_name      = aws_db_subnet_group.test.name
-  ca_certificate_identifier = "rds-ca-rsa2048-g1"
+  ca_certificate_identifier = data.aws_rds_certificate.test.id
   cluster_identifier        = %[1]q
   engine                    = data.aws_rds_orderable_db_instance.test.engine
   engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
@@ -3632,7 +3707,7 @@ resource "aws_db_instance" "test" {
 `, tfrds.ClusterEnginePostgres, mainInstanceClasses, rName, sType))
 }
 
-func testAccClusterConfig_allocatedStorage(rName string) string {
+func testAccClusterConfig_allocatedStorage(rName, storageType string, allocatedStorage, iops int) string {
 	return acctest.ConfigCompose(
 		testAccConfig_ClusterSubnetGroup(rName),
 		fmt.Sprintf(`
@@ -3640,7 +3715,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
   engine_latest_version      = true
   preferred_instance_classes = [%[2]s]
-  storage_type               = "io1"
+  storage_type               = %[4]q
   supports_iops              = true
   supports_clusters          = true
 }
@@ -3653,13 +3728,13 @@ resource "aws_rds_cluster" "test" {
   engine                    = data.aws_rds_orderable_db_instance.test.engine
   engine_version            = data.aws_rds_orderable_db_instance.test.engine_version
   storage_type              = data.aws_rds_orderable_db_instance.test.storage_type
-  allocated_storage         = 100
-  iops                      = 1000
+  allocated_storage         = %[5]d
+  iops                      = %[6]d
   master_password           = "mustbeeightcharaters"
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName))
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, storageType, allocatedStorage, iops))
 }
 
 func testAccClusterConfig_iops(rName string) string {
@@ -5242,6 +5317,25 @@ resource "aws_rds_cluster" "test" {
   }
 }
 `, tfrds.ClusterEngineAuroraPostgreSQL, rName, maxCapacity, minCapacity)
+}
+
+func testAccClusterConfig_serverlessV2ScalingRemoved(rName string) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = ["db.serverless"]
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier  = %[2]q
+  master_password     = "avoid-plaintext-passwords"
+  master_username     = "tfacctest"
+  skip_final_snapshot = true
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
+}
+`, tfrds.ClusterEngineAuroraPostgreSQL, rName)
 }
 
 func testAccClusterConfig_serverlessV2ScalingConfigurationWithSecondsUntilAutoPause(rName string, maxCapacity, minCapacity float64, secondsUntilAutoPause int) string {

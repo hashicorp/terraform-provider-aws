@@ -283,7 +283,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListDistributions(ctx, &cloudfront.ListDistributionsInput{},
+	input := cloudfront.ListDistributionsInput{}
+	_, err := client.ListDistributions(ctx, &input,
 		func(opts *cloudfront.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

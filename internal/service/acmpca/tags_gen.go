@@ -20,12 +20,12 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *acmpca.Client, identifier string, optFns ...func(*acmpca.Options)) (tftags.KeyValueTags, error) {
-	input := &acmpca.ListTagsInput{
+	input := acmpca.ListTagsInput{
 		CertificateAuthorityArn: aws.String(identifier),
 	}
 	var output []awstypes.Tag
 
-	pages := acmpca.NewListTagsPaginator(conn, input)
+	pages := acmpca.NewListTagsPaginator(conn, &input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx, optFns...)
 
@@ -117,12 +117,12 @@ func updateTags(ctx context.Context, conn *acmpca.Client, identifier string, old
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.ACMPCA)
 	if len(removedTags) > 0 {
-		input := &acmpca.UntagCertificateAuthorityInput{
+		input := acmpca.UntagCertificateAuthorityInput{
 			CertificateAuthorityArn: aws.String(identifier),
 			Tags:                    Tags(removedTags),
 		}
 
-		_, err := conn.UntagCertificateAuthority(ctx, input, optFns...)
+		_, err := conn.UntagCertificateAuthority(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -132,12 +132,12 @@ func updateTags(ctx context.Context, conn *acmpca.Client, identifier string, old
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.ACMPCA)
 	if len(updatedTags) > 0 {
-		input := &acmpca.TagCertificateAuthorityInput{
+		input := acmpca.TagCertificateAuthorityInput{
 			CertificateAuthorityArn: aws.String(identifier),
 			Tags:                    Tags(updatedTags),
 		}
 
-		_, err := conn.TagCertificateAuthority(ctx, input, optFns...)
+		_, err := conn.TagCertificateAuthority(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

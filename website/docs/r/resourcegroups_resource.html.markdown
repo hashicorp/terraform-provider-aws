@@ -30,23 +30,20 @@ resource "aws_resourcegroups_resource" "example" {
   group_arn    = aws_resourcegroups_group.example.arn
   resource_arn = aws_ec2_host.example.arn
 }
-
 ```
 
 ## Argument Reference
 
 The following arguments are required:
 
-* `group_arn` - (Required) The name or the ARN of the resource group to add resources to.
-
-The following arguments are optional:
-
-* `resource_arn` - (Required) The ARN of the resource to be added to the group.
+* `group_arn` - (Required) Name or ARN of the resource group to add resources to.
+* `resource_arn` - (Required) ARN of the resource to be added to the group.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - A comma-delimited string combining `group_arn` and `resource_arn`.
 * `resource_type` - The resource type of a resource, such as `AWS::EC2::Instance`.
 
 ## Timeouts
@@ -55,3 +52,20 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `create` - (Default `5m`)
 * `delete` - (Default `5m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an AWS Resource Groups Resource using `group_arn` and `resource_arn`, separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_resourcegroups_resource.example
+  id = "arn:aws:resource-groups:us-west-2:012345678901:group/example,arn:aws:lambda:us-west-2:012345678901:function:example"
+}
+```
+
+Using `terraform import`, import an AWS Resource Groups Resource using `group_arn` and `resource_arn`, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_resourcegroups_resource.example arn:aws:resource-groups:us-west-2:012345678901:group/example,arn:aws:lambda:us-west-2:012345678901:function:example
+```

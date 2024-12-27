@@ -396,7 +396,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.DescribeCertificates(ctx, &databasemigrationservice.DescribeCertificatesInput{},
+	input := databasemigrationservice.DescribeCertificatesInput{}
+	_, err := client.DescribeCertificates(ctx, &input,
 		func(opts *databasemigrationservice.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

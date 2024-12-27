@@ -19,11 +19,11 @@ import (
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *glue.Client, identifier string, optFns ...func(*glue.Options)) (tftags.KeyValueTags, error) {
-	input := &glue.GetTagsInput{
+	input := glue.GetTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
 
-	output, err := conn.GetTags(ctx, input, optFns...)
+	output, err := conn.GetTags(ctx, &input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -91,12 +91,12 @@ func updateTags(ctx context.Context, conn *glue.Client, identifier string, oldTa
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.Glue)
 	if len(removedTags) > 0 {
-		input := &glue.UntagResourceInput{
+		input := glue.UntagResourceInput{
 			ResourceArn:  aws.String(identifier),
 			TagsToRemove: removedTags.Keys(),
 		}
 
-		_, err := conn.UntagResource(ctx, input, optFns...)
+		_, err := conn.UntagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -106,12 +106,12 @@ func updateTags(ctx context.Context, conn *glue.Client, identifier string, oldTa
 	updatedTags := oldTags.Updated(newTags)
 	updatedTags = updatedTags.IgnoreSystem(names.Glue)
 	if len(updatedTags) > 0 {
-		input := &glue.TagResourceInput{
+		input := glue.TagResourceInput{
 			ResourceArn: aws.String(identifier),
 			TagsToAdd:   Tags(updatedTags),
 		}
 
-		_, err := conn.TagResource(ctx, input, optFns...)
+		_, err := conn.TagResource(ctx, &input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

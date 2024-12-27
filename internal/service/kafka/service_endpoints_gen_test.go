@@ -337,7 +337,8 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) apiCa
 
 	var result apiCallParams
 
-	_, err := client.ListClusters(ctx, &kafka.ListClustersInput{},
+	input := kafka.ListClustersInput{}
+	_, err := client.ListClusters(ctx, &input,
 		func(opts *kafka.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &result.endpoint),

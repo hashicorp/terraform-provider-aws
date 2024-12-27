@@ -98,6 +98,11 @@ func RegisterSweepers() {
 			"aws_cloudfront_distribution",
 		},
 	})
+
+	resource.AddTestSweepers("aws_cloudfront_vpc_origin", &resource.Sweeper{
+		Name: "aws_cloudfront_vpc_origin",
+		F:    sweepVPCOrigins,
+	})
 }
 
 func sweepCachePolicies(region string) error {
@@ -760,6 +765,47 @@ func sweepOriginAccessControls(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping CloudFront Origin Access Controls (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVPCOrigins(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.CloudFrontClient(ctx)
+	input := &cloudfront.ListVpcOriginsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = listVPCOriginsPages(ctx, conn, input, func(page *cloudfront.ListVpcOriginsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VpcOriginList.Items {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newVPCOriginResource, client,
+				framework.NewAttribute(names.AttrID, aws.ToString(v.Id))))
+		}
+
+		return !lastPage
+	})
+
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFront VPC Origin sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFront VPC Origins (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping CloudFront VPC Origins (%s): %w", region, err)
 	}
 
 	return nil
